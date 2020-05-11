@@ -1649,45 +1649,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                                     groups);
             break;
         }
-        case OP_TYPEID::GRUCell:
-        {
-            auto hidden_size = node_js.at("hidden_size").get<size_t>();
-            auto clip = node_js.at("clip").get<float>();
-            auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activations_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activations_beta").get<vector<float>>();
-            auto linear_before_reset = node_js.at("linear_before_reset").get<bool>();
-            switch (args.size())
-            {
-            case 4:
-                node = make_shared<op::GRUCell>(args[0],
-                                                args[1],
-                                                args[2],
-                                                args[3],
-                                                hidden_size,
-                                                activations,
-                                                activation_alpha,
-                                                activation_beta,
-                                                clip,
-                                                linear_before_reset);
-                break;
-            case 5:
-                node = make_shared<op::GRUCell>(args[0],
-                                                args[1],
-                                                args[2],
-                                                args[3],
-                                                hidden_size,
-                                                args[4],
-                                                activations,
-                                                activation_alpha,
-                                                activation_beta,
-                                                clip,
-                                                linear_before_reset);
-                break;
-            default: throw runtime_error("GRUCell constructor not supported in serializer");
-            }
-            break;
-        }
         case OP_TYPEID::HardSigmoid:
         {
             node = make_shared<op::HardSigmoid>(args[0], args[1], args[2]);
@@ -2325,7 +2286,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::RegionYolo: { break;
         }
-        case OP_TYPEID::ReorgYolo: { break;
+        case OP_TYPEID::ReorgYolo:
+        {
+            break;
+            const auto strides = node_js.at("strides").get<vector<size_t>>();
+            node = make_shared<op::ReorgYolo>(args[0], strides);
+            break;
         }
         case OP_TYPEID::Round:
         {
@@ -3047,7 +3013,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::RegionYolo: { break;
     }
-    case OP_TYPEID::ReorgYolo: { break;
+    case OP_TYPEID::ReorgYolo:
+    {
+        auto tmp = static_cast<const op::ReorgYolo*>(&n);
+        node["strides"] = tmp->get_strides();
+        break;
     }
     case OP_TYPEID::Round: { break;
     }
@@ -3199,17 +3169,6 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::GRN*>(&n);
         node["bias"] = tmp->get_bias();
-        break;
-    }
-    case OP_TYPEID::GRUCell:
-    {
-        auto tmp = static_cast<const op::GRUCell*>(&n);
-        node["hidden_size"] = tmp->get_hidden_size();
-        node["clip"] = tmp->get_clip();
-        node["activations"] = tmp->get_activations();
-        node["activations_alpha"] = tmp->get_activations_alpha();
-        node["activations_beta"] = tmp->get_activations_beta();
-        node["linear_before_reset"] = tmp->get_linear_before_reset();
         break;
     }
     case OP_TYPEID::GroupConvolution:

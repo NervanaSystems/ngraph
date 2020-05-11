@@ -649,10 +649,17 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                               "Upper bounds and strides needs to have same number of values");
     }
 
+    NODE_VALIDATION_CHECK(node, ellipsis_mask.size() <= 1, "At most one ellipsis is allowed.");
+
     if (input_shape.rank().is_dynamic())
     {
         return PartialShape::dynamic();
     }
+
+    NODE_VALIDATION_CHECK(node,
+                          input_shape.rank().get_length() + new_axis_mask.size() >= begin.size(),
+                          "Input rank plus number of new axis has to be at least the size of Lower "
+                          "and Upper bounds vector.");
 
     std::vector<Dimension> dim;
 
@@ -1023,7 +1030,7 @@ void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
             }
             else
             {
-                return {};
+                NGRAPH_CHECK(false, "Evaluation failed on ", node);
             }
         });
     for (auto value : outputs)
