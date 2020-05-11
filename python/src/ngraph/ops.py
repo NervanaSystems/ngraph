@@ -422,6 +422,71 @@ def lstm_cell(X,                       # type: NodeInput
 
 
 @nameable_op
+def lstm_sequence(X,                       # type: NodeInput
+                  initial_hidden_state,    # type: NodeInput
+                  initial_cell_state,      # type: NodeInput
+                  sequence_lengths,        # type: NodeInput
+                  W,                       # type: NodeInput
+                  R,                       # type: NodeInput
+                  B,                       # type: NodeInput
+                  hidden_size,             # type: int
+                  direction,               # type: str
+                  activations=None,        # type: List[str]
+                  activations_alpha=None,  # type: List[float]
+                  activations_beta=None,   # type: List[float]
+                  clip=0.,                 # type: float
+                  name=None,               # type: str
+                  ):
+    # type: (...) -> Node
+    """Return a node which performs LSTMSequence operation.
+
+    :param X: The input tensor. Shape: [batch_size, seq_length, input_size].
+    :param initial_hidden_state:    The hidden state tensor.
+                                    Shape: [batch_size, num_directions, hidden_size].
+    :param initial_cell_state:      The cell state tensor.
+                                    Shape: [batch_size, num_directions, hidden_size].
+    :param sequence_lengths:        Specifies real sequence lengths for each batch element.
+                                    Shape: [batch_size]
+    :param W: Tensor with weights for matrix multiplication operation with input portion of data.
+              Shape: [num_directions, 4*hidden_size, input_size].
+    :param R: The tensor with weights for matrix multiplication operation with hidden state.
+              Shape: [num_directions, 4*hidden_size, input_size].
+    :param B: The tensor with biases.
+              Shape: [num_directions, 4*hidden_size, hidden_size].
+    :param hidden_size: Specifies hidden state size.
+    :param direction: Specifies if the RNN is forward, reverse, or bidirectional.
+    :param activations: The list of three activation functions for gates.
+    :param activations_alpha: The list of alpha parameters for activation functions.
+    :param activations_beta: The list of beta parameters for activation functions.
+    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
+    :param name: An optional name of the output node.
+
+    :return: The new node performing LSTMSequence. Node outputs count: 3.
+    """
+    weights_format = 'ifco'  # nGraph default, not such attribute in the OV spec
+    input_forget = False  # nGraph default, not such attribute in the OV spec
+
+    if activations is None:
+        activations = ['sigmoid', 'tanh', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, sequence_lengths, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'direction': direction.lower(),
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  'weights_format': weights_format,
+                  'input_forget': input_forget,
+                  }
+    return _get_node_factory().create('LSTMSequence', node_inputs, attributes)
+
+
+@nameable_op
 def gru_cell(X,                                  # type: NodeInput
              initial_hidden_state,               # type: NodeInput
              W,                                  # type: NodeInput
