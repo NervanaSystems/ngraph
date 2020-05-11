@@ -97,16 +97,45 @@ def test_constant_from_integer_array(val_type, range_start, range_end):
 
 
 @pytest.mark.skip_on_gpu
-def test_broadcast_v1():
-    input_tensor = np.array([1.0, 2.0, 3.0], np.float32)
-    input_shape = np.array([3, 3], np.int64)
+def test_broadcast_numpy():
+    data_shape = [16, 1, 1]
+    target_shape_shape = [4]
+
+    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    target_shape_parameter = ng.parameter(target_shape_shape, name='Target_shape', dtype=np.int64)
+
+    node = ng.broadcast(data_parameter, target_shape_parameter)
+
+    assert node.get_type_name() == 'Broadcast'
+    assert node.get_output_size() == 1
+
+
+@pytest.mark.skip_on_gpu
+def test_broadcast_bidirectional():
+    data_shape = [16, 1, 1]
+    target_shape_shape = [4]
+
+    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    target_shape_parameter = ng.parameter(target_shape_shape, name='Target_shape', dtype=np.int64)
+
+    node = ng.broadcast(data_parameter, target_shape_parameter, 'BIDIRECTIONAL')
+
+    assert node.get_type_name() == 'Broadcast'
+    assert node.get_output_size() == 1
+
+
+@pytest.mark.skip_on_gpu
+def test_gather():
+    input_data = np.array([1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2], np.float32).reshape((3, 3))
+    input_indices = np.array([0, 2], np.int64).reshape(1, 2)
     input_axes = np.array([1], np.int64)
-    result = run_op_node([input_tensor, input_shape, input_axes], ng.broadcast)
 
-    a_arr = np.array([[0], [0], [0]], dtype=np.float32)
-    b_arr = np.array([[1, 2, 3]], dtype=np.float32)
-    expected = np.add(a_arr, b_arr)
+    expected = np.array([1.0, 1.2, 2.0, 2.2, 3.0, 3.2], dtype=np.float32).reshape((3, 1, 2))
 
+    result = run_op_node([input_data, input_indices, input_axes], ng.gather)
+    assert np.allclose(result, expected)
+
+    result = run_op_numeric_data(input_data, ng.gather, input_indices, input_axes)
     assert np.allclose(result, expected)
 
 
