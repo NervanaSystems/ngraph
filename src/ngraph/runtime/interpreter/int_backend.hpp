@@ -49,6 +49,8 @@ public:
     INTBackend(INTBackend&&) = delete;
     INTBackend& operator=(const INTBackend&) = delete;
 
+    std::shared_ptr<Tensor> create_tensor() override;
+
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
 
