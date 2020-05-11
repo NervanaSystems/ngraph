@@ -316,7 +316,7 @@ set(MULTI_TEST_SRC
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
-    backend/asin.in.cpp
+    backend/asinh.in.cpp
     backend/atan2.in.cpp
     backend/atanh.in.cpp
     backend/atanh.in.cpp

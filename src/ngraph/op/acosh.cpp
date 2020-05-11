@@ -14,19 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/acosh.hpp"
-
-#include "ngraph/axis_set.hpp"
-#include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/constant.hpp"
-#include "ngraph/op/divide.hpp"
-#include "ngraph/op/multiply.hpp"
-#include "ngraph/op/sqrt.hpp"
-#include "ngraph/op/subtract.hpp"
-#include "ngraph/shape.hpp"
-
 #include <string>
 #include <vector>
+
+#include "ngraph/op/acosh.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/acosh.hpp"
+#include "ngraph/type/element_type.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -48,46 +42,45 @@ shared_ptr<Node> op::v3::Acosh::clone_with_new_inputs(const OutputVector& new_ar
 namespace
 {
     template <element::Type_t ET>
-    bool evaluate(const HostTensorPtr& arg0,
-                  const HostTensorPtr& out,
-                  const op::AutoBroadcastSpec& broadcast_spec)
+    bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out)
     {
         runtime::reference::acosh(
-            arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), arg0->get_shape(), broadcast_spec);
+            arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), shape_size(arg0->get_shape()));
         return true;
+    }
+
+    bool evaluate_acosh(const HostTensorPtr& arg0, const HostTensorPtr& out)
+    {
+        bool rc = true;
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0, out);
+            break;
+            TYPE_CASE(i16)(arg0, out);
+            break;
+            TYPE_CASE(i32)(arg0, out);
+            break;
+            TYPE_CASE(i64)(arg0, out);
+            break;
+            TYPE_CASE(u8)(arg0, out);
+            break;
+            TYPE_CASE(u16)(arg0, out);
+            break;
+            TYPE_CASE(u32)(arg0, out);
+            break;
+            TYPE_CASE(u64)(arg0, out);
+            break;
+            TYPE_CASE(f32)(arg0, out);
+            break;
+            TYPE_CASE(f64)(arg0, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
     }
 }
 
 bool op::v3::Acosh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    const HostTensorPtr& arg0 = inputs[0];
-    const HostTensorPtr& out = outputs[0];
-    const op::AutoBroadcastSpec& broadcast_spec = get_autob();
-    bool rc = true;
-    out->set_broadcast(broadcast_spec, arg0);
-    switch (arg0->get_element_type())
-    {
-        TYPE_CASE(i8)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(i16)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(i32)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(i64)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(u8)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(u16)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(u32)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(u64)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(f32)(arg0, out, broadcast_spec);
-        break;
-        TYPE_CASE(f64)(arg0, out, broadcast_spec);
-        break;
-    default: rc = false; break;
-    }
-    return rc;
+    return evaluate_acosh(inputs[0], outputs[0]);
 }

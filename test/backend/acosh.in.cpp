@@ -54,21 +54,15 @@ NGRAPH_TEST(${BACKEND_NAME}, acosh)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    vector<float> input{-1.f, -0.75f, -0.5f, -0.25f, -0.125f, 0.f, 0.125f, 0.25f, 0.5f, 0.75f, 1.f};
+    vector<float> input{0.f, 1.f, -1.f, 2.f, -2.f, 3.f, -3.f, 4.f, 5.f, 10.f, 100.f};
     copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f(vector<float>{3.14159265f,
-                                                2.41885841f,
-                                                2.09439510f,
-                                                1.82347658f,
-                                                1.69612416f,
-                                                1.57079633f,
-                                                1.44546850f,
-                                                1.31811607f,
-                                                1.04719755f,
-                                                0.72273425f,
-                                                0.00000000f},
-                                  read_vector<float>(result)));
+    vector<float> expected;
+    for (float f : input)
+    {
+        expected.push_back(std::acosh(f));
+    }
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
