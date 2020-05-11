@@ -1461,7 +1461,7 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
 
 @nameable_op
 def select(cond, then_node, else_node, auto_broadcast='numpy', name=None):
-    # type: (Node, NodeInput, NodeInput, Optional[str]) -> Node
+    # type: (Node, NodeInput, NodeInput, str, Optional[str]) -> Node
     """Perform an element-wise selection operation on input tensors.
 
     :param cond: Tensor with selection mask of type `boolean`.
@@ -2151,8 +2151,8 @@ def batch_norm_inference(data,            # type: Node
     :param name: The optional name of the output node.
     :return: The new node which performs BatchNormInference.
     """
-    inputs = [data, as_node(gamma), as_node(beta), as_node(mean), as_node(variance)]
-    return _get_node_factory().create('BatchNormInference', inputs, {'epsilon': epsilon})
+    inputs = [as_node(gamma), as_node(beta), data, as_node(mean), as_node(variance)]
+    return _get_node_factory('opset0').create('BatchNormInference', inputs, {'epsilon': epsilon})
 
 
 @nameable_op
@@ -2173,8 +2173,8 @@ def batch_norm_training(data,            # type: Node
     :param name: The optional name of the output node.
     :return: The new node which performs BatchNormTraining.
     """
-    inputs = [data, as_node(gamma), as_node(beta)]
-    return _get_node_factory().create('BatchNormTraining', inputs, {'epsilon': epsilon})
+    inputs = [as_node(gamma), as_node(beta), data]
+    return _get_node_factory('opset0').create('BatchNormTraining', inputs, {'epsilon': epsilon})
 
 
 @nameable_op
@@ -2249,7 +2249,7 @@ def non_max_suppression(boxes,                              # type: Node
                         scores,                             # type: NodeInput
                         max_output_boxes_per_class=None,    # type: Optional[NodeInput]
                         iou_threshold=None,                 # type: Optional[NodeInput]
-                        score_threshold=None,               # Optional[NodeInput]
+                        score_threshold=None,               # type: Optional[NodeInput]
                         box_encoding='corner',              # type: str
                         sort_result_descending=True,        # type: bool
                         output_type='i64',                  # type: str
