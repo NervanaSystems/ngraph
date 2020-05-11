@@ -777,8 +777,7 @@ namespace
         const auto data_shape = data.get_shape();
         std::vector<size_t> axes(data_shape.size() - axis);
         std::iota(std::begin(axes), std::end(axes), axis);
-        const auto replacement_node =
-            make_shared<op::v0::Softmax>(node->input_value(0), axes);
+        const auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
         return replacement_node;
     }
