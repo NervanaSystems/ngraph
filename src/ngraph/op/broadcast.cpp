@@ -46,9 +46,11 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
 
 std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 {
-    AxisSet broadcast_axes;
     if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
     {
+        AxisSet broadcast_axes;
+        bool axes_known = false;
+
         if (get_input_partial_shape(0).is_static() && get_output_partial_shape(0).is_static())
         {
             const auto arg_shape = get_input_shape(0);
@@ -64,9 +66,9 @@ std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
                 }
             }
 
-            const bool axes_known = true;
-            return std::make_pair(axes_known, broadcast_axes);
+            axes_known = true;
         }
+        return std::make_pair(axes_known, broadcast_axes);
     }
 
     return util::BroadcastBase::get_broadcast_axes();

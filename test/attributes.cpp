@@ -17,6 +17,7 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/opsets/opset1.hpp"
 #include "ngraph/opsets/opset3.hpp"
 
@@ -279,6 +280,7 @@ public:
     }
 
     vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
+    HostTensorPtr get_host_tensor(const string& name) { return m_host_tensors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
@@ -326,6 +328,10 @@ public:
     void set_string_vector(const string& name, const vector<string>& value)
     {
         m_string_vectors[name] = value;
+    }
+    void set_host_tensor(const string& name, const HostTensorPtr& value)
+    {
+        m_host_tensors[name] = value;
     }
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
@@ -392,6 +398,12 @@ public:
     {
         set_uint64_t_vector(name, adapter.get());
     }
+    void on_attribute(const std::string& name, void* constant_data, size_t size) override
+    {
+        HostTensorPtr data = make_shared<HostTensor>(element::u8, Shape{size});
+        data->write(constant_data, size);
+        set_host_tensor(name, data);
+    }
 
 protected:
     NodeTypeInfo m_node_type_info;
@@ -411,6 +423,7 @@ protected:
     map<string, vector<float>> m_float_vectors;
     map<string, vector<double>> m_double_vectors;
     map<string, vector<std::string>> m_string_vectors;
+    map<string, HostTensorPtr> m_host_tensors;
 };
 
 class NodeBuilder : public AttributeVisitor
@@ -421,6 +434,7 @@ public:
     {
     }
 
+    // Does not validate, since inputs aren't set
     shared_ptr<Node> create()
     {
         shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
@@ -494,6 +508,11 @@ public:
     void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
     {
         adapter.set(m_values.get_double_vector(name));
+    }
+    void on_attribute(const std::string& name, void* constant_data, size_t size) override
+    {
+        HostTensorPtr data = m_values.get_host_tensor(name);
+        data->read(constant_data, size);
     }
 
 protected:
@@ -1376,4 +1395,128 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, mvn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::MVN>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto axes = AxisSet{0, 1};
+
+    const auto op = make_shared<opset3::MVN>(data, true, false, 0.1);
+    op->set_reduction_axes(axes);
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::MVN>(builder.create());
+
+    EXPECT_EQ(g_op->get_reduction_axes(), op->get_reduction_axes());
+    EXPECT_EQ(g_op->get_across_channels(), op->get_across_channels());
+    EXPECT_EQ(g_op->get_normalize_variance(), op->get_normalize_variance());
+    EXPECT_EQ(g_op->get_eps(), op->get_eps());
+}
+
+TEST(attributes, reorg_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ReorgYolo>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto op = make_shared<opset3::ReorgYolo>(data, Strides{2});
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ReorgYolo>(builder.create());
+
+    EXPECT_EQ(g_op->get_strides(), op->get_strides());
+}
+
+TEST(attributes, roi_pooling_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ROIPooling>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    const auto coords = make_shared<op::Parameter>(element::i32, Shape{2, 3});
+
+    const auto op = make_shared<opset3::ROIPooling>(data, coords, Shape{5, 5}, 0.123, "Bilinear");
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ROIPooling>(builder.create());
+
+    EXPECT_EQ(g_op->get_output_size(), op->get_output_size());
+    EXPECT_EQ(g_op->get_spatial_scale(), op->get_spatial_scale());
+    EXPECT_EQ(g_op->get_method(), op->get_method());
+}
+
+TEST(attributes, constant_op)
+{
+    vector<float> data{5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f};
+    auto k = make_shared<op::v0::Constant>(element::f32, Shape{2, 3}, data);
+    NodeBuilder builder(k);
+    auto g_k = as_type_ptr<op::v0::Constant>(builder.create());
+    g_k->validate_and_infer_types();
+    ASSERT_TRUE(g_k);
+    EXPECT_EQ(k->get_element_type(), g_k->get_element_type());
+    EXPECT_EQ(k->get_shape(), g_k->get_shape());
+    vector<float> g_data = g_k->get_vector<float>();
+    EXPECT_EQ(data, g_data);
+}
+
+TEST(attributes, bucketize_v3_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Bucketize>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto bucketize = make_shared<opset3::Bucketize>(data, buckets);
+    NodeBuilder builder(bucketize);
+
+    auto g_bucketize = as_type_ptr<opset3::Bucketize>(builder.create());
+
+    EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
+    EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
+}
+
+TEST(attributes, bucketize_v3_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Bucketize>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    element::Type output_type = element::i32;
+    bool with_right_bound = false;
+
+    auto bucketize = make_shared<opset3::Bucketize>(data, buckets, output_type, with_right_bound);
+    NodeBuilder builder(bucketize);
+
+    auto g_bucketize = as_type_ptr<opset3::Bucketize>(builder.create());
+
+    EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
+    EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
+}
+
+TEST(attributes, cum_sum_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    auto cs = make_shared<op::CumSum>(A, axis);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
+}
+
+TEST(attributes, cum_sum_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    bool exclusive = true;
+    bool reverse = true;
+    auto cs = make_shared<op::CumSum>(A, axis, exclusive, reverse);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
 }
