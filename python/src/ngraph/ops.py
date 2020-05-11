@@ -23,12 +23,12 @@ from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Functio
 from ngraph.impl.op import Abs, Acos, Asin, ArgMax, ArgMin, Atan, \
     BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Constant, Convert, \
     Cos, Cosh, DepthToSpace, Dequantize, Dot, \
-    Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
-    Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Power, \
-    Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
-    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
+    Floor, Gelu, Gemm, GetOutputElement, GRN, \
+    HardSigmoid, Log, \
+    MVN, Negative, Parameter, \
+    Quantize, QuantizedConvolution, QuantizedDot, RNNCell, ReplaceSlice, \
+    ScaleShift, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
+    Sqrt, Tan
 
 from typing import Callable, Iterable, List, Set, Union, Optional
 

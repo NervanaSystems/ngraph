@@ -27,9 +27,7 @@ from ngraph.impl.runtime import Backend, Executable
 from ngraph.impl.op import Parameter
 from ngraph.impl.op import Dot
 from ngraph.impl.op import Constant, Sum
-from ngraph.impl.op import Not
-from ngraph.impl.op import OneHot, Broadcast, Reshape, Convert
-from ngraph.impl.op import Select
+from ngraph.impl.op import Broadcast, Convert
 from ngraph.impl.op import MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
