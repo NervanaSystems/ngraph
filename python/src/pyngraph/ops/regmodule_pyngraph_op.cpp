@@ -22,13 +22,9 @@ namespace py = pybind11;
 
 void regmodule_pyngraph_op(py::module m_op)
 {
-    regclass_pyngraph_op_Abs(m_op);
-    regclass_pyngraph_op_Acos(m_op);
     regclass_pyngraph_op_AllReduce(m_op);
     regclass_pyngraph_op_ArgMax(m_op);
     regclass_pyngraph_op_ArgMin(m_op);
-    regclass_pyngraph_op_Asin(m_op);
-    regclass_pyngraph_op_Atan(m_op);
     regclass_pyngraph_op_AvgPool(m_op);
     regclass_pyngraph_op_AvgPoolBackprop(m_op);
     regclass_pyngraph_op_BatchNormInference(m_op);
@@ -36,32 +32,26 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_BatchNormTrainingBackprop(m_op);
     regclass_pyngraph_op_Broadcast(m_op);
     regclass_pyngraph_op_BroadcastDistributed(m_op);
-    regclass_pyngraph_op_Ceiling(m_op);
     regclass_pyngraph_op_Constant(m_op);
     regclass_pyngraph_op_Convert(m_op);
     regclass_pyngraph_op_Convolution(m_op);
     regclass_pyngraph_op_ConvolutionBackpropData(m_op);
     regclass_pyngraph_op_ConvolutionBackpropFilters(m_op);
-    regclass_pyngraph_op_Cos(m_op);
-    regclass_pyngraph_op_Cosh(m_op);
     regclass_pyngraph_op_DepthToSpace(m_op);
     regclass_pyngraph_op_Dequantize(m_op);
     regclass_pyngraph_op_Dot(m_op);
-    regclass_pyngraph_op_Floor(m_op);
     regclass_pyngraph_op_Gelu(m_op);
     regclass_pyngraph_op_Gemm(m_op);
     regclass_pyngraph_op_GetOutputElement(m_op);
     regclass_pyngraph_op_GRN(m_op);
     regclass_pyngraph_op_GroupConvolution(m_op);
     regclass_pyngraph_op_HardSigmoid(m_op);
-    regclass_pyngraph_op_Log(m_op);
     regclass_pyngraph_op_Max(m_op);
     regclass_pyngraph_op_Maximum(m_op);
     regclass_pyngraph_op_MaxPool(m_op);
     regclass_pyngraph_op_MaxPoolBackprop(m_op);
     regclass_pyngraph_op_Min(m_op);
     regclass_pyngraph_op_MVN(m_op);
-    regclass_pyngraph_op_Negative(m_op);
     regclass_pyngraph_op_Parameter(m_op);
     regclass_pyngraph_op_Passthrough(m_op);
     regclass_pyngraph_op_Product(m_op);
@@ -72,16 +62,9 @@ void regmodule_pyngraph_op(py::module m_op)
     regclass_pyngraph_op_RNNCell(m_op);
     regclass_pyngraph_op_ScaleShift(m_op);
     regclass_pyngraph_op_ShuffleChannels(m_op);
-    regclass_pyngraph_op_Sign(m_op);
-    regclass_pyngraph_op_Sin(m_op);
-    regclass_pyngraph_op_Sinh(m_op);
     regclass_pyngraph_op_Slice(m_op);
     regclass_pyngraph_op_Softmax(m_op);
     regclass_pyngraph_op_SpaceToDepth(m_op);
-    regclass_pyngraph_op_Sqrt(m_op);
-    regclass_pyngraph_op_Sum(m_op);
-    regclass_pyngraph_op_Tan(m_op);
-    regclass_pyngraph_op_TopK(m_op);
     regclass_pyngraph_op_Result(m_op);
     regclass_pyngraph_op_Unsqueeze(m_op);
 }

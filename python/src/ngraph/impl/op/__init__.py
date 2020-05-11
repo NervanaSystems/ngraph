@@ -35,20 +35,15 @@ if sys.platform != 'win32':
         flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
     sys.setdlopenflags(flags)
 
-from _pyngraph.op import Abs
-from _pyngraph.op import Acos
 from _pyngraph.op import AllReduce
 from _pyngraph.op import ArgMax
 from _pyngraph.op import ArgMin
-from _pyngraph.op import Asin
-from _pyngraph.op import Atan
 from _pyngraph.op import AvgPool
 from _pyngraph.op import AvgPoolBackprop
 from _pyngraph.op import BatchNormTraining
 from _pyngraph.op import BatchNormInference
 from _pyngraph.op import BatchNormTrainingBackprop
 from _pyngraph.op import Broadcast
-from _pyngraph.op import Ceiling
 from _pyngraph.op import Constant
 
 """ Retrieve Constant inner data.
@@ -63,26 +58,21 @@ from _pyngraph.op import Convert
 from _pyngraph.op import Convolution
 from _pyngraph.op import ConvolutionBackpropData
 from _pyngraph.op import ConvolutionBackpropFilters
-from _pyngraph.op import Cos
-from _pyngraph.op import Cosh
 from _pyngraph.op import DepthToSpace
 from _pyngraph.op import Dequantize
 from _pyngraph.op import Dot
-from _pyngraph.op import Floor
 from _pyngraph.op import Gelu
 from _pyngraph.op import Gemm
 from _pyngraph.op import GetOutputElement
 from _pyngraph.op import GRN
 from _pyngraph.op import GroupConvolution
 from _pyngraph.op import HardSigmoid
-from _pyngraph.op import Log
 from _pyngraph.op import Max
 from _pyngraph.op import Maximum
 from _pyngraph.op import MaxPool
 from _pyngraph.op import MaxPoolBackprop
 from _pyngraph.op import Min
 from _pyngraph.op import MVN
-from _pyngraph.op import Negative
 from _pyngraph.op import Op
 from _pyngraph.op import Parameter
 from _pyngraph.op import Product
@@ -93,14 +83,7 @@ from _pyngraph.op import ReplaceSlice
 from _pyngraph.op import RNNCell
 from _pyngraph.op import ScaleShift
 from _pyngraph.op import ShuffleChannels
-from _pyngraph.op import Sign
-from _pyngraph.op import Sin
-from _pyngraph.op import Sinh
 from _pyngraph.op import Slice
 from _pyngraph.op import Softmax
 from _pyngraph.op import SpaceToDepth
-from _pyngraph.op import Sqrt
-from _pyngraph.op import Sum
-from _pyngraph.op import Tan
-from _pyngraph.op import TopK
 from _pyngraph.op import Unsqueeze

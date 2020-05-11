@@ -26,7 +26,7 @@ from ngraph.impl import Type, Function
 from ngraph.impl.runtime import Backend, Executable
 from ngraph.impl.op import Parameter
 from ngraph.impl.op import Dot
-from ngraph.impl.op import Constant, Sum
+from ngraph.impl.op import Constant
 from ngraph.impl.op import Broadcast, Convert
 from ngraph.impl.op import MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
@@ -484,64 +484,13 @@ def test_reverse():
     unary_op_exec(op_str, input_list)
 
 
-def test_not():
-    element_type = Type.boolean
-    shape = Shape([2])
-    A = Parameter(element_type, shape)
-    parameter_list = [A]
-    function = Function([Not(A)], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, shape)
-    result = backend.create_tensor(Type.boolean, shape)
-
-    a.write(util.numpy_to_c(np.array([True, False], dtype=np.bool)), 2)
-
-    result_arr = np.array([False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 2)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 2)
-
-    a_arr = np.array([True, False], dtype=np.bool)
-    result_arr_ref = np.logical_not(a_arr)
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-def test_sum():
-
-    element_type = Type.f32
-    shape = Shape([1, 4])
-    A = Parameter(element_type, shape)
-    parameter_list = [A]
-    function = Function([Sum(A, AxisSet({1}))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, shape)
-    result = backend.create_tensor(element_type, Shape([1]))
-
-    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 16)
-
-    result_arr = np.array([0], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 4)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 4)
-
-    a_arr = np.array([1, 2, 3, 4], dtype=np.float32)
-    result_arr_ref = np.sum(a_arr)
-
-    assert np.allclose(result_arr[0], result_arr_ref)
-
-
 def test_reshape():
 
     element_type = Type.f32
     shape = Shape([2, 3])
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function([Reshape(A, AxisVector([0, 1]), Shape([3, 2]))], parameter_list, 'test')
+    function = Function([ng.reshape(A, Shape([3, 2]), special_zero=False)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -658,7 +607,7 @@ def test_onehot():
     element_type = Type.i32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
-    function = Function([OneHot(A, Shape([3, 3]), 0)], parameter_list, 'test')
+    function = Function([ng.one_hot(A, Shape([3, 3]), 0, 1, 0)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
@@ -739,7 +688,7 @@ def test_select():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
 
-    function = Function([Select(A, B, C)], parameter_list, 'test')
+    function = Function([ng.select(A, B, C)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(Type.boolean, Shape([1, 2]))

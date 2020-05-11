@@ -15,20 +15,18 @@
 # ******************************************************************************
 
 """Factory functions for all ngraph ops."""
-from typing import Callable, Iterable, List, Optional, Set, Union
+from typing import List, Optional, Set, Union
 
 import numpy as np
 
 from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (GRN, MVN, Abs, Acos, ArgMax, ArgMin, Asin, Atan,
-                            BatchNormInference, BatchNormTraining, Broadcast,
-                            Ceiling, Constant, Cos, Cosh, DepthToSpace,
-                            Dequantize, Dot, Floor, Gelu, Gemm,
-                            GetOutputElement, HardSigmoid, Log, Negative,
-                            Parameter, Quantize, QuantizedConvolution,
-                            QuantizedDot, ReplaceSlice, RNNCell, ScaleShift,
-                            ShuffleChannels, Sign, Sin, Sinh, Slice,
-                            SpaceToDepth, Sqrt, Tan)
+from ngraph.impl.op import (GRN, MVN, ArgMax, ArgMin, BatchNormInference,
+                            BatchNormTraining, Broadcast, Constant,
+                            DepthToSpace, Dequantize, Dot, Gelu, Gemm,
+                            GetOutputElement, HardSigmoid, Parameter, Quantize,
+                            QuantizedConvolution, QuantizedDot, ReplaceSlice,
+                            RNNCell, ScaleShift, ShuffleChannels, Slice,
+                            SpaceToDepth)
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
@@ -705,7 +703,7 @@ def absolute(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with Abs operation applied on it.
     """
-    return Abs(node)
+    return _get_node_factory().create('Abs', [node])
 
 
 @unary_op
@@ -716,7 +714,7 @@ def acos(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with arccos operation applied on it.
     """
-    return Acos(node)
+    return _get_node_factory().create('Acos', [node])
 
 
 @unary_op
@@ -727,7 +725,7 @@ def asin(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with arcsin operation applied on it.
     """
-    return Asin(node)
+    return _get_node_factory().create('Asin', [node])
 
 
 @unary_op
@@ -738,7 +736,7 @@ def atan(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with arctan operation applied on it.
     """
-    return Atan(node)
+    return _get_node_factory().create('Atan', [node])
 
 
 @unary_op
@@ -749,7 +747,7 @@ def cos(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with cos operation applied on it.
     """
-    return Cos(node)
+    return _get_node_factory().create('Cos', [node])
 
 
 @unary_op
@@ -760,7 +758,7 @@ def cosh(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with cosh operation applied on it.
     """
-    return Cosh(node)
+    return _get_node_factory().create('Cosh', [node])
 
 
 @unary_op
@@ -771,7 +769,7 @@ def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: The new node with sqrt operation applied element-wise.
     """
-    return Sqrt(node)
+    return _get_node_factory().create('Sqrt', [node])
 
 
 @unary_op
@@ -804,13 +802,13 @@ def log(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional new name for output node.
     :return: The new node performing log operation element-wise.
     """
-    return Log(node)
+    return _get_node_factory().create('Log', [node])
 
 
 @unary_op
 def negative(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies f(x) = -x to the input node elementwise."""
-    return Negative(node)
+    return _get_node_factory().create('Negative', [node])
 
 
 @unary_op
@@ -821,7 +819,7 @@ def floor(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional name for new output node.
     :return: The node performing element-wise floor operation.
     """
-    return Floor(node)
+    return _get_node_factory().create('Floor', [node])
 
 
 @unary_op
@@ -832,12 +830,12 @@ def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional name for output node.
     :return: The node performing element-wise ceiling.
     """
-    return Ceiling(node)
+    return _get_node_factory().create('Ceiling', [node])
 
 
-@unary_op
+@nameable_op
 def reshape(node, output_shape, special_zero, name=None):
-    # type: (Node,Node, bool, str) -> Node
+    # type: (Node, Node, bool, str) -> Node
     """Return reshaped node according to provided parameters.
 
     :param node: The tensor we want to reshape.
@@ -851,7 +849,7 @@ def reshape(node, output_shape, special_zero, name=None):
                          Range of values: False or True
     """
     return _get_node_factory().create('Reshape',
-                                      [node, output_shape],
+                                      as_nodes(node, output_shape),
                                       {'special_zero': special_zero})
 
 
@@ -890,7 +888,7 @@ def sign(node, name=None):  # type: (NodeInput, str) -> Node
     :return: The node with mapped elements of the input tensor to -1 (if it is negative),
              0 (if it is zero), or 1 (if it is positive).
     """
-    return Sign(node)
+    return _get_node_factory().create('Sign', [node])
 
 
 @unary_op
@@ -901,7 +899,7 @@ def sin(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with sin operation applied on it.
     """
-    return Sin(node)
+    return _get_node_factory().create('Sin', [node])
 
 
 @unary_op
@@ -912,7 +910,7 @@ def sinh(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with sin operation applied on it.
     """
-    return Sinh(node)
+    return _get_node_factory().create('Sinh', [node])
 
 
 @unary_op
@@ -923,7 +921,7 @@ def tan(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with tan operation applied on it.
     """
-    return Tan(node)
+    return _get_node_factory().create('Tan', [node])
 
 
 # Binary ops
@@ -2090,8 +2088,8 @@ def one_hot(indices, depth, on_value, off_value, axis, name=None):
     :param name: The optional name for new output node.
     :return: New node performing one-hot operation.
     """
-    inputs = [indices, as_node(depth), as_node(on_value), as_node(off_value)]
-    return _get_node_factory().create('OneHot', inputs, {'axis': axis})
+    return _get_node_factory().create('OneHot', as_nodes(indices, depth, on_value, off_value),
+                                      {'axis': axis})
 
 
 @nameable_op
