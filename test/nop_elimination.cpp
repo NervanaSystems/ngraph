@@ -108,6 +108,7 @@ TEST(nop_elimination, convert_type_ReduceMin)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::ConvertElimination>();
+    pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(func);
 
     ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
@@ -116,6 +117,7 @@ TEST(nop_elimination, convert_type_ReduceMin)
 
     pass::Manager pass_manager_2;
     pass_manager_2.register_pass<pass::Validate>();
+    pass_manager.register_pass<pass::ConvertElimination>();
     pass_manager_2.register_pass<pass::NopElimination>();
     pass_manager_2.run_passes(func);
 

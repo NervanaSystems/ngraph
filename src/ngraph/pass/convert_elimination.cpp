@@ -66,11 +66,13 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
         }
     }
     // case 2
-    static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
-    bool is_out_type_agnostic = type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1;
-    if (convert->get_users().size() == 1 && is_out_type_agnostic)
+    if (convert->get_users().size() == 1)
     {
-        return replace_output_update_name(convert->output(0), input_op);
+        static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
+        if (type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1)
+        {
+            return replace_output_update_name(convert->output(0), input_op);
+        }
     }
     return false;
 }
