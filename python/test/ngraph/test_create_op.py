@@ -268,3 +268,15 @@ def test_region_yolo():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == [1, (80 + 4 + 1) * 3, 13, 13]
     assert node.get_output_element_type(0) == Type.f32
+
+
+def test_reorg_yolo():
+    data = ng.parameter([2, 24, 34, 62], name='input', dtype=np.int32)
+    stride = [2]
+
+    node = ng.reorg_yolo(data, stride)
+
+    assert node.get_type_name() == 'ReorgYolo'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [2, 96, 17, 31]
+    assert node.get_output_element_type(0) == Type.i32

@@ -57,6 +57,6 @@ shared_ptr<Node> op::ReorgYolo::clone_with_new_inputs(const OutputVector& new_ar
 
 bool op::ReorgYolo::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("strides", m_strides);
+    visitor.on_attribute("stride", m_strides);
     return true;
 }

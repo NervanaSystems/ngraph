@@ -2631,9 +2631,8 @@ def region_yolo(input, # type: Node
                 axis, # type: int
                 end_axis, # type: int
                 anchors = [] # type: List[float]
-                ):
-    # type: (Node, NodeInput, NodeInput) -> Node
-    """Return a node which produces the Range operation.
+                ): # type: Node
+    """Return a node which produces the RegionYolo operation.
 
 
     :param input:        Input data
@@ -2657,3 +2656,15 @@ def region_yolo(input, # type: Node
                                       "end_axis": end_axis,
                                       "anchors": anchors
                                     })
+
+
+@nameable_op
+def reorg_yolo(input, strides): # type: (Node, NodeInput, NodeInput) -> Node
+    """Return a node which produces the ReorgYolo operation.
+
+
+    :param input:  Input data
+    :param step:   The step value for the generated range
+    :return: ReorgYolo node
+    """
+    return _get_node_factory().create('ReorgYolo', [input], {"stride": strides})
