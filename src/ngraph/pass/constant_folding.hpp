@@ -86,7 +86,6 @@ public:
         construct_constant_reverse();
         construct_constant_arithmetic_reduction();
         construct_constant_logical_reduction();
-        construct_constant_concat();
         construct_constant_gather_with_subgraph();
         construct_constant_scatter_elements_update();
         construct_constant_slice();
@@ -112,7 +111,6 @@ private:
     void construct_constant_reverse();
     void construct_constant_arithmetic_reduction();
     void construct_constant_logical_reduction();
-    void construct_constant_concat();
     void construct_constant_gather_with_subgraph();
     void construct_constant_scatter_elements_update();
     void construct_constant_slice();

@@ -29,12 +29,13 @@ from test.ngraph.util import get_runtime, run_op_node
     (ng.subtract, np.subtract),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
+    (ng.mod, np.mod),
     (ng.equal, np.equal),
     (ng.not_equal, np.not_equal),
     (ng.greater, np.greater),
-    (ng.greater_eq, np.greater_equal),
+    (ng.greater_equal, np.greater_equal),
     (ng.less, np.less),
-    (ng.less_eq, np.less_equal),
+    (ng.less_equal, np.less_equal),
 ])
 def test_binary_op(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -61,12 +62,13 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.subtract, np.subtract),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
+    (ng.mod, np.mod),
     (ng.equal, np.equal),
     (ng.not_equal, np.not_equal),
     (ng.greater, np.greater),
-    (ng.greater_eq, np.greater_equal),
+    (ng.greater_equal, np.greater_equal),
     (ng.less, np.less),
-    (ng.less_eq, np.less_equal),
+    (ng.less_equal, np.less_equal),
 ])
 def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -88,6 +90,7 @@ def test_binary_op_with_scalar(ng_api_helper, numpy_function):
 @pytest.mark.parametrize('ng_api_helper,numpy_function', [
     (ng.logical_and, np.logical_and),
     (ng.logical_or, np.logical_or),
+    (ng.logical_xor, np.logical_xor),
 ])
 def test_binary_logical_op(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -99,7 +102,7 @@ def test_binary_logical_op(ng_api_helper, numpy_function):
     model = ng_api_helper(parameter_a, parameter_b)
     computation = runtime.computation(model, parameter_a, parameter_b)
 
-    value_a = np.array([[True, False], [False, False]], dtype=np.bool)
+    value_a = np.array([[True, False], [False, True]], dtype=np.bool)
     value_b = np.array([[False, True], [False, True]], dtype=np.bool)
 
     result = computation(value_a, value_b)
@@ -110,11 +113,12 @@ def test_binary_logical_op(ng_api_helper, numpy_function):
 @pytest.mark.parametrize('ng_api_helper,numpy_function', [
     (ng.logical_and, np.logical_and),
     (ng.logical_or, np.logical_or),
+    (ng.logical_xor, np.logical_xor),
 ])
 def test_binary_logical_op_with_scalar(ng_api_helper, numpy_function):
     runtime = get_runtime()
 
-    value_a = np.array([[True, False], [False, False]], dtype=np.bool)
+    value_a = np.array([[True, False], [False, True]], dtype=np.bool)
     value_b = np.array([[False, True], [False, True]], dtype=np.bool)
 
     shape = [2, 2]

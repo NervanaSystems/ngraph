@@ -16,38 +16,23 @@
 
 #pragma once
 
-#include "core/node.hpp"
-#include "default_opset.hpp"
-#include "ngraph/node.hpp"
-#include "utils/variadic.hpp"
+#include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
-    namespace onnx_import
+    namespace pass
     {
-        namespace op
+        class NGRAPH_API Opset1Downgrade : public NodePass
         {
-            namespace set_1
-            {
-                inline NodeVector sum(const Node& node)
-                {
-                    return variadic::make_ng_variadic_op<default_opset::Add>(
-                        node, ngraph::op::AutoBroadcastSpec::NONE);
-                }
-
-            } // namespace set_1
-
-            namespace set_8
-            {
-                inline NodeVector sum(const Node& node)
-                {
-                    return variadic::make_ng_variadic_op<default_opset::Add>(node);
-                }
-
-            } // namespace set_8
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        public:
+            ///
+            /// \brief    Constructor for the Opv1 downgrade transformation pass.
+            ///
+            /// \details  This transformation pass iterates over all nodes in a graph
+            /// and updates version 3 ops to their version 1 equivalents.
+            /// All ops in the final graph have op version 1.
+            Opset1Downgrade() = default;
+            bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
+        };
+    }
+}
