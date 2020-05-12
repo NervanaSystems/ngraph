@@ -54,16 +54,6 @@ op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table
 
 void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
 {
-    enum
-    {
-        EMB_TABLE,
-        INDICES,
-        SEGMENT_IDS,
-        NUM_SEGMENTS,
-        PER_SAMPLE_WEIGHTS,
-        DEFAULT_INDEX
-    };
-
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(SEGMENT_IDS) == element::i64 ||
                               get_input_element_type(SEGMENT_IDS) == element::i32,

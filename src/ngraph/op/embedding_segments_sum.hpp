@@ -77,6 +77,14 @@ namespace ngraph
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
+
+            private:
+                static constexpr int EMB_TABLE = 0;
+                static constexpr int INDICES = 1;
+                static constexpr int SEGMENT_IDS = 2;
+                static constexpr int NUM_SEGMENTS = 3;
+                static constexpr int PER_SAMPLE_WEIGHTS = 4;
+                static constexpr int DEFAULT_INDEX = 5;
             };
         }
         using v3::EmbeddingSegmentsSum;
