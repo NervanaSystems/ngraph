@@ -72,14 +72,14 @@ NGRAPH_TEST(${BACKEND_NAME}, sqrt_negative_inputs)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{-1, -4, -81, -100});
+    copy_data(a, vector<float>{-1, 4, -81, 100});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     auto result_val = read_vector<float>(result);
     EXPECT_TRUE(isnan(result_val[0]));
-    EXPECT_TRUE(isnan(result_val[1]));
+    EXPECT_FLOAT_EQ(result_val[1], std::sqrt(4));
     EXPECT_TRUE(isnan(result_val[2]));
-    EXPECT_TRUE(isnan(result_val[3]));
+    EXPECT_FLOAT_EQ(result_val[3], std::sqrt(100));
 }
