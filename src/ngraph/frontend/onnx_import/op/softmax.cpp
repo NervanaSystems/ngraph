@@ -44,12 +44,7 @@ namespace ngraph
                 const auto data_minus_max =
                     std::make_shared<default_opset::Subtract>(coerced_data, reshaped_max);
 
-                const auto exp = std::make_shared<default_opset::Exp>(data_minus_max);
-                const auto sum_exp = std::make_shared<default_opset::ReduceSum>(exp, axis_1);
-                const auto reshaped_sum_exp =
-                    std::make_shared<default_opset::Reshape>(sum_exp, reshape_pattern, true);
-
-                const auto result = std::make_shared<default_opset::Divide>(exp, reshaped_sum_exp);
+                const auto result = std::make_shared<default_opset::Softmax>(data_minus_max, 1);
                 if (data->get_output_partial_shape(0).is_static())
                 {
                     return ngraph::builder::opset1::reshape(result, data->get_output_shape(0));

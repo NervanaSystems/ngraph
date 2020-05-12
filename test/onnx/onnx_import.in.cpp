@@ -818,32 +818,18 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_axis_2)
 
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_invalid_axis_1D)
 {
-    try
-    {
-        onnx_import::import_onnx_model(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_invalid_axis_1D.prototxt"));
-        FAIL() << "Softmax model with invalid axis was successfully imported while it should have "
-                  "thrown.";
-    }
-    catch (ngraph::ngraph_error const& err)
-    {
-        SUCCEED();
-    }
+    ASSERT_THROW(onnx_import::import_onnx_model(
+                     file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_invalid_axis_1D.prototxt")),
+                 ngraph::ngraph_error)
+        << "Softmax model with invalid axis was successfully imported while it should have thrown.";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_softmax_invalid_axis_3D)
 {
-    try
-    {
-        onnx_import::import_onnx_model(
-            file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_invalid_axis_3D.prototxt"));
-        FAIL() << "Softmax model with invalid axis was successfully imported while it should have "
-                  "thrown.";
-    }
-    catch (ngraph::ngraph_error const& err)
-    {
-        SUCCEED();
-    }
+    ASSERT_THROW(onnx_import::import_onnx_model(
+                     file_util::path_join(SERIALIZED_ZOO, "onnx/softmax_invalid_axis_3D.prototxt")),
+                 ngraph::ngraph_error)
+        << "Softmax model with invalid axis was successfully imported while it should have thrown.";
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_sub)
