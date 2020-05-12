@@ -20,7 +20,7 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "convert_elimination.hpp"
+#include "ngraph/pass/convert_elimination.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/convert.hpp"
