@@ -113,6 +113,7 @@ from ngraph.ops import reduce_mean
 from ngraph.ops import reduce_min
 from ngraph.ops import reduce_prod
 from ngraph.ops import reduce_sum
+from ngraph.ops import region_yolo
 from ngraph.ops import relu
 from ngraph.ops import replace_slice
 from ngraph.ops import reshape

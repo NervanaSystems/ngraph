@@ -249,3 +249,22 @@ def test_range():
 
     result = test.ngraph.util.run_op_node([start, stop, step], ng.ops.range)
     assert np.allclose(result, [5, 10, 15, 20, 25, 30])
+
+
+def test_region_yolo():
+    data = ng.parameter([1, 125, 13, 13], name='input', dtype=np.float32)
+    num_coords = 4
+    num_classes = 80
+    num_regions = 1
+    do_softmax = False
+    mask = [6, 7, 8]
+    axis = 0
+    end_axis = 3
+
+    node = ng.region_yolo(data, num_coords, num_classes, num_regions,
+                          do_softmax, mask, axis, end_axis)
+
+    assert node.get_type_name() == 'RegionYolo'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [1, (80 + 4 + 1) * 3, 13, 13]
+    assert node.get_output_element_type(0) == Type.f32

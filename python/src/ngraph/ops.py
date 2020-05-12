@@ -2619,3 +2619,41 @@ def range(start, stop, step):
     :return: Range node
     """
     return _get_node_factory().create('Range', [start, as_node(stop), as_node(step)])
+
+
+@nameable_op
+def region_yolo(input, # type: Node
+                num_coords, # type: int
+                num_classes, # type: int
+                num_regions, # type: int
+                do_softmax,  # type: bool
+                mask, # type: List[int]
+                axis, # type: int
+                end_axis, # type: int
+                anchors = [] # type: List[float]
+                ):
+    # type: (Node, NodeInput, NodeInput) -> Node
+    """Return a node which produces the Range operation.
+
+
+    :param input:        Input data
+    :param num_coords:   Number of coordinates for each region
+    :param num_classes:  Number of classes for each region
+    :param num_regions:  Number of regions
+    :param do_softmax:   Compute softmax
+    :param mask:         Mask
+    :param axis:         Axis to begin softmax on
+    :param end_axis:     Axis to end softmax on
+    :param anchors:      A flattened list of pairs `[width, height]` that describes prior box sizes
+    :return: RegionYolo node
+    """
+    return _get_node_factory().create('RegionYolo', [input], {
+                                      "coords": num_coords,
+                                      "classes": num_classes,
+                                      "num": num_regions,
+                                      "do_softmax": do_softmax,
+                                      "mask": mask,
+                                      "axis": axis,
+                                      "end_axis": end_axis,
+                                      "anchors": anchors
+                                    })
