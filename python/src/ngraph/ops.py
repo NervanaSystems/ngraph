@@ -2600,8 +2600,22 @@ def bucketize(data, buckets, output_type='i64', with_right_bound=True):
     :param buckets:           1-D of sorted unique boundaries for buckets
     :param output_type:       Output tensor type, "i64" or "i32", defaults to i64
     :param with_right_bound:  indicates whether bucket includes the right or left
-                             edge of interval. default true = includes right edge
+                              edge of interval. default true = includes right edge
     :return: Bucketize node
     """
     return _get_node_factory().create('Bucketize', [data, as_node(buckets)],
         {'output_type': output_type, 'with_right_bound': with_right_bound})
+
+
+@nameable_op
+def range(start, stop, step):
+    # type: (Node, NodeInput, NodeInput) -> Node
+    """Return a node which produces the Range operation.
+
+
+    :param start:  The start value of the generated range
+    :param stop:   The stop value of the generated range
+    :param step:   The step value for the generated range
+    :return: Range node
+    """
+    return _get_node_factory().create('Range', [start, as_node(stop), as_node(step)])

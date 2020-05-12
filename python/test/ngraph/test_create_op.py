@@ -240,3 +240,12 @@ def test_bucketize():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == [4, 3, 2, 1]
     assert node.get_output_element_type(0) == Type.i32
+
+
+def test_range():
+    start = 5
+    stop = 35
+    step = 5
+
+    result = test.ngraph.util.run_op_node([start, stop, step], ng.ops.range)
+    assert np.allclose(result, [5, 10, 15, 20, 25, 30])
