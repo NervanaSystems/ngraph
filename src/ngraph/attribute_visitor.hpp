@@ -40,6 +40,7 @@ namespace ngraph
         // Must implement these methods
         virtual void on_attribute(const std::string& name, std::string& value) = 0;
         virtual void on_attribute(const std::string& name, bool& value) = 0;
+        virtual void on_attribute(const std::string& name, void* data, size_t size) {}
         virtual void on_adapter(const std::string& name, ValueAccessor<void>& adapter) = 0;
         // The remaining adapter methods fall back on the void adapter if not implemented
         virtual void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter)
