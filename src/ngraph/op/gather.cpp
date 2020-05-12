@@ -309,7 +309,7 @@ bool op::v0::Gather::evaluate(const HostTensorVector& outputs, const HostTensorV
 
 bool op::v1::Gather::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    auto axis = 0;
+    int64_t axis = 0;
     switch (inputs[2]->get_element_type())
     {
     case element::Type_t::i8: axis = inputs[2]->get_data_ptr<element::Type_t::i8>()[0]; break;
