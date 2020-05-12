@@ -509,7 +509,6 @@ set (SRC
     pass/common_function_collection.hpp
     pass/constant_folding_arithmetic_reduction.cpp
     pass/constant_folding_broadcast.cpp
-    pass/constant_folding_concat.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
@@ -567,6 +566,8 @@ set (SRC
     pass/pass.hpp
     pass/opset0_downgrade.cpp
     pass/opset0_downgrade.hpp
+    pass/opset1_downgrade.cpp
+    pass/opset1_downgrade.hpp
     pass/opset1_upgrade.cpp
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp
