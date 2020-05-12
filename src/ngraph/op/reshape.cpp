@@ -79,6 +79,18 @@ namespace
         }
         return rc;
     }
+
+    template <element::Type_t ET>
+    void compute_output_shape(const HostTensorPtr& pattern, Shape& output_shape)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        T* pattern_ptr = pattern->get_data_ptr<ET>();
+        size_t output_rank = pattern->get_shape()[0];
+        for (int i = 0; i < output_rank; i++)
+        {
+            output_shape.push_back(pattern_ptr[i]);
+        }
+    }
 }
 
 constexpr NodeTypeInfo op::Reshape::type_info;
@@ -368,45 +380,33 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
     size_t output_rank = inputs[1]->get_shape()[0];
     Shape out_shape_val;
 
-#define COMPUTE_OUPUT_SHAPE(T)                                                                     \
-    T* pattern_ptr = inputs[1]->get_data_ptr<T>();                                                 \
-    for (int i = 0; i < output_rank; i++)                                                          \
-    {                                                                                              \
-        out_shape_val.push_back(pattern_ptr[i]);                                                   \
-    }
-
-    // read the pattern tensor to set the shape of the output.
-    if (inputs[1]->get_element_type() == element::i8)
+    switch (inputs[1]->get_element_type())
     {
-        COMPUTE_OUPUT_SHAPE(int8_t);
-    }
-    else if (inputs[1]->get_element_type() == element::i16)
-    {
-        COMPUTE_OUPUT_SHAPE(int16_t);
-    }
-    else if (inputs[1]->get_element_type() == element::i32)
-    {
-        COMPUTE_OUPUT_SHAPE(int32_t);
-    }
-    else if (inputs[1]->get_element_type() == element::i64)
-    {
-        COMPUTE_OUPUT_SHAPE(int64_t);
-    }
-    else if (inputs[1]->get_element_type() == element::u8)
-    {
-        COMPUTE_OUPUT_SHAPE(uint8_t);
-    }
-    else if (inputs[1]->get_element_type() == element::u16)
-    {
-        COMPUTE_OUPUT_SHAPE(uint16_t);
-    }
-    else if (inputs[1]->get_element_type() == element::u32)
-    {
-        COMPUTE_OUPUT_SHAPE(uint32_t);
-    }
-    else if (inputs[1]->get_element_type() == element::u64)
-    {
-        COMPUTE_OUPUT_SHAPE(uint64_t);
+    case element::Type_t::i8:
+        compute_output_shape<element::Type_t::i8>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::i16:
+        compute_output_shape<element::Type_t::i16>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::i32:
+        compute_output_shape<element::Type_t::i32>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::i64:
+        compute_output_shape<element::Type_t::i64>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::u8:
+        compute_output_shape<element::Type_t::u8>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::u16:
+        compute_output_shape<element::Type_t::u16>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::u32:
+        compute_output_shape<element::Type_t::u32>(inputs[1], out_shape_val);
+        break;
+    case element::Type_t::u64:
+        compute_output_shape<element::Type_t::u64>(inputs[1], out_shape_val);
+        break;
+    default: throw ngraph_error("pattern element type is not integral data type");
     }
 
     NODE_VALIDATION_CHECK(
