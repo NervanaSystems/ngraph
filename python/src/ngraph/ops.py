@@ -1589,6 +1589,7 @@ def binary_convolution(data,                           # type: Node
                                        'pad_value': pad_value,
                                        'auto_pad': auto_pad})
 
+
 # convpool ops
 @nameable_op
 def convolution(data,                           # type: Node
