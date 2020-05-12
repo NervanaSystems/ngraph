@@ -73,7 +73,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sqrt_negative_inputs)
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
     copy_data(a, vector<float>{-1, -4, -81, -100});
-    auto result = backend->create_tensor (element::f32, shape);
+    auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
