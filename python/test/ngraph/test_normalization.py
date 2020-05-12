@@ -100,16 +100,3 @@ def test_batch_norm_inference():
     result = test.ngraph.util.run_op_node([data, gamma, beta, mean, variance],
                                           ng.ops.batch_norm_inference, epsilon)
     assert np.allclose(result, excepted)
-
-
-def test_batch_norm_training():
-    data = [[1.0, 2.0, 3.0], [-1.0, -2.0, -3.0]]
-    gamma = [2.0, 3.0, 4.0]
-    beta = [0.0, 0.0, 0.0]
-    excepted = [[1.99999001, 2.99999625, 3.99999778],
-                [-1.99999001, -2.99999625, -3.99999778]]
-    epsilon = 9.99e-06
-
-    result = test.ngraph.util.run_op_node([data, gamma, beta],
-                                          ng.ops.batch_norm_training, epsilon)
-    assert np.allclose(result, excepted)

@@ -2167,28 +2167,6 @@ def batch_norm_inference(data,            # type: Node
 
 
 @nameable_op
-def batch_norm_training(data,            # type: Node
-                        gamma,           # type: NodeInput
-                        beta,            # type: NodeInput
-                        epsilon,         # type: float
-                        name=None,       # type: Optional[str]
-                        ):
-    # type: (...) -> Node
-    """Perform layer normalizes a input tensor by appling a scale and a offset.
-
-    :param data: The input tensor with data for normalization.
-    :param gamma: The scalar scaling for normalized value.
-    :param beta: The bias added to the scaled normalized value.
-    :param epsilon: The  number to be added to the variance to avoid division
-                    by zero when normalizing a value.
-    :param name: The optional name of the output node.
-    :return: The new node which performs BatchNormTraining.
-    """
-    inputs = [as_node(gamma), as_node(beta), data]
-    return _get_node_factory('opset0').create('BatchNormTraining', inputs, {'epsilon': epsilon})
-
-
-@nameable_op
 def normalize_l2(data, axes, eps, eps_mode, name=None):
     # type: (NodeInput, NodeInput, float, str, Optional[str]) -> Node
     """Construct an NormalizeL2 operation.
