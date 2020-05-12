@@ -31,10 +31,10 @@ using namespace ngraph;
 TEST(op_eval, strided_slice)
 {
     auto A_shape = Shape{3, 2, 3};
-    auto A = make_shared<op::Parameter>(element::i32, A_shape);
-    auto begin = make_shared<op::Parameter>(element::i32, Shape{3});
-    auto end = make_shared<op::Parameter>(element::i32, Shape{3});
-    auto strides = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto A = make_shared<op::Parameter>(element::i64, A_shape);
+    auto begin = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto end = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto strides = make_shared<op::Parameter>(element::i64, Shape{3});
     auto r = make_shared<op::v1::StridedSlice>(A,
                                                begin,
                                                end,
@@ -60,6 +60,6 @@ TEST(op_eval, strided_slice)
                              make_host_tensor<element::Type_t::i64>(Shape{3}, begin_vec),
                              make_host_tensor<element::Type_t::i64>(Shape{3}, end_vec),
                              make_host_tensor<element::Type_t::i64>(Shape{3}, strides_vec)}));
-    // EXPECT_EQ(result->get_element_type(), element::i64);
-    // EXPECT_EQ(read_vector<int64_t>(result), expected);
+    EXPECT_EQ(result->get_element_type(), element::i64);
+    EXPECT_EQ(read_vector<int64_t>(result), expected);
 }

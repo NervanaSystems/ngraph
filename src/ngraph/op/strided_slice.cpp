@@ -239,8 +239,10 @@ namespace
     inline bool evaluate(const HostTensorPtr& in, const SlicePlan& sp, const HostTensorPtr& out)
 
     {
+        auto in_shape = in->get_shape();
+        out->set_shape(sp.reshape_out_shape);
         runtime::reference::strided_slice(
-            in->get_data_ptr<ET>(), out->get_data_ptr<ET>(), in->get_shape(), sp, out->get_shape());
+            in->get_data_ptr<ET>(), out->get_data_ptr<ET>(), in_shape, sp);
         return true;
     }
 
