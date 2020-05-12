@@ -296,6 +296,8 @@ namespace
             break;
             TYPE_CASE(f64)(arg0, arg1, out, axis);
             break;
+            TYPE_CASE(boolean)(arg0, arg1, out, axis);
+            break;
         default: rc = false; break;
         }
         return rc;
