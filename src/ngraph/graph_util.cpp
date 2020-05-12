@@ -912,3 +912,11 @@ bool ngraph::replace_output_update_name(Output<Node> output, const Output<Node>&
     }
     return false;
 }
+
+void ngraph::replace_node_update_name(std::shared_ptr<Node> target,
+                                      std::shared_ptr<Node> replacement)
+{
+    replace_node(target, replacement);
+    replacement->set_friendly_name(target->get_friendly_name());
+    copy_runtime_info(target, replacement);
+}

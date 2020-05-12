@@ -125,10 +125,11 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
         auto shape = node->get_output_shape(0);
         std::vector<int64_t> vi;
         vi.assign(shape.begin(), shape.end());
-        auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        auto pat = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
         auto new_reshape =
             make_shared<opset3::Reshape>(input.get_node()->input_value(0), pat, false);
-        return replace_output_update_name(node->output(0), new_reshape->output(0));
+        replace_node_update_name(node, new_reshape);
+        return true;
     }
 
     return false;
@@ -178,7 +179,7 @@ static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
     shared_ptr<Node> reshape;
     auto input = node->input_value(0).get_node_shared_ptr();
     auto pat =
-        op::Constant::create<int64_t>(element::i64, Shape{target_shape.size()}, target_shape);
+        opset3::Constant::create<int64_t>(element::i64, Shape{target_shape.size()}, target_shape);
 
     if (is_type<opset3::Reshape>(input) || is_type<opset3::Squeeze>(input) ||
         is_type<opset3::Unsqueeze>(input))
@@ -197,7 +198,8 @@ static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
     }
     else
     {
-        return replace_output_update_name(node->output(0), reshape->output(0));
+        replace_node_update_name(node, reshape);
+        return true;
     }
     return false;
 }
@@ -256,12 +258,13 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
     auto data_shape = input->input_value(0).get_partial_shape();
     auto squeeze = as_type_ptr<opset3::Squeeze>(input);
     auto replace_unsqueeze_only = [&](const vector<int64_t>& axes) {
-        auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+        auto axes_const = opset3::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
         auto new_unsq = make_shared<opset3::Unsqueeze>(input->input_value(0), axes_const);
         if (unsqueeze->get_output_partial_shape(0).same_scheme(
                 new_unsq->get_output_partial_shape(0)))
         {
-            return replace_output_update_name(unsqueeze->output(0), new_unsq->output(0));
+            replace_node_update_name(unsqueeze, new_unsq);
+            return true;
         }
         return false;
     };
@@ -293,12 +296,13 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
             if (data_shape.rank().get_length() - axes.size() == out_shape.rank().get_length())
             {
                 auto axes_const =
-                    op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+                    opset3::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
                 auto new_sq = make_shared<opset3::Squeeze>(input->input_value(0), axes_const);
                 if (unsqueeze->get_output_partial_shape(0).same_scheme(
                         new_sq->get_output_partial_shape(0)))
                 {
-                    return replace_output_update_name(unsqueeze->output(0), new_sq->output(0));
+                    replace_node_update_name(unsqueeze, new_sq);
+                    return true;
                 }
                 return false;
             }
@@ -334,11 +338,12 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
     auto data_shape = input->input_value(0).get_partial_shape();
     auto unsqueeze = as_type_ptr<opset3::Unsqueeze>(input);
     auto replace_squeeze_only = [&](const vector<int64_t>& axes) {
-        auto axes_const = op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+        auto axes_const = opset3::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
         auto new_sq = make_shared<opset3::Squeeze>(input->input_value(0), axes_const);
         if (squeeze->get_output_partial_shape(0).same_scheme(new_sq->get_output_partial_shape(0)))
         {
-            return replace_output_update_name(squeeze->output(0), new_sq->output(0));
+            replace_node_update_name(squeeze, new_sq);
+            return true;
         }
         return false;
     };
@@ -370,12 +375,13 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
             if (data_shape.rank().get_length() + axes.size() == out_shape.rank().get_length())
             {
                 auto axes_const =
-                    op::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
+                    opset3::Constant::create<int64_t>(element::i64, Shape{axes.size()}, axes);
                 auto new_unsq = make_shared<opset3::Unsqueeze>(input->input_value(0), axes_const);
                 if (squeeze->get_output_partial_shape(0).same_scheme(
                         new_unsq->get_output_partial_shape(0)))
                 {
-                    return replace_output_update_name(squeeze->output(0), new_unsq->output(0));
+                    replace_output_update_name(squeeze, new_unsq);
+                    return true;
                 }
             }
         }

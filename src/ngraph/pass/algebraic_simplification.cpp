@@ -401,7 +401,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         // check if the indices is constant
         auto constant_indices =
-            as_type_ptr<op::Constant>(gather->input_value(1).get_node_shared_ptr());
+            as_type_ptr<opset3::Constant>(gather->input_value(1).get_node_shared_ptr());
         if (!constant_indices)
         {
             return false;
@@ -512,16 +512,19 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         return false;
     }
 
-    auto zero_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
-    shared_ptr<Node> replace_node;
+    auto zero_axis = opset3::Constant::create<int64_t>(element::i64, Shape{}, {0});
+    NodeVector new_ops;
     auto new_shapeof = make_shared<opset3::ShapeOf>(gather->input_value(0));
+    new_ops.push_back(new_shapeof);
+    std::shared_ptr<Node> replace_op;
     if (indices_rank.get_length() == 0)
     {
         std::vector<int64_t> vi(gather_in_rank.get_length());
         std::iota(vi.begin(), vi.end(), 0);
         vi.erase(vi.begin() + axis);
-        auto new_indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-        replace_node = make_shared<opset3::Gather>(new_shapeof, new_indices, zero_axis);
+        auto new_indices = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        replace_op = make_shared<opset3::Gather>(new_shapeof, new_indices, zero_axis);
+        new_ops.push_back(replace_op);
     }
     else
     {
@@ -530,11 +533,13 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         {
             std::vector<int64_t> vi(axis);
             std::iota(vi.begin(), vi.end(), 0);
-            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto indices = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
             auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
+            new_ops.push_back(gather);
             concat_inputs.push_back(gather);
         }
         auto shapeof_indices = make_shared<opset3::ShapeOf>(gather->input_value(1));
+        new_ops.push_back(shapeof_indices);
 
         concat_inputs.push_back(shapeof_indices);
 
@@ -542,13 +547,18 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         {
             std::vector<int64_t> vi(gather_in_rank.get_length() - (axis + 1));
             std::iota(vi.begin(), vi.end(), axis + 1);
-            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto indices = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
             auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
+            new_ops.push_back(gather);
             concat_inputs.push_back(gather);
         }
-        replace_node = make_shared<opset3::Concat>(concat_inputs, 0);
+        replace_op = make_shared<opset3::Concat>(concat_inputs, 0);
+        new_ops.push_back(replace_op);
     }
-    return replace_output_update_name(node->output(0), replace_node->output(0));
+    replace_op->set_friendly_name(node->get_friendly_name());
+    copy_runtime_info(node, new_ops);
+    replace_node(node, replace_op);
+    return true;
 }
 
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
