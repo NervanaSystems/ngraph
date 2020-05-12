@@ -415,4 +415,35 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::BroadcastModeSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    namespace op
+    {
+        ///
+        /// \brief      This class defines possible recurrent sequence directions.
+        ///
+        enum class RecurrentSequenceDirection
+        {
+            FORWARD,
+            REVERSE,
+            BIDIRECTIONAL
+        };
+
+        NGRAPH_API
+        std::ostream& operator<<(std::ostream& s, const RecurrentSequenceDirection& direction);
+    }
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::RecurrentSequenceDirection>
+        : public EnumAttributeAdapterBase<op::RecurrentSequenceDirection>
+    {
+    public:
+        AttributeAdapter(op::RecurrentSequenceDirection& value)
+            : EnumAttributeAdapterBase<op::RecurrentSequenceDirection>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::RecurrentSequenceDirection>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 }

@@ -170,4 +170,23 @@ namespace ngraph
     }
 
     NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+
+    NGRAPH_API
+    constexpr DiscreteTypeInfo AttributeAdapter<op::RecurrentSequenceDirection>::type_info;
+
+    std::ostream& op::operator<<(std::ostream& s, const op::RecurrentSequenceDirection& direction)
+    {
+        return s << as_string(direction);
+    }
+    template <>
+    NGRAPH_API EnumNames<op::RecurrentSequenceDirection>&
+        EnumNames<op::RecurrentSequenceDirection>::get()
+    {
+        static auto enum_names = EnumNames<op::RecurrentSequenceDirection>(
+            "op::RecurrentSequenceDirection",
+            {{"forward", op::RecurrentSequenceDirection::FORWARD},
+             {"reverse", op::RecurrentSequenceDirection::REVERSE},
+             {"bidirectional", op::RecurrentSequenceDirection::BIDIRECTIONAL}});
+        return enum_names;
+    }
 }

@@ -25,6 +25,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph
@@ -50,13 +51,6 @@ namespace ngraph
                 LSTMSequence() = default;
 
                 size_t get_default_output_index() const override { return no_default_index(); }
-                enum class direction
-                {
-                    FORWARD,
-                    REVERSE,
-                    BIDIRECTIONAL
-                };
-
                 explicit LSTMSequence(const Output<Node>& X,
                                       const Output<Node>& initial_hidden_state,
                                       const Output<Node>& initial_cell_state,
@@ -66,7 +60,7 @@ namespace ngraph
                                       const Output<Node>& B,
                                       const Output<Node>& P,
                                       const std::int64_t hidden_size,
-                                      const direction lstm_direction,
+                                      const RecurrentSequenceDirection lstm_direction,
                                       LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
                                       const std::vector<float> activations_alpha = {},
                                       const std::vector<float> activations_beta = {},
@@ -103,7 +97,7 @@ namespace ngraph
                                       const Output<Node>& R,
                                       const Output<Node>& B,
                                       const std::int64_t hidden_size,
-                                      const direction lstm_direction,
+                                      const RecurrentSequenceDirection lstm_direction,
                                       LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
                                       const std::vector<float> activations_alpha = {},
                                       const std::vector<float> activations_beta = {},
@@ -122,7 +116,9 @@ namespace ngraph
                           B,
                           Constant::create(
                               element::f32,
-                              Shape{(lstm_direction == direction::BIDIRECTIONAL ? 2UL : 1UL),
+                              Shape{(lstm_direction == RecurrentSequenceDirection::BIDIRECTIONAL
+                                         ? 2UL
+                                         : 1UL),
                                     3UL * static_cast<size_t>(hidden_size)},
                               std::vector<float>{0.f}),
                           hidden_size,
@@ -146,7 +142,7 @@ namespace ngraph
                 std::vector<float> get_activations_beta() const { return m_activations_beta; }
                 std::vector<std::string> get_activations() const { return m_activations; }
                 float get_clip_threshold() const { return m_clip_threshold; }
-                direction get_direction() const { return m_direction; }
+                RecurrentSequenceDirection get_direction() const { return m_direction; }
                 std::int64_t get_hidden_size() const { return m_hidden_size; }
                 bool get_input_forget() const { return m_input_forget; }
                 LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
@@ -179,7 +175,7 @@ namespace ngraph
                 std::vector<float> m_activations_beta;
                 std::vector<std::string> m_activations;
                 float m_clip_threshold;
-                direction m_direction;
+                RecurrentSequenceDirection m_direction;
                 std::int64_t m_hidden_size;
                 bool m_input_forget;
                 LSTMWeightsFormat m_weights_format;
@@ -188,21 +184,4 @@ namespace ngraph
         using v0::LSTMSequence;
     } // namespace op
 
-    NGRAPH_API
-    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type);
-
-    template <>
-    class NGRAPH_API AttributeAdapter<op::v0::LSTMSequence::direction>
-        : public EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>
-    {
-    public:
-        AttributeAdapter(op::v0::LSTMSequence::direction& value)
-            : EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>(value)
-        {
-        }
-
-        static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<op::v0::LSTMSequence::direction>", 1};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    };
 } // namespace ngraph

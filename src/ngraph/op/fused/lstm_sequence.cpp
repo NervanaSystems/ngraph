@@ -49,11 +49,12 @@ bool ngraph::op::v0::LSTMSequence::visit_attributes(AttributeVisitor& visitor)
 NodeVector op::LSTMSequence::decompose_op() const
 {
     NodeVector results;
-    if (m_direction == direction::FORWARD || m_direction == direction::REVERSE)
+    if (m_direction == RecurrentSequenceDirection::FORWARD ||
+        m_direction == RecurrentSequenceDirection::REVERSE)
     {
-        results = lstm_pass(m_direction == direction::REVERSE);
+        results = lstm_pass(m_direction == RecurrentSequenceDirection::REVERSE);
     }
-    if (m_direction == direction::BIDIRECTIONAL)
+    if (m_direction == RecurrentSequenceDirection::BIDIRECTIONAL)
     {
         NodeVector fwd_results{lstm_pass()};
         NodeVector rev_results{lstm_pass(true)};
@@ -254,31 +255,10 @@ shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reve
 {
     // In bidirectional mode inputs are stacked together, so we must split them.
     shared_ptr<Node> tmp = node.get_node_shared_ptr();
-    if (m_direction == direction::BIDIRECTIONAL)
+    if (m_direction == RecurrentSequenceDirection::BIDIRECTIONAL)
     {
         tmp = builder::split(node, 2).at(is_reverse ? 1 : 0);
     }
     // Since we have forward LSTM we can squeeze `num_directions` axis from inputs.
     return builder::squeeze(tmp);
 }
-
-namespace ngraph
-{
-    template <>
-    EnumNames<op::v0::LSTMSequence::direction>& EnumNames<op::v0::LSTMSequence::direction>::get()
-    {
-        static auto enum_names = EnumNames<op::v0::LSTMSequence::direction>(
-            "op::v0::LSTMSequence::direction",
-            {{"forward", op::v0::LSTMSequence::direction::FORWARD},
-             {"reverse", op::v0::LSTMSequence::direction::REVERSE},
-             {"bidirectional", op::v0::LSTMSequence::direction::BIDIRECTIONAL}});
-        return enum_names;
-    }
-
-    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::LSTMSequence::direction>::type_info;
-
-    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type)
-    {
-        return s << as_string(type);
-    }
-} // namespace ngraph
