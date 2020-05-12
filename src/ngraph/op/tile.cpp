@@ -59,7 +59,7 @@ void op::Tile::validate_and_infer_types()
         {
             auto data_shape = arg_shape.to_shape();
             auto data_rank = data_shape.size();
-            auto repeats_val = const_repeats->cast_vector<int64_t>();
+            auto repeats_val = const_repeats->get_vector<int64_t>();
             auto repeats_rank = repeats_val.size();
             auto output_rank = std::max(data_rank, repeats_rank);
 

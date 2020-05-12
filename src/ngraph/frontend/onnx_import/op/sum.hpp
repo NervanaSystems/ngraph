@@ -19,6 +19,7 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/opsets/opset0.hpp"
 #include "utils/variadic.hpp"
 
 namespace ngraph
