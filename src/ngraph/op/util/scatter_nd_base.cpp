@@ -38,6 +38,7 @@ bool op::util::ScatterNDBase::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
+
 void op::util::ScatterNDBase::validate_and_infer_types()
 {
     element::Type inputs_et = get_input_element_type(INPUTS);

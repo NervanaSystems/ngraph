@@ -25,7 +25,7 @@ namespace ngraph
         namespace util
         {
             ///
-            /// \brief      Base class for ScatterXXX operators.
+            /// \brief      Base class for ScatterNDXXX operators.
             ///
             class NGRAPH_API ScatterNDBase : public Op
             {
