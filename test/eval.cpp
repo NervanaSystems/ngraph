@@ -24,7 +24,11 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -70,7 +74,7 @@ TEST(eval, max_eval_parameter)
 
     auto result = maximum_value(p);
     EXPECT_FALSE(result.first);
-    EXPECT_EQ(result.second, 0);
+    EXPECT_EQ(result.second, numeric_limits<uint64_t>::max());
 }
 
 TEST(eval, max_eval_constant)
@@ -89,6 +93,25 @@ TEST(eval, max_eval_minimum_constant)
     auto result = maximum_value(m);
     ASSERT_TRUE(result.first);
     EXPECT_EQ(result.second, 27);
+}
+
+TEST(eval, max_eval_reduce_min)
+{
+    auto concat = make_shared<op::v0::Convert>(
+        make_shared<op::v0::Concat>(
+            OutputVector{make_shared<op::v0::Parameter>(element::i64, Shape{4}),
+                         make_shared<op::v0::Constant>(element::i64, Shape{4}, 37)},
+            0),
+        element::i32);
+    auto reduce = make_shared<op::v0::Convert>(
+        make_shared<op::v1::ReduceMin>(concat,
+                                       make_shared<op::v0::Constant>(element::i32, Shape{1}, 0)),
+        element::i64);
+    auto squeezes = make_shared<op::v0::Squeeze>(
+        make_shared<op::v0::Unsqueeze>(reduce,
+                                       make_shared<op::v0::Constant>(element::i32, Shape{1}, 0)),
+        make_shared<op::v0::Constant>(element::i64, Shape{1}, 0));
+    EXPECT_EQ(maximum_value(squeezes).second, 37);
 }
 
 TEST(eval, evaluate_shape_of)
