@@ -17,26 +17,25 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/embeddingbag_packed_base.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace util
         {
             /// \brief Returns embeddings for given indices
-            class NGRAPH_API EmbeddingBagPackedSum : public util::EmbeddingBagPackedBase
+            class NGRAPH_API EmbeddingBagPackedBase : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"EmbeddingBagPackedSum", 3};
+                static constexpr NodeTypeInfo type_info{"EmbeddingBagPackedBase", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                /// \brief Constructs a EmbeddingBagPackedSum operation.
-                EmbeddingBagPackedSum() = default;
-                /// \brief Constructs a EmbeddingBagPackedSum operation.
+                /// \brief Constructs a EmbeddingBagPackedBase operation.
+                EmbeddingBagPackedBase() = default;
+                /// \brief Constructs a EmbeddingBagPackedBase operation.
                 ///
-                /// EmbeddingBagPackedSum constructs an output tensor by replacing every index in a
+                /// EmbeddingBagPackedBase constructs an output tensor by replacing every index in a
                 /// given
                 /// input tensor with a row (from the weights matrix) at that index
                 ///
@@ -48,16 +47,21 @@ namespace ngraph
                 /// Each value in this tensor are multiplied with each
                 /// value pooled from embedding table for each index. Optional.
 
-                EmbeddingBagPackedSum(const Output<Node>& emb_table,
-                                      const Output<Node>& indices,
-                                      const Output<Node>& per_sample_weights);
+                EmbeddingBagPackedBase(const Output<Node>& emb_table,
+                                       const Output<Node>& indices,
+                                       const Output<Node>& per_sample_weights);
 
-                EmbeddingBagPackedSum(const Output<Node>& emb_table, const Output<Node>& indices);
+                EmbeddingBagPackedBase(const Output<Node>& emb_table, const Output<Node>& indices);
 
-                virtual std::shared_ptr<Node>
-                    clone_with_new_inputs(const OutputVector& new_args) const override;
+                void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
+            private:
+                static constexpr int EMB_TABLE = 0;
+                static constexpr int INDICES = 1;
+                static constexpr int PER_SAMPLE_WEIGHTS = 2;
             };
         }
-        using v3::EmbeddingBagPackedSum;
+        using util::EmbeddingBagPackedBase;
     }
 }

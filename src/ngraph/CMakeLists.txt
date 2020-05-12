@@ -480,6 +480,8 @@ set (SRC
     op/util/binary_elementwise_logical.hpp
     op/util/broadcast_base.cpp
     op/util/broadcast_base.hpp
+    op/util/embeddingbag_packed_base.cpp
+    op/util/embeddingbag_packed_base.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
