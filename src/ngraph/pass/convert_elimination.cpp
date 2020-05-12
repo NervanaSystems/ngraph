@@ -81,7 +81,7 @@ bool pass::ConvertElimination::run_on_function(std::shared_ptr<Function> functio
 
     for (const auto& node : function->get_ops())
     {
-        if (node->get_type_info() == TI(opset3::Convert))
+        if (node->get_type_info() == opset3::Convert::type_info)
         {
             clobbered = eliminate_convert(node) || clobbered;
         }
