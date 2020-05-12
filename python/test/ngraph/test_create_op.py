@@ -219,7 +219,8 @@ def test_lstm_cell_operator(dtype):
     assert list(node_param.get_output_shape(1)) == expected_shape
 
 
-def test_lstm_sequence_operator_bidirectional():
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_sequence_operator_bidirectional(dtype):
     batch_size = 1
     input_size = 16
     hidden_size = 128
@@ -234,13 +235,13 @@ def test_lstm_sequence_operator_bidirectional():
     R_shape = [num_directions, 4 * hidden_size, hidden_size]
     B_shape = [num_directions, 4 * hidden_size]
 
-    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
-    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
-    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=np.float32)
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
     parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
-    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
-    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
-    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
 
     direction = 'BIDIRECTIONAL'
     node = ng.lstm_sequence(parameter_X,
@@ -256,8 +257,31 @@ def test_lstm_sequence_operator_bidirectional():
     assert node.get_type_name() == 'LSTMSequence'
     assert node.get_output_size() == 3
 
+    activations = ['RELU', 'tanh', 'Sigmoid']
+    activation_alpha = [1.0, 2.0, 3.0]
+    activation_beta = [3.0, 2.0, 1.0]
+    clip = 1.22
 
-def test_lstm_sequence_operator_reverse():
+    node_param = ng.lstm_sequence(parameter_X,
+                                  parameter_H_t,
+                                  parameter_C_t,
+                                  parameter_seq_len,
+                                  parameter_W,
+                                  parameter_R,
+                                  parameter_B,
+                                  hidden_size,
+                                  direction,
+                                  activations,
+                                  activation_alpha,
+                                  activation_beta,
+                                  clip)
+
+    assert node_param.get_type_name() == 'LSTMSequence'
+    assert node_param.get_output_size() == 3
+
+
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_sequence_operator_reverse(dtype):
     batch_size = 2
     input_size = 4
     hidden_size = 3
@@ -272,15 +296,91 @@ def test_lstm_sequence_operator_reverse():
     R_shape = [num_directions, 4 * hidden_size, hidden_size]
     B_shape = [num_directions, 4 * hidden_size]
 
-    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
-    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
-    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=np.float32)
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
     parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
-    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
-    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
-    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
 
     direction = 'REVERSE'
+
+    node_default = ng.lstm_sequence(parameter_X,
+                                    parameter_H_t,
+                                    parameter_C_t,
+                                    parameter_seq_len,
+                                    parameter_W,
+                                    parameter_R,
+                                    parameter_B,
+                                    hidden_size,
+                                    direction)
+
+    assert node_default.get_type_name() == 'LSTMSequence'
+    assert node_default.get_output_size() == 3
+
+    activations = ['RELU', 'tanh', 'Sigmoid']
+    activation_alpha = [1.0, 2.0, 3.0]
+    activation_beta = [3.0, 2.0, 1.0]
+    clip = 1.22
+
+    node_param = ng.lstm_sequence(parameter_X,
+                                  parameter_H_t,
+                                  parameter_C_t,
+                                  parameter_seq_len,
+                                  parameter_W,
+                                  parameter_R,
+                                  parameter_B,
+                                  hidden_size,
+                                  direction,
+                                  activations,
+                                  activation_alpha,
+                                  activation_beta,
+                                  clip)
+
+    assert node_param.get_type_name() == 'LSTMSequence'
+    assert node_param.get_output_size() == 3
+
+
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_sequence_operator_forward(dtype):
+    batch_size = 2
+    input_size = 4
+    hidden_size = 3
+    num_directions = 1
+    seq_length = 2
+
+    X_shape = [seq_length, batch_size, input_size]
+    H_t_shape = [num_directions, batch_size, hidden_size]
+    C_t_shape = [num_directions, batch_size, hidden_size]
+    seq_len_shape = [batch_size]
+    W_shape = [num_directions, 4 * hidden_size, input_size]
+    R_shape = [num_directions, 4 * hidden_size, hidden_size]
+    B_shape = [num_directions, 4 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
+    parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
+
+    direction = 'forward'
+
+    node_default = ng.lstm_sequence(parameter_X,
+                                    parameter_H_t,
+                                    parameter_C_t,
+                                    parameter_seq_len,
+                                    parameter_W,
+                                    parameter_R,
+                                    parameter_B,
+                                    hidden_size,
+                                    direction)
+
+    assert node_default.get_type_name() == 'LSTMSequence'
+    assert node_default.get_output_size() == 3
+
     activations = ['RELU', 'tanh', 'Sigmoid']
     activation_alpha = [2.0]
     activation_beta = [1.0]
@@ -299,45 +399,6 @@ def test_lstm_sequence_operator_reverse():
                             activation_alpha,
                             activation_beta,
                             clip)
-
-    assert node.get_type_name() == 'LSTMSequence'
-    assert node.get_output_size() == 3
-
-
-def test_lstm_sequence_operator_forward():
-    batch_size = 2
-    input_size = 4
-    hidden_size = 3
-    num_directions = 1
-    seq_length = 2
-
-    X_shape = [seq_length, batch_size, input_size]
-    H_t_shape = [num_directions, batch_size, hidden_size]
-    C_t_shape = [num_directions, batch_size, hidden_size]
-    seq_len_shape = [batch_size]
-    W_shape = [num_directions, 4 * hidden_size, input_size]
-    R_shape = [num_directions, 4 * hidden_size, hidden_size]
-    B_shape = [num_directions, 4 * hidden_size]
-
-    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
-    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
-    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=np.float32)
-    parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
-    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
-    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
-    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
-
-    direction = 'forward'
-
-    node = ng.lstm_sequence(parameter_X,
-                            parameter_H_t,
-                            parameter_C_t,
-                            parameter_seq_len,
-                            parameter_W,
-                            parameter_R,
-                            parameter_B,
-                            hidden_size,
-                            direction)
 
     assert node.get_type_name() == 'LSTMSequence'
     assert node.get_output_size() == 3
