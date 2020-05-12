@@ -906,7 +906,7 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
         ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(optimized_f), num);
         ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(optimized_f), (num ? 0 : 1));
     };
-  
+
     for (auto& i32 : {true, false})
         for (auto& multiout : {true, false})
         {
