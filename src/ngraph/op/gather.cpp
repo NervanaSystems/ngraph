@@ -18,7 +18,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/gather.hpp"
-#include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/shape.hpp"
 
 #include <limits>
