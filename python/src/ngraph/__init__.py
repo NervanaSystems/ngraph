@@ -37,6 +37,7 @@ from ngraph.ops import batch_to_space
 from ngraph.ops import binary_convolution
 from ngraph.ops import broadcast
 from ngraph.ops import broadcast_to
+from ngraph.ops import bucketize
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
 from ngraph.ops import clamp

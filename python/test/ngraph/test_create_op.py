@@ -228,3 +228,15 @@ def test_select():
 
     result = test.ngraph.util.run_op_node([cond, then_node, else_node], ng.ops.select)
     assert np.allclose(result, excepted)
+
+
+def test_bucketize():
+    data = ng.parameter([4, 3, 2, 1], name='data', dtype=np.float32)
+    buckets = ng.parameter([5], name='buckets', dtype=np.int64)
+
+    node = ng.bucketize(data, buckets, 'i32')
+
+    assert node.get_type_name() == 'Bucketize'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [4, 3, 2, 1]
+    assert node.get_output_element_type(0) == Type.i32

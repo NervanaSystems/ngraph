@@ -2588,3 +2588,20 @@ def reverse_sequence(input, seq_lengths, batch_axis, seq_axis, name=None):
     """
     return _get_node_factory().create('ReverseSequence', [input, as_node(seq_lengths)],
                                       {'batch_axis': batch_axis, 'seq_axis': seq_axis})
+
+
+@nameable_op
+def bucketize(data, buckets, output_type='i64', with_right_bound=True):
+    # type: (Node, NodeInput, str, bool) -> Node
+    """Return a node which produces the Bucketize operation.
+
+
+    :param data:              Input data to bucketize
+    :param buckets:           1-D of sorted unique boundaries for buckets
+    :param output_type:       Output tensor type, "i64" or "i32", defaults to i64
+    :param with_right_bound:  indicates whether bucket includes the right or left
+                             edge of interval. default true = includes right edge
+    :return: Bucketize node
+    """
+    return _get_node_factory().create('Bucketize', [data, as_node(buckets)],
+        {'output_type': output_type, 'with_right_bound': with_right_bound})
