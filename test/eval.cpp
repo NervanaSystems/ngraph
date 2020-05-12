@@ -30,6 +30,7 @@
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/cos.hpp"
 #include "ngraph/op/cosh.hpp"
@@ -39,6 +40,7 @@
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/negative.hpp"
+#include "ngraph/op/non_zero.hpp"
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
@@ -160,6 +162,7 @@ TEST(eval, evaluate_dynamic_range_sum)
     ASSERT_EQ(cval, seq);
 }
 
+#ifdef NGRAPH_INTERPRETER_ENABLE
 TEST(eval, interpret_dynamic_range_sum)
 {
     auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
@@ -179,7 +182,7 @@ TEST(eval, interpret_dynamic_range_sum)
     copy_data(p_step_val, vector<float>{3.0f});
     auto p1_val = backend->create_tensor(element::f32, Shape{});
     copy_data(p1_val, vector<float>{7.0f});
-    auto result = make_shared<HostTensor>();
+    auto result = backend->create_tensor();
     auto cfun = backend->compile(fun);
     cfun->call({result}, {p_start_val, p_stop_val, p_step_val, p1_val});
     EXPECT_EQ(result->get_element_type(), element::f32);
@@ -188,6 +191,7 @@ TEST(eval, interpret_dynamic_range_sum)
     vector<float> seq{8.0f, 11.0f, 14.0f};
     ASSERT_EQ(result_val, seq);
 }
+#endif
 
 TEST(eval, evaluate_abs)
 {
@@ -664,4 +668,21 @@ TEST(eval, evaluate_logical_not)
     auto result_val = read_vector<char>(result);
     vector<char> expec{0, 1, 0, 1};
     ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_dynamic_concat)
+{
+    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto concat = make_shared<op::v0::Concat>(NodeVector{arg1, arg2}, 1);
+    auto fun = make_shared<Function>(OutputVector{concat}, ParameterVector{arg1, arg2});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result_tensor},
+                              {make_host_tensor<element::Type_t::f32>({1, 1}, {1.0f}),
+                               make_host_tensor<element::Type_t::f32>({1, 2}, {8.0f, 10.0f})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{1, 3}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{1.0f, 8.0f, 10.0f};
+    ASSERT_EQ(cval, out);
 }
