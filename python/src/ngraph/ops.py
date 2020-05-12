@@ -471,6 +471,17 @@ def lstm_sequence(X,                       # type: NodeInput
     weights_format = 'ifco'  # nGraph default, not such attribute in the OV spec
     input_forget = False  # nGraph default, not such attribute in the OV spec
 
+    peepholes_count = 3  # nGraph default, not such attribute in the OV spec
+
+    if direction.lower() == 'bidirectional':
+        num_directions = 2
+    else:
+        num_directions = 1
+
+    peepholes_shape = [num_directions, peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape, dtype=np.float32)
+    default_P = make_constant_node(peepholes_array)  # nGraph default, not such input in the OV spec
+
     if activations is None:
         activations = ['sigmoid', 'tanh', 'tanh']
     if activations_alpha is None:
@@ -478,7 +489,15 @@ def lstm_sequence(X,                       # type: NodeInput
     if activations_beta is None:
         activations_beta = []
 
-    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, sequence_lengths, W, R, B)
+    node_inputs = as_nodes(
+        X,
+        initial_hidden_state,
+        initial_cell_state,
+        sequence_lengths,
+        W,
+        R,
+        B,
+        default_P)
     attributes = {'hidden_size': hidden_size,
                   'direction': direction.lower(),
                   'activations': activations,
