@@ -214,7 +214,7 @@ shared_ptr<Node> op::v1::Gather::clone_with_new_inputs(const OutputVector& new_a
 namespace
 {
     template <element::Type_t ET>
-    inline bool evaluate(const HostTensorPtr& arg0,
+    bool evaluate(const HostTensorPtr& arg0,
                          const HostTensorPtr& arg1,
                          const HostTensorPtr& out,
                          size_t axis)
