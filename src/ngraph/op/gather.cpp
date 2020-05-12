@@ -303,7 +303,21 @@ namespace
     }
 }
 
-bool op::Gather::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Gather::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     return evaluate_gather(inputs[0], inputs[1], outputs[0], get_axis());
+}
+
+bool op::v1::Gather::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    int64_t axis = inputs[2]->get_data_ptr<int64_t>()[0];
+    if (axis < 0)
+    {
+        const auto& input_rank = get_input_partial_shape(PARAMS).rank();
+        if (input_rank.is_static())
+        {
+            axis += input_rank.get_length();
+        }
+    }
+    return evaluate_gather(inputs[0], inputs[1], outputs[0], axis);
 }
