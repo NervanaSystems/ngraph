@@ -38,7 +38,7 @@ from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.reduction import get_reduction_axes
 from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
     NodeInput, ScalarData, as_node, as_nodes
-from ngraph.utils.types import get_element_type, get_element_type_str
+from ngraph.utils.types import get_dtype, get_element_type, get_element_type_str
 
 from ngraph.utils.node_factory import NodeFactory
 
@@ -397,16 +397,8 @@ def lstm_cell(X,                       # type: NodeInput
     :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
     :param name: An optional name of the output node.
 
-    :return: The new node with two outputs which performs LSTMCell.
+    :return: The new node represents LSTMCell. Node outputs count: 2.
     """
-    weights_format = 'ifco'  # nGraph default, not such attribute in the OV spec
-    input_forget = False  # nGraph default, not such attribute in the OV spec
-
-    peepholes_count = 3  # nGraph default, not such attribute in the OV spec
-    peepholes_shape = [peepholes_count * hidden_size]
-    peepholes_array = np.zeros(peepholes_shape, dtype=np.float32)
-    default_P = make_constant_node(peepholes_array)  # nGraph default, not such input in the OV spec
-
     if activations is None:
         activations = ['sigmoid', 'tanh', 'tanh']
     if activations_alpha is None:
@@ -414,7 +406,19 @@ def lstm_cell(X,                       # type: NodeInput
     if activations_beta is None:
         activations_beta = []
 
-    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, W, R, B, default_P)
+    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, W, R, B)
+
+    # P - nGraph additional input, no such input in the OV spec
+    peepholes_count = 3  # nGraph default
+    peepholes_shape = [peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape)  # nGraph default
+    data_dtype = get_dtype(node_inputs[0].get_output_element_type(0))
+    default_P = make_constant_node(peepholes_array, dtype=data_dtype)
+    node_inputs.append(default_P)
+
+    weights_format = 'fico'  # IE LSTMWeightsFormat, no such attribute in the OV spec
+    input_forget = False  # nGraph default, no such attribute in the OV spec
+
     attributes = {'hidden_size': hidden_size,
                   'activations': activations,
                   'activations_alpha': activations_alpha,
@@ -445,13 +449,13 @@ def lstm_sequence(X,                       # type: NodeInput
     # type: (...) -> Node
     """Return a node which performs LSTMSequence operation.
 
-    :param X: The input tensor. Shape: [batch_size, seq_length, input_size].
+    :param X: The input tensor. Shape: [seq_length, batch_size, input_size].
     :param initial_hidden_state:    The hidden state tensor.
-                                    Shape: [batch_size, num_directions, hidden_size].
+                                    Shape: [num_directions, batch_size, hidden_size].
     :param initial_cell_state:      The cell state tensor.
-                                    Shape: [batch_size, num_directions, hidden_size].
+                                    Shape: [num_directions, batch_size, hidden_size].
     :param sequence_lengths:        Specifies real sequence lengths for each batch element.
-                                    Shape: [batch_size]
+                                    Shape: [batch_size]. Integer type.
     :param W: Tensor with weights for matrix multiplication operation with input portion of data.
               Shape: [num_directions, 4*hidden_size, input_size].
     :param R: The tensor with weights for matrix multiplication operation with hidden state.
@@ -466,22 +470,8 @@ def lstm_sequence(X,                       # type: NodeInput
     :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
     :param name: An optional name of the output node.
 
-    :return: The new node performing LSTMSequence. Node outputs count: 3.
+    :return: The new node represents LSTMSequence. Node outputs count: 3.
     """
-    weights_format = 'ifco'  # nGraph default, not such attribute in the OV spec
-    input_forget = False  # nGraph default, not such attribute in the OV spec
-
-    peepholes_count = 3  # nGraph default, not such attribute in the OV spec
-
-    if direction.lower() == 'bidirectional':
-        num_directions = 2
-    else:
-        num_directions = 1
-
-    peepholes_shape = [num_directions, peepholes_count * hidden_size]
-    peepholes_array = np.zeros(peepholes_shape, dtype=np.float32)
-    default_P = make_constant_node(peepholes_array)  # nGraph default, not such input in the OV spec
-
     if activations is None:
         activations = ['sigmoid', 'tanh', 'tanh']
     if activations_alpha is None:
@@ -496,8 +486,23 @@ def lstm_sequence(X,                       # type: NodeInput
         sequence_lengths,
         W,
         R,
-        B,
-        default_P)
+        B)
+
+    # P - nGraph additional input, no such input in the OV spec
+    peepholes_count = 3  # nGraph default
+    if direction.lower() == 'bidirectional':
+        num_directions = 2
+    else:
+        num_directions = 1
+    peepholes_shape = [num_directions, peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape)  # nGraph default
+    data_dtype = get_dtype(node_inputs[0].get_output_element_type(0))
+    default_P = make_constant_node(peepholes_array, dtype=data_dtype)
+    node_inputs.append(default_P)
+
+    weights_format = 'fico'  # IE LSTMWeightsFormat, no such attribute in the OV spec
+    input_forget = False  # nGraph default, no such attribute in the OV spec
+
     attributes = {'hidden_size': hidden_size,
                   'direction': direction.lower(),
                   'activations': activations,
