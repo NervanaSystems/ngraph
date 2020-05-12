@@ -811,7 +811,6 @@ TEST(serialize, opset3_interpolate)
     attrs.axes = {2, 3};
     attrs.mode = InterpolateMode::linear;
     attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
-    attrs.align_corners = true;
     attrs.antialias = false;
     attrs.pads_begin = {0, 0, 0, 0};
     attrs.pads_end = {0, 0, 0, 0};
@@ -830,7 +829,6 @@ TEST(serialize, opset3_interpolate)
     EXPECT_EQ(g_attrs.axes, attrs.axes);
     EXPECT_EQ(g_attrs.mode, attrs.mode);
     EXPECT_EQ(g_attrs.coordinate_transformation_mode, attrs.coordinate_transformation_mode);
-    EXPECT_EQ(g_attrs.align_corners, attrs.align_corners);
     EXPECT_EQ(g_attrs.antialias, attrs.antialias);
     EXPECT_EQ(g_attrs.pads_begin, attrs.pads_begin);
     EXPECT_EQ(g_attrs.pads_end, attrs.pads_end);

@@ -133,10 +133,6 @@ namespace ngraph
                     // nearest`. one of `round_prefer_floor`, `round_prefer_ceil`, `floor`, `ceil`,
                     // `simple`
                     NearestMode nearest_mode = NearestMode::round_prefer_floor;
-                    // a flag that specifies whether to align corners or not.
-                    // `true` (default) means the alignment is applied,
-                    // `false` means the alignment isn't applied.
-                    bool align_corners = true;
                     // a flag that specifies whether to perform anti-aliasing. default is `false`
                     bool antialias = false;
                     // specify the number of pixels to add to the beginning of the image being

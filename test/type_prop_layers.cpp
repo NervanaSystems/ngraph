@@ -91,7 +91,6 @@ TEST(type_prop_layers, interpolate_v3)
     attrs.axes = {2, 3};
     attrs.mode = InterpolateMode::nearest;
     attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
-    attrs.align_corners = true;
     attrs.antialias = false;
     attrs.pads_begin = {0, 0, 0, 0};
     attrs.pads_end = {0, 0, 0, 0};
