@@ -57,7 +57,6 @@
 #include "pyngraph/ops/slice.hpp"
 #include "pyngraph/ops/softmax.hpp"
 
-
 namespace py = pybind11;
 
 void regmodule_pyngraph_op(py::module m);
