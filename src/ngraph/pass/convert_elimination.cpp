@@ -29,8 +29,6 @@
 using namespace std;
 using namespace ngraph;
 
-#define TI(x) x::type_info
-
 //************************
 // Eliminates 2 types of spines with converts:
 //
