@@ -30,7 +30,6 @@ namespace ngraph
                 for (size_t i = 0; i < count; i++)
                 {
                     out[i] = static_cast<T>(!(arg[i]));
-                    // out[i] = (static_cast<T>(arg[i]) == static_cast<T>(0));
                 }
             }
         }
