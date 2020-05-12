@@ -215,9 +215,9 @@ namespace
 {
     template <element::Type_t ET>
     bool evaluate(const HostTensorPtr& arg0,
-                         const HostTensorPtr& arg1,
-                         const HostTensorPtr& out,
-                         size_t axis)
+                  const HostTensorPtr& arg1,
+                  const HostTensorPtr& out,
+                  size_t axis)
     {
         using T = typename element_type_traits<ET>::value_type;
         Shape params_shape = arg0->get_shape();
