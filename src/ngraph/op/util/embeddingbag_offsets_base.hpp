@@ -17,26 +17,26 @@
 #pragma once
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/embeddingbag_offsets_base.hpp"
 #include "ngraph/op/util/index_reduction.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace util
         {
             /// \brief Returns embeddings for given indices
-            class NGRAPH_API EmbeddingBagOffsetsSum : public util::EmbeddingBagOffsetsBase
+            class NGRAPH_API EmbeddingBagOffsetsBase : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"EmbeddingBagOffsetsSum", 3};
+                static constexpr NodeTypeInfo type_info{"EmbeddingBagOffsetsBase", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                /// \brief Constructs a EmbeddingBagOffsetsSum operation.
-                EmbeddingBagOffsetsSum() = default;
-                /// \brief Constructs a EmbeddingBagOffsetsSum operation.
+                /// \brief Constructs a EmbeddingBagOffsetsBase operation.
+                EmbeddingBagOffsetsBase() = default;
+                /// \brief Constructs a EmbeddingBagOffsetsBase operation.
                 ///
-                /// EmbeddingBagOffsetsSum constructs an output tensor by replacing every index in a
+                /// EmbeddingBagOffsetsBase constructs an output tensor by replacing every index in
+                /// a
                 /// given
                 /// input tensor with a row (from the weights matrix) at that index
                 ///
@@ -52,25 +52,31 @@ namespace ngraph
                 /// table to fill empty "bags". If not provided empty "bags"
                 /// are filled with zeros. Optional.
 
-                EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
-                                       const Output<Node>& indices,
-                                       const Output<Node>& offsets,
-                                       const Output<Node>& per_sample_weights,
-                                       const Output<Node>& default_index);
+                EmbeddingBagOffsetsBase(const Output<Node>& emb_table,
+                                        const Output<Node>& indices,
+                                        const Output<Node>& offsets,
+                                        const Output<Node>& per_sample_weights,
+                                        const Output<Node>& default_index);
 
-                EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
-                                       const Output<Node>& indices,
-                                       const Output<Node>& offsets,
-                                       const Output<Node>& per_sample_weights);
+                EmbeddingBagOffsetsBase(const Output<Node>& emb_table,
+                                        const Output<Node>& indices,
+                                        const Output<Node>& offsets,
+                                        const Output<Node>& per_sample_weights);
 
-                EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
-                                       const Output<Node>& indices,
-                                       const Output<Node>& offsets);
+                EmbeddingBagOffsetsBase(const Output<Node>& emb_table,
+                                        const Output<Node>& indices,
+                                        const Output<Node>& offsets);
 
-                virtual std::shared_ptr<Node>
-                    clone_with_new_inputs(const OutputVector& new_args) const override;
+                void validate_and_infer_types() override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
+            private:
+                static constexpr int EMB_TABLE = 0;
+                static constexpr int INDICES = 1;
+                static constexpr int OFFSETS = 2;
+                static constexpr int PER_SAMPLE_WEIGHTS = 3;
+                static constexpr int DEFAULT_INDEX = 4;
             };
         }
-        using v3::EmbeddingBagOffsetsSum;
     }
 }
