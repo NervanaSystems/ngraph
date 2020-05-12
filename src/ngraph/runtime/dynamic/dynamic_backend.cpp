@@ -30,7 +30,6 @@
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_function.hpp"
 #include "ngraph/util.hpp"
@@ -258,9 +257,6 @@ bool runtime::dynamic::DynamicExecutable::call(
         }
 
         pass::Manager passes;
-        // Opset1Downgrade should be moved below DynElimination
-        // when ConstantFolding for v3 ops will be ready
-        passes.register_pass<pass::Opset1Downgrade>();
         passes.register_pass<pass::ConstantFolding>();
         passes.register_pass<pass::DynElimination>();
         passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
