@@ -16,7 +16,6 @@
 
 #include <memory>
 #include <numeric>
-#include <rt_info.hpp>
 #include <set>
 
 #include "algebraic_simplification.hpp"
@@ -41,6 +40,7 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/rt_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -717,12 +717,12 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
 
     // Transpose operation can be removed if original transpose order is sorted
     // or dimension that changes their places equal to 1
-    using DimensionToPositoin = struct
+    using DimensionToPosition = struct
     {
         Dimension dim;
         size_t pos;
     };
-    std::vector<DimensionToPositoin> dims;
+    std::vector<DimensionToPosition> dims;
     for (size_t i = 0; i < input_shape_rank; ++i)
     {
         if (order_value[i] != i)
@@ -732,7 +732,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
     }
 
     // If number of dimensions != 1 to move equal to 0 we can remove this Transpose
-    if (count_if(dims.begin(), dims.end(), [](const DimensionToPositoin& item) {
+    if (count_if(dims.begin(), dims.end(), [](const DimensionToPosition& item) {
             return !(item.dim.is_static() && item.dim.get_length() == 1);
         }) == 0)
     {
@@ -752,7 +752,7 @@ static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
     Output<Node> reshape_dim;
     NodeVector new_ops;
 
-    if (count_if(dims.begin(), dims.end(), [](const DimensionToPositoin& item) {
+    if (count_if(dims.begin(), dims.end(), [](const DimensionToPosition& item) {
             return item.dim.is_dynamic();
         }) < 2)
     {
