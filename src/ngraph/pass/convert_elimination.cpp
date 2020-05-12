@@ -66,7 +66,7 @@ static bool eliminate_convert(const std::shared_ptr<Node>& node)
     // case 2
     if (convert->get_users().size() == 1)
     {
-        static const std::set<NodeTypeInfo> type_agnostic{TI(opset3::NonZero)};
+        static const std::set<NodeTypeInfo> type_agnostic{opset3::NonZero::type_info};
         if (type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1)
         {
             return replace_output_update_name(convert->output(0), input_op);
