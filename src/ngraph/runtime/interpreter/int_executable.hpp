@@ -482,23 +482,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Concat:
-        {
-            const op::Concat* concat = static_cast<const op::Concat*>(&node);
-            std::vector<const T*> in_args;
-            std::vector<Shape> in_shapes;
-            for (size_t i = 0; i < node.get_input_size(); i++)
-            {
-                in_args.push_back(args[i]->get_data_ptr<const T>());
-                in_shapes.push_back(node.get_input_shape(i));
-            }
-            reference::concat<T>(in_args,
-                                 out[0]->get_data_ptr<T>(),
-                                 in_shapes,
-                                 node.get_output_shape(0),
-                                 concat->get_concatenation_axis());
-            break;
-        }
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
@@ -1598,6 +1581,7 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
+        case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
         case OP_TYPEID::Equal:
