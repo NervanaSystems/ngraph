@@ -228,9 +228,10 @@ def test_lstm_sequence_operator_bidirectional():
     parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
     parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
 
-    activations = ['RELU', 'sigmoid', 'tanh']
+    activations = []
     activations_alpha = []
     activations_beta = []
+
     clip = 0
     direction = 'BIDIRECTIONAL'
 
@@ -275,7 +276,8 @@ def test_lstm_sequence_operator_reverse():
     parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
     parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
 
-    activations = ['RELU', 'sigmoid', 'tanh']
+    # activations = ['RELU', 'sigmoid', 'tanh']
+    activations = []
     activations_alpha = []
     activations_beta = []
     clip = 0
@@ -322,7 +324,7 @@ def test_lstm_sequence_operator_forward():
     parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
     parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
 
-    activations = ['RELU', 'sigmoid', 'tanh']
+    activations = ['relu', 'sigmoid', 'tanh']
     activations_alpha = []
     activations_beta = []
     clip = 0
