@@ -511,11 +511,13 @@ TEST(nop_elimination, squeeze_squeeze_overlap_elimination)
         ;
     };
 
-    check_usecase(PartialShape{1, Dimension::dynamic(), 1, 1}, {0}, {1, 2}, 1);
+    check_usecase(PartialShape{1, Dimension::dynamic(), 1, Dimension::dynamic()}, {0}, {1}, 1);
     check_usecase(
         PartialShape{1, 1, 1, Dimension::dynamic(), 1, Dimension::dynamic(), 1}, {2, 1}, {2, 4}, 1);
-    check_usecase(PartialShape{1, Dimension::dynamic(), 2, 1, 1}, {-1, -5}, {2}, 1);
-    check_usecase(PartialShape{1, Dimension::dynamic(), 1, 2, 1}, {0}, {1, 3}, 1);
+    check_usecase(
+        PartialShape{1, Dimension::dynamic(), Dimension::dynamic(), 1, 1}, {-1, -5}, {2}, 1);
+    check_usecase(
+        PartialShape{1, Dimension::dynamic(), 1, Dimension::dynamic(), 1}, {0}, {1, 3}, 1);
 }
 
 TEST(nop_elimination, unsqueeze_unsqueeze_overlap_elimination)
@@ -550,11 +552,11 @@ TEST(nop_elimination, unsqueeze_unsqueeze_overlap_elimination)
         ;
     };
 
-    check_usecase(PartialShape{Dimension::dynamic(), 1, 1}, {0}, {1, 2}, 1);
+    check_usecase(PartialShape{Dimension::dynamic(), 1, Dimension::dynamic()}, {0}, {2}, 1);
     check_usecase(
         PartialShape{1, Dimension::dynamic(), 1, Dimension::dynamic(), 1}, {2, 1}, {2, 4}, 1);
-    check_usecase(PartialShape{3, Dimension::dynamic(), 1}, {-1, -3}, {2}, 1);
-    check_usecase(PartialShape{Dimension::dynamic(), 1, 2, 1}, {0}, {1, 3}, 1);
+    check_usecase(PartialShape{Dimension::dynamic(), Dimension::dynamic(), 1}, {-1, -3}, {2}, 1);
+    check_usecase(PartialShape{Dimension::dynamic(), 1, Dimension::dynamic(), 1}, {0}, {1, 3}, 1);
 }
 
 TEST(nop_elimination, unsqueeze_squeeze_elimination)

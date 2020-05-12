@@ -158,28 +158,27 @@ static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
     {
         return false;
     }
-    size_t num_unknown = 0;
-    std::vector<int64_t> vi;
+    if (count_unknown_dims(shape_ps) > 1)
+    {
+        return false;
+    }
+    std::vector<int64_t> target_shape;
     for (auto i = 0; i < shape_ps.rank().get_length(); i++)
     {
         if (shape_ps[i].is_dynamic())
         {
-            num_unknown += 1;
-            if (num_unknown > 1)
-            {
-                return false;
-            }
-            vi.emplace_back(-1);
+            target_shape.emplace_back(-1);
         }
         else
         {
-            vi.emplace_back(shape_ps[i]);
+            target_shape.emplace_back(shape_ps[i]);
         }
     }
 
     shared_ptr<Node> reshape;
     auto input = node->input_value(0).get_node_shared_ptr();
-    auto pat = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+    auto pat =
+        op::Constant::create<int64_t>(element::i64, Shape{target_shape.size()}, target_shape);
 
     if (is_type<opset3::Reshape>(input) || is_type<opset3::Squeeze>(input) ||
         is_type<opset3::Unsqueeze>(input))
