@@ -20,7 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::util : EmbeddingBagPackedBase::type_info;
+constexpr NodeTypeInfo op::util::EmbeddingBagPackedBase::type_info;
 
 op::util::EmbeddingBagPackedBase::EmbeddingBagPackedBase(const Output<Node>& emb_table,
                                                          const Output<Node>& indices,
