@@ -15,32 +15,26 @@
 # ******************************************************************************
 
 """Factory functions for all ngraph ops."""
+from typing import List, Optional, Set, Union
+
 import numpy as np
 
-from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
-    Shape, Strides
-
-from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
-    FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
-    Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Power, \
-    Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
-    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
-
-from typing import Callable, Iterable, List, Set, Union, Optional
-
+from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
+from ngraph.impl.op import (GRN, MVN, ArgMax, ArgMin, BatchNormInference,
+                            BatchNormTraining, Broadcast, Constant,
+                            DepthToSpace, Dequantize, Dot, Gelu, Gemm,
+                            GetOutputElement, HardSigmoid, Parameter, Quantize,
+                            QuantizedConvolution, QuantizedDot, ReplaceSlice,
+                            RNNCell, ScaleShift, ShuffleChannels, Slice,
+                            SpaceToDepth)
 from ngraph.utils.broadcasting import get_broadcast_axes
-from ngraph.utils.decorators import nameable_op, binary_op, unary_op
+from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
-from ngraph.utils.reduction import get_reduction_axes
-from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, as_node, as_nodes
-from ngraph.utils.types import get_element_type, get_element_type_str
-
 from ngraph.utils.node_factory import NodeFactory
+from ngraph.utils.types import (NodeInput, NumericData, NumericType,
+                                ScalarData, TensorShape, as_node, as_nodes,
+                                get_element_type, get_element_type_str,
+                                make_constant_node)
 
 
 def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
@@ -709,7 +703,7 @@ def absolute(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with Abs operation applied on it.
     """
-    return Abs(node)
+    return _get_node_factory().create('Abs', [node])
 
 
 @unary_op
@@ -720,7 +714,7 @@ def acos(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with arccos operation applied on it.
     """
-    return Acos(node)
+    return _get_node_factory().create('Acos', [node])
 
 
 @unary_op
@@ -731,7 +725,7 @@ def asin(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with arcsin operation applied on it.
     """
-    return Asin(node)
+    return _get_node_factory().create('Asin', [node])
 
 
 @unary_op
@@ -742,7 +736,7 @@ def atan(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with arctan operation applied on it.
     """
-    return Atan(node)
+    return _get_node_factory().create('Atan', [node])
 
 
 @unary_op
@@ -753,7 +747,7 @@ def cos(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with cos operation applied on it.
     """
-    return Cos(node)
+    return _get_node_factory().create('Cos', [node])
 
 
 @unary_op
@@ -764,7 +758,7 @@ def cosh(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with cosh operation applied on it.
     """
-    return Cosh(node)
+    return _get_node_factory().create('Cosh', [node])
 
 
 @unary_op
@@ -775,7 +769,7 @@ def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: The new node with sqrt operation applied element-wise.
     """
-    return Sqrt(node)
+    return _get_node_factory().create('Sqrt', [node])
 
 
 @unary_op
@@ -808,13 +802,13 @@ def log(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional new name for output node.
     :return: The new node performing log operation element-wise.
     """
-    return Log(node)
+    return _get_node_factory().create('Log', [node])
 
 
 @unary_op
 def negative(node, name=None):  # type: (NodeInput, str) -> Node
     """Return node which applies f(x) = -x to the input node elementwise."""
-    return Negative(node)
+    return _get_node_factory().create('Negative', [node])
 
 
 @unary_op
@@ -825,7 +819,7 @@ def floor(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: The optional name for new output node.
     :return: The node performing element-wise floor operation.
     """
-    return Floor(node)
+    return _get_node_factory().create('Floor', [node])
 
 
 @unary_op
@@ -836,12 +830,12 @@ def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional name for output node.
     :return: The node performing element-wise ceiling.
     """
-    return Ceiling(node)
+    return _get_node_factory().create('Ceiling', [node])
 
 
-@unary_op
+@nameable_op
 def reshape(node, output_shape, special_zero, name=None):
-    # type: (Node,Node, bool, str) -> Node
+    # type: (Node, Node, bool, str) -> Node
     """Return reshaped node according to provided parameters.
 
     :param node: The tensor we want to reshape.
@@ -855,7 +849,7 @@ def reshape(node, output_shape, special_zero, name=None):
                          Range of values: False or True
     """
     return _get_node_factory().create('Reshape',
-                                      [node, output_shape],
+                                      as_nodes(node, output_shape),
                                       {'special_zero': special_zero})
 
 
@@ -894,7 +888,7 @@ def sign(node, name=None):  # type: (NodeInput, str) -> Node
     :return: The node with mapped elements of the input tensor to -1 (if it is negative),
              0 (if it is zero), or 1 (if it is positive).
     """
-    return Sign(node)
+    return _get_node_factory().create('Sign', [node])
 
 
 @unary_op
@@ -905,7 +899,7 @@ def sin(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with sin operation applied on it.
     """
-    return Sin(node)
+    return _get_node_factory().create('Sin', [node])
 
 
 @unary_op
@@ -916,7 +910,7 @@ def sinh(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with sin operation applied on it.
     """
-    return Sinh(node)
+    return _get_node_factory().create('Sinh', [node])
 
 
 @unary_op
@@ -927,7 +921,7 @@ def tan(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: New node with tan operation applied on it.
     """
-    return Tan(node)
+    return _get_node_factory().create('Tan', [node])
 
 
 # Binary ops
@@ -2095,8 +2089,8 @@ def one_hot(indices, depth, on_value, off_value, axis, name=None):
     :param name: The optional name for new output node.
     :return: New node performing one-hot operation.
     """
-    inputs = [indices, as_node(depth), as_node(on_value), as_node(off_value)]
-    return _get_node_factory().create('OneHot', inputs, {'axis': axis})
+    return _get_node_factory().create('OneHot', as_nodes(indices, depth, on_value, off_value),
+                                      {'axis': axis})
 
 
 @nameable_op
@@ -2142,20 +2136,29 @@ def reverse(data, axis, mode, name=None):  # type: (Node, NodeInput, str, Option
 
 
 @nameable_op
-def batch_norm(eps,             # type: float
-               gamma,           # type: Node
-               beta,            # type: Node
-               data,            # type: Node
-               mean=None,       # type: Node
-               variance=None,   # type: Node
-               name=None,       # type: str
-               ):
+def batch_norm_inference(data,            # type: Node
+                         gamma,           # type: NodeInput
+                         beta,            # type: NodeInput
+                         mean,            # type: NodeInput
+                         variance,        # type: NodeInput
+                         epsilon,         # type: float
+                         name=None,       # type: Optional[str]
+                         ):
     # type: (...) -> Node
-    """Return batch normalization node."""
-    if mean is None and variance is None:
-        return BatchNormTraining(data, gamma, beta, eps)
-    else:
-        return BatchNormInference(data, gamma, beta, mean, variance, eps)
+    """Perform layer normalizes a input tensor by mean and variance with appling scale and offset.
+
+    :param data: The input tensor with data for normalization.
+    :param gamma: The scalar scaling for normalized value.
+    :param beta: The bias added to the scaled normalized value.
+    :param mean: The value for mean normalization.
+    :param variance: The value for variance normalization.
+    :param epsilon: The  number to be added to the variance to avoid division
+                    by zero when normalizing a value.
+    :param name: The optional name of the output node.
+    :return: The new node which performs BatchNormInference.
+    """
+    inputs = [as_node(gamma), as_node(beta), data, as_node(mean), as_node(variance)]
+    return _get_node_factory().create('BatchNormInference', inputs, {'epsilon': epsilon})
 
 
 @nameable_op
