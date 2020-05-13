@@ -2595,7 +2595,6 @@ def bucketize(data, buckets, output_type='i64', with_right_bound=True):
     # type: (Node, NodeInput, str, bool) -> Node
     """Return a node which produces the Bucketize operation.
 
-
     :param data:              Input data to bucketize
     :param buckets:           1-D of sorted unique boundaries for buckets
     :param output_type:       Output tensor type, "i64" or "i32", defaults to i64
@@ -2603,15 +2602,17 @@ def bucketize(data, buckets, output_type='i64', with_right_bound=True):
                               edge of interval. default true = includes right edge
     :return: Bucketize node
     """
-    return _get_node_factory().create('Bucketize', [data, as_node(buckets)],
-        {'output_type': output_type, 'with_right_bound': with_right_bound})
+    return _get_node_factory().create(
+        'Bucketize',
+        [data, as_node(buckets)],
+        {'output_type': output_type, 'with_right_bound': with_right_bound},
+    )
 
 
 @nameable_op
 def range(start, stop, step):
     # type: (Node, NodeInput, NodeInput) -> Node
     """Return a node which produces the Range operation.
-
 
     :param start:  The start value of the generated range
     :param stop:   The stop value of the generated range
@@ -2622,49 +2623,47 @@ def range(start, stop, step):
 
 
 @nameable_op
-def region_yolo(input, # type: Node
-                num_coords, # type: int
-                num_classes, # type: int
-                num_regions, # type: int
-                do_softmax,  # type: bool
-                mask, # type: List[int]
-                axis, # type: int
-                end_axis, # type: int
-                anchors = [] # type: List[float]
-                ): # type: Node
+def region_yolo(input,  # type: Node
+                coords,  # type: int
+                classes,  # type: int
+                num,  # type: int
+                mask,  # type: List[int]
+                axis,  # type: int
+                end_axis,  # type: int
+                do_softmax=True,  # type: bool
+                anchors=[],  # type: List[float]
+                ):  # type: Node
     """Return a node which produces the RegionYolo operation.
 
-
-    :param input:        Input data
-    :param num_coords:   Number of coordinates for each region
-    :param num_classes:  Number of classes for each region
-    :param num_regions:  Number of regions
-    :param do_softmax:   Compute softmax
-    :param mask:         Mask
-    :param axis:         Axis to begin softmax on
-    :param end_axis:     Axis to end softmax on
-    :param anchors:      A flattened list of pairs `[width, height]` that describes prior box sizes
+    :param input:       Input data
+    :param coords:      Number of coordinates for each region
+    :param classes:     Number of classes for each region
+    :param num:         Number of regions
+    :param mask:        Mask
+    :param axis:        Axis to begin softmax on
+    :param end_axis:    Axis to end softmax on
+    :param do_softmax:  Compute softmax
+    :param anchors:     A flattened list of pairs `[width, height]` that describes prior box sizes
     :return: RegionYolo node
     """
     return _get_node_factory().create('RegionYolo', [input], {
-                                      "coords": num_coords,
-                                      "classes": num_classes,
-                                      "num": num_regions,
-                                      "do_softmax": do_softmax,
-                                      "mask": mask,
-                                      "axis": axis,
-                                      "end_axis": end_axis,
-                                      "anchors": anchors
-                                    })
+                                      'coords': coords,
+                                      'classes': classes,
+                                      'num': num,
+                                      'mask': mask,
+                                      'axis': axis,
+                                      'end_axis': end_axis,
+                                      'do_softmax': do_softmax,
+                                      'anchors': anchors,
+                                      })
 
 
 @nameable_op
-def reorg_yolo(input, strides): # type: (Node, NodeInput, NodeInput) -> Node
+def reorg_yolo(input, stride):  # type: (Node, List[int]) -> Node
     """Return a node which produces the ReorgYolo operation.
-
 
     :param input:  Input data
     :param step:   The step value for the generated range
     :return: ReorgYolo node
     """
-    return _get_node_factory().create('ReorgYolo', [input], {"stride": strides})
+    return _get_node_factory().create('ReorgYolo', [input], {'stride': stride})
