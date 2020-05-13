@@ -111,7 +111,7 @@ namespace ngraph
                     model.set_producer_name("backend-test");
                     auto* opset_version = model.add_opset_import();
                     opset_version->set_version(11);
-                    const std::string path = "/home/etusien/ngraph/test/models/onnx/dql_test.onnx";
+                    const std::string path = "dql_test.onnx";
                     std::ofstream output_file{path};
                     model.SerializeToOstream(&output_file);
 
