@@ -71,3 +71,11 @@ shared_ptr<Node> op::ROIPooling::clone_with_new_inputs(const OutputVector& new_a
     return make_shared<ROIPooling>(
         new_args.at(0), new_args.at(1), m_output_size, m_spatial_scale, m_method);
 }
+
+bool op::ROIPooling::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("output_size", m_output_size);
+    visitor.on_attribute("spatial_scale", m_spatial_scale);
+    visitor.on_attribute("method", m_method);
+    return true;
+}

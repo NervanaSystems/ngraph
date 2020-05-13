@@ -125,6 +125,57 @@ def test_depth_to_space():
     assert np.allclose(result, expected)
 
 
+def test_space_to_batch():
+    runtime = get_runtime()
+
+    data_value = np.array([[[[0, 1, 2],
+                             [3, 4, 5]],
+                            [[6, 7, 8],
+                             [9, 10, 11]]]], dtype=np.float32)
+    data_shape = data_value.shape
+
+    block_shape = np.array([1, 2, 3, 2], dtype=np.int64)
+    pads_begin = np.array([0, 0, 1, 0], dtype=np.int64)
+    pads_end = np.array([0, 0, 0, 1], dtype=np.int64)
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+
+    model = ng.space_to_batch(parameter_data, block_shape, pads_begin, pads_end)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data_value)
+    expected = np.array([[[[0, 0]]], [[[0, 0]]], [[[0, 2]]], [[[1, 0]]], [[[3, 5]]], [[[4, 0]]],
+                         [[[0, 0]]], [[[0, 0]]], [[[6, 8]]], [[[7, 0]]], [[[9, 11]]], [[[10, 0]]]],
+                        dtype=np.float32)
+    assert np.allclose(result, expected)
+
+
+def test_batch_to_space():
+    runtime = get_runtime()
+
+    data = np.array([[[[0, 0]]], [[[0, 0]]], [[[0, 2]]], [[[1, 0]]], [[[3, 5]]], [[[4, 0]]],
+                     [[[0, 0]]], [[[0, 0]]], [[[6, 8]]], [[[7, 0]]], [[[9, 11]]], [[[10, 0]]]],
+                    dtype=np.float32)
+    data_shape = data.shape
+
+    block_shape = np.array([1, 2, 3, 2], dtype=np.int64)
+    crops_begin = np.array([0, 0, 1, 0], dtype=np.int64)
+    crops_end = np.array([0, 0, 0, 1], dtype=np.int64)
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+
+    model = ng.batch_to_space(parameter_data, block_shape, crops_begin, crops_end)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data)
+    expected = np.array([[[[0, 1, 2],
+                           [3, 4, 5]],
+                          [[6, 7, 8],
+                           [9, 10, 11]]]], dtype=np.float32)
+
+    assert np.allclose(result, expected)
+
+
 def test_gemm_operator():
     runtime = get_runtime()
 
@@ -345,6 +396,24 @@ def test_prelu_operator():
 
     result = computation(data_value, slope_value)
     expected = np.clip(data_value, 0, np.inf) + np.clip(data_value, -np.inf, 0) * slope_value
+    assert np.allclose(result, expected)
+
+
+def test_selu_operator():
+    runtime = get_runtime()
+
+    data_shape = [4, 2, 3, 1]
+
+    data = np.arange(start=1.0, stop=25.0, dtype=np.float32).reshape(data_shape)
+    alpha = np.array(1.6733, dtype=np.float32)
+    lambda_value = np.array(1.0507, dtype=np.float32)
+
+    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    model = ng.selu(parameter_data, alpha, lambda_value)
+    computation = runtime.computation(model, parameter_data)
+
+    result = computation(data)
+    expected = lambda_value * ((data > 0) * data + (data <= 0) * (alpha * np.exp(data) - alpha))
     assert np.allclose(result, expected)
 
 
