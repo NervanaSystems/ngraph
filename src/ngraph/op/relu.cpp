@@ -17,6 +17,9 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/multiply.hpp"
 
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/relu.hpp"
+
 using namespace std;
 using namespace ngraph;
 
@@ -33,6 +36,60 @@ shared_ptr<Node> op::Relu::clone_with_new_inputs(const OutputVector& new_args) c
 {
     check_new_args_count(this, new_args);
     return make_shared<Relu>(new_args.at(0));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        runtime::reference::relu<T>(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
+        return true;
+    }
+
+    bool evaluate_relu(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        bool rc = true;
+        out->set_unary(arg0);
+
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(boolean)(arg0, out, count);
+            break;
+            TYPE_CASE(i8)(arg0, out, count);
+            break;
+            TYPE_CASE(i16)(arg0, out, count);
+            break;
+            TYPE_CASE(i32)(arg0, out, count);
+            break;
+            TYPE_CASE(i64)(arg0, out, count);
+            break;
+            TYPE_CASE(u8)(arg0, out, count);
+            break;
+            TYPE_CASE(u16)(arg0, out, count);
+            break;
+            TYPE_CASE(u32)(arg0, out, count);
+            break;
+            TYPE_CASE(u64)(arg0, out, count);
+            break;
+            TYPE_CASE(bf16)(arg0, out, count);
+            break;
+            TYPE_CASE(f16)(arg0, out, count);
+            break;
+            TYPE_CASE(f32)(arg0, out, count);
+            break;
+            TYPE_CASE(f64)(arg0, out, count);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::Relu::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_relu(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
 
 op::ReluBackprop::ReluBackprop(const Output<Node>& arg, const Output<Node>& delta)

@@ -27,6 +27,7 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -74,6 +75,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
         {
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Unsqueeze: retval = true; break;
         default: break;
@@ -83,6 +85,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
