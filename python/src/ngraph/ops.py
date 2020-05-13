@@ -2582,3 +2582,26 @@ def reverse_sequence(input, seq_lengths, batch_axis, seq_axis, name=None):
     """
     return _get_node_factory().create('ReverseSequence', [input, as_node(seq_lengths)],
                                       {'batch_axis': batch_axis, 'seq_axis': seq_axis})
+
+@nameable_op
+def embedding_segments_sum(emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights):
+    # type: (Node, NodeInput, NodeInput, NodeInput, NodeInput, NodeInput) -> Node
+    """Return a node which produces a EmbeddingSegmentsSum operation.
+
+    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a
+    given input tensor with a row (from the weights matrix) at that index
+    :param 'emb_table' tensor containing the embedding lookup table of the module of
+            shape [num_emb, emb_dim1, emb_dim2, ...] and  of type T
+    :param 'indices' tensor of shape [num_indices] and of type T_IND. Required
+    :param `segment_ids` tensor of shape `[num_indices]` and of type *T_IND* with indices
+            into the output Tensor. Values should be sorted and can be repeated. Required.
+    :param `num_segments` scalar of type *T_IND* indicating the number of segments. Required.
+    :param 'per_sample_weights' tensor of the same shape as indices and of type T.
+            Each value in this tensor are multiplied with each
+            value pooled from embedding table for each index. Optional.
+    :param 'default_index' scalar of type T_IND containing default index in embedding
+            table to fill empty "bags". If not provided empty "bags" are filled with zeros. Optional.
+    """
+    return _get_node_factory().create('EmbeddingSegmentsSum', [emb_table, as_node(indices),
+                                                        as_node(segment_ids), as_node(num_segments),
+                                                        as_node(default_index), as_node(per_sample_weights)])
