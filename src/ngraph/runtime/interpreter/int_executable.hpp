@@ -1251,16 +1251,6 @@ protected:
                                         node.get_output_shape(0));
             break;
         }
-        case OP_TYPEID::Reshape:
-        {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
-                               out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
-                               reshape->get_input_order(),
-                               node.get_output_shape(0));
-            break;
-        }
         case OP_TYPEID::Reverse:
         {
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
@@ -1498,7 +1488,6 @@ protected:
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
@@ -1553,6 +1542,7 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
@@ -1573,6 +1563,7 @@ protected:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
         case OP_TYPEID::Range:
+        case OP_TYPEID::Reshape:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::ShapeOf:
