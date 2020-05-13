@@ -158,14 +158,23 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
     if (emb_table_shape.rank().is_static())
     {
         result_shape = emb_table_shape;
-        result_shape[0] = Dimension::dynamic();
+        if (auto num_segments_const =
+                as_type<op::v0::Constant>(this->get_input_node_ptr(NUM_SEGMENTS)))
+        {
+            result_shape[0] = num_segments_const->cast_vector<int64_t>()[0];
+        }
+        else
+        {
+            result_shape[0] = Dimension::dynamic();
+            set_input_is_relevant_to_shape(NUM_SEGMENTS);
+        }
     }
     else
     {
         result_shape = PartialShape::dynamic();
+        set_input_is_relevant_to_shape(NUM_SEGMENTS);
     }
 
-    set_input_is_relevant_to_shape(NUM_SEGMENTS);
     set_output_type(0, result_et, result_shape);
 }
 
