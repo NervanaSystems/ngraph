@@ -112,7 +112,10 @@ public:
         : m_json(j)
     {
     }
-
+    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
+    {
+        NGRAPH_CHECK(false, "Adapter ", adapter.get_type_info().name, " is not handled");
+    }
     void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
     {
         m_json[name] = adapter.get();
@@ -190,7 +193,10 @@ public:
         : m_json(j)
     {
     }
-    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override {}
+    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
+    {
+        NGRAPH_CHECK(false, "Adapter ", adapter.get_type_info().name, " is not handled");
+    }
     void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
     {
         if (has_key(m_json, name))
