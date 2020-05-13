@@ -26,52 +26,6 @@
 using namespace std;
 using namespace ngraph;
 
-namespace
-{
-    InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape,
-                                         const void* data,
-                                         size_t data_size,
-                                         const element::Type& elem_type)
-    {
-        InferenceEngine::Layout layout;
-        switch (shape.size())
-        {
-        case 0: layout = InferenceEngine::Layout::SCALAR; break;
-        case 1: layout = InferenceEngine::Layout::C; break;
-        case 2: layout = InferenceEngine::Layout::NC; break;
-        case 3: layout = InferenceEngine::Layout::CHW; break;
-        case 4: layout = InferenceEngine::Layout::NCHW; break;
-        case 5: layout = InferenceEngine::Layout::NCDHW; break;
-        case 6: layout = InferenceEngine::Layout::GOIDHW; break;
-        default: THROW_IE_EXCEPTION << "Can't convert dims " << shape.size() << " to Layout!";
-        }
-
-        InferenceEngine::MemoryBlob::Ptr blob;
-
-        auto size = data_size * elem_type.size();
-
-#define MAKE_IE_TBLOB(type_, precision_, shape_, layout_)                                          \
-    make_shared<InferenceEngine::TBlob<type_>>(                                                    \
-        InferenceEngine::TensorDesc{InferenceEngine::Precision::precision_, shape_, layout_}, (type_*)data, size)
-
-        switch (elem_type)
-        {
-        case element::Type_t::f32: blob = MAKE_IE_TBLOB(float, FP32, shape, layout); break;
-        case element::Type_t::i16: blob = MAKE_IE_TBLOB(int16_t, I16, shape, layout); break;
-        case element::Type_t::u8: blob = MAKE_IE_TBLOB(uint8_t, U8, shape, layout); break;
-        case element::Type_t::i8: blob = MAKE_IE_TBLOB(int8_t, I8, shape, layout); break;
-        case element::Type_t::u16: blob = MAKE_IE_TBLOB(uint16_t, U16, shape, layout); break;
-        case element::Type_t::i32: blob = MAKE_IE_TBLOB(int32_t, I32, shape, layout); break;
-        case element::Type_t::i64: blob = MAKE_IE_TBLOB(int64_t, I64, shape, layout); break;
-        case element::Type_t::u64: blob = MAKE_IE_TBLOB(uint64_t, U64, shape, layout); break;
-        case element::Type_t::boolean: blob = MAKE_IE_TBLOB(uint8_t, BOOL, shape, layout); break;
-        default: THROW_IE_EXCEPTION << "Can't convert type " << elem_type << " to IE Precision!";
-        }
-#undef MAKE_IE_TBLOB
-        return blob;
-    }
-}
-
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     : m_device{device}
 {
@@ -113,14 +67,13 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     //  Load model to the plugin (BACKEND_NAME)
     InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
     //  Create infer request
-     m_infer_req = exe_network.CreateInferRequest();
+    m_infer_req = exe_network.CreateInferRequest();
 }
 
 bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-
-    //  Prepare input and output blobs
+    // Prepare input blobs
     InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
     if (input_info.size() != inputs.size())
     {
@@ -130,17 +83,18 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     size_t i = 0;
     for (const auto& it : input_info)
     {
-        shared_ptr<runtime::ie::IETensor> tv =
-            static_pointer_cast<runtime::ie::IETensor>(inputs[i]);
-        m_infer_req.SetBlob(it.first,
-                              fill_blob(it.second->getTensorDesc().getDims(),
-                                        tv->get_data_ptr(),
-                                        tv->get_element_count(),
-                                        tv->get_element_type()));
+        string input_name = it.first;
+        InferenceEngine::Blob::Ptr input_blob = m_infer_req.GetBlob(input_name);
+        auto input_buffer = input_blob->buffer().as<void*>();
+        size_t input_data_size = input_blob->byteSize();
+        inputs[i]->read(input_buffer, input_data_size);
         i++;
     }
 
-    //  Prepare output blobs
+    // Infer Request
+    m_infer_req.Infer();
+
+    // Prepare output blobs
     InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
     if (output_info.size() != outputs.size())
     {
@@ -150,16 +104,12 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     i = 0;
     for (const auto& it : output_info)
     {
-        shared_ptr<runtime::ie::IETensor> tv =
-            static_pointer_cast<runtime::ie::IETensor>(outputs[i]);
-        m_infer_req.SetBlob(it.first,
-                              fill_blob(it.second->getTensorDesc().getDims(),
-                                        tv->get_data_ptr(),
-                                        tv->get_element_count(),
-                                        tv->get_element_type()));
+        string output_name = it.first;
+        InferenceEngine::Blob::Ptr output_blob = m_infer_req.GetBlob(output_name);
+        auto output_buffer = output_blob->buffer().as<void*>();
+        size_t output_data_size = output_blob->byteSize();
+        outputs[i]->write(output_buffer, output_data_size);
         i++;
     }
-
-    m_infer_req.Infer();
     return true;
 }
