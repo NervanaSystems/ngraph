@@ -16,8 +16,10 @@
 
 #include "ngraph/op/floor.hpp"
 
+#include "ngraph/op/util/eval_identity.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
+#include "ngraph/runtime/reference/identity.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -43,6 +45,7 @@ shared_ptr<Node> op::Floor::clone_with_new_inputs(const OutputVector& new_args) 
 
 namespace
 {
+    // function used by TYPE_CASE
     template <element::Type_t ET>
     inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
@@ -51,11 +54,11 @@ namespace
         return true;
     }
 
+    // function used by IDENTITY
     template <element::Type_t ET>
     inline bool copy_tensor(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
-        using T = typename element_type_traits<ET>::value_type;
-        memcpy(out->get_data_ptr<T>(), arg0->get_data_ptr<T>(), count * sizeof(T));
+        runtime::reference::identity(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
         return true;
     }
 
@@ -63,9 +66,6 @@ namespace
     {
         bool rc = true;
         out->set_unary(arg0);
-
-#define IDENTITY(a)                                                                                \
-    case element::Type_t::a: rc = copy_tensor<element::Type_t::a>
 
         switch (arg0->get_element_type())
         {

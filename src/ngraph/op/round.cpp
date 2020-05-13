@@ -19,7 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
+#include "ngraph/op/util/eval_identity.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/identity.hpp"
 #include "ngraph/runtime/reference/round.hpp"
 
 constexpr NodeTypeInfo op::Round::type_info;
@@ -38,11 +40,20 @@ shared_ptr<Node> op::Round::clone_with_new_inputs(const OutputVector& new_args) 
 
 namespace
 {
+    // function used by TYPE_CASE
     template <element::Type_t ET>
     inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
         using T = typename element_type_traits<ET>::value_type;
         runtime::reference::round<T>(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
+        return true;
+    }
+
+    // function used by IDENTITY
+    template <element::Type_t ET>
+    inline bool copy_tensor(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        runtime::reference::identity(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
         return true;
     }
 
@@ -53,23 +64,23 @@ namespace
 
         switch (arg0->get_element_type())
         {
-            TYPE_CASE(boolean)(arg0, out, count);
+            IDENTITY(boolean)(arg0, out, count);
             break;
-            TYPE_CASE(i8)(arg0, out, count);
+            IDENTITY(i8)(arg0, out, count);
             break;
-            TYPE_CASE(i16)(arg0, out, count);
+            IDENTITY(i16)(arg0, out, count);
             break;
-            TYPE_CASE(i32)(arg0, out, count);
+            IDENTITY(i32)(arg0, out, count);
             break;
-            TYPE_CASE(i64)(arg0, out, count);
+            IDENTITY(i64)(arg0, out, count);
             break;
-            TYPE_CASE(u8)(arg0, out, count);
+            IDENTITY(u8)(arg0, out, count);
             break;
-            TYPE_CASE(u16)(arg0, out, count);
+            IDENTITY(u16)(arg0, out, count);
             break;
-            TYPE_CASE(u32)(arg0, out, count);
+            IDENTITY(u32)(arg0, out, count);
             break;
-            TYPE_CASE(u64)(arg0, out, count);
+            IDENTITY(u64)(arg0, out, count);
             break;
             TYPE_CASE(bf16)(arg0, out, count);
             break;
