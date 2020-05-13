@@ -444,7 +444,7 @@ TEST(constant_folding, constant_unary_binary)
     ASSERT_EQ(get_result_constant<char>(func, 23), logical_and_autob_numpy_expected);
     ASSERT_EQ(get_result_constant<char>(func, 24), logical_or_autob_numpy_expected);
     ASSERT_EQ(get_result_constant<char>(func, 25), logical_xor_autob_numpy_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
+    ASSERT_NO_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(constant_folding, const_dequantize)

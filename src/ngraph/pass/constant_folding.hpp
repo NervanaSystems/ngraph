@@ -78,7 +78,6 @@ public:
         construct_constant_broadcast();
         construct_constant_dyn_broadcast();
         construct_constant_pad();
-        construct_constant_unary();
         construct_constant_quantize();
         construct_constant_dequantize();
         construct_constant_convert();
@@ -86,7 +85,6 @@ public:
         construct_constant_arithmetic_reduction();
         construct_constant_logical_reduction();
         construct_constant_gather_with_subgraph();
-        construct_constant_gather();
         construct_constant_scatter_elements_update();
         construct_constant_slice();
         construct_constant_dyn_slice();
@@ -103,7 +101,6 @@ private:
     void construct_constant_broadcast();
     void construct_constant_dyn_broadcast();
     void construct_constant_pad();
-    void construct_constant_unary();
     void construct_constant_quantize();
     void construct_constant_dequantize();
     void construct_constant_convert();
@@ -111,7 +108,6 @@ private:
     void construct_constant_arithmetic_reduction();
     void construct_constant_logical_reduction();
     void construct_constant_gather_with_subgraph();
-    void construct_constant_gather();
     void construct_constant_scatter_elements_update();
     void construct_constant_slice();
     void construct_constant_dyn_slice();

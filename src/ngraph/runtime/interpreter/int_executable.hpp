@@ -782,35 +782,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Gather:
-        {
-            const op::Gather* gather = static_cast<const op::Gather*>(&node);
-            if (node.get_input_element_type(1) == element::i64)
-            {
-                reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
-                                              args[1]->get_data_ptr<int64_t>(),
-                                              out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
-                                              node.get_input_shape(1),
-                                              node.get_output_shape(0),
-                                              gather->get_axis());
-            }
-            else if (node.get_input_element_type(1) == element::i32)
-            {
-                reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
-                                              args[1]->get_data_ptr<int32_t>(),
-                                              out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
-                                              node.get_input_shape(1),
-                                              node.get_output_shape(0),
-                                              gather->get_axis());
-            }
-            else
-            {
-                throw ngraph_error("Unexpected type");
-            }
-            break;
-        }
         case OP_TYPEID::GatherND:
         {
             if (node.get_input_element_type(1) == element::i64)
@@ -1531,6 +1502,7 @@ protected:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
+        case OP_TYPEID::Gather:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
