@@ -1654,8 +1654,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::HardSigmoid>(args[0], args[1], args[2]);
             break;
         }
-        case OP_TYPEID::Interpolate: { break;
-        }
         case OP_TYPEID::LayerNorm:
         {
             auto keep_stats = node_js.at("keep_stats").get<bool>();
@@ -3207,8 +3205,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::HardSigmoid: { break;
-    }
-    case OP_TYPEID::Interpolate: { break;
     }
     case OP_TYPEID::LayerNorm:
     {

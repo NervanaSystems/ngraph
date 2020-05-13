@@ -20,4 +20,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_Log(py::module m);
+void regclass_pyngraph_Dimension(py::module m);
