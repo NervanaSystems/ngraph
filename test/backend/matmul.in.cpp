@@ -293,7 +293,39 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2_2)
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), vector<float>{5.f}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x2x3_transpose)
+NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x1x3_transpose)
+{
+    Shape shape_in1{2, 2, 3};
+    Shape shape_in2{2, 1, 3};
+    Shape shape_out{2, 2, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::MatMul>(A, B, false, true);
+    auto f = make_shared<Function>(matmul, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape_in1);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, shape_in2);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape_out);
+
+    vector<float> in1_vec(shape_size(shape_in1));
+    vector<float> in2_vec(shape_size(shape_in2));
+    // in1_vec is 1.f, 2.f, 3.f, ..., 12.f
+    iota(in1_vec.begin(), in1_vec.end(), 1.f);
+    // in2_vec is 1.f, 2.f, 3.f, ..., 6.f
+    iota(in2_vec.begin(), in2_vec.end(), 1.f);
+    copy_data(a, in1_vec);
+    copy_data(b, in2_vec);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+
+    EXPECT_TRUE(
+        test::all_close(read_vector<float>(result), vector<float>{14.f, 32.f, 122.f, 167.f}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x1x3_transpose_int64)
 {
     Shape shape_in1{2, 2, 3};
     Shape shape_in2{2, 1, 3};
@@ -301,6 +333,37 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x2x3_transpose)
     auto A = make_shared<op::Parameter>(element::i64, shape_in1);
     auto B = make_shared<op::Parameter>(element::i64, shape_in2);
     auto matmul = make_shared<op::MatMul>(A, B, false, true);
+    auto f = make_shared<Function>(matmul, ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i64, shape_in1);
+    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i64, shape_in2);
+    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::i64, shape_out);
+
+    vector<int64_t> in1_vec(shape_size(shape_in1));
+    vector<int64_t> in2_vec(shape_size(shape_in2));
+    // in1_vec is 1, 2, 3, ..., 12
+    iota(in1_vec.begin(), in1_vec.end(), 1);
+    // in2_vec is 1, 2, 3, ..., 6
+    iota(in2_vec.begin(), in2_vec.end(), 1);
+    copy_data(a, in1_vec);
+    copy_data(b, in2_vec);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+
+    EXPECT_TRUE(test::all_close(read_vector<int64_t>(result), vector<int64_t>{14, 32, 122, 167}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x3x1_int64)
+{
+    Shape shape_in1{2, 2, 3};
+    Shape shape_in2{2, 3, 1};
+    Shape shape_out{2, 2, 1};
+    auto A = make_shared<op::Parameter>(element::i64, shape_in1);
+    auto B = make_shared<op::Parameter>(element::i64, shape_in2);
+    auto matmul = make_shared<op::MatMul>(A, B, false, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
