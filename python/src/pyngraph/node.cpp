@@ -59,7 +59,7 @@ void regclass_pyngraph_Node(py::module m)
     node.def("__repr__", [](const ngraph::Node& self) {
         std::string type_name = self.get_type_name();
         std::stringstream shapes_ss;
-        for (int i = 0; i < self.get_output_size(); ++i)
+        for (size_t i = 0; i < self.get_output_size(); ++i)
         {
             if (i > 0)
             {
