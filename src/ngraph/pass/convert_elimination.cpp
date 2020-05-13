@@ -20,11 +20,11 @@
 #include <typeinfo>
 #include <unordered_map>
 
-#include "ngraph/pass/convert_elimination.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/opsets/opset3.hpp"
+#include "ngraph/pass/convert_elimination.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,7 +38,7 @@ using namespace ngraph;
 //                    [ op3--> NonZero--> op4 ]
 //
 //*************************
-static bool eliminate_convert(const std::shared_ptr<Node>& node)
+bool pass::ConvertElimination::eliminate_convert(const std::shared_ptr<Node>& node)
 {
     auto convert = as_type_ptr<opset3::Convert>(node);
     auto destination_type = convert->get_destination_type();

@@ -26,6 +26,9 @@ namespace ngraph
         {
         public:
             bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+
+        private:
+            static bool eliminate_convert(const std::shared_ptr<Node>& node);
         };
     }
 }
