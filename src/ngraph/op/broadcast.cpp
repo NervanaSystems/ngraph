@@ -338,45 +338,45 @@ namespace
     }
 
     bool evaluate_broadcast(const HostTensorPtr& arg0,
-                            const HostTensorPtr& arg1,
                             const HostTensorPtr& out,
-                            const std::pair<bool, AxisSet> pair_broadcast_axes)
+                            const AxisSet broadcast_axes,
+                            const Shape output_shape)
     {
         if (arg0->get_element_type() != out->get_element_type())
         {
             return false;
         }
-        if (!pair_broadcast_axes.first)
-        {
-            // error / debug message: broadcast_axes not known deterministically
-            std::cout << " Broadcast axes not known deterministically\n";
-            return false;
-        }
+
         bool rc = true;
         Shape in_shape = arg0->get_shape();
-        Shape out_shape = out->get_shape();
-        // output_value->set_shape(Shape{shape.size()});
+        out->set_shape(output_shape);
         switch (arg0->get_element_type())
         {
-            TYPE_CASE(i8)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(boolean)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(i16)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(i8)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(i32)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(i16)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(i64)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(i32)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(u8)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(i64)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(u16)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(u8)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(u32)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(u16)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(u64)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(u32)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(f32)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(u64)(arg0, out, broadcast_axes);
             break;
-            TYPE_CASE(f64)(arg0, out, pair_broadcast_axes.second);
+            TYPE_CASE(bf16)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE(f16)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE(f32)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE(f64)(arg0, out, broadcast_axes);
             break;
         default: rc = false; break;
         }
@@ -386,8 +386,7 @@ namespace
 
 bool op::v0::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(
-        inputs[0], inputs[1], outputs[0], std::pair<bool, AxisSet>(true, get_broadcast_axes()));
+    return evaluate_broadcast(inputs[0], outputs[0], get_broadcast_axes(), get_output_shape(0));
 }
 
 constexpr NodeTypeInfo op::v0::BroadcastLike::type_info;

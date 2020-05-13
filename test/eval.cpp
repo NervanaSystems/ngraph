@@ -201,6 +201,60 @@ TEST(eval, evaluate_broadcast_v3_numpy)
     ASSERT_EQ(result_val, expec);
 }
 
+TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
+{
+    Shape in_shape{1, 4, 1};
+
+    auto A = make_shared<op::Parameter>(element::f32, in_shape);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 4});
+    auto bcast_v3_num = make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::NUMPY);
+    auto fun_num = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun_num->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(in_shape, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1, 4, 4}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(expec, result_val);
+
+    auto target_shape2 = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 4});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape2, op::BroadcastType::BIDIRECTIONAL);
+    auto fun_bidi = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
+
+    auto result2 = make_shared<HostTensor>();
+    ASSERT_TRUE(fun_bidi->evaluate(
+        {result2}, {make_host_tensor<element::Type_t::f32>(in_shape, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result2->get_element_type(), element::f32);
+    EXPECT_EQ(result2->get_partial_shape(), (PartialShape{1, 4, 4}));
+    auto result_val2 = read_vector<float>(result2);
+    vector<float> expec2{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(expec2, result_val2);
+}
+
+TEST(eval, evaluate_broadcast_v3_bidi_4d)
+{
+    Shape in_shape{4, 1, 1};
+    Shape expec_shape{1, 4, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, in_shape);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{4}, {1, 1, 2, 2});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(in_shape, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1, 4, 2, 2}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(result_val, expec);
+}
+
 TEST(eval, evaluate_broadcast_v3_pdpd)
 {
     Shape shape_a{3, 1};
@@ -263,6 +317,26 @@ TEST(eval, evaluate_broadcast_v1_pdpd)
         1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
         1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
     };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_explicit)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
+    auto axes_mapping = op::Constant::create<int64_t>(element::i32, Shape{2}, {1, 2});
+    auto bcast_v3 = make_shared<op::v1::Broadcast>(
+        A, target_shape, axes_mapping, op::AutoBroadcastSpec(op::AutoBroadcastType::EXPLICIT));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 1}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 2, 3, 1, 2, 3};
     ASSERT_EQ(result_val, expec);
 }
 

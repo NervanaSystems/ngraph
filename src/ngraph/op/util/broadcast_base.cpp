@@ -286,10 +286,9 @@ namespace
     }
 
     bool evaluate_broadcast(const HostTensorPtr& arg0,
-                            const HostTensorPtr& arg1,
                             const HostTensorPtr& out,
-                            const std::pair<bool, AxisSet> pair_broadcast_axes /*,
-                            const op::BroadcastModeSpec& broadcast_spec*/)
+                            const std::pair<bool, AxisSet> pair_broadcast_axes,
+                            const Shape output_shape)
     {
         if (arg0->get_element_type() != out->get_element_type())
         {
@@ -297,16 +296,16 @@ namespace
         }
         if (!pair_broadcast_axes.first)
         {
-            // error / debug message: broadcast_axes not known deterministically
-            std::cout << " Broadcast axes not known deterministically\n";
+            // broadcast_axes not known deterministically
             return false;
         }
         bool rc = true;
         Shape in_shape = arg0->get_shape();
-        Shape out_shape = out->get_shape();
-        // output_value->set_shape(Shape{shape.size()});
+        out->set_shape(output_shape);
         switch (arg0->get_element_type())
         {
+            TYPE_CASE(boolean)(arg0, out, pair_broadcast_axes.second);
+            break;
             TYPE_CASE(i8)(arg0, out, pair_broadcast_axes.second);
             break;
             TYPE_CASE(i16)(arg0, out, pair_broadcast_axes.second);
@@ -323,6 +322,10 @@ namespace
             break;
             TYPE_CASE(u64)(arg0, out, pair_broadcast_axes.second);
             break;
+            TYPE_CASE(bf16)(arg0, out, pair_broadcast_axes.second);
+            break;
+            TYPE_CASE(f16)(arg0, out, pair_broadcast_axes.second);
+            break;
             TYPE_CASE(f32)(arg0, out, pair_broadcast_axes.second);
             break;
             TYPE_CASE(f64)(arg0, out, pair_broadcast_axes.second);
@@ -336,5 +339,5 @@ namespace
 bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
                                        const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], inputs[1], outputs[0], get_broadcast_axes());
+    return evaluate_broadcast(inputs[0], outputs[0], get_broadcast_axes(), get_output_shape(0));
 }
