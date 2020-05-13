@@ -14,20 +14,36 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/sin.hpp"
-#include "pyngraph/ops/sin.hpp"
+#include <cmath>
+#include <cstddef>
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Sin(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::Sin,
-               std::shared_ptr<ngraph::op::Sin>,
-               ngraph::op::util::UnaryElementwiseArithmetic>
-        sin(m, "Sin");
-    sin.doc() = "ngraph.impl.op.Sin wraps ngraph::op::Sin";
-    sin.def(py::init<const std::shared_ptr<ngraph::Node>&>());
+    namespace runtime
+    {
+        namespace reference
+        {
+            template <typename T>
+            void clamp(const T* arg, T* out, T min, T max, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    if (arg[i] < min)
+                    {
+                        out[i] = min;
+                    }
+                    else if (arg[i] > max)
+                    {
+                        out[i] = max;
+                    }
+                    else
+                    {
+                        out[i] = arg[i];
+                    }
+                }
+            }
+        }
+    }
 }
