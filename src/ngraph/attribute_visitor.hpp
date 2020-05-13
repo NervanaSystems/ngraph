@@ -69,18 +69,6 @@ namespace ngraph
     class NGRAPH_API AttributeVisitor
     {
     public:
-        enum class ContextType
-        {
-            Struct,
-            Vector
-        };
-        struct Context
-        {
-            ContextType context_type;
-            std::string name;
-            int64_t index;
-        };
-
         virtual ~AttributeVisitor() {}
         // Must implement these methods
         /// \brief handles all specialized on_adapter methods implemented by the visitor.
@@ -137,16 +125,13 @@ namespace ngraph
             on_adapter(get_name_with_context(name), adapter);
         }
         /// \returns The nested context of visits
-        const std::vector<Context>& get_context() const { return m_context; }
+        const std::vector<std::string>& get_context() const { return m_context; }
         /// \returns context prepended to names
         virtual std::string get_name_with_context(const std::string& name);
         /// \brief Start visiting a nested structure
         virtual void start_structure(const std::string& name);
         /// \brief Finish visiting a nested structure
         virtual void finish_structure();
-        virtual void start_vector(const std::string& name);
-        virtual void next_vector_element();
-        virtual void finish_vector();
         using node_id_t = std::string;
         static const node_id_t invalid_node_id;
         /// \brief Associate a node with an id.
@@ -160,7 +145,7 @@ namespace ngraph
         virtual node_id_t get_registered_node_id(const std::shared_ptr<Node>& node);
 
     protected:
-        std::vector<Context> m_context;
+        std::vector<std::string> m_context;
         std::unordered_map<std::shared_ptr<Node>, node_id_t> m_node_id_map;
         std::unordered_map<node_id_t, std::shared_ptr<Node>> m_id_node_map;
     };

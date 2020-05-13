@@ -200,59 +200,107 @@ bool op::v0::TensorIterator::BodyOutputDescription::visit_attributes(AttributeVi
     return true;
 }
 
+namespace
+{
+}
+
 namespace ngraph
 {
     template <>
-    class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>
-        : public VisitorAdapter
+    FactoryRegistry<op::v0::TensorIterator::InputDescription>&
+        FactoryRegistry<op::v0::TensorIterator::InputDescription>::get()
     {
-    public:
-        AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& ref)
-            : m_ref(ref)
+        static FactoryRegistry<op::v0::TensorIterator::InputDescription> registry;
+        static mutex init_guard;
+        if (registry.m_factory_map.size() == 0)
         {
+            lock_guard<mutex> guard(init_guard);
+            if (registry.m_factory_map.size() == 0)
+            {
+                registry.register_factory<op::v0::TensorIterator::SliceInputDescription>();
+                registry.register_factory<op::v0::TensorIterator::MergedInputDescription>();
+                registry.register_factory<op::v0::TensorIterator::InvariantInputDescription>();
+            }
         }
+        return registry;
+    }
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
-        {
-            return true;
-        }
-
-        static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>",
-            0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    protected:
-        std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& m_ref;
-    };
+    constexpr DiscreteTypeInfo
+        AttributeAdapter<std::shared_ptr<op::TensorIterator::InputDescription>>::type_info;
 
     constexpr DiscreteTypeInfo AttributeAdapter<
         std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>::type_info;
 
-    template <>
-    class AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>
-        : public VisitorAdapter
+    AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>::
+        AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& ref)
+        : m_ref(ref)
     {
-    public:
-        AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& ref)
-            : m_ref(ref)
-        {
-        }
+    }
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+    bool AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>::
+        visit_attributes(AttributeVisitor& visitor, const std::string& name)
+    {
+        visitor.start_structure(name);
+        int64_t size = m_ref.size();
+        visitor.on_attribute("size", size);
+        ostringstream index;
+        for (int64_t i = 0; i < size; i++)
         {
-            return true;
+            index.clear();
+            index << i;
+            visitor.on_attribute(index.str(), m_ref[i]);
         }
+        visitor.finish_structure();
+        return true;
+    }
 
-        static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>",
-            0};
-        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-    protected:
-        std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& m_ref;
-    };
+    template <>
+    FactoryRegistry<op::v0::TensorIterator::OutputDescription>&
+        FactoryRegistry<op::v0::TensorIterator::OutputDescription>::get()
+    {
+        static FactoryRegistry<op::v0::TensorIterator::OutputDescription> registry;
+        static mutex init_guard;
+        // TODO: Add a lock
+        if (registry.m_factory_map.size() == 0)
+        {
+            lock_guard<mutex> guard(init_guard);
+            if (registry.m_factory_map.size() == 0)
+            {
+                registry.register_factory<op::v0::TensorIterator::ConcatOutputDescription>();
+                registry.register_factory<op::v0::TensorIterator::BodyOutputDescription>();
+            }
+        }
+        return registry;
+    }
 
     constexpr DiscreteTypeInfo AttributeAdapter<
         std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>::type_info;
+
+    constexpr DiscreteTypeInfo
+        AttributeAdapter<std::shared_ptr<op::TensorIterator::OutputDescription>>::type_info;
+
+    AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>::
+        AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& ref)
+        : m_ref(ref)
+    {
+    }
+
+    bool AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>::
+        visit_attributes(AttributeVisitor& visitor, const std::string& name)
+    {
+        visitor.start_structure(name);
+        int64_t size = m_ref.size();
+        visitor.on_attribute("size", size);
+        ostringstream index;
+        for (int64_t i = 0; i < size; i++)
+        {
+            index.clear();
+            index << i;
+            visitor.on_attribute(index.str(), m_ref[i]);
+        }
+        visitor.finish_structure();
+        return true;
+    }
 }
 
 bool op::v0::TensorIterator::visit_attributes(AttributeVisitor& visitor)
@@ -629,46 +677,4 @@ std::shared_ptr<Node>
 
 namespace ngraph
 {
-    template class NGRAPH_API FactoryRegistry<op::v0::TensorIterator::InputDescription>;
-
-    template <>
-    FactoryRegistry<op::v0::TensorIterator::InputDescription>&
-        FactoryRegistry<op::v0::TensorIterator::InputDescription>::get()
-    {
-        static FactoryRegistry<op::v0::TensorIterator::InputDescription> registry;
-        static mutex init_guard;
-        // TODO: Add a lock
-        if (registry.m_factory_map.size() == 0)
-        {
-            lock_guard<mutex> guard(init_guard);
-            if (registry.m_factory_map.size() == 0)
-            {
-                registry.register_factory<op::v0::TensorIterator::SliceInputDescription>();
-                registry.register_factory<op::v0::TensorIterator::MergedInputDescription>();
-                registry.register_factory<op::v0::TensorIterator::InvariantInputDescription>();
-            }
-        }
-        return registry;
-    }
-
-    template class NGRAPH_API FactoryRegistry<op::v0::TensorIterator::OutputDescription>;
-
-    template <>
-    FactoryRegistry<op::v0::TensorIterator::OutputDescription>&
-        FactoryRegistry<op::v0::TensorIterator::OutputDescription>::get()
-    {
-        static FactoryRegistry<op::v0::TensorIterator::OutputDescription> registry;
-        static mutex init_guard;
-        // TODO: Add a lock
-        if (registry.m_factory_map.size() == 0)
-        {
-            lock_guard<mutex> guard(init_guard);
-            if (registry.m_factory_map.size() == 0)
-            {
-                registry.register_factory<op::v0::TensorIterator::ConcatOutputDescription>();
-                registry.register_factory<op::v0::TensorIterator::BodyOutputDescription>();
-            }
-        }
-        return registry;
-    }
 }

@@ -92,6 +92,7 @@ set (SRC
     except.hpp
     factory.cpp
     factory.hpp
+    factory_adapter.hpp
     file_util.cpp
     file_util.hpp
     function.cpp

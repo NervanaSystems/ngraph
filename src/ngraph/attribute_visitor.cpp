@@ -22,25 +22,10 @@ using namespace ngraph;
 
 void AttributeVisitor::start_structure(const string& name)
 {
-    m_context.push_back(Context{ContextType::Struct, name, 0});
+    m_context.push_back(name);
 }
 
 void AttributeVisitor::finish_structure()
-{
-    m_context.pop_back();
-}
-
-void AttributeVisitor::start_vector(const std::string& name)
-{
-    m_context.push_back(Context{ContextType::Vector, name, 0});
-}
-
-void AttributeVisitor::next_vector_element()
-{
-    m_context.back().index++;
-}
-
-void AttributeVisitor::finish_vector()
 {
     m_context.pop_back();
 }
@@ -51,13 +36,8 @@ string AttributeVisitor::get_name_with_context(const std::string& name)
     string sep = "";
     for (auto c : m_context)
     {
-        result << sep;
+        result << sep << c;
         sep = ".";
-        result << c.name;
-        if (c.context_type == ContextType::Vector)
-        {
-            result << "[" << c.index << "]";
-        }
     }
     result << sep << name;
     return result.str();

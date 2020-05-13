@@ -94,143 +94,8 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<Position>::type_info;
-
-    /// TODO: Better name and move to attribute_adapter
-    /// \brief Visits type info for value.
-    ///
-    /// If value is nullptr, type info is obtained from the visitor and the factory is used
-    /// to create an object. Otherwise, type_info is obtained from value and visited.
-    template <typename BASE_TYPE>
-    BASE_TYPE* visit_type_info(AttributeVisitor& visitor, BASE_TYPE* value)
-    {
-        string name;
-        uint64_t version = 0;
-        if (value)
-        {
-            auto type_info = value->get_type_info();
-            name = type_info.name;
-            version = type_info.version;
-        }
-        visitor.on_attribute("name", name);
-        visitor.on_attribute("version", version);
-        if (value || name.empty())
-        {
-            return nullptr;
-        }
-        else
-        {
-            return FactoryRegistry<BASE_TYPE>::get().create(
-                DiscreteTypeInfo{name.c_str(), version});
-        }
-    }
 }
 
-#if 0
-// TODO Update and use for NodeVector, ParameterVector, OutputVector, ResultVector
-void AttributeAdapter<std::shared_ptr<Node>>::visit_node_vector(AttributeVisitor& visitor,
-                                                                const std::string& name,
-                                                                NodeVector& node_vector)
-{
-    std::vector<AttributeVisitor::id_type> references;
-    if (references.size() == 0 && node_vector.size() > 0)
-    {
-        for (auto node : node_vector)
-        {
-            auto val = visitor.get_id(type_info, node.get(), false);
-            NGRAPH_CHECK(val != AttributeVisitor::INVALID_ID,
-                         "Cannot serialize node vector that references unserialized nodes");
-            references.push_back(val);
-        }
-    }
-    visitor.on_attribute(name, references);
-    if (node_vector.size() == 0 && references.size() > 0)
-    {
-        for (auto id : references)
-        {
-            auto val = visitor.get_ptr(type_info, id);
-            NGRAPH_CHECK(val.first, "Bad reference to node");
-            node_vector.push_back(static_cast<Node*>(val.second)->shared_from_this());
-        }
-    }
-}
-
-bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor)
-{
-    AttributeVisitor::id_type id = visitor.get_id(type_info, m_ref.get(), true);
-    visitor.on_attribute("reference_id", id);
-    if (m_ref == nullptr)
-    {
-        NGRAPH_CHECK(id != AttributeVisitor::INVALID_ID, "Unable to visit node");
-        auto found_ptr = visitor.get_ptr(type_info, id);
-        if (found_ptr.first)
-        {
-            // Already visited
-            m_ref = static_cast<Node*>(found_ptr.second)->shared_from_this();
-            visitor.add_keep_alice(m_ref);
-            return true;
-        }
-    }
-    // Full visit
-    bool node_created = false;
-    {
-        visitor.start_structure("type_info");
-        auto val = visit_type_info(visitor, m_ref.get());
-        visitor.finish_structure();
-        NGRAPH_CHECK(val, "Failed to create node");
-        node_created = true;
-        m_ref = shared_ptr<Node>(val);
-    }
-    vector<size_t> input_indices;
-    NodeVector input_nodes;
-    NodeVector control_deps;
-    if (!node_created)
-    {
-        // Get the indices for the input_nodes and control deps
-        for (auto value : m_ref->input_values())
-        {
-            input_nodes.push_back(value.get_node_shared_ptr());
-            input_indices.push_back(value.get_index());
-        }
-        control_deps = m_ref->get_control_dependencies();
-    }
-
-    visit_node_vector(visitor, "input_nodes", input_nodes);
-    visitor.on_attribute("input_indices", input_indices);
-    visit_node_vector(visitor, "control_deps", control_deps);
-    m_ref->visit_attributes(visitor);
-    if (node_created)
-    {
-        OutputVector args;
-        for (size_t i = 0; i < input_nodes.size(); ++i)
-        {
-            args.push_back(input_nodes[i]->output(input_indices[i]));
-        }
-        m_ref->set_arguments(args);
-        for (auto control_dep : control_deps)
-        {
-            m_ref->add_control_dependency(control_dep);
-        }
-        m_ref->constructor_validate_and_infer_types();
-    }
-
-    return true;
-}
-
-vector<int64_t> visit_nodes(AttributeVisitor& visitor, const NodeVector& nodes)
-{
-    vector<int64_t> node_ids;
-    traverse_nodes(nodes, [&visitor, &node_ids](std::shared_ptr<Node> node) {
-        auto id = visitor.get_id(node.get());
-        if (id == -1)
-        {
-            id = get_node_visitor_id(visitor, node);
-        }
-        NGRAPH_CHECK(id != -1, "Node ", node, " could not be visited");
-        node_ids.push_back(id);
-    });
-    return node_ids;
-}
-#endif
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
 class Oracle : public op::Op
@@ -664,7 +529,8 @@ public:
         node->visit_attributes(*this);
         return node;
     }
-    NodeSaver& get_node_saver() { return m_values; }
+    AttributeVisitor& get_node_saver() { return m_values; }
+    AttributeVisitor& get_node_loader() { return *this; }
     void on_adapter(const string& name, ValueAccessor<void>& adapter) override
     {
         NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be unmarshalled");
@@ -783,14 +649,16 @@ TEST(attributes, user_op)
                                       ParameterVector{data, data, program},
                                       ResultVector{result});
     NodeBuilder builder;
-    builder.register_node(program, "program");
-    ASSERT_EQ(builder.get_registered_node("program"), program);
-    ASSERT_EQ(builder.get_registered_node_id(program), "program");
-    builder.register_node(data, "data");
-    builder.register_node(result, "result");
-    builder.get_node_saver().register_node(program, "program");
-    builder.get_node_saver().register_node(data, "data");
-    builder.get_node_saver().register_node(result, "result");
+    AttributeVisitor& saver = builder.get_node_saver();
+    AttributeVisitor& loader = builder.get_node_loader();
+    loader.register_node(program, "program");
+    ASSERT_EQ(loader.get_registered_node("program"), program);
+    ASSERT_EQ(loader.get_registered_node_id(program), "program");
+    loader.register_node(data, "data");
+    loader.register_node(result, "result");
+    saver.register_node(program, "program");
+    saver.register_node(data, "data");
+    saver.register_node(result, "result");
     builder.save_node(oracle);
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
@@ -849,8 +717,8 @@ TEST(attributes, matmul_op)
 TEST(attributes, partial_shape)
 {
     NodeBuilder builder;
-    AttributeVisitor& loader(builder);
-    AttributeVisitor& saver(builder.get_node_saver());
+    AttributeVisitor& loader = builder.get_node_loader();
+    AttributeVisitor& saver = builder.get_node_saver();
 
     PartialShape dyn = PartialShape::dynamic();
     saver.on_attribute("dyn", dyn);
