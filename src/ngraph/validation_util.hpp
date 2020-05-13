@@ -186,8 +186,9 @@ namespace ngraph
                            std::int64_t axis_range_max);
 
     /// \brief Try to compute the maximum value of value
-    /// \return (true, max_value) if can be determined, or (false, 0) if not.
-    NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
+    /// \return (true, max_value) if can be determined, or (false, numeric_limits<uint64_t>::max())
+    /// if not.
+    NGRAPH_API std::pair<bool, uint64_t> maximum_value(const Output<Node>& value);
 
     /// \brief Evaluates outputs, treating values in value_map as already computed. value_map is
     /// updated.
