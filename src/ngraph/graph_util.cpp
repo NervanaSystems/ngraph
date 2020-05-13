@@ -927,4 +927,5 @@ bool ngraph::replace_node_update_name(std::shared_ptr<Node> target,
     replace_node(target, replacement);
     replacement->set_friendly_name(target->get_friendly_name());
     copy_runtime_info(target, replacement);
+    return true;
 }
