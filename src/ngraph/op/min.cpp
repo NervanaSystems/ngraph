@@ -18,6 +18,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -89,11 +90,9 @@ namespace
     template <element::Type_t ET>
     bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
     {
-        runtime::reference::min(arg->get_data_ptr<ET>(),
-                                out->get_data_ptr<ET>(),
-                                arg->get_shape(),
-                                out->get_shape(),
-                                axes);
+        out->set_shape(reduce(arg->get_shape(), axes));
+        runtime::reference::min(
+            arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), arg->get_shape(), axes);
         return true;
     }
 

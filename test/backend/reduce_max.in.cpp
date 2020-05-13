@@ -811,3 +811,45 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_max_keep_3d_eliminate_zero_dim)
     handle->call_with_validate({result}, {a});
     EXPECT_EQ((vector<float>{mi, mi, mi, mi, mi, mi}), read_vector<float>(result));
 }
+
+// Dynamic
+
+NGRAPH_TEST(${BACKEND_NAME}, reduce_max_keep_matrix_columns_dynamic)
+{
+    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto f =
+        make_shared<Function>(make_shared<op::v1::ReduceMax>(A, axes, false), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    // Create some tensors for input/output
+    Shape shape_a{3, 2};
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{5, 6}), read_vector<float>(result)));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, reduce_max_keep_matrix_rows_dynamic)
+{
+    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto f =
+        make_shared<Function>(make_shared<op::v1::ReduceMax>(A, axes, false), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    // Create some tensors for input/output
+    Shape shape_a{3, 2};
+    auto a = backend->create_tensor(element::f32, shape_a);
+    copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
+    auto result = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_TRUE(test::all_close_f((vector<float>{2, 4, 6}), read_vector<float>(result)));
+}

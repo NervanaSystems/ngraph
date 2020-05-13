@@ -1583,8 +1583,6 @@ protected:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
         case OP_TYPEID::Range:
-        case OP_TYPEID::ReduceMax_v1:
-        case OP_TYPEID::ReduceMin_v1:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::ShapeOf:

@@ -46,7 +46,6 @@ static shared_ptr<op::Constant>
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
-                                   reduction_node->get_shape(),
                                    max->get_reduction_axes());
     }
     else if (auto reduce_max = as_type_ptr<op::v1::ReduceMax>(reduction_node))
@@ -64,7 +63,6 @@ static shared_ptr<op::Constant>
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
-                                   shape_no_keep_dims,
                                    reduce_max->get_reduction_axes());
     }
     else if (auto min = as_type_ptr<op::Min>(reduction_node))
@@ -72,7 +70,6 @@ static shared_ptr<op::Constant>
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
-                                   reduction_node->get_shape(),
                                    min->get_reduction_axes());
     }
     else if (auto reduce_min = as_type_ptr<op::v1::ReduceMin>(reduction_node))
@@ -90,7 +87,6 @@ static shared_ptr<op::Constant>
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
-                                   shape_no_keep_dims,
                                    reduce_min->get_reduction_axes());
     }
     else if (auto prod = as_type_ptr<op::Product>(reduction_node))
