@@ -18,27 +18,6 @@
 
 using namespace ngraph;
 
-Variant::~Variant()
-{
-}
-std::shared_ptr<ngraph::Variant> Variant::init(const std::shared_ptr<ngraph::Node>& node)
-{
-    return nullptr;
-}
-std::shared_ptr<ngraph::Variant> Variant::merge(const ngraph::NodeVector& nodes)
-{
-    return nullptr;
-}
-
 // Define variant for std::string
 constexpr VariantTypeInfo VariantWrapper<std::string>::type_info;
 constexpr VariantTypeInfo VariantWrapper<int64_t>::type_info;
-
-const VariantTypeInfo& VariantWrapper<int64_t>::get_type_info() const
-{
-    return type_info;
-}
-const VariantTypeInfo& VariantWrapper<std::string>::get_type_info() const
-{
-    return type_info;
-}
