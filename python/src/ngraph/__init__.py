@@ -32,7 +32,7 @@ from ngraph.ops import argmin
 from ngraph.ops import asin
 from ngraph.ops import atan
 from ngraph.ops import avg_pool
-from ngraph.ops import batch_norm
+from ngraph.ops import batch_norm_inference
 from ngraph.ops import batch_to_space
 from ngraph.ops import binary_convolution
 from ngraph.ops import broadcast

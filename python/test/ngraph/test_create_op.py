@@ -528,3 +528,10 @@ def test_select():
 
     result = test.ngraph.util.run_op_node([cond, then_node, else_node], ng.ops.select)
     assert np.allclose(result, excepted)
+
+
+def test_result():
+    node = [[11, 10], [1, 8], [3, 4]]
+
+    result = test.ngraph.util.run_op_node([node], ng.ops.result)
+    assert np.allclose(result, node)
