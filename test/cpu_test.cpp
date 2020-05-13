@@ -1351,7 +1351,7 @@ TEST(cpu_test, constant_unary_binary)
         get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
     ASSERT_EQ(get_result_constant<int>(func, 23), add_autob_numpy_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
+    ASSERT_NO_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(cpu_test, conv_test_winograd)

@@ -4,11 +4,13 @@ from _pyngraph import NodeFactory as _NodeFactory
 
 from ngraph.impl import Node
 
+DEFAULT_OPSET = 'opset3'
+
 
 class NodeFactory(object):
     """Factory front-end to create node objects."""
 
-    def __init__(self, opset_version='opset1'):  # type: (str) -> None
+    def __init__(self, opset_version=DEFAULT_OPSET):  # type: (str) -> None
         """Create the NodeFactory object.
 
         :param      opset_version:  The opset version the factory will use to produce ops from.
