@@ -113,7 +113,6 @@ public:
     {
     }
 
-    void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override {}
     void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
     {
         m_json[name] = adapter.get();
@@ -131,6 +130,10 @@ public:
         m_json[name] = adapter.get();
     }
     void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<uint64_t>>& adapter) override
     {
         m_json[name] = adapter.get();
     }
@@ -223,6 +226,13 @@ public:
         if (has_key(m_json, name))
         {
             adapter.set(m_json.at(name).get<std::vector<int64_t>>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<uint64_t>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<uint64_t>>());
         }
     }
     void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter) override
