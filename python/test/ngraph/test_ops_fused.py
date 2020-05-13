@@ -517,6 +517,7 @@ def test_space_to_depth_operator():
     assert np.allclose(result, expected)
 
 
+@pytest.mark.skip_on_cpu
 def test_rnn_cell_operator():
     runtime = get_runtime()
 

@@ -73,9 +73,7 @@ op::RNNCell::RNNCell(const Output<Node>& X,
 
 bool op::RNNCell::visit_attributes(AttributeVisitor& visitor)
 {
-    op::util::RNNCellBase::visit_attributes(visitor);
-    m_activation_f = get_activation_function(0);
-    return true;
+    return op::util::RNNCellBase::visit_attributes(visitor);
 }
 
 void op::RNNCell::pre_validate_and_infer_types()
