@@ -75,7 +75,7 @@ namespace ngraph
             {
             public:
                 static constexpr NodeTypeInfo type_info{"Add", 1};
-                const NodeTypeInfo& get_type_info() const override { std::cerr << "TYPE INFO FROM ADD !!! 1 !!!\n"; return type_info; }
+                const NodeTypeInfo& get_type_info() const override { /*std::cerr << "TYPE INFO FROM ADD !!! 1 !!!\n";*/ return type_info; }
                 
                 /// \brief Constructs an uninitialized addition operation
                 Add()
@@ -119,7 +119,7 @@ namespace ngraph
             {
             public:
                 static constexpr NodeTypeInfo type_info{"Add", 2, &v1::Add::type_info};
-                const NodeTypeInfo& get_type_info() const override { std::cerr << "TYPE INFO FROM ADD 2\n"; return type_info; }
+                const NodeTypeInfo& get_type_info() const override { /*std::cerr << "TYPE INFO FROM ADD 2\n";*/ return type_info; }
 
                 using v1::Add::Add;
 
