@@ -52,16 +52,17 @@ shared_ptr<Node>
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)
     {
-        return make_shared<EmbeddingBagOffsetsSum>(new_args.at(0), new_args.at(1), new_args.at(2));
+        return make_shared<op::v3::EmbeddingBagOffsetsSum>(
+            new_args.at(0), new_args.at(1), new_args.at(2));
     }
     else if (new_args.size() == 4)
     {
-        return make_shared<EmbeddingBagOffsetsSum>(
+        return make_shared<op::v3::EmbeddingBagOffsetsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
     }
     else if (new_args.size() == 5)
     {
-        return make_shared<EmbeddingBagOffsetsSum>(
+        return make_shared<op::v3::EmbeddingBagOffsetsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
     }
     else
