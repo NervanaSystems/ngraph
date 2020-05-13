@@ -857,16 +857,6 @@ protected:
                               lrn->get_nsize());
             break;
         }
-        case OP_TYPEID::Max:
-        {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            reference::max<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              max->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::MaxPool:
         {
             const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
@@ -895,16 +885,6 @@ protected:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
-            break;
-        }
-        case OP_TYPEID::Min:
-        {
-            const op::Min* min = static_cast<const op::Min*>(&node);
-            reference::min<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              min->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Negative:
@@ -1593,7 +1573,9 @@ protected:
         case OP_TYPEID::LogicalAnd_v1:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
@@ -1601,6 +1583,8 @@ protected:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
         case OP_TYPEID::Range:
+        case OP_TYPEID::ReduceMax_v1:
+        case OP_TYPEID::ReduceMin_v1:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::ShapeOf:

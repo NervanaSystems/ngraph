@@ -24,6 +24,8 @@ NGRAPH_OP(LogicalAnd, op::v1)
 NGRAPH_OP(LogicalOr, op::v1)
 NGRAPH_OP(LogicalXor, op::v1)
 NGRAPH_OP(LogicalNot, op::v1)
+NGRAPH_OP(ReduceMax, op::v1)
+NGRAPH_OP(ReduceMin, op::v1)
 #undef ID_SUFFIX
 
 #define ID_SUFFIX(NAME) NAME##_v3

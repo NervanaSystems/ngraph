@@ -16,6 +16,8 @@
 
 #include "ngraph/op/min.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/min.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -82,6 +84,55 @@ shared_ptr<Node> op::v0::Min::get_default_value() const
     }
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        runtime::reference::min(arg->get_data_ptr<ET>(),
+                                out->get_data_ptr<ET>(),
+                                arg->get_shape(),
+                                out->get_shape(),
+                                axes);
+        return true;
+    }
+
+    bool evaluate_min(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        bool rc = true;
+        switch (arg->get_element_type())
+        {
+            TYPE_CASE(i8)(arg, out, axes);
+            break;
+            TYPE_CASE(i16)(arg, out, axes);
+            break;
+            TYPE_CASE(i32)(arg, out, axes);
+            break;
+            TYPE_CASE(i64)(arg, out, axes);
+            break;
+            TYPE_CASE(u8)(arg, out, axes);
+            break;
+            TYPE_CASE(u16)(arg, out, axes);
+            break;
+            TYPE_CASE(u32)(arg, out, axes);
+            break;
+            TYPE_CASE(u64)(arg, out, axes);
+            break;
+            TYPE_CASE(f32)(arg, out, axes);
+            break;
+            TYPE_CASE(f64)(arg, out, axes);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Min::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_min(inputs[0], outputs[0], get_reduction_axes());
+}
+
 constexpr NodeTypeInfo op::v1::ReduceMin::type_info;
 
 op::v1::ReduceMin::ReduceMin(const Output<Node>& arg,
@@ -96,4 +147,9 @@ shared_ptr<Node> op::v1::ReduceMin::clone_with_new_inputs(const OutputVector& ne
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::ReduceMin>(new_args.at(0), new_args.at(1), get_keep_dims());
+}
+
+bool op::v1::ReduceMin::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_min(inputs[0], outputs[0], get_reduction_axes());
 }
