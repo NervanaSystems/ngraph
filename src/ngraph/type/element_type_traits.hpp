@@ -28,7 +28,7 @@ namespace ngraph
     template <>
     struct element_type_traits<element::Type_t::boolean>
     {
-        using value_type = bool;
+        using value_type = char;
     };
 
     template <>
