@@ -70,10 +70,9 @@ namespace ngraph
                         axes.insert(ax);
                     }
 
-                    auto attrs = ngraph::op::InterpolateAttrs();
+                    auto attrs = default_opset::Interpolate::InterpolateAttrs();
                     attrs.axes = axes;
-                    attrs.mode = mode;
-                    attrs.align_corners = false;
+                    attrs.mode = as_enum<default_opset::Interpolate::InterpolateMode>(mode);
 
                     if (scales->is_constant() && data_shape.is_static())
                     {

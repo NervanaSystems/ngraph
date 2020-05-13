@@ -50,6 +50,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/relu.hpp"
+#include "ngraph/op/reshape.hpp"
 #include "ngraph/op/round.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/op/sigmoid.hpp"
@@ -216,6 +217,100 @@ TEST(eval, interpret_dynamic_range_sum)
     ASSERT_EQ(result_val, seq);
 }
 #endif
+
+TEST(eval, evaluate_reshape_v1)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, false);
+    auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(func->evaluate(
+        {result_tensor},
+        {make_host_tensor<element::Type_t::f32>({2, 5}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}),
+         make_host_tensor<element::Type_t::i64>({2}, {5, 2})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{5, 2}));
+    auto computed_val = read_vector<float>(result_tensor);
+    vector<float> expected_val{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    ASSERT_EQ(computed_val, expected_val);
+}
+
+TEST(eval, evaluate_reshape_v1_negative_index)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, false);
+    auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(func->evaluate(
+        {result_tensor},
+        {make_host_tensor<element::Type_t::f32>({2, 5}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}),
+         make_host_tensor<element::Type_t::i64>({2}, {2, -1})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{2, 5}));
+    auto computed_val = read_vector<float>(result_tensor);
+    vector<float> expected_val{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    ASSERT_EQ(computed_val, expected_val);
+}
+
+TEST(eval, evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
+    auto pattern = make_shared<op::Parameter>(element::i64, Shape{6});
+    auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, true);
+    auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        func->evaluate({result_tensor},
+                       {make_host_tensor<element::Type_t::f32>(
+                            {2, 2, 2, 2}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                        make_host_tensor<element::Type_t::i64>({6}, {2, 0, 1, -1, 1, 2})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{2, 2, 1, 2, 1, 2}));
+    auto computed_val = read_vector<float>(result_tensor);
+    vector<float> expected_val{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    ASSERT_EQ(computed_val, expected_val);
+}
+
+TEST(eval, evaluate_reshape_v1_pattern_int16)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
+    auto pattern = make_shared<op::Parameter>(element::i16, Shape{6});
+    auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, true);
+    auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        func->evaluate({result_tensor},
+                       {make_host_tensor<element::Type_t::f32>(
+                            {2, 2, 2, 2}, {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}),
+                        make_host_tensor<element::Type_t::i16>({6}, {2, 0, 1, -1, 1, 2})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{2, 2, 1, 2, 1, 2}));
+    auto computed_val = read_vector<float>(result_tensor);
+    vector<float> expected_val{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+    ASSERT_EQ(computed_val, expected_val);
+}
+
+TEST(eval, evaluate_convert)
+{
+    auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
+    auto convert = make_shared<op::v0::Convert>(p, element::i64);
+    auto fun = make_shared<Function>(OutputVector{convert}, ParameterVector{p});
+
+    std::vector<std::vector<float>> inputs{{-1, 1}};
+    std::vector<std::vector<int64_t>> expected_result{{-1, 1}};
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        auto result = make_shared<HostTensor>();
+        ASSERT_TRUE(fun->evaluate(
+            {result}, {make_host_tensor<element::Type_t::f32>(Shape{1, 2}, inputs[i])}));
+        EXPECT_EQ(result->get_element_type(), element::i64);
+        EXPECT_EQ(result->get_shape(), (Shape{1, 2}));
+        auto result_data = read_vector<int64_t>(result);
+        ASSERT_EQ(result_data, expected_result[i]);
+    }
+}
 
 TEST(eval, evaluate_abs)
 {
