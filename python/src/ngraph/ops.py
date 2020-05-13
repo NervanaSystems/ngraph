@@ -2140,20 +2140,29 @@ def reverse(data, axis, mode, name=None):  # type: (Node, NodeInput, str, Option
 
 
 @nameable_op
-def batch_norm(eps,             # type: float
-               gamma,           # type: Node
-               beta,            # type: Node
-               data,            # type: Node
-               mean=None,       # type: Node
-               variance=None,   # type: Node
-               name=None,       # type: str
-               ):
+def batch_norm_inference(data,            # type: Node
+                         gamma,           # type: NodeInput
+                         beta,            # type: NodeInput
+                         mean,            # type: NodeInput
+                         variance,        # type: NodeInput
+                         epsilon,         # type: float
+                         name=None,       # type: Optional[str]
+                         ):
     # type: (...) -> Node
-    """Return batch normalization node."""
-    if mean is None and variance is None:
-        return BatchNormTraining(data, gamma, beta, eps)
-    else:
-        return BatchNormInference(data, gamma, beta, mean, variance, eps)
+    """Perform layer normalizes a input tensor by mean and variance with appling scale and offset.
+
+    :param data: The input tensor with data for normalization.
+    :param gamma: The scalar scaling for normalized value.
+    :param beta: The bias added to the scaled normalized value.
+    :param mean: The value for mean normalization.
+    :param variance: The value for variance normalization.
+    :param epsilon: The  number to be added to the variance to avoid division
+                    by zero when normalizing a value.
+    :param name: The optional name of the output node.
+    :return: The new node which performs BatchNormInference.
+    """
+    inputs = [as_node(gamma), as_node(beta), data, as_node(mean), as_node(variance)]
+    return _get_node_factory().create('BatchNormInference', inputs, {'epsilon': epsilon})
 
 
 @nameable_op
