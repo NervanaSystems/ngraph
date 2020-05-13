@@ -80,14 +80,9 @@ void op::util::EmbeddingBagPackedBase::validate_and_infer_types()
     PartialShape result_shape;
     if (emb_table_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(emb_table_shape.rank().get_length());
-        result_dims[0] = indices_shape.rank().is_static() ? indices_shape[0] : Dimension::dynamic();
-        for (size_t i = 1; i < emb_table_shape.rank().get_length(); i++)
-        {
-            result_dims[i] = emb_table_shape[i];
-        }
-
-        result_shape = PartialShape(result_dims);
+        result_shape = emb_table_shape;
+        result_shape[0] =
+            indices_shape.rank().is_static() ? indices_shape[0] : Dimension::dynamic();
     }
     else
     {
