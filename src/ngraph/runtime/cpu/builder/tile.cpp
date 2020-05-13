@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/kernel/tile.hpp"
-#include "ngraph/op/experimental/tile.hpp"
+#include "ngraph/op/tile.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 
 using namespace std;

@@ -17,16 +17,16 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/experimental/layers/ctc_greedy_decoder.hpp"
-#include "ngraph/op/experimental/layers/detection_output.hpp"
-#include "ngraph/op/experimental/layers/interpolate.hpp"
-#include "ngraph/op/experimental/layers/prior_box.hpp"
-#include "ngraph/op/experimental/layers/prior_box_clustered.hpp"
-#include "ngraph/op/experimental/layers/proposal.hpp"
-#include "ngraph/op/experimental/layers/psroi_pooling.hpp"
-#include "ngraph/op/experimental/layers/region_yolo.hpp"
-#include "ngraph/op/experimental/layers/reorg_yolo.hpp"
-#include "ngraph/op/experimental/layers/roi_pooling.hpp"
+#include "ngraph/op/ctc_greedy_decoder.hpp"
+#include "ngraph/op/detection_output.hpp"
+#include "ngraph/op/interpolate.hpp"
+#include "ngraph/op/prior_box.hpp"
+#include "ngraph/op/prior_box_clustered.hpp"
+#include "ngraph/op/proposal.hpp"
+#include "ngraph/op/psroi_pooling.hpp"
+#include "ngraph/op/region_yolo.hpp"
+#include "ngraph/op/reorg_yolo.hpp"
+#include "ngraph/op/roi_pooling.hpp"
 
 #include <memory>
 using namespace std;

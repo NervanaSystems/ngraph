@@ -169,7 +169,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const Output<Node>& data_batch,
     set_output_type(0, data_batch_et, output_shape);
 }
 
-shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GroupConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

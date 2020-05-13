@@ -624,7 +624,7 @@ namespace ngraph
 
                     if ((node->get_input_element_type(0) != element::f32 &&
                          convolution_algo != mkldnn::algorithm::convolution_direct) ||
-                        convolution->get_argument(0)->get_shape()[1] <= 8)
+                        convolution->get_input_shape(0)[1] <= 8)
                     {
                         convolution_algo = mkldnn::algorithm::convolution_direct;
                     }
@@ -705,9 +705,7 @@ namespace ngraph
                         SET_ROUND_MODE
                         attr.set_output_scales(0, get_output_scale<OP, float>(node));
                     }
-#if MKLDNN_VERSION_MAJOR >= 1
                     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
-#endif
                     return attr;
                 }
 
@@ -762,9 +760,7 @@ namespace ngraph
                         SET_ROUND_MODE
                         attr.set_output_scales(0, get_output_scale<OP, float>(node));
                     }
-#if MKLDNN_VERSION_MAJOR >= 1
                     attr.set_scratchpad_mode(mkldnn::scratchpad_mode::user);
-#endif
                     return attr;
                 }
 
@@ -1194,7 +1190,6 @@ namespace ngraph
                                          const std::vector<size_t>& deps,
                                          size_t gelu_index);
 
-#if MKLDNN_VERSION_MAJOR >= 1
                 // TODO(jmenon): Get rid of TensorWrappers at some point
                 mkldnn::memory::desc
                     build_memory_descriptor(const TensorWrapper& tvw,
@@ -1562,262 +1557,6 @@ namespace ngraph
                                               const ngraph::Coordinate& lower_bounds,
                                               const ngraph::Shape& result_shape);
                 size_t query_scratchpad_softmax_forward(const mkldnn::softmax_forward::desc& desc);
-
-#else
-                // TODO(jmenon): Get rid of TensorWrappers at some point
-                mkldnn::memory::desc build_memory_descriptor(const TensorWrapper& tvw,
-                                                             mkldnn::memory::format fmt) const;
-                mkldnn::memory::desc build_memory_descriptor(const Shape& shape,
-                                                             const ngraph::element::Type& et,
-                                                             mkldnn::memory::format fmt) const;
-                size_t build_memory_primitive(const mkldnn::memory::desc& desc);
-                void build_memory_primitive(const mkldnn::memory::desc& desc, size_t index);
-                void build_memory_primitive(std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                            const mkldnn::memory::desc& desc,
-                                            size_t index);
-
-                template <typename OP>
-                mkldnn::concat::primitive_desc get_concat_desc(const ngraph::Node* node,
-                                                               size_t nargs)
-                {
-                    auto concat = static_cast<const OP*>(node);
-
-                    std::vector<mkldnn::memory::primitive_desc> inputs_pd;
-                    for (size_t i = 0; i < nargs; i++)
-                    {
-                        inputs_pd.push_back(mkldnn::memory::primitive_desc(
-                            mkldnn_utils::get_input_mkldnn_md(node, i),
-                            runtime::cpu::executor::global_cpu_engine));
-                    }
-
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-
-                    auto concat_dim = concat->get_concatenation_axis();
-
-                    // concat primitive descriptor
-                    return mkldnn::concat::primitive_desc(
-                        result_desc, static_cast<int>(concat_dim), inputs_pd);
-                }
-
-                template <typename OP>
-                mkldnn::rnn_forward::desc
-                    get_rnn_forward_desc(const ngraph::Node* node,
-                                         const std::vector<TensorWrapper>& args,
-                                         const std::vector<TensorWrapper>& out)
-                {
-                    auto rnn_node = static_cast<const OP*>(node);
-                    auto src_sequence_length_max =
-                        static_cast<unsigned long>(rnn_node->get_src_sequence_length());
-                    auto direction = static_cast<unsigned long>(rnn_node->get_direction());
-                    auto num_fused_layers =
-                        static_cast<unsigned long>(rnn_node->get_num_fused_layers());
-                    auto feature_size =
-                        static_cast<unsigned long>(rnn_node->get_src_iter_feature_size());
-                    auto batch = static_cast<unsigned long>(rnn_node->get_batch_size());
-                    auto rnn_cell_n_gates =
-                        static_cast<unsigned long>(rnn_node->get_gates_per_cell());
-                    auto rnn_cell_n_states =
-                        static_cast<unsigned long>(rnn_node->get_num_cell_states());
-
-                    auto get_mkldnn_rnn_cell_type = [&]() {
-                        switch (rnn_node->get_rnn_type())
-                        {
-                        case rnn_utils::rnntype::vanilla_rnn: return mkldnn::algorithm::vanilla_rnn;
-                        case rnn_utils::rnntype::vanilla_gru: return mkldnn::algorithm::vanilla_gru;
-                        case rnn_utils::rnntype::vanilla_lstm:
-                            return mkldnn::algorithm::vanilla_lstm;
-                        default: throw ngraph_error("unsupported mkldnn rnn algorithm");
-                        }
-                    };
-
-                    auto get_mkldnn_rnn_direction = [&]() {
-                        switch (direction)
-                        {
-                        case 1: return mkldnn::rnn_direction::unidirectional_left2right;
-                        case 2: return mkldnn::rnn_direction::bidirectional_concat;
-                        default: throw ngraph_error("unsupported mkldnn rnn direction");
-                        }
-                    };
-
-                    if (out[0].get_shape().size() == 2 &&
-                        (out[0].get_shape()[1] != direction * feature_size))
-                    {
-                        throw ngraph_error(
-                            "input slc{ht} feature size is not equal to output dlc{ht} feature "
-                            "size ");
-                    }
-
-                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
-                        rnn_node->get_num_timesteps() != 1)
-                    {
-                        throw ngraph_error(
-                            "input sic{ht_1|ct_1} feature size is not equal to output "
-                            "dlc{ht_1|ct_1} "
-                            "feature size ");
-                    }
-
-                    Shape src_layer_tz{
-                        src_sequence_length_max,
-                        batch,
-                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size())};
-                    Shape src_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
-                    Shape wei_layer_tz{
-                        num_fused_layers,
-                        direction,
-                        static_cast<unsigned long>(rnn_node->get_src_layer_feature_size()),
-                        rnn_cell_n_gates,
-                        feature_size};
-                    Shape wei_iter_tz{
-                        num_fused_layers, direction, feature_size, rnn_cell_n_gates, feature_size};
-                    Shape bias_tz{num_fused_layers, direction, rnn_cell_n_gates, feature_size};
-                    Shape dst_layer_tz{src_sequence_length_max, batch, direction * feature_size};
-                    Shape dst_iter_tz{
-                        num_fused_layers, direction, rnn_cell_n_states, batch, feature_size};
-
-                    // We create the memory descriptors used by the user
-                    auto src_layer_desc = build_memory_descriptor(
-                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::FORMAT::tnc);
-                    auto src_iter_desc = build_memory_descriptor(
-                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::FORMAT::ldsnc);
-                    auto weights_layer_desc = build_memory_descriptor(
-                        wei_layer_tz, args[2].get_element_type(), mkldnn::memory::FORMAT::ldigo);
-                    auto weights_iter_desc = build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::FORMAT::ldigo);
-                    auto bias_desc = build_memory_descriptor(
-                        bias_tz, args[4].get_element_type(), mkldnn::memory::FORMAT::ldgo);
-                    auto dst_layer_desc = build_memory_descriptor(
-                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::FORMAT::tnc);
-                    auto dst_iter_desc = build_memory_descriptor(
-                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::FORMAT::ldsnc);
-
-                    mkldnn::rnn_cell::desc rnn_cell_desc(get_mkldnn_rnn_cell_type(),
-                                                         mkldnn::algorithm::eltwise_tanh);
-                    return mkldnn::rnn_forward::desc(mkldnn::prop_kind::forward_training,
-                                                     rnn_cell_desc,
-                                                     get_mkldnn_rnn_direction(),
-                                                     src_layer_desc,
-                                                     src_iter_desc,
-                                                     weights_layer_desc,
-                                                     weights_iter_desc,
-                                                     bias_desc,
-                                                     dst_layer_desc,
-                                                     dst_iter_desc);
-                }
-
-                template <bool with_bias>
-                void build_convolution_forward(
-                    std::vector<mkldnn::memory*>& /* mkldnn_memories */,
-                    std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                    std::vector<mkldnn::memory::desc*>& /* mkldnn_scratchpad_mds */,
-                    const mkldnn::convolution_forward::desc& desc,
-                    const mkldnn::primitive_attr& attr,
-                    const mkldnn::engine& engine,
-                    const std::vector<size_t>& deps,
-                    size_t conv_idx)
-                {
-                    size_t input_idx, weights_idx, results_idx, bias_idx;
-                    input_idx = deps[0];
-                    weights_idx = deps[1];
-                    mkldnn_primitives[input_idx] =
-                        new mkldnn::memory({desc.data.src_desc, engine}, nullptr);
-                    mkldnn_primitives[weights_idx] =
-                        new mkldnn::memory({desc.data.weights_desc, engine}, nullptr);
-                    if (with_bias)
-                    {
-                        bias_idx = deps[2];
-                        results_idx = deps[3];
-                        mkldnn_primitives[bias_idx] =
-                            new mkldnn::memory({desc.data.bias_desc, engine}, nullptr);
-                    }
-                    else
-                    {
-                        results_idx = deps[2];
-                    }
-                    mkldnn_primitives[results_idx] =
-                        new mkldnn::memory({desc.data.dst_desc, engine}, nullptr);
-
-                    mkldnn::primitive* prim;
-                    if (with_bias)
-                    {
-                        prim = new mkldnn::convolution_forward({desc, attr, engine},
-                                                               *mkldnn_primitives[input_idx],
-                                                               *mkldnn_primitives[weights_idx],
-                                                               *mkldnn_primitives[bias_idx],
-                                                               *mkldnn_primitives[results_idx]);
-                    }
-                    else
-                    {
-                        prim = new mkldnn::convolution_forward({desc, attr, engine},
-                                                               *mkldnn_primitives[input_idx],
-                                                               *mkldnn_primitives[weights_idx],
-                                                               *mkldnn_primitives[results_idx]);
-                    }
-
-                    mkldnn_primitives[conv_idx] = prim;
-                }
-
-                template <bool with_bias>
-                void build_inner_product_forward(
-                    std::vector<mkldnn::memory*>& /* mkldnn_memories */,
-                    std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                    std::vector<mkldnn::memory::desc*>& /* mkldnn_scratchpad_mds */,
-                    const mkldnn::inner_product_forward::desc& desc,
-                    const mkldnn::primitive_attr& attr,
-                    const mkldnn::engine& engine,
-                    const std::vector<size_t>& deps,
-                    size_t ip_idx)
-                {
-                    size_t input_idx, weights_idx, results_idx, bias_idx;
-                    input_idx = deps[0];
-                    weights_idx = deps[1];
-                    mkldnn_primitives[input_idx] =
-                        new mkldnn::memory({desc.data.src_desc, engine}, nullptr);
-                    mkldnn_primitives[weights_idx] =
-                        new mkldnn::memory({desc.data.weights_desc, engine}, nullptr);
-                    if (with_bias)
-                    {
-                        bias_idx = deps[2];
-                        results_idx = deps[3];
-                        mkldnn_primitives[bias_idx] =
-                            new mkldnn::memory({desc.data.bias_desc, engine}, nullptr);
-                    }
-                    else
-                    {
-                        results_idx = deps[2];
-                    }
-                    mkldnn_primitives[results_idx] =
-                        new mkldnn::memory({desc.data.dst_desc, engine}, nullptr);
-
-                    mkldnn::primitive* prim;
-                    if (with_bias)
-                    {
-                        prim = new mkldnn::inner_product_forward({desc, attr, engine},
-                                                                 *mkldnn_primitives[input_idx],
-                                                                 *mkldnn_primitives[weights_idx],
-                                                                 *mkldnn_primitives[bias_idx],
-                                                                 *mkldnn_primitives[results_idx]);
-                    }
-                    else
-                    {
-                        prim = new mkldnn::inner_product_forward({desc, attr, engine},
-                                                                 *mkldnn_primitives[input_idx],
-                                                                 *mkldnn_primitives[weights_idx],
-                                                                 *mkldnn_primitives[results_idx]);
-                    }
-
-                    mkldnn_primitives[ip_idx] = prim;
-                }
-
-                void build_rnn_forward(std::vector<mkldnn::memory*>& mkldnn_memories,
-                                       std::vector<mkldnn::primitive*>& mkldnn_primitives,
-                                       std::vector<mkldnn::memory::desc*>& mkldnn_scratchpad_mds,
-                                       std::vector<char*>& mkldnn_workspaces,
-                                       const mkldnn::rnn_forward::desc& desc,
-                                       std::vector<size_t>& deps,
-                                       size_t rnn_idx);
-
-#endif
 
             private:
                 std::vector<mkldnn::memory*> m_mkldnn_memories;

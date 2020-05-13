@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/experimental/tile.hpp"
+#include "ngraph/op/tile.hpp"
 #include "ngraph/runtime/reference/tile.hpp"
 
 using namespace std;

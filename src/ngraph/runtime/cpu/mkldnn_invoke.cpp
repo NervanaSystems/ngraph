@@ -24,34 +24,6 @@
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
-#if MKLDNN_VERSION_MAJOR < 1
-extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeContext* ctx,
-                                                                   size_t index,
-                                                                   void* ptr)
-{
-    auto primitive = static_cast<mkldnn::memory*>(ctx->mkldnn_primitives[index]);
-    primitive->set_data_handle(ptr);
-}
-
-extern "C" void
-    ngraph::runtime::cpu::mkldnn_utils::mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                                size_t primitive_index,
-                                                                std::vector<size_t>& /* deps */,
-                                                                OpType /* type */,
-                                                                size_t scratchpad_size)
-{
-    (void)scratchpad_size;
-    mkldnn::stream s(mkldnn::stream::kind::eager);
-    try
-    {
-        s.submit({*ctx->mkldnn_primitives[primitive_index]}).wait();
-    }
-    catch (const mkldnn::error& e)
-    {
-        throw ngraph_error("Could not run mkdnn primitive " + MKLDNN_ERROR_MESSAGE);
-    }
-}
-#else
 extern "C" void ngraph::runtime::cpu::mkldnn_utils::set_memory_ptr(CPURuntimeContext* ctx,
                                                                    size_t index,
                                                                    void* ptr)
@@ -240,4 +212,3 @@ extern "C" void
         throw ngraph_error("Could not run mkdnn primitive " + MKLDNN_ERROR_MESSAGE);
     }
 }
-#endif

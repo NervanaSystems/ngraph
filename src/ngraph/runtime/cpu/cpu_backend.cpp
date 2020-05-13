@@ -20,7 +20,6 @@
 
 #include "cpu_backend_visibility.h"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
@@ -70,6 +69,11 @@ shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_fra
     Allocator* allocator)
 {
     return external_function->make_call_frame(pass_config, allocator);
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor()
+{
+    throw runtime_error("CPU backend does not support dynamic tensors");
 }
 
 shared_ptr<runtime::Tensor>

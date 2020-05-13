@@ -23,13 +23,14 @@
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
 #include "ngraph/op/experimental/generate_mask.hpp"
-#include "ngraph/op/experimental/range.hpp"
-#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/range.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/transpose.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/specialize_function.hpp"
 #include "ngraph/util.hpp"
@@ -40,6 +41,11 @@ using namespace ngraph;
 runtime::dynamic::DynamicBackend::DynamicBackend(shared_ptr<runtime::Backend> wrapped_backend)
     : m_wrapped_backend(std::move(wrapped_backend))
 {
+}
+
+shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor()
+{
+    return m_wrapped_backend->create_tensor();
 }
 
 shared_ptr<runtime::Tensor>
@@ -93,7 +99,7 @@ bool is_dynamic_op(const std::shared_ptr<Node>& op)
            is_type<op::v1::ConvolutionBackpropData>(op) ||
            is_type<op::v1::ConvolutionBackpropFilters>(op) ||
            is_type<op::v1::AvgPoolBackprop>(op) || is_type<op::v1::Broadcast>(op) ||
-           is_type<op::v1::GenerateMask>(op);
+           is_type<op::v3::Broadcast>(op) || is_type<op::v1::GenerateMask>(op);
 }
 
 // Helper for a vile hack in DynamicExecutable::call. See body of that function for details.
@@ -252,6 +258,9 @@ bool runtime::dynamic::DynamicExecutable::call(
         }
 
         pass::Manager passes;
+        // Opset1Downgrade should be moved below DynElimination
+        // when ConstantFolding for v3 ops will be ready
+        passes.register_pass<pass::Opset1Downgrade>();
         passes.register_pass<pass::ConstantFolding>();
         passes.register_pass<pass::DynElimination>();
         passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops

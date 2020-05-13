@@ -20,7 +20,6 @@
 
 #include "cpu_backend_visibility.h"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"

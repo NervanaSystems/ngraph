@@ -43,13 +43,15 @@ namespace ngraph
                 virtual ~IE_Backend() = default;
 
                 std::shared_ptr<Executable> compile(std::shared_ptr<Function> func,
-                                                    bool enable_performance_data = false);
-                bool is_supported(const Node& node) const;
-                bool is_supported_property(const Property prop) const;
+                                                    bool enable_performance_data = false) override;
+                bool is_supported(const Node& node) const override;
+                bool is_supported_property(const Property prop) const override;
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_dynamic_tensor(const ngraph::element::Type& type,
                                           const ngraph::PartialShape& shape) override;
+
+                std::shared_ptr<ngraph::runtime::Tensor> create_tensor() override;
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,

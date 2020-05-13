@@ -283,55 +283,6 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
                               input->get_element_type().size());
 
-#if MKLDNN_VERSION_MAJOR < 1
-    if (input_desc.data.format == mkldnn_nchw && result_desc.data.format == mkldnn_goihw)
-    {
-        // becomes a copy
-        input_desc = result_desc;
-    }
-    else if ((input_desc.data.format == mkldnn_nchw || input_desc.data.format == mkldnn_nhwc) &&
-             result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
-    {
-        input_desc.data.format = mkldnn_oihw;
-    }
-    else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
-             result_desc.data.ndims == 5 && convertlayout->get_users().size() == 1)
-    {
-        Shape weights_shape_groups;
-        if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(convertlayout->get_users()[0]))
-        {
-            weights_shape_groups = gconv->get_weights_dimensions();
-        }
-        else if (auto gconvb =
-                     as_type_ptr<ngraph::op::GroupConvolutionBias>(convertlayout->get_users()[0]))
-        {
-            weights_shape_groups = gconvb->get_weights_dimensions();
-        }
-        else
-        {
-            throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
-        }
-        input_desc = mkldnn::memory::desc(
-            mkldnn::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
-            mkldnn::memory::format::goihw);
-    }
-
-    // build mkldnn primitive and execute
-    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine},
-                      const_cast<void*>(input->get_data_ptr())};
-    mkldnn::memory out{{result_desc, runtime::cpu::executor::global_cpu_engine}, result_vec.data()};
-    mkldnn::reorder reorder{in, out};
-    mkldnn::stream s(mkldnn::stream::kind::eager);
-    try
-    {
-        s.submit({reorder}).wait();
-    }
-    catch (const mkldnn::error& e)
-    {
-        throw ngraph_error("Could not run mkdnn primitive " + e.message);
-    }
-#else
     bool input_format_is_nchw = runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
         input_desc.data, mkldnn::memory::format_tag::nchw);
     if (input_format_is_nchw && runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
@@ -396,7 +347,6 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     {
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-#endif
 
     return make_shared<ngraph::op::Constant>(
         convertlayout->get_output_element_type(0), convertlayout->get_output_shape(0), result_vec);

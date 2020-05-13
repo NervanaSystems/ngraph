@@ -827,7 +827,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
         ngraph::test::all_close(expected_result, read_vector<float>(bn_output), 1e-3f, 1e-4f));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, dyn_batch_norm_fprop_b1c2h2w2)
+NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dyn_batch_norm_fprop_b1c2h2w2)
 {
     // auto input_shape = Shape{1, 2, 2, 2};
     auto input = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());

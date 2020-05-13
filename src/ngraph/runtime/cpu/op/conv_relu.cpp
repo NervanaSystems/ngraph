@@ -86,7 +86,7 @@ op::ConvolutionRelu::ConvolutionRelu(const Output<Node>& data_batch,
                                                          ));
 }
 
-std::shared_ptr<Node> op::ConvolutionRelu::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::ConvolutionRelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

@@ -16,7 +16,6 @@
 
 #include "ie_backend.hpp"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -73,6 +72,11 @@ shared_ptr<runtime::Tensor>
     return make_shared<IETensor>(type, shape);
 }
 
+shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor()
+{
+    throw runtime_error("IE_Backend::create_tensor() not supported");
+}
+
 shared_ptr<runtime::Tensor>
     runtime::ie::IE_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {
@@ -82,7 +86,7 @@ shared_ptr<runtime::Tensor>
 shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor(
     const element::Type& element_type, const Shape& shape, void* data)
 {
-    auto tensor{make_shared<IETensor>(element_type, shape)};
+    shared_ptr<runtime::Tensor> tensor = make_shared<IETensor>(element_type, shape);
     tensor->write(data, shape_size(shape) * element_type.size());
     return tensor;
 }

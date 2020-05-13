@@ -32,6 +32,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
+#include "ngraph/rt_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -880,4 +881,34 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
                                 std::function<void(std::shared_ptr<Function>)> f)
 {
     f(p);
+}
+
+bool ngraph::replace_output_update_name(Output<Node> output, const Output<Node>& replacement)
+{
+    bool has_result_output = false;
+    for (auto& target_input : output.get_target_inputs())
+    {
+        if (is_type<op::Result>(target_input.get_node()))
+        {
+            // ignore trivial elimination
+            has_result_output = true;
+            if (is_type<ngraph::op::Parameter>(replacement.get_node()))
+            {
+                return false;
+            }
+            break;
+        }
+    }
+    if (!has_result_output || replacement.get_node()->get_users().size() == 1)
+    {
+        if (has_result_output && !is_type<ngraph::op::Parameter>(replacement.get_node()))
+        {
+            replacement.get_node()->set_friendly_name(output.get_node()->get_friendly_name());
+            copy_runtime_info({replacement.get_node_shared_ptr(), output.get_node_shared_ptr()},
+                              replacement.get_node_shared_ptr());
+        }
+        output.replace(replacement);
+        return true;
+    }
+    return false;
 }

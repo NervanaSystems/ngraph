@@ -94,24 +94,16 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                                     "materialized";
                     continue;
                 }
-                NGRAPH_DEBUG << "Running matcher " << closure.matcher->get_name() << "("
-                             << closure.matcher->get_pattern()->get_name() << ") on "
-                             << node->get_name();
-                if (closure.matcher->match(node))
+                if (closure.handler(node))
                 {
-                    NGRAPH_DEBUG << "Matcher " << closure.matcher << closure.matcher->get_name()
-                                 << " matched " << node->get_name();
-                    if (closure.callback(*closure.matcher.get()))
+                    rewritten = true;
+                    // If call back may change function's is_dynamic state, we need to
+                    // update the cached value.
+                    if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
                     {
-                        rewritten = true;
-                        // If call back may change function's is_dynamic state, we need to
-                        // update the cached value.
-                        if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
-                        {
-                            is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
-                        }
-                        break;
+                        is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
                     }
+                    break;
                 }
             }
         }
@@ -138,16 +130,16 @@ static vector<regex> initialize_fusion_regexes()
     return regexes;
 }
 
-bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m) const
+bool pass::GraphRewriteBase::is_enabled(const std::string& name) const
 {
     // note, regexes are static to avoid re-initialization
     static const auto regexes = initialize_fusion_regexes();
 
     for (const auto& regex : regexes)
     {
-        if (regex_match(m->get_name(), regex))
+        if (regex_match(name, regex))
         {
-            NGRAPH_DEBUG << "Disabling matcher " << m->get_name();
+            NGRAPH_DEBUG << "Disabling matcher " << name;
             return false;
         }
     }
@@ -155,13 +147,13 @@ bool pass::GraphRewrite::is_enabled(const shared_ptr<pattern::Matcher>& m) const
     return true;
 }
 
-void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
-                                     const graph_rewrite_callback& callback,
-                                     const PassPropertyMask& property)
+void pass::GraphRewriteBase::add_handler(const std::string& name,
+                                         function<bool(const std::shared_ptr<Node>&)> handler,
+                                         const PassPropertyMask& property)
 {
-    if (is_enabled(m))
+    if (is_enabled(name))
     {
-        m_matchers.push_back({m, callback, property});
+        m_matchers.push_back({name, handler, property});
         // If any matcher call back may change dynamic state, we need to
         // update the pass property.
         if (property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
@@ -169,6 +161,23 @@ void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
             set_property(PassProperty::CHANGE_DYNAMIC_STATE, true);
         }
     }
+}
+
+void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
+                                     const graph_rewrite_callback& callback,
+                                     const PassPropertyMask& property)
+{
+    add_handler(m->get_name(),
+                [m, callback](const std::shared_ptr<Node>& node) -> bool {
+                    NGRAPH_DEBUG << "Running matcher " << m->get_name() << " on " << node;
+                    if (m->match(node->output(0)))
+                    {
+                        NGRAPH_DEBUG << "Matcher " << m->get_name() << " matched " << node;
+                        return callback(*m.get());
+                    }
+                    return false;
+                },
+                property);
 }
 
 void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
@@ -184,13 +193,17 @@ void pass::RecurrentGraphRewrite::add_matcher(
     const ngraph::recurrent_graph_rewrite_callback& callback,
     const PassPropertyMask& property)
 {
-    m_matchers.push_back({m, callback, property});
-    // If any matcher call back may change dynamic state, we need to
-    // update the pass property.
-    if (property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
-    {
-        set_property(PassProperty::CHANGE_DYNAMIC_STATE, true);
-    }
+    add_handler("Reurrent matcher",
+                [m, callback](const std::shared_ptr<Node>& node) {
+                    NGRAPH_DEBUG << "Running recurrent matcher on " << node;
+                    if (m->match(node->output(0)))
+                    {
+                        NGRAPH_DEBUG << "Recurrent matcher matched " << m.get();
+                        return callback(*m.get());
+                    }
+                    return false;
+                },
+                property);
 }
 
 void pass::RecurrentGraphRewrite::add_matcher(
@@ -225,21 +238,15 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                                     "materialized";
                     continue;
                 }
-                NGRAPH_DEBUG << "Running matcher " << closure.matcher << " on " << node->get_name();
-                if (closure.matcher->match(node->output(0)))
+                if (closure.handler(node))
                 {
-                    NGRAPH_DEBUG << "Matcher " << closure.matcher << " matched "
-                                 << node->get_name();
-                    if (closure.callback(*closure.matcher.get()))
+                    // If call back may change function's is_dynamic state, we need to
+                    // update the cached value.
+                    if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
                     {
-                        // If call back may change function's is_dynamic state, we need to
-                        // update the cached value.
-                        if (closure.property.is_set(PassProperty::CHANGE_DYNAMIC_STATE))
-                        {
-                            is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
-                        }
-                        return true;
+                        is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
                     }
+                    return true;
                 }
             }
         }

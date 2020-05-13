@@ -162,9 +162,9 @@ void op::DeconvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */
     throw ngraph_error("DeconvolutionBias generate_adjoints not supported implemented");
 }
 
-shared_ptr<Node> op::DeconvolutionBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::DeconvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    NGRAPH_DEBUG << "DeconvolutionBias::copy_with_new_args" << endl;
+    NGRAPH_DEBUG << "DeconvolutionBias::clone_with_new_inputs" << endl;
     check_new_args_count(this, new_args);
     return make_shared<DeconvolutionBias>(m_data_batch_shape,
                                           new_args.at(0),
