@@ -463,7 +463,7 @@ TEST(type_prop, ess_num_segment_const)
     auto emb_table = make_shared<op::Parameter>(element::f32, Shape{5, 2});
     auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
     auto segment_ids = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto num_segments = op::v0::Constant::create(element::i64, Shape{}, {3});
+    auto num_segments = opset3::Constant::create(element::i64, Shape{}, {3});
 
     auto ess =
         make_shared<op::v3::EmbeddingSegmentsSum>(emb_table, indices, segment_ids, num_segments);

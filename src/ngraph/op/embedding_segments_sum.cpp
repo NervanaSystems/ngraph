@@ -160,7 +160,7 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
     {
         result_shape = emb_table_shape;
         if (auto num_segments_const =
-                as_type<op::v0::Constant>(this->get_input_node_ptr(NUM_SEGMENTS)))
+                as_type<opset3::Constant>(this->get_input_node_ptr(NUM_SEGMENTS)))
         {
             result_shape[0] = num_segments_const->cast_vector<int64_t>()[0];
         }
