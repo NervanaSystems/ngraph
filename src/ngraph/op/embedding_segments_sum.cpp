@@ -26,9 +26,9 @@ op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table
                                                    const Output<Node>& indices,
                                                    const Output<Node>& segment_ids,
                                                    const Output<Node>& num_segments,
-                                                   const Output<Node>& per_sample_weights,
-                                                   const Output<Node>& default_index)
-    : Op({emb_table, indices, segment_ids, num_segments, per_sample_weights, default_index})
+                                                   const Output<Node>& default_index,
+                                                   const Output<Node>& per_sample_weights)
+    : Op({emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights})
 {
     constructor_validate_and_infer_types();
 }
@@ -37,8 +37,8 @@ op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table
                                                    const Output<Node>& indices,
                                                    const Output<Node>& segment_ids,
                                                    const Output<Node>& num_segments,
-                                                   const Output<Node>& per_sample_weights)
-    : Op({emb_table, indices, segment_ids, num_segments, per_sample_weights})
+                                                   const Output<Node>& default_index)
+    : Op({emb_table, indices, segment_ids, num_segments, default_index})
 {
     constructor_validate_and_infer_types();
 }
@@ -109,6 +109,27 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
     if (get_input_size() >= 5)
     {
         NODE_VALIDATION_CHECK(this,
+                              get_input_element_type(DEFAULT_INDEX) == element::i64 ||
+                                  get_input_element_type(DEFAULT_INDEX) == element::i32,
+                              "DEFAULT_INDEX type must be i32 or i64");
+
+        NODE_VALIDATION_CHECK(
+            this,
+            get_input_element_type(INDICES).compatible(get_input_element_type(DEFAULT_INDEX)),
+            "Default_index element type (",
+            get_input_element_type(DEFAULT_INDEX),
+            ") must match indices element type (",
+            get_input_element_type(INDICES),
+            ")");
+
+        NODE_VALIDATION_CHECK(this,
+                              get_input_partial_shape(DEFAULT_INDEX).compatible(PartialShape{}),
+                              "DEFAULT_INDEX must be a scalar");
+    }
+
+    if (get_input_size() == 6)
+    {
+        NODE_VALIDATION_CHECK(this,
                               get_input_element_type(EMB_TABLE).compatible(
                                   get_input_element_type(PER_SAMPLE_WEIGHTS)),
                               "Per sample weight element type (",
@@ -129,27 +150,6 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
                               "INDICES and PER_SAMPLE_WEIGHTS shape must be same");
     }
 
-    if (get_input_size() == 6)
-    {
-        NODE_VALIDATION_CHECK(this,
-                              get_input_element_type(DEFAULT_INDEX) == element::i64 ||
-                                  get_input_element_type(DEFAULT_INDEX) == element::i32,
-                              "DEFAULT_INDEX type must be i32 or i64");
-
-        NODE_VALIDATION_CHECK(
-            this,
-            get_input_element_type(INDICES).compatible(get_input_element_type(DEFAULT_INDEX)),
-            "Default_index element type (",
-            get_input_element_type(DEFAULT_INDEX),
-            ") must match indices element type (",
-            get_input_element_type(INDICES),
-            ")");
-
-        NODE_VALIDATION_CHECK(this,
-                              get_input_partial_shape(DEFAULT_INDEX).compatible(PartialShape{}),
-                              "DEFAULT_INDEX must be a scalar");
-    }
-
     element::Type result_et = get_input_element_type(EMB_TABLE);
 
     const PartialShape& emb_table_shape = get_input_partial_shape(EMB_TABLE);
@@ -157,14 +157,8 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
     PartialShape result_shape;
     if (emb_table_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(emb_table_shape.rank().get_length());
-        result_dims[0] = Dimension::dynamic();
-        for (size_t i = 1; i < emb_table_shape.rank().get_length(); i++)
-        {
-            result_dims[i] = emb_table_shape[i];
-        }
-
-        result_shape = PartialShape(result_dims);
+        result_shape = emb_table_shape;
+        result_shape[0] = Dimension::dynamic();
     }
     else
     {
@@ -181,22 +175,22 @@ shared_ptr<Node>
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)
     {
-        return make_shared<EmbeddingSegmentsSum>(
+        return make_shared<op::v3::EmbeddingSegmentsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
     }
     else if (new_args.size() == 5)
     {
-        return make_shared<EmbeddingSegmentsSum>(
+        return make_shared<op::v3::EmbeddingSegmentsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
     }
     else if (new_args.size() == 6)
     {
-        return make_shared<EmbeddingSegmentsSum>(new_args.at(0),
-                                                 new_args.at(1),
-                                                 new_args.at(2),
-                                                 new_args.at(3),
-                                                 new_args.at(4),
-                                                 new_args.at(5));
+        return make_shared<op::v3::EmbeddingSegmentsSum>(new_args.at(0),
+                                                         new_args.at(1),
+                                                         new_args.at(2),
+                                                         new_args.at(3),
+                                                         new_args.at(4),
+                                                         new_args.at(5));
     }
     else
     {

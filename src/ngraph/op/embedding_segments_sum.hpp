@@ -59,14 +59,14 @@ namespace ngraph
                                      const Output<Node>& indices,
                                      const Output<Node>& segment_ids,
                                      const Output<Node>& num_segments,
-                                     const Output<Node>& per_sample_weights,
-                                     const Output<Node>& default_index);
+                                     const Output<Node>& default_index,
+                                     const Output<Node>& per_sample_weights);
 
                 EmbeddingSegmentsSum(const Output<Node>& emb_table,
                                      const Output<Node>& indices,
                                      const Output<Node>& segment_ids,
                                      const Output<Node>& num_segments,
-                                     const Output<Node>& per_sample_weights);
+                                     const Output<Node>& default_index);
 
                 EmbeddingSegmentsSum(const Output<Node>& emb_table,
                                      const Output<Node>& indices,
@@ -83,8 +83,8 @@ namespace ngraph
                 static constexpr int INDICES = 1;
                 static constexpr int SEGMENT_IDS = 2;
                 static constexpr int NUM_SEGMENTS = 3;
-                static constexpr int PER_SAMPLE_WEIGHTS = 4;
-                static constexpr int DEFAULT_INDEX = 5;
+                static constexpr int DEFAULT_INDEX = 4;
+                static constexpr int PER_SAMPLE_WEIGHTS = 5;
             };
         }
         using v3::EmbeddingSegmentsSum;
