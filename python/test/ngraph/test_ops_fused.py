@@ -517,6 +517,7 @@ def test_space_to_depth_operator():
     assert np.allclose(result, expected)
 
 
+@pytest.mark.skip_on_cpu
 def test_rnn_cell_operator():
     runtime = get_runtime()
 
@@ -525,9 +526,9 @@ def test_rnn_cell_operator():
     hidden_size = 3
 
     X_shape = [batch_size, input_size]
+    H_t_shape = [batch_size, hidden_size]
     W_shape = [hidden_size, input_size]
     R_shape = [hidden_size, hidden_size]
-    H_t_shape = [batch_size, hidden_size]
     B_shape = [hidden_size]
 
     parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
