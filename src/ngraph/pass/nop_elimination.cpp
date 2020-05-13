@@ -128,8 +128,7 @@ static bool eliminate_reshape_v1(const std::shared_ptr<Node>& node)
         auto pat = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
         auto new_reshape =
             make_shared<opset3::Reshape>(input.get_node()->input_value(0), pat, false);
-        replace_node_update_name(node, new_reshape);
-        return true;
+        return replace_node_update_name(node, new_reshape);
     }
 
     return false;
@@ -198,8 +197,7 @@ static bool replace_squeeze_unsqueeze(const std::shared_ptr<Node>& node)
     }
     else
     {
-        replace_node_update_name(node, reshape);
-        return true;
+        return replace_node_update_name(node, reshape);
     }
     return false;
 }
@@ -263,8 +261,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
         if (unsqueeze->get_output_partial_shape(0).same_scheme(
                 new_unsq->get_output_partial_shape(0)))
         {
-            replace_node_update_name(unsqueeze, new_unsq);
-            return true;
+            return replace_node_update_name(unsqueeze, new_unsq);
         }
         return false;
     };
@@ -301,8 +298,7 @@ static bool eliminate_unsqueeze(const std::shared_ptr<Node>& node)
                 if (unsqueeze->get_output_partial_shape(0).same_scheme(
                         new_sq->get_output_partial_shape(0)))
                 {
-                    replace_node_update_name(unsqueeze, new_sq);
-                    return true;
+                    return replace_node_update_name(unsqueeze, new_sq);
                 }
                 return false;
             }
@@ -342,8 +338,7 @@ static bool eliminate_squeeze(const std::shared_ptr<Node>& node)
         auto new_sq = make_shared<opset3::Squeeze>(input->input_value(0), axes_const);
         if (squeeze->get_output_partial_shape(0).same_scheme(new_sq->get_output_partial_shape(0)))
         {
-            replace_node_update_name(squeeze, new_sq);
-            return true;
+            return replace_node_update_name(squeeze, new_sq);
         }
         return false;
     };
