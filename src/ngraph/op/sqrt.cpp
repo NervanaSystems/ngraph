@@ -68,6 +68,8 @@ namespace
         out->set_unary(arg0);
         switch (arg0->get_element_type())
         {
+            TYPE_CASE(boolean)(arg0, out, count);
+            break;
             TYPE_CASE(i8)(arg0, out, count);
             break;
             TYPE_CASE(i16)(arg0, out, count);
