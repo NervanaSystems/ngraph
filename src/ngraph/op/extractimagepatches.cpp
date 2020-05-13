@@ -117,8 +117,8 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
         }
         else
         {
-            out_rows = ((input_shape[2] - 1) / m_patch_movement_strides[0]);
-            out_cols = ((input_shape[3] - 1) / m_patch_movement_strides[1]);
+            out_rows = 1 + ((input_shape[2] - 1) / m_patch_movement_strides[0]);
+            out_cols = 1 + ((input_shape[3] - 1) / m_patch_movement_strides[1]);
         }
         Shape output_shape;
         output_shape.push_back(input_shape[0]);
