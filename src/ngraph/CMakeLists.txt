@@ -509,7 +509,6 @@ set (SRC
     pass/common_function_collection.hpp
     pass/constant_folding_arithmetic_reduction.cpp
     pass/constant_folding_broadcast.cpp
-    pass/constant_folding_concat.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
@@ -521,7 +520,6 @@ set (SRC
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
-    pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
     pass/constant_folding_slice.cpp
@@ -530,7 +528,6 @@ set (SRC
     pass/constant_folding_strided_slice.cpp
     pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
-    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
