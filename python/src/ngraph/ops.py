@@ -20,10 +20,6 @@ import numpy as np
 from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
     Shape, Strides, util
 from typing import List, Optional, Set, Union
-
-import numpy as np
-
-from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
 from ngraph.impl.op import (GRN, MVN, ArgMax, ArgMin, BatchNormInference,
                             BatchNormTraining, Broadcast, Constant,
                             DepthToSpace, Dequantize, Dot, Gelu, Gemm,
