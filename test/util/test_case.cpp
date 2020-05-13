@@ -44,7 +44,7 @@ ngraph::test::NgraphTestCase::NgraphTestCase(const std::shared_ptr<Function>& fu
     }
 }
 
-void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
+::testing::AssertionResult ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
 {
     m_tolerance_bits = tolerance_bits;
     const auto& function_results = m_function->get_results();
@@ -58,11 +58,21 @@ void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
         const auto& expected_result_constant = m_expected_outputs.at(i);
         const auto& element_type = result_tensor->get_element_type();
 
-        EXPECT_EQ(expected_result_constant->get_output_size(), 1);
+        if (expected_result_constant->get_output_size() != 1)
+        {
+            return ::testing::AssertionFailure()
+                   << "expected_result_constant->get_output_size() "
+                   << "'" << expected_result_constant->get_output_size() << "'"
+                   << " != 1";
+        }
         const auto& expected_shape = expected_result_constant->get_shape();
         const auto& result_shape = result_tensor->get_shape();
 
-        EXPECT_EQ(expected_shape, result_shape);
+        if (expected_shape != result_shape)
+        {
+            return ::testing::AssertionFailure() << "result_shape " << result_shape
+                                                 << " != expected_shape " << expected_shape;
+        }
 
         if (m_value_comparators.count(element_type) == 0)
         {
@@ -73,13 +83,18 @@ void ngraph::test::NgraphTestCase::run(size_t tolerance_bits)
         {
             auto values_match = m_value_comparators.at(element_type);
 
-            EXPECT_TRUE(values_match(expected_result_constant, result_tensor));
+            auto value_result = values_match(expected_result_constant, result_tensor);
+            if (value_result == false)
+            {
+                return value_result;
+            }
         }
     }
     m_input_index = 0;
     m_output_index = 0;
     m_expected_outputs.clear();
     m_input_tensors.clear();
+    return ::testing::AssertionSuccess();
 }
 
 ngraph::test::NgraphTestCase& ngraph::test::NgraphTestCase::dump_results(bool dump)
