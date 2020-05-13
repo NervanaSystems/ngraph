@@ -63,7 +63,7 @@ TEST(type_prop, ebos_dynamic_offsets)
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
     auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
-        emb_table, indices, offsets, default_index,per_sample_weights;
+        emb_table, indices, offsets, default_index, per_sample_weights);
 
     EXPECT_TRUE(
         ebos->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2}));
