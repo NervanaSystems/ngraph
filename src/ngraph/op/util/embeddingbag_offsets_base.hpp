@@ -55,13 +55,13 @@ namespace ngraph
                 EmbeddingBagOffsetsBase(const Output<Node>& emb_table,
                                         const Output<Node>& indices,
                                         const Output<Node>& offsets,
-                                        const Output<Node>& per_sample_weights,
-                                        const Output<Node>& default_index);
+                                        const Output<Node>& default_index,
+                                        const Output<Node>& per_sample_weights);
 
                 EmbeddingBagOffsetsBase(const Output<Node>& emb_table,
                                         const Output<Node>& indices,
                                         const Output<Node>& offsets,
-                                        const Output<Node>& per_sample_weights);
+                                        const Output<Node>& default_index);
 
                 EmbeddingBagOffsetsBase(const Output<Node>& emb_table,
                                         const Output<Node>& indices,
@@ -74,8 +74,8 @@ namespace ngraph
                 static constexpr int EMB_TABLE = 0;
                 static constexpr int INDICES = 1;
                 static constexpr int OFFSETS = 2;
-                static constexpr int PER_SAMPLE_WEIGHTS = 3;
-                static constexpr int DEFAULT_INDEX = 4;
+                static constexpr int DEFAULT_INDEX = 3;
+                static constexpr int PER_SAMPLE_WEIGHTS = 4;
             };
         }
     }

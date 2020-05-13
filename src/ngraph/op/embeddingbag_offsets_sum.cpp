@@ -25,17 +25,17 @@ constexpr NodeTypeInfo op::v3::EmbeddingBagOffsetsSum::type_info;
 op::v3::EmbeddingBagOffsetsSum::EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
                                                        const Output<Node>& indices,
                                                        const Output<Node>& offsets,
-                                                       const Output<Node>& per_sample_weights,
-                                                       const Output<Node>& default_index)
-    : util::EmbeddingBagOffsetsBase(emb_table, indices, offsets, per_sample_weights, default_index)
+                                                       const Output<Node>& default_index,
+                                                       const Output<Node>& per_sample_weights)
+    : util::EmbeddingBagOffsetsBase(emb_table, indices, offsets, default_index, per_sample_weights)
 {
 }
 
 op::v3::EmbeddingBagOffsetsSum::EmbeddingBagOffsetsSum(const Output<Node>& emb_table,
                                                        const Output<Node>& indices,
                                                        const Output<Node>& offsets,
-                                                       const Output<Node>& per_sample_weights)
-    : util::EmbeddingBagOffsetsBase(emb_table, indices, offsets, per_sample_weights)
+                                                       const Output<Node>& default_index)
+    : util::EmbeddingBagOffsetsBase(emb_table, indices, offsets, default_index)
 {
 }
 
