@@ -81,7 +81,7 @@ size_t op::v0::TopK::get_k() const
     size_t k = 0;
     if (auto const_op = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
     {
-        k = const_op->get_vector<int64_t>()[0];
+        k = const_op->cast_vector<int64_t>()[0];
     }
     Dimension top_k_axis = get_top_k_axis_dynamic();
     if (k == 0 && get_input_partial_shape(0).is_static() && top_k_axis.is_static())
@@ -113,7 +113,7 @@ Dimension op::v0::TopK::get_top_k_axis_dynamic() const
     auto const_op = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
     if (const_op)
     {
-        return const_op->get_vector<int64_t>()[0];
+        return const_op->cast_vector<int64_t>()[0];
     }
     else
     {
@@ -504,4 +504,15 @@ size_t op::v3::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
 #endif
 
     return k;
+}
+
+shared_ptr<Node> op::v3::TopK::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    auto new_v3_topk =
+        make_shared<v3::TopK>(new_args.at(0), new_args.at(1), m_axis, m_mode, m_sort);
+
+    new_v3_topk->set_index_element_type(m_index_element_type);
+
+    return std::move(new_v3_topk);
 }
