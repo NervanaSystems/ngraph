@@ -2591,8 +2591,8 @@ def reverse_sequence(input, seq_lengths, batch_axis, seq_axis, name=None):
 
 
 @nameable_op
-def bucketize(data, buckets, output_type='i64', with_right_bound=True):
-    # type: (Node, NodeInput, str, bool) -> Node
+def bucketize(data, buckets, output_type='i64', with_right_bound=True, name=None):
+    # type: (Node, NodeInput, str, bool, str) -> Node
     """Return a node which produces the Bucketize operation.
 
     :param data:              Input data to bucketize
@@ -2600,6 +2600,7 @@ def bucketize(data, buckets, output_type='i64', with_right_bound=True):
     :param output_type:       Output tensor type, "i64" or "i32", defaults to i64
     :param with_right_bound:  indicates whether bucket includes the right or left
                               edge of interval. default true = includes right edge
+    :param name:              Optional name for output node.
     :return: Bucketize node
     """
     return _get_node_factory().create(
@@ -2610,16 +2611,17 @@ def bucketize(data, buckets, output_type='i64', with_right_bound=True):
 
 
 @nameable_op
-def range(start, stop, step):
-    # type: (Node, NodeInput, NodeInput) -> Node
+def range(start, stop, step, name=None):
+    # type: (Node, NodeInput, NodeInput, str) -> Node
     """Return a node which produces the Range operation.
 
     :param start:  The start value of the generated range
     :param stop:   The stop value of the generated range
     :param step:   The step value for the generated range
+    :param name:   Optional name for output node.
     :return: Range node
     """
-    return _get_node_factory().create('Range', [start, as_node(stop), as_node(step)])
+    return _get_node_factory().create('Range', as_nodes(start, stop, step))
 
 
 @nameable_op
@@ -2631,7 +2633,8 @@ def region_yolo(input,  # type: Node
                 axis,  # type: int
                 end_axis,  # type: int
                 do_softmax=True,  # type: bool
-                anchors=[],  # type: List[float]
+                anchors=None,  # type: List[float]
+                name=None,  # type: str
                 ):  # type: Node
     """Return a node which produces the RegionYolo operation.
 
@@ -2644,8 +2647,12 @@ def region_yolo(input,  # type: Node
     :param end_axis:    Axis to end softmax on
     :param do_softmax:  Compute softmax
     :param anchors:     A flattened list of pairs `[width, height]` that describes prior box sizes
+    :param name:        Optional name for output node.
     :return: RegionYolo node
     """
+    if anchors is None:
+        anchors = []
+
     return _get_node_factory().create('RegionYolo', [input], {
                                       'coords': coords,
                                       'classes': classes,
@@ -2659,11 +2666,12 @@ def region_yolo(input,  # type: Node
 
 
 @nameable_op
-def reorg_yolo(input, stride):  # type: (Node, List[int]) -> Node
+def reorg_yolo(input, stride, name=None):  # type: (Node, List[int], str) -> Node
     """Return a node which produces the ReorgYolo operation.
 
-    :param input:  Input data
-    :param step:   The step value for the generated range
+    :param input:   Input data
+    :param stride:  Stride to reorganize input by
+    :param name:    Optional name for output node.
     :return: ReorgYolo node
     """
     return _get_node_factory().create('ReorgYolo', [input], {'stride': stride})
