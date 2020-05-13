@@ -173,7 +173,6 @@ namespace ngraph
                 const Node& node{m_nodes.back()};
 
                 NodeVector ng_nodes{node.get_ng_nodes()};
-
                 // Iterate over the number of outputs for given node in graph.
                 // Some of them may be optional and trimmed. See:
                 // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs

@@ -150,7 +150,6 @@ namespace ngraph
                 auto function_output_type = results.at(m_output_index)->get_element_type();
 
                 const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
-
                 NGRAPH_CHECK(output_pshape.compatible(expected_shape),
                              "Passed output shape is not compatible with nGraph function.");
 
