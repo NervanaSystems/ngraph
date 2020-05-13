@@ -1192,6 +1192,7 @@ IE_CPU.cum_sum_2dim_default_axis
 IE_CPU.fused_clamp_double
 IE_CPU.fused_clamp_int8
 IE_CPU.fused_clamp_int16
+IE_CPU.fused_clamp_int32
 IE_CPU.fused_clamp_int64
 IE_CPU.fused_clamp_uint8
 IE_CPU.fused_clamp_uint16
