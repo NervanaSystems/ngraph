@@ -230,6 +230,13 @@ def test_select():
     assert np.allclose(result, excepted)
 
 
+def test_result():
+    node = [[11, 10], [1, 8], [3, 4]]
+
+    result = test.ngraph.util.run_op_node([node], ng.ops.result)
+    assert np.allclose(result, node)
+
+
 def test_bucketize():
     data = ng.parameter([4, 3, 2, 1], name='data', dtype=np.float32)
     buckets = ng.parameter([5], name='buckets', dtype=np.int64)
