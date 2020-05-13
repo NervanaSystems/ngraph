@@ -51,30 +51,41 @@ namespace
         return true;
     }
 
+    template <element::Type_t ET>
+    inline bool copy_tensor(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        memcpy(out->get_data_ptr<T>(), arg0->get_data_ptr<T>(), count * sizeof(T));
+        return true;
+    }
+
     bool evaluate_floor(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
         bool rc = true;
         out->set_unary(arg0);
 
+#define IDENTITY(a)                                                                                \
+    case element::Type_t::a: rc = copy_tensor<element::Type_t::a>
+
         switch (arg0->get_element_type())
         {
-            TYPE_CASE(boolean)(arg0, out, count);
+            IDENTITY(boolean)(arg0, out, count);
             break;
-            TYPE_CASE(i8)(arg0, out, count);
+            IDENTITY(i8)(arg0, out, count);
             break;
-            TYPE_CASE(i16)(arg0, out, count);
+            IDENTITY(i16)(arg0, out, count);
             break;
-            TYPE_CASE(i32)(arg0, out, count);
+            IDENTITY(i32)(arg0, out, count);
             break;
-            TYPE_CASE(i64)(arg0, out, count);
+            IDENTITY(i64)(arg0, out, count);
             break;
-            TYPE_CASE(u8)(arg0, out, count);
+            IDENTITY(u8)(arg0, out, count);
             break;
-            TYPE_CASE(u16)(arg0, out, count);
+            IDENTITY(u16)(arg0, out, count);
             break;
-            TYPE_CASE(u32)(arg0, out, count);
+            IDENTITY(u32)(arg0, out, count);
             break;
-            TYPE_CASE(u64)(arg0, out, count);
+            IDENTITY(u64)(arg0, out, count);
             break;
             TYPE_CASE(bf16)(arg0, out, count);
             break;
