@@ -16,6 +16,8 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/constant.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -454,4 +456,19 @@ TEST(type_prop, ess_fail_indices_element_type_4_args_api)
     {
         FAIL() << "INDICES type check failed for unexpected reason";
     }
+}
+
+TEST(type_prop, ess_num_segment_const)
+{
+    auto emb_table = make_shared<op::Parameter>(element::f32, Shape{5, 2});
+    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto segment_ids = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto num_segments = op::v0::Constant::create(element::i64, Shape{}, {3});
+
+    auto ess =
+        make_shared<op::v3::EmbeddingSegmentsSum>(emb_table, indices, segment_ids, num_segments);
+    EXPECT_TRUE(ess->get_output_partial_shape(0).same_scheme(PartialShape{3, 2}));
+    EXPECT_EQ(ess->get_output_element_type(0), element::f32);
+    EXPECT_EQ(indices->get_partial_shape().rank().get_length(), 1);
+    EXPECT_EQ(segment_ids->get_partial_shape().rank().get_length(), 1);
 }
