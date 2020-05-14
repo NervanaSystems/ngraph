@@ -20,7 +20,7 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 import numpy as np
 
 from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (MVN, ArgMax, ArgMin, BatchNormInference,
+from ngraph.impl.op import (ArgMax, ArgMin, BatchNormInference,
                             BatchNormTraining, Broadcast, Constant,
                             Dequantize, Dot, Gemm,
                             GetOutputElement, Parameter, Quantize,
@@ -711,8 +711,8 @@ def space_to_batch(data, block_shape, pads_begin, pads_end, name=None):
 
 
 @nameable_op
-def mvn(data, axes, normalize_variance, eps, name=None):
-    # type: (Node, Set[int], bool, float, str) -> Node
+def mvn(data, across_channels=True, normalize_variance=True, eps=np.float32(1e-9), name=None):
+    # type: (Node, bool, bool, float, str) -> Node
     r"""Perform Mean Variance Normalization operation on data from input node.
 
     Computes MVN on the input tensor :code:`data` (called `X`) using formula:
@@ -720,15 +720,18 @@ def mvn(data, axes, normalize_variance, eps, name=None):
     .. math:: Y = \dfrac{X-EX}{\sqrt{E(X-EX)^2}}
 
     :param data: The node with data tensor.
-    :param axes: A list of axes, along which to reduce. Array of integers.
-    :param normalize_variance: Flag that denotes if mean values are shared across channels.
-                               Boolen value.
+    :param across_channels: Denotes if mean values are shared across channels.
+    :param normalize_variance: Denotes whether to perform variance normalization.
     :param eps: The number added to the variance to avoid division by zero
                when normalizing the value. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a MVN operation on input tensor.
     """
-    return MVN(data, AxisSet(axes), normalize_variance, eps)
+    return _get_node_factory().create(
+        'MVN',
+        [data],
+        {'across_channels': across_channels, 'normalize_variance': normalize_variance, 'eps': eps},
+    )
 
 
 @nameable_op
@@ -2863,7 +2866,8 @@ def region_yolo(input,  # type: Node
                 do_softmax=True,  # type: bool
                 anchors=None,  # type: List[float]
                 name=None,  # type: str
-                ):  # type: Node
+                ):
+                # type: (...) -> Node
     """Return a node which produces the RegionYolo operation.
 
     :param input:       Input data

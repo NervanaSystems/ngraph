@@ -442,7 +442,7 @@ def test_mvn_operator():
     runtime = get_runtime()
 
     data_shape = [3, 3, 3, 1]
-    axis = [0, 2, 3]
+    across_channels = True
     normalize_variance = True
     eps = np.float32(1e-9)
 
@@ -458,17 +458,30 @@ def test_mvn_operator():
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.mvn(parameter_data, axis, normalize_variance, eps)
+    model = ng.mvn(parameter_data, across_channels, normalize_variance, eps)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
 
-    data_mean = np.mean(data_value, axis=(0, 2, 3), keepdims=1)
-    data_mean_squared = np.power(data_mean, 2)
-    data_squared = np.power(data_value, 2)
-    data_squared_mean = np.mean(data_squared, axis=(0, 2, 3), keepdims=1)
-    std = np.sqrt(data_squared_mean - data_mean_squared)
-    expected = (data_value - data_mean) / (std + 1e-9)
+    expected = np.array(
+        [
+            [
+                [[0.9951074], [0.14548765], [-1.410561]],
+                [[-1.4999886], [-1.1923014], [-0.03975919]],
+                [[0.8463296], [1.2926502], [1.3340596]],
+            ],
+            [
+                [[-1.0463363], [-0.1747985], [-0.7784088]],
+                [[0.47672555], [-1.5383], [0.32375798]],
+                [[1.2404392], [1.3878832], [-1.2228798]],
+            ],
+            [
+                [[-0.3228847], [1.2063044], [0.22751297]],
+                [[0.91956615], [0.81839436], [-1.2279599]],
+                [[0.5312334], [0.067952], [-1.3592235]],
+            ],
+        ],
+    )
 
     assert np.allclose(result, expected)
 
