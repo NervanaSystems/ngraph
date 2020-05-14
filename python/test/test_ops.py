@@ -21,15 +21,11 @@ import numpy as np
 import ngraph as ng
 
 from ngraph.impl import util
-from ngraph.impl import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
+from ngraph.impl import Shape, Strides, CoordinateDiff, AxisSet, Coordinate
 from ngraph.impl import Type, Function
-from ngraph.impl.runtime import Backend, Executable
+from ngraph.impl.runtime import Backend
 from ngraph.impl.op import Parameter
-from ngraph.impl.op import Dot
 from ngraph.impl.op import Constant
-from ngraph.impl.op import Broadcast, Convert
-from ngraph.impl.op import MaxPool, ReplaceSlice, Slice
-from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
 import test
 
@@ -196,10 +192,6 @@ def test_div():
 
 def test_div_op():
     binary_op_exec('Div')
-
-
-def test_dot():
-    binary_op_exec('Dot')
 
 
 def test_maximum():
@@ -510,57 +502,12 @@ def test_reshape():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-def test_convert():
-
-    element_type = Type.f32
-    shape = Shape([1, 3])
-    A = Parameter(element_type, shape)
-    parameter_list = [A]
-    # f32 to boolean
-    function = Function([Convert(A, Type.boolean)], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, shape)
-    result = backend.create_tensor(Type.boolean, shape)
-
-    a.write(util.numpy_to_c(np.array([1, 5, 3], dtype=np.float32)), 12)
-
-    result_arr = np.array([False, False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 3)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 3)
-
-    a_arr = np.array([1, 5, 3], dtype=np.float32)
-    result_arr_ref = a_arr.astype(bool)
-    assert np.allclose(result_arr, result_arr_ref)
-
-    # f32 to i32
-    function = Function([Convert(A, Type.i32)], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    result = backend.create_tensor(Type.i32, shape)
-
-    a.write(util.numpy_to_c(np.array([1.4, 5.5, 3.9], dtype=np.float32)), 12)
-
-    result_arr = np.array([0, 0, 0], dtype=np.int32)
-    result.write(util.numpy_to_c(result_arr), 12)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 12)
-
-    a_arr = np.array([1.4, 5.4, 3.9], dtype=np.float32)
-    result_arr_ref = a_arr.astype(int)
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
 def test_broadcast():
 
     element_type = Type.f32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
-    function = Function([Broadcast(A, Shape([3, 3]), AxisSet({0}))], parameter_list, 'test')
+    function = Function([ng.broadcast(A, [3, 3])], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
@@ -687,116 +634,7 @@ def test_select():
 
 
 @pytest.mark.skip_on_gpu
-def test_slice():
-
-    element_type = Type.f32
-    shape = Shape([6, 6])
-    A = Parameter(element_type, shape)
-    parameter_list = [A]
-
-    input_arr = np.arange(36, dtype=np.float32).reshape(6, 6)
-    lower_bounds = [1, 1]
-    upper_bounds = [5, 5]
-
-    function = Function([Slice(A, Coordinate(lower_bounds),
-                                   Coordinate(upper_bounds))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, shape)
-    result = backend.create_tensor(element_type, Shape([4, 4]))
-
-    a.write(util.numpy_to_c(input_arr), 36*4)
-
-    result_arr = np.zeros(16, dtype=np.float32).reshape(4, 4)
-    result.write(util.numpy_to_c(result_arr), 16*4)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 64)
-
-    result_arr_ref = input_arr[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]]
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-    #test with strides
-    strides = [1, 2]
-
-    function = Function([Slice(A, Coordinate(lower_bounds), Coordinate(upper_bounds),
-                        Strides(strides))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    result = backend.create_tensor(element_type, Shape([4, 2]))
-    result_arr = np.zeros(8, dtype=np.float32).reshape(4, 2)
-
-    result.write(util.numpy_to_c(result_arr), 8*4)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 32)
-
-    result_arr_ref = result_arr_ref[::strides[0], ::strides[1]]
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-@pytest.mark.skip_on_gpu
-@pytest.mark.skip_on_intelgpu
-def test_replace_slice():
-
-    element_type = Type.f32
-    A = Parameter(element_type, Shape([6, 4]))
-    B = Parameter(element_type, Shape([3, 2]))
-    parameter_list = [A, B]
-
-    input_arr_a = np.zeros(24, dtype=np.float32).reshape(6, 4)
-    input_arr_b = np.ones(6, dtype=np.float32).reshape(3, 2)
-    lower_bounds = [0, 1]
-    upper_bounds = [3, 3]
-
-    function = Function([ReplaceSlice(A, B, Coordinate(lower_bounds),
-                        Coordinate(upper_bounds))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, Shape([6, 4]))
-    b = backend.create_tensor(element_type, Shape([3, 2]))
-    result = backend.create_tensor(element_type, Shape([6, 4]))
-
-    a.write(util.numpy_to_c(input_arr_a), 24*4)
-    b.write(util.numpy_to_c(input_arr_b), 6*4)
-
-    result_arr = np.zeros(24, dtype=np.float32).reshape(6, 4)
-    result.write(util.numpy_to_c(result_arr), 24*4)
-    handle = backend.compile(function)
-    handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 24*4)
-
-    result_arr_ref = np.copy(input_arr_a)
-    result_arr_ref[lower_bounds[0]:upper_bounds[0], lower_bounds[1]:upper_bounds[1]] = input_arr_b
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-    #test with strides
-    lower_bounds = [0, 0]
-    upper_bounds = [5, 3]
-    strides = [2, 2]
-
-    function = Function([ReplaceSlice(A, B, Coordinate(lower_bounds),
-                        Coordinate(upper_bounds), Strides(strides))],
-                        parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    handle = backend.compile(function)
-    handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 24*4)
-
-    result_arr_ref = np.copy(input_arr_a)
-    result_arr_ref[::strides[0], ::strides[1]] = input_arr_b
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-@pytest.mark.skip_on_gpu
 def test_max_pool():
-
     #test 1d
     element_type = Type.f32
     shape = Shape([1, 1, 10])
@@ -806,7 +644,26 @@ def test_max_pool():
     input_arr = np.arange(10, dtype=np.float32).reshape(1, 1, 10)
     window_shape = [3]
 
-    function = Function([MaxPool(A, Shape(window_shape))], parameter_list, 'test')
+    #              strides,                 # type: List[int]
+    #              pads_begin,              # type: List[int]
+    #              pads_end,                # type: List[int]
+    #              kernel_shape,            # type: TensorShape
+    #              rounding_type='floor',   # type: str
+    #              auto_pad=None,           # type: str
+    #              name=None,               # type: str
+    #     if strides is None:
+    #         strides = [1] * len(window_shape)  # Default to as many 1s as spatial dimensions of input.
+    #     if padding_above is None:
+    #         padding_above = [0] * len(window_shape)
+    #     if padding_below is None:
+    #         padding_below = [0] * len(window_shape)
+
+    strides = [1] * len(window_shape)
+    pads_begin = [0] * len(window_shape)
+    pads_end = [0] * len(window_shape)
+
+    model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -825,14 +682,17 @@ def test_max_pool():
 
     #test 1d with strides
     strides = [2]
+    pads_begin = [0] * len(window_shape)
+    pads_end = [0] * len(window_shape)
 
-    function = Function([MaxPool(A, Shape(window_shape), Strides(strides))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
+    model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
+    function = Function([model], parameter_list, 'test')
 
     size = 4
     result = backend.create_tensor(element_type, Shape([1, 1, size]))
     result_arr = np.zeros(size, dtype=np.float32).reshape(1, 1, size)
 
+    backend = Backend.create(test.BACKEND_NAME)
     result.write(util.numpy_to_c(result_arr), size*4)
     handle = backend.compile(function)
     handle.call([result], [a])
@@ -850,9 +710,14 @@ def test_max_pool():
     input_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
     window_shape = [3, 3]
 
-    function = Function([MaxPool(A, Shape(window_shape))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
+    strides = [1, 1]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
 
+    model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
+    function = Function([model], parameter_list, 'test')
+
+    backend = Backend.create(test.BACKEND_NAME)
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8, 8]))
 
@@ -869,8 +734,11 @@ def test_max_pool():
 
     #test 2d with strides
     strides = [2, 2]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
 
-    function = Function([MaxPool(A, Shape(window_shape), Strides(strides))], parameter_list, 'test')
+    model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     size = 4
@@ -930,14 +798,14 @@ def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_belo
 
 
 @pytest.mark.skip_on_gpu
-def test_convolution():
+def test_convolution_simple():
 
     element_type = Type.f32
     image_shape = Shape([1, 1, 16, 16])
     filter_shape = Shape([1, 1, 3, 3])
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, filter_shape)
-    parameter_list = [A, B]
+    data = Parameter(element_type, image_shape)
+    filters = Parameter(element_type, filter_shape)
+    parameter_list = [data, filters]
 
     image_arr = np.arange(-128, 128, 1, dtype=np.float32).reshape(1, 1, 16, 16)
     filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
@@ -948,7 +816,13 @@ def test_convolution():
     filter_arr[0][0][2][0] = -1
     result_arr = np.zeros(196, dtype=np.float32).reshape(1, 1, 14, 14)
 
-    function = Function([Convolution(A, B)], parameter_list, 'test')
+    strides = [1, 1]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
+    dilations = [1, 1]
+
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -973,16 +847,20 @@ def test_convolution_with_strides():
     element_type = Type.f32
     image_shape = Shape([1, 1, 10, 10])
     filter_shape = Shape([1, 1, 3, 3])
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, filter_shape)
-    parameter_list = [A, B]
+    data = Parameter(element_type, image_shape)
+    filters = Parameter(element_type, filter_shape)
+    parameter_list = [data, filters]
 
     image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
     filter_arr = np.zeros(9, dtype=np.float32).reshape(1, 1, 3, 3)
     filter_arr[0][0][1][1] = 1
     strides = [2, 2]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
+    dilations = [1, 1]
 
-    function = Function([Convolution(A, B, Strides(strides))], parameter_list, 'test')
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1008,16 +886,19 @@ def test_convolution_with_filter_dilation():
     element_type = Type.f32
     image_shape = Shape([1, 1, 10, 10])
     filter_shape = Shape([1, 1, 3, 3])
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, filter_shape)
-    parameter_list = [A, B]
+    data = Parameter(element_type, image_shape)
+    filters = Parameter(element_type, filter_shape)
+    parameter_list = [data, filters]
 
     image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
     filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
     strides = [1, 1]
-    dilation = [2, 2]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
+    dilations = [2, 2]
 
-    function = Function([Convolution(A, B, Strides(strides), Strides(dilation))], parameter_list, 'test')
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1034,7 +915,7 @@ def test_convolution_with_filter_dilation():
 
     result.read(util.numpy_to_c(result_arr), 6*6*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilation).reshape(1, 1, 6, 6)
+                                   dilations).reshape(1, 1, 6, 6)
     assert np.allclose(result_arr, result_arr_ref)
 
 
@@ -1044,21 +925,20 @@ def test_convolution_with_padding():
     element_type = Type.f32
     image_shape = Shape([1, 1, 10, 10])
     filter_shape = Shape([1, 1, 3, 3])
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, filter_shape)
-    parameter_list = [A, B]
+    data = Parameter(element_type, image_shape)
+    filters = Parameter(element_type, filter_shape)
+    parameter_list = [data, filters]
 
     image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
     filter_arr = np.zeros(9, dtype=np.float32).reshape(1, 1, 3, 3)
     filter_arr[0][0][1][1] = 1
     strides = [1, 1]
-    dilation = [2, 2]
-    padding_below = [0, 0]
-    padding_above = [0, 0]
+    dilations = [2, 2]
+    pads_begin = [0, 0]
+    pads_end = [0, 0]
 
-    function = Function([Convolution(A, B, Strides(strides), Strides(dilation),
-                        CoordinateDiff(padding_below), CoordinateDiff(padding_above))],
-                        parameter_list, 'test')
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1075,29 +955,30 @@ def test_convolution_with_padding():
 
     result.read(util.numpy_to_c(result_arr), 6*6*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilation, padding_below,
-                                   padding_above).reshape(1, 1, 6, 6)
+                                   dilations, pads_begin,
+                                   pads_end).reshape(1, 1, 6, 6)
     assert np.allclose(result_arr, result_arr_ref)
 
-    # test with non-zero padding
+
+@pytest.mark.skip_on_gpu
+def test_convolution_with_non_zero_padding():
     element_type = Type.f32
     image_shape = Shape([1, 1, 10, 10])
     filter_shape = Shape([1, 1, 3, 3])
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, filter_shape)
-    parameter_list = [A, B]
+    data = Parameter(element_type, image_shape)
+    filters = Parameter(element_type, filter_shape)
+    parameter_list = [data, filters]
 
     image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
     filter_arr = (np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)) * -1
     filter_arr[0][0][1][1] = 1
     strides = [1, 1]
-    dilation = [2, 2]
-    padding_below = [2, 1]
-    padding_above = [1, 2]
+    dilations = [2, 2]
+    pads_begin = [2, 1]
+    pads_end = [1, 2]
 
-    function = Function([Convolution(A, B, Strides(strides), Strides(dilation),
-                        CoordinateDiff(padding_below), CoordinateDiff(padding_above))],
-                        parameter_list, 'test')
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    function = Function([model], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
@@ -1114,153 +995,6 @@ def test_convolution_with_padding():
 
     result.read(util.numpy_to_c(result_arr), 9*9*4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilation, padding_below,
-                                   padding_above).reshape(1, 1, 9, 9)
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-@pytest.mark.skip_on_gpu
-def test_convolution_with_data_dilation():
-
-    element_type = Type.f32
-    image_shape = Shape([1, 1, 10, 10])
-    filter_shape = Shape([1, 1, 3, 3])
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, filter_shape)
-    parameter_list = [A, B]
-
-    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
-    filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
-    strides = [1, 1]
-    dilation = [1, 1]
-    padding_below = [0, 0]
-    padding_above = [0, 0]
-    data_dilation = [2, 2]
-
-    function = Function([Convolution(A, B, Strides(strides), Strides(dilation),
-                                    CoordinateDiff(padding_below), CoordinateDiff(padding_above),
-                                    Strides(data_dilation))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, image_shape)
-    b = backend.create_tensor(element_type, filter_shape)
-
-    a.write(util.numpy_to_c(image_arr), 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 3*3*4)
-
-    result_arr = np.zeros(17*17, dtype=np.float32).reshape(1, 1, 17, 17)
-    result = backend.create_tensor(element_type, Shape([1, 1, 17, 17]))
-    result.write(util.numpy_to_c(result_arr), 17*17*4)
-    handle = backend.compile(function)
-    handle.call([result], [a, b])
-
-    result.read(util.numpy_to_c(result_arr), 17*17*4)
-    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilation, padding_below, padding_above,
-                                   data_dilation).reshape(1, 1, 17, 17)
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-@pytest.mark.skip_on_gpu
-def test_convolutionBackpropData():
-
-    element_type = Type.f32
-    image_shape = Shape([1, 1, 10, 10])
-    filter_shape = Shape([1, 1, 3, 3])
-    output_shape = Shape([1, 1, 17, 17])
-
-    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
-    filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
-    window_strides = [1, 1]
-    window_dilation = [1, 1]
-    padding_below = [0, 0]
-    padding_above = [0, 0]
-    data_dilation = [2, 2]
-
-    output_arr = convolution2d(image_arr[0][0], filter_arr[0][0], window_strides,
-                               window_dilation, padding_below, padding_above,
-                               data_dilation).reshape(1, 1, 17, 17)
-
-    A = Parameter(element_type, filter_shape)
-    B = Parameter(element_type, output_shape)
-    parameter_list = [A, B]
-
-    function = Function([ConvolutionBackpropData(image_shape, A, B, Strides(window_strides), Strides(window_dilation),
-                                     CoordinateDiff(padding_below), CoordinateDiff(padding_above),
-                                     Strides(data_dilation))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, filter_shape)
-    b = backend.create_tensor(element_type, output_shape)
-
-    a.write(util.numpy_to_c(filter_arr), 3*3*4)
-    b.write(util.numpy_to_c(output_arr), 17*17*4)
-
-    result_arr = np.zeros(10*10, dtype=np.float32).reshape(1, 1, 10, 10)
-    result = backend.create_tensor(element_type, Shape([1, 1, 10, 10]))
-    result.write(util.numpy_to_c(result_arr), 10*10*4)
-    handle = backend.compile(function)
-    handle.call([result], [a, b])
-
-    result.read(util.numpy_to_c(result_arr), 10*10*4)
-    result_arr_ref = np.array(
-        [[[[  22,   60,   70,   80,   90,  100,  110,  120,  130,   54.],
-           [ 105,  275,  300,  325,  350,  375,  400,  425,  450,  185.],
-           [ 205,  525,  550,  575,  600,  625,  650,  675,  700,  285.],
-           [ 305,  775,  800,  825,  850,  875,  900,  925,  950,  385.],
-           [ 405, 1025, 1050, 1075, 1100, 1125, 1150, 1175, 1200,  485.],
-           [ 505, 1275, 1300, 1325, 1350, 1375, 1400, 1425, 1450,  585.],
-           [ 605, 1525, 1550, 1575, 1600, 1625, 1650, 1675, 1700,  685.],
-           [ 705, 1775, 1800, 1825, 1850, 1875, 1900, 1925, 1950,  785.],
-           [ 805, 2025, 2050, 2075, 2100, 2125, 2150, 2175, 2200,  885.],
-           [ 342,  860,  870,  880,  890,  900,  910,  920,  930,  374.]]]])
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-@pytest.mark.skip_on_gpu
-def test_convolutionBackpropFilters():
-
-    element_type = Type.f32
-    image_shape = Shape([1, 1, 10, 10])
-    filter_shape = Shape([1, 1, 3, 3])
-    output_shape = Shape([1, 1, 17, 17])
-
-    image_arr = np.arange(100, dtype=np.float32).reshape(1, 1, 10, 10)
-    filter_arr = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)
-    window_strides = [1, 1]
-    window_dilation = [1, 1]
-    padding_below = [0, 0]
-    padding_above = [0, 0]
-    data_dilation = [2, 2]
-
-    output_arr = convolution2d(image_arr[0][0], filter_arr[0][0], window_strides,
-                               window_dilation, padding_below, padding_above,
-                               data_dilation).reshape(1, 1, 17, 17)
-
-    A = Parameter(element_type, image_shape)
-    B = Parameter(element_type, output_shape)
-    parameter_list = [A, B]
-
-    function = Function([ConvolutionBackpropFilters(A, filter_shape, B, Strides(window_strides), Strides(window_dilation),
-                                     CoordinateDiff(padding_below),CoordinateDiff(padding_above),
-                                     Strides(data_dilation))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, image_shape)
-    b = backend.create_tensor(element_type, output_shape)
-
-    a.write(util.numpy_to_c(image_arr), 10*10*4)
-    b.write(util.numpy_to_c(output_arr), 17*17*4)
-
-    result_arr = np.zeros(3*3, dtype=np.float32).reshape(1, 1, 3, 3)
-    result = backend.create_tensor(element_type, Shape([1, 1, 3, 3]))
-    result.write(util.numpy_to_c(result_arr), 3*3*4)
-    handle = backend.compile(function)
-    handle.call([result], [a, b])
-
-    result.read(util.numpy_to_c(result_arr), 3*3*4)
-    result_arr_ref = np.array(
-        [[[[ 923832,  413952,  939870.],
-           [ 425832,  190752,  432960.],
-           [1084212,  485232, 1100250.]]]])
+                                   dilations, pads_begin,
+                                   pads_end).reshape(1, 1, 9, 9)
     assert np.allclose(result_arr, result_arr_ref)

@@ -93,27 +93,29 @@ def test_serialization():
     except Exception:
         pass
 
+
+def test_broadcast():
     input_data = np.array([1, 2, 3])
 
     new_shape = [3, 3]
     expected = [[1, 2, 3],
                 [1, 2, 3],
                 [1, 2, 3]]
-    result = run_op_node([input_data], ng.broadcast_to, new_shape)
-    assert np.allclose(result, expected)
-
-    axis = 0
-    expected = [[1, 1, 1],
-                [2, 2, 2],
-                [3, 3, 3]]
-
-    result = run_op_node([input_data], ng.broadcast_to, new_shape, axis)
+    result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
     input_data = np.arange(4)
     new_shape = [3, 4, 2, 4]
     expected = np.broadcast_to(input_data, new_shape)
-    result = run_op_node([input_data], ng.broadcast_to, new_shape)
+    result = run_op_node([input_data], ng.broadcast, new_shape)
+    assert np.allclose(result, expected)
+
+    axis_mapping = [1]
+    expected = [[1, 1, 1],
+                [2, 2, 2],
+                [3, 3, 3]]
+
+    result = run_op_node([input_data], ng.broadcast, new_shape, axis_mapping, 'EXPLICIT')
     assert np.allclose(result, expected)
 
 
