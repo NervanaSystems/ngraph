@@ -1421,7 +1421,7 @@ def convert_like(data, like, name=None):  # type: (Node, NumericType, str) -> No
 
 
 @nameable_op
-def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
+def depth_to_space(node, mode, block_size=1, name=None):  # type: (Node, str, int, str) -> Node
     """Rearranges input tensor from depth into blocks of spatial data.
 
     Values from the height and width dimensions are moved to the depth dimension.
