@@ -179,8 +179,14 @@ set (SRC
     op/divide.hpp
     op/dot.cpp
     op/dot.hpp
+    op/embeddingbag_offsets_sum.cpp
+    op/embeddingbag_offsets_sum.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
+    op/embeddingbag_packedsum.cpp
+    op/embeddingbag_packedsum.hpp
+    op/embedding_segments_sum.cpp
+    op/embedding_segments_sum.hpp
     op/equal.cpp
     op/equal.hpp
     op/erf.cpp
@@ -346,6 +352,8 @@ set (SRC
     op/scatter_elements_update.hpp
     op/scatter_nd_add.cpp
     op/scatter_nd_add.hpp
+    op/scatter_nd_update.cpp
+    op/scatter_nd_update.hpp
     op/scatter_update.cpp
     op/scatter_update.hpp
     op/select.cpp
@@ -480,6 +488,10 @@ set (SRC
     op/util/binary_elementwise_logical.hpp
     op/util/broadcast_base.cpp
     op/util/broadcast_base.hpp
+    op/util/embeddingbag_packed_base.cpp
+    op/util/embeddingbag_packed_base.hpp
+    op/util/embeddingbag_offsets_base.cpp
+    op/util/embeddingbag_offsets_base.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
@@ -490,6 +502,8 @@ set (SRC
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
+    op/util/scatter_nd_base.cpp
+    op/util/scatter_nd_base.hpp
     op/util/scatter_base.cpp
     op/util/scatter_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
@@ -509,7 +523,6 @@ set (SRC
     pass/common_function_collection.hpp
     pass/constant_folding_arithmetic_reduction.cpp
     pass/constant_folding_broadcast.cpp
-    pass/constant_folding_concat.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
@@ -521,7 +534,6 @@ set (SRC
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
-    pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
     pass/constant_folding_slice.cpp
@@ -530,7 +542,6 @@ set (SRC
     pass/constant_folding_strided_slice.cpp
     pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
-    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp

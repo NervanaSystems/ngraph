@@ -26,15 +26,21 @@ namespace ngraph
 {
     using VariantTypeInfo = DiscreteTypeInfo;
 
-    class NGRAPH_API Variant
+    class Variant
     {
     public:
-        virtual ~Variant();
+        virtual ~Variant() {}
         virtual const VariantTypeInfo& get_type_info() const = 0;
 
-        virtual std::shared_ptr<ngraph::Variant> init(const std::shared_ptr<ngraph::Node>& node);
+        virtual std::shared_ptr<ngraph::Variant> init(const std::shared_ptr<ngraph::Node>& node)
+        {
+            return nullptr;
+        }
 
-        virtual std::shared_ptr<ngraph::Variant> merge(const ngraph::NodeVector& nodes);
+        virtual std::shared_ptr<ngraph::Variant> merge(const ngraph::NodeVector& nodes)
+        {
+            return nullptr;
+        }
     };
 
     template <typename VT>
@@ -64,7 +70,7 @@ namespace ngraph
     {
     public:
         static constexpr VariantTypeInfo type_info{"Variant::std::string", 0};
-        const VariantTypeInfo& get_type_info() const override;
+        const VariantTypeInfo& get_type_info() const override { return type_info; }
         VariantWrapper(const value_type& value)
             : VariantImpl<value_type>(value)
         {
@@ -76,7 +82,7 @@ namespace ngraph
     {
     public:
         static constexpr VariantTypeInfo type_info{"Variant::int64_t", 0};
-        const VariantTypeInfo& get_type_info() const override;
+        const VariantTypeInfo& get_type_info() const override { return type_info; }
         VariantWrapper(const value_type& value)
             : VariantImpl<value_type>(value)
         {
