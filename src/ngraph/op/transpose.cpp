@@ -90,3 +90,9 @@ void op::v1::Transpose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 {
     throw ngraph_error("generate_adjoints not implemented for Transpose");
 }
+
+bool op::v1::Transpose::evaluate(const HostTensorVector& output_values,
+                                 const HostTensorVector& input_values)
+{
+    // return evaluate_transpose(input_values[0], output_values[0]);
+}

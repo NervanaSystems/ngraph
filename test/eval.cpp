@@ -29,6 +29,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/shape_of.hpp"
+#include "ngraph/op/transpose.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
@@ -175,4 +176,35 @@ TEST(eval, evaluate_dynamic_concat)
     auto cval = read_vector<float>(result_tensor);
     vector<float> out{1.0f, 8.0f, 10.0f};
     ASSERT_EQ(cval, out);
+}
+
+TEST(eval, eval_transpose)
+{
+    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto perm = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto x_transpose = make_shared<op::v1::Transpose>(x, perm);
+    auto fun = make_shared<Function>(NodeVector{x_transpose}, ParameterVector{x, perm});
+    auto result_tensor = make_shared<HostTensor>();
+
+    std::vector<Shape> x_shapes{Shape{2, 3}, Shape{2, 3}, Shape{2, 2, 3}};
+    std::vector<std::vector<int64_t>> perms{{0, 1}, {1, 0}, {2, 1, 0}};
+    std::vector<std::vector<float>> inputs{
+        {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
+    std::vector<Shape> expected_result_shapes{Shape{2, 3}, Shape{3, 2}, {3, 2, 2}};
+    std::vector<std::vector<float>> expected_results{
+        {1, 2, 3, 4, 5, 6}, {1, 4, 2, 5, 3, 6}, {1, 7, 4, 10, 2, 8, 5, 11, 3, 9, 6, 12}};
+
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        ASSERT_TRUE(fun->evaluate(
+            {result_tensor},
+            {make_host_tensor<element::Type_t::f32>(x_shapes[i], inputs[i]),
+             make_host_tensor<element::Type_t::i64>(Shape{perms[i].size()}, perms[i])}));
+
+        ASSERT_EQ(result_tensor->get_shape(), expected_result_shapes[i]);
+
+        auto results = read_vector<float>(result_tensor);
+
+        ASSERT_EQ(results, expected_results[i]);
+    }
 }
