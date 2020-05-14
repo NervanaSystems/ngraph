@@ -53,8 +53,8 @@ namespace ngraph
                 /// input.
                 SpaceToBatch(const Output<Node>& data,
                              const Output<Node>& block_shape,
-                             const ngraph::Output<ngraph::Node>& pads_begin,
-                             const ngraph::Output<ngraph::Node>& pads_end);
+                             const Output<ngraph::Node>& pads_begin,
+                             const Output<ngraph::Node>& pads_end);
 
                 NodeVector decompose_op() const override;
                 void pre_validate_and_infer_types() override;

@@ -50,6 +50,7 @@ bool op::v0::CumSum::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("reverse", m_reverse);
     return true;
 }
+
 void op::v0::CumSum::validate_and_infer_types()
 {
     element::Type arg_type = get_input_element_type(0);
