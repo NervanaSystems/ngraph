@@ -345,6 +345,7 @@ namespace
         bool rc = true;
         Shape in_shape = arg0->get_shape();
         out->set_shape(output_shape);
+        out->set_element_type(arg0->get_element_type());
         switch (arg0->get_element_type())
         {
             TYPE_CASE(boolean)(arg0, out, broadcast_axes);
