@@ -10,6 +10,9 @@ max_3d_to_scalar_int32
 # Not implemented
 send_recv
 send_recv_ring
+atanh
+asinh
+acosh
 
 # ONNX TopK with dynamic K
 onnx_top_k_opset_10
