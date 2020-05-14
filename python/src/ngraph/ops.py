@@ -711,7 +711,7 @@ def space_to_batch(data, block_shape, pads_begin, pads_end, name=None):
 
 
 @nameable_op
-def mvn(data, across_channels=True, normalize_variance=True, eps=np.float32(1e-9), name=None):
+def mvn(data, across_channels=False, normalize_variance=False, eps=1e-9, name=None):
     # type: (Node, bool, bool, float, str) -> Node
     r"""Perform Mean Variance Normalization operation on data from input node.
 
