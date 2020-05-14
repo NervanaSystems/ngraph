@@ -291,7 +291,7 @@ shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
         output_shape = make_shared<ngraph::opset1::Concat>(
             OutputVector{first_part_dims_length, remaining_part_length}, 0);
     }
-    return make_shared<ngraph::opset1::Reshape>(value, output_shape, false)
+    return make_shared<ngraph::opset1::Reshape>(value, output_shape, true)
         ->add_provenance_group_members_above({value});
 }
 
