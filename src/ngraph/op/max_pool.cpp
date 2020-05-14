@@ -14,10 +14,12 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/max_pool.hpp"
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/max_pool.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -87,22 +89,23 @@ void op::v0::MaxPool::validate_and_infer_types()
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
 
-    if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
-    {
-        if (arg_shape.is_static())
-        {
-            CoordinateDiff padding_above, padding_below;
-            infer_auto_padding(arg_shape.to_shape(),
-                               m_window_shape,
-                               m_window_movement_strides,
-                               Strides(m_window_shape.size(), 1), // No dilation
-                               m_pad_type,
-                               padding_above,
-                               padding_below);
-            m_padding_above = Shape(padding_above.begin(), padding_above.end());
-            m_padding_below = Shape(padding_below.begin(), padding_below.end());
-        }
-    }
+    update_auto_padding(arg_shape);
+    /* if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER) */
+    /* { */
+    /*     if (arg_shape.is_static()) */
+    /*     { */
+    /*         CoordinateDiff padding_above, padding_below; */
+    /*         infer_auto_padding(arg_shape.to_shape(), */
+    /*                            m_window_shape, */
+    /*                            m_window_movement_strides, */
+    /*                            Strides(m_window_shape.size(), 1), // No dilation */
+    /*                            m_pad_type, */
+    /*                            padding_above, */
+    /*                            padding_below); */
+    /*         m_padding_above = Shape(padding_above.begin(), padding_above.end()); */
+    /*         m_padding_below = Shape(padding_below.begin(), padding_below.end()); */
+    /*     } */
+    /* } */
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -119,6 +122,26 @@ void op::v0::MaxPool::validate_and_infer_types()
                                                   m_window_movement_strides,
                                                   true,
                                                   m_ceil_mode));
+}
+
+void update_auto_padding(const PartialShape& in_shape)
+{
+if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
+    {
+        if (in_shape.is_static())
+        {
+            CoordinateDiff padding_above, padding_below;
+            infer_auto_padding(in_shape.to_shape(),
+                               m_window_shape,
+                               m_window_movement_strides,
+                               Strides(m_window_shape.size(), 1), // No dilation
+                               m_pad_type,
+                               padding_above,
+                               padding_below);
+            m_padding_above = Shape(padding_above.begin(), padding_above.end());
+            m_padding_below = Shape(padding_below.begin(), padding_below.end());
+        }
+    }
 }
 
 op::v0::MaxPool::MaxPool(const Output<Node>& arg,
@@ -334,22 +357,23 @@ void op::v1::MaxPool::validate_and_infer_types()
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
 
-    if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
-    {
-        if (arg_shape.is_static())
-        {
-            CoordinateDiff pads_end, pads_begin;
-            infer_auto_padding(arg_shape.to_shape(),
-                               m_kernel,
-                               m_strides,
-                               Strides(m_kernel.size(), 1), // No dilation
-                               m_auto_pad,
-                               pads_end,
-                               pads_begin);
-            m_pads_end = Shape(pads_end.begin(), pads_end.end());
-            m_pads_begin = Shape(pads_begin.begin(), pads_begin.end());
-        }
-    }
+    update_auto_padding(arg_shape);
+    /* if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER) */
+    /* { */
+    /*     if (arg_shape.is_static()) */
+    /*     { */
+    /*         CoordinateDiff pads_end, pads_begin; */
+    /*         infer_auto_padding(arg_shape.to_shape(), */
+    /*                            m_kernel, */
+    /*                            m_strides, */
+    /*                            Strides(m_kernel.size(), 1), // No dilation */
+    /*                            m_auto_pad, */
+    /*                            pads_end, */
+    /*                            pads_begin); */
+    /*         m_pads_end = Shape(pads_end.begin(), pads_end.end()); */
+    /*         m_pads_begin = Shape(pads_begin.begin(), pads_begin.end()); */
+    /*     } */
+    /* } */
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -491,4 +515,70 @@ void op::v1::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
                                              m_kernel);
 
     adjoints.add_delta(operand, backprop);
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool
+        evaluate(const HostTensorPtr& arg, const HostTensorPtr& out, const Shape& arg_shape,
+const Shape& out_shape,
+                          const Shape& window_shape,
+                          const Strides& window_movement_strides,
+                          const Shape& padding_below,
+                          const Shape& padding_above)
+    {
+        /* out->set_shape(out_shape); */
+        /* runtime::reference::concat<T>( */
+        /*     arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out_shape, concatenation_axis); */
+        return true;
+    }
+
+    bool evaluate_maxpool(const HostTensorPtr& arg,
+                         const HostTensorPtr& out,
+const Shape& arg_shape,
+const Shape& out_shape,
+                          const Shape& window_shape,
+                          const Strides& window_movement_strides,
+                          const Shape& padding_below,
+                          const Shape& padding_above)
+    {
+        bool rc = true;
+
+        switch (out->get_element_type())
+        {
+            TYPE_CASE(i8)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(i16)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(i32)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(i64)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(u8)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(u16)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(u32)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(u64)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(f32)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+            TYPE_CASE(f64)(arg, out, arg_shape, out_shape, window_shape, window_movement_strides,padding_below, padding_above);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+} // namespace
+
+bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_maxpool(inputs[0], outputs[0], Shape{}, Shape{}, Shape{}, Strides{},Shape{},Shape{});
+}
+
+bool op::v1::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_maxpool(inputs[0], outputs[0], Shape{}, Shape{}, Shape{}, Strides{},Shape{},Shape{});
 }
