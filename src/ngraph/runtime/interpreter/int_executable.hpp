@@ -65,6 +65,7 @@
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
+#include "ngraph/runtime/reference/matmul.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
@@ -828,6 +829,19 @@ protected:
                               lrn->get_nsize());
             break;
         }
+        case OP_TYPEID::MatMul:
+        {
+            const op::MatMul* matmul = static_cast<const op::MatMul*>(&node);
+            reference::matmul<T>(args[0]->get_data_ptr<const T>(),
+                                 args[1]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<T>(),
+                                 node.get_input_shape(0),
+                                 node.get_input_shape(1),
+                                 node.get_output_shape(0),
+                                 matmul->get_transpose_a(),
+                                 matmul->get_transpose_b());
+            break;
+        }
         case OP_TYPEID::Max:
         {
             const op::Max* max = static_cast<const op::Max*>(&node);
@@ -1517,7 +1531,6 @@ protected:
         case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
-        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PartialSlice:
