@@ -2457,6 +2457,34 @@ def argmin(data,    # type: Node
 
 
 @nameable_op
+def embedding_bag_offsets_sum(emb_table,                   # type: Node
+                              indices,                     # type: NodeInput
+                              offsets,                     # type: NodeInput
+                              per_sample_weights=None,     # type: Optional[NodeInput]
+                              default_index=None,          # type: Optional[NodeInput]
+                              name=None,                   # type: Optional[str]
+                              ):
+    # type: (...) -> Node
+    """Return a node which performs sums of bags of embeddings without the intermediate embeddings.
+
+    :param emb_table: Input data.
+    :param indices: Reduction Axis.
+    :param offsets: Reduction Axis.
+    :param per_sample_weights: Reduction Axis.
+    :param default_index: Reduction Axis.
+    :param name: Optional name for output node.
+    :return: The new node which performs EmbeddingBagOffsetsSum
+    """
+    if per_sample_weights is None:
+        per_sample_weights = make_constant_node(1, np.float32)
+    if default_index is None:
+        default_index = make_constant_node(0, np.int64)
+    inputs = [emb_table, as_node(indices), as_node(offsets),
+              as_node(default_index), as_node(per_sample_weights)]
+    return _get_node_factory().create('EmbeddingBagOffsetsSum', inputs, {})
+
+
+@nameable_op
 def non_max_suppression(boxes,                              # type: Node
                         scores,                             # type: NodeInput
                         max_output_boxes_per_class=None,    # type: Optional[NodeInput]
@@ -2866,8 +2894,7 @@ def region_yolo(input,  # type: Node
                 do_softmax=True,  # type: bool
                 anchors=None,  # type: List[float]
                 name=None,  # type: str
-                ):
-                # type: (...) -> Node
+                ):  # type: (...) -> Node
     """Return a node which produces the RegionYolo operation.
 
     :param input:       Input data

@@ -587,3 +587,18 @@ def test_reorg_yolo():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == [2, 96, 17, 31]
     assert node.get_output_element_type(0) == Type.i32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_bag_offsets_sum_1():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([4], name='indices', dtype=np.int64)
+    offsets = ng.parameter([3], name='offsets', dtype=np.int64)
+    per_sample_weights = ng.parameter([4], name='per_sample_weights', dtype=np.float32)
+
+    node = ng.embedding_bag_offsets_sum(emb_table, indices, offsets, per_sample_weights)
+
+    assert node.get_type_name() == 'EmbeddingBagOffsetsSum'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [3, 2]
+    assert node.get_output_element_type(0) == Type.f32
