@@ -2467,11 +2467,11 @@ def embedding_bag_offsets_sum(emb_table,                   # type: Node
     # type: (...) -> Node
     """Return a node which performs sums of bags of embeddings without the intermediate embeddings.
 
-    :param emb_table: Input data.
-    :param indices: Reduction Axis.
-    :param offsets: Reduction Axis.
-    :param per_sample_weights: Reduction Axis.
-    :param default_index: Reduction Axis.
+    :param emb_table: Tensor containing the embedding lookup table.
+    :param indices: Tensor with indices.
+    :param offsets: Tensor containing the starting index positions of each bag in indices.
+    :param per_sample_weights: Tensor with weights for each sample.
+    :param default_index: Scalar containing default index in embedding table to fill empty bags.
     :param name: Optional name for output node.
     :return: The new node which performs EmbeddingBagOffsetsSum
     """
