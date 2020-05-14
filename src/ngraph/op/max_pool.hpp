@@ -134,8 +134,8 @@ namespace ngraph
                 /// \return The default value for MaxPool.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
-bool evaluate(const HostTensorVector& outputs,
-                                  const HostTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -147,9 +147,9 @@ bool evaluate(const HostTensorVector& outputs,
                 Shape m_padding_above;
                 PadType m_pad_type;
                 bool m_ceil_mode{false};
-private:
-void update_auto_padding(const PartialShape& in_shape);
 
+            private:
+                void update_auto_padding(const PartialShape& in_shape);
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
@@ -284,8 +284,8 @@ void update_auto_padding(const PartialShape& in_shape);
                 /// \return The default value for MaxPool.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
-bool evaluate(const HostTensorVector& outputs,
-                                  const HostTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -297,8 +297,9 @@ bool evaluate(const HostTensorVector& outputs,
                 Shape m_pads_end;
                 PadType m_auto_pad;
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
-private:
-void update_auto_padding(const PartialShape& in_shape);
+
+            private:
+                void update_auto_padding(const PartialShape& in_shape);
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
