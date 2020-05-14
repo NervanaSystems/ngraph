@@ -52,6 +52,7 @@ namespace
     bool evaluate_atanh(const HostTensorPtr& arg0, const HostTensorPtr& out)
     {
         bool rc = true;
+        out->set_unary(arg0);
         switch (arg0->get_element_type())
         {
             TYPE_CASE(i8)(arg0, out);
