@@ -240,6 +240,8 @@ add_library(onnx_import STATIC
         utils/convpool.hpp
         utils/pooling_factory.cpp
         utils/pooling_factory.hpp
+        utils/recurrent.cpp
+        utils/recurrent.hpp
         utils/reduction.cpp
         utils/reduction.hpp
         utils/reshape.cpp
