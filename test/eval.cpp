@@ -416,6 +416,7 @@ TEST(eval, evaluate_broadcast_v0)
     vector<float> expec{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4};
     ASSERT_EQ(result_val, expec);
 }
+
 TEST(eval, evaluate_reshape_v1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});

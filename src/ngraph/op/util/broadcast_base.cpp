@@ -290,10 +290,6 @@ namespace
                             const std::pair<bool, AxisSet> pair_broadcast_axes,
                             const Shape output_shape)
     {
-        if (arg0->get_element_type() != out->get_element_type())
-        {
-            return false;
-        }
         if (!pair_broadcast_axes.first)
         {
             // broadcast_axes not known deterministically

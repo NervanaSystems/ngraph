@@ -342,11 +342,6 @@ namespace
                             const AxisSet broadcast_axes,
                             const Shape output_shape)
     {
-        if (arg0->get_element_type() != out->get_element_type())
-        {
-            return false;
-        }
-
         bool rc = true;
         Shape in_shape = arg0->get_shape();
         out->set_shape(output_shape);
