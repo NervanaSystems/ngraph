@@ -179,10 +179,14 @@ set (SRC
     op/divide.hpp
     op/dot.cpp
     op/dot.hpp
+    op/embeddingbag_offsets_sum.cpp
+    op/embeddingbag_offsets_sum.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
     op/embeddingbag_packedsum.cpp
     op/embeddingbag_packedsum.hpp
+    op/embedding_segments_sum.cpp
+    op/embedding_segments_sum.hpp
     op/equal.cpp
     op/equal.hpp
     op/erf.cpp
@@ -484,6 +488,8 @@ set (SRC
     op/util/broadcast_base.hpp
     op/util/embeddingbag_packed_base.cpp
     op/util/embeddingbag_packed_base.hpp
+    op/util/embeddingbag_offsets_base.cpp
+    op/util/embeddingbag_offsets_base.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
