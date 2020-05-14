@@ -31,6 +31,7 @@ namespace ngraph
             template <typename T>
             void softmax(const T* arg, T* out, const Shape& shape, const AxisSet& axes)
             {
+                // TODO: deleteme
                 auto temp_shape = reduce(shape, axes);
                 auto temp_elements = shape_size(temp_shape);
                 auto temp_ptr = new T[temp_elements];
@@ -46,7 +47,7 @@ namespace ngraph
                         arg[transform.index(coord)] - temp_ptr[temp_transform.index(temp_coord)]);
                 }
 
-                sum(out, temp_ptr, shape, temp_shape, axes);
+                sum(out, temp_ptr, shape, axes);
 
                 for (const Coordinate& coord : transform)
                 {
