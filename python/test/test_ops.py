@@ -18,21 +18,17 @@ from __future__ import absolute_import
 
 import pytest
 import numpy as np
+import ngraph as ng
 
 from ngraph.impl import util
 from ngraph.impl import Shape, Strides, CoordinateDiff, AxisSet, AxisVector, Coordinate
 from ngraph.impl import Type, Function
 from ngraph.impl.runtime import Backend, Executable
-from ngraph.impl.op import Acos, Asin, Atan, Cos, Sin, Tan
-from ngraph.impl.op import Cosh, Sinh, Tanh, Sqrt, Sign
-from ngraph.impl.op import Power, Negative, Ceiling, Floor
-from ngraph.impl.op import Parameter, Maximum, Minimum
-from ngraph.impl.op import Add, Subtract, Multiply, Divide, Dot
-from ngraph.impl.op import Constant, Abs, Exp, Log, Sum
-from ngraph.impl.op import Greater, Less, Equal, NotEqual, GreaterEq, LessEq, Not
-from ngraph.impl.op import OneHot, Broadcast, Reshape, Convert
-from ngraph.impl.op import Concat, Select
-from ngraph.impl.op import Reverse, MaxPool, ReplaceSlice, Slice
+from ngraph.impl.op import Parameter
+from ngraph.impl.op import Dot
+from ngraph.impl.op import Constant
+from ngraph.impl.op import Broadcast, Convert
+from ngraph.impl.op import MaxPool, ReplaceSlice, Slice
 from ngraph.impl.op import Convolution, ConvolutionBackpropData, ConvolutionBackpropFilters
 
 import test
@@ -43,39 +39,39 @@ def binary_op(op_str, a, b):
     if op_str == '+':
         return a + b
     elif op_str == 'Add':
-        return Add(a, b)
+        return ng.add(a, b)
     elif op_str == '-':
         return a - b
     elif op_str == 'Sub':
-        return Subtract(a, b)
+        return ng.subtract(a, b)
     elif op_str == '*':
         return a * b
     elif op_str == 'Mul':
-        return Multiply(a, b)
+        return ng.multiply(a, b)
     elif op_str == '/':
         return a / b
     elif op_str == 'Div':
-        return Divide(a, b)
+        return ng.divide(a, b)
     elif op_str == 'Dot':
         return Dot(a, b)
     elif op_str == 'Equal':
-        return Equal(a, b)
+        return ng.equal(a, b)
     elif op_str == 'Greater':
-        return Greater(a, b)
+        return ng.greater(a, b)
     elif op_str == 'GreaterEq':
-        return GreaterEq(a, b)
+        return ng.greater_equal(a, b)
     elif op_str == 'Less':
-        return Less(a, b)
+        return ng.less(a, b)
     elif op_str == 'LessEq':
-        return LessEq(a, b)
+        return ng.less_equal(a, b)
     elif op_str == 'Maximum':
-        return Maximum(a, b)
+        return ng.maximum(a, b)
     elif op_str == 'Minimum':
-        return Minimum(a, b)
+        return ng.minimum(a, b)
     elif op_str == 'NotEqual':
-        return NotEqual(a, b)
+        return ng.not_equal(a, b)
     elif op_str == 'Power':
-        return Power(a, b)
+        return ng.power(a, b)
 
 
 def binary_op_ref(op_str, a, b):
@@ -246,7 +242,7 @@ def test_add_with_mul():
     B = Parameter(element_type, shape)
     C = Parameter(element_type, shape)
     parameter_list = [A, B, C]
-    function = Function([Multiply(Add(A, B), C)], parameter_list, 'test')
+    function = Function([ng.multiply(ng.add(A, B), C)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -274,41 +270,41 @@ def test_add_with_mul():
 
 def unary_op(op_str, a):
     if op_str == 'Abs':
-        return Abs(a)
+        return ng.abs(a)
     elif op_str == 'Acos':
-        return Acos(a)
+        return ng.acos(a)
     elif op_str == 'Asin':
-        return Asin(a)
+        return ng.asin(a)
     elif op_str == 'Atan':
-        return Atan(a)
+        return ng.atan(a)
     elif op_str == 'Ceiling':
-        return Ceiling(a)
+        return ng.ceiling(a)
     elif op_str == 'Cos':
-        return Cos(a)
+        return ng.cos(a)
     elif op_str == 'Cosh':
-        return Cosh(a)
+        return ng.cosh(a)
     elif op_str == 'Floor':
-        return Floor(a)
+        return ng.floor(a)
     elif op_str == 'log':
-        return Log(a)
+        return ng.log(a)
     elif op_str == 'exp':
-        return Exp(a)
+        return ng.exp(a)
     elif op_str == 'negative':
-        return Negative(a)
+        return ng.negative(a)
     elif op_str == 'Reverse':
-        return Reverse(a, AxisSet({1}))
+        return ng.reverse(a, np.array([1]), 'index')
     elif op_str == 'Sign':
-        return Sign(a)
+        return ng.sign(a)
     elif op_str == 'Sin':
-        return Sin(a)
+        return ng.sin(a)
     elif op_str == 'Sinh':
-        return Sinh(a)
+        return ng.sinh(a)
     elif op_str == 'Sqrt':
-        return Sqrt(a)
+        return ng.sqrt(a)
     elif op_str == 'Tan':
-        return Tan(a)
+        return ng.tan(a)
     elif op_str == 'Tanh':
-        return Tanh(a)
+        return ng.tanh(a)
 
 
 def unary_op_ref(op_str, a):
@@ -488,64 +484,13 @@ def test_reverse():
     unary_op_exec(op_str, input_list)
 
 
-def test_not():
-    element_type = Type.boolean
-    shape = Shape([2])
-    A = Parameter(element_type, shape)
-    parameter_list = [A]
-    function = Function([Not(A)], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, shape)
-    result = backend.create_tensor(Type.boolean, shape)
-
-    a.write(util.numpy_to_c(np.array([True, False], dtype=np.bool)), 2)
-
-    result_arr = np.array([False, False], dtype=np.bool)
-    result.write(util.numpy_to_c(result_arr), 2)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 2)
-
-    a_arr = np.array([True, False], dtype=np.bool)
-    result_arr_ref = np.logical_not(a_arr)
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
-def test_sum():
-
-    element_type = Type.f32
-    shape = Shape([1, 4])
-    A = Parameter(element_type, shape)
-    parameter_list = [A]
-    function = Function([Sum(A, AxisSet({1}))], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, shape)
-    result = backend.create_tensor(element_type, Shape([1]))
-
-    a.write(util.numpy_to_c(np.array([1, 2, 3, 4], dtype=np.float32)), 16)
-
-    result_arr = np.array([0], dtype=np.float32)
-    result.write(util.numpy_to_c(result_arr), 4)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 4)
-
-    a_arr = np.array([1, 2, 3, 4], dtype=np.float32)
-    result_arr_ref = np.sum(a_arr)
-
-    assert np.allclose(result_arr[0], result_arr_ref)
-
-
 def test_reshape():
 
     element_type = Type.f32
     shape = Shape([2, 3])
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function([Reshape(A, AxisVector([0, 1]), Shape([3, 2]))], parameter_list, 'test')
+    function = Function([ng.reshape(A, Shape([3, 2]), special_zero=False)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -657,31 +602,6 @@ def test_constant():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-def test_onehot():
-
-    element_type = Type.i32
-    A = Parameter(element_type, Shape([3]))
-    parameter_list = [A]
-    function = Function([OneHot(A, Shape([3, 3]), 0)], parameter_list, 'test')
-    backend = Backend.create(test.BACKEND_NAME)
-
-    a = backend.create_tensor(element_type, Shape([3]))
-    result = backend.create_tensor(element_type, Shape([3, 3]))
-
-    a.write(util.numpy_to_c(np.array([1, 0, 2], dtype=np.int32)), 12)
-
-    result_arr = np.zeros((3, 3), dtype=np.int32)
-    result.write(util.numpy_to_c(result_arr), 36)
-    handle = backend.compile(function)
-    handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 36)
-
-    a_arr = np.array([1, 0, 2])
-    result_arr_ref = np.eye(3)[a_arr]
-
-    assert np.allclose(result_arr, result_arr_ref)
-
-
 @pytest.mark.skip_on_gpu
 def test_concat():
 
@@ -691,7 +611,7 @@ def test_concat():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
     axis = 0
-    function = Function([Concat([A, B, C], axis)], parameter_list, 'test')
+    function = Function([ng.concat([A, B, C], axis)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([1, 2]))
@@ -743,7 +663,7 @@ def test_select():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
 
-    function = Function([Select(A, B, C)], parameter_list, 'test')
+    function = Function([ng.select(A, B, C)], parameter_list, 'test')
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(Type.boolean, Shape([1, 2]))
