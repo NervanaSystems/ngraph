@@ -385,6 +385,8 @@ set(MULTI_TEST_SRC
     backend/random_uniform.in.cpp
     backend/range.in.cpp
     backend/relu.in.cpp
+    backend/reduce_prod.in.cpp
+    backend/reduce_sum.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
     backend/reverse_sequence.in.cpp
