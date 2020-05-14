@@ -48,7 +48,6 @@ PYBIND11_MODULE(_pyngraph, m)
     regclass_pyngraph_Dimension(m); // Dimension must be registered before PartialShape
     regclass_pyngraph_PartialShape(m);
     regclass_pyngraph_Shape(m);
-    regclass_pyngraph_PartialShape(m);
     regclass_pyngraph_Strides(m);
     regclass_pyngraph_CoordinateDiff(m);
     regclass_pyngraph_AxisSet(m);
