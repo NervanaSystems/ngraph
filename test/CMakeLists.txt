@@ -144,6 +144,7 @@ set(SRC
     type_prop/elu.cpp
     type_prop/embeddingbag_offsetssum.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/embeddingbag_packedsum.cpp
     type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
@@ -187,6 +188,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_nd_update.cpp
     type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
