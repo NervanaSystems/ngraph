@@ -105,6 +105,7 @@
 #include "op/reshape.hpp"
 #include "op/resize.hpp"
 #include "op/reverse_sequence.hpp"
+#include "op/rnn.hpp"
 #include "op/roi_align.hpp"
 #include "op/round.hpp"
 #include "op/scatter_elements.hpp"
@@ -346,6 +347,7 @@ namespace ngraph
             REGISTER_OPERATOR("Reshape", 1, reshape);
             REGISTER_OPERATOR("Resize", 1, resize);
             REGISTER_OPERATOR("ReverseSequence", 1, reverse_sequence);
+            REGISTER_OPERATOR("RNN", 1, rnn);
             REGISTER_OPERATOR("RoiAlign", 1, roi_align);
             REGISTER_OPERATOR("Round", 1, round);
             REGISTER_OPERATOR("Scatter", 1, scatter_elements);

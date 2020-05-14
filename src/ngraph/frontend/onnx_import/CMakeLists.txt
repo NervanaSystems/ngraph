@@ -181,6 +181,8 @@ add_library(onnx_import STATIC
         op/resize.hpp
         op/reverse_sequence.cpp
         op/reverse_sequence.hpp
+        op/rnn.cpp
+        op/rnn.hpp
         op/roi_align.cpp
         op/roi_align.hpp
         op/round.cpp
