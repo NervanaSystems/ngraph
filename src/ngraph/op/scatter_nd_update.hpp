@@ -23,21 +23,21 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v3
         {
             /// \brief Add updates to slices from inputs addressed by indices
-            class NGRAPH_API ScatterNDAdd : public util::ScatterNDBase
+            class NGRAPH_API ScatterNDUpdate : public util::ScatterNDBase
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ScatterNDAdd", 0};
+                static constexpr NodeTypeInfo type_info{"ScatterNDUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ScatterNDAdd() = default;
+                ScatterNDUpdate() = default;
                 /// \param inputs Tensor
                 /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
                 /// \param updates Tensor: Must have same type as inputs
-                ScatterNDAdd(const Output<Node>& inputs,
-                             const Output<Node>& indices,
-                             const Output<Node>& updates)
+                ScatterNDUpdate(const Output<Node>& inputs,
+                                const Output<Node>& indices,
+                                const Output<Node>& updates)
                     : util::ScatterNDBase(inputs, indices, updates)
                 {
                 }
@@ -46,6 +46,6 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-        using v0::ScatterNDAdd;
+        using v3::ScatterNDUpdate;
     }
 }
