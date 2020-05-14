@@ -16,6 +16,7 @@
 
 #include "ngraph/op/scatter_elements_update.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/runtime/reference/scatter_elements_update.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace ngraph;
@@ -140,20 +141,29 @@ namespace
     template <element::Type_t DT, element::Type_t IT, element::Type_t AT >
     bool evaluate(const HostTensorPtr& data,const HostTensorPtr& indices,const HostTensorPtr& updates,const HostTensorPtr& axis, const HostTensorPtr& out)
     {
-        using T = typename element_type_traits<DT>::value_type; // ????????????????????
+        using DataType = typename element_type_traits<DT>::value_type;
+        using IndicesType = typename element_type_traits<IT>::value_type;
+        //int64_t normalized_axis = ngraph::normalize_axis(out.get(), *(axis->get_data_ptr<AT>()), static_cast<int64_t>(data->get_shape().size()));
+        //int64_t normalized_axis = ngraph::normalize_axis(out->get_data_ptr<DT>(), *(axis->get_data_ptr<AT>()), static_cast<int64_t>(data->get_shape().size()));
+		
+		int64_t axis2 =  *(axis->get_data_ptr<AT>());
+		const auto input_rank = static_cast<int64_t>(data->get_shape().size());
+        //const Rank input_rank;
+        // const Node* node;
+        //string node_description = data->get_data_ptr<DataType>()->description();
+        string node_description = "dont know how????"; 
+		
 
+        
+		//int64_t normalized_axis =  *(axis->get_data_ptr<AT>());
+		int64_t normalized_axis = ngraph::normalize_axis(node_description, axis2, input_rank);
 
-		runtime::AlignedBuffer buffer(shape_size(out->get_shape()) * sizeof(DT));
-		DT* data_ptr = buffer.get_ptr<DT>();
-        int64_t normalized_axis = normalize_axis(out.get(), *(axis->get_data_ptr<AT>()), static_cast<int64_t>(data->get_shape().size()));
-        runtime::reference::scatter_elem_update<DT,IT>( data->get_data_ptr<DT>(), indices->get_data_ptr<IT>(),
+        runtime::reference::scatter_elem_update<DataType,IndicesType>( data->get_data_ptr<DT>(), indices->get_data_ptr<IT>(),
             updates->get_data_ptr<DT>(),
             normalized_axis,
-            data_ptr,
-            //out->get_data_ptr<DT>(),
+            out->get_data_ptr<DT>(),
             data->get_shape(),
             indices->get_shape());
-
 
 
         return true;
@@ -282,7 +292,8 @@ namespace
 }
 
 
-bool op::v3::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v3::ScatterElementsUpdate::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-     return evaluate_scatter_element_update(inputs[0], inputs[1], inputs[2],input[3], outputs[0]);
+    string str_des = this->description();
+    return evaluate_scatter_element_update(inputs[0], inputs[1], inputs[2],inputs[3], outputs[0]);
 }
