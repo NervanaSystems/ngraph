@@ -494,6 +494,19 @@ bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank r
 {
     std::vector<bool> axis_occurs(permutation.size(), false);
 
+    // Check bounds if rank is static
+    if (rank.is_static())
+    {
+        auto bound = rank.get_length();
+        for (auto axis : permutation)
+        {
+            if (static_cast<decltype(bound)>(axis) >= bound)
+            {
+                return false;
+            }
+        }
+    }
+
     for (auto& axis : permutation)
     {
         axis_occurs[axis] = true;
