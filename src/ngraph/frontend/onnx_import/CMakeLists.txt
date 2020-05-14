@@ -112,6 +112,8 @@ add_library(onnx_import STATIC
         op/global_max_pool.cpp
         op/global_max_pool.hpp
         op/greater.hpp
+        op/gru.cpp
+        op/gru.hpp
         op/hard_sigmoid.cpp
         op/hard_sigmoid.hpp
         op/hardmax.cpp
