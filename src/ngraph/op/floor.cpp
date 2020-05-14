@@ -16,10 +16,10 @@
 
 #include "ngraph/op/floor.hpp"
 
-#include "ngraph/op/util/eval_identity.hpp"
+#include "ngraph/op/util/eval_copy.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/floor.hpp"
-#include "ngraph/runtime/reference/identity.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -54,11 +54,11 @@ namespace
         return true;
     }
 
-    // function used by IDENTITY
+    // function used by COPY_TENSOR
     template <element::Type_t ET>
     inline bool copy_tensor(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
     {
-        runtime::reference::identity(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
+        runtime::reference::copy(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
         return true;
     }
 
@@ -69,23 +69,23 @@ namespace
 
         switch (arg0->get_element_type())
         {
-            IDENTITY(boolean)(arg0, out, count);
+            COPY_TENSOR(boolean)(arg0, out, count);
             break;
-            IDENTITY(i8)(arg0, out, count);
+            COPY_TENSOR(i8)(arg0, out, count);
             break;
-            IDENTITY(i16)(arg0, out, count);
+            COPY_TENSOR(i16)(arg0, out, count);
             break;
-            IDENTITY(i32)(arg0, out, count);
+            COPY_TENSOR(i32)(arg0, out, count);
             break;
-            IDENTITY(i64)(arg0, out, count);
+            COPY_TENSOR(i64)(arg0, out, count);
             break;
-            IDENTITY(u8)(arg0, out, count);
+            COPY_TENSOR(u8)(arg0, out, count);
             break;
-            IDENTITY(u16)(arg0, out, count);
+            COPY_TENSOR(u16)(arg0, out, count);
             break;
-            IDENTITY(u32)(arg0, out, count);
+            COPY_TENSOR(u32)(arg0, out, count);
             break;
-            IDENTITY(u64)(arg0, out, count);
+            COPY_TENSOR(u64)(arg0, out, count);
             break;
             TYPE_CASE(bf16)(arg0, out, count);
             break;

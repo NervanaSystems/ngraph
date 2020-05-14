@@ -16,22 +16,5 @@
 
 #pragma once
 
-#include <cstddef>
-
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void identity(const T* arg0, T* out, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    out[i] = arg0[i];
-                }
-            }
-        }
-    }
-}
+#define COPY_TENSOR(a)                                                                             \
+    case element::Type_t::a: rc = copy_tensor<element::Type_t::a>
