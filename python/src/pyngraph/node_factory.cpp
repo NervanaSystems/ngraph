@@ -64,15 +64,6 @@ namespace
             }
         }
         virtual void on_adapter(const std::string& name,
-                                ngraph::ValueAccessor<void>& adapter) override
-        {
-            if (m_attributes.contains(name))
-            {
-                NGRAPH_CHECK(
-                    false, "No AttributeVisitor support for accessing attribute named: ", name);
-            }
-        }
-        virtual void on_adapter(const std::string& name,
                                 ngraph::ValueAccessor<std::string>& adapter) override
         {
             if (m_attributes.contains(name))
