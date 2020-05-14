@@ -14,36 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/op/scatter_nd_update.hpp"
 
-#include <cmath>
-#include <cstddef>
+using namespace std;
+using namespace ngraph;
 
-namespace ngraph
+constexpr NodeTypeInfo op::v3::ScatterNDUpdate::type_info;
+
+shared_ptr<Node> op::v3::ScatterNDUpdate::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    namespace runtime
-    {
-        namespace reference
-        {
-            template <typename T>
-            void clamp(const T* arg, T* out, T min, T max, size_t count)
-            {
-                for (size_t i = 0; i < count; i++)
-                {
-                    if (arg[i] < min)
-                    {
-                        out[i] = min;
-                    }
-                    else if (arg[i] > max)
-                    {
-                        out[i] = max;
-                    }
-                    else
-                    {
-                        out[i] = arg[i];
-                    }
-                }
-            }
-        }
-    }
+    check_new_args_count(this, new_args);
+    return make_shared<op::v3::ScatterNDUpdate>(new_args.at(op::util::ScatterNDBase::INPUTS),
+                                                new_args.at(op::util::ScatterNDBase::INDICES),
+                                                new_args.at(op::util::ScatterNDBase::UPDATES));
 }
