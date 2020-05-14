@@ -531,7 +531,7 @@ TEST(constant_folding, constant_unary_binary)
     ASSERT_EQ(get_result_constant<char>(func, 23), logical_and_autob_numpy_expected);
     ASSERT_EQ(get_result_constant<char>(func, 24), logical_or_autob_numpy_expected);
     ASSERT_EQ(get_result_constant<char>(func, 25), logical_xor_autob_numpy_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
+    ASSERT_NO_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(constant_folding, const_dequantize)
@@ -3160,4 +3160,58 @@ TEST(constant_folding, constant_scatter_elements_update_one_elem)
     // we have updated coordinate (1, 0, 0)
     expected.at(9) = 2;
     range_test_check(result_node->cast_vector<int32_t>(), expected);
+}
+
+void test_constant_folding_reshape_v1(Shape& shape_in,
+                                      vector<float>& values_in,
+                                      Shape shape_shape,
+                                      vector<int32_t> values_shape,
+                                      bool zero_flag = false)
+{
+    auto constant_in = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto constant_shape = make_shared<op::Constant>(element::i64, shape_shape, values_shape);
+    auto dyn_reshape = make_shared<op::v1::Reshape>(constant_in, constant_shape, zero_flag);
+    auto f = make_shared<Function>(dyn_reshape, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    ASSERT_EQ(count_ops_of_type<op::v1::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    ASSERT_TRUE(new_const);
+    auto values_out = new_const->get_vector<float>();
+
+    ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+TEST(constant_folding, constant_dyn_reshape_v1_2d)
+{
+    Shape shape_in{2, 5};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {1, 1, 1, 10});
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {1, 1, 2, 5});
+    test_constant_folding_reshape_v1(shape_in, values_in, {3}, {1, 2, 5});
+    test_constant_folding_reshape_v1(shape_in, values_in, {3}, {5, 2, 1});
+}
+
+TEST(constant_folding, constant_dyn_reshape_v1_pattern_with_negative_indices)
+{
+    Shape shape_in{2, 2, 2, 2};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+    test_constant_folding_reshape_v1(shape_in, values_in, {3}, {4, -1, 2});
+    test_constant_folding_reshape_v1(shape_in, values_in, {2}, {4, -1});
+    test_constant_folding_reshape_v1(shape_in, values_in, {1}, {-1});
+}
+
+TEST(constant_folding, constant_dyn_reshape_v1_pattern_with_zero_dims)
+{
+    Shape shape_in{2, 2, 2, 2};
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {2, -1, 2, 0}, true);
+    test_constant_folding_reshape_v1(shape_in, values_in, {4}, {4, 1, 0, 2}, true);
 }

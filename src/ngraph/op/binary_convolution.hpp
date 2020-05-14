@@ -57,17 +57,7 @@ namespace ngraph
                                   const CoordinateDiff& pads_begin,
                                   const CoordinateDiff& pads_end,
                                   const Strides& dilations,
-                                  const BinaryConvolutionMode& mode,
-                                  float pad_value,
-                                  const PadType& auto_pad = PadType::EXPLICIT);
-
-                BinaryConvolution(const Output<Node>& data,
-                                  const Output<Node>& kernel,
-                                  const Strides& strides,
-                                  const CoordinateDiff& pads_begin,
-                                  const CoordinateDiff& pads_end,
-                                  const Strides& dilations,
-                                  const std::string& mode,
+                                  BinaryConvolutionMode mode,
                                   float pad_value,
                                   const PadType& auto_pad = PadType::EXPLICIT);
 
