@@ -86,3 +86,17 @@ def test_lrn_factory():
     result = test.ngraph.util.run_op_node([x, axis], ng.ops.lrn, alpha, beta, bias, nsize)
 
     assert np.allclose(result, excepted)
+
+
+def test_batch_norm_inference():
+    data = [[1.0, 2.0, 3.0], [-1.0, -2.0, -3.0]]
+    gamma = [2.0, 3.0, 4.0]
+    beta = [0.0, 0.0, 0.0]
+    mean = [0.0, 0.0, 0.0]
+    variance = [1.0, 1.0, 1.0]
+    epsilon = 9.99e-06
+    excepted = [[2.0, 6.0, 12.0], [-2.0, -6.0, -12.0]]
+
+    result = test.ngraph.util.run_op_node([data, gamma, beta, mean, variance],
+                                          ng.ops.batch_norm_inference, epsilon)
+    assert np.allclose(result, excepted)
