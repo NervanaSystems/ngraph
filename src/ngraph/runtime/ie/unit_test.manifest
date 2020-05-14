@@ -1189,6 +1189,15 @@ IE_CPU.onnx_model_instance_normalization
 IE_CPU.onnx_model_reverse_sequence_1_batch_0
 IE_CPU.onnx_model_reverse_sequence_0_batch_1
 IE_CPU.cum_sum_2dim_default_axis
+IE_CPU.fused_clamp_double
+IE_CPU.fused_clamp_int8
+IE_CPU.fused_clamp_int16
+IE_CPU.fused_clamp_int32
+IE_CPU.fused_clamp_int64
+IE_CPU.fused_clamp_uint8
+IE_CPU.fused_clamp_uint16
+IE_CPU.fused_clamp_uint32
+IE_CPU.fused_clamp_uint64
 
 #Node <name> contains empty child edge for index 0
 IE_CPU.backwards_log
