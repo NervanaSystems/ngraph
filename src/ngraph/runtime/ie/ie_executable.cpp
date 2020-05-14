@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/ie/ie_executable.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -22,6 +23,7 @@
 #include "ngraph/runtime/ie/ie_tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -52,7 +54,9 @@ namespace
 
 #define MAKE_IE_TBLOB(type_, precision_, shape_, layout_)                                          \
     make_shared<InferenceEngine::TBlob<type_>>(                                                    \
-        InferenceEngine::TensorDesc{InferenceEngine::Precision::precision_, shape_, layout_}, (type_*)data, size)
+        InferenceEngine::TensorDesc{InferenceEngine::Precision::precision_, shape_, layout_},      \
+        (type_*)data,                                                                              \
+        size)
 
         switch (elem_type)
         {
@@ -113,14 +117,15 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     //  Load model to the plugin (BACKEND_NAME)
     InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
     //  Create infer request
-     m_infer_req = exe_network.CreateInferRequest();
+    m_infer_req = exe_network.CreateInferRequest();
 }
 
 bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-
-    //  Prepare input and output blobs
+    stopwatch timer;
+    //  Prepare input blobs
+    timer.start();
     InferenceEngine::InputsDataMap input_info = m_network.getInputsInfo();
     if (input_info.size() != inputs.size())
     {
@@ -133,14 +138,17 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
         shared_ptr<runtime::ie::IETensor> tv =
             static_pointer_cast<runtime::ie::IETensor>(inputs[i]);
         m_infer_req.SetBlob(it.first,
-                              fill_blob(it.second->getTensorDesc().getDims(),
-                                        tv->get_data_ptr(),
-                                        tv->get_element_count(),
-                                        tv->get_element_type()));
+                            fill_blob(it.second->getTensorDesc().getDims(),
+                                      tv->get_data_ptr(),
+                                      tv->get_element_count(),
+                                      tv->get_element_type()));
         i++;
     }
+    timer.stop();
+    auto time_prep_inputs = timer.get_milliseconds();
 
     //  Prepare output blobs
+    timer.start();
     InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
     if (output_info.size() != outputs.size())
     {
@@ -153,13 +161,22 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
         shared_ptr<runtime::ie::IETensor> tv =
             static_pointer_cast<runtime::ie::IETensor>(outputs[i]);
         m_infer_req.SetBlob(it.first,
-                              fill_blob(it.second->getTensorDesc().getDims(),
-                                        tv->get_data_ptr(),
-                                        tv->get_element_count(),
-                                        tv->get_element_type()));
+                            fill_blob(it.second->getTensorDesc().getDims(),
+                                      tv->get_data_ptr(),
+                                      tv->get_element_count(),
+                                      tv->get_element_type()));
         i++;
     }
+    timer.stop();
+    auto time_prep_outputs = timer.get_milliseconds();
 
+    timer.start();
     m_infer_req.Infer();
+    timer.stop();
+    auto time_infer = timer.get_milliseconds();
+
+    NGRAPH_DEBUG << "EXEC_CALL_TIMING PROFILE: "
+                 << "Prepare Inputs: " << time_prep_inputs << "ms, Prepare Outputs "
+                 << time_prep_outputs << "ms, Infer " << time_infer << "ms " << endl;
     return true;
 }
