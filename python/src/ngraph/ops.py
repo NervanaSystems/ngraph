@@ -2485,6 +2485,44 @@ def embedding_bag_offsets_sum(emb_table,                   # type: Node
 
 
 @nameable_op
+def embedding_segments_sum(emb_table,                   # type: Node
+                           indices,                     # type: NodeInput
+                           segment_ids,                 # type: NodeInput
+                           num_segments=None,           # type: Optional[NodeInput]
+                           default_index=None,          # type: Optional[NodeInput]
+                           per_sample_weights=None,     # type: Optional[NodeInput]
+                           name=None,                   # type: Optional[str]
+                           ):
+    # type: (...) -> Node
+    """Return an EmbeddingSegmentsSum node.
+
+    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a given
+    input tensor with a row (from the weights matrix) at that index
+
+    :param emb_table: Tensor containing the embedding lookup table.
+    :param indices: Tensor with indices.
+    :param segment_ids: Tensor with indices into the output Tensor
+    :param num_segments: Tensor with number of segments.
+    :param default_index: Scalar containing default index in embedding table to fill empty bags.
+    :param per_sample_weights: Weights to be multiplied with embedding table.
+    :param name: Optional name for output node.
+    :return: EmbeddingSegmentsSum node
+    """
+    inputs = [emb_table, as_node(indices), as_node(segment_ids)]
+    if per_sample_weights is not None:
+        inputs.append(num_segments)
+        inputs.append(default_index)
+        inputs.append(per_sample_weights)
+    elif default_index is not None:
+        inputs.append(num_segments)
+        inputs.append(default_index)
+    elif num_segments is not None:
+        inputs.append(num_segments)
+
+    return _get_node_factory().create('EmbeddingSegmentsSum', inputs, {})
+
+
+@nameable_op
 def non_max_suppression(boxes,                              # type: Node
                         scores,                             # type: NodeInput
                         max_output_boxes_per_class=None,    # type: Optional[NodeInput]

@@ -18,6 +18,7 @@ import pytest
 
 import ngraph as ng
 from ngraph.impl import Type
+from _pyngraph import PartialShape
 import test
 
 np_types = [np.float32, np.int32]
@@ -601,4 +602,37 @@ def test_embedding_bag_offsets_sum_1():
     assert node.get_type_name() == 'EmbeddingBagOffsetsSum'
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == [3, 2]
+    assert node.get_output_element_type(0) == Type.f32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_segments_sum_all_inputs():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([4], name='indices', dtype=np.int64)
+    segment_ids = ng.parameter([4], name='segment_ids', dtype=np.int64)
+    num_segments = ng.parameter([], name='num_segments', dtype=np.int64)
+    default_index = ng.parameter([], name='default_index', dtype=np.int64)
+    per_sample_weights = ng.parameter([4], name='per_sample_weights', dtype=np.float32)
+
+    node = ng.embedding_segments_sum(emb_table, indices, segment_ids, num_segments,
+                                     default_index, per_sample_weights)
+
+    assert node.get_type_name() == 'EmbeddingSegmentsSum'
+    assert node.get_output_size() == 1
+    assert node.get_output_partial_shape(0).same_scheme(PartialShape([-1, 2]))
+    assert node.get_output_element_type(0) == Type.f32
+
+@pytest.mark.skip_on_gpu
+def test_embedding_segments_sum_with_some_opt_inputs():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([4], name='indices', dtype=np.int64)
+    segment_ids = ng.parameter([4], name='segment_ids', dtype=np.int64)
+    num_segments = ng.parameter([], name='num_segments', dtype=np.int64)
+
+    # only 1 out of 3 optional inputs
+    node = ng.embedding_segments_sum(emb_table, indices, segment_ids, num_segments)
+
+    assert node.get_type_name() == 'EmbeddingSegmentsSum'
+    assert node.get_output_size() == 1
+    assert node.get_output_partial_shape(0).same_scheme(PartialShape([-1, 2]))
     assert node.get_output_element_type(0) == Type.f32

@@ -60,6 +60,7 @@ from ngraph.ops import divide
 from ngraph.ops import dot
 from ngraph.ops import elu
 from ngraph.ops import embedding_bag_offsets_sum
+from ngraph.ops import embedding_segments_sum
 from ngraph.ops import equal
 from ngraph.ops import erf
 from ngraph.ops import exp
