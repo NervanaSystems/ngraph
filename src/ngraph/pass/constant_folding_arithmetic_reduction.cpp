@@ -50,17 +50,6 @@ static shared_ptr<op::Constant>
     }
     else if (auto reduce_max = as_type_ptr<op::v1::ReduceMax>(reduction_node))
     {
-        // TODO: deleteme
-        auto reduction_axes = reduce_max->get_reduction_axes();
-        auto input_shape = reduce_max->get_input_shape(0);
-        Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
-        {
-            if (reduction_axes.count(i) == 0)
-            {
-                shape_no_keep_dims.push_back(input_shape[i]);
-            }
-        }
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
@@ -75,17 +64,6 @@ static shared_ptr<op::Constant>
     }
     else if (auto reduce_min = as_type_ptr<op::v1::ReduceMin>(reduction_node))
     {
-        // TODO: deleteme
-        auto reduction_axes = reduce_min->get_reduction_axes();
-        auto input_shape = reduce_min->get_input_shape(0);
-        Shape shape_no_keep_dims;
-        for (size_t i = 0; i < input_shape.size(); i++)
-        {
-            if (reduction_axes.count(i) == 0)
-            {
-                shape_no_keep_dims.push_back(input_shape[i]);
-            }
-        }
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),

@@ -31,7 +31,6 @@ namespace ngraph
             template <typename T>
             void softmax(const T* arg, T* out, const Shape& shape, const AxisSet& axes)
             {
-                // TODO: deleteme
                 auto temp_shape = reduce(shape, axes);
                 auto temp_elements = shape_size(temp_shape);
                 auto temp_ptr = new T[temp_elements];
