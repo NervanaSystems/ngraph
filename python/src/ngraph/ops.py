@@ -23,10 +23,9 @@ from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strid
 from ngraph.impl.op import (MVN, ArgMax, ArgMin, BatchNormInference,
                             BatchNormTraining, Broadcast, Constant,
                             Dequantize, Dot, Gemm,
-                            GetOutputElement, HardSigmoid, Parameter, Quantize,
+                            GetOutputElement, Parameter, Quantize,
                             QuantizedConvolution, QuantizedDot, ReplaceSlice,
-                            RNNCell, ScaleShift, ShuffleChannels, Slice,
-                            SpaceToDepth)
+                            RNNCell, ScaleShift, ShuffleChannels, Slice)
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
@@ -431,7 +430,7 @@ def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str)
 
 
 @nameable_op
-def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
+def space_to_depth(data, mode, block_size=1, name=None):  # type: (Node, str, int, str) -> Node
     """Perform SpaceToDepth operation on the input tensor.
 
     SpaceToDepth rearranges blocks of spatial data into depth.
@@ -448,7 +447,11 @@ def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int,
     :param name: Optional output node name.
     :return: The new node performing a SpaceToDepth operation on input tensor.
     """
-    return SpaceToDepth(data, mode, block_size)
+    return _get_node_factory().create(
+        'SpaceToDepth',
+        [data],
+        {'mode': mode, 'block_size': block_size},
+    )
 
 
 @nameable_op
@@ -1447,7 +1450,7 @@ def depth_to_space(node, mode, block_size=1, name=None):  # type: (Node, str, in
     return _get_node_factory().create(
         'DepthToSpace',
         [node],
-        {'mode': mode, 'blocksize': block_size}
+        {'mode': mode, 'block_size': block_size},
     )
 
 
@@ -1988,7 +1991,7 @@ def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
 
 
 @nameable_op
-def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, str) -> Node
+def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, NodeInput, NodeInput, str) -> Node
     """Perform Hard Sigmoid operation element-wise on data from input node.
 
     Hard Sigmoid uses the following logic:
@@ -1998,12 +2001,12 @@ def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, st
         y = max(0, min(1, alpha * data + beta))
 
     :param data: The node with data tensor.
-    :param alpha: Alpha parameter. Scalar value.
-    :param beta: Beta parameter. Scalar value.
+    :param alpha: A node producing the alpha parameter.
+    :param beta: A node producing the beta parameter
     :param name: Optional output node name.
     :return: The new node performing a Hard Sigmoid element-wise on input tensor.
     """
-    return HardSigmoid(data, alpha, beta)
+    return _get_node_factory().create('HardSigmoid', [data, as_node(alpha), as_node(beta)])
 
 
 # reshape ops
