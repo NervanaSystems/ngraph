@@ -56,6 +56,7 @@
 #include "ngraph/op/embedding_lookup.hpp"
 #include "ngraph/op/embedding_segments_sum.hpp"
 #include "ngraph/op/embeddingbag_offsets_sum.hpp"
+#include "ngraph/op/embeddingbag_packedsum.hpp"
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
