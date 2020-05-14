@@ -132,3 +132,157 @@ shared_ptr<Node>
     return make_shared<v3::ScatterElementsUpdate>(
         inputs.at(0), inputs.at(1), inputs.at(2), inputs.at(3));
 }
+
+
+namespace
+{
+
+    template <element::Type_t DT, element::Type_t IT, element::Type_t AT >
+    bool evaluate(const HostTensorPtr& data,const HostTensorPtr& indices,const HostTensorPtr& updates,const HostTensorPtr& axis, const HostTensorPtr& out)
+    {
+        using T = typename element_type_traits<DT>::value_type; // ????????????????????
+
+
+		runtime::AlignedBuffer buffer(shape_size(out->get_shape()) * sizeof(DT));
+		DT* data_ptr = buffer.get_ptr<DT>();
+        int64_t normalized_axis = normalize_axis(out.get(), *(axis->get_data_ptr<AT>()), static_cast<int64_t>(data->get_shape().size()));
+        runtime::reference::scatter_elem_update<DT,IT>( data->get_data_ptr<DT>(), indices->get_data_ptr<IT>(),
+            updates->get_data_ptr<DT>(),
+            normalized_axis,
+            data_ptr,
+            //out->get_data_ptr<DT>(),
+            data->get_shape(),
+            indices->get_shape());
+
+
+
+        return true;
+    }
+
+#define TYPE_AXS_CASE(a)                                                                           \
+        case element::Type_t::a: rc = evaluate<DT,IT, element::Type_t::a>
+
+    template <element::Type_t DT, element::Type_t IT >
+    bool evaluate(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out)
+    {
+        auto axis_type = arg3->get_element_type();
+
+        // Dispatch specialization based on axis data type.
+        bool rc = true;
+
+        switch (axis_type)
+        {
+            TYPE_AXS_CASE(i8)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(i16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(i32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(i64)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(u8)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(u16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(u32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_AXS_CASE(u64)(arg0,arg1,arg2,arg3,out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+
+#define TYPE_IND_CASE(a)                                                                           \
+        case element::Type_t::a: rc = evaluate<DT, element::Type_t::a>
+
+
+    template <element::Type_t DT>
+    bool evaluate(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out)
+    {
+        auto indices_type = arg1->get_element_type();
+
+        // Dispatch specialization based on indicies data type.
+        bool rc = true;
+
+        switch (indices_type)
+        {
+            TYPE_IND_CASE(i8)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(i16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(i32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(i64)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(u8)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(u16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(u32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_IND_CASE(u64)(arg0,arg1,arg2,arg3,out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+    /*
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        std::vector<const T*> arg_bufs;
+        std::vector<Shape> arg_shapes;
+        Shape out_shape(args[0]->get_shape());
+        out_shape[concatenation_axis] = 0;
+        for (auto& input : args)
+        {
+            arg_bufs.push_back(input->get_data_ptr<ET>());
+            arg_shapes.push_back(input->get_shape());
+            out_shape[concatenation_axis] += arg_shapes.back()[concatenation_axis];
+        }
+        out->set_shape(out_shape);
+        runtime::reference::concat<T>(
+            arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out_shape, concatenation_axis);
+        return true;
+    }
+    */
+
+    bool evaluate_scatter_element_update(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out)
+    {
+        bool rc = true;
+
+        switch (out->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(i16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(i32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(i64)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(u8)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(u16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(u32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(u64)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(bf16)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(f32)(arg0,arg1,arg2,arg3,out);
+            break;
+            TYPE_CASE(f64)(arg0,arg1,arg2,arg3,out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+
+bool op::v3::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+     return evaluate_scatter_element_update(inputs[0], inputs[1], inputs[2],input[3], outputs[0]);
+}
