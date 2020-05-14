@@ -110,7 +110,7 @@ def test_broadcast():
     result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
-    axis_mapping = [1]
+    axis_mapping = [0]
     expected = [[1, 1, 1],
                 [2, 2, 2],
                 [3, 3, 3]]
