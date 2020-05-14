@@ -118,20 +118,6 @@ namespace ngraph
                     auto function = ngraph::onnx_import::import_onnx_model(path);
                     std::vector<std::shared_ptr<ngraph::Node>> nodes = function->get_ordered_ops();
 
-                    std::string para_name;
-
-                    // Delete parameters and outputs
-                    for (int i = nodes.size() - 1; i >= 0; --i)
-                    {
-                        if (nodes.at(i)->is_output() || nodes.at(i)->is_parameter())
-                        {
-                            if (nodes.at(i)->is_parameter())
-                            {
-                                para_name = nodes.at(i)->get_name();
-                            }
-                            nodes.erase(nodes.begin() + i);
-                        }
-                    }
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
                         for (auto& input : nodes.at(i)->inputs())
@@ -142,8 +128,8 @@ namespace ngraph
                             }
                         }
                     }
-
-                    return NodeVector{nodes.at(16), nodes.at(9), nodes.at(15)};
+                    // Quantze, Divde, Convert
+                    return NodeVector{nodes.at(19), nodes.at(10), nodes.at(16)};
                 }
             } // namespace set_1
 
