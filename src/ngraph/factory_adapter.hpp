@@ -33,6 +33,7 @@ namespace ngraph
 
         bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
         {
+            visitor.start_structure(name);
             std::string type_info_name;
             uint64_t type_info_version;
             if (m_ref)
@@ -54,6 +55,7 @@ namespace ngraph
             {
                 m_ref->visit_attributes(visitor);
             }
+            visitor.finish_structure();
             return true;
         }
 

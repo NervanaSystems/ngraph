@@ -21,8 +21,25 @@
 #include "ngraph/opsets/opset1.hpp"
 #include "ngraph/opsets/opset3.hpp"
 
+#include "util/visitor.hpp"
+
 using namespace std;
 using namespace ngraph;
+using ngraph::test::NodeBuilder;
+using ngraph::test::ValueMap;
+
+TEST(attributes, value_map)
+{
+    ValueMap value_map;
+    bool a = true;
+    int8_t b = 2;
+    value_map.insert("a", a);
+    value_map.insert("b", b);
+    bool g_a = value_map.get<bool>("a");
+    int8_t g_b = value_map.get<int8_t>("b");
+    EXPECT_EQ(a, g_a);
+    EXPECT_EQ(b, g_b);
+}
 
 enum class TuringModel
 {
@@ -325,287 +342,6 @@ protected:
 };
 
 constexpr NodeTypeInfo Oracle::type_info;
-
-class NodeSaver : public AttributeVisitor
-{
-public:
-    NodeSaver(shared_ptr<Node> node)
-    {
-        save_node(node);
-        node->visit_attributes(*this);
-    }
-    NodeSaver() {}
-    void save_node(shared_ptr<Node> node)
-    {
-        m_node_type_info = node->get_type_info();
-        node->visit_attributes(*this);
-    }
-    const NodeTypeInfo& get_node_type_info() { return m_node_type_info; }
-    string& get_string(const string& name) { return m_strings.at(name); }
-    bool get_bool(const string& name) { return m_bools.at(name); }
-    float get_float(const string& name) { return m_doubles.at(name); }
-    double get_double(const string& name) { return m_doubles.at(name); }
-    int64_t get_signed(const string& name) { return m_signeds.at(name); }
-    uint64_t get_unsigned(const string& name) { return m_unsigneds.at(name); }
-    vector<float>& get_float_vector(const string& name) { return m_float_vectors.at(name); }
-    vector<double>& get_double_vector(const string& name) { return m_double_vectors.at(name); }
-    vector<int8_t>& get_int8_t_vector(const string& name) { return m_int8_t_vectors.at(name); }
-    vector<int16_t>& get_int16_t_vector(const string& name) { return m_int16_t_vectors.at(name); }
-    vector<int32_t>& get_int32_t_vector(const string& name) { return m_int32_t_vectors.at(name); }
-    vector<int64_t>& get_int64_t_vector(const string& name) { return m_int64_t_vectors.at(name); }
-    vector<uint8_t>& get_uint8_t_vector(const string& name) { return m_uint8_t_vectors.at(name); }
-    vector<uint16_t>& get_uint16_t_vector(const string& name)
-    {
-        return m_uint16_t_vectors.at(name);
-    }
-    vector<uint32_t>& get_uint32_t_vector(const string& name)
-    {
-        return m_uint32_t_vectors.at(name);
-    }
-    vector<uint64_t>& get_uint64_t_vector(const string& name)
-    {
-        return m_uint64_t_vectors.at(name);
-    }
-    HostTensorPtr get_host_tensor(const string& name) { return m_host_tensors.at(name); }
-    vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
-    void set_string(const string& name, const string& value) { m_strings[name] = value; }
-    void set_bool(const string& name, bool value) { m_bools[name] = value; }
-    void set_double(const string& name, double value) { m_doubles[name] = value; }
-    void set_signed(const string& name, int64_t value) { m_signeds[name] = value; }
-    void set_float_vector(const string& name, const vector<float>& value)
-    {
-        m_float_vectors[name] = value;
-    }
-    void set_double_vector(const string& name, const vector<double>& value)
-    {
-        m_double_vectors[name] = value;
-    }
-    void set_int8_t_vector(const string& name, const vector<int8_t>& value)
-    {
-        m_int8_t_vectors[name] = value;
-    }
-    void set_int16_t_vector(const string& name, const vector<int16_t>& value)
-    {
-        m_int16_t_vectors[name] = value;
-    }
-    void set_int32_t_vector(const string& name, const vector<int32_t>& value)
-    {
-        m_int32_t_vectors[name] = value;
-    }
-    void set_int64_t_vector(const string& name, const vector<int64_t>& value)
-    {
-        m_int64_t_vectors[name] = value;
-    }
-    void set_uint8_t_vector(const string& name, const vector<uint8_t>& value)
-    {
-        m_uint8_t_vectors[name] = value;
-    }
-    void set_uint16_t_vector(const string& name, const vector<uint16_t>& value)
-    {
-        m_uint16_t_vectors[name] = value;
-    }
-    void set_uint32_t_vector(const string& name, const vector<uint32_t>& value)
-    {
-        m_uint32_t_vectors[name] = value;
-    }
-    void set_uint64_t_vector(const string& name, const vector<uint64_t>& value)
-    {
-        m_uint64_t_vectors[name] = value;
-    }
-    void set_string_vector(const string& name, const vector<string>& value)
-    {
-        m_string_vectors[name] = value;
-    }
-    void set_host_tensor(const string& name, const HostTensorPtr& value)
-    {
-        m_host_tensors[name] = value;
-    }
-
-    void on_adapter(const string& name, ValueAccessor<void>& adapter) override
-    {
-        NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be marshalled");
-    }
-    // The remaining adapter methods fall back on the void adapter if not implemented
-    void on_adapter(const string& name, ValueAccessor<string>& adapter) override
-    {
-        set_string(name, adapter.get());
-    };
-    void on_adapter(const string& name, ValueAccessor<bool>& adapter) override
-    {
-        set_bool(name, adapter.get());
-    };
-
-    void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
-    {
-        set_signed(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<double>& adapter) override
-    {
-        set_double(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
-    {
-        set_string_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
-    {
-        set_float_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
-    {
-        set_double_vector(name, adapter.get());
-    }
-
-    void on_adapter(const string& name, ValueAccessor<vector<int8_t>>& adapter) override
-    {
-        set_int8_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<int16_t>>& adapter) override
-    {
-        set_int16_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<int32_t>>& adapter) override
-    {
-        set_int32_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        set_int64_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint8_t>>& adapter) override
-    {
-        set_uint8_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint16_t>>& adapter) override
-    {
-        set_uint16_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint32_t>>& adapter) override
-    {
-        set_uint32_t_vector(name, adapter.get());
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint64_t>>& adapter) override
-    {
-        set_uint64_t_vector(name, adapter.get());
-    }
-    void on_adapter(const std::string& name, ValueAccessor<void*>& adapter) override
-    {
-        HostTensorPtr data = make_shared<HostTensor>(element::u8, Shape{adapter.size()});
-        data->write(adapter.get_ptr(), adapter.size());
-        set_host_tensor(name, data);
-    }
-
-protected:
-    NodeTypeInfo m_node_type_info;
-    map<string, string> m_strings;
-    map<string, bool> m_bools;
-    map<string, double> m_doubles;
-    map<string, int64_t> m_signeds;
-    map<string, uint64_t> m_unsigneds;
-    map<string, vector<int8_t>> m_int8_t_vectors;
-    map<string, vector<int16_t>> m_int16_t_vectors;
-    map<string, vector<int32_t>> m_int32_t_vectors;
-    map<string, vector<int64_t>> m_int64_t_vectors;
-    map<string, vector<uint8_t>> m_uint8_t_vectors;
-    map<string, vector<uint16_t>> m_uint16_t_vectors;
-    map<string, vector<uint32_t>> m_uint32_t_vectors;
-    map<string, vector<uint64_t>> m_uint64_t_vectors;
-    map<string, vector<float>> m_float_vectors;
-    map<string, vector<double>> m_double_vectors;
-    map<string, vector<std::string>> m_string_vectors;
-    map<string, HostTensorPtr> m_host_tensors;
-};
-
-class NodeBuilder : public AttributeVisitor
-{
-public:
-    NodeBuilder(const shared_ptr<Node>& node) { save_node(node); }
-    NodeBuilder() {}
-    void save_node(const std::shared_ptr<Node>& node) { m_values.save_node(node); }
-    // Does not validate, since inputs aren't set
-    shared_ptr<Node> create()
-    {
-        shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
-        node->visit_attributes(*this);
-        return node;
-    }
-    AttributeVisitor& get_node_saver() { return m_values; }
-    AttributeVisitor& get_node_loader() { return *this; }
-    void on_adapter(const string& name, ValueAccessor<void>& adapter) override
-    {
-        NGRAPH_CHECK(false, "Attribute \"", name, "\" cannot be unmarshalled");
-    }
-    // The remaining adapter methods fall back on the void adapter if not implemented
-    void on_adapter(const string& name, ValueAccessor<string>& adapter) override
-    {
-        adapter.set(m_values.get_string(name));
-    };
-    void on_adapter(const string& name, ValueAccessor<bool>& adapter) override
-    {
-        adapter.set(m_values.get_bool(name));
-    };
-    void on_adapter(const string& name, ValueAccessor<int64_t>& adapter) override
-    {
-        adapter.set(m_values.get_signed(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<double>& adapter) override
-    {
-        adapter.set(m_values.get_double(name));
-    }
-
-    void on_adapter(const string& name, ValueAccessor<vector<int8_t>>& adapter) override
-    {
-        adapter.set(m_values.get_int8_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<int16_t>>& adapter) override
-    {
-        adapter.set(m_values.get_int16_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<int32_t>>& adapter) override
-    {
-        adapter.set(m_values.get_int32_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<int64_t>>& adapter) override
-    {
-        adapter.set(m_values.get_int64_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint8_t>>& adapter) override
-    {
-        adapter.set(m_values.get_uint8_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint16_t>>& adapter) override
-    {
-        adapter.set(m_values.get_uint16_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint32_t>>& adapter) override
-    {
-        adapter.set(m_values.get_uint32_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<uint64_t>>& adapter) override
-    {
-        adapter.set(m_values.get_uint64_t_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<string>>& adapter) override
-    {
-        adapter.set(m_values.get_string_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<float>>& adapter) override
-    {
-        adapter.set(m_values.get_float_vector(name));
-    }
-    void on_adapter(const string& name, ValueAccessor<vector<double>>& adapter) override
-    {
-        adapter.set(m_values.get_double_vector(name));
-    }
-    void on_adapter(const std::string& name, ValueAccessor<void*>& adapter) override
-    {
-        HostTensorPtr data = m_values.get_host_tensor(name);
-        data->read(adapter.get_ptr(), adapter.size());
-    }
-
-protected:
-    NodeSaver m_values;
-};
 
 TEST(attributes, user_op)
 {

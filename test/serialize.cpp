@@ -34,6 +34,7 @@
 #include "nlohmann/json.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
+#include "util/visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -498,6 +499,10 @@ TEST(serialize, tensor_iterator_raw)
     auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
+
+    ngraph::test::NodeBuilder builder;
+    builder.save_node(tensor_iterator);
+    // auto g_tensor_iterator = builder.create();
 }
 
 TEST(serialize, tensor_iterator_lstm)
