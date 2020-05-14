@@ -15,14 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/op/round.hpp"
-
-using namespace std;
-using namespace ngraph;
-
 #include "ngraph/op/util/eval_copy.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/round.hpp"
+
+using namespace std;
+using namespace ngraph;
 
 constexpr NodeTypeInfo op::Round::type_info;
 

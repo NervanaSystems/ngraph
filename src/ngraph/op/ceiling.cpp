@@ -15,14 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/op/ceiling.hpp"
-
-using namespace std;
-using namespace ngraph;
-
 #include "ngraph/op/util/eval_copy.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
 #include "ngraph/runtime/reference/copy.hpp"
+
+using namespace std;
+using namespace ngraph;
 
 constexpr NodeTypeInfo op::Ceiling::type_info;
 
