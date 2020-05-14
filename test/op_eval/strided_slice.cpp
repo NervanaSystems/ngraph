@@ -39,27 +39,34 @@ TEST(op_eval, strided_slice)
                                                begin,
                                                end,
                                                strides,
-                                               vector<int64_t>(3, 0),
-                                               vector<int64_t>(3, 0),
-                                               vector<int64_t>(3, 0),
-                                               vector<int64_t>(3, 0),
-                                               vector<int64_t>(3, 0));
+                                               std::vector<int64_t>(3, 0),
+                                               std::vector<int64_t>(3, 0),
+                                               std::vector<int64_t>(3, 0),
+                                               std::vector<int64_t>(3, 0),
+                                               std::vector<int64_t>(3, 0));
     auto f = make_shared<Function>(r, ParameterVector{A, begin, end, strides});
 
     std::vector<int64_t> A_vec(3 * 2 * 3);
     std::iota(A_vec.begin(), A_vec.end(), 0);
-    std::vector<int64_t> begin_vec{1, 0, 0};
-    std::vector<int64_t> end_vec{2, 1, 3};
-    std::vector<int64_t> strides_vec{1, 1, 1};
+    std::vector<std::vector<int64_t>> begin_vecs{{1, 0, 0}, {1, 0, 0}, {2, 0, 0}};
+    std::vector<std::vector<int64_t>> end_vecs{{2, 1, 3}, {2, 2, 3}, {3, 2, 3}};
+    std::vector<std::vector<int64_t>> strides_vecs{{1, 1, 1}, {1, 1, 1}, {1, 1, 2}};
 
-    std::vector<int64_t> expected{6, 7, 8};
-    auto result = make_shared<HostTensor>();
+    std::vector<std::vector<int64_t>> expected_results{
+        {6, 7, 8}, {6, 7, 8, 9, 10, 11}, {12, 14, 15, 17}};
+    std::vector<Shape> expected_shape{Shape{1, 1, 3}, Shape{1, 2, 3}, Shape{1, 2, 2}};
 
-    ASSERT_TRUE(f->evaluate({result},
-                            {make_host_tensor<element::Type_t::i64>(A_shape, A_vec),
-                             make_host_tensor<element::Type_t::i64>(Shape{3}, begin_vec),
-                             make_host_tensor<element::Type_t::i64>(Shape{3}, end_vec),
-                             make_host_tensor<element::Type_t::i64>(Shape{3}, strides_vec)}));
-    EXPECT_EQ(result->get_element_type(), element::i64);
-    EXPECT_EQ(read_vector<int64_t>(result), expected);
+    for (size_t i = 0; i < begin_vecs.size(); ++i)
+    {
+        auto result = make_shared<HostTensor>();
+        ASSERT_TRUE(
+            f->evaluate({result},
+                        {make_host_tensor<element::Type_t::i64>(A_shape, A_vec),
+                         make_host_tensor<element::Type_t::i64>(Shape{3}, begin_vecs[i]),
+                         make_host_tensor<element::Type_t::i64>(Shape{3}, end_vecs[i]),
+                         make_host_tensor<element::Type_t::i64>(Shape{3}, strides_vecs[i])}));
+        EXPECT_EQ(result->get_element_type(), element::i64);
+        EXPECT_EQ(result->get_shape(), expected_shape[i]);
+        EXPECT_EQ(read_vector<int64_t>(result), expected_results[i]), s
+    }
 }
