@@ -20,9 +20,9 @@ from typing import List, Optional, Set, Union
 import numpy as np
 
 from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (GRN, MVN, ArgMax, ArgMin, BatchNormInference,
+from ngraph.impl.op import (MVN, ArgMax, ArgMin, BatchNormInference,
                             BatchNormTraining, Broadcast, Constant,
-                            DepthToSpace, Dequantize, Dot, Gelu, Gemm,
+                            Dequantize, Dot, Gemm,
                             GetOutputElement, HardSigmoid, Parameter, Quantize,
                             QuantizedConvolution, QuantizedDot, ReplaceSlice,
                             RNNCell, ScaleShift, ShuffleChannels, Slice,
@@ -206,7 +206,7 @@ def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a GRN operation on tensor's channels.
     """
-    return GRN(data, bias)
+    return _get_node_factory().create('GRN', [data], {'bias': bias})
 
 
 @nameable_op
@@ -1444,7 +1444,11 @@ def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int,
     :param name: Optional output node name.
     :return: The new node performing an DepthToSpace operation on its input tensor.
     """
-    return DepthToSpace(node, mode, block_size)
+    return _get_node_factory().create(
+        'DepthToSpace',
+        [node],
+        {'mode': mode, 'blocksize': block_size}
+    )
 
 
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
@@ -1461,7 +1465,7 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a GELU operation on its input data element-wise.
     """
-    return Gelu(as_node(node))
+    return _get_node_factory().create('Gelu', [as_node(node)])
 
 
 @nameable_op
