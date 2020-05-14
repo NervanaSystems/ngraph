@@ -20,14 +20,12 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 import numpy as np
 
 from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (MVN, Abs, Acos, ArgMax, ArgMin, Asin, Atan,
-                            BatchNormInference, BatchNormTraining, Broadcast,
-                            Ceiling, Constant, Cos, Cosh,
-                            Dequantize, Dot, Floor, Gelu, Gemm,
-                            GetOutputElement, Log, Negative,
-                            Parameter, Quantize, QuantizedConvolution,
-                            QuantizedDot, ReplaceSlice, RNNCell, ScaleShift,
-                            ShuffleChannels, Sign, Sin, Sinh, Slice, Sqrt, Tan)
+from ngraph.impl.op import (MVN, ArgMax, ArgMin, BatchNormInference,
+                            BatchNormTraining, Broadcast, Constant,
+                            Dequantize, Dot, Gemm,
+                            GetOutputElement, Parameter, Quantize,
+                            QuantizedConvolution, QuantizedDot, ReplaceSlice,
+                            RNNCell, ScaleShift, ShuffleChannels, Slice)
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
