@@ -179,8 +179,12 @@ set (SRC
     op/divide.hpp
     op/dot.cpp
     op/dot.hpp
+    op/embeddingbag_offsets_sum.cpp
+    op/embeddingbag_offsets_sum.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
+    op/embedding_segments_sum.cpp
+    op/embedding_segments_sum.hpp
     op/equal.cpp
     op/equal.hpp
     op/erf.cpp
@@ -480,6 +484,8 @@ set (SRC
     op/util/binary_elementwise_logical.hpp
     op/util/broadcast_base.cpp
     op/util/broadcast_base.hpp
+    op/util/embeddingbag_offsets_base.cpp
+    op/util/embeddingbag_offsets_base.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
@@ -520,7 +526,6 @@ set (SRC
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
-    pass/constant_folding_reshape.cpp
     pass/constant_folding_reverse.cpp
     pass/constant_folding_select.cpp
     pass/constant_folding_slice.cpp
@@ -529,7 +534,6 @@ set (SRC
     pass/constant_folding_strided_slice.cpp
     pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
-    pass/constant_folding_unary.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
