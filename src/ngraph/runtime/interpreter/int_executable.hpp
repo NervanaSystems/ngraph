@@ -65,6 +65,7 @@
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
+#include "ngraph/runtime/reference/matmul.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
@@ -336,8 +337,8 @@ protected:
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] =
-                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
+                m_states[&node] = std::unique_ptr<BernoulliRNGState>(
+                    new BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
@@ -826,6 +827,19 @@ protected:
                               lrn->get_beta(),
                               lrn->get_bias(),
                               lrn->get_nsize());
+            break;
+        }
+        case OP_TYPEID::MatMul:
+        {
+            const op::MatMul* matmul = static_cast<const op::MatMul*>(&node);
+            reference::matmul<T>(args[0]->get_data_ptr<const T>(),
+                                 args[1]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<T>(),
+                                 node.get_input_shape(0),
+                                 node.get_input_shape(1),
+                                 node.get_output_shape(0),
+                                 matmul->get_transpose_a(),
+                                 matmul->get_transpose_b());
             break;
         }
         case OP_TYPEID::Max:
@@ -1488,6 +1502,7 @@ protected:
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
@@ -1516,7 +1531,6 @@ protected:
         case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
-        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PartialSlice:
@@ -1542,7 +1556,6 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
