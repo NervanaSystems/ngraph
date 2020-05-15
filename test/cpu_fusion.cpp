@@ -1148,7 +1148,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
                                  ParameterVector{filters, out_delta, gamma, beta, mean, var});
 }
 
-TEST(cpu_fusion, fuse_deconv)
+TEST(cpu_fusion, DISABLED_fuse_deconv)
 {
     DisableRemoveGOE nogoe;
     bool use_deconv_fuse = (getenv_bool("NGRAPH_DECONV_FUSE"));
@@ -2515,7 +2515,7 @@ TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_bounded_relu_inter_vs_cpu))
     check_bounded_relu(Shape{4, 3, 2}, 2.0f);
 }
 
-TEST(cpu_fusion, MLIR_DISABLE_TEST(fuse_dropout))
+TEST(cpu_fusion, MLIR_DISABLE_TEST(DISABLED_fuse_dropout))
 {
     auto make_function = [](Shape input_shape,
                             const uint32_t seed_val,
@@ -3789,7 +3789,7 @@ TEST(cpu_fusion, rnn_fusion_1rnn_layer_3lstm_cell)
     }
 }
 
-TEST(cpu_fusion, lstm_cell)
+TEST(cpu_fusion, DISABLED_lstm_cell)
 {
     DisableRemoveGOE nogoe;
     auto make_function = []() {
