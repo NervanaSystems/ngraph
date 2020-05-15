@@ -102,6 +102,7 @@ bool_init_raw
 bool_const_op
 onnx_model_tile
 onnx_model_tile_static
+onnx_model_softmax_0D
 
 # [NOT_IMPLEMENTED] Input image format BOOL is not supported yet...
 bool_input_or

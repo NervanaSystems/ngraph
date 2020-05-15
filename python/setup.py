@@ -87,6 +87,10 @@ NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
 if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
     NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
 
+ONNX_IMPORTER_CPP_LIBRARY_NAME = 'onnx_importer'
+if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('onnx_importerd', fn)]):
+    ONNX_IMPORTER_CPP_LIBRARY_NAME = 'onnx_importerd'
+
 
 def parallelCCompile(
     self,
@@ -227,7 +231,7 @@ include_dirs = [PYNGRAPH_SRC_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries = [NGRAPH_CPP_LIBRARY_NAME]
+libraries = [NGRAPH_CPP_LIBRARY_NAME, ONNX_IMPORTER_CPP_LIBRARY_NAME]
 
 extra_compile_args = []
 if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
