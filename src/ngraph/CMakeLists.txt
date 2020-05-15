@@ -183,6 +183,8 @@ set (SRC
     op/embeddingbag_offsets_sum.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
+    op/embedding_segments_sum.cpp
+    op/embedding_segments_sum.hpp
     op/equal.cpp
     op/equal.hpp
     op/erf.cpp
