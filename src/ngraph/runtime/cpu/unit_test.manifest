@@ -43,3 +43,4 @@ CPU.lstm_cell_fixed_no_bias_no_peepholes
 cpu_fusion.fuse_deconv
 cpu_fusion.fuse_dropout
 cpu_fusion.lstm_cell
+cpu_fusion.batchnorm_fprop_relu
