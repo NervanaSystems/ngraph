@@ -204,7 +204,7 @@ def test_multiply():
 @pytest.mark.skip_on_gpu
 def test_power_v1():
     A = np.arange(48, dtype=np.float32).reshape((8, 1, 6, 1))
-    B = np.arange(35, dtype=np.float32).reshape((7, 1, 5))
+    B = np.arange(20, dtype=np.float32).reshape((4, 1, 5))
 
     expected = np.power(A, B)
     result = run_op_node([A, B], ng.power)
