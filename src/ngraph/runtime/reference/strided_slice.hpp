@@ -43,18 +43,13 @@ namespace ngraph
                          Strides(sp.strides.begin(), sp.strides.end()),
                          sp.reshape_in_shape);
 
-                AlignedBuffer reshape_out_buffer(shape_size(sp.reshape_out_shape) * sizeof(T));
                 reshape<T>(out,
                            out,
                            sp.reshape_in_shape,
                            get_default_order(sp.reshape_in_shape.size()),
                            sp.reshape_out_shape);
 
-                reverse<T>(out,
-                           out,
-                           sp.reshape_out_shape,
-                           sp.reshape_out_shape,
-                           sp.reverse_axes);
+                reverse<T>(out, out, sp.reshape_out_shape, sp.reshape_out_shape, sp.reverse_axes);
             }
         }
     }
