@@ -1532,8 +1532,8 @@ TEST(attributes, interpolate_op)
     interp_atrs.mode = "cubic";
     interp_atrs.align_corners = true;
     interp_atrs.antialias = true;
-    interp_atrs.pads_begin = vector<int64_t>{0, 0};
-    interp_atrs.pads_end = vector<int64_t>{0, 0};
+    interp_atrs.pads_begin = vector<size_t>{0, 0};
+    interp_atrs.pads_end = vector<size_t>{0, 0};
 
     auto interpolate = make_shared<opset1::Interpolate>(img, out_shape, interp_atrs);
     NodeBuilder builder(interpolate);

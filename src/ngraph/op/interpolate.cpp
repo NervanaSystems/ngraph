@@ -230,14 +230,3 @@ namespace ngraph
         return s << as_string(type);
     }
 }
-
-bool op::Interpolate::visit_attributes(AttributeVisitor& visitor)
-{
-    visitor.on_attribute("InterpolateAttrs.axes", m_attrs.axes);
-    visitor.on_attribute("InterpolateAttrs.mode", m_attrs.mode);
-    visitor.on_attribute("InterpolateAttrs.align_corners", m_attrs.align_corners);
-    visitor.on_attribute("InterpolateAttrs.antialias", m_attrs.antialias);
-    visitor.on_attribute("InterpolateAttrs.pads_begin", m_attrs.pads_begin);
-    visitor.on_attribute("InterpolateAttrs.pads_end", m_attrs.pads_end);
-    return true;
-}

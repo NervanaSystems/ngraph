@@ -71,7 +71,6 @@ namespace ngraph
                 Interpolate(const Output<Node>& image,
                             const Output<Node>& output_shape,
                             const InterpolateAttrs& attrs);
-                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 void validate_and_infer_types() override;
 
@@ -79,7 +78,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const InterpolateAttrs& get_attrs() const { return m_attrs; }
-                virtual bool visit_attributes(AttributeVisitor& visitor) override;
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
             private:
                 InterpolateAttrs m_attrs;

@@ -2766,12 +2766,12 @@ def interpolate(image, output_shape, attrs, name=None):
     :return: Node representing interpolation operation.
     """
     requirements = [
-        ('InterpolateAttrs.axes', True, np.integer, is_non_negative_value),
-        ('InterpolateAttrs.mode', True, np.str_, None),
-        ('InterpolateAttrs.align_corners', False, np.bool_, None),
-        ('InterpolateAttrs.antialias', False, np.bool_, None),
-        ('InterpolateAttrs.pads_begin', False, np.integer, is_non_negative_value),
-        ('InterpolateAttrs.pads_end', False, np.integer, is_non_negative_value),
+        ('attrs.axes', True, np.integer, is_non_negative_value),
+        ('attrs.mode', True, np.str_, None),
+        ('attrs.align_corners', False, np.bool_, None),
+        ('attrs.antialias', False, np.bool_, None),
+        ('attrs.pads_begin', False, np.integer, is_non_negative_value),
+        ('attrs.pads_end', False, np.integer, is_non_negative_value),
     ]
 
     check_valid_attributes('Interpolate', attrs, requirements)
