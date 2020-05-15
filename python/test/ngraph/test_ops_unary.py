@@ -41,7 +41,6 @@ from test.ngraph.util import run_op_numeric_data, run_op_node
     (ng.tan, np.tan, -1., 1.),
     (ng.tanh, np.tanh, -100., 100.),
 ])
-@pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     np.random.seed(133391)
     input_data = range_start + np.random.rand(2, 3, 4) * (range_end - range_start)
@@ -75,7 +74,6 @@ def test_unary_op_array(ng_api_fn, numpy_fn, range_start, range_end):
     (ng.tan, np.tan, np.float32(np.pi / 4.0)),
     (ng.tanh, np.tanh, np.float32(0.1234)),
 ])
-@pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     expected = numpy_fn(input_data)
 
@@ -91,7 +89,6 @@ def test_unary_op_scalar(ng_api_fn, numpy_fn, input_data):
     (np.array(True)),
     (np.array(False)),
 ])
-@pytest.mark.skip_on_gpu
 def test_logical_not(input_data):
     expected = np.logical_not(input_data)
 
@@ -102,7 +99,6 @@ def test_logical_not(input_data):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_sigmoid():
     input_data = np.array([-3.14, -1.0, 0.0, 2.71001, 1000.0], dtype=np.float32)
     result = run_op_node([input_data], ng.sigmoid)
@@ -115,7 +111,6 @@ def test_sigmoid():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_softmax():
     axis = 0
     input_tensor = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -128,7 +123,6 @@ def test_softmax():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_erf():
     input_tensor = np.array([-1.0, 0.0, 1.0, 2.5, 3.14, 4.0], dtype=np.float32)
     expected = [-0.842701, 0.0, 0.842701, 0.999593, 0.999991, 1.0]

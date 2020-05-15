@@ -22,7 +22,6 @@ from test.ngraph.util import get_runtime, run_op_node
 from test.test_ops import convolution2d
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_2d():
 
     # input_x should have shape N(batch) x C x H x W
@@ -130,7 +129,6 @@ def test_convolution_2d():
                                 dtype=np.float32))
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_backprop_data():
     runtime = get_runtime()
 
@@ -173,7 +171,6 @@ def test_convolution_backprop_data():
                                 dtype=np.float32))
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_v1():
     input_tensor = np.arange(-128, 128, 1, dtype=np.float32).reshape(1, 1, 16, 16)
     filters = np.ones(9, dtype=np.float32).reshape(1, 1, 3, 3)

@@ -37,7 +37,6 @@ from test.ngraph.util import run_op_node
     # # tensor, tensor
     ([2, 2, 4], [2, 4, 2], False, False),
 ])
-@pytest.mark.skip_on_gpu
 def test_matmul(shape_a, shape_b, transpose_a, transpose_b):
     np.random.seed(133391)
     left_input = -100.0 + np.random.rand(*shape_a).astype(np.float32) * 200.0

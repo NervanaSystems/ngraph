@@ -190,7 +190,6 @@ def test_binary_operators_with_scalar(operator, numpy_function):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_multiply():
     A = np.arange(48).reshape((8, 1, 6, 1))
     B = np.arange(35).reshape((7, 1, 5))
@@ -201,7 +200,6 @@ def test_multiply():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_power_v1():
     A = np.arange(48, dtype=np.float32).reshape((8, 1, 6, 1))
     B = np.arange(20, dtype=np.float32).reshape((4, 1, 5))

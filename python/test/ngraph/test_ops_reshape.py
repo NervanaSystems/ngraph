@@ -20,7 +20,6 @@ import ngraph as ng
 from test.ngraph.util import get_runtime, run_op_node, run_op_numeric_data
 
 
-@pytest.mark.skip_on_gpu
 def test_concat():
     a = np.array([[1, 2], [3, 4]])
     b = np.array([[5, 6]])
@@ -40,7 +39,6 @@ def test_concat():
     (bool, False),
     (bool, np.empty((2, 2), dtype=bool)),
 ])
-@pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_bool(val_type, value):
     expected = np.array(value, dtype=val_type)
     result = run_op_numeric_data(value, ng.constant, val_type)
@@ -59,7 +57,6 @@ def test_constant_from_bool(val_type, value):
     (np.uint32, np.uint32(123456)),
     (np.uint64, np.uint64(1234567)),
 ])
-@pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_scalar(val_type, value):
     expected = np.array(value, dtype=val_type)
     result = run_op_numeric_data(value, ng.constant, val_type)
@@ -70,7 +67,6 @@ def test_constant_from_scalar(val_type, value):
     np.float32,
     np.float64,
 ])
-@pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_float_array(val_type):
     np.random.seed(133391)
     input_data = np.array(-1 + np.random.rand(2, 3, 4) * 2, dtype=val_type)
@@ -88,7 +84,6 @@ def test_constant_from_float_array(val_type):
     (np.uint32, 0, 1024),
     (np.uint64, 0, 16383),
 ])
-@pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_integer_array(val_type, range_start, range_end):
     np.random.seed(133391)
     input_data = np.array(np.random.randint(range_start, range_end, size=(2, 2)), dtype=val_type)
@@ -96,7 +91,6 @@ def test_constant_from_integer_array(val_type, range_start, range_end):
     assert np.allclose(result, input_data)
 
 
-@pytest.mark.skip_on_gpu
 def test_broadcast_numpy():
     data_shape = [16, 1, 1]
     target_shape_shape = [4]
@@ -110,7 +104,6 @@ def test_broadcast_numpy():
     assert node.get_output_size() == 1
 
 
-@pytest.mark.skip_on_gpu
 def test_broadcast_bidirectional():
     data_shape = [16, 1, 1]
     target_shape_shape = [4]
@@ -124,7 +117,6 @@ def test_broadcast_bidirectional():
     assert node.get_output_size() == 1
 
 
-@pytest.mark.skip_on_gpu
 def test_gather():
     input_data = np.array([1.0, 1.1, 1.2, 2.0, 2.1, 2.2, 3.0, 3.1, 3.2], np.float32).reshape((3, 3))
     input_indices = np.array([0, 2], np.int64).reshape(1, 2)
@@ -139,7 +131,6 @@ def test_gather():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_transpose():
     input_tensor = np.arange(3 * 3 * 224 * 224).reshape((3, 3, 224, 224))
     input_order = np.array([0, 2, 3, 1])
@@ -151,7 +142,6 @@ def test_transpose():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 @pytest.mark.skip_on_interpreter  # unsupported op
 def test_tile():
     input_tensor = np.arange(6).reshape((2, 1, 3))
@@ -164,7 +154,6 @@ def test_tile():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_strided_slice():
     input_tensor = np.arange(2 * 3 * 4).reshape((2, 3, 4))
     begin = np.array([1, 0])
@@ -189,7 +178,6 @@ def test_strided_slice():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_reshape_v1():
     A = np.arange(1200, dtype=np.float32).reshape((2, 5, 5, 24))
     shape = np.array([0, -1, 4])
@@ -202,7 +190,6 @@ def test_reshape_v1():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_shape_of():
     input_tensor = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=np.float32)
 
