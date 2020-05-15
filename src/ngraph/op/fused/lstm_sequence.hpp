@@ -50,6 +50,8 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LSTMSequence() = default;
 
+                using direction = RecurrentSequenceDirection;
+
                 size_t get_default_output_index() const override { return no_default_index(); }
                 explicit LSTMSequence(const Output<Node>& X,
                                       const Output<Node>& initial_hidden_state,
@@ -60,7 +62,7 @@ namespace ngraph
                                       const Output<Node>& B,
                                       const Output<Node>& P,
                                       const std::int64_t hidden_size,
-                                      const RecurrentSequenceDirection lstm_direction,
+                                      const direction lstm_direction,
                                       LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
                                       const std::vector<float> activations_alpha = {},
                                       const std::vector<float> activations_beta = {},
@@ -97,7 +99,7 @@ namespace ngraph
                                       const Output<Node>& R,
                                       const Output<Node>& B,
                                       const std::int64_t hidden_size,
-                                      const RecurrentSequenceDirection lstm_direction,
+                                      const direction lstm_direction,
                                       LSTMWeightsFormat weights_format = LSTMWeightsFormat::IFCO,
                                       const std::vector<float> activations_alpha = {},
                                       const std::vector<float> activations_beta = {},
@@ -116,9 +118,7 @@ namespace ngraph
                           B,
                           Constant::create(
                               element::f32,
-                              Shape{(lstm_direction == RecurrentSequenceDirection::BIDIRECTIONAL
-                                         ? 2UL
-                                         : 1UL),
+                              Shape{(lstm_direction == direction::BIDIRECTIONAL ? 2UL : 1UL),
                                     3UL * static_cast<size_t>(hidden_size)},
                               std::vector<float>{0.f}),
                           hidden_size,
@@ -142,7 +142,7 @@ namespace ngraph
                 std::vector<float> get_activations_beta() const { return m_activations_beta; }
                 std::vector<std::string> get_activations() const { return m_activations; }
                 float get_clip_threshold() const { return m_clip_threshold; }
-                RecurrentSequenceDirection get_direction() const { return m_direction; }
+                direction get_direction() const { return m_direction; }
                 std::int64_t get_hidden_size() const { return m_hidden_size; }
                 bool get_input_forget() const { return m_input_forget; }
                 LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
@@ -175,7 +175,7 @@ namespace ngraph
                 std::vector<float> m_activations_beta;
                 std::vector<std::string> m_activations;
                 float m_clip_threshold;
-                RecurrentSequenceDirection m_direction;
+                direction m_direction;
                 std::int64_t m_hidden_size;
                 bool m_input_forget;
                 LSTMWeightsFormat m_weights_format;
