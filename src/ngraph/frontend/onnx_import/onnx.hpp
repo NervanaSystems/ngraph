@@ -23,7 +23,7 @@
 #include <string>
 
 #include "ngraph/function.hpp"
-#include "utils/onnx_importer_visibility.hpp"
+#include "ngraph/ngraph_visibility.hpp"
 
 /// \brief              Top level nGraph namespace.
 namespace ngraph
@@ -39,7 +39,7 @@ namespace ngraph
         /// \param[in]  domain    A domain to get the supported operators for.
         ///
         /// \return     The set containing names of supported operators.
-        ONNX_IMPORTER_API
+        NGRAPH_API
         std::set<std::string> get_supported_operators(std::int64_t version,
                                                       const std::string& domain);
 
@@ -51,7 +51,7 @@ namespace ngraph
         ///                       If not set, the default domain "ai.onnx" is used.
         ///
         /// \return     true if operator is supported, false otherwise.
-        ONNX_IMPORTER_API
+        NGRAPH_API
         bool is_operator_supported(const std::string& op_name,
                                    std::int64_t version,
                                    const std::string& domain = "ai.onnx");
@@ -65,7 +65,7 @@ namespace ngraph
         /// \param[in]  stream    The input stream (e.g. file stream, memory stream, etc).
         ///
         /// \return     An nGraph function that represents a single output from the created graph.
-        ONNX_IMPORTER_API
+        NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(std::istream& stream);
 
         /// \brief     Imports and converts an ONNX model from the input file
@@ -78,7 +78,7 @@ namespace ngraph
         ///                       (relative or absolute).
         ///
         /// \return    An nGraph function that represents a single output from the created graph.
-        ONNX_IMPORTER_API
+        NGRAPH_API
         std::shared_ptr<Function> import_onnx_model(const std::string& file_path);
 
     } // namespace onnx_import

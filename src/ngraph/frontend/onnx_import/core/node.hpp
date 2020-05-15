@@ -21,7 +21,6 @@
 
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
-#include "utils/onnx_importer_visibility.hpp"
 
 namespace ONNX_NAMESPACE
 {
@@ -52,7 +51,7 @@ namespace ngraph
         // forward declaration
         class Graph;
 
-        class ONNX_IMPORTER_API Node
+        class NGRAPH_API Node
         {
         public:
             Node() = delete;

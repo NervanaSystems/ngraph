@@ -25,7 +25,6 @@ namespace ngraph
     {
         namespace quantization
         {
-            NGRAPH_API
             std::shared_ptr<Node>
                 QuantizedLinearConvolutionBias(const Output<Node>& input,
                                                const Output<Node>& filter,

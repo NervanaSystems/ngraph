@@ -165,7 +165,7 @@ shared_ptr<Node> op::v3::Interpolate::clone_with_new_inputs(const OutputVector& 
 namespace ngraph
 {
     template <>
-    NGRAPH_API EnumNames<op::v3::Interpolate::InterpolateMode>&
+    EnumNames<op::v3::Interpolate::InterpolateMode>&
         EnumNames<op::v3::Interpolate::InterpolateMode>::get()
     {
         static auto enum_names = EnumNames<op::v3::Interpolate::InterpolateMode>(

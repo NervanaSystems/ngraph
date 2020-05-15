@@ -114,7 +114,6 @@ namespace ngraph
             /// \param[in]  shape  The new shape.
             ///
             /// \return     Reshape:v1 op.
-            NGRAPH_API
             std::shared_ptr<Node> reshape(const Output<Node>& value, const Shape& shape);
 
             /// \brief Permute axes according to specified axes_order parameter.
@@ -132,7 +131,6 @@ namespace ngraph
             /// \param      Value to transpose.
             ///
             /// \return     Transpose:v1 op.
-            NGRAPH_API
             std::shared_ptr<Node> transpose(const Output<Node>& value);
 
             /// \brief       Flatten a value into a 2D matrix, with a static dividing axis.
@@ -142,7 +140,6 @@ namespace ngraph
             ///
             /// \return      The new value will be a 2D matrix representing the flattened input
             /// node.
-            NGRAPH_API
             std::shared_ptr<Node> flatten(const Output<Node>& value, int axis);
 
             /// \brief      Expands node tensor shape with empty axis at
