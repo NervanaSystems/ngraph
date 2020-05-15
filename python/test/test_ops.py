@@ -644,20 +644,6 @@ def test_max_pool():
     input_arr = np.arange(10, dtype=np.float32).reshape(1, 1, 10)
     window_shape = [3]
 
-    #              strides,                 # type: List[int]
-    #              pads_begin,              # type: List[int]
-    #              pads_end,                # type: List[int]
-    #              kernel_shape,            # type: TensorShape
-    #              rounding_type='floor',   # type: str
-    #              auto_pad=None,           # type: str
-    #              name=None,               # type: str
-    #     if strides is None:
-    #         strides = [1] * len(window_shape)  # Default to as many 1s as spatial dimensions of input.
-    #     if padding_above is None:
-    #         padding_above = [0] * len(window_shape)
-    #     if padding_below is None:
-    #         padding_below = [0] * len(window_shape)
-
     strides = [1] * len(window_shape)
     pads_begin = [0] * len(window_shape)
     pads_end = [0] * len(window_shape)
