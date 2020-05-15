@@ -65,6 +65,32 @@ def test_reduction_logical_ops(ng_api_helper, numpy_function, reduction_axes):
 
 
 @pytest.mark.skip_on_gpu
+def test_argmax():
+    runtime = get_runtime()
+    input_x = ng.constant(np.array([[9, 2, 10],
+                                    [12, 8, 4],
+                                    [6, 1, 5],
+                                    [3, 11, 7]], dtype=np.float32))
+    model = runtime.computation(ng.argmax(input_x, 0))
+    result = model()
+    assert np.allclose(result,
+                       np.array([1, 3, 0], dtype=np.int32))
+
+
+@pytest.mark.skip_on_gpu
+def test_argmin():
+    runtime = get_runtime()
+    input_x = ng.constant(np.array([[12, 2, 10],
+                                    [9, 8, 4],
+                                    [6, 1, 5],
+                                    [3, 11, 7]], dtype=np.float32))
+    model = runtime.computation(ng.argmin(input_x, 0))
+    result = model()
+    assert np.allclose(result,
+                       np.array([3, 2, 1], dtype=np.int32))
+
+
+@pytest.mark.skip_on_gpu
 def test_topk():
     data_shape = [6, 12, 10, 24]
     data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
