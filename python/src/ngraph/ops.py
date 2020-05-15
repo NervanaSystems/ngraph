@@ -2460,8 +2460,8 @@ def argmin(data,    # type: Node
 def embedding_bag_offsets_sum(emb_table,                   # type: Node
                               indices,                     # type: NodeInput
                               offsets,                     # type: NodeInput
-                              per_sample_weights=None,     # type: Optional[NodeInput]
                               default_index=None,          # type: Optional[NodeInput]
+                              per_sample_weights=None,     # type: Optional[NodeInput]
                               name=None,                   # type: Optional[str]
                               ):
     # type: (...) -> Node
@@ -2475,12 +2475,13 @@ def embedding_bag_offsets_sum(emb_table,                   # type: Node
     :param name: Optional name for output node.
     :return: The new node which performs EmbeddingBagOffsetsSum
     """
-    if per_sample_weights is None:
-        per_sample_weights = make_constant_node(1, np.float32)
-    if default_index is None:
-        default_index = make_constant_node(0, np.int64)
-    inputs = [emb_table, as_node(indices), as_node(offsets),
-              as_node(default_index), as_node(per_sample_weights)]
+    inputs = [emb_table, as_node(indices), as_node(offsets)]
+    if per_sample_weights is not None:
+        inputs.append(default_index)
+        inputs.append(per_sample_weights)
+    elif default_index is not None:
+        inputs.append(default_index)
+
     return _get_node_factory().create('EmbeddingBagOffsetsSum', inputs, {})
 
 
