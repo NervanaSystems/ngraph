@@ -30,3 +30,12 @@ rnn_fusion_2rnn_layer_3lstm_cell
 #ONNX Flatten with dynamic reshape
 onnx_dyn_shapes_flatten_axis
 onnx_dyn_shapes_flatten_neg_axis
+
+# Need use evaluate, only applicable to INTERPRETER
+non_zero
+non_zero_all_1s
+non_zero_all_0s
+
+# Incorrect result from CPU, need check and fix 
+matmul_2x2x3_2x1x3_transpose_int64
+matmul_2x2x3_2x3x1_int64

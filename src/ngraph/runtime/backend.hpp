@@ -62,6 +62,13 @@ public:
     static std::vector<std::string> get_registered_devices();
 
     /// \brief Create a tensor specific to this backend
+    /// This call is used when an output is dynamic and not known until execution time. When
+    /// passed as an output to a function the tensor will have a type and shape after executing
+    /// a call.
+    /// \returns shared_ptr to a new backend-specific tensor
+    virtual std::shared_ptr<ngraph::runtime::Tensor> create_tensor() = 0;
+
+    /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend-specific tensor

@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/equal.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/equal.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -37,6 +39,65 @@ shared_ptr<Node> op::v0::Equal::clone_with_new_inputs(const OutputVector& new_ar
     return make_shared<op::v0::Equal>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg0,
+                  const HostTensorPtr& arg1,
+                  const HostTensorPtr& out,
+                  const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        runtime::reference::equal(arg0->get_data_ptr<ET>(),
+                                  arg1->get_data_ptr<ET>(),
+                                  out->get_data_ptr<element::Type_t::boolean>(),
+                                  arg0->get_shape(),
+                                  arg1->get_shape(),
+                                  broadcast_spec);
+        return true;
+    }
+
+    bool evaluate_equal(const HostTensorPtr& arg0,
+                        const HostTensorPtr& arg1,
+                        const HostTensorPtr& out,
+                        const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        bool rc = true;
+        out->set_broadcast(broadcast_spec, arg0, arg1, element::boolean);
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(boolean)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f64)(arg0, arg1, out, broadcast_spec);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Equal::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_equal(inputs[0], inputs[1], outputs[0], get_autob());
+}
+
 //------------------------------- v1 -------------------------------------------
 
 constexpr NodeTypeInfo op::v1::Equal::type_info;
@@ -53,4 +114,9 @@ shared_ptr<Node> op::v1::Equal::clone_with_new_inputs(const OutputVector& new_ar
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Equal>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+bool op::v1::Equal::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_equal(inputs[0], inputs[1], outputs[0], get_autob());
 }
