@@ -2509,18 +2509,43 @@ def embedding_segments_sum(emb_table,                   # type: Node
     :param name: Optional name for output node.
     :return: EmbeddingSegmentsSum node
     """
-    inputs = [emb_table, as_node(indices), as_node(segment_ids)]
+    inputs = [as_node(emb_table), as_node(indices), as_node(segment_ids)]
     if per_sample_weights is not None:
-        inputs.append(num_segments)
-        inputs.append(default_index)
-        inputs.append(per_sample_weights)
+        inputs.append(as_node(num_segments))
+        inputs.append(as_node(default_index))
+        inputs.append(as_node(per_sample_weights))
     elif default_index is not None:
-        inputs.append(num_segments)
-        inputs.append(default_index)
+        inputs.append(as_node(num_segments))
+        inputs.append(as_node(default_index))
     elif num_segments is not None:
-        inputs.append(num_segments)
+        inputs.append(as_node(num_segments))
 
     return _get_node_factory().create('EmbeddingSegmentsSum', inputs, {})
+
+
+@nameable_op
+def embedding_bag_packed_sum(emb_table,                   # type: NodeInput
+                             indices,                     # type: NodeInput
+                             per_sample_weights=None,     # type: Optional[NodeInput]
+                             name=None,                   # type: Optional[str]
+                             ):
+    # type: (...) -> Node
+    """Return an EmbeddingBagPackedSum node.
+
+    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a given
+    input tensor with a row (from the weights matrix) at that index
+
+    :param emb_table: Tensor containing the embedding lookup table.
+    :param indices: Tensor with indices.
+    :param per_sample_weights: Weights to be multiplied with embedding table.
+    :param name: Optional name for output node.
+    :return: EmbeddingBagPackedSum node
+    """
+    inputs = [as_node(emb_table), as_node(indices)]
+    if per_sample_weights is not None:
+        inputs.append(as_node(per_sample_weights))
+
+    return _get_node_factory().create('EmbeddingBagPackedSum', inputs, {})
 
 
 @nameable_op

@@ -637,3 +637,18 @@ def test_embedding_segments_sum_with_some_opt_inputs():
     assert node.get_output_size() == 1
     assert node.get_output_partial_shape(0).same_scheme(PartialShape([-1, 2]))
     assert node.get_output_element_type(0) == Type.f32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_bag_packed_sum():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([3, 3], name='indices', dtype=np.int64)
+    per_sample_weights = ng.parameter([3, 3], name='per_sample_weights', dtype=np.float32)
+
+    # only 1 out of 3 optional inputs
+    node = ng.embedding_bag_packed_sum(emb_table, indices, per_sample_weights)
+
+    assert node.get_type_name() == 'EmbeddingBagPackedSum'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [3, 2]
+    assert node.get_output_element_type(0) == Type.f32
