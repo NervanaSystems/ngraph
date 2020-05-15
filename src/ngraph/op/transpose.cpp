@@ -18,6 +18,7 @@
 
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/transpose.hpp"
+#include "ngraph/runtime/reference/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -89,4 +90,139 @@ void op::v1::Transpose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                           const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for Transpose");
+}
+
+namespace
+{
+    template <typename T>
+    std::vector<T> get_vector(const HostTensorPtr& arg)
+    {
+        std::vector<T> rc;
+        const T* p = static_cast<const T*>(arg->get_data_ptr());
+        for (size_t i = 0; i < shape_size(arg->get_shape()); i++)
+        {
+            rc.push_back(p[i]);
+        }
+        return rc;
+    }
+
+    template <element::Type_t INPUT_ET>
+    bool evaluate(const HostTensorPtr& arg1, const HostTensorPtr& arg2, const HostTensorPtr& out)
+    {
+        element::Type_t axis_type = arg2->get_element_type();
+        std::vector<int64_t> axis_order;
+        switch (axis_type)
+        {
+        case element::Type_t::i8:
+        {
+            auto vec = get_vector<int8_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::i16:
+        {
+            auto vec = get_vector<int16_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::i32:
+        {
+            auto vec = get_vector<int32_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::i64:
+        {
+            auto vec = get_vector<int64_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::u8:
+        {
+            auto vec = get_vector<uint8_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::u16:
+        {
+            auto vec = get_vector<uint16_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::u32:
+        {
+            auto vec = get_vector<uint32_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        case element::Type_t::u64:
+        {
+            auto vec = get_vector<uint64_t>(arg2);
+            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
+            break;
+        }
+        default: throw ngraph_error("axis element type is not integral data type");
+        }
+        AxisVector in_axis_order(shape_size(arg2->get_shape()));
+        std::transform(axis_order.begin(),
+                       axis_order.end(),
+                       in_axis_order.begin(),
+                       [&](const int64_t& v) { return (v > 0) ? v : 0; });
+
+        Shape in_shape = arg1->get_shape();
+        Shape out_shape(in_shape.size());
+        std::transform(in_axis_order.begin(),
+                       in_axis_order.end(),
+                       out_shape.begin(),
+                       [&](const int64_t& v) { return in_shape[v]; });
+
+        out->set_shape(out_shape);
+        return (INPUT_ET == arg1->get_element_type()) &&
+               (runtime::reference::reshape(arg1->get_data_ptr<INPUT_ET>(),
+                                            out->get_data_ptr<INPUT_ET>(),
+                                            arg1->get_shape(),
+                                            in_axis_order,
+                                            out->get_shape()),
+                true);
+    }
+
+    bool evaluate_transpose(const HostTensorPtr& arg1,
+                            const HostTensorPtr& arg2,
+                            const HostTensorPtr& out)
+    {
+        bool rc = true;
+
+        switch (arg1->get_element_type())
+        {
+            TYPE_CASE(i8)(arg1, arg2, out);
+            break;
+            TYPE_CASE(i16)(arg1, arg2, out);
+            break;
+            TYPE_CASE(i32)(arg1, arg2, out);
+            break;
+            TYPE_CASE(i64)(arg1, arg2, out);
+            break;
+            TYPE_CASE(u8)(arg1, arg2, out);
+            break;
+            TYPE_CASE(u16)(arg1, arg2, out);
+            break;
+            TYPE_CASE(u32)(arg1, arg2, out);
+            break;
+            TYPE_CASE(u64)(arg1, arg2, out);
+            break;
+            TYPE_CASE(bf16)(arg1, arg2, out);
+            break;
+            TYPE_CASE(f32)(arg1, arg2, out);
+            break;
+            TYPE_CASE(f64)(arg1, arg2, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+bool op::v1::Transpose::evaluate(const HostTensorVector& output_values,
+                                 const HostTensorVector& input_values)
+{
+    return evaluate_transpose(input_values[0], input_values[1], output_values[0]);
 }
