@@ -67,6 +67,10 @@ namespace ngraph
                                                         const Shape& target_shape,
                                                         const op::BroadcastModeSpec& broadcast_spec,
                                                         PartialShape& result_shape);
+                static std::pair<bool, AxisSet>
+                    get_broadcast_axes_numpy_pdpd(const Shape& arg_shape,
+                                                  const Shape& result_shape,
+                                                  const op::BroadcastModeSpec& broadcast_spec);
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

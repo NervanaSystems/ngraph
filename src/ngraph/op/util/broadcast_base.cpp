@@ -219,6 +219,28 @@ void op::util::BroadcastBase::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
+std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes_numpy_pdpd(
+    const Shape& arg_shape, const Shape& result_shape, const op::BroadcastModeSpec& broadcast_spec)
+{
+    AxisSet broadcast_axes;
+    bool axes_known = false;
+    auto start_axis = (broadcast_spec.m_type == op::BroadcastType::PDPD)
+                          ? broadcast_spec.m_axis
+                          : result_shape.size() - arg_shape.size();
+    NGRAPH_CHECK(start_axis >= 0);
+    for (size_t i = 0; i < result_shape.size(); i++)
+    {
+        if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
+        {
+            broadcast_axes.insert(i);
+        }
+    }
+    axes_known = true;
+    std::cout << "get_broadcast_axes_numpy_pdpd, axes_known = true, broadcast_axes = "
+              << broadcast_axes << "\n";
+    return std::make_pair(axes_known, broadcast_axes);
+}
+
 std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
 {
     AxisSet broadcast_axes;
@@ -250,18 +272,7 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
         {
             auto arg_shape = get_input_shape(0);
             auto result_shape = get_output_shape(0);
-            auto start_axis = (m_mode.m_type == BroadcastType::PDPD)
-                                  ? m_mode.m_axis
-                                  : result_shape.size() - arg_shape.size();
-            NGRAPH_CHECK(start_axis >= 0);
-            for (size_t i = 0; i < result_shape.size(); i++)
-            {
-                if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
-                {
-                    broadcast_axes.insert(i);
-                }
-            }
-            axes_known = true;
+            return get_broadcast_axes_numpy_pdpd(arg_shape, result_shape, m_mode);
         }
     }
     else

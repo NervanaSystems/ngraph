@@ -46,6 +46,27 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    std::pair<bool, AxisSet> get_broadcast_axes_bidirectional(const Shape& arg_shape,
+                                                              const Shape& result_shape)
+    {
+        AxisSet broadcast_axes;
+        bool axes_known = false;
+        const auto start_axis = result_shape.size() - arg_shape.size();
+        NGRAPH_CHECK(start_axis >= 0);
+        for (size_t i = 0; i < result_shape.size(); i++)
+        {
+            if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
+            {
+                broadcast_axes.insert(i);
+            }
+        }
+        axes_known = true;
+        return std::make_pair(axes_known, broadcast_axes);
+    }
+}
+
 std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 {
     if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
@@ -57,18 +78,7 @@ std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
         {
             const auto arg_shape = get_input_shape(0);
             const auto result_shape = get_output_shape(0);
-
-            const auto start_axis = result_shape.size() - arg_shape.size();
-            NGRAPH_CHECK(start_axis >= 0);
-            for (size_t i = 0; i < result_shape.size(); i++)
-            {
-                if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
-                {
-                    broadcast_axes.insert(i);
-                }
-            }
-
-            axes_known = true;
+            return get_broadcast_axes_bidirectional(arg_shape, result_shape);
         }
         return std::make_pair(axes_known, broadcast_axes);
     }
@@ -277,7 +287,7 @@ namespace
     }
 
     void get_result_shape(Node* this_ptr,
-                          Shape& arg0_shape,
+                          Shape& arg_shape,
                           Shape& target_shape,
                           const op::BroadcastModeSpec& broadcast_spec,
                           PartialShape& result_shape)
@@ -286,8 +296,8 @@ namespace
         if (broadcast_spec.m_type == op::BroadcastType::BIDIRECTIONAL)
         {
             // first get result shape and then axes, as for bidi axes_mapping cal
-            get_result_shape_bidirectional(this_ptr, arg0_shape, target_shape, result_shape);
-            // get_
+            get_result_shape_bidirectional(this_ptr, arg_shape, target_shape, result_shape);
+            auto bcast_axes = get_broadcast_axes_bidirectional(arg_shape, result_shape.to_shape());
         }
         else if (broadcast_spec.m_type == op::BroadcastType::NUMPY ||
                  broadcast_spec.m_type == op::BroadcastType::PDPD)
@@ -295,7 +305,9 @@ namespace
             // create a separate function to calculate, so we can use in v1 also
             // or cast v1 AutoBroadcast types to v3 BroadcastType
             op::util::BroadcastBase::get_result_shape_numpy_pdpd(
-                this_ptr, arg0_shape, target_shape, broadcast_spec, result_shape);
+                this_ptr, arg_shape, target_shape, broadcast_spec, result_shape);
+            auto bcast_axes = op::util::BroadcastBase::get_broadcast_axes_numpy_pdpd(
+                arg_shape, result_shape.to_shape(), broadcast_spec);
         }
         else
         {
