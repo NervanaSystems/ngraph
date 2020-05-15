@@ -20,7 +20,7 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 import numpy as np
 
 from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (ArgMax, ArgMin, BatchNormInference,
+from ngraph.impl.op import (BatchNormInference,
                             BatchNormTraining, Broadcast, Constant,
                             DepthToSpace, Dequantize, Dot, Gelu, Gemm,
                             GetOutputElement, GRN, HardSigmoid, MVN, Parameter, Quantize,
@@ -2089,34 +2089,6 @@ def lrn(data,       # type: Node
     """
     attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
     return _get_node_factory().create('LRN', [data, as_node(axes)], attributes)
-
-
-@nameable_op
-def argmax(data,     # type: Node
-           axis=0,   # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMax index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMax
-    """
-    return ArgMax(data, axis, get_element_type(np.int32))
-
-
-@nameable_op
-def argmin(data,    # type: Node
-           axis=0,  # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMin index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMin
-    """
-    return ArgMin(data, axis, get_element_type(np.int32))
 
 
 @nameable_op
