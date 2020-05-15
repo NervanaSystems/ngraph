@@ -177,6 +177,7 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
         ->add_provenance_group_members_above({value});
 }
 
+NGRAPH_API
 shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
     const auto out_pattern = op::Constant::create(
