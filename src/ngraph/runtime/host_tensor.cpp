@@ -84,7 +84,8 @@ void runtime::HostTensor::allocate_buffer()
     }
     else
     {
-        size_t allocation_size = m_buffer_size + alignment;
+        // Add 1 so that even for zero-sized tensor we get at least 1 byte
+        size_t allocation_size = m_buffer_size + alignment + 1;
         uint8_t* allocated_buffer_pool = static_cast<uint8_t*>(ngraph_malloc(allocation_size));
         m_allocated_buffer_pool = allocated_buffer_pool;
         size_t mod = size_t(allocated_buffer_pool) % alignment;
@@ -98,6 +99,7 @@ void runtime::HostTensor::allocate_buffer()
         }
     }
 }
+
 runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
     : HostTensor(constant->output(0).get_tensor().get_name())
 {
@@ -142,7 +144,14 @@ void runtime::HostTensor::write(const void* source, size_t n)
     {
         throw out_of_range("partial tensor write not supported");
     }
-    memcpy(target, source, n);
+    if (n > 0)
+    {
+        if (!source)
+        {
+            throw runtime_error("nullptr passed to HostTensor::write");
+        }
+        memcpy(target, source, n);
+    }
 }
 
 void runtime::HostTensor::read(void* target, size_t n) const
@@ -153,7 +162,14 @@ void runtime::HostTensor::read(void* target, size_t n) const
     {
         throw out_of_range("partial tensor read access not supported");
     }
-    memcpy(target, source, n);
+    if (n > 0)
+    {
+        if (!target)
+        {
+            throw runtime_error("nullptr passed to HostTensor::read");
+        }
+        memcpy(target, source, n);
+    }
 }
 
 bool runtime::HostTensor::get_is_allocated() const
