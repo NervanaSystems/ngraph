@@ -830,7 +830,7 @@ static void test_batchnorm_fprop_relu(Shape input_shape)
     }
 }
 
-TEST(cpu_fusion, batchnorm_fprop_relu)
+TEST(cpu_fusion, DISABLED_batchnorm_fprop_relu)
 {
     DisableRemoveGOE nogoe;
     test_batchnorm_fprop_relu(Shape{1, 2, 2, 2});
