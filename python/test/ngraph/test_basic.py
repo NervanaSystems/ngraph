@@ -94,7 +94,7 @@ def test_serialization():
         pass
 
 
-def test_broadcast():
+def test_broadcast_1():
     input_data = np.array([1, 2, 3])
 
     new_shape = [3, 3]
@@ -104,12 +104,18 @@ def test_broadcast():
     result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
+
+def test_broadcast_2():
     input_data = np.arange(4)
     new_shape = [3, 4, 2, 4]
     expected = np.broadcast_to(input_data, new_shape)
     result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
+
+def test_broadcast_3():
+    input_data = np.array([1, 2, 3])
+    new_shape = [3, 3]
     axis_mapping = [0]
     expected = [[1, 1, 1],
                 [2, 2, 2],
