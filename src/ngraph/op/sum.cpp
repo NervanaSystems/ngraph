@@ -17,9 +17,6 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/reference/sum.hpp"
-#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -57,51 +54,4 @@ void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 shared_ptr<Node> op::v0::Sum::get_default_value() const
 {
     return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
-}
-
-namespace
-{
-    template <element::Type_t ET>
-    bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
-    {
-        out->set_shape(reduce(arg->get_shape(), axes));
-        runtime::reference::sum(
-            arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), arg->get_shape(), axes);
-        return true;
-    }
-
-    bool evaluate_sum(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
-    {
-        bool rc = true;
-        switch (arg->get_element_type())
-        {
-            TYPE_CASE(i8)(arg, out, axes);
-            break;
-            TYPE_CASE(i16)(arg, out, axes);
-            break;
-            TYPE_CASE(i32)(arg, out, axes);
-            break;
-            TYPE_CASE(i64)(arg, out, axes);
-            break;
-            TYPE_CASE(u8)(arg, out, axes);
-            break;
-            TYPE_CASE(u16)(arg, out, axes);
-            break;
-            TYPE_CASE(u32)(arg, out, axes);
-            break;
-            TYPE_CASE(u64)(arg, out, axes);
-            break;
-            TYPE_CASE(f32)(arg, out, axes);
-            break;
-            TYPE_CASE(f64)(arg, out, axes);
-            break;
-        default: rc = false; break;
-        }
-        return rc;
-    }
-}
-
-bool op::v0::Sum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
-{
-    return evaluate_sum(inputs[0], outputs[0], get_reduction_axes());
 }

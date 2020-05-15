@@ -179,6 +179,7 @@ namespace ngraph
                     reference::min(static_cast<ElementType*>(arg),
                                    static_cast<ElementType*>(out),
                                    in_shape,
+                                   out_shape,
                                    reduction_axes);
                 }
             }

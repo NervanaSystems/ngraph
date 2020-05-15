@@ -46,13 +46,25 @@ static shared_ptr<op::Constant>
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
                                    max->get_reduction_axes());
     }
     else if (auto reduce_max = as_type_ptr<op::v1::ReduceMax>(reduction_node))
     {
+        auto reduction_axes = reduce_max->get_reduction_axes();
+        auto input_shape = reduce_max->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
         runtime::reference::max<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
+                                   shape_no_keep_dims,
                                    reduce_max->get_reduction_axes());
     }
     else if (auto min = as_type_ptr<op::Min>(reduction_node))
@@ -60,13 +72,25 @@ static shared_ptr<op::Constant>
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
                                    min->get_reduction_axes());
     }
     else if (auto reduce_min = as_type_ptr<op::v1::ReduceMin>(reduction_node))
     {
+        auto reduction_axes = reduce_min->get_reduction_axes();
+        auto input_shape = reduce_min->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
         runtime::reference::min<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
+                                   shape_no_keep_dims,
                                    reduce_min->get_reduction_axes());
     }
     else if (auto prod = as_type_ptr<op::Product>(reduction_node))
@@ -74,13 +98,25 @@ static shared_ptr<op::Constant>
         runtime::reference::product<T>(constant->get_vector<T>().data(),
                                        data_ptr,
                                        constant->get_output_shape(0),
+                                       reduction_node->get_shape(),
                                        prod->get_reduction_axes());
     }
     else if (auto reduce_prod = as_type_ptr<op::v1::ReduceProd>(reduction_node))
     {
+        auto reduction_axes = reduce_prod->get_reduction_axes();
+        auto input_shape = reduce_prod->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
         runtime::reference::product<T>(constant->get_vector<T>().data(),
                                        data_ptr,
                                        constant->get_output_shape(0),
+                                       shape_no_keep_dims,
                                        reduce_prod->get_reduction_axes());
     }
     else if (auto sum = as_type_ptr<op::Sum>(reduction_node))
@@ -88,20 +124,43 @@ static shared_ptr<op::Constant>
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
+                                   reduction_node->get_shape(),
                                    sum->get_reduction_axes());
     }
     else if (auto reduce_sum = as_type_ptr<op::v1::ReduceSum>(reduction_node))
     {
+        auto reduction_axes = reduce_sum->get_reduction_axes();
+        auto input_shape = reduce_sum->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
         runtime::reference::sum<T>(constant->get_vector<T>().data(),
                                    data_ptr,
                                    constant->get_output_shape(0),
+                                   shape_no_keep_dims,
                                    reduce_sum->get_reduction_axes());
     }
     else if (auto reduce_mean = as_type_ptr<op::v1::ReduceMean>(reduction_node))
     {
+        auto reduction_axes = reduce_mean->get_reduction_axes();
+        auto input_shape = reduce_mean->get_input_shape(0);
+        Shape shape_no_keep_dims;
+        for (size_t i = 0; i < input_shape.size(); i++)
+        {
+            if (reduction_axes.count(i) == 0)
+            {
+                shape_no_keep_dims.push_back(input_shape[i]);
+            }
+        }
         runtime::reference::mean<T>(constant->get_vector<T>().data(),
                                     data_ptr,
                                     constant->get_output_shape(0),
+                                    shape_no_keep_dims,
                                     reduce_mean->get_reduction_axes());
     }
     else

@@ -28,9 +28,12 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void product(const T* arg, T* out, const Shape& in_shape, const AxisSet& reduction_axes)
+            void product(const T* arg,
+                         T* out,
+                         const Shape& in_shape,
+                         const Shape& out_shape,
+                         const AxisSet& reduction_axes)
             {
-                auto out_shape = reduce(in_shape, reduction_axes);
                 CoordinateTransform output_transform(out_shape);
 
                 for (const Coordinate& output_coord : output_transform)
