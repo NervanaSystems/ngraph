@@ -286,11 +286,11 @@ namespace
         }
     }
 
-    std::pair<bool, AxisSet> get_result_shape(Node* this_ptr,
-                                              Shape& arg_shape,
-                                              Shape& target_shape,
-                                              const op::BroadcastModeSpec& broadcast_spec,
-                                              PartialShape& result_shape)
+    std::pair<bool, AxisSet> get_result_shape_and_axes(Node* this_ptr,
+                                                       Shape& arg_shape,
+                                                       Shape& target_shape,
+                                                       const op::BroadcastModeSpec& broadcast_spec,
+                                                       PartialShape& result_shape)
     {
         // calculate result shape from target shape, arg0 shape and broadcast type
         if (broadcast_spec.m_type == op::BroadcastType::BIDIRECTIONAL)
@@ -319,11 +319,19 @@ namespace
 bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     std::cout << "Bcast v3 evaluate \n";
-    // 1. if input[1] i.e. target_shape is not Constant, read it from host tensor
-    // TODO: add if condition, else get the target_shape from the constant
+    // 1. get target_shape
     Shape target_shape;
-    get_target_shape_from_ht(inputs[1], target_shape);
-    std::cout << "*** Target shape = " << target_shape << "\n";
+    const auto shape_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+    if (shape_constant)
+    {
+        target_shape = shape_constant->get_shape_val();
+        std::cout << "*** from node Target shape = " << target_shape << "\n";
+    }
+    else
+    {
+        get_target_shape_from_ht(inputs[1], target_shape);
+        std::cout << "*** Calculated Target shape = " << target_shape << "\n";
+    }
 
     // 2. if output shape is dynamic, calculate result_shape
     PartialShape result_shape;
@@ -331,13 +339,14 @@ bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTens
     if (get_output_partial_shape(0).is_static())
     {
         result_shape = get_output_shape(0);
+        pair_broadcast_axes = get_broadcast_axes();
     }
     else
     {
         // calculate result shape from target shape, arg shape and broadcast type
         Shape arg_shape = inputs[0]->get_shape();
-        pair_broadcast_axes =
-            get_result_shape(this, arg_shape, target_shape, get_broadcast_spec(), result_shape);
+        pair_broadcast_axes = get_result_shape_and_axes(
+            this, arg_shape, target_shape, get_broadcast_spec(), result_shape);
         std::cout << " in bcast_v3 evaluate, pair_bcast_axes " << pair_broadcast_axes.first
                   << ", second = " << pair_broadcast_axes.second << "\n";
     }
