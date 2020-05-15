@@ -80,7 +80,7 @@ TEST(op_eval, strided_slice1)
 //   [15 16 17]]]
 
 // A[1:, :, :]
-// result Shape{2, 2, 3} 
+// result Shape{2, 2, 3}
 // [[[ 6  7  8]
 //   [ 9 10 11]]
 //  [[12 13 14]
@@ -178,8 +178,8 @@ TEST(op_eval, strided_slice3)
 // A[0:1, :, ::-1]
 // result Shape{1, 2, 3}
 // [[[2 1 0]
-//   [5 4 3]]] 
-TEST(op_eval, DISABLED_strided_slice_reverse)
+//   [5 4 3]]]
+TEST(op_eval, strided_slice_reverse)
 {
     auto A_shape = Shape{3, 2, 3};
     auto A = make_shared<op::Parameter>(element::i64, A_shape);

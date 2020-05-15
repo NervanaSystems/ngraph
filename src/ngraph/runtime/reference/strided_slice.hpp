@@ -35,21 +35,29 @@ namespace ngraph
             template <typename T>
             void strided_slice(const T* arg, T* out, const Shape& arg_shape, const SlicePlan& sp)
             {
+                runtime::AlignedBuffer slice_out_buffer(shape_size(sp.reshape_in_shape) *
+                                                        sizeof(T));
                 slice<T>(arg,
-                         out,
+                         slice_out_buffer.get_ptr<T>(),
                          arg_shape,
                          Coordinate(sp.begins.begin(), sp.begins.end()),
                          Coordinate(sp.ends.begin(), sp.ends.end()),
                          Strides(sp.strides.begin(), sp.strides.end()),
                          sp.reshape_in_shape);
 
-                reshape<T>(out,
-                           out,
+                runtime::AlignedBuffer reshape_out_buffer(shape_size(sp.reshape_out_shape) *
+                                                          sizeof(T));
+                reshape<T>(slice_out_buffer.get_ptr<T>(),
+                           reshape_out_buffer.get_ptr<T>(),
                            sp.reshape_in_shape,
                            get_default_order(sp.reshape_in_shape.size()),
                            sp.reshape_out_shape);
 
-                reverse<T>(out, out, sp.reshape_out_shape, sp.reshape_out_shape, sp.reverse_axes);
+                reverse<T>(reshape_out_buffer.get_ptr<T>(),
+                           out,
+                           sp.reshape_out_shape,
+                           sp.reshape_out_shape,
+                           sp.reverse_axes);
             }
         }
     }
