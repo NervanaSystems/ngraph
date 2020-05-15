@@ -27,8 +27,6 @@ from ngraph.ops import absolute
 from ngraph.ops import absolute as abs
 from ngraph.ops import acos
 from ngraph.ops import add
-from ngraph.ops import argmax
-from ngraph.ops import argmin
 from ngraph.ops import asin
 from ngraph.ops import atan
 from ngraph.ops import avg_pool
@@ -55,9 +53,7 @@ from ngraph.ops import cum_sum as cumsum
 from ngraph.ops import deformable_convolution
 from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space
-from ngraph.ops import dequantize
 from ngraph.ops import divide
-from ngraph.ops import dot
 from ngraph.ops import elu
 from ngraph.ops import embedding_bag_offsets_sum
 from ngraph.ops import embedding_bag_packed_sum
@@ -71,7 +67,6 @@ from ngraph.ops import floor_mod
 from ngraph.ops import gather
 from ngraph.ops import gather_tree
 from ngraph.ops import gelu
-from ngraph.ops import gemm
 from ngraph.ops import get_output_element
 from ngraph.ops import greater
 from ngraph.ops import greater_equal
@@ -108,10 +103,6 @@ from ngraph.ops import parameter
 from ngraph.ops import power
 from ngraph.ops import prelu
 from ngraph.ops import psroi_pooling
-from ngraph.ops import quantize
-from ngraph.ops import quantized_convolution
-from ngraph.ops import quantized_dot
-from ngraph.ops import range
 from ngraph.ops import reduce_logical_and
 from ngraph.ops import reduce_logical_or
 from ngraph.ops import reduce_max
@@ -121,8 +112,6 @@ from ngraph.ops import reduce_prod
 from ngraph.ops import reduce_sum
 from ngraph.ops import region_yolo
 from ngraph.ops import relu
-from ngraph.ops import reorg_yolo
-from ngraph.ops import replace_slice
 from ngraph.ops import reshape
 from ngraph.ops import result
 from ngraph.ops import reverse
@@ -130,7 +119,6 @@ from ngraph.ops import reverse_sequence
 from ngraph.ops import rnn_cell
 from ngraph.ops import roi_align
 from ngraph.ops import roi_pooling
-from ngraph.ops import scale_shift
 from ngraph.ops import scatter_elements_update
 from ngraph.ops import scatter_nd_update
 from ngraph.ops import scatter_update
@@ -142,7 +130,6 @@ from ngraph.ops import sigmoid
 from ngraph.ops import sign
 from ngraph.ops import sin
 from ngraph.ops import sinh
-from ngraph.ops import slice
 from ngraph.ops import softmax
 from ngraph.ops import space_to_batch
 from ngraph.ops import space_to_depth
