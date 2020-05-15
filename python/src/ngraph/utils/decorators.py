@@ -37,7 +37,7 @@ def nameable_op(node_factory_function):  # type: (Callable) -> Callable
 
 
 def unary_op(node_factory_function):  # type: (Callable) -> Callable
-    """Convert the first input value to a Constant Node if a scalar value is detected."""
+    """Convert the first input value to a Constant Node if a numeric value is detected."""
     @wraps(node_factory_function)
     def wrapper(input_value, *args, **kwargs):  # type: (NodeInput, *Any, **Any) -> Node
         input_node = as_node(input_value)
@@ -48,7 +48,7 @@ def unary_op(node_factory_function):  # type: (Callable) -> Callable
 
 
 def binary_op(node_factory_function):  # type: (Callable) -> Callable
-    """Convert the first two input values to Constant Nodes if scalar values are detected."""
+    """Convert the first two input values to Constant Nodes if numeric values are detected."""
     @wraps(node_factory_function)
     def wrapper(left, right, *args, **kwargs):  # type: (NodeInput, NodeInput, *Any, **Any) -> Node
         left, right = as_nodes(left, right)
