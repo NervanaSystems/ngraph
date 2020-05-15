@@ -305,4 +305,6 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    inline bool is_scalar(const PartialShape& shape) { return shape.rank() == 0; }
 }
