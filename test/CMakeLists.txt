@@ -391,6 +391,11 @@ set(MULTI_TEST_SRC
     backend/quantized_dot.in.cpp
     backend/random_uniform.in.cpp
     backend/range.in.cpp
+    backend/reduce_max.in.cpp
+    backend/reduce_mean.in.cpp
+    backend/reduce_min.in.cpp
+    backend/reduce_prod.in.cpp
+    backend/reduce_sum.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
@@ -508,6 +513,10 @@ endif()
 # We should probably split up type_prop.cpp.
 if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
 if (NGRAPH_CPU_ENABLE)

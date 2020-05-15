@@ -61,6 +61,16 @@ namespace ngraph
                                   float pad_value,
                                   const PadType& auto_pad = PadType::EXPLICIT);
 
+                BinaryConvolution(const Output<Node>& data,
+                                  const Output<Node>& kernel,
+                                  const Strides& strides,
+                                  const CoordinateDiff& pads_begin,
+                                  const CoordinateDiff& pads_end,
+                                  const Strides& dilations,
+                                  const std::string& mode,
+                                  float pad_value,
+                                  const PadType& auto_pad = PadType::EXPLICIT);
+
                 size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
