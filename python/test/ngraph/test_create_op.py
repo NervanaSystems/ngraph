@@ -622,6 +622,7 @@ def test_embedding_segments_sum_all_inputs():
     assert node.get_output_partial_shape(0).same_scheme(PartialShape([-1, 2]))
     assert node.get_output_element_type(0) == Type.f32
 
+
 @pytest.mark.skip_on_gpu
 def test_embedding_segments_sum_with_some_opt_inputs():
     emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
