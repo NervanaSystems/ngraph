@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "default_opset.hpp"
 #include "rnn.hpp"
+#include "default_opset.hpp"
 #include "utils/recurrent.hpp"
 
 namespace ngraph
@@ -55,17 +55,13 @@ namespace ngraph
                     RNNInputMap input_map{node, gates_count};
                     RNNAttributes attributes{node};
 
-                    recurrent::RecurrentSequence sequence_op(
-                        input_map, attributes, attributes.m_direction);
+                    recurrent::RecurrentSequence sequence_op(input_map, attributes.m_direction);
                     auto results =
                         sequence_op.run_sequence([&attributes](const recurrent::OpInputMap& args,
-                                                               const recurrent::OpAttributes& attrs,
                                                                const Output<ngraph::Node>& in_Xt,
                                                                const Output<ngraph::Node> H_t) {
 
                             const RNNInputMap& rnn_args = dynamic_cast<const RNNInputMap&>(args);
-                            const RNNAttributes& rnn_attrs =
-                                dynamic_cast<const RNNAttributes&>(attrs);
 
                             return std::make_shared<default_opset::RNNCell>(
                                 in_Xt,
@@ -73,11 +69,11 @@ namespace ngraph
                                 rnn_args.at(recurrent::OpInput::W),
                                 rnn_args.at(recurrent::OpInput::R),
                                 rnn_args.at(recurrent::OpInput::B),
-                                rnn_attrs.m_hidden_size,
-                                rnn_attrs.m_activations,
-                                rnn_attrs.m_activations_alpha,
-                                rnn_attrs.m_activations_beta,
-                                rnn_attrs.m_clip_threshold);
+                                attributes.m_hidden_size,
+                                attributes.m_activations,
+                                attributes.m_activations_alpha,
+                                attributes.m_activations_beta,
+                                attributes.m_clip_threshold);
                         });
                     return results;
                 }

@@ -90,15 +90,12 @@ namespace ngraph
             /// Function returns node output representing cell hidden state after cell
             /// computations. The arguments are:
             ///     * input node map.
-            ///     * Onnx node attributes.
             ///     * the cell input data
             ///     * the cell hidden state from previous step.
             ///
-            using RecurrentCellFunction =
-                std::function<Output<ngraph::Node>(const OpInputMap&,
-                                                   const OpAttributes&,
-                                                   const Output<ngraph::Node>&,
-                                                   const Output<ngraph::Node>)>;
+            using RecurrentCellFunction = std::function<Output<ngraph::Node>(
+                const OpInputMap&, const Output<ngraph::Node>&, const Output<ngraph::Node>)>;
+
             ///
             /// \brief      This class describes a recurrent sequence.
             ///
@@ -114,7 +111,6 @@ namespace ngraph
                 ///                        BIDIRECTIONAL}.
                 ///
                 RecurrentSequence(OpInputMap& args,
-                                  const OpAttributes& attrs,
                                   ngraph::op::RecurrentSequenceDirection direction);
 
                 ///
@@ -169,7 +165,6 @@ namespace ngraph
                                                    bool is_reverse = false);
 
                 OpInputMap& m_args;
-                const OpAttributes& m_attrs;
                 ngraph::op::RecurrentSequenceDirection m_direction;
             };
 

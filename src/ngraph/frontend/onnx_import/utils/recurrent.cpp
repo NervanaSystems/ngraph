@@ -119,10 +119,8 @@ namespace ngraph
             // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Sequence Computations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
             RecurrentSequence::RecurrentSequence(OpInputMap& args,
-                                                 const OpAttributes& attrs,
                                                  ngraph::op::RecurrentSequenceDirection direction)
                 : m_args{args}
-                , m_attrs{attrs}
                 , m_direction{direction}
             {
             }
@@ -197,7 +195,7 @@ namespace ngraph
                 int32_t time_step{1};
                 for (const auto& in_x : in_seq_steps)
                 {
-                    Output<ngraph::Node> H = kernel(m_args, m_attrs, in_x, H_t);
+                    Output<ngraph::Node> H = kernel(m_args, in_x, H_t);
 
                     // Expand tensors with empty outermost dim, so we can later concatenate
                     // them.

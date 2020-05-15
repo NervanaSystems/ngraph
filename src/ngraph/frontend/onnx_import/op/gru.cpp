@@ -64,17 +64,13 @@ namespace ngraph
                     GRUInputMap input_map{node, gates_count};
                     GRUAttributes attributes{node};
 
-                    recurrent::RecurrentSequence sequence_op(
-                        input_map, attributes, attributes.m_direction);
+                    recurrent::RecurrentSequence sequence_op(input_map, attributes.m_direction);
                     auto results =
                         sequence_op.run_sequence([&attributes](const recurrent::OpInputMap& args,
-                                                               const recurrent::OpAttributes& attrs,
                                                                const Output<ngraph::Node>& in_Xt,
                                                                const Output<ngraph::Node> H_t) {
 
                             const GRUInputMap& gru_args = dynamic_cast<const GRUInputMap&>(args);
-                            const GRUAttributes& gru_attrs =
-                                dynamic_cast<const GRUAttributes&>(attrs);
 
                             return std::make_shared<default_opset::GRUCell>(
                                 in_Xt,
@@ -82,12 +78,12 @@ namespace ngraph
                                 gru_args.at(recurrent::OpInput::W),
                                 gru_args.at(recurrent::OpInput::R),
                                 gru_args.at(recurrent::OpInput::B),
-                                gru_attrs.m_hidden_size,
-                                gru_attrs.m_activations,
-                                gru_attrs.m_activations_alpha,
-                                gru_attrs.m_activations_beta,
-                                gru_attrs.m_clip_threshold,
-                                gru_attrs.m_linear_before_reset);
+                                attributes.m_hidden_size,
+                                attributes.m_activations,
+                                attributes.m_activations_alpha,
+                                attributes.m_activations_beta,
+                                attributes.m_clip_threshold,
+                                attributes.m_linear_before_reset);
                         });
                     return results;
                 }
