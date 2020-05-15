@@ -78,7 +78,10 @@ std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 
 namespace
 {
-    void get_result_shape_bidirectional(Shape& arg_shape, Shape& target_shape, Shape& result_shape)
+    void get_result_shape_bidirectional(Node* this_ptr,
+                                        Shape& arg_shape,
+                                        Shape& target_shape,
+                                        PartialShape& result_shape)
     {
         // Add left padding to shorter target or argument shape
         const auto target_padded_rank = std::max(arg_shape.size(), target_shape.size());
@@ -94,12 +97,14 @@ namespace
         result_shape = target_shape;
         for (auto i = 0; i < target_shape.size(); ++i)
         {
-            if (arg_shape[i] != 1 && target_shape[i] != 1 && arg_shape[i] != target_shape[i])
-            {
-                throw ngraph_error("Broadcast incorrect target shape. Expecting either 1 or " +
-                                   std::to_string(arg_shape[i]) + ". Got " +
-                                   std::to_string(target_shape[i]));
-            }
+            NODE_VALIDATION_CHECK(this_ptr,
+                                  arg_shape[i] == 1 || target_shape[i] == 1 ||
+                                      arg_shape[i] == target_shape[i],
+                                  "Broadcast incorrect target shape. Expecting either 1 or ",
+                                  arg_shape[i],
+                                  ". Got ",
+                                  target_shape[i]);
+
             result_shape[i] = std::max(arg_shape[i], target_shape[i]);
         }
         std::cout << " get_result_shape_bidirectional result_shape = " << result_shape << "\n";
@@ -136,9 +141,7 @@ void op::v3::Broadcast::validate_and_infer_types()
             if (shape_constant)
             {
                 auto target_shape = shape_constant->get_shape_val();
-                Shape calc_res_shape;
-                get_result_shape_bidirectional(arg_shape, target_shape, calc_res_shape);
-                result_shape = PartialShape(calc_res_shape);
+                get_result_shape_bidirectional(this, arg_shape, target_shape, result_shape);
             }
         }
     }
@@ -273,21 +276,26 @@ namespace
         }
     }
 
-    void get_result_shape(Shape& arg0_shape,
+    void get_result_shape(Node* this_ptr,
+                          Shape& arg0_shape,
                           Shape& target_shape,
                           const op::BroadcastModeSpec& broadcast_spec,
-                          Shape result_shape)
+                          PartialShape& result_shape)
     {
         // calculate result shape from target shape, arg0 shape and broadcast type
         if (broadcast_spec.m_type == op::BroadcastType::BIDIRECTIONAL)
         {
-            get_result_shape_bidirectional(arg0_shape, target_shape, result_shape);
+            // first get result shape and then axes, as for bidi axes_mapping cal
+            get_result_shape_bidirectional(this_ptr, arg0_shape, target_shape, result_shape);
+            // get_
         }
         else if (broadcast_spec.m_type == op::BroadcastType::NUMPY ||
                  broadcast_spec.m_type == op::BroadcastType::PDPD)
         {
             // create a separate function to calculate, so we can use in v1 also
             // or cast v1 AutoBroadcast types to v3 BroadcastType
+            op::util::BroadcastBase::get_result_shape_numpy_pdpd(
+                this_ptr, arg0_shape, target_shape, broadcast_spec, result_shape);
         }
         else
         {
@@ -328,7 +336,7 @@ bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTens
     std::cout << "*** Target shape = " << target_shape << "\n";
 
     // 2. if output shape is dynamic, calculate result_shape
-    Shape result_shape;
+    PartialShape result_shape;
     if (get_output_partial_shape(0).is_static())
     {
         result_shape = get_output_shape(0);
@@ -337,7 +345,7 @@ bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTens
     {
         // calculate result shape from target shape, arg0 shape and broadcast type
         Shape arg0 = inputs[0]->get_shape();
-        get_result_shape(arg0, target_shape, get_broadcast_spec(), result_shape);
+        get_result_shape(this, arg0, target_shape, get_broadcast_spec(), result_shape);
     }
 
     // 3. if broadcast axis is dynamic, calculate here

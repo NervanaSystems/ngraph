@@ -45,6 +45,46 @@ op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
 {
 }
 
+void op::util::BroadcastBase::get_result_shape_numpy_pdpd(
+    Node* this_ptr,
+    const Shape& arg0_shape,
+    const Shape& target_shape,
+    const op::BroadcastModeSpec& broadcast_spec,
+    PartialShape& result_shape)
+{
+    result_shape = target_shape;
+    auto start_axis = (broadcast_spec.m_type == op::BroadcastType::PDPD)
+                          ? broadcast_spec.m_axis
+                          : target_shape.size() - arg0_shape.size();
+    NODE_VALIDATION_CHECK(this_ptr,
+                          start_axis >= 0,
+                          "Broadcast target_shape has smaller rank ",
+                          target_shape.size(),
+                          " than arg shape ",
+                          arg0_shape.size());
+    for (auto i = start_axis; i < target_shape.size(); i++)
+    {
+        NODE_VALIDATION_CHECK(this_ptr,
+                              arg0_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
+                                  arg0_shape[i - start_axis] == target_shape[i],
+                              "Broadcast incorrect target shape. Expecting either 1 or ",
+                              arg0_shape[i - start_axis],
+                              " . Got ",
+                              target_shape[i]);
+        result_shape[i] = std::max(arg0_shape[i - start_axis], target_shape[i]);
+    }
+    std::cout << "get_result_shape_numpy_pdpd : result_shape = " << result_shape << "\n";
+}
+
+/*void op::util::BroadcastBase::get_result_shape_none(Node* this_ptr,
+                                    const Shape& arg0_shape,
+                                    const Shape& target_shape,
+                                    const op::BroadcastModeSpec& broadcast_spec,
+                                    PartialShape& result_shape)
+{
+
+}*/
+
 void op::util::BroadcastBase::validate_and_infer_types()
 {
     // shape node should have integer data type. For now we only allow i64
@@ -172,27 +212,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
             if (shape_constant)
             {
                 const auto target_shape = shape_constant->get_shape_val();
-                auto start_axis = (m_mode.m_type == BroadcastType::PDPD)
-                                      ? m_mode.m_axis
-                                      : target_shape.size() - arg_shape.size();
-                NODE_VALIDATION_CHECK(this,
-                                      start_axis >= 0,
-                                      "Broadcast target_shape has smaller rank ",
-                                      target_shape.size(),
-                                      " than arg shape ",
-                                      arg_shape.size());
-                for (auto i = start_axis; i < target_shape.size(); i++)
-                {
-                    NODE_VALIDATION_CHECK(
-                        this,
-                        arg_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
-                            arg_shape[i - start_axis] == target_shape[i],
-                        "Broadcast incorrect target shape. Expecting either 1 or ",
-                        arg_shape[i - start_axis],
-                        " . Got ",
-                        target_shape[i]);
-                    result_shape[i] = std::max(arg_shape[i - start_axis], target_shape[i]);
-                }
+                get_result_shape_numpy_pdpd(this, arg_shape, target_shape, m_mode, result_shape);
             }
         }
     }

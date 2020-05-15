@@ -62,6 +62,12 @@ namespace ngraph
                 // virtual bool evaluate(const HostTensorVector& outputs,
                 //              const HostTensorVector& inputs) override;
 
+                static void get_result_shape_numpy_pdpd(Node* this_ptr,
+                                                        const Shape& arg0_shape,
+                                                        const Shape& target_shape,
+                                                        const op::BroadcastModeSpec& broadcast_spec,
+                                                        PartialShape& result_shape);
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
