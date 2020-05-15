@@ -139,24 +139,10 @@ namespace
 {
 
     template <element::Type_t DT, element::Type_t IT, element::Type_t AT >
-    bool evaluate(const HostTensorPtr& data,const HostTensorPtr& indices,const HostTensorPtr& updates,const HostTensorPtr& axis, const HostTensorPtr& out)
+    bool evaluate(const HostTensorPtr& data,const HostTensorPtr& indices,const HostTensorPtr& updates,const HostTensorPtr& axis, const HostTensorPtr& out,const int64_t normalized_axis)
     {
         using DataType = typename element_type_traits<DT>::value_type;
         using IndicesType = typename element_type_traits<IT>::value_type;
-        //int64_t normalized_axis = ngraph::normalize_axis(out.get(), *(axis->get_data_ptr<AT>()), static_cast<int64_t>(data->get_shape().size()));
-        //int64_t normalized_axis = ngraph::normalize_axis(out->get_data_ptr<DT>(), *(axis->get_data_ptr<AT>()), static_cast<int64_t>(data->get_shape().size()));
-		
-		int64_t axis2 =  *(axis->get_data_ptr<AT>());
-		const auto input_rank = static_cast<int64_t>(data->get_shape().size());
-        //const Rank input_rank;
-        // const Node* node;
-        //string node_description = data->get_data_ptr<DataType>()->description();
-        string node_description = "dont know how????"; 
-		
-
-        
-		//int64_t normalized_axis =  *(axis->get_data_ptr<AT>());
-		int64_t normalized_axis = ngraph::normalize_axis(node_description, axis2, input_rank);
 
         runtime::reference::scatter_elem_update<DataType,IndicesType>( data->get_data_ptr<DT>(), indices->get_data_ptr<IT>(),
             updates->get_data_ptr<DT>(),
@@ -173,7 +159,7 @@ namespace
         case element::Type_t::a: rc = evaluate<DT,IT, element::Type_t::a>
 
     template <element::Type_t DT, element::Type_t IT >
-    bool evaluate(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out)
+    bool evaluate(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out,const int64_t normalized_axis)
     {
         auto axis_type = arg3->get_element_type();
 
@@ -182,21 +168,21 @@ namespace
 
         switch (axis_type)
         {
-            TYPE_AXS_CASE(i8)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(i8)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(i16)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(i16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(i32)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(i32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(i64)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(i64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(u8)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(u8)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(u16)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(u16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(u32)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(u32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_AXS_CASE(u64)(arg0,arg1,arg2,arg3,out);
+            TYPE_AXS_CASE(u64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
         default: rc = false; break;
         }
@@ -208,7 +194,7 @@ namespace
 
 
     template <element::Type_t DT>
-    bool evaluate(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out)
+    bool evaluate(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out,const int64_t normalized_axis)
     {
         auto indices_type = arg1->get_element_type();
 
@@ -217,73 +203,54 @@ namespace
 
         switch (indices_type)
         {
-            TYPE_IND_CASE(i8)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(i8)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(i16)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(i16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(i32)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(i32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(i64)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(i64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(u8)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(u8)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(u16)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(u16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(u32)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(u32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_IND_CASE(u64)(arg0,arg1,arg2,arg3,out);
+            TYPE_IND_CASE(u64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
         default: rc = false; break;
         }
         return rc;
     }
-    /*
-    {
-        using T = typename element_type_traits<ET>::value_type;
-        std::vector<const T*> arg_bufs;
-        std::vector<Shape> arg_shapes;
-        Shape out_shape(args[0]->get_shape());
-        out_shape[concatenation_axis] = 0;
-        for (auto& input : args)
-        {
-            arg_bufs.push_back(input->get_data_ptr<ET>());
-            arg_shapes.push_back(input->get_shape());
-            out_shape[concatenation_axis] += arg_shapes.back()[concatenation_axis];
-        }
-        out->set_shape(out_shape);
-        runtime::reference::concat<T>(
-            arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out_shape, concatenation_axis);
-        return true;
-    }
-    */
 
-    bool evaluate_scatter_element_update(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out)
+    bool evaluate_scatter_element_update(const HostTensorPtr& arg0,const HostTensorPtr& arg1,const HostTensorPtr& arg2,const HostTensorPtr& arg3, const HostTensorPtr& out, const int64_t normalized_axis )
     {
         bool rc = true;
 
         switch (out->get_element_type())
         {
-            TYPE_CASE(i8)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(i8)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(i16)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(i16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(i32)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(i32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(i64)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(i64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(u8)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(u8)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(u16)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(u16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(u32)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(u32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(u64)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(u64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(bf16)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(bf16)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(f32)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(f32)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
-            TYPE_CASE(f64)(arg0,arg1,arg2,arg3,out);
+            TYPE_CASE(f64)(arg0,arg1,arg2,arg3,out,normalized_axis);
             break;
         default: rc = false; break;
         }
@@ -294,6 +261,22 @@ namespace
 
 bool op::v3::ScatterElementsUpdate::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    string str_des = this->description();
-    return evaluate_scatter_element_update(inputs[0], inputs[1], inputs[2],inputs[3], outputs[0]);
+    int64_t axis = 0;
+    switch (inputs[3]->get_element_type())
+    {
+    case element::Type_t::i8: axis = inputs[3]->get_data_ptr<element::Type_t::i8>()[0]; break;
+    case element::Type_t::i16: axis = inputs[3]->get_data_ptr<element::Type_t::i16>()[0]; break;
+    case element::Type_t::i32: axis = inputs[3]->get_data_ptr<element::Type_t::i32>()[0]; break;
+    case element::Type_t::i64: axis = inputs[3]->get_data_ptr<element::Type_t::i64>()[0]; break;
+    case element::Type_t::u8: axis = inputs[3]->get_data_ptr<element::Type_t::u8>()[0]; break;
+    case element::Type_t::u16: axis = inputs[3]->get_data_ptr<element::Type_t::u16>()[0]; break;
+    case element::Type_t::u32: axis = inputs[3]->get_data_ptr<element::Type_t::u32>()[0]; break;
+    case element::Type_t::u64: axis = inputs[3]->get_data_ptr<element::Type_t::u64>()[0]; break;
+    default: throw ngraph_error("axis element type is not integral data type");
+    }
+
+    const auto& input_rank = get_input_partial_shape(0).rank();
+    int64_t normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
+    
+    return evaluate_scatter_element_update(inputs[0], inputs[1], inputs[2],inputs[3], outputs[0],normalized_axis);
 }
