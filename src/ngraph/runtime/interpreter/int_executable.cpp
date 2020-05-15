@@ -75,6 +75,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
         {
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Unsqueeze: retval = true; break;
         default: break;
