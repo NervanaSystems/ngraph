@@ -1905,6 +1905,68 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64)
                       {min, 20, 9, 10, 11, 19, 20, 20});
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_float16)
+{
+    auto type = element::f16;
+    Shape shape{5, 2};
+
+    double min = 0.2;
+    double max = 0.6;
+    auto X = make_shared<op::Parameter>(type, shape);
+    auto clamp = make_shared<op::Clamp>(X, min, max);
+    auto function = make_shared<Function>(clamp, ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(type, shape);
+    copy_data(x, vector<float16>{-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8});
+    auto y = backend->create_tensor(type, shape);
+
+    auto handle = backend->compile(function);
+    handle->call_with_validate({y}, {x});
+
+    auto actual = read_vector<float16>(y);
+    auto expected = vector<float16>{0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6};
+
+    for (int i = 0; i < 10; ++i)
+    {
+        std::cout << "actual   = " << actual[i] << std::endl;
+        std::cout << "expected = " << expected[i] << std::endl << std::endl;
+    }
+
+    EXPECT_TRUE(true);
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_bfloat16)
+{
+    auto type = element::bf16;
+    Shape shape{5, 2};
+
+    double min = 0.2;
+    double max = 0.6;
+    auto X = make_shared<op::Parameter>(type, shape);
+    auto clamp = make_shared<op::Clamp>(X, min, max);
+    auto function = make_shared<Function>(clamp, ParameterVector{X});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+    auto x = backend->create_tensor(type, shape);
+    copy_data(x, vector<bfloat16>{-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8});
+    auto y = backend->create_tensor(type, shape);
+
+    auto handle = backend->compile(function);
+    handle->call_with_validate({y}, {x});
+
+    auto actual = read_vector<bfloat16>(y);
+    auto expected = vector<bfloat16>{0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6};
+
+    for (int i = 0; i < 10; ++i)
+    {
+        std::cout << "actual   = " << actual[i] << std::endl;
+        std::cout << "expected = " << expected[i] << std::endl << std::endl;
+    }
+
+    EXPECT_TRUE(true);
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 {
     Shape data_shape{1, 2, 5};

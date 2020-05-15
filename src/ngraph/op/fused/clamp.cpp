@@ -101,6 +101,11 @@ namespace
              double_to_int<uint64_t>(max, floor_func),
              count);
             break;
+            TYPE_CASE(f16)(arg, out, static_cast<float16>(min), static_cast<float16>(max), count);
+            break;
+            TYPE_CASE(bf16)
+            (arg, out, static_cast<bfloat16>(min), static_cast<bfloat16>(max), count);
+            break;
             TYPE_CASE(f32)(arg, out, static_cast<float>(min), static_cast<float>(max), count);
             break;
             TYPE_CASE(f64)(arg, out, min, max, count);
@@ -216,6 +221,18 @@ NodeVector op::Clamp::decompose_op() const
             make_shared<op::Constant>(type, shape, double_to_int<uint64_t>(m_min, ceil_func));
         clamp_max =
             make_shared<op::Constant>(type, shape, double_to_int<uint64_t>(m_max, floor_func));
+        break;
+    }
+    case element::Type_t::f16:
+    {
+        clamp_min = builder::make_constant(type, shape, static_cast<float16>(m_min));
+        clamp_max = builder::make_constant(type, shape, static_cast<float16>(m_max));
+        break;
+    }
+    case element::Type_t::bf16:
+    {
+        clamp_min = builder::make_constant(type, shape, static_cast<bfloat16>(m_min));
+        clamp_max = builder::make_constant(type, shape, static_cast<bfloat16>(m_max));
         break;
     }
     case element::Type_t::f32:
