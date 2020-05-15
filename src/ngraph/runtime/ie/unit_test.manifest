@@ -303,6 +303,8 @@ reduce_sum_keep_vector_zero
 reduce_sum_keep_matrix_rows_zero
 reduce_sum_dynamic
 reduce_sum_3d_eliminate_zero_dim_int32
+reduce_sum_keep_3d_eliminate_zero_dim_int32
+reduce_sum_keep_trivial_in_double
 reduce_sum_3d_eliminate_zero_dim
 reduce_sum_matrix_to_scalar_zero_by_zero
 reduce_sum_vector_zero
@@ -311,6 +313,7 @@ reduce_sum_matrix_rows_zero
 onnx_model_softmax_0D
 reduce_sum_keep_matrix_to_scalar_zero_by_zero
 reduce_sum_keep_matrix_cols_zero
+reduce_product_matrix_columns
 
 # accuracy
 reduce_sum_keep_stable_acc
