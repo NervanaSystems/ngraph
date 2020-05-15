@@ -58,16 +58,16 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
                                              const std::string& mode,
                                              float pad_value,
                                              const PadType& auto_pad)
-    : BinaryConvolution(data,
-                        kernel,
-                        strides,
-                        pads_begin,
-                        pads_end,
-                        dilations,
-                        mode_from_string(mode),
-                        pad_value,
-                        auto_pad)
+    : Op({data, kernel})
+    , m_strides(strides)
+    , m_dilations(dilations)
+    , m_pads_begin(pads_begin)
+    , m_pads_end(pads_end)
+    , m_mode(mode_from_string(mode))
+    , m_pad_value(pad_value)
+    , m_auto_pad(auto_pad)
 {
+    constructor_validate_and_infer_types();
 }
 
 void op::v1::BinaryConvolution::validate_and_infer_types()
