@@ -286,18 +286,18 @@ namespace
         }
     }
 
-    void get_result_shape(Node* this_ptr,
-                          Shape& arg_shape,
-                          Shape& target_shape,
-                          const op::BroadcastModeSpec& broadcast_spec,
-                          PartialShape& result_shape)
+    std::pair<bool, AxisSet> get_result_shape(Node* this_ptr,
+                                              Shape& arg_shape,
+                                              Shape& target_shape,
+                                              const op::BroadcastModeSpec& broadcast_spec,
+                                              PartialShape& result_shape)
     {
         // calculate result shape from target shape, arg0 shape and broadcast type
         if (broadcast_spec.m_type == op::BroadcastType::BIDIRECTIONAL)
         {
             // first get result shape and then axes, as for bidi axes_mapping cal
             get_result_shape_bidirectional(this_ptr, arg_shape, target_shape, result_shape);
-            auto bcast_axes = get_broadcast_axes_bidirectional(arg_shape, result_shape.to_shape());
+            return get_broadcast_axes_bidirectional(arg_shape, result_shape.to_shape());
         }
         else if (broadcast_spec.m_type == op::BroadcastType::NUMPY ||
                  broadcast_spec.m_type == op::BroadcastType::PDPD)
@@ -306,36 +306,14 @@ namespace
             // or cast v1 AutoBroadcast types to v3 BroadcastType
             op::util::BroadcastBase::get_result_shape_numpy_pdpd(
                 this_ptr, arg_shape, target_shape, broadcast_spec, result_shape);
-            auto bcast_axes = op::util::BroadcastBase::get_broadcast_axes_numpy_pdpd(
+            return op::util::BroadcastBase::get_broadcast_axes_numpy_pdpd(
                 arg_shape, result_shape.to_shape(), broadcast_spec);
         }
-        else
+        /*else
         {
             // for type NONE/EXPLICIT, result_shape = target_shape
-        }
+        }*/
     }
-
-    /*AxisSet& get_broadcast_axes()
-    {
-        if (get_input_size() == 2)
-        {
-            if (!get_broadcast_axes().first)
-            {
-                std::cout << "can't determine broadcast axes deterministically. CHECK: when can this
-    happen? \n";
-                //return false;
-            }
-            else
-            {
-                //Calculate from the arg0 shape and arg1 and target shape
-            }
-        }
-        else if (get_input_size() == 3)
-        {
-
-        }
-        return AxisSet{};
-    }*/
 }
 
 bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
@@ -349,21 +327,25 @@ bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTens
 
     // 2. if output shape is dynamic, calculate result_shape
     PartialShape result_shape;
+    std::pair<bool, AxisSet> pair_broadcast_axes;
     if (get_output_partial_shape(0).is_static())
     {
         result_shape = get_output_shape(0);
     }
     else
     {
-        // calculate result shape from target shape, arg0 shape and broadcast type
-        Shape arg0 = inputs[0]->get_shape();
-        get_result_shape(this, arg0, target_shape, get_broadcast_spec(), result_shape);
+        // calculate result shape from target shape, arg shape and broadcast type
+        Shape arg_shape = inputs[0]->get_shape();
+        pair_broadcast_axes =
+            get_result_shape(this, arg_shape, target_shape, get_broadcast_spec(), result_shape);
+        std::cout << " in bcast_v3 evaluate, pair_bcast_axes " << pair_broadcast_axes.first
+                  << ", second = " << pair_broadcast_axes.second << "\n";
     }
 
     // 3. if broadcast axis is dynamic, calculate here
     if (get_input_size() == 2)
     {
-        if (!get_broadcast_axes().first)
+        if (!pair_broadcast_axes.first)
         {
             std::cout << "can't determine broadcast axes deterministically. CHECK: when can this "
                          "happen? \n";
@@ -371,17 +353,7 @@ bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTens
         }
     }
 
-    // AxisSet axes_mapping = get_input_size() == 3 ? inputs[2] : get_broadcast_axes().second;
-
-    // Shape output_shape = get_broadcast_output_shape(inputs[0]->get_shape(),
-    // get_target_shape(inputs[1]), get_broadcast_spec());
-
-    /*if (get_input_size() == 3)
-        return evaluate_broadcast(inputs[0], outputs[0], get_broadcast_axes(), output_shape);
-    else if (get_input_size() == 2)
-        return ;
-    else*/
-    return evaluate_broadcast(inputs[0], outputs[0], get_broadcast_axes(), get_output_shape(0));
+    return evaluate_broadcast(inputs[0], outputs[0], pair_broadcast_axes, result_shape.to_shape());
 }
 
 namespace
