@@ -16,36 +16,36 @@
 
 #pragma once
 
-#include "ngraph/axis_set.hpp"
-#include "ngraph/op/util/arithmetic_reductions_keep_dims.hpp"
+#include "ngraph/op/op.hpp"
+#include "ngraph/op/util/scatter_nd_base.hpp"
 
 namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v3
         {
-            class NGRAPH_API ReduceMean : public util::ArithmeticReductionKeepDims
+            /// \brief Add updates to slices from inputs addressed by indices
+            class NGRAPH_API ScatterNDUpdate : public util::ScatterNDBase
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ReduceMean", 1};
+                static constexpr NodeTypeInfo type_info{"ScatterNDUpdate", 3};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
-                ReduceMean() = default;
+                ScatterNDUpdate() = default;
+                /// \param inputs Tensor
+                /// \param indices Index tensor: Data type must be `element::i32` or `element::i64`
+                /// \param updates Tensor: Must have same type as inputs
+                ScatterNDUpdate(const Output<Node>& inputs,
+                                const Output<Node>& indices,
+                                const Output<Node>& updates)
+                    : util::ScatterNDBase(inputs, indices, updates)
+                {
+                }
 
-                /// \param arg The tensor to be summed.
-                /// \param reduction_axes The axis positions (0-based) to be eliminated.
-                /// \param keep_dims If set to 1 it holds axes that are used for reduction.
-                ReduceMean(const Output<Node>& arg,
-                           const Output<Node>& reduction_axes,
-                           bool keep_dims = false);
-
-                size_t get_version() const override { return 1; }
-                std::shared_ptr<Node>
+                virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
-
-                bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
             };
         }
+        using v3::ScatterNDUpdate;
     }
 }
