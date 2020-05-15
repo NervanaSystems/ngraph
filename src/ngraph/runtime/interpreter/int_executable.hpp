@@ -337,8 +337,8 @@ protected:
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] =
-                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
+                m_states[&node] = std::unique_ptr<BernoulliRNGState>(
+                    new BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
@@ -828,14 +828,17 @@ protected:
                               lrn->get_nsize());
             break;
         }
-        case OP_TYPEID::Max:
+        case OP_TYPEID::MatMul:
         {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            reference::max<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              max->get_reduction_axes());
+            const op::MatMul* matmul = static_cast<const op::MatMul*>(&node);
+            reference::matmul<T>(args[0]->get_data_ptr<const T>(),
+                                 args[1]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<T>(),
+                                 node.get_input_shape(0),
+                                 node.get_input_shape(1),
+                                 node.get_output_shape(0),
+                                 matmul->get_transpose_a(),
+                                 matmul->get_transpose_b());
             break;
         }
         case OP_TYPEID::MaxPool:
@@ -866,16 +869,6 @@ protected:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
-            break;
-        }
-        case OP_TYPEID::Min:
-        {
-            const op::Min* min = static_cast<const op::Min*>(&node);
-            reference::min<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              min->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Negative:
@@ -916,16 +909,6 @@ protected:
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
-            break;
-        }
-        case OP_TYPEID::Product:
-        {
-            const op::Product* product = static_cast<const op::Product*>(&node);
-            reference::product<T>(args[0]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_output_shape(0),
-                                  product->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Quantize:
@@ -1428,16 +1411,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Sum:
-        {
-            const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            reference::sum<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              sum->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::Tan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1488,6 +1461,7 @@ protected:
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
@@ -1541,7 +1515,6 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
@@ -1555,13 +1528,16 @@ protected:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
         case OP_TYPEID::MatMul:
+        case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
+        case OP_TYPEID::Product:
         case OP_TYPEID::Range:
         case OP_TYPEID::Reshape:
         case OP_TYPEID::Result:
@@ -1569,6 +1545,7 @@ protected:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::Softmax:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Sum:
         case OP_TYPEID::Subtract:
         case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Xor:

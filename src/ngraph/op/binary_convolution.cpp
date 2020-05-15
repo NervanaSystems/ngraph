@@ -34,7 +34,7 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
                                              const CoordinateDiff& pads_begin,
                                              const CoordinateDiff& pads_end,
                                              const Strides& dilations,
-                                             const BinaryConvolutionMode& mode,
+                                             BinaryConvolutionMode mode,
                                              float pad_value,
                                              const PadType& auto_pad)
     : Op({data, kernel})
@@ -47,27 +47,6 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
     , m_auto_pad(auto_pad)
 {
     constructor_validate_and_infer_types();
-}
-
-op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
-                                             const Output<Node>& kernel,
-                                             const Strides& strides,
-                                             const CoordinateDiff& pads_begin,
-                                             const CoordinateDiff& pads_end,
-                                             const Strides& dilations,
-                                             const std::string& mode,
-                                             float pad_value,
-                                             const PadType& auto_pad)
-    : BinaryConvolution(data,
-                        kernel,
-                        strides,
-                        pads_begin,
-                        pads_end,
-                        dilations,
-                        mode_from_string(mode),
-                        pad_value,
-                        auto_pad)
-{
 }
 
 void op::v1::BinaryConvolution::validate_and_infer_types()
