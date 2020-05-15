@@ -149,7 +149,9 @@ namespace ngraph
                 bool m_ceil_mode{false};
 
             private:
-                void update_auto_padding(const PartialShape& in_shape);
+                void update_auto_padding(const PartialShape& in_shape,
+                                         Shape& new_padding_above,
+                                         Shape& new_padding_below);
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
@@ -299,7 +301,9 @@ namespace ngraph
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
 
             private:
-                void update_auto_padding(const PartialShape& in_shape);
+                void update_auto_padding(const PartialShape& in_shape,
+                                         Shape& new_pads_end,
+                                         Shape& new_pads_begin);
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op

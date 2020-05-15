@@ -89,7 +89,7 @@ void op::v0::MaxPool::validate_and_infer_types()
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
 
-    update_auto_padding(arg_shape);
+    update_auto_padding(arg_shape, m_padding_above, m_padding_below);
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -108,7 +108,9 @@ void op::v0::MaxPool::validate_and_infer_types()
                                                   m_ceil_mode));
 }
 
-void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape)
+void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape,
+                                          Shape& new_padding_above,
+                                          Shape& new_padding_below)
 {
     if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
     {
@@ -122,13 +124,15 @@ void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape)
                                m_pad_type,
                                padding_above,
                                padding_below);
-            m_padding_above = Shape(padding_above.begin(), padding_above.end());
-            m_padding_below = Shape(padding_below.begin(), padding_below.end());
+            new_padding_above = Shape(padding_above.begin(), padding_above.end());
+            new_padding_below = Shape(padding_below.begin(), padding_below.end());
         }
     }
 }
 
-void op::v1::MaxPool::update_auto_padding(const PartialShape& in_shape)
+void op::v1::MaxPool::update_auto_padding(const PartialShape& in_shape,
+                                          Shape& new_pads_end,
+                                          Shape& new_pads_begin)
 {
     if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
     {
@@ -142,8 +146,8 @@ void op::v1::MaxPool::update_auto_padding(const PartialShape& in_shape)
                                m_auto_pad,
                                pads_end,
                                pads_begin);
-            m_pads_end = Shape(pads_end.begin(), pads_end.end());
-            m_pads_begin = Shape(pads_begin.begin(), pads_begin.end());
+            new_pads_end = Shape(pads_end.begin(), pads_end.end());
+            new_pads_begin = Shape(pads_begin.begin(), pads_begin.end());
         }
     }
 }
@@ -361,7 +365,7 @@ void op::v1::MaxPool::validate_and_infer_types()
 
     const PartialShape& arg_shape = get_input_partial_shape(0);
 
-    update_auto_padding(arg_shape);
+    update_auto_padding(arg_shape, m_pads_end, m_pads_begin);
 
     // infer_batched_forward_pooling wants CoordinateDiffs for these, while the pooling ops for
     // now still take Shape (no negative padding).
@@ -571,9 +575,11 @@ namespace
 bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     auto arg_shape = inputs[0]->get_partial_shape();
-    update_auto_padding(arg_shape);
-    CoordinateDiff padding_below(get_padding_below().begin(), get_padding_below().end());
-    CoordinateDiff padding_above(get_padding_above().begin(), get_padding_above().end());
+    auto padding_below_s = get_padding_below();
+    auto padding_above_s = get_padding_above();
+    update_auto_padding(arg_shape, padding_above_s, padding_below_s);
+    CoordinateDiff padding_below(padding_below_s.begin(), padding_below_s.end());
+    CoordinateDiff padding_above(padding_above_s.begin(), padding_above_s.end());
     auto out_shape = infer_batched_pooling_forward(this,
                                                    arg_shape,
                                                    padding_below,
@@ -594,9 +600,11 @@ bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensor
 bool op::v1::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     auto arg_shape = inputs[0]->get_partial_shape();
-    update_auto_padding(arg_shape);
-    CoordinateDiff pads_begin(get_pads_begin().begin(), get_pads_begin().end());
-    CoordinateDiff pads_end(get_pads_end().begin(), get_pads_end().end());
+    auto pads_begin_s = get_pads_begin();
+    auto pads_end_s = get_pads_end();
+    update_auto_padding(arg_shape, pads_begin_s, pads_end_s);
+    CoordinateDiff pads_begin(pads_begin_s.begin(), pads_begin_s.end());
+    CoordinateDiff pads_end(pads_end_s.begin(), pads_end_s.end());
     auto out_shape = infer_batched_pooling_forward(this,
                                                    arg_shape,
                                                    pads_begin,
