@@ -59,8 +59,8 @@ namespace ngraph
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 virtual std::pair<bool, AxisSet> get_broadcast_axes() const;
 
-                bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                // virtual bool evaluate(const HostTensorVector& outputs,
+                //              const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
