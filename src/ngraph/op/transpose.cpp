@@ -94,11 +94,11 @@ void op::v1::Transpose::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 
 namespace
 {
-    template <typename T>
-    std::vector<T> get_vector(const HostTensorPtr& arg)
+    template <element::Type_t ET>
+    std::vector<int64_t> get_vector(const HostTensorPtr& arg)
     {
-        std::vector<T> rc;
-        const T* p = static_cast<const T*>(arg->get_data_ptr());
+        std::vector<int64_t> rc;
+        auto p = arg->get_data_ptr<ET>();
         for (size_t i = 0; i < shape_size(arg->get_shape()); i++)
         {
             rc.push_back(p[i]);
@@ -110,57 +110,26 @@ namespace
     bool evaluate(const HostTensorPtr& arg1, const HostTensorPtr& arg2, const HostTensorPtr& out)
     {
         element::Type_t axis_type = arg2->get_element_type();
+
         std::vector<int64_t> axis_order;
         switch (axis_type)
         {
-        case element::Type_t::i8:
-        {
-            auto vec = get_vector<int8_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::i16:
-        {
-            auto vec = get_vector<int16_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::i32:
-        {
-            auto vec = get_vector<int32_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::i64:
-        {
-            auto vec = get_vector<int64_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::u8:
-        {
-            auto vec = get_vector<uint8_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::u16:
-        {
-            auto vec = get_vector<uint16_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::u32:
-        {
-            auto vec = get_vector<uint32_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
-        case element::Type_t::u64:
-        {
-            auto vec = get_vector<uint64_t>(arg2);
-            axis_order = std::vector<int64_t>(vec.begin(), vec.end());
-            break;
-        }
+        case element::Type_t::i8: axis_order = get_vector<element::Type_t::i8>(arg2); break;
+
+        case element::Type_t::i16: axis_order = get_vector<element::Type_t::i16>(arg2); break;
+
+        case element::Type_t::i32: axis_order = get_vector<element::Type_t::i32>(arg2); break;
+
+        case element::Type_t::i64: axis_order = get_vector<element::Type_t::i64>(arg2); break;
+
+        case element::Type_t::u8: axis_order = get_vector<element::Type_t::u8>(arg2); break;
+
+        case element::Type_t::u16: axis_order = get_vector<element::Type_t::u16>(arg2); break;
+
+        case element::Type_t::u32: axis_order = get_vector<element::Type_t::u32>(arg2); break;
+
+        case element::Type_t::u64: axis_order = get_vector<element::Type_t::u64>(arg2); break;
+
         default: throw ngraph_error("axis element type is not integral data type");
         }
         AxisVector in_axis_order(shape_size(arg2->get_shape()));

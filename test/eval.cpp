@@ -189,9 +189,6 @@ void test_eval(shared_ptr<Function> fun,
     std::vector<std::vector<IN_T>> perms{{0, 1}, {1, 0}, {2, 1, 0}};
     for (size_t i = 0; i < x_shapes.size(); i++)
     {
-        // If I have the result_tensor defined outside the loop, we fail
-        // dynamic shape vs real shape check for second test case onwards.
-        // Please confirm that we are NOT allowed to reuse result tensors! TBD in code review
         auto result_tensor = make_shared<HostTensor>();
         ASSERT_TRUE(fun->evaluate({result_tensor},
                                   {make_host_tensor<element::Type_t::f32>(x_shapes[i], inputs[i]),
