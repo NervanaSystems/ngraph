@@ -181,20 +181,11 @@ namespace
 
         Shape arg0_shape = arg0->get_shape();
         Shape arg1_shape = arg1->get_shape();
-        PartialShape output_pshape = output->get_partial_shape();
-        Shape output_shape;
 
-        if (output_pshape.is_static())
-        {
-            output_shape = output_pshape.get_shape();
-        }
-        else
-        {
-            output_shape =
-                evaluate_matmul_output_shape(arg0_shape, arg1_shape, transpose_a, transpose_b);
-            output->set_shape(output_shape);
-            output->set_element_type(ET);
-        }
+        Shape output_shape =
+            evaluate_matmul_output_shape(arg0_shape, arg1_shape, transpose_a, transpose_b);
+        output->set_element_type(arg0->get_element_type());
+        output->set_shape(output_shape);
 
         runtime::reference::matmul<T>(arg0->get_data_ptr<ET>(),
                                       arg1->get_data_ptr<ET>(),
