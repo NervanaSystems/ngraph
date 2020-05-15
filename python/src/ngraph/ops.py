@@ -987,7 +987,7 @@ def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
     return _get_node_factory().create('Multiply',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1048,7 +1048,7 @@ def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('Power',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 # Logical ops
@@ -1066,7 +1066,7 @@ def equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('Equal',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1083,7 +1083,7 @@ def not_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('NotEqual',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1100,7 +1100,7 @@ def greater(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('Greater',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1118,7 +1118,7 @@ def greater_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('GreaterEqual',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1135,7 +1135,7 @@ def less(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('Less',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1153,7 +1153,7 @@ def less_equal(left_node, right_node, auto_broadcast='NUMPY', name=None):
     """
     return _get_node_factory().create('LessEqual',
                                       [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+                                      {'auto_broadcast': auto_broadcast.upper()})
 
 
 @binary_op
@@ -1313,7 +1313,7 @@ def fake_quantize(data, input_low, input_high, output_low, output_high,
     """
     return _get_node_factory().create('FakeQuantize',
                                       as_nodes(data, input_low, input_high, output_low, output_high),
-                                      {'levels': levels, 'auto_broadcast': auto_broadcast})
+                                      {'levels': levels, 'auto_broadcast': auto_broadcast.upper()})
 
 
 @nameable_op
