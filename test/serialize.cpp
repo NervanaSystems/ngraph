@@ -502,7 +502,28 @@ TEST(serialize, tensor_iterator_raw)
 
     ngraph::test::NodeBuilder builder;
     builder.save_node(tensor_iterator);
-    // auto g_tensor_iterator = builder.create();
+    auto g_tensor_iterator = as_type_ptr<op::v0::TensorIterator>(builder.create());
+    ASSERT_TRUE(g_tensor_iterator);
+    auto& inputs = tensor_iterator->get_input_descriptions();
+    auto& g_inputs = g_tensor_iterator->get_input_descriptions();
+    ASSERT_EQ(inputs.size(), g_inputs.size());
+    for (size_t i = 0; i < tensor_iterator->get_input_descriptions().size(); ++i)
+    {
+        auto& val = inputs[i];
+        auto& g_val = g_inputs[i];
+        ASSERT_EQ(val->get_type_info(), g_val->get_type_info());
+        ASSERT_EQ(val->m_input_index, g_val->m_input_index);
+        ASSERT_EQ(val->m_body_parameter_index, g_val->m_body_parameter_index);
+    }
+    auto& outputs = tensor_iterator->get_output_descriptions();
+    auto& g_outputs = g_tensor_iterator->get_output_descriptions();
+    ASSERT_EQ(outputs.size(), g_outputs.size());
+    for (size_t i = 0; i < tensor_iterator->get_output_descriptions().size(); ++i)
+    {
+        auto& val = outputs[i];
+        auto& g_val = g_outputs[i];
+        ASSERT_EQ(val->get_type_info(), g_val->get_type_info());
+    }
 }
 
 TEST(serialize, tensor_iterator_lstm)

@@ -42,10 +42,8 @@ namespace ngraph
                 type_info_name = type_info.name;
                 type_info_version = type_info.version;
             }
-            visitor.start_structure("type_info");
             visitor.on_attribute("name", type_info_name);
             visitor.on_attribute("version", type_info_version);
-            visitor.finish_structure();
             if (!type_info_name.empty() && !m_ref)
             {
                 m_ref = std::shared_ptr<BASE_TYPE>(FactoryRegistry<BASE_TYPE>::get().create(
@@ -53,7 +51,9 @@ namespace ngraph
             }
             if (m_ref)
             {
+                visitor.start_structure("value");
                 m_ref->visit_attributes(visitor);
+                visitor.finish_structure();
             }
             visitor.finish_structure();
             return true;

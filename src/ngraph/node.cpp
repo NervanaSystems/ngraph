@@ -1179,21 +1179,29 @@ AttributeAdapter<NodeVector>::AttributeAdapter(NodeVector& ref)
 bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor,
                                                     const std::string& name)
 {
-    vector<AttributeVisitor::node_id_t> original_ids;
-    for (auto elt : m_ref)
+    visitor.start_structure(name);
+    int64_t size = m_ref.size();
+    visitor.on_attribute("size", size);
+    if (size != m_ref.size())
     {
-        original_ids.push_back(visitor.get_registered_node_id(elt));
+        m_ref.resize(size);
     }
-    vector<AttributeVisitor::node_id_t> ids(original_ids);
-    visitor.on_attribute(name, ids);
-    if (original_ids != ids)
+    ostringstream index;
+    for (int64_t i = 0; i < size; i++)
     {
-        NodeVector new_nodes;
-        for (auto id : ids)
+        index.clear();
+        index << i;
+        string id;
+        if (m_ref[i])
         {
-            new_nodes.push_back(visitor.get_registered_node(id));
+            id = visitor.get_registered_node_id(m_ref[i]);
         }
-        m_ref = new_nodes;
+        visitor.on_attribute(index.str(), id);
+        if (!m_ref[i])
+        {
+            m_ref[i] = visitor.get_registered_node(id);
+        }
     }
+    visitor.finish_structure();
     return true;
 }

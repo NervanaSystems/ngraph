@@ -243,6 +243,10 @@ namespace ngraph
         visitor.start_structure(name);
         int64_t size = m_ref.size();
         visitor.on_attribute("size", size);
+        if (size != m_ref.size())
+        {
+            m_ref.resize(size);
+        }
         ostringstream index;
         for (int64_t i = 0; i < size; i++)
         {
@@ -291,6 +295,10 @@ namespace ngraph
         visitor.start_structure(name);
         int64_t size = m_ref.size();
         visitor.on_attribute("size", size);
+        if (size != m_ref.size())
+        {
+            m_ref.resize(size);
+        }
         ostringstream index;
         for (int64_t i = 0; i < size; i++)
         {
@@ -305,6 +313,7 @@ namespace ngraph
 
 bool op::v0::TensorIterator::visit_attributes(AttributeVisitor& visitor)
 {
+#if 0
     // We assume the ops in body lambda are alread registered
     ParameterVector body_parameters;
     ResultVector body_results;
@@ -319,6 +328,10 @@ bool op::v0::TensorIterator::visit_attributes(AttributeVisitor& visitor)
     {
         m_body = make_shared<BodyLambda>(body_results, body_parameters);
     }
+#else
+    // Handled manually
+    m_body = make_shared<BodyLambda>();
+#endif
     visitor.on_attribute("input_descriptions", m_input_descriptions);
     visitor.on_attribute("output_descriptions", m_output_descriptions);
 
