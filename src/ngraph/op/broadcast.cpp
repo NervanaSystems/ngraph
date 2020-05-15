@@ -129,6 +129,14 @@ void op::v3::Broadcast::validate_and_infer_types()
                     result_shape[i] = std::max(arg_shape[i], target_shape[i]);
                 }
             }
+        } else {
+            auto target_shape_length = input_value(1).get_partial_shape()[0].get_length();
+            auto rank = input_value(0).get_partial_shape().rank();
+            if (rank.is_dynamic()) {
+                result_shape = PartialShape::dynamic();
+            } else {
+                result_shape = PartialShape::dynamic(std::max(rank.get_length(), target_shape_length));
+            }
         }
     }
     set_input_is_relevant_to_shape(0); // arg - Result element type

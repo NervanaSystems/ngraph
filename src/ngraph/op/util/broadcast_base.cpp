@@ -75,6 +75,13 @@ void op::util::BroadcastBase::validate_and_infer_types()
     }
 
     PartialShape result_shape{PartialShape::dynamic()};
+    auto target_shape_length = input_value(1).get_partial_shape()[0].get_length();
+    auto rank = input_value(0).get_partial_shape().rank();
+    if (rank.is_dynamic()) {
+        result_shape = PartialShape::dynamic();
+    } else {
+        result_shape = PartialShape::dynamic(std::max(rank.get_length(), target_shape_length));
+    }
 
     const auto shape_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
 

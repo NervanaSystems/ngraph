@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
 #include "constant_folding.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/runtime/opt_kernel/broadcast.hpp"
@@ -53,7 +54,15 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
         }
         else
         {
-            throw ngraph_error("Unexpected failure due to inability to obtain broadcast axes.");
+            ngraph::AxisSet axisSet;
+            for (std::int64_t i = 0; i < out_shape.size(); ++i) {
+                axisSet.insert(i);
+            }
+            runtime::opt_kernel::broadcast<T>(constant->get_data_ptr<T>(),
+                data_ptr,
+                constant->get_shape(),
+                out_shape,
+                axisSet);
         }
     }
     else if (auto broadcast_v0 = as_type_ptr<op::v0::Broadcast>(broadcast))
@@ -63,6 +72,31 @@ shared_ptr<op::Constant> fold_constant_broadcast(shared_ptr<op::Constant> consta
                                           constant->get_shape(),
                                           out_shape,
                                           broadcast_v0->get_broadcast_axes());
+    }
+    else if (auto broadcast_v3 = as_type_ptr<op::v3::Broadcast>(broadcast))
+    {
+        auto static_bcast_axes = broadcast_v3->get_broadcast_axes();
+        if (static_bcast_axes.first)
+        {
+            runtime::opt_kernel::broadcast<T>(constant->get_data_ptr<T>(),
+                data_ptr,
+                constant->get_shape(),
+                out_shape,
+                static_bcast_axes.second);
+        }
+        else
+        {
+            ngraph::AxisSet axisSet;
+            for (std::int64_t i = 0; i < out_shape.size(); ++i) {
+                axisSet.insert(i);
+            }
+            runtime::opt_kernel::broadcast<T>(constant->get_data_ptr<T>(),
+                data_ptr,
+                constant->get_shape(),
+                out_shape,
+                axisSet);
+//            throw ngraph_error("Unexpected failure due to inability to obtain broadcast axes.");
+        }
     }
     else
     {
@@ -85,6 +119,16 @@ void pass::ConstantFolding::construct_constant_broadcast()
         make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
     auto broadcast_v1 =
         make_shared<op::v1::Broadcast>(constant_label, constant_shape, constant_axes);
+
+    auto broadcast_v1_1 =
+        make_shared<op::v1::Broadcast>(constant_label, constant_shape);
+
+    auto broadcast_v3 =
+        make_shared<op::v3::Broadcast>(constant_label, constant_shape, constant_axes);
+
+
+    auto broadcast_v3_1 =
+        make_shared<op::v3::Broadcast>(constant_label, constant_shape);
 
     auto constant_broadcast_callback = [&, constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_broadcast_callback against node = "
@@ -173,6 +217,21 @@ void pass::ConstantFolding::construct_constant_broadcast()
 
     this->add_matcher(
         make_shared<pattern::Matcher>(broadcast_v1, "ConstantFolding.ConstantBroadcastV1"),
+        constant_broadcast_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
+
+    this->add_matcher(
+        make_shared<pattern::Matcher>(broadcast_v3, "ConstantFolding.ConstantBroadcastV3"),
+        constant_broadcast_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
+
+    this->add_matcher(
+        make_shared<pattern::Matcher>(broadcast_v3_1, "ConstantFolding.ConstantBroadcastV3"),
+        constant_broadcast_callback,
+        PassProperty::CHANGE_DYNAMIC_STATE);
+
+    this->add_matcher(
+        make_shared<pattern::Matcher>(broadcast_v1_1, "ConstantFolding.ConstantBroadcastV3"),
         constant_broadcast_callback,
         PassProperty::CHANGE_DYNAMIC_STATE);
 }
