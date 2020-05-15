@@ -19,22 +19,17 @@ from typing import List, Optional, Set, Union
 
 import numpy as np
 
-from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (GRN, MVN, ArgMax, ArgMin, BatchNormInference,
-                            BatchNormTraining, Broadcast, Constant,
-                            DepthToSpace, Dequantize, Dot, Gelu, Gemm,
-                            GetOutputElement, HardSigmoid, Parameter, Quantize,
-                            QuantizedConvolution, QuantizedDot, ReplaceSlice,
-                            RNNCell, ScaleShift, ShuffleChannels, Slice,
-                            SpaceToDepth)
-from ngraph.utils.broadcasting import get_broadcast_axes
+from ngraph.impl import (AxisSet, Node, Shape)
+from ngraph.impl.op import (GRN, MVN, Constant, DepthToSpace, Gelu,
+                            GetOutputElement, HardSigmoid, Parameter,
+                            ShuffleChannels, SpaceToDepth)
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.node_factory import NodeFactory
 from ngraph.utils.types import (NodeInput, NumericData, NumericType,
                                 ScalarData, TensorShape, as_node, as_nodes,
-                                get_element_type, get_element_type_str,
-                                make_constant_node)
+                                get_dtype, get_element_type,
+                                get_element_type_str, make_constant_node)
 
 
 def _get_node_factory(opset_version=None):  # type: (Optional[str]) -> NodeFactory
@@ -362,16 +357,228 @@ def group_convolution_backprop_data(data,                 # type: Node
 
 
 @nameable_op
-def rnn_cell(X,                      # type: Node
-             H_t,                    # type: Node
-             W,                      # type: Node
-             R,                      # type: Node
-             B,                      # type: Node
+def lstm_cell(X,                       # type: NodeInput
+              initial_hidden_state,    # type: NodeInput
+              initial_cell_state,      # type: NodeInput
+              W,                       # type: NodeInput
+              R,                       # type: NodeInput
+              B,                       # type: NodeInput
+              hidden_size,             # type: int
+              activations=None,        # type: List[str]
+              activations_alpha=None,  # type: List[float]
+              activations_beta=None,   # type: List[float]
+              clip=0.,                 # type: float
+              name=None,               # type: str
+              ):
+    # type: (...) -> Node
+    """Return a node which performs LSTMCell operation.
+
+    :param X: The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state: The hidden state tensor with shape: [batch_size, hidden_size].
+    :param initial_cell_state: The cell state tensor with shape: [batch_size, hidden_size].
+    :param W: The weight tensor with shape: [4*hidden_size, input_size].
+    :param R: The recurrence weight tensor with shape: [4*hidden_size, hidden_size].
+    :param B: The bias tensor for gates with shape: [4*hidden_size].
+    :param hidden_size: Specifies hidden state size.
+    :param activations: The list of three activation functions for gates.
+    :param activations_alpha: The list of alpha parameters for activation functions.
+    :param activations_beta: The list of beta parameters for activation functions.
+    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
+    :param name: An optional name of the output node.
+
+    :return: The new node represents LSTMCell. Node outputs count: 2.
+    """
+    if activations is None:
+        activations = ['sigmoid', 'tanh', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, W, R, B)
+
+    # P - nGraph additional input, no such input in the OV spec
+    peepholes_count = 3  # nGraph default
+    peepholes_shape = [peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape)  # nGraph default
+    data_dtype = get_dtype(node_inputs[0].get_output_element_type(0))
+    default_P = make_constant_node(peepholes_array, dtype=data_dtype)
+    node_inputs.append(default_P)
+
+    weights_format = 'fico'  # IE LSTMWeightsFormat, no such attribute in the OV spec
+    input_forget = False  # nGraph default, no such attribute in the OV spec
+
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  'weights_format': weights_format,
+                  'input_forget': input_forget,
+                  }
+    return _get_node_factory().create('LSTMCell', node_inputs, attributes)
+
+
+@nameable_op
+def lstm_sequence(X,                       # type: NodeInput
+                  initial_hidden_state,    # type: NodeInput
+                  initial_cell_state,      # type: NodeInput
+                  sequence_lengths,        # type: NodeInput
+                  W,                       # type: NodeInput
+                  R,                       # type: NodeInput
+                  B,                       # type: NodeInput
+                  hidden_size,             # type: int
+                  direction,               # type: str
+                  activations=None,        # type: List[str]
+                  activations_alpha=None,  # type: List[float]
+                  activations_beta=None,   # type: List[float]
+                  clip=0.,                 # type: float
+                  name=None,               # type: str
+                  ):
+    # type: (...) -> Node
+    """Return a node which performs LSTMSequence operation.
+
+    :param X: The input tensor. Shape: [seq_length, batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor.
+                                    Shape: [num_directions, batch_size, hidden_size].
+    :param initial_cell_state:      The cell state tensor.
+                                    Shape: [num_directions, batch_size, hidden_size].
+    :param sequence_lengths:        Specifies real sequence lengths for each batch element.
+                                    Shape: [batch_size]. Integer type.
+    :param W: Tensor with weights for matrix multiplication operation with input portion of data.
+              Shape: [num_directions, 4*hidden_size, input_size].
+    :param R: The tensor with weights for matrix multiplication operation with hidden state.
+              Shape: [num_directions, 4*hidden_size, input_size].
+    :param B: The tensor with biases.
+              Shape: [num_directions, 4*hidden_size, hidden_size].
+    :param hidden_size: Specifies hidden state size.
+    :param direction: Specifies if the RNN is forward, reverse, or bidirectional.
+    :param activations: The list of three activation functions for gates.
+    :param activations_alpha: The list of alpha parameters for activation functions.
+    :param activations_beta: The list of beta parameters for activation functions.
+    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
+    :param name: An optional name of the output node.
+
+    :return: The new node represents LSTMSequence. Node outputs count: 3.
+    """
+    if activations is None:
+        activations = ['sigmoid', 'tanh', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    node_inputs = as_nodes(
+        X,
+        initial_hidden_state,
+        initial_cell_state,
+        sequence_lengths,
+        W,
+        R,
+        B)
+
+    # P - nGraph additional input, no such input in the OV spec
+    peepholes_count = 3  # nGraph default
+    if direction.lower() == 'bidirectional':
+        num_directions = 2
+    else:
+        num_directions = 1
+    peepholes_shape = [num_directions, peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape)  # nGraph default
+    data_dtype = get_dtype(node_inputs[0].get_output_element_type(0))
+    default_P = make_constant_node(peepholes_array, dtype=data_dtype)
+    node_inputs.append(default_P)
+
+    weights_format = 'fico'  # IE LSTMWeightsFormat, no such attribute in the OV spec
+    input_forget = False  # nGraph default, no such attribute in the OV spec
+
+    attributes = {'hidden_size': hidden_size,
+                  'direction': direction.lower(),
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  'weights_format': weights_format,
+                  'input_forget': input_forget,
+                  }
+    return _get_node_factory().create('LSTMSequence', node_inputs, attributes)
+
+
+@nameable_op
+def gru_cell(X,                                  # type: NodeInput
+             initial_hidden_state,               # type: NodeInput
+             W,                                  # type: NodeInput
+             R,                                  # type: NodeInput
+             B,                                  # type: NodeInput
+             hidden_size,                        # type: int
+             activations=None,                   # type: List[str]
+             activations_alpha=None,             # type: List[float]
+             activations_beta=None,              # type: List[float]
+             clip=0.,                            # type: float
+             linear_before_reset=False,          # type: bool
+             name=None,                          # type: str
+             ):
+    # type: (...) -> Node
+    """Perform GRUCell operation on the tensor from input node.
+
+    GRUCell represents a single GRU Cell that computes the output
+    using the formula described in the paper: https://arxiv.org/abs/1406.1078
+
+    Note this class represents only single *cell* and not whole *layer*.
+
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weights for matrix multiplication, gate order: zrh.
+                                    Shape: [3*hidden_size, input_size].
+    :param R:                       The recurrence weights for matrix multiplication.
+                                    Shape: [3*hidden_size, hidden_size].
+    :param B:                       The sum of biases (weight and recurrence).
+                                    For linear_before_reset set True the shape is [4*hidden_size].
+                                    Otherwise the shape is [3*hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param linear_before_reset:     Flag denotes if the layer behaves according to the modification
+                                    of GRUCell described in the formula in the ONNX documentation.
+    :param name:                    Optional output node name.
+    :returns:   The new node performing a GRUCell operation on tensor from input node.
+    """
+    if activations is None:
+        activations = ['relu', 'sigmoid', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'linear_before_reset': linear_before_reset,
+                  'clip': clip,
+                  }
+    return _get_node_factory().create('GRUCell', input_nodes, attributes)
+
+
+@nameable_op
+def rnn_cell(X,                      # type: NodeInput
+             initial_hidden_state,   # type: NodeInput
+             W,                      # type: NodeInput
+             R,                      # type: NodeInput
+             B,                      # type: NodeInput
              hidden_size,            # type: int
              activations,            # type: List[str]
-             activation_alpha,       # type: List[float]
-             activation_beta,        # type: List[float]
-             clip,                   # type: float
+             activations_alpha,      # type: List[float]
+             activations_beta,       # type: List[float]
+             clip=0.,                # type: float
              name=None,              # type: str
              ):
     # type: (...) -> Node
@@ -382,52 +589,40 @@ def rnn_cell(X,                      # type: Node
 
     Note this class represents only single *cell* and not whole RNN *layer*.
 
-    :param      X:                 The input tensor with shape: [batch_size, input_size].
-    :param      H_t:               The hidden state tensor at current time step with shape:
-                                   [batch_size, hidden_size].
-    :param      W:                 The weight tensor with shape: [hidden_size, input_size].
-    :param      R:                 The recurrence weight tensor with shape: [hidden_size,
-                                   hidden_size].
-    :param      B:                 The bias tensor for input gate with shape: [2*hidden_size].
-    :param      hidden_size:       The number of hidden units for recurrent cell.
-    :param      activations:       The vector of activation functions used inside recurrent cell.
-    :param      activation_alpha:  The vector of alpha parameters for activation functions in
-                                   order respective to activation list.
-    :param      activation_beta:   The vector of beta parameters for activation functions in order
-                                   respective to activation list.
-    :param      clip:              The value defining clipping range [-clip, clip] on input of
-                                   activation functions.
-    :param      name:              Optional output node name.
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weight tensor with shape: [hidden_size, input_size].
+    :param R:                       The recurrence weight tensor with shape: [hidden_size,
+                                    hidden_size].
+    :param B:                       The bias tensor for input gate with shape: [2*hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param name:                    Optional output node name.
     :returns:   The new node performing a RNNCell operation on tensor from input node.
     """
-    return RNNCell(X,
-                   H_t,
-                   W,
-                   R,
-                   B,
-                   hidden_size,
-                   activations,
-                   activation_alpha,
-                   activation_beta,
-                   clip)
+    if activations is None:
+        activations = ['sigmoid', 'tanh']
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
 
-
-@nameable_op
-def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str) -> Node
-    r"""Perform ScaleShift transformation on input node.
-
-    Computes ScaleShift:
-
-    .. math:: Y = scale\cdot data + shift
-
-
-    :param data: The node with data tensor.
-    :param scale: The node with data tensor that scale input data.
-    :param shift: The node with data tensor that shift input data.
-    :param name: Optional output node name.
-    :return: The new node performing a ScaleShift operation on input tensor.
-    """
-    return ScaleShift(data, scale, shift)
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {'hidden_size': hidden_size,
+                  'activations': activations,
+                  'activations_alpha': activations_alpha,
+                  'activations_beta': activations_beta,
+                  'clip': clip,
+                  }
+    return _get_node_factory().create('RNNCell', input_nodes, attributes)
 
 
 @nameable_op
@@ -508,190 +703,6 @@ def mvn(data, axes, normalize_variance, eps, name=None):
     :return: The new node performing a MVN operation on input tensor.
     """
     return MVN(data, AxisSet(axes), normalize_variance, eps)
-
-
-@nameable_op
-def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
-    # type: (Node, Node, Node, NumericType, Set[int], Quantize.RoundMode, str) -> Node
-    r"""Perform quantize operation on data from input node.
-
-    Computes quantize on the input tensor:
-
-    .. math:: output = ROUND((input / scale) + zero\_point)
-
-    :param data: The node with data tensor.
-    :param scale: Scale used for mapping.
-    :param zero_point: Zero point used for mapping.
-    :param new_type: Output element type.
-    :param round_mode: Number describes how to perform ROUND function.
-
-                 ROUND_NEAREST_TOWARD_INFINITY: Round to nearest integer. In case of two
-                 equidistant integers round away from zero e.g. 2.5 -> 3,  -3.5 -> -4
-
-                 ROUND_NEAREST_TOWARD_ZERO: Round to nearest integer. In case of two equidistant
-                 integers round toward zero e.g. 2.5 -> 2,  -3.5 -> -3
-
-                 ROUND_NEAREST_UPWARD: Round to nearest integer. In case of two equidistant
-                 integers round up e.g. 2.5 -> 2,  -3.5 -> -3
-
-                 ROUND_NEAREST_DOWNWARD: Round to nearest integer. In case of two equidistant
-                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
-
-                 ROUND_NEAREST_TOWARD_EVEN: Round to nearest integer. In case of two equidistant
-                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
-
-                 ROUND_TOWARD_INFINITY: Round to nearest integer away from zero.
-
-                 ROUND_TOWARD_ZERO: Round to nearest integer toward zero.
-
-                 ROUND_UP: Round to nearest integer toward infinity (ceiling).
-
-                 ROUND_DOWN: Round to nearest integer toward negative infinity (floor).
-
-    :param name: Optional output node name.
-    :return: The new node performing a quantize operation on input tensor.
-    """
-    new_element_type = get_element_type(new_type)
-    return Quantize(data,
-                    scale,
-                    zero_point,
-                    new_element_type,
-                    AxisSet(axes),
-                    round_mode)
-
-
-@nameable_op
-def dequantize(data, scale, zero_point, element_type, axes, name=None):
-    # type: (Node, Node, Node, NumericType, Set[int], str) -> Node
-    r"""Perform dequantize operation on data from input node.
-
-    Computes dequantize on the input tensor:
-
-    .. math:: output = (input - zero\_point) * scale
-
-    :param data: The node with data tensor.
-    :param scale: Scale used for mapping.
-    :param zero_point: Zero point used for mapping.
-    :param element_type: Output element type.
-    :param name: Optional output node name.
-    :return: The new node performing a dequantize operation on input tensor.
-    """
-    new_element_type = get_element_type(element_type)
-    return Dequantize(data, scale, zero_point, new_element_type, AxisSet(axes))
-
-
-@nameable_op
-def quantized_convolution(data,                      # type: Node
-                          filters,                   # type: Node
-                          window_movement_strides,   # type: List[int]
-                          window_dilation_strides,   # type: List[int]
-                          padding_below,             # type: List[int]
-                          padding_above,             # type: List[int]
-                          data_dilation_strides,     # type: List[int]
-                          input_scale,               # type: Node
-                          input_zero_point,          # type: Node
-                          filter_scale,              # type: Node
-                          filter_zero_point,         # type: Node
-                          output_scale,              # type: Node
-                          output_zero_point,         # type: Node
-                          output_type,               # type: NumericType
-                          input_axes,                # type: Set[int]
-                          filter_axes,               # type: Set[int]
-                          output_axes,               # type: Set[int]
-                          name=None,                 # type: str
-                          ):
-    # type: (...) -> Node
-    r"""Perform quantized convolution operation on data from input node.
-
-    :param data: The node producing the input data batch tensor.
-    :param filters: The node producing the filters tensor.
-    :param window_movement_strides: The window movement strides.
-    :param window_dilation_strides: he window dilation strides.
-    :param padding_below: The padding-below sizes.
-    :param padding_above: The padding-above sizes.
-    :param data_dilation_strides: The data dilation strides.
-    :param input_scale: Scale to transform the input.
-    :param input_zero_point: Zero point used for mapping.
-    :param filter_scale: Scale to transform the filters.
-    :param filter_zero_point: Zero point used for mapping.
-    :param output_scale: Scale to transform the output.
-    :param output_zero_point: Zero point used for mapping.
-    :param output_type: Output element type.
-    :param input_axes: Input axes set for channel wise quantization.
-    :param filter_axes: Filter axes set for channel wise quantization.
-    :param output_type: Output axes set for channel wise quantization.
-    :param name: Optional output node name.
-    :return: The new node performing a quantized convolution operation on input tensor.
-    """
-    new_output_type = get_element_type(output_type)
-    return QuantizedConvolution(data,
-                                filters,
-                                Strides(window_movement_strides),
-                                Strides(window_dilation_strides),
-                                CoordinateDiff(padding_below),
-                                CoordinateDiff(padding_above),
-                                Strides(data_dilation_strides),
-                                input_scale,
-                                input_zero_point,
-                                filter_scale,
-                                filter_zero_point,
-                                output_scale,
-                                output_zero_point,
-                                new_output_type,
-                                AxisSet(input_axes),
-                                AxisSet(filter_axes),
-                                AxisSet(output_axes))
-
-
-@nameable_op
-def quantized_dot(input0,                      # type: Node
-                  input1,                      # type: Node
-                  reduction_axes_count,        # type: int
-                  input0_scale,                # type: Node
-                  input0_zero_point,           # type: Node
-                  input1_scale,                # type: Node
-                  input1_zero_point,           # type: Node
-                  output_scale,                # type: Node
-                  output_zero_point,           # type: Node
-                  output_type,                 # type: NumericType
-                  input0_axes,                 # type: Set[int]
-                  input1_axes,                 # type: Set[int]
-                  output_axes,                 # type: Set[int]
-                  name=None,                   # type: str
-                  ):
-    # type: (...) -> Node
-    r"""Perform quantized dot operation on data from input node.
-
-    :param input0: The node producing the input data batch tensor.
-    :param input1: The node producing the filters tensor.
-    :param reduction_axes_count: Number of reduction axes.
-    :param input0_scale: Scale to transform the input.
-    :param input0_zero_point: Zero point used for mapping.
-    :param input1_scale: Scale to transform the filters.
-    :param input1_zero_point: Zero point used for mapping.
-    :param output_scale: Scale to transform the output.
-    :param output_zero_point: Zero point used for mapping.
-    :param output_type: Output element type.
-    :param input0_axes: Input0 axes set for channel wise quantization
-    :param input1_axes: Input1 axes set for channel wise quantization
-    :param output_axes: Output axes set for channel wise quantization
-    :param name: Optional output node name.
-    :return: The new node performing a quantized dot operation on input tensor.
-    """
-    new_output_type = get_element_type(output_type)
-    return QuantizedDot(input0,
-                        input1,
-                        reduction_axes_count,
-                        input0_scale,
-                        input0_zero_point,
-                        input1_scale,
-                        input1_zero_point,
-                        output_scale,
-                        output_zero_point,
-                        new_output_type,
-                        AxisSet(input0_axes),
-                        AxisSet(input1_axes),
-                        AxisSet(output_axes))
 
 
 # Unary ops
@@ -1258,7 +1269,7 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
     :param target_shape: The node with a new shape we want to broadcast tensor to.
     :param axes_mapping: The node with a axis positions (0-based) in the result
                            that are being broadcast.
-    :param broadcast_spec: The type of broadcating that specifies mapping of input tensor axes
+    :param broadcast_spec: The type of broadcasting that specifies mapping of input tensor axes
                            to output shape axes. Range of values: NUMPY, EXPLICIT, BIDIRECTIONAL.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
@@ -1269,50 +1280,6 @@ def broadcast(data, target_shape, axes_mapping=None, broadcast_spec='NUMPY', nam
     return _get_node_factory().create('Broadcast',
                                       inputs,
                                       {'broadcast_spec': broadcast_spec.upper()})
-
-
-@nameable_op
-def broadcast_to(node, new_shape, axis=None, name=None):
-    # type: (Node, TensorShape, int, str) -> Node
-    """Create a node which broadcasts the input node's values to a desired shape.
-
-    `broadcast_to` will attempt to automatically determine which axes need broadcasting.
-
-    The optional `axis` parameter specifies the starting axis position (0-based) in the output
-    shape from which the current shape of the tensor matches the desired new shape.
-
-    e.g. current_shape: [4, 5], new_shape: [2, 3, 4, 5, 6], axis: 2
-
-    By using the `axis` parameter you can control which output axis to broadcast along.
-
-    Example:
-
-    >>> input_node = ng.constant([1, 2, 3])
-    >>> current_shape = [3]
-    >>> new_shape = [3, 3]
-    >>> ng.broadcast_to(input_node, new_shape, axis=1)
-    array([[1, 2, 3],
-           [1, 2, 3],
-           [1, 2, 3]])
-
-    >>> ng.broadcast_to(input_node, new_shape, axis=0)
-    array([[1, 1, 1],
-           [2, 2, 2],
-           [3, 3, 3]])
-
-    If the `axis` parameter is not specified, `broadcast_to` will attempt to match shapes,
-    assuming the current shape matches the rightmost positions of the desired new shape.
-    This behaviour is similar to NumPy's broadcasting.
-
-    i.e. default `axis = len(new_shape) - len(current_shape)`
-
-    :param node: The node with input tensor data.
-    :param new_shape: The new shape we want to broadcast tensor to.
-    :param axis: The axis along which we perform broadcasting.
-    :param name: Optional new name for output node.
-    :return: New node with broadcast shape.
-    """
-    return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
 
 
 @nameable_op
@@ -1350,46 +1317,6 @@ def fake_quantize(data, input_low, input_high, output_low, output_high,
     return _get_node_factory().create('FakeQuantize',
                                       [data, input_low, input_high, output_low, output_high],
                                       {'levels': levels, 'auto_broadcast': auto_broadcast})
-
-
-@nameable_op
-def gemm(A,                      # type: Node
-         B,                      # type: Node
-         C,                      # type: Node
-         alpha,                  # type: ScalarData
-         beta,                   # type: ScalarData
-         transA,                 # type: bool
-         transB,                 # type: bool
-         name=None,              # type: str
-         ):
-    # type: (...) -> Node
-    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
-
-    Computes:
-
-    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
-
-    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
-    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
-
-    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
-    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
-
-    :code:`C`: Matrix broadcastable to shape (M, N).
-
-    :code:`Y`: Matrix with shape (M, N).
-
-    :param A: The node with input tensor A.
-    :param B: The node with input tensor B.
-    :param C: The node with input tensor C.
-    :param alpha: Scalar multiplier for the product of input tensors A * B.
-    :param beta: Scalar multiplier for input tensor C.
-    :param transA: Whether A should be transposed. Boolean value.
-    :param transB: Whether B should be transposed. Boolean value.
-    :param name: Optional name for the output node.
-    :return: Return node with tensor of shape (M, N).
-    """
-    return Gemm(A, B, C, alpha, beta, transA, transB)
 
 
 @nameable_op
@@ -1525,27 +1452,6 @@ def clamp(data, min_value, max_value, name=None):
                                       {'min': min_value, 'max': max_value})
 
 
-# matmul ops
-@nameable_op
-def dot(left_node, right_node, reduction_axes_count=None, name=None):
-    # type: (Node, Node, int, str) -> Node
-    """Return node which performs generalized dot product of two input nodes.
-
-    This operation is capable of performing scalar-tensor, matrix-vector product and matrix
-    multiplication.
-
-    :param left_node: The node providing left hand side data.
-    :param right_node: The node providing right hand side data.
-    :param reduction_axes_count: The number of axes to reduce during dot-product.
-    :param name: The optional name for output node.
-    :return: The new node performing dot-product on input two nodes.
-    """
-    if reduction_axes_count is None:
-        return Dot(left_node, right_node)
-    else:
-        return Dot(left_node, right_node, reduction_axes_count)
-
-
 @nameable_op
 def binary_convolution(data,                           # type: Node
                        filters,                        # type: Node
@@ -1658,7 +1564,7 @@ def convolution_backprop_data(data,                 # type: Node
         output_padding = [0] * spatial_dim_count
     args = [data, filters]
     if output_shape is not None:
-        args.append(output_shape)
+        args.append(as_node(output_shape))
 
     return _get_node_factory().create('ConvolutionBackpropData',
                                       args,
@@ -2002,27 +1908,6 @@ def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, st
     return HardSigmoid(data, alpha, beta)
 
 
-# reshape ops
-@nameable_op
-def slice(node, lower_bounds, upper_bounds, strides=None, name=None):
-    # type: (Node, List[int], List[int], List[int], str) -> Node
-    """Take a slice of an input tensor, (sub-tensor) that resides within a bounding box.
-
-    Optionally this function may be provided with stride along each axis.
-
-    :param node: The tensor we want to slice.
-    :param lower_bounds: The (inclusive) lower-bound coordinates for the tensor slice.
-    :param upper_bounds: The (exclusive) upper-bound coordinates for the tensor slice.
-    :param strides: The strides for the tensor slice.
-    :param name: Optional name for the output node.
-    :return: Return node that represents a slice of input nodes data.
-    """
-    if strides is None:
-        return Slice(node, Coordinate(lower_bounds), Coordinate(upper_bounds))
-    else:
-        return Slice(node, Coordinate(lower_bounds), Coordinate(upper_bounds), Strides(strides))
-
-
 @nameable_op
 def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     """Concatenate input nodes into single new node along specified axis.
@@ -2091,33 +1976,6 @@ def one_hot(indices, depth, on_value, off_value, axis, name=None):
     """
     return _get_node_factory().create('OneHot', as_nodes(indices, depth, on_value, off_value),
                                       {'axis': axis})
-
-
-@nameable_op
-def replace_slice(dest_node,        # type: Node
-                  src_node,         # type: Node
-                  lower_bounds,     # type: List[int]
-                  upper_bounds,     # type: List[int]
-                  strides=None,     # type: List[int]
-                  name=None,        # type: str
-                  ):
-    # type: (...) -> Node
-    """Return a copy of `dest_node` with the specified slice overwritten by the `src_node` data.
-
-    :param dest_node: The node providing data to be overwritten by the specified slice.
-    :param src_node: The node providing data for overwriting.
-    :param lower_bounds: The (inclusive) lower-bound coordinates for the replaced slice.
-    :param upper_bounds: The (exclusive) upper-bound coordinates for the replaced slice.
-    :param strides: The strides for the replaced slice.
-    :param name: The optional name for the output new node.
-    :return: The new node with copy of `dest_node` with the specified slice overwritten
-             by the `src_node`.
-    """
-    if strides is None:
-        return ReplaceSlice(dest_node, src_node, Coordinate(lower_bounds), Coordinate(upper_bounds))
-    else:
-        return ReplaceSlice(dest_node, src_node, Coordinate(lower_bounds), Coordinate(upper_bounds),
-                            Strides(strides))
 
 
 @nameable_op
@@ -2198,34 +2056,6 @@ def lrn(data,       # type: Node
     """
     attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
     return _get_node_factory().create('LRN', [data, as_node(axes)], attributes)
-
-
-@nameable_op
-def argmax(data,     # type: Node
-           axis=0,   # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMax index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMax
-    """
-    return ArgMax(data, axis, get_element_type(np.int32))
-
-
-@nameable_op
-def argmin(data,    # type: Node
-           axis=0,  # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMin index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMin
-    """
-    return ArgMin(data, axis, get_element_type(np.int32))
 
 
 @nameable_op
