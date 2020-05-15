@@ -18,6 +18,9 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/sign.hpp"
 
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/abs.hpp"
+
 using namespace std;
 using namespace ngraph;
 
@@ -42,4 +45,58 @@ void op::Abs::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector
     auto x = input_value(0);
 
     adjoints.add_delta(x, delta * make_shared<op::Sign>(x));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        runtime::reference::abs<T>((arg0->get_data_ptr<ET>()), (out->get_data_ptr<ET>()), count);
+        return true;
+    }
+
+    bool evaluate_abs(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        bool rc = true;
+        out->set_unary(arg0);
+
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(boolean)(arg0, out, count);
+            break;
+            TYPE_CASE(i8)(arg0, out, count);
+            break;
+            TYPE_CASE(i16)(arg0, out, count);
+            break;
+            TYPE_CASE(i32)(arg0, out, count);
+            break;
+            TYPE_CASE(i64)(arg0, out, count);
+            break;
+            TYPE_CASE(u8)(arg0, out, count);
+            break;
+            TYPE_CASE(u16)(arg0, out, count);
+            break;
+            TYPE_CASE(u32)(arg0, out, count);
+            break;
+            TYPE_CASE(u64)(arg0, out, count);
+            break;
+            TYPE_CASE(bf16)(arg0, out, count);
+            break;
+            TYPE_CASE(f16)(arg0, out, count);
+            break;
+            TYPE_CASE(f32)(arg0, out, count);
+            break;
+            TYPE_CASE(f64)(arg0, out, count);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::Abs::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_abs(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

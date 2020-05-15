@@ -119,9 +119,9 @@ void op::DynReplaceSlice::validate_and_infer_types()
     {
         slice_shape = infer_slice_shape(this,
                                         get_input_partial_shape(0),
-                                        lower_bounds->get_vector<int64_t>(),
-                                        upper_bounds->get_vector<int64_t>(),
-                                        strides->get_vector<int64_t>(),
+                                        lower_bounds->cast_vector<int64_t>(),
+                                        upper_bounds->cast_vector<int64_t>(),
+                                        strides->cast_vector<int64_t>(),
                                         m_lower_bounds_mask,
                                         m_upper_bounds_mask,
                                         m_new_axis,

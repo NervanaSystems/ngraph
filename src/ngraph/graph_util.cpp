@@ -923,3 +923,20 @@ bool ngraph::replace_output_update_name(Output<Node> output, const Output<Node>&
     }
     return false;
 }
+
+bool ngraph::replace_node_update_name(std::shared_ptr<Node> target,
+                                      std::shared_ptr<Node> replacement)
+{
+    for (auto& output : target->output(0).get_target_inputs())
+    {
+        if (as_type<ngraph::op::Parameter>(replacement->input_value(0).get_node()) &&
+            as_type<op::Result>(output.get_node()))
+        {
+            return false;
+        }
+    }
+    replace_node(target, replacement);
+    replacement->set_friendly_name(target->get_friendly_name());
+    copy_runtime_info(target, replacement);
+    return true;
+}
