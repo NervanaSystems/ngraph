@@ -75,3 +75,40 @@ bool op::Result::constant_fold(OutputVector& output_values, const OutputVector& 
 {
     return false;
 }
+
+constexpr DiscreteTypeInfo AttributeAdapter<ResultVector>::type_info;
+
+AttributeAdapter<ResultVector>::AttributeAdapter(ResultVector& ref)
+    : m_ref(ref)
+{
+}
+
+bool AttributeAdapter<ResultVector>::visit_attributes(AttributeVisitor& visitor,
+                                                      const std::string& name)
+{
+    visitor.start_structure(name);
+    int64_t size = m_ref.size();
+    visitor.on_attribute("size", size);
+    if (size != m_ref.size())
+    {
+        m_ref.resize(size);
+    }
+    ostringstream index;
+    for (int64_t i = 0; i < size; i++)
+    {
+        index.clear();
+        index << i;
+        string id;
+        if (m_ref[i])
+        {
+            id = visitor.get_registered_node_id(m_ref[i]);
+        }
+        visitor.on_attribute(index.str(), id);
+        if (!m_ref[i])
+        {
+            m_ref[i] = as_type_ptr<op::v0::Result>(visitor.get_registered_node(id));
+        }
+    }
+    visitor.finish_structure();
+    return true;
+}

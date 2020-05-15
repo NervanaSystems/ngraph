@@ -94,3 +94,8 @@ bool Lambda::evaluate(const HostTensorVector& output_tensors, const HostTensorVe
     evaluate_nodes(value_map, output_tensor_map, outputs);
     return true;
 }
+
+bool Lambda::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
