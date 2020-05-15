@@ -26,7 +26,7 @@ namespace ngraph
     {
         namespace v0
         {
-            /// \brief Elementwise absolute value operation.
+            /// \brief Elementwise absolute value operation, test blah.
             ///
             class NGRAPH_API Abs : public util::UnaryElementwiseArithmetic
             {
