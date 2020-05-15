@@ -222,7 +222,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Reshape> node)
     {
-        shared_ptr<Node> replacement_node = builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
+        shared_ptr<Node> replacement_node =
+            builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
         replace_node(node, replacement_node);
         return replacement_node;
     }
