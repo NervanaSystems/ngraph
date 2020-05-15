@@ -470,6 +470,33 @@ TEST(eval, evaluate_broadcast_v1_explicit)
     ASSERT_EQ(result_val, expec);
 }
 
+TEST(eval, evaluate_broadcast_v3_explicit_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    // auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
+    auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
+    // auto axes_mapping = op::Constant::create<int64_t>(element::i32, Shape{2}, {1, 2});
+
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+        A, target_shape, axes_mapping, op::BroadcastModeSpec(op::BroadcastType::EXPLICIT));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3},
+                                     ParameterVector{A, target_shape, axes_mapping});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i64>(Shape{3}, {2, 3, 1}),
+                       make_host_tensor<element::Type_t::i32>(Shape{2}, {1, 2})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 1}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 2, 3, 1, 2, 3};
+    ASSERT_EQ(result_val, expec);
+}
+
 TEST(eval, evaluate_broadcast_v0)
 {
     Shape shape_a{2, 4};

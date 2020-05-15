@@ -76,14 +76,41 @@ void op::util::BroadcastBase::get_result_shape_numpy_pdpd(
     std::cout << "get_result_shape_numpy_pdpd : result_shape = " << result_shape << "\n";
 }
 
-/*void op::util::BroadcastBase::get_result_shape_none(Node* this_ptr,
-                                    const Shape& arg0_shape,
-                                    const Shape& target_shape,
-                                    const op::BroadcastModeSpec& broadcast_spec,
-                                    PartialShape& result_shape)
+void op::util::BroadcastBase::validate_target_shape_none(const Node* this_ptr,
+                                                         const Shape& arg_shape,
+                                                         const AxisVector& axes_mapping_val,
+                                                         const Shape& target_shape /*,
+                                    PartialShape& result_shape*/)
 {
+    // axes_mapping needs to be in sorted order
+    NODE_VALIDATION_CHECK(this_ptr,
+                          std::is_sorted(axes_mapping_val.begin(), axes_mapping_val.end()),
+                          "Broadcast doesn't permit transposes. axes_mapping ",
+                          axes_mapping_val,
+                          " not in sorted order");
 
-}*/
+    for (size_t i = 0; i < axes_mapping_val.size(); i++)
+    {
+        NODE_VALIDATION_CHECK(this_ptr,
+                              axes_mapping_val[i] < target_shape.size(),
+                              "Broadcast axes_mapping[",
+                              i,
+                              "]: ",
+                              axes_mapping_val[i],
+                              " exceeds target rank ",
+                              target_shape.size());
+
+        NODE_VALIDATION_CHECK(this_ptr,
+                              target_shape[axes_mapping_val[i]] == arg_shape[i],
+                              "Broadcast target[axes_mapping[",
+                              i,
+                              "]]",
+                              " Expected ",
+                              arg_shape[i],
+                              ". Got ",
+                              target_shape[axes_mapping_val[i]]);
+    }
+}
 
 void op::util::BroadcastBase::validate_and_infer_types()
 {
@@ -171,35 +198,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
                 auto axes_mapping_val =
                     as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr())
                         ->get_axis_vector_val();
-                // axes_mapping needs to be in sorted order
-                NODE_VALIDATION_CHECK(
-                    this,
-                    std::is_sorted(axes_mapping_val.begin(), axes_mapping_val.end()),
-                    "Broadcast doesn't permit transposes. axes_mapping ",
-                    axes_mapping_val,
-                    " not in sorted order");
-
-                for (size_t i = 0; i < axes_mapping_val.size(); i++)
-                {
-                    NODE_VALIDATION_CHECK(this,
-                                          axes_mapping_val[i] < target_shape.size(),
-                                          "Broadcast axes_mapping[",
-                                          i,
-                                          "]: ",
-                                          axes_mapping_val[i],
-                                          " exceeds target rank ",
-                                          target_shape.size());
-
-                    NODE_VALIDATION_CHECK(this,
-                                          target_shape[axes_mapping_val[i]] == arg_shape[i],
-                                          "Broadcast target[axes_mapping[",
-                                          i,
-                                          "]]",
-                                          " Expected ",
-                                          arg_shape[i],
-                                          ". Got ",
-                                          target_shape[axes_mapping_val[i]]);
-                }
+                validate_target_shape_none(this, arg_shape, axes_mapping_val, target_shape);
             }
         }
     }
@@ -241,6 +240,27 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes_numpy_pdpd(
     return std::make_pair(axes_known, broadcast_axes);
 }
 
+std::pair<bool, AxisSet>
+    op::util::BroadcastBase::get_broadcast_axes_none(const AxisVector axes_mapping_val,
+                                                     const size_t target_shape_size)
+{
+    AxisSet broadcast_axes;
+    bool axes_known = false;
+
+    std::vector<size_t> axes(target_shape_size);
+    std::iota(axes.begin(), axes.end(), 0);
+    for (auto i = axes_mapping_val.rbegin(); i != axes_mapping_val.rend(); ++i)
+    {
+        axes.erase(axes.begin() + *i);
+    }
+    broadcast_axes.insert(axes.begin(), axes.end());
+
+    axes_known = true;
+    std::cout << "get_broadcast_axes_none, axes_known = true, broadcast_axes = " << broadcast_axes
+              << "\n";
+    return std::make_pair(axes_known, broadcast_axes);
+}
+
 std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
 {
     AxisSet broadcast_axes;
@@ -252,18 +272,10 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes() const
             as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
         if (get_input_partial_shape(1).is_static() && axes_mapping_constant)
         {
+            auto axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
             auto target_shape = get_input_shape(1);
             NGRAPH_CHECK(target_shape.size() == 1);
-            auto axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
-
-            std::vector<size_t> axes(target_shape[0]);
-            std::iota(axes.begin(), axes.end(), 0);
-            for (auto i = axes_mapping_val.rbegin(); i != axes_mapping_val.rend(); ++i)
-            {
-                axes.erase(axes.begin() + *i);
-            }
-            broadcast_axes.insert(axes.begin(), axes.end());
-            axes_known = true;
+            return get_broadcast_axes_none(axes_mapping_val, target_shape[0]);
         }
     }
     else if (m_mode.m_type == BroadcastType::NUMPY || m_mode.m_type == BroadcastType::PDPD)

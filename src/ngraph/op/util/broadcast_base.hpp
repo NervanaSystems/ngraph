@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/axis_set.hpp"
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
@@ -71,6 +72,15 @@ namespace ngraph
                     get_broadcast_axes_numpy_pdpd(const Shape& arg_shape,
                                                   const Shape& result_shape,
                                                   const op::BroadcastModeSpec& broadcast_spec);
+
+                static std::pair<bool, AxisSet>
+                    get_broadcast_axes_none(const AxisVector axes_mapping_val,
+                                            const size_t target_shape);
+
+                static void validate_target_shape_none(const Node* this_ptr,
+                                                       const Shape& arg_shape,
+                                                       const AxisVector& axes_mapping_val,
+                                                       const Shape& target_shape);
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

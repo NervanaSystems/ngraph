@@ -250,6 +250,45 @@ namespace
     }
 
     template <element::Type_t ET>
+    void get_axis_vector_from_hosttensor(const HostTensorPtr& arg, AxisVector& axes_vector)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        auto rank = arg->get_shape().at(0);
+        std::vector<T> axes_vec(rank);
+        arg->read(axes_vec.data(), rank * sizeof(T));
+        axes_vector = AxisVector(axes_vec.begin(), axes_vec.end());
+    }
+
+#define GET_AXIS_VECTOR(a)                                                                         \
+    case element::Type_t::a: get_axis_vector_from_hosttensor<element::Type_t::a>
+
+    void get_axis_vector_from_ht(const HostTensorPtr& arg, AxisVector& axis_vector)
+    {
+        switch (arg->get_element_type())
+        {
+            GET_AXIS_VECTOR(i8)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(i16)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(i32)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(i64)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u8)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u16)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u32)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u64)(arg, axis_vector);
+            break;
+        default:
+            // other types are not supported and would have thrown in ctor
+            break;
+        }
+    }
+
+    template <element::Type_t ET>
     void get_shape_from_hosttensor(const HostTensorPtr& input1, Shape& target_shape)
     {
         using T = typename element_type_traits<ET>::value_type;
@@ -282,7 +321,9 @@ namespace
             break;
             CASE_GET_SHAPE(u64)(input1, target_shape);
             break;
+        default:
             // other types are not supported and would have thrown in ctor
+            break;
         }
     }
 
@@ -334,24 +375,68 @@ bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTens
     }
 
     // 2. if output shape is dynamic, calculate result_shape
+    // 3. if broadcast axis is dynamic, calculate here
     PartialShape result_shape;
     std::pair<bool, AxisSet> pair_broadcast_axes;
-    if (get_output_partial_shape(0).is_static())
+    if (get_input_size() == 2)
     {
-        result_shape = get_output_shape(0);
-        pair_broadcast_axes = get_broadcast_axes();
+        std::cout << " Num Inputs is 2\n";
+        if (get_output_partial_shape(0).is_static())
+        {
+            result_shape = get_output_shape(0);
+            pair_broadcast_axes = get_broadcast_axes();
+        }
+        else
+        {
+            // calculate result shape from target shape, arg shape and broadcast type
+            Shape arg_shape = inputs[0]->get_shape();
+            pair_broadcast_axes = get_result_shape_and_axes(
+                this, arg_shape, target_shape, get_broadcast_spec(), result_shape);
+            std::cout << " in bcast_v3 evaluate, pair_bcast_axes " << pair_broadcast_axes.first
+                      << ", second = " << pair_broadcast_axes.second << "\n";
+        }
     }
-    else
+    else if (get_input_size() == 3)
     {
-        // calculate result shape from target shape, arg shape and broadcast type
-        Shape arg_shape = inputs[0]->get_shape();
-        pair_broadcast_axes = get_result_shape_and_axes(
-            this, arg_shape, target_shape, get_broadcast_spec(), result_shape);
-        std::cout << " in bcast_v3 evaluate, pair_bcast_axes " << pair_broadcast_axes.first
-                  << ", second = " << pair_broadcast_axes.second << "\n";
+        std::cout << " Num Inputs is 3\n";
+        // check type == NONE
+        if (get_broadcast_spec().m_type == op::BroadcastType::NONE)
+        {
+            AxisVector axes_mapping_val;
+            const auto axes_mapping_constant =
+                as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
+            if (axes_mapping_constant)
+            {
+                axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
+                std::cout << "axes_mapping_val from node input = " << axes_mapping_val << "\n";
+            }
+            else
+            {
+                // read from HT and save as AxisVector
+                get_axis_vector_from_ht(inputs[2], axes_mapping_val);
+                std::cout << "axes_mapping_val from HT = " << axes_mapping_val << "\n";
+
+                // Rank(arg_shape) == shape_size(axes_mapping)
+                NODE_VALIDATION_CHECK(this,
+                                      axes_mapping_val.size() == inputs[0]->get_shape().size(),
+                                      "Broadcast axes_mapping shape ",
+                                      axes_mapping_val.size(),
+                                      " doesn't match rank of input tensor ",
+                                      inputs[0]->get_shape().size());
+            }
+            pair_broadcast_axes = get_broadcast_axes_none(axes_mapping_val, target_shape.size());
+            op::util::BroadcastBase::validate_target_shape_none(
+                this, inputs[0]->get_shape(), axes_mapping_val, target_shape);
+            result_shape = target_shape;
+        }
+
+        // 1. Get axes_mapping
+        //    a) if input 2 IS a constant, then read it from the node.
+        //    b) else read it from the HostTensor and save as AxisVector
+        // 2. get_broadcast_axes_none(axes_mapping_val, target_shape)
+        // 3. calculate result_shape
     }
 
-    // 3. if broadcast axis is dynamic, calculate here
     if (get_input_size() == 2)
     {
         if (!pair_broadcast_axes.first)
