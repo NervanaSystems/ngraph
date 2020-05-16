@@ -144,6 +144,7 @@ set(SRC
     type_prop/elu.cpp
     type_prop/embeddingbag_offsetssum.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/extractimagepatches.cpp
     type_prop/embeddingbag_packedsum.cpp
     type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
