@@ -142,7 +142,10 @@ set(SRC
     type_prop/dyn_slice.cpp
     type_prop/strided_slice.cpp
     type_prop/elu.cpp
+    type_prop/embeddingbag_offsetssum.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/embeddingbag_packedsum.cpp
+    type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
     type_prop/gather_nd.cpp
@@ -185,6 +188,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_nd_update.cpp
     type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
@@ -254,17 +258,17 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_IE_ENABLE)
-    if (ENABLE_MKL_DNN)
-        message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
-    endif()
+# if (NGRAPH_IE_ENABLE)
+#     if (ENABLE_MKL_DNN)
+#         message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
+#     endif()
 
-    if (ENABLE_CLDNN)
-        message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
-    endif()
-endif()
+#     if (ENABLE_CLDNN)
+#         message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
+#     endif()
+# endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
@@ -384,6 +388,11 @@ set(MULTI_TEST_SRC
     backend/quantized_dot.in.cpp
     backend/random_uniform.in.cpp
     backend/range.in.cpp
+    backend/reduce_max.in.cpp
+    backend/reduce_mean.in.cpp
+    backend/reduce_min.in.cpp
+    backend/reduce_prod.in.cpp
+    backend/reduce_sum.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
@@ -501,6 +510,10 @@ endif()
 # We should probably split up type_prop.cpp.
 if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
 if (NGRAPH_CPU_ENABLE)

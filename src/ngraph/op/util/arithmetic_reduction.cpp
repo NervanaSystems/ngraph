@@ -73,7 +73,7 @@ void op::util::ArithmeticReduction::validate_and_infer_types()
     if (input_rank.is_static() && reduction_axes_constant())
     {
         AxisSet reduction_axes;
-        auto reduction_axes_val =
+        const auto reduction_axes_val =
             as_type<op::Constant>(input_value(1).get_node())->cast_vector<int64_t>();
         for (auto axis : reduction_axes_val)
         {

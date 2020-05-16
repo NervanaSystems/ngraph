@@ -33,15 +33,12 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void min(const T* arg,
-                     T* out,
-                     const Shape& in_shape,
-                     const Shape& out_shape,
-                     const AxisSet& reduction_axes)
+            void min(const T* arg, T* out, const Shape& in_shape, const AxisSet& reduction_axes)
             {
                 T minval = std::numeric_limits<T>::has_infinity ? std::numeric_limits<T>::infinity()
                                                                 : std::numeric_limits<T>::max();
 
+                auto out_shape = reduce(in_shape, reduction_axes);
                 CoordinateTransform output_transform(out_shape);
 
                 for (const Coordinate& output_coord : output_transform)

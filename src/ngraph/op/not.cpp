@@ -17,6 +17,9 @@
 #include "ngraph/op/not.hpp"
 #include "ngraph/op/op.hpp"
 
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/not.hpp"
+
 using namespace ngraph;
 using namespace std;
 
@@ -49,6 +52,61 @@ shared_ptr<Node> op::v1::LogicalNot::clone_with_new_inputs(const OutputVector& n
     return make_shared<v1::LogicalNot>(new_args.at(0));
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        runtime::reference::logical_not<T>(
+            arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
+        return true;
+    }
+
+    bool evaluate_not(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        bool rc = true;
+        out->set_unary(arg0);
+
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(boolean)(arg0, out, count);
+            break;
+            TYPE_CASE(i8)(arg0, out, count);
+            break;
+            TYPE_CASE(i16)(arg0, out, count);
+            break;
+            TYPE_CASE(i32)(arg0, out, count);
+            break;
+            TYPE_CASE(i64)(arg0, out, count);
+            break;
+            TYPE_CASE(u8)(arg0, out, count);
+            break;
+            TYPE_CASE(u16)(arg0, out, count);
+            break;
+            TYPE_CASE(u32)(arg0, out, count);
+            break;
+            TYPE_CASE(u64)(arg0, out, count);
+            break;
+            TYPE_CASE(bf16)(arg0, out, count);
+            break;
+            TYPE_CASE(f16)(arg0, out, count);
+            break;
+            TYPE_CASE(f32)(arg0, out, count);
+            break;
+            TYPE_CASE(f64)(arg0, out, count);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v1::LogicalNot::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_not(inputs[0], outputs[0], shape_size(get_output_shape(0)));
+}
+
 constexpr NodeTypeInfo op::v0::Not::type_info;
 
 op::v0::Not::Not(const Output<Node>& arg)
@@ -71,4 +129,9 @@ shared_ptr<Node> op::v0::Not::clone_with_new_inputs(const OutputVector& new_args
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Not>(new_args.at(0));
+}
+
+bool op::Not::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_not(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
