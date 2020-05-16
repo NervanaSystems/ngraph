@@ -528,7 +528,6 @@ set (SRC
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding_arithmetic_reduction.cpp
-    pass/constant_folding_broadcast.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
