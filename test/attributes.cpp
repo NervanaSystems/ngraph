@@ -1415,7 +1415,7 @@ TEST(attributes, extractimagepatches_op)
     EXPECT_EQ(g_extractimagepatches->get_sizes(), sizes);
     EXPECT_EQ(g_extractimagepatches->get_strides(), strides);
     EXPECT_EQ(g_extractimagepatches->get_rates(), rates);
-    EXPECT_EQ(g_extractimagepatches->get_padding(), padtype_padding);
+    EXPECT_EQ(g_extractimagepatches->get_auto_pad(), padtype_padding);
 }
 
 TEST(attributes, mvn_op)

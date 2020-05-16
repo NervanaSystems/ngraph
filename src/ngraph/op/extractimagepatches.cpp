@@ -28,12 +28,12 @@ op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
                                                  const Shape& sizes,
                                                  const Strides& strides,
                                                  const Shape& rates,
-                                                 const PadType& padding)
+                                                 const PadType& auto_pad)
     : Op({image})
     , m_patch_sizes(sizes)
     , m_patch_movement_strides(strides)
     , m_patch_selection_rates(rates)
-    , m_padding(padding)
+    , m_padding(auto_pad)
 {
     constructor_validate_and_infer_types();
 }
@@ -43,7 +43,8 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     const PartialShape input_Pshape = get_input_partial_shape(0);
 
     NODE_VALIDATION_CHECK(this,
-                          get_input_element_type(0).is_integral_number(),
+                          get_input_element_type(0).is_dynamic() ||
+                              get_input_element_type(0).is_integral_number(),
                           "input tensor must be an integral number.");
     NODE_VALIDATION_CHECK(this, input_Pshape.rank() == 4, "input tensor must be 4D tensor.");
 
@@ -73,7 +74,8 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
             m_padding == PadType::SAME_UPPER,
         "Attribute padding should be in either valid or same_lower or same_upper.");
 
-    if (input_Pshape.is_dynamic())
+    if (input_Pshape[1].is_dynamic() || input_Pshape[2].is_dynamic() ||
+        input_Pshape[3].is_dynamic())
     {
         set_input_is_relevant_to_shape(0);
         auto output_Pshape = PartialShape::dynamic(4);
@@ -81,58 +83,68 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     }
     else
     {
-        Shape input_shape = get_input_shape(0); // as input shape is static
-        size_t out_rows(0);
-        size_t out_cols(0);
+        int32_t input_depth = input_Pshape[1].get_length();
+        int32_t input_rows = input_Pshape[2].get_length();
+        int32_t input_cols = input_Pshape[3].get_length();
+        int32_t out_rows(0);
+        int32_t out_cols(0);
 
-        if (m_patch_movement_strides[0] > input_shape[2] ||
-            m_patch_movement_strides[1] > input_shape[3])
-        {
-            if (m_padding == PadType::VALID)
-            {
-                out_rows = 0; // no padding allowed for VALID
-                out_cols = 0; // no padding allowed for VALID
-            }
-            else
-            {
-                out_rows = 1; // padding will get 1 patch
-                out_cols = 1; // padding will get 1 patch
-            }
-        }
-        else if (input_shape[2] == 0 || input_shape[3] == 0)
+        if (input_rows == 0 || input_cols == 0)
         {
             out_rows = 0;
             out_cols = 0;
         }
         else if (m_padding == PadType::VALID)
         {
-            out_rows =
-                ((input_shape[2] - (m_patch_selection_rates[0]) * (m_patch_sizes[0] - 1) - 1) /
-                 m_patch_movement_strides[0]) +
-                1;
-            out_cols =
-                ((input_shape[3] - (m_patch_selection_rates[1]) * (m_patch_sizes[1] - 1) - 1) /
-                 m_patch_movement_strides[1]) +
-                1;
+            out_rows = (((input_rows) -
+                         static_cast<int32_t>(m_patch_selection_rates[0]) *
+                             (static_cast<int32_t>(m_patch_sizes[0]) - 1) -
+                         1) /
+                        m_patch_movement_strides[0]) +
+                       1;
+            out_cols = (((input_cols) -
+                         static_cast<int32_t>(m_patch_selection_rates[1]) *
+                             (static_cast<int32_t>(m_patch_sizes[1]) - 1) -
+                         1) /
+                        m_patch_movement_strides[1]) +
+                       1;
         }
         else
         {
-            out_rows = 1 + ((input_shape[2] - 1) / m_patch_movement_strides[0]);
-            out_cols = 1 + ((input_shape[3] - 1) / m_patch_movement_strides[1]);
+            out_rows = 1 + (((input_rows)-1) / m_patch_movement_strides[0]);
+            out_cols = 1 + (((input_cols)-1) / m_patch_movement_strides[1]);
         }
-        Shape output_shape;
-        output_shape.push_back(input_shape[0]);
-        output_shape.push_back(input_shape[1] * m_patch_sizes[0] *
-                               m_patch_sizes[1]); // size[1]*size[2]*depth
-        output_shape.push_back(out_rows);
-        output_shape.push_back(out_cols);
 
-        if (input_shape[2] == 0 || input_shape[3] == 0)
+        if (out_rows < 0)
+            out_rows = 0;
+        if (out_cols < 0)
+            out_cols = 0;
+
+        PartialShape output_Pshape;
+        if (input_Pshape[0].is_dynamic())
         {
-            output_shape = input_shape;
+            output_Pshape =
+                PartialShape{input_Pshape[0],
+                             static_cast<size_t>(input_depth * m_patch_sizes[0] * m_patch_sizes[1]),
+                             static_cast<size_t>(out_rows),
+                             static_cast<size_t>(out_cols)};
+        }
+        else
+        {
+            size_t input_batch_cast = input_Pshape[0].get_length();
+            output_Pshape =
+                PartialShape{input_batch_cast,
+                             static_cast<size_t>(input_depth * m_patch_sizes[0] * m_patch_sizes[1]),
+                             static_cast<size_t>(out_rows),
+                             static_cast<size_t>(out_cols)};
         }
 
-        set_output_type(0, get_input_element_type(0), output_shape);
+        if (input_rows == 0 || input_cols == 0)
+        {
+            output_Pshape = input_Pshape;
+        }
+
+        set_output_type(0, get_input_element_type(0), output_Pshape);
     }
 }
 
@@ -141,7 +153,7 @@ bool op::v3::ExtractImagePatches::visit_attributes(AttributeVisitor& visitor)
     visitor.on_attribute("sizes", m_patch_sizes);
     visitor.on_attribute("strides", m_patch_movement_strides);
     visitor.on_attribute("rates", m_patch_selection_rates);
-    visitor.on_attribute("padding", m_padding);
+    visitor.on_attribute("auto_pad", m_padding);
     return true;
 }
 
