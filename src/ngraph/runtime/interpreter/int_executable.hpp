@@ -434,19 +434,6 @@ protected:
                                             apb->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::Broadcast:
-        {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
-            Shape out_shape = node.get_output_shape(0);
-            AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    in_shape,
-                                    out_shape,
-                                    broadcast_axes);
-            break;
-        }
         case OP_TYPEID::BroadcastDistributed:
         {
             const ngraph::op::BroadcastDistributed* broadcast =
@@ -826,20 +813,6 @@ protected:
                               lrn->get_beta(),
                               lrn->get_bias(),
                               lrn->get_nsize());
-            break;
-        }
-        case OP_TYPEID::MaxPool:
-        {
-            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
-
-            reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_output_shape(0),
-                                   max_pool->get_window_shape(),
-                                   max_pool->get_window_movement_strides(),
-                                   max_pool->get_padding_below(),
-                                   max_pool->get_padding_above());
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
@@ -1502,6 +1475,7 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
+        case OP_TYPEID::Broadcast:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
@@ -1517,6 +1491,7 @@ protected:
         case OP_TYPEID::MatMul:
         case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::MaxPool:
         case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:

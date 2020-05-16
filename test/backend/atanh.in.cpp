@@ -44,60 +44,25 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, floor)
+NGRAPH_TEST(${BACKEND_NAME}, atanh)
 {
-    Shape shape{2, 2};
+    Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Floor>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::Atanh>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{-2.5f, -2.0f, 0.3f, 4.8f});
+    vector<float> input{0.f, 1.f, -1.f, 2.f, -2.f, 3.f, -3.f, 4.f, 5.f, 10.f, 100.f};
+    copy_data(a, input);
     auto result = backend->create_tensor(element::f32, shape);
-
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
-    EXPECT_TRUE(test::all_close_f((vector<float>{-3.0f, -2.0f, 0.0f, 4.0f}),
-                                  read_vector<float>(result),
-                                  MIN_FLOAT_TOLERANCE_BITS));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
-{
-    Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Floor>(A), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    // Create some tensors for input/output
-    auto a = backend->create_tensor(element::i32, shape);
-    copy_data(a, vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001});
-    auto result = backend->create_tensor(element::i32, shape);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_EQ((vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001}),
-              read_vector<int32_t>(result));
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, floor_int64)
-{
-    // This tests large numbers that will not fit in a double
-    Shape shape{3};
-    auto A = make_shared<op::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>(make_shared<op::Floor>(A), ParameterVector{A});
-
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
-    auto a = backend->create_tensor(element::i64, shape);
-    vector<int64_t> expected{0, 1, 0x4000000000000001};
-    copy_data(a, expected);
-    auto result = backend->create_tensor(element::i64, shape);
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a});
-    EXPECT_EQ(expected, read_vector<int64_t>(result));
+    vector<float> expected;
+    for (float f : input)
+    {
+        expected.push_back(std::atanh(f));
+    }
+    EXPECT_TRUE(test::all_close_f(expected, read_vector<float>(result)));
 }
