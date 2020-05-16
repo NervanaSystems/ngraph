@@ -45,18 +45,14 @@ op::util::BroadcastBase::BroadcastBase(const Output<Node>& arg,
 {
 }
 
-void op::util::BroadcastBase::get_result_shape_numpy_pdpd(
-    Node* this_ptr,
-    const Shape& arg0_shape,
-    const Shape& target_shape,
-    const op::BroadcastModeSpec& broadcast_spec,
-    PartialShape& result_shape)
+PartialShape op::util::BroadcastBase::get_result_shape_numpy_pdpd(
+    const Shape& arg0_shape, const Shape& target_shape, const op::BroadcastModeSpec& broadcast_spec)
 {
-    result_shape = target_shape;
+    PartialShape result_shape = target_shape;
     auto start_axis = (broadcast_spec.m_type == op::BroadcastType::PDPD)
                           ? broadcast_spec.m_axis
                           : target_shape.size() - arg0_shape.size();
-    NODE_VALIDATION_CHECK(this_ptr,
+    NODE_VALIDATION_CHECK(this,
                           start_axis >= 0,
                           "Broadcast target_shape has smaller rank ",
                           target_shape.size(),
@@ -64,7 +60,7 @@ void op::util::BroadcastBase::get_result_shape_numpy_pdpd(
                           arg0_shape.size());
     for (auto i = start_axis; i < target_shape.size(); i++)
     {
-        NODE_VALIDATION_CHECK(this_ptr,
+        NODE_VALIDATION_CHECK(this,
                               arg0_shape[i - start_axis] == 1 || target_shape[i] == 1 ||
                                   arg0_shape[i - start_axis] == target_shape[i],
                               "Broadcast incorrect target shape. Expecting either 1 or ",
@@ -74,16 +70,15 @@ void op::util::BroadcastBase::get_result_shape_numpy_pdpd(
         result_shape[i] = std::max(arg0_shape[i - start_axis], target_shape[i]);
     }
     std::cout << "get_result_shape_numpy_pdpd : result_shape = " << result_shape << "\n";
+    return result_shape;
 }
 
-void op::util::BroadcastBase::validate_target_shape_none(const Node* this_ptr,
-                                                         const Shape& arg_shape,
+void op::util::BroadcastBase::validate_target_shape_none(const Shape& arg_shape,
                                                          const AxisVector& axes_mapping_val,
-                                                         const Shape& target_shape /*,
-                                    PartialShape& result_shape*/)
+                                                         const Shape& target_shape)
 {
     // axes_mapping needs to be in sorted order
-    NODE_VALIDATION_CHECK(this_ptr,
+    NODE_VALIDATION_CHECK(this,
                           std::is_sorted(axes_mapping_val.begin(), axes_mapping_val.end()),
                           "Broadcast doesn't permit transposes. axes_mapping ",
                           axes_mapping_val,
@@ -91,7 +86,7 @@ void op::util::BroadcastBase::validate_target_shape_none(const Node* this_ptr,
 
     for (size_t i = 0; i < axes_mapping_val.size(); i++)
     {
-        NODE_VALIDATION_CHECK(this_ptr,
+        NODE_VALIDATION_CHECK(this,
                               axes_mapping_val[i] < target_shape.size(),
                               "Broadcast axes_mapping[",
                               i,
@@ -100,7 +95,7 @@ void op::util::BroadcastBase::validate_target_shape_none(const Node* this_ptr,
                               " exceeds target rank ",
                               target_shape.size());
 
-        NODE_VALIDATION_CHECK(this_ptr,
+        NODE_VALIDATION_CHECK(this,
                               target_shape[axes_mapping_val[i]] == arg_shape[i],
                               "Broadcast target[axes_mapping[",
                               i,
@@ -198,7 +193,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
                 auto axes_mapping_val =
                     as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr())
                         ->get_axis_vector_val();
-                validate_target_shape_none(this, arg_shape, axes_mapping_val, target_shape);
+                validate_target_shape_none(arg_shape, axes_mapping_val, target_shape);
             }
         }
     }
@@ -211,7 +206,7 @@ void op::util::BroadcastBase::validate_and_infer_types()
             if (shape_constant)
             {
                 const auto target_shape = shape_constant->get_shape_val();
-                get_result_shape_numpy_pdpd(this, arg_shape, target_shape, m_mode, result_shape);
+                result_shape = get_result_shape_numpy_pdpd(arg_shape, target_shape, m_mode);
             }
         }
     }
@@ -311,4 +306,222 @@ void op::util::BroadcastBase::generate_adjoints(autodiff::Adjoints& adjoints,
     {
         throw ngraph_error("Autodiff not supported on dynamic op variants");
     }
+}
+
+template <element::Type_t ET>
+bool op::util::BroadcastBase::evaluate(const HostTensorPtr& arg0,
+                                       const HostTensorPtr& out,
+                                       const AxisSet& broadcast_axes)
+{
+    using T = typename element_type_traits<ET>::value_type;
+    runtime::reference::broadcast<T>((arg0->get_data_ptr<ET>()),
+                                     (out->get_data_ptr<ET>()),
+                                     arg0->get_shape(),
+                                     out->get_shape(),
+                                     broadcast_axes);
+    return true;
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    void get_axis_vector_from_hosttensor(const HostTensorPtr& arg, AxisVector& axes_vector)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        auto rank = arg->get_shape().at(0);
+        std::vector<T> axes_vec(rank);
+        arg->read(axes_vec.data(), rank * sizeof(T));
+        axes_vector = AxisVector(axes_vec.begin(), axes_vec.end());
+    }
+
+#define GET_AXIS_VECTOR(a)                                                                         \
+    case element::Type_t::a: get_axis_vector_from_hosttensor<element::Type_t::a>
+
+    void get_axis_vector_from_ht(const HostTensorPtr& arg,
+                                 AxisVector& axis_vector,
+                                 const Shape& arg_shape)
+    {
+        switch (arg->get_element_type())
+        {
+            GET_AXIS_VECTOR(i8)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(i16)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(i32)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(i64)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u8)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u16)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u32)(arg, axis_vector);
+            break;
+            GET_AXIS_VECTOR(u64)(arg, axis_vector);
+            break;
+        default:
+            // other types are not supported and would have thrown in ctor
+            ngraph_error("get_axis_vector_from_ht: type is not integral\n");
+            break;
+        }
+        // Rank(arg_shape) == shape_size(axes_mapping)
+        NGRAPH_CHECK(axis_vector.size() == arg_shape.size(),
+                     "Broadcast axes_mapping shape ",
+                     axis_vector.size(),
+                     " doesn't match rank of input tensor ",
+                     arg_shape.size());
+    }
+
+    template <element::Type_t ET>
+    void get_shape_from_hosttensor(const HostTensorPtr& input1, Shape& target_shape)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        auto rank = input1->get_shape().at(0);
+        std::vector<T> target_shape_vec(rank);
+        input1->read(target_shape_vec.data(), rank * sizeof(T));
+        target_shape = Shape(target_shape_vec.begin(), target_shape_vec.end());
+    }
+
+#define CASE_GET_SHAPE(a)                                                                          \
+    case element::Type_t::a: get_shape_from_hosttensor<element::Type_t::a>
+
+    Shape get_target_shape_from_ht(const HostTensorPtr& input1)
+    {
+        Shape target_shape;
+        switch (input1->get_element_type())
+        {
+            CASE_GET_SHAPE(i8)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(i16)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(i32)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(i64)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(u8)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(u16)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(u32)(input1, target_shape);
+            break;
+            CASE_GET_SHAPE(u64)(input1, target_shape);
+            break;
+        default:
+            // other types are not supported and would have thrown in ctor
+            ngraph_error("get_target_shape_from_ht: type is not integral\n");
+            break;
+        }
+        return target_shape;
+    }
+}
+
+bool op::util::BroadcastBase::evaluate_broadcast(const HostTensorPtr& arg0,
+                                                 const HostTensorPtr& out,
+                                                 const std::pair<bool, AxisSet> pair_broadcast_axes,
+                                                 const Shape output_shape)
+{
+    if (!pair_broadcast_axes.first)
+    {
+        std::cout << " In Base actual evaluate, broadcast_axes not known deterministically\n";
+        // broadcast_axes not known deterministically
+        return false;
+    }
+    bool rc = true;
+    Shape in_shape = arg0->get_shape();
+    out->set_shape(output_shape);
+    out->set_element_type(arg0->get_element_type());
+    switch (arg0->get_element_type())
+    {
+        TYPE_CASE(boolean)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(i8)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(i16)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(i32)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(i64)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(u8)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(u16)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(u32)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(u64)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(bf16)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(f16)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(f32)(arg0, out, pair_broadcast_axes.second);
+        break;
+        TYPE_CASE(f64)(arg0, out, pair_broadcast_axes.second);
+        break;
+    default: rc = false; break;
+    }
+    return rc;
+}
+
+Shape op::util::BroadcastBase::get_target_shape(const HostTensorPtr& input1)
+{
+    Shape target_shape;
+    const auto shape_constant = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+    if (shape_constant)
+    {
+        target_shape = shape_constant->get_shape_val();
+        std::cout << "*** from node Target shape = " << target_shape << "\n";
+    }
+    else
+    {
+        target_shape = get_target_shape_from_ht(input1);
+        std::cout << "*** Calculated Target shape = " << target_shape << "\n";
+    }
+    return target_shape;
+}
+
+bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
+                                       const HostTensorVector& inputs)
+{
+    std::cout << "BcastBase evaluate \n";
+    // 1. get target_shape
+    Shape target_shape = get_target_shape(inputs[1]);
+
+    PartialShape result_shape;
+    std::pair<bool, AxisSet> pair_broadcast_axes;
+    auto arg_shape = inputs[0]->get_shape();
+
+    if (m_mode.m_type == BroadcastType::NONE)
+    {
+        AxisVector axes_mapping_val;
+        const auto axes_mapping_constant =
+            as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
+        if (axes_mapping_constant)
+        {
+            axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
+            std::cout << "axes_mapping_val from node input = " << axes_mapping_val << "\n";
+        }
+        else
+        {
+            // read from HT and save as AxisVector
+            get_axis_vector_from_ht(inputs[2], axes_mapping_val, arg_shape);
+            std::cout << "axes_mapping_val from HT = " << axes_mapping_val << "\n";
+        }
+        pair_broadcast_axes = get_broadcast_axes_none(axes_mapping_val, target_shape.size());
+        validate_target_shape_none(inputs[0]->get_shape(), axes_mapping_val, target_shape);
+        result_shape = target_shape;
+    }
+    else if (m_mode.m_type == BroadcastType::NUMPY || m_mode.m_type == BroadcastType::PDPD)
+    {
+        result_shape = get_result_shape_numpy_pdpd(arg_shape, target_shape, m_mode);
+        pair_broadcast_axes =
+            get_broadcast_axes_numpy_pdpd(arg_shape, result_shape.to_shape(), m_mode);
+    }
+    else
+    {
+        ngraph_error("Unsupported BroadcastType ");
+    }
+
+    return evaluate_broadcast(inputs[0], outputs[0], pair_broadcast_axes, result_shape.to_shape());
+    // return false;
 }

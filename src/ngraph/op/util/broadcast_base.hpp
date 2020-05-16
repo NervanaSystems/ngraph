@@ -60,14 +60,26 @@ namespace ngraph
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 virtual std::pair<bool, AxisSet> get_broadcast_axes() const;
 
-                // virtual bool evaluate(const HostTensorVector& outputs,
-                //              const HostTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs);
+                bool evaluate_broadcast(const HostTensorPtr& arg0,
+                                        const HostTensorPtr& out,
+                                        const std::pair<bool, AxisSet> pair_broadcast_axes,
+                                        const Shape output_shape);
 
-                static void get_result_shape_numpy_pdpd(Node* this_ptr,
-                                                        const Shape& arg0_shape,
-                                                        const Shape& target_shape,
-                                                        const op::BroadcastModeSpec& broadcast_spec,
-                                                        PartialShape& result_shape);
+            protected:
+                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
+                                               const OutputVector& deltas) override;
+                BroadcastModeSpec m_mode;
+
+                template <element::Type_t ET>
+                bool evaluate(const HostTensorPtr& arg0,
+                              const HostTensorPtr& out,
+                              const AxisSet& broadcast_axes);
+
+                /*static*/ PartialShape
+                    get_result_shape_numpy_pdpd(const Shape& arg0_shape,
+                                                const Shape& target_shape,
+                                                const op::BroadcastModeSpec& broadcast_spec);
                 static std::pair<bool, AxisSet>
                     get_broadcast_axes_numpy_pdpd(const Shape& arg_shape,
                                                   const Shape& result_shape,
@@ -77,15 +89,11 @@ namespace ngraph
                     get_broadcast_axes_none(const AxisVector axes_mapping_val,
                                             const size_t target_shape);
 
-                static void validate_target_shape_none(const Node* this_ptr,
-                                                       const Shape& arg_shape,
-                                                       const AxisVector& axes_mapping_val,
-                                                       const Shape& target_shape);
+                /*static*/ void validate_target_shape_none(const Shape& arg_shape,
+                                                           const AxisVector& axes_mapping_val,
+                                                           const Shape& target_shape);
 
-            protected:
-                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
-                BroadcastModeSpec m_mode;
+                Shape get_target_shape(const HostTensorPtr& input1);
             };
         }
     }
