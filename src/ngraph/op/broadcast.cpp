@@ -269,8 +269,8 @@ bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 
 bool op::v1::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_broadcast(inputs[0], outputs[0], get_broadcast_axes(), get_output_shape(0));
-    // return util::BroadcastBase::evaluate(outputs, inputs);
+    // return evaluate_broadcast(inputs[0], outputs[0], get_broadcast_axes(), get_output_shape(0));
+    return op::util::BroadcastBase::evaluate(outputs, inputs);
 }
 
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;

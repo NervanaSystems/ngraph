@@ -244,7 +244,6 @@ TEST(eval, evaluate_broadcast_v3_bidirectional_dyn)
     Shape shape_a{4, 1};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
-    // auto target_shape = op::Constant::create<int32_t>(element::i32, Shape{3}, {2, 1, 4});
     auto bcast_v3 =
         make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
@@ -287,7 +286,6 @@ TEST(eval, evaluate_broadcast_v3_numpy_dyn)
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
-    // auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
     auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
 
@@ -387,7 +385,6 @@ TEST(eval, evaluate_broadcast_v3_pdpd_dyn)
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
-    // auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
     auto bcast_v3 = make_shared<op::v3::Broadcast>(
         A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
@@ -475,9 +472,7 @@ TEST(eval, evaluate_broadcast_v3_explicit_dyn)
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    // auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
     auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
-    // auto axes_mapping = op::Constant::create<int64_t>(element::i32, Shape{2}, {1, 2});
 
     auto bcast_v3 = make_shared<op::v3::Broadcast>(
         A, target_shape, axes_mapping, op::BroadcastModeSpec(op::BroadcastType::EXPLICIT));

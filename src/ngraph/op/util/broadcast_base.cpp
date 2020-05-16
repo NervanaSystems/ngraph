@@ -484,7 +484,6 @@ bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
                                        const HostTensorVector& inputs)
 {
     std::cout << "BcastBase evaluate \n";
-    // 1. get target_shape
     Shape target_shape = get_target_shape(inputs[1]);
 
     PartialShape result_shape;
@@ -523,5 +522,4 @@ bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
     }
 
     return evaluate_broadcast(inputs[0], outputs[0], pair_broadcast_axes, result_shape.to_shape());
-    // return false;
 }
