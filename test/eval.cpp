@@ -1300,37 +1300,36 @@ TEST(eval, eval_transpose)
         auto x_transpose = make_shared<op::v1::Transpose>(x, axis);
         auto fun = make_shared<Function>(NodeVector{x_transpose}, ParameterVector{x, axis});
 
+        switch (axis->get_element_type())
         {
-            switch (axis->get_element_type())
-            {
-            case element::Type_t::i8:
-                test_eval<element::Type_t::i8>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::i16:
-                test_eval<element::Type_t::i16>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::i32:
-                test_eval<element::Type_t::i32>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::i64:
-                test_eval<element::Type_t::i64>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::u8:
-                test_eval<element::Type_t::u8>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::u16:
-                test_eval<element::Type_t::u16>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::u32:
-                test_eval<element::Type_t::u32>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            case element::Type_t::u64:
-                test_eval<element::Type_t::u64>(fun, inputs, x_shapes, result_shapes, results);
-                break;
-            default: NGRAPH_CHECK(false, "Invalid type"); break;
-            }
+        case element::Type_t::i8:
+            test_eval<element::Type_t::i8>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::i16:
+            test_eval<element::Type_t::i16>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::i32:
+            test_eval<element::Type_t::i32>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::i64:
+            test_eval<element::Type_t::i64>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u8:
+            test_eval<element::Type_t::u8>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u16:
+            test_eval<element::Type_t::u16>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u32:
+            test_eval<element::Type_t::u32>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u64:
+            test_eval<element::Type_t::u64>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        default: NGRAPH_CHECK(false, "Invalid type"); break;
         }
     }
+}
 
 TEST(eval, max_pool_v0_dynamic)
 {
