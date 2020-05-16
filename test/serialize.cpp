@@ -740,7 +740,7 @@ TEST(serialize, opset1_binary_convolution)
     const CoordinateDiff pads_begin{0, 0};
     const CoordinateDiff pads_end{0, 0};
     const Strides dilations{1, 1};
-    const std::string mode = "xnor-popcount";
+    auto mode = op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT;
     const float pad_value = 2.1f;
     const auto auto_pad = op::PadType::NOTSET;
 

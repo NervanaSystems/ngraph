@@ -87,6 +87,10 @@ NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
 if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
     NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
 
+ONNX_IMPORTER_CPP_LIBRARY_NAME = 'onnx_importer'
+if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('onnx_importerd', fn)]):
+    ONNX_IMPORTER_CPP_LIBRARY_NAME = 'onnx_importerd'
+
 
 def parallelCCompile(
     self,
@@ -174,48 +178,19 @@ sources = [
     'pyngraph/function.cpp',
     'pyngraph/node.cpp',
     'pyngraph/node_factory.cpp',
-    'pyngraph/ops/allreduce.cpp',
-    'pyngraph/ops/and.cpp',
-    'pyngraph/ops/argmax.cpp',
-    'pyngraph/ops/argmin.cpp',
-    'pyngraph/ops/avg_pool.cpp',
-    'pyngraph/ops/batch_norm.cpp',
-    'pyngraph/ops/broadcast.cpp',
-    'pyngraph/ops/broadcast_distributed.cpp',
     'pyngraph/ops/constant.cpp',
-    'pyngraph/ops/convert.cpp',
-    'pyngraph/ops/convolution.cpp',
-    'pyngraph/ops/dequantize.cpp',
-    'pyngraph/ops/dot.cpp',
     'pyngraph/ops/fused/depth_to_space.cpp',
     'pyngraph/ops/fused/gelu.cpp',
-    'pyngraph/ops/fused/gemm.cpp',
     'pyngraph/ops/fused/grn.cpp',
-    'pyngraph/ops/fused/group_conv.cpp',
     'pyngraph/ops/fused/hard_sigmoid.cpp',
     'pyngraph/ops/fused/mvn.cpp',
-    'pyngraph/ops/fused/rnn_cell.cpp',
-    'pyngraph/ops/fused/scale_shift.cpp',
     'pyngraph/ops/fused/shuffle_channels.cpp',
     'pyngraph/ops/fused/space_to_depth.cpp',
-    'pyngraph/ops/fused/unsqueeze.cpp',
     'pyngraph/ops/get_output_element.cpp',
-    'pyngraph/ops/max.cpp',
-    'pyngraph/ops/max_pool.cpp',
-    'pyngraph/ops/maximum.cpp',
-    'pyngraph/ops/min.cpp',
     'pyngraph/ops/op.cpp',
     'pyngraph/ops/parameter.cpp',
-    'pyngraph/ops/passthrough.cpp',
-    'pyngraph/ops/product.cpp',
-    'pyngraph/ops/quantize.cpp',
-    'pyngraph/ops/quantized_convolution.cpp',
-    'pyngraph/ops/quantized_dot.cpp',
     'pyngraph/ops/regmodule_pyngraph_op.cpp',
-    'pyngraph/ops/replace_slice.cpp',
     'pyngraph/ops/result.cpp',
-    'pyngraph/ops/slice.cpp',
-    'pyngraph/ops/softmax.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
     'pyngraph/ops/util/binary_elementwise_arithmetic.cpp',
     'pyngraph/ops/util/binary_elementwise_comparison.cpp',
@@ -256,7 +231,7 @@ include_dirs = [PYNGRAPH_SRC_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries = [NGRAPH_CPP_LIBRARY_NAME]
+libraries = [NGRAPH_CPP_LIBRARY_NAME, ONNX_IMPORTER_CPP_LIBRARY_NAME]
 
 extra_compile_args = []
 if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
