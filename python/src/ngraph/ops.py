@@ -20,12 +20,8 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 import numpy as np
 
 from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (ArgMax, ArgMin, BatchNormInference,
-                            BatchNormTraining, Broadcast, Constant,
-                            DepthToSpace, Dequantize, Dot, Gelu, Gemm,
-                            GetOutputElement, GRN, HardSigmoid, MVN, Parameter, Quantize,
-                            QuantizedConvolution, QuantizedDot, ReplaceSlice,
-                            RNNCell, ScaleShift, ShuffleChannels, Slice, SpaceToDepth)
+from ngraph.impl.op import (GRN, MVN, Constant, GetOutputElement,
+                            HardSigmoid, Parameter, ShuffleChannels)
 from ngraph.utils.broadcasting import get_broadcast_axes
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
@@ -627,24 +623,6 @@ def rnn_cell(X,                      # type: NodeInput
                   'clip': clip,
                   }
     return _get_node_factory().create('RNNCell', input_nodes, attributes)
-
-
-@nameable_op
-def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str) -> Node
-    r"""Perform ScaleShift transformation on input node.
-
-    Computes ScaleShift:
-
-    .. math:: Y = scale\cdot data + shift
-
-
-    :param data: The node with data tensor.
-    :param scale: The node with data tensor that scale input data.
-    :param shift: The node with data tensor that shift input data.
-    :param name: Optional output node name.
-    :return: The new node performing a ScaleShift operation on input tensor.
-    """
-    return ScaleShift(data, scale, shift)
 
 
 @nameable_op
@@ -2089,34 +2067,6 @@ def lrn(data,       # type: Node
     """
     attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
     return _get_node_factory().create('LRN', [data, as_node(axes)], attributes)
-
-
-@nameable_op
-def argmax(data,     # type: Node
-           axis=0,   # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMax index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMax
-    """
-    return ArgMax(data, axis, get_element_type(np.int32))
-
-
-@nameable_op
-def argmin(data,    # type: Node
-           axis=0,  # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMin index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMin
-    """
-    return ArgMin(data, axis, get_element_type(np.int32))
 
 
 @nameable_op
