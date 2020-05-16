@@ -16,8 +16,23 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <cmath>
+#include <cstddef>
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Gemm(py::module m);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace reference
+        {
+            template <typename T>
+            void asinh(const T* arg, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = std::asinh(arg[i]);
+                }
+            }
+        }
+    }
+}

@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include "ngraph/visibility.hpp"
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-void regclass_pyngraph_op_Convert(py::module m);
+#ifdef ONNX_IMPORTER_DLL_EXPORTS // defined if we are building the ONNX_IMPORTER
+#define ONNX_IMPORTER_API NGRAPH_HELPER_DLL_EXPORT
+#else
+#define ONNX_IMPORTER_API NGRAPH_HELPER_DLL_IMPORT
+#endif
