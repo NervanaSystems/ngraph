@@ -83,16 +83,16 @@ shared_ptr<Node> op::PriorBox::clone_with_new_inputs(const OutputVector& new_arg
     return make_shared<PriorBox>(new_args.at(0), new_args.at(1), m_attrs);
 }
 
-size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
+int64_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
 {
     // Starting with 0 number of prior and then various conditions on attributes will contribute
     // real number of prior boxes as PriorBox is a fat thing with several modes of
     // operation that will be checked in order in the next statements.
-    size_t num_priors = 0;
+    int64_t num_priors = 0;
 
     // Total number of boxes around each point; depends on whether flipped boxes are included
     // plus one box 1x1.
-    size_t total_aspect_ratios = normalized_aspect_ratio(attrs.aspect_ratio, attrs.flip).size();
+    int64_t total_aspect_ratios = normalized_aspect_ratio(attrs.aspect_ratio, attrs.flip).size();
 
     if (attrs.scale_all_sizes)
         num_priors = total_aspect_ratios * attrs.min_size.size() + attrs.max_size.size();
@@ -104,7 +104,7 @@ size_t op::PriorBox::number_of_priors(const PriorBoxAttrs& attrs)
 
     for (auto density : attrs.density)
     {
-        auto rounded_density = static_cast<size_t>(density);
+        auto rounded_density = static_cast<int64_t>(density);
         auto density_2d = (rounded_density * rounded_density - 1);
         if (!attrs.fixed_ratio.empty())
             num_priors += attrs.fixed_ratio.size() * density_2d;
