@@ -10,6 +10,9 @@ max_3d_to_scalar_int32
 # Not implemented
 send_recv
 send_recv_ring
+atanh
+asinh
+acosh
 
 # ONNX TopK with dynamic K
 onnx_top_k_opset_10
@@ -39,3 +42,7 @@ non_zero_all_0s
 # Incorrect result from CPU, need check and fix 
 matmul_2x2x3_2x1x3_transpose_int64
 matmul_2x2x3_2x3x1_int64
+
+acosh
+asinh
+atanh
