@@ -47,13 +47,13 @@ namespace ngraph
                 /// into the output Tensor. Values should be sorted and can be repeated. Required.
                 /// \param `num_segments` scalar of type *T_IND* indicating the number of segments.
                 /// Required.
-                /// \param 'per_sample_weights' tensor of the same shape as indices and of type T.
-                /// Each value in this tensor are multiplied with each
-                /// value pooled from embedding table for each index. Optional.
                 /// \param 'default_index' scalar of type T_IND containing default index in
                 /// embedding
                 /// table to fill empty "bags". If not provided empty "bags"
                 /// are filled with zeros. Optional.
+                /// \param 'per_sample_weights' tensor of the same shape as indices and of type T.
+                /// Each value in this tensor are multiplied with each
+                /// value pooled from embedding table for each index. Optional.
 
                 EmbeddingSegmentsSum(const Output<Node>& emb_table,
                                      const Output<Node>& indices,
@@ -78,6 +78,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
+                virtual bool visit_attributes(AttributeVisitor& visitor) override { return true; }
             private:
                 static constexpr int EMB_TABLE = 0;
                 static constexpr int INDICES = 1;

@@ -258,17 +258,17 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_IE_ENABLE)
-    if (ENABLE_MKL_DNN)
-        message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
-    endif()
+# if (NGRAPH_IE_ENABLE)
+#     if (ENABLE_MKL_DNN)
+#         message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
+#     endif()
 
-    if (ENABLE_CLDNN)
-        message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
-    endif()
-endif()
+#     if (ENABLE_CLDNN)
+#         message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
+#     endif()
+# endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
@@ -312,6 +312,7 @@ set(MULTI_TEST_SRC
     backend/abc.in.cpp
     backend/abs.in.cpp
     backend/acos.in.cpp
+    backend/acosh.in.cpp
     backend/add.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
@@ -319,8 +320,10 @@ set(MULTI_TEST_SRC
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
+    backend/asinh.in.cpp
     backend/atan.in.cpp
     backend/atan2.in.cpp
+    backend/atanh.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -510,6 +513,10 @@ endif()
 # We should probably split up type_prop.cpp.
 if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
