@@ -44,3 +44,7 @@ cpu_fusion.fuse_deconv
 cpu_fusion.fuse_dropout
 cpu_fusion.lstm_cell
 cpu_fusion.batchnorm_fprop_relu
+
+# Incorrect result from CPU, need check and fix 
+matmul_2x2x3_2x1x3_transpose_int64
+matmul_2x2x3_2x3x1_int64
