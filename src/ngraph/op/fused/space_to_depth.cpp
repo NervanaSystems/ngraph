@@ -38,7 +38,7 @@ op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
 }
 
 op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode, size_t block_size)
-    : SpaceToDepth(data, mode_from_string(mode), block_size)
+    : SpaceToDepth(data, as_enum<SpaceToDepthMode>(mode), block_size)
 {
 }
 
@@ -148,18 +148,6 @@ shared_ptr<Node> op::SpaceToDepth::clone_with_new_inputs(const OutputVector& new
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<SpaceToDepth>(new_args.at(0), m_mode, m_blocksize);
-}
-
-op::SpaceToDepth::SpaceToDepthMode op::SpaceToDepth::mode_from_string(const std::string& mode) const
-{
-    static const std::map<std::string, SpaceToDepthMode> allowed_values = {
-        {"blocks_first", SpaceToDepthMode::BLOCKS_FIRST},
-        {"depth_first", SpaceToDepthMode::DEPTH_FIRST}};
-
-    NODE_VALIDATION_CHECK(
-        this, allowed_values.count(mode) > 0, "Invalid 'depth_to_space_mode' value passed in.");
-
-    return allowed_values.at(mode);
 }
 
 namespace ngraph
