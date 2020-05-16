@@ -1437,6 +1437,40 @@ TEST(attributes, interpolate_op)
     EXPECT_EQ(g_i_attrs.pads_end, i_attrs.pads_end);
 }
 
+TEST(attributes, interpolate_op_v3)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Interpolate>();
+    auto img = make_shared<op::Parameter>(element::f32, Shape{1, 3, 32, 32});
+    auto out_shape = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    op::v3::Interpolate::InterpolateAttrs interp_atrs;
+    interp_atrs.axes = AxisSet{1, 2};
+    interp_atrs.mode = op::v3::Interpolate::InterpolateMode::linear_onnx;
+    interp_atrs.coordinate_transformation_mode =
+        op::v3::Interpolate::CoordinateTransformMode::asymmetric;
+    interp_atrs.nearest_mode = op::v3::Interpolate::NearestMode::round_prefer_ceil;
+    interp_atrs.antialias = true;
+    interp_atrs.pads_begin = vector<size_t>{0, 0};
+    interp_atrs.pads_end = vector<size_t>{0, 0};
+    interp_atrs.cube_coeff = 1.345;
+
+    auto interpolate = make_shared<opset3::Interpolate>(img, out_shape, interp_atrs);
+    NodeBuilder builder(interpolate);
+    auto g_interpolate = as_type_ptr<opset3::Interpolate>(builder.create());
+
+    const auto i_attrs = interpolate->get_attrs();
+    const auto g_i_attrs = g_interpolate->get_attrs();
+
+    EXPECT_EQ(g_i_attrs.axes, i_attrs.axes);
+    EXPECT_EQ(g_i_attrs.mode, i_attrs.mode);
+    EXPECT_EQ(g_i_attrs.coordinate_transformation_mode, i_attrs.coordinate_transformation_mode);
+    EXPECT_EQ(g_i_attrs.nearest_mode, i_attrs.nearest_mode);
+    EXPECT_EQ(g_i_attrs.antialias, i_attrs.antialias);
+    EXPECT_EQ(g_i_attrs.pads_begin, i_attrs.pads_begin);
+    EXPECT_EQ(g_i_attrs.pads_end, i_attrs.pads_end);
+    EXPECT_EQ(g_i_attrs.cube_coeff, i_attrs.cube_coeff);
+}
+
 TEST(attributes, detection_output_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::DetectionOutput>();
