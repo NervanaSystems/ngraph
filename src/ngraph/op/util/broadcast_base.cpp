@@ -69,7 +69,6 @@ PartialShape op::util::BroadcastBase::get_result_shape_numpy_pdpd(
                               target_shape[i]);
         result_shape[i] = std::max(arg0_shape[i - start_axis], target_shape[i]);
     }
-    std::cout << "get_result_shape_numpy_pdpd : result_shape = " << result_shape << "\n";
     return result_shape;
 }
 
@@ -230,8 +229,6 @@ std::pair<bool, AxisSet> op::util::BroadcastBase::get_broadcast_axes_numpy_pdpd(
         }
     }
     axes_known = true;
-    std::cout << "get_broadcast_axes_numpy_pdpd, axes_known = true, broadcast_axes = "
-              << broadcast_axes << "\n";
     return std::make_pair(axes_known, broadcast_axes);
 }
 
@@ -251,8 +248,6 @@ std::pair<bool, AxisSet>
     broadcast_axes.insert(axes.begin(), axes.end());
 
     axes_known = true;
-    std::cout << "get_broadcast_axes_none, axes_known = true, broadcast_axes = " << broadcast_axes
-              << "\n";
     return std::make_pair(axes_known, broadcast_axes);
 }
 
@@ -422,7 +417,6 @@ bool op::util::BroadcastBase::evaluate_broadcast(const HostTensorPtr& arg0,
 {
     if (!pair_broadcast_axes.first)
     {
-        std::cout << " In Base actual evaluate, broadcast_axes not known deterministically\n";
         // broadcast_axes not known deterministically
         return false;
     }
@@ -470,12 +464,10 @@ Shape op::util::BroadcastBase::get_target_shape(const HostTensorPtr& input1)
     if (shape_constant)
     {
         target_shape = shape_constant->get_shape_val();
-        std::cout << "*** from node Target shape = " << target_shape << "\n";
     }
     else
     {
         target_shape = get_target_shape_from_ht(input1);
-        std::cout << "*** Calculated Target shape = " << target_shape << "\n";
     }
     return target_shape;
 }
@@ -483,7 +475,6 @@ Shape op::util::BroadcastBase::get_target_shape(const HostTensorPtr& input1)
 bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
                                        const HostTensorVector& inputs)
 {
-    std::cout << "BcastBase evaluate \n";
     Shape target_shape = get_target_shape(inputs[1]);
 
     PartialShape result_shape;
@@ -498,13 +489,11 @@ bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
         if (axes_mapping_constant)
         {
             axes_mapping_val = axes_mapping_constant->get_axis_vector_val();
-            std::cout << "axes_mapping_val from node input = " << axes_mapping_val << "\n";
         }
         else
         {
             // read from HT and save as AxisVector
             get_axis_vector_from_ht(inputs[2], axes_mapping_val, arg_shape);
-            std::cout << "axes_mapping_val from HT = " << axes_mapping_val << "\n";
         }
         pair_broadcast_axes = get_broadcast_axes_none(axes_mapping_val, target_shape.size());
         validate_target_shape_none(inputs[0]->get_shape(), axes_mapping_val, target_shape);

@@ -116,7 +116,6 @@ namespace
 
             result_shape[i] = std::max(arg_shape[i], target_shape[i]);
         }
-        std::cout << " get_result_shape_bidirectional result_shape = " << result_shape << "\n";
         return result_shape;
     }
 }
@@ -189,8 +188,6 @@ bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
 
 bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    std::cout << "Bcast v3 evaluate \n";
-
     if (get_broadcast_spec().m_type == op::BroadcastType::BIDIRECTIONAL)
     {
         auto arg_shape = inputs[0]->get_shape();
