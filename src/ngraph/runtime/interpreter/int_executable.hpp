@@ -842,16 +842,6 @@ protected:
                                  matmul->get_transpose_b());
             break;
         }
-        case OP_TYPEID::Max:
-        {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            reference::max<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              max->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::MaxPool:
         {
             const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
@@ -880,16 +870,6 @@ protected:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
-            break;
-        }
-        case OP_TYPEID::Min:
-        {
-            const op::Min* min = static_cast<const op::Min*>(&node);
-            reference::min<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              min->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Negative:
@@ -930,16 +910,6 @@ protected:
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
-            break;
-        }
-        case OP_TYPEID::Product:
-        {
-            const op::Product* product = static_cast<const op::Product*>(&node);
-            reference::product<T>(args[0]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_output_shape(0),
-                                  product->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Quantize:
@@ -1442,16 +1412,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Sum:
-        {
-            const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            reference::sum<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              sum->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::Tan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1568,13 +1528,16 @@ protected:
         case OP_TYPEID::LogicalAnd_v1:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
+        case OP_TYPEID::Product:
         case OP_TYPEID::Range:
         case OP_TYPEID::Reshape:
         case OP_TYPEID::Result:
@@ -1582,6 +1545,7 @@ protected:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::Softmax:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Sum:
         case OP_TYPEID::Subtract:
         case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Xor:
