@@ -910,7 +910,7 @@ TEST(attributes, region_yolo_op)
     auto anchors = std::vector<float>{10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319};
 
     auto region_yolo = make_shared<opset1::RegionYolo>(
-        data, num_coords, num_classes, num_regions, do_softmax, mask, axis, end_axis, anchors);
+        data, num_coords, num_classes, num_regions, mask, axis, end_axis, do_softmax, anchors);
     NodeBuilder builder(region_yolo);
     auto g_region_yolo = as_type_ptr<opset1::RegionYolo>(builder.create());
 
