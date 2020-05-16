@@ -375,7 +375,6 @@ protected:
                                      node.get_output_shape(0));
             break;
         }
-
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -814,19 +813,6 @@ protected:
                               lrn->get_beta(),
                               lrn->get_bias(),
                               lrn->get_nsize());
-            break;
-        }
-        case OP_TYPEID::MatMul:
-        {
-            const op::MatMul* matmul = static_cast<const op::MatMul*>(&node);
-            reference::matmul<T>(args[0]->get_data_ptr<const T>(),
-                                 args[1]->get_data_ptr<const T>(),
-                                 out[0]->get_data_ptr<T>(),
-                                 node.get_input_shape(0),
-                                 node.get_input_shape(1),
-                                 node.get_output_shape(0),
-                                 matmul->get_transpose_a(),
-                                 matmul->get_transpose_b());
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
@@ -1502,6 +1488,7 @@ protected:
         case OP_TYPEID::LogicalAnd_v1:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
         case OP_TYPEID::MaxPool:
