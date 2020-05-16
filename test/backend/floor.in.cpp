@@ -82,3 +82,22 @@ NGRAPH_TEST(${BACKEND_NAME}, floor_int32)
     EXPECT_EQ((vector<int32_t>{-2, -136314888, 0x40000010, 0x40000001}),
               read_vector<int32_t>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, floor_int64)
+{
+    // This tests large numbers that will not fit in a double
+    Shape shape{3};
+    auto A = make_shared<op::Parameter>(element::i64, shape);
+    auto f = make_shared<Function>(make_shared<op::Floor>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::i64, shape);
+    vector<int64_t> expected{0, 1, 0x4000000000000001};
+    copy_data(a, expected);
+    auto result = backend->create_tensor(element::i64, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
+}

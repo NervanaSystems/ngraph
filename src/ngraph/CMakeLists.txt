@@ -235,6 +235,8 @@ set (SRC
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
     op/experimental/transpose.hpp
+    op/extractimagepatches.cpp
+    op/extractimagepatches.hpp
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
@@ -528,7 +530,6 @@ set (SRC
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding_arithmetic_reduction.cpp
-    pass/constant_folding_broadcast.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
