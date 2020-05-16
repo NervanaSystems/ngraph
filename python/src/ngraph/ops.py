@@ -2720,13 +2720,24 @@ def interpolate(image, output_shape, attrs, name=None):
                         Required: yes.
 
     * mode              Specifies type of interpolation.
-                        Range of values: one of {nearest, linear, cubic, area}
+                        Range of values: one of {nearest, linear, linear_onnx, cubic, area}
                         Type: string
                         Required: yes
 
-    * align_corners     A flag that specifies whether to align corners or not. True means the
-                        alignment is applied, False means the alignment isn't applied.
-                        Range of values: True or False. Default: True.
+    * coordinate_transformation_mode    Specifies how to transform the coordinate in the resized
+                                        tensor to the coordinate in the original tensor.
+                                        Range of values: one of {half_pixel, pytorch_half_pixel,
+                                                                 asymmetric, tf_half_pixel_for_nn,
+                                                                 align_corners}
+                                        Type: string
+                                        Default value: half_pixel
+                                        Required: no
+
+    * nearest_mode      Specifies round mode when mode is set to `nearest`.
+                        Range of values: one of {round_prefer_floor, round_prefer_ceil, floor,
+                                                 ceil, simple}
+                        Type: string
+                        Default value: {round_prefer_floor}
                         Required: no
 
     * antialias         A flag that specifies whether to perform anti-aliasing.
@@ -2743,6 +2754,12 @@ def interpolate(image, output_shape, attrs, name=None):
     * pads_end          Specify the number of pixels to add to the beginning of the image being
                         interpolated. A scalar that specifies padding for each spatial dimension.
                         Range of values: list of non-negative integer numbers. Default value: 0
+                        Required: no
+
+    * cube_coeff        Specifies the parameter `a` for cubic interpolation.
+                        Range of values: floating point number
+                        Type: floating point type
+                        Default value: -0.75
                         Required: no
 
     Example of attribute dictionary:
@@ -2768,10 +2785,12 @@ def interpolate(image, output_shape, attrs, name=None):
     requirements = [
         ('attrs.axes', True, np.integer, is_non_negative_value),
         ('attrs.mode', True, np.str_, None),
-        ('attrs.align_corners', False, np.bool_, None),
+        ('attrs.coordinate_transformation_mode', False, np.str_, None),
+        ('attrs.nearest_mode', False, np.str_, None),
         ('attrs.antialias', False, np.bool_, None),
         ('attrs.pads_begin', False, np.integer, is_non_negative_value),
         ('attrs.pads_end', False, np.integer, is_non_negative_value),
+        ('attrs.cube_coeff', False, np.floating, None),
     ]
 
     check_valid_attributes('Interpolate', attrs, requirements)

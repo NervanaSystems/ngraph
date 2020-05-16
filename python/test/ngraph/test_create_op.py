@@ -544,9 +544,9 @@ def test_interpolate(dtype):
     image_shape = [1, 3, 1024, 1024]
     output_shape = [64, 64]
     attributes = {
-        'InterpolateAttrs.axes': [2, 3],
-        'InterpolateAttrs.mode': 'cubic',
-        'InterpolateAttrs.pads_begin': np.array([2, 2], dtype=dtype),
+        'attrs.axes': [2, 3],
+        'attrs.mode': 'cubic',
+        'attrs.pads_begin': np.array([2, 2], dtype=dtype),
     }
 
     image_node = ng.parameter(image_shape, dtype, name='Image')
