@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <numeric>
 #include <vector>
 
 #include "gtest/gtest.h"
