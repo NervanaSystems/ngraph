@@ -2596,10 +2596,10 @@ def region_yolo(input,  # type: Node
     :param coords:      Number of coordinates for each region
     :param classes:     Number of classes for each region
     :param num:         Number of regions
+    :param do_softmax:  Compute softmax
     :param mask:        Mask
     :param axis:        Axis to begin softmax on
     :param end_axis:    Axis to end softmax on
-    :param do_softmax:  Compute softmax
     :param anchors:     A flattened list of pairs `[width, height]` that describes prior box sizes
     :param name:        Optional name for output node.
     :return: RegionYolo node
@@ -2611,10 +2611,10 @@ def region_yolo(input,  # type: Node
                                       'coords': coords,
                                       'classes': classes,
                                       'num': num,
+                                      'do_softmax': do_softmax,
                                       'mask': mask,
                                       'axis': axis,
                                       'end_axis': end_axis,
-                                      'do_softmax': do_softmax,
                                       'anchors': anchors,
                                       })
 
