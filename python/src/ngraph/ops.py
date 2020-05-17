@@ -2583,10 +2583,10 @@ def region_yolo(input,  # type: Node
                 coords,  # type: int
                 classes,  # type: int
                 num,  # type: int
+                do_softmax,  # type: bool
                 mask,  # type: List[int]
                 axis,  # type: int
                 end_axis,  # type: int
-                do_softmax=True,  # type: bool
                 anchors=None,  # type: List[float]
                 name=None,  # type: str
                 ):  # type: (...) -> Node
