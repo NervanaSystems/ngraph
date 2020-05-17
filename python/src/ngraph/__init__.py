@@ -34,7 +34,6 @@ from ngraph.ops import batch_norm_inference
 from ngraph.ops import batch_to_space
 from ngraph.ops import binary_convolution
 from ngraph.ops import broadcast
-from ngraph.ops import bucketize
 from ngraph.ops import ceiling
 from ngraph.ops import ceiling as ceil
 from ngraph.ops import clamp
@@ -54,9 +53,6 @@ from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space
 from ngraph.ops import divide
 from ngraph.ops import elu
-from ngraph.ops import embedding_bag_offsets_sum
-from ngraph.ops import embedding_bag_packed_sum
-from ngraph.ops import embedding_segments_sum
 from ngraph.ops import equal
 from ngraph.ops import erf
 from ngraph.ops import exp
@@ -109,8 +105,6 @@ from ngraph.ops import reduce_mean
 from ngraph.ops import reduce_min
 from ngraph.ops import reduce_prod
 from ngraph.ops import reduce_sum
-from ngraph.ops import region_yolo
-from ngraph.ops import reorg_yolo
 from ngraph.ops import relu
 from ngraph.ops import reshape
 from ngraph.ops import result
@@ -120,7 +114,6 @@ from ngraph.ops import rnn_cell
 from ngraph.ops import roi_align
 from ngraph.ops import roi_pooling
 from ngraph.ops import scatter_elements_update
-from ngraph.ops import scatter_nd_update
 from ngraph.ops import scatter_update
 from ngraph.ops import select
 from ngraph.ops import selu

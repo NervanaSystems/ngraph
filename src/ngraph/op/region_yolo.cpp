@@ -23,18 +23,18 @@ using namespace ngraph;
 constexpr NodeTypeInfo op::RegionYolo::type_info;
 
 op::RegionYolo::RegionYolo(const Output<Node>& input,
-                           const size_t coords,
-                           const size_t classes,
-                           const size_t regions,
+                           const size_t num_coords,
+                           const size_t num_classes,
+                           const size_t num_regions,
+                           const bool do_softmax,
                            const vector<int64_t>& mask,
                            const int axis,
                            const int end_axis,
-                           const bool do_softmax,
                            const vector<float>& anchors)
     : Op({input})
-    , m_num_coords(coords)
-    , m_num_classes(classes)
-    , m_num_regions(regions)
+    , m_num_coords(num_coords)
+    , m_num_classes(num_classes)
+    , m_num_regions(num_regions)
     , m_do_softmax(do_softmax)
     , m_mask(mask)
     , m_anchors(anchors)
@@ -109,9 +109,9 @@ shared_ptr<Node> op::RegionYolo::clone_with_new_inputs(const OutputVector& new_a
                                    m_num_coords,
                                    m_num_classes,
                                    m_num_regions,
+                                   m_do_softmax,
                                    m_mask,
                                    m_axis,
                                    m_end_axis,
-                                   m_do_softmax,
                                    m_anchors);
 }

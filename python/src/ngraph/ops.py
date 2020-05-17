@@ -15,14 +15,14 @@
 # ******************************************************************************
 
 """Factory functions for all ngraph ops."""
-from typing import Callable, Iterable, List, Optional, Set, Union
+from typing import List, Optional, Set, Union
 
 import numpy as np
 
-from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (GRN, MVN, Constant, GetOutputElement,
-                            HardSigmoid, Parameter, ShuffleChannels)
-from ngraph.utils.broadcasting import get_broadcast_axes
+from ngraph.impl import (AxisSet, Node, Shape)
+from ngraph.impl.op import (GRN, MVN, Constant, DepthToSpace, Gelu,
+                            GetOutputElement, HardSigmoid, Parameter,
+                            ShuffleChannels, SpaceToDepth)
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.node_factory import NodeFactory
@@ -201,7 +201,7 @@ def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a GRN operation on tensor's channels.
     """
-    return _get_node_factory().create('GRN', [data], {'bias': bias})
+    return GRN(data, bias)
 
 
 @nameable_op
@@ -626,7 +626,7 @@ def rnn_cell(X,                      # type: NodeInput
 
 
 @nameable_op
-def space_to_depth(data, mode, block_size=1, name=None):  # type: (Node, str, int, str) -> Node
+def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
     """Perform SpaceToDepth operation on the input tensor.
 
     SpaceToDepth rearranges blocks of spatial data into depth.
@@ -643,11 +643,7 @@ def space_to_depth(data, mode, block_size=1, name=None):  # type: (Node, str, in
     :param name: Optional output node name.
     :return: The new node performing a SpaceToDepth operation on input tensor.
     """
-    return _get_node_factory().create(
-        'SpaceToDepth',
-        [data],
-        {'mode': mode, 'block_size': block_size},
-    )
+    return SpaceToDepth(data, mode, block_size)
 
 
 @nameable_op
@@ -689,8 +685,8 @@ def space_to_batch(data, block_shape, pads_begin, pads_end, name=None):
 
 
 @nameable_op
-def mvn(data, across_channels=False, normalize_variance=False, eps=1e-9, name=None):
-    # type: (Node, bool, bool, float, str) -> Node
+def mvn(data, axes, normalize_variance, eps, name=None):
+    # type: (Node, Set[int], bool, float, str) -> Node
     r"""Perform Mean Variance Normalization operation on data from input node.
 
     Computes MVN on the input tensor :code:`data` (called `X`) using formula:
@@ -698,18 +694,15 @@ def mvn(data, across_channels=False, normalize_variance=False, eps=1e-9, name=No
     .. math:: Y = \dfrac{X-EX}{\sqrt{E(X-EX)^2}}
 
     :param data: The node with data tensor.
-    :param across_channels: Denotes if mean values are shared across channels.
-    :param normalize_variance: Denotes whether to perform variance normalization.
+    :param axes: A list of axes, along which to reduce. Array of integers.
+    :param normalize_variance: Flag that denotes if mean values are shared across channels.
+                               Boolen value.
     :param eps: The number added to the variance to avoid division by zero
                when normalizing the value. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a MVN operation on input tensor.
     """
-    return _get_node_factory().create(
-        'MVN',
-        [data],
-        {'across_channels': across_channels, 'normalize_variance': normalize_variance, 'eps': eps},
-    )
+    return MVN(data, AxisSet(axes), normalize_variance, eps)
 
 
 # Unary ops
@@ -1355,7 +1348,7 @@ def convert_like(data, like, name=None):  # type: (Node, NumericType, str) -> No
 
 
 @nameable_op
-def depth_to_space(node, mode, block_size=1, name=None):  # type: (Node, str, int, str) -> Node
+def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
     """Rearranges input tensor from depth into blocks of spatial data.
 
     Values from the height and width dimensions are moved to the depth dimension.
@@ -1378,11 +1371,7 @@ def depth_to_space(node, mode, block_size=1, name=None):  # type: (Node, str, in
     :param name: Optional output node name.
     :return: The new node performing an DepthToSpace operation on its input tensor.
     """
-    return _get_node_factory().create(
-        'DepthToSpace',
-        [node],
-        {'mode': mode, 'block_size': block_size},
-    )
+    return DepthToSpace(node, mode, block_size)
 
 
 def gelu(node, name=None):  # type: (NodeInput, str) -> Node
@@ -1399,7 +1388,7 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a GELU operation on its input data element-wise.
     """
-    return _get_node_factory().create('Gelu', [as_node(node)])
+    return Gelu(as_node(node))
 
 
 @nameable_op
@@ -1901,7 +1890,7 @@ def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
 
 
 @nameable_op
-def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, NodeInput, NodeInput, str) -> Node
+def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, str) -> Node
     """Perform Hard Sigmoid operation element-wise on data from input node.
 
     Hard Sigmoid uses the following logic:
@@ -1911,12 +1900,12 @@ def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, NodeInput, NodeI
         y = max(0, min(1, alpha * data + beta))
 
     :param data: The node with data tensor.
-    :param alpha: A node producing the alpha parameter.
-    :param beta: A node producing the beta parameter
+    :param alpha: Alpha parameter. Scalar value.
+    :param beta: Beta parameter. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a Hard Sigmoid element-wise on input tensor.
     """
-    return _get_node_factory().create('HardSigmoid', [data, as_node(alpha), as_node(beta)])
+    return HardSigmoid(data, alpha, beta)
 
 
 @nameable_op
@@ -2067,98 +2056,6 @@ def lrn(data,       # type: Node
     """
     attributes = {'alpha': alpha, 'beta': beta, 'bias': bias, 'size': size}
     return _get_node_factory().create('LRN', [data, as_node(axes)], attributes)
-
-
-@nameable_op
-def embedding_bag_offsets_sum(emb_table,                   # type: Node
-                              indices,                     # type: NodeInput
-                              offsets,                     # type: NodeInput
-                              default_index=None,          # type: Optional[NodeInput]
-                              per_sample_weights=None,     # type: Optional[NodeInput]
-                              name=None,                   # type: Optional[str]
-                              ):
-    # type: (...) -> Node
-    """Return a node which performs sums of bags of embeddings without the intermediate embeddings.
-
-    :param emb_table: Tensor containing the embedding lookup table.
-    :param indices: Tensor with indices.
-    :param offsets: Tensor containing the starting index positions of each bag in indices.
-    :param per_sample_weights: Tensor with weights for each sample.
-    :param default_index: Scalar containing default index in embedding table to fill empty bags.
-    :param name: Optional name for output node.
-    :return: The new node which performs EmbeddingBagOffsetsSum
-    """
-    inputs = [emb_table, as_node(indices), as_node(offsets)]
-    if per_sample_weights is not None:
-        inputs.append(default_index)
-        inputs.append(per_sample_weights)
-    elif default_index is not None:
-        inputs.append(default_index)
-
-    return _get_node_factory().create('EmbeddingBagOffsetsSum', inputs, {})
-
-
-@nameable_op
-def embedding_segments_sum(emb_table,                   # type: Node
-                           indices,                     # type: NodeInput
-                           segment_ids,                 # type: NodeInput
-                           num_segments=None,           # type: Optional[NodeInput]
-                           default_index=None,          # type: Optional[NodeInput]
-                           per_sample_weights=None,     # type: Optional[NodeInput]
-                           name=None,                   # type: Optional[str]
-                           ):
-    # type: (...) -> Node
-    """Return an EmbeddingSegmentsSum node.
-
-    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a given
-    input tensor with a row (from the weights matrix) at that index
-
-    :param emb_table: Tensor containing the embedding lookup table.
-    :param indices: Tensor with indices.
-    :param segment_ids: Tensor with indices into the output Tensor
-    :param num_segments: Tensor with number of segments.
-    :param default_index: Scalar containing default index in embedding table to fill empty bags.
-    :param per_sample_weights: Weights to be multiplied with embedding table.
-    :param name: Optional name for output node.
-    :return: EmbeddingSegmentsSum node
-    """
-    inputs = [as_node(emb_table), as_node(indices), as_node(segment_ids)]
-    if per_sample_weights is not None:
-        inputs.append(as_node(num_segments))
-        inputs.append(as_node(default_index))
-        inputs.append(as_node(per_sample_weights))
-    elif default_index is not None:
-        inputs.append(as_node(num_segments))
-        inputs.append(as_node(default_index))
-    elif num_segments is not None:
-        inputs.append(as_node(num_segments))
-
-    return _get_node_factory().create('EmbeddingSegmentsSum', inputs, {})
-
-
-@nameable_op
-def embedding_bag_packed_sum(emb_table,                   # type: NodeInput
-                             indices,                     # type: NodeInput
-                             per_sample_weights=None,     # type: Optional[NodeInput]
-                             name=None,                   # type: Optional[str]
-                             ):
-    # type: (...) -> Node
-    """Return an EmbeddingBagPackedSum node.
-
-    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a given
-    input tensor with a row (from the weights matrix) at that index
-
-    :param emb_table: Tensor containing the embedding lookup table.
-    :param indices: Tensor with indices.
-    :param per_sample_weights: Weights to be multiplied with embedding table.
-    :param name: Optional name for output node.
-    :return: EmbeddingBagPackedSum node
-    """
-    inputs = [as_node(emb_table), as_node(indices)]
-    if per_sample_weights is not None:
-        inputs.append(as_node(per_sample_weights))
-
-    return _get_node_factory().create('EmbeddingBagPackedSum', inputs, {})
 
 
 @nameable_op
@@ -2416,24 +2313,6 @@ def result(data):  # type: (Node) -> Node
 
 
 @nameable_op
-def scatter_nd_update(data, indices, updates, name=None):
-    # type: (NodeInput, NodeInput, NodeInput, str) -> Node
-    """Return a node which produces a ScatterNDUpdate operation.
-
-    ScatterNDUpdate creates a copy of the first input tensor
-    with updated elements specified with second and third input tensors.
-
-    :param data:    The input tensor to be updated.
-    :param indices: The tensor with indexes which will be updated.
-    :param updates: The tensor with update values.
-    :param name:    Optional name for output node.
-    :return: ScatterNDUpdate node
-    """
-    node_inputs = as_nodes(data, indices, updates)
-    return _get_node_factory().create('ScatterNDUpdate', node_inputs)
-
-
-@nameable_op
 def scatter_update(data, indices, updates, axis):
     # type: (Node, NodeInput, NodeInput, NodeInput) -> Node
     """Return a node which produces a ScatterUpdate operation.
@@ -2542,90 +2421,3 @@ def reverse_sequence(input, seq_lengths, batch_axis, seq_axis, name=None):
     """
     return _get_node_factory().create('ReverseSequence', [input, as_node(seq_lengths)],
                                       {'batch_axis': batch_axis, 'seq_axis': seq_axis})
-
-
-@nameable_op
-def bucketize(data, buckets, output_type='i64', with_right_bound=True, name=None):
-    # type: (Node, NodeInput, str, bool, str) -> Node
-    """Return a node which produces the Bucketize operation.
-
-    :param data:              Input data to bucketize
-    :param buckets:           1-D of sorted unique boundaries for buckets
-    :param output_type:       Output tensor type, "i64" or "i32", defaults to i64
-    :param with_right_bound:  indicates whether bucket includes the right or left
-                              edge of interval. default true = includes right edge
-    :param name:              Optional name for output node.
-    :return: Bucketize node
-    """
-    return _get_node_factory().create(
-        'Bucketize',
-        [data, as_node(buckets)],
-        {'output_type': output_type, 'with_right_bound': with_right_bound},
-    )
-
-
-@nameable_op
-def range(start, stop, step, name=None):
-    # type: (Node, NodeInput, NodeInput, str) -> Node
-    """Return a node which produces the Range operation.
-
-    :param start:  The start value of the generated range
-    :param stop:   The stop value of the generated range
-    :param step:   The step value for the generated range
-    :param name:   Optional name for output node.
-    :return: Range node
-    """
-    return _get_node_factory().create('Range', as_nodes(start, stop, step))
-
-
-@nameable_op
-def region_yolo(input,  # type: Node
-                coords,  # type: int
-                classes,  # type: int
-                num,  # type: int
-                mask,  # type: List[int]
-                axis,  # type: int
-                end_axis,  # type: int
-                do_softmax=True,  # type: bool
-                anchors=None,  # type: List[float]
-                name=None,  # type: str
-                ):  # type: (...) -> Node
-    """Return a node which produces the RegionYolo operation.
-
-    :param input:       Input data
-    :param coords:      Number of coordinates for each region
-    :param classes:     Number of classes for each region
-    :param num:         Number of regions
-    :param mask:        Mask
-    :param axis:        Axis to begin softmax on
-    :param end_axis:    Axis to end softmax on
-    :param do_softmax:  Compute softmax
-    :param anchors:     A flattened list of pairs `[width, height]` that describes prior box sizes
-    :param name:        Optional name for output node.
-    :return: RegionYolo node
-    """
-    if anchors is None:
-        anchors = []
-
-    return _get_node_factory().create('RegionYolo', [input], {
-                                      'coords': coords,
-                                      'classes': classes,
-                                      'num': num,
-                                      'mask': mask,
-                                      'axis': axis,
-                                      'end_axis': end_axis,
-                                      'do_softmax': do_softmax,
-                                      'anchors': anchors,
-                                      })
-
-
-@nameable_op
-def reorg_yolo(input, stride, name=None):  # type: (Node, List[int], str) -> Node
-    """Return a node which produces the ReorgYolo operation.
-
-    :param input:   Input data
-    :param stride:  Stride to reorganize input by
-    :param name:    Optional name for output node.
-    :return: ReorgYolo node
-    """
-    return _get_node_factory().create('ReorgYolo', [input], {'stride': stride})
