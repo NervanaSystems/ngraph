@@ -26,18 +26,18 @@ from ngraph.utils.input_validation import (
 )
 
 
-@pytest.mark.parametrize("dtype", [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64,])
+@pytest.mark.parametrize("dtype", [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64])
 def test_is_positive_value_signed_type(dtype):
     assert is_positive_value(dtype(16))
     assert not is_positive_value(dtype(-16))
 
 
-@pytest.mark.parametrize("dtype", [np.uint8, np.uint16, np.uint32, np.uint64,])
+@pytest.mark.parametrize("dtype", [np.uint8, np.uint16, np.uint32, np.uint64])
 def test_is_positive_value_unsigned_type(dtype):
     assert is_positive_value(dtype(16))
 
 
-@pytest.mark.parametrize("dtype", [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64,])
+@pytest.mark.parametrize("dtype", [np.int8, np.int16, np.int32, np.int64, np.float32, np.float64])
 def test_is_non_negative_value_signed_type(dtype):
     assert is_non_negative_value(dtype(16))
     assert is_non_negative_value(dtype(0))
@@ -45,7 +45,7 @@ def test_is_non_negative_value_signed_type(dtype):
     assert not is_non_negative_value(dtype(-16))
 
 
-@pytest.mark.parametrize("dtype", [np.uint8, np.uint16, np.uint32, np.uint64,])
+@pytest.mark.parametrize("dtype", [np.uint8, np.uint16, np.uint32, np.uint64])
 def test_is_non_negative_value_unsigned_type(dtype):
     assert is_non_negative_value(dtype(16))
     assert is_non_negative_value(dtype(0))

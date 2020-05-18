@@ -1670,13 +1670,17 @@ def convolution(
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-    return _get_node_factory().create('Convolution',
-                                      [data, filters],
-                                      {'strides': strides,
-                                       'pads_begin': pads_begin,
-                                       'pads_end': pads_end,
-                                       'dilations': dilations,
-                                       'auto_pad': auto_pad})
+    return _get_node_factory().create(
+        "Convolution",
+        [data, filters],
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "dilations": dilations,
+            "auto_pad": auto_pad,
+        },
+    )
 
 
 @nameable_op
@@ -2788,7 +2792,7 @@ def bucketize(
     buckets: NodeInput,
     output_type: str = "i64",
     with_right_bound: bool = True,
-    name: str = None,
+    name: Optional[str] = None,
 ) -> Node:
     """Return a node which produces the Bucketize operation.
 
@@ -2808,7 +2812,7 @@ def bucketize(
 
 
 @nameable_op
-def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> Node:
+def range(start: Node, stop: NodeInput, step: NodeInput, name: Optional[str] = None) -> Node:
     """Return a node which produces the Range operation.
 
     :param start:  The start value of the generated range
@@ -2822,17 +2826,17 @@ def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> No
 
 @nameable_op
 def region_yolo(
-    input,  # type: Node
-    coords,  # type: int
-    classes,  # type: int
-    num,  # type: int
-    do_softmax,  # type: bool
-    mask,  # type: List[int]
-    axis,  # type: int
-    end_axis,  # type: int
-    anchors=None,  # type: List[float]
-    name=None,  # type: str
-):  # type: (...) -> Node
+    input: Node,
+    coords: int,
+    classes: int,
+    num: int,
+    do_softmax: bool,
+    mask: List[int],
+    axis: int,
+    end_axis: int,
+    anchors: List[float] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Return a node which produces the RegionYolo operation.
 
     :param input:       Input data
@@ -2867,7 +2871,7 @@ def region_yolo(
 
 
 @nameable_op
-def reorg_yolo(input: Node, stride: List[int], name: str = None) -> Node:
+def reorg_yolo(input: Node, stride: List[int], name: Optional[str] = None) -> Node:
     """Return a node which produces the ReorgYolo operation.
 
     :param input:   Input data
@@ -2879,8 +2883,9 @@ def reorg_yolo(input: Node, stride: List[int], name: str = None) -> Node:
 
 
 @nameable_op
-def interpolate(image, output_shape, attrs, name=None):
-    # type: (Node, NodeInput, dict, str) -> Node
+def interpolate(
+    image: Node, output_shape: NodeInput, attrs: dict, name: Optional[str] = None
+) -> Node:
     """Perform interpolation of independent slices in input tensor.
 
     :param  image:         The node providing input tensor with data for interpolation.
@@ -2955,8 +2960,9 @@ def interpolate(image, output_shape, attrs, name=None):
 
 
 @nameable_op
-def prior_box(layer_shape, image_shape, attrs, name=None):
-    # type: (Node, NodeInput, dict, str) -> Node
+def prior_box(
+    layer_shape: Node, image_shape: NodeInput, attrs: dict, name: Optional[str] = None
+) -> Node:
     """Generate prior boxes of specified sizes and aspect ratios across all dimensions.
 
     :param  layer_shape:  Shape of layer for which prior boxes are computed.
@@ -3069,8 +3075,9 @@ def prior_box(layer_shape, image_shape, attrs, name=None):
 
 
 @nameable_op
-def prior_box_clustered(output_size, image_size, attrs, name=None):
-    # type: (Node, NodeInput, dict, str) -> Node
+def prior_box_clustered(
+    output_size: Node, image_size: NodeInput, attrs: dict, name: Optional[str] = None
+) -> Node:
     """Generate prior boxes of specified sizes normalized to the input image size.
 
     :param  output_size:    1D tensor with two integer elements [height, width]. Specifies the
@@ -3155,15 +3162,14 @@ def prior_box_clustered(output_size, image_size, attrs, name=None):
 
 @nameable_op
 def detection_output(
-    box_logits,  # type: Node
-    class_preds,  # type: Node
-    proposals,  # type: Node
-    attrs,  # type: dict
-    aux_class_preds=None,  # type: NodeInput
-    aux_box_preds=None,  # type: NodeInput
-    name=None,  # type: str
-):
-    # type: (...) -> Node
+    box_logits: Node,
+    class_preds: Node,
+    proposals: Node,
+    attrs: dict,
+    aux_class_preds: NodeInput = None,
+    aux_box_preds: NodeInput = None,
+    name: Optional[str] = None,
+) -> Node:
     """Generate the detection output using information on location and confidence predictions.
 
     :param  box_logits:         The 2D input tensor with box logits.
@@ -3319,13 +3325,12 @@ def detection_output(
 
 @nameable_op
 def proposal(
-    class_probs,  # type: Node
-    box_logits,  # type: Node
-    image_shape,  # type: NodeInput
-    attrs,  # type: dict
-    name=None,  # type: str
-):
-    # type: (...) -> Node
+    class_probs: Node,
+    box_logits: Node,
+    image_shape: NodeInput,
+    attrs: dict,
+    name: Optional[str] = None,
+) -> Node:
     """Filter bounding boxes and outputs only those with the highest prediction confidence.
 
     :param  class_probs:        4D input floating point tensor with class prediction scores.
