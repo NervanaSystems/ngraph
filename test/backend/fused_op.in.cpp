@@ -1927,12 +1927,6 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_float16)
     auto actual = read_vector<float16>(y);
     auto expected = vector<float16>{0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6};
 
-    for (int i = 0; i < 10; ++i)
-    {
-        std::cout << "actual   = " << actual[i] << std::endl;
-        std::cout << "expected = " << expected[i] << std::endl << std::endl;
-    }
-
     EXPECT_TRUE(true);
 }
 
@@ -1957,12 +1951,6 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_bfloat16)
 
     auto actual = read_vector<bfloat16>(y);
     auto expected = vector<bfloat16>{0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6};
-
-    for (int i = 0; i < 10; ++i)
-    {
-        std::cout << "actual   = " << actual[i] << std::endl;
-        std::cout << "expected = " << expected[i] << std::endl << std::endl;
-    }
 
     EXPECT_TRUE(true);
 }
