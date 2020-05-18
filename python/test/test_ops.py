@@ -48,8 +48,6 @@ def binary_op(op_str, a, b):
         return a / b
     elif op_str == 'Div':
         return ng.divide(a, b)
-    elif op_str == 'Dot':
-        return Dot(a, b)
     elif op_str == 'Equal':
         return ng.equal(a, b)
     elif op_str == 'Greater':

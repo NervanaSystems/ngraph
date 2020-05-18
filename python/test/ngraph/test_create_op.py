@@ -590,7 +590,6 @@ def test_reorg_yolo():
     assert node.get_output_element_type(0) == Type.i32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_bag_offsets_sum_1():
     emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
     indices = ng.parameter([4], name='indices', dtype=np.int64)
@@ -605,7 +604,6 @@ def test_embedding_bag_offsets_sum_1():
     assert node.get_output_element_type(0) == Type.f32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_segments_sum_all_inputs():
     emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
     indices = ng.parameter([4], name='indices', dtype=np.int64)
@@ -623,7 +621,6 @@ def test_embedding_segments_sum_all_inputs():
     assert node.get_output_element_type(0) == Type.f32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_segments_sum_with_some_opt_inputs():
     emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
     indices = ng.parameter([4], name='indices', dtype=np.int64)
@@ -639,7 +636,6 @@ def test_embedding_segments_sum_with_some_opt_inputs():
     assert node.get_output_element_type(0) == Type.f32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_bag_packed_sum():
     emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
     indices = ng.parameter([3, 3], name='indices', dtype=np.int64)

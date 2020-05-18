@@ -45,13 +45,6 @@ from _pyngraph.op import Constant
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
 
-from _pyngraph.op import DepthToSpace
-from _pyngraph.op import Gelu
 from _pyngraph.op import GetOutputElement
-from _pyngraph.op import GRN
-from _pyngraph.op import HardSigmoid
-from _pyngraph.op import MVN
 from _pyngraph.op import Op
 from _pyngraph.op import Parameter
-from _pyngraph.op import ShuffleChannels
-from _pyngraph.op import SpaceToDepth

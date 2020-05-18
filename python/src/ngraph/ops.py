@@ -19,10 +19,8 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 
 import numpy as np
 
-from ngraph.impl import (AxisSet, Coordinate, CoordinateDiff, Node, Shape, Strides)
-from ngraph.impl.op import (GRN, MVN, Constant, GetOutputElement,
-                            HardSigmoid, Parameter, ShuffleChannels)
-from ngraph.utils.broadcasting import get_broadcast_axes
+from ngraph.impl import (Node, Shape)
+from ngraph.impl.op import Constant, GetOutputElement, Parameter
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
 from ngraph.utils.node_factory import NodeFactory
@@ -143,7 +141,7 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, O
     :return: The new node performing a permutation on data in the channel dimension
              of the input tensor.
     """
-    return ShuffleChannels(data, axis, groups)
+    return _get_node_factory().create('ShuffleChannels', [as_node(data)], {'axis': axis, 'groups':groups})
 
 
 @nameable_op
