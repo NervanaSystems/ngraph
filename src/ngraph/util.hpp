@@ -395,6 +395,32 @@ namespace ngraph
     NGRAPH_API
     void parse_version_string(
         std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
+
+    template <typename T>
+    T double_to_int(double x, double float_to_int_converter(double))
+    {
+        if (!std::is_integral<T>())
+        {
+            throw std::runtime_error(
+                "Function double_to_int template parameter must be an integral type.");
+        }
+
+        x = float_to_int_converter(x);
+
+        double min_t = static_cast<double>(std::numeric_limits<T>::min());
+        if (x < min_t)
+        {
+            return std::numeric_limits<T>::min();
+        }
+
+        double max_t = static_cast<double>(std::numeric_limits<T>::max());
+        if (x > max_t)
+        {
+            return std::numeric_limits<T>::max();
+        }
+
+        return static_cast<T>(x);
+    }
 } // end namespace ngraph
 
 template <typename T>
