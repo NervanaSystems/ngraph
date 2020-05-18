@@ -22,35 +22,30 @@
 
 namespace ngraph
 {
+    struct VariableInfo
+    {
+        PartialShape data_shape;
+        element::Type data_type;
+        std::string variable_id;
+    };
+
     class NGRAPH_API Variable
     {
     public:
         Variable() = default;
 
-        Variable(const PartialShape& data_shape,
-                 const element::Type& data_type,
-                 const std::string& variable_id)
-            : m_data_shape(data_shape)
-            , m_data_type(data_type)
-            , m_variable_id(variable_id)
+         explicit Variable(const std::shared_ptr<VariableInfo>& variable_info)
+            : m_info(variable_info)
         {
         }
 
-        PartialShape get_shape() { return m_data_shape; }
-        element::Type get_type() { return m_data_type; }
-        std::string get_id() { return m_variable_id; }
-        void update(const PartialShape& data_shape,
-                    const element::Type& data_type,
-                    const std::string& variable_id)
+        std::shared_ptr<VariableInfo> get_info() { return m_info; }
+        void update(const std::shared_ptr<VariableInfo>& variable_info)
         {
-            m_data_shape = data_shape;
-            m_data_type = data_type;
-            m_variable_id = variable_id;
+            m_info = variable_info;
         }
 
     private:
-        PartialShape m_data_shape;
-        element::Type m_data_type;
-        std::string m_variable_id;
+        std::shared_ptr<VariableInfo> m_info;
     };
 }

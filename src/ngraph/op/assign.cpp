@@ -23,21 +23,6 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::Assign::type_info;
 
-void op::v3::Assign::find_variable(const vector<Input<Node>>& inputs,
-                                   const std::shared_ptr<ngraph::Variable>& variable)
-{
-    for (const auto& input : inputs)
-    {
-        auto input_value_node = input.get_source_output().get_node_shared_ptr();
-        if (auto read_value = as_type_ptr<op::v3::ReadValue>(input_value_node))
-        {
-            if (read_value->get_variable_id() == m_variable_id)
-                m_variable = read_value->get_variable();
-        }
-        find_variable(input_value_node->inputs(), variable);
-    }
-}
-
 op::v3::Assign::Assign(const Output<Node>& new_value, const std::string& variable_id)
     : Op({new_value})
     , m_variable_id(variable_id)
@@ -52,18 +37,31 @@ void op::v3::Assign::validate_and_infer_types()
     auto output_shape = get_input_partial_shape(0);
     if (!m_variable)
     {
-        find_variable(inputs(), m_variable);
+        NodeVector start_nodes;
+        for (const auto& input : inputs())
+        {
+            start_nodes.push_back(input.get_source_output().get_node_shared_ptr());
+        }
+        auto nodes = topological_sort(start_nodes);
+        for (const auto& node : nodes)
+        {
+            if (auto read_value = as_type_ptr<op::v3::ReadValue>(node))
+            {
+                if (read_value->get_variable_id() == m_variable_id)
+                    m_variable = read_value->get_variable();
+            }
+        }
         NODE_VALIDATION_CHECK(
             this, m_variable != nullptr, "Can't find variable with id = ", m_variable_id);
     }
 
+    auto variable_info = m_variable->get_info();
     NODE_VALIDATION_CHECK(
-        this, m_variable_id == m_variable->get_id(), "Variables identifiers are inconsistent.");
+        this, m_variable_id == variable_info->variable_id, "Variables identifiers are inconsistent.");
     NODE_VALIDATION_CHECK(
-        this, arg_t == m_variable->get_type(), "Variables types are inconsistent.");
+        this, arg_t == variable_info->data_type, "Variables types are inconsistent.");
     NODE_VALIDATION_CHECK(
-        this, output_shape == m_variable->get_shape(), "Variables output shapes are inconsistent.");
-    m_variable->update(output_shape, arg_t, m_variable_id);
+        this, output_shape == variable_info->data_shape, "Variables output shapes are inconsistent.");
 
     set_output_type(0, arg_t, output_shape);
 }

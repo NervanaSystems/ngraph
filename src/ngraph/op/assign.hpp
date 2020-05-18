@@ -49,9 +49,6 @@ namespace ngraph
             private:
                 std::string m_variable_id;
                 std::shared_ptr<ngraph::Variable> m_variable;
-
-                void find_variable(const std::vector<Input<Node>>& inputs,
-                                   const std::shared_ptr<ngraph::Variable>& variable);
             };
         }
         using v3::Assign;
