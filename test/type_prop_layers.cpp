@@ -173,14 +173,14 @@ TEST(type_prop_layers, proposal)
 TEST(type_prop_layers, region_yolo1)
 {
     auto inputs = make_shared<op::Parameter>(element::f32, Shape{1, 125, 13, 13});
-    auto op = make_shared<op::RegionYolo>(inputs, 0, 0, 0, true, std::vector<int64_t>{}, 0, 1);
+    auto op = make_shared<op::RegionYolo>(inputs, 0, 0, 0, std::vector<int64_t>{}, 0, 1);
     ASSERT_EQ(op->get_shape(), (Shape{1 * 125, 13, 13}));
 }
 
 TEST(type_prop_layers, region_yolo2)
 {
     auto inputs = make_shared<op::Parameter>(element::f32, Shape{1, 125, 13, 13});
-    auto op = make_shared<op::RegionYolo>(inputs, 0, 0, 0, true, std::vector<int64_t>{}, 0, 2);
+    auto op = make_shared<op::RegionYolo>(inputs, 0, 0, 0, std::vector<int64_t>{}, 0, 2);
     ASSERT_EQ(op->get_shape(), (Shape{1 * 125 * 13, 13}));
 }
 
@@ -188,7 +188,7 @@ TEST(type_prop_layers, region_yolo3)
 {
     auto inputs = make_shared<op::Parameter>(element::f32, Shape{1, 125, 13, 13});
     auto op =
-        make_shared<op::RegionYolo>(inputs, 4, 80, 1, false, std::vector<int64_t>{6, 7, 8}, 0, -1);
+        make_shared<op::RegionYolo>(inputs, 4, 80, 1, std::vector<int64_t>{6, 7, 8}, 0, -1, false);
     ASSERT_EQ(op->get_shape(), (Shape{1, (80 + 4 + 1) * 3, 13, 13}));
 }
 
