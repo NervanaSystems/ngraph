@@ -54,7 +54,7 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
-}
+} // namespace ngraph
 
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
@@ -910,7 +910,7 @@ TEST(attributes, region_yolo_op)
     auto anchors = std::vector<float>{10, 14, 23, 27, 37, 58, 81, 82, 135, 169, 344, 319};
 
     auto region_yolo = make_shared<opset1::RegionYolo>(
-        data, num_coords, num_classes, num_regions, do_softmax, mask, axis, end_axis, anchors);
+        data, num_coords, num_classes, num_regions, mask, axis, end_axis, do_softmax, anchors);
     NodeBuilder builder(region_yolo);
     auto g_region_yolo = as_type_ptr<opset1::RegionYolo>(builder.create());
 
@@ -1395,6 +1395,27 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, extractimagepatches_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ExtractImagePatches>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
+
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{1, 1};
+    auto padtype_padding = ngraph::op::PadType::VALID;
+
+    auto extractimagepatches =
+        make_shared<opset3::ExtractImagePatches>(data, sizes, strides, rates, padtype_padding);
+    NodeBuilder builder(extractimagepatches);
+    auto g_extractimagepatches = as_type_ptr<opset3::ExtractImagePatches>(builder.create());
+
+    EXPECT_EQ(g_extractimagepatches->get_sizes(), sizes);
+    EXPECT_EQ(g_extractimagepatches->get_strides(), strides);
+    EXPECT_EQ(g_extractimagepatches->get_rates(), rates);
+    EXPECT_EQ(g_extractimagepatches->get_auto_pad(), padtype_padding);
 }
 
 TEST(attributes, mvn_op)

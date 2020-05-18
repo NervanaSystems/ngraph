@@ -26,21 +26,11 @@ def test_split():
     axis = ng.constant(0, dtype=np.int64)
     splits = 3
 
-    op = ng.split(input_tensor, axis, splits)
-    model0 = runtime.computation(ng.get_output_element(op, 0))
-    result0 = model0()
-    split0 = np.array([0, 1], dtype=np.int32)
-    assert np.allclose(result0, split0)
-
-    model1 = runtime.computation(ng.get_output_element(op, 1))
-    result1 = model1()
-    split1 = np.array([2, 3], dtype=np.int32)
-    assert np.allclose(result1, split1)
-
-    model2 = runtime.computation(ng.get_output_element(op, 2))
-    result2 = model2()
-    split2 = np.array([4, 5], dtype=np.int32)
-    assert np.allclose(result2, split2)
+    split_node = ng.split(input_tensor, axis, splits)
+    computation = runtime.computation(split_node)
+    split_results = computation()
+    expected_results = np.array([[0, 1], [2, 3], [4, 5]], dtype=np.int32)
+    assert np.allclose(split_results, expected_results)
 
 
 def test_variadic_split():
@@ -49,13 +39,11 @@ def test_variadic_split():
     axis = ng.constant(1, dtype=np.int64)
     splits = ng.constant(np.array([2, 4], dtype=np.int64))
 
-    op = ng.variadic_split(input_tensor, axis, splits)
-    model0 = runtime.computation(ng.get_output_element(op, 0))
-    result0 = model0()
+    v_split_node = ng.variadic_split(input_tensor, axis, splits)
+    computation = runtime.computation(v_split_node)
+    results = computation()
     split0 = np.array([[0, 1], [6, 7]], dtype=np.int32)
-    assert np.allclose(result0, split0)
-
-    model1 = runtime.computation(ng.get_output_element(op, 1))
-    result1 = model1()
     split1 = np.array([[2, 3, 4, 5], [8, 9, 10, 11]], dtype=np.int32)
-    assert np.allclose(result1, split1)
+
+    assert np.allclose(results[0], split0)
+    assert np.allclose(results[1], split1)

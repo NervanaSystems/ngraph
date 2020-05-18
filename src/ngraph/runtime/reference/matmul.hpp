@@ -22,6 +22,7 @@
 
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/builder/autobroadcast.hpp"
+#include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/shape_util.hpp"
@@ -174,8 +175,8 @@ namespace ngraph
                         end(wip_arg0_shape));
                     arg1_br_marker_shape.insert(
                         end(arg1_br_marker_shape),
-                        next(begin(wip_arg0_shape), wip_arg0_shape.size() - 2),
-                        end(wip_arg0_shape));
+                        next(begin(wip_arg1_shape), wip_arg1_shape.size() - 2),
+                        end(wip_arg1_shape));
 
                     if (arg0_br_target_shape != wip_arg0_shape)
                     {

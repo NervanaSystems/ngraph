@@ -115,6 +115,8 @@ set (SRC
     op/abs.hpp
     op/acos.cpp
     op/acos.hpp
+    op/acosh.cpp
+    op/acosh.hpp
     op/add.cpp
     op/add.hpp
     op/all.cpp
@@ -131,8 +133,12 @@ set (SRC
     op/argmin.hpp
     op/asin.cpp
     op/asin.hpp
+    op/asinh.cpp
+    op/asinh.hpp
     op/atan.cpp
     op/atan.hpp
+    op/atanh.cpp
+    op/atanh.hpp
     op/atan2.cpp
     op/atan2.hpp
     op/avg_pool.cpp
@@ -229,6 +235,8 @@ set (SRC
     op/experimental/random_uniform.hpp
     op/experimental/random_uniform.cpp
     op/experimental/transpose.hpp
+    op/extractimagepatches.cpp
+    op/extractimagepatches.hpp
     op/strided_slice.hpp
     op/floor.cpp
     op/floor.hpp
@@ -522,7 +530,6 @@ set (SRC
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
     pass/constant_folding_arithmetic_reduction.cpp
-    pass/constant_folding_broadcast.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
     pass/constant_folding_dyn_broadcast.cpp
