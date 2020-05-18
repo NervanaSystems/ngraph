@@ -14,7 +14,6 @@
 # limitations under the License.
 # ******************************************************************************
 import numpy as np
-import pytest
 
 import ngraph as ng
 from test.ngraph.util import get_runtime

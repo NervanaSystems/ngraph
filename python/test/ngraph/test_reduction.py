@@ -162,7 +162,7 @@ def test_roi_align():
 
 @pytest.mark.parametrize(
     "input_shape, cumsum_axis, reverse",
-    [([5, 2], 0, False), ([5, 2], 1, False), ([5, 2, 6], 2, False), ([5, 2], 0, True),],
+    [([5, 2], 0, False), ([5, 2], 1, False), ([5, 2, 6], 2, False), ([5, 2], 0, True)],
 )
 def test_cum_sum(input_shape, cumsum_axis, reverse):
     input_data = np.arange(np.prod(input_shape)).reshape(input_shape)

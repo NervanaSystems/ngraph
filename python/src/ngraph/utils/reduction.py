@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 from typing import Iterable, Optional
+
 from ngraph.impl import Node
 
 

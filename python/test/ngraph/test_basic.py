@@ -134,7 +134,7 @@ def test_broadcast_3():
 
 @pytest.mark.parametrize(
     "destination_type, input_data",
-    [(bool, np.zeros((2, 2), dtype=int)), ("boolean", np.zeros((2, 2), dtype=int)),],
+    [(bool, np.zeros((2, 2), dtype=int)), ("boolean", np.zeros((2, 2), dtype=int))],
 )
 def test_convert_to_bool(destination_type, input_data):
     expected = np.array(input_data, dtype=bool)
@@ -225,7 +225,7 @@ def test_constant_get_data_bool():
     assert np.allclose(input_data, retrieved_data)
 
 
-@pytest.mark.parametrize("data_type", [np.float32, np.float64,])
+@pytest.mark.parametrize("data_type", [np.float32, np.float64])
 def test_constant_get_data_floating_point(data_type):
     np.random.seed(133391)
     input_data = np.random.randn(2, 3, 4).astype(data_type)
@@ -237,7 +237,7 @@ def test_constant_get_data_floating_point(data_type):
     assert np.allclose(input_data, retrieved_data)
 
 
-@pytest.mark.parametrize("data_type", [np.int64, np.int32, np.int16, np.int8,])
+@pytest.mark.parametrize("data_type", [np.int64, np.int32, np.int16, np.int8])
 def test_constant_get_data_signed_integer(data_type):
     np.random.seed(133391)
     input_data = np.random.randint(
@@ -248,7 +248,7 @@ def test_constant_get_data_signed_integer(data_type):
     assert np.allclose(input_data, retrieved_data)
 
 
-@pytest.mark.parametrize("data_type", [np.uint64, np.uint32, np.uint16, np.uint8,])
+@pytest.mark.parametrize("data_type", [np.uint64, np.uint32, np.uint16, np.uint8])
 def test_constant_get_data_unsigned_integer(data_type):
     np.random.seed(133391)
     input_data = np.random.randn(2, 3, 4).astype(data_type)

@@ -17,7 +17,7 @@ from functools import wraps
 from typing import Any, Callable
 
 from ngraph.impl import Node
-from ngraph.utils.types import as_node, as_nodes, NodeInput
+from ngraph.utils.types import NodeInput, as_node, as_nodes
 
 
 def _set_node_name(node: Node, **kwargs: Any) -> Node:

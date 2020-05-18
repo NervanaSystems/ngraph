@@ -17,9 +17,8 @@ import logging
 from typing import List
 
 import ngraph as ng
-
-from ngraph.impl import Node, AxisSet
-from ngraph.utils.types import TensorShape, get_dtype, make_constant_node, NodeInput
+from ngraph.impl import AxisSet, Node
+from ngraph.utils.types import NodeInput, TensorShape, get_dtype, make_constant_node
 
 log = logging.getLogger(__name__)
 

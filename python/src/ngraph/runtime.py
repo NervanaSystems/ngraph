@@ -19,10 +19,10 @@ from typing import Dict, List, Union
 
 import numpy as np
 
+from ngraph.exceptions import UserInputError
 from ngraph.impl import Function, Node, Shape, serialize, util
 from ngraph.impl.runtime import Backend, Executable, Tensor
-from ngraph.utils.types import get_dtype, NumericData
-from ngraph.exceptions import UserInputError
+from ngraph.utils.types import NumericData, get_dtype
 
 log = logging.getLogger(__name__)
 

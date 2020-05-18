@@ -35,7 +35,7 @@ def test_concat():
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize("val_type, value", [(bool, False), (bool, np.empty((2, 2), dtype=bool)),])
+@pytest.mark.parametrize("val_type, value", [(bool, False), (bool, np.empty((2, 2), dtype=bool))])
 def test_constant_from_bool(val_type, value):
     expected = np.array(value, dtype=val_type)
     result = run_op_numeric_data(value, ng.constant, val_type)
@@ -63,7 +63,7 @@ def test_constant_from_scalar(val_type, value):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize("val_type", [np.float32, np.float64,])
+@pytest.mark.parametrize("val_type", [np.float32, np.float64])
 def test_constant_from_float_array(val_type):
     np.random.seed(133391)
     input_data = np.array(-1 + np.random.rand(2, 3, 4) * 2, dtype=val_type)

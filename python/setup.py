@@ -14,13 +14,14 @@
 # limitations under the License.
 # ******************************************************************************
 
-from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
-import sys
-import setuptools
+import distutils.ccompiler
 import os
 import re
-import distutils.ccompiler
+import sys
+
+import setuptools
+from setuptools import Extension, setup
+from setuptools.command.build_ext import build_ext
 
 __version__ = os.environ.get("NGRAPH_VERSION", "0.0.0-dev")
 PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))

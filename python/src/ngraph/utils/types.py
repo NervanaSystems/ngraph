@@ -16,16 +16,14 @@
 """Functions related to converting between Python and numpy types and ngraph types."""
 
 import logging
-from typing import Union, List
+from typing import List, Union
 
 import numpy as np
 
-from ngraph.impl import Type as NgraphType
-from ngraph.impl import Node, Shape
-from ngraph.impl.op import Constant
-
 from ngraph.exceptions import NgraphTypeError
-
+from ngraph.impl import Node, Shape
+from ngraph.impl import Type as NgraphType
+from ngraph.impl.op import Constant
 
 log = logging.getLogger(__name__)
 
