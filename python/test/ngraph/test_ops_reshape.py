@@ -184,7 +184,8 @@ def test_strided_slice():
                          shrink_axis_mask,
                          ellipsis_mask)
 
-    expected = np.array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23], dtype=np.float32).reshape((1, 3, 4))
+    expected = np.array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23],
+                        dtype=np.float32).reshape((1, 3, 4))
 
     assert np.allclose(result, expected)
 
