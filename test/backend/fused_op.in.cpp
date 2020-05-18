@@ -716,6 +716,50 @@ NGRAPH_TEST(${BACKEND_NAME}, group_conv_groups_included_in_shape)
     EXPECT_EQ(expected, read_vector<float>(result0));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, space_to_batch)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 3});
+    auto block_shape =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 2, 3, 2});
+    auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
+    auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
+    auto space_to_batch =
+        make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
+    auto function = make_shared<Function>(NodeVector{space_to_batch}, ParameterVector{data});
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f});
+    test_case.add_expected_output<float>(Shape{12, 1, 1, 2},
+                                         {
+                                             0.f, 0.f, 0.f, 0.f, 0.f, 2.f,  1.f,  0.f,
+                                             3.f, 5.f, 4.f, 0.f, 0.f, 0.f,  0.f,  0.f,
+                                             6.f, 8.f, 7.f, 0.f, 9.f, 11.f, 10.f, 0.f,
+                                         });
+    test_case.run();
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_to_space)
+{
+    auto data = make_shared<op::Parameter>(element::f32, Shape{12, 1, 1, 2});
+    auto block_shape =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 2, 3, 2});
+    auto pads_begin =
+        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
+    auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
+    auto batch_to_space =
+        make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
+    auto function = make_shared<Function>(NodeVector{batch_to_space}, ParameterVector{data});
+
+    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
+    test_case.add_input<float>({
+        0.f, 0.f, 0.f, 0.f, 0.f, 2.f, 1.f, 0.f, 3.f, 5.f,  4.f,  0.f,
+        0.f, 0.f, 0.f, 0.f, 6.f, 8.f, 7.f, 0.f, 9.f, 11.f, 10.f, 0.f,
+    });
+    test_case.add_expected_output<float>(
+        Shape{1, 2, 2, 3}, {0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f});
+    test_case.run();
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, space_to_depth_block_first)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});
@@ -1308,7 +1352,7 @@ NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
 {
     auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
     auto axes_node =
-        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{1, 2});
+        make_shared<ngraph::op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto squeeze = make_shared<op::Unsqueeze>(data_node, axes_node);
 
     auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
@@ -1425,7 +1469,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
-        make_shared<ngraph::op::Constant>(element::u64, Shape{2}, vector<int64_t>{0, 2});
+        make_shared<ngraph::op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 2});
     const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
@@ -1441,7 +1485,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
 {
     const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
-        make_shared<ngraph::op::Constant>(element::u64, Shape{0}, vector<int64_t>{});
+        make_shared<ngraph::op::Constant>(element::i64, Shape{0}, vector<int64_t>{});
     const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(NodeVector{squeeze}, ParameterVector{data_node});
@@ -1530,6 +1574,7 @@ NGRAPH_TEST(${BACKEND_NAME}, split_var_len_parts)
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_no_bias_no_peepholes)
 {
+    DisableRemoveGOE nogoe;
     const size_t batch_size = 2;
     const size_t input_size = 3;
     const size_t hidden_size = 3;
@@ -1663,6 +1708,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes)
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
 {
+    DisableRemoveGOE nogoe;
     const size_t batch_size = 2;
     const size_t input_size = 3;
     const size_t hidden_size = 3;
@@ -1730,6 +1776,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
 
 NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fixed_no_bias_no_peepholes)
 {
+    DisableRemoveGOE nogoe;
     const size_t batch_size = 2;
     const size_t input_size = 3;
     const size_t hidden_size = 3;
@@ -2251,96 +2298,6 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_transpose)
-{
-    const CoordinateDiff output_padding{1, 1};
-    const CoordinateDiff padding_begin{1, 1};
-    const CoordinateDiff padding_end{1, 1};
-    Strides strides{2, 2};
-    Strides dilations{1, 1};
-    size_t groups = 1;
-
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 1, 3, 3});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{1, 1, 3, 3});
-
-    auto gct = make_shared<op::GroupConvolutionTranspose>(
-        data, filters, strides, dilations, padding_begin, padding_end, output_padding, groups);
-
-    auto function = make_shared<Function>(NodeVector{gct}, ParameterVector{data, filters});
-    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-
-    // X
-    test_case.add_input<float>(vector<float>{0.16857791f,
-                                             -0.15161794f,
-                                             0.08540368f,
-                                             0.1820628f,
-                                             -0.21746576f,
-                                             0.08245695f,
-                                             0.1431433f,
-                                             -0.43156421f,
-                                             0.30591947f});
-    // W
-    test_case.add_input<float>({-0.06230065f,
-                                0.37932432f,
-                                -0.25388849f,
-                                0.33878803f,
-                                0.43709868f,
-                                -0.22477469f,
-                                0.04118127f,
-                                -0.44696793f,
-                                0.06373066f});
-    test_case.add_expected_output(
-        Shape{1, 1, 6, 6},
-        vector<float>{
-            0.07368518f,  -0.08925839f, -0.06627201f, 0.06301362f,  0.03732984f,  -0.01919658f,
-            -0.00628807f, -0.02817563f, -0.01472169f, 0.04392925f,  -0.00689478f, -0.01549204f,
-            0.07957941f,  -0.11459791f, -0.09505399f, 0.07681622f,  0.03604182f,  -0.01853423f,
-            -0.0270785f,  -0.00680824f, -0.06650258f, 0.08004665f,  0.07918708f,  -0.0724144f,
-            0.06256775f,  -0.17838378f, -0.18863615f, 0.20064656f,  0.133717f,    -0.06876295f,
-            -0.06398046f, -0.00864975f, 0.19289537f,  -0.01490572f, -0.13673618f, 0.01949645f});
-    test_case.run(DEFAULT_FLOAT_TOLERANCE_BITS + 1);
-}
-
-NGRAPH_TEST(${BACKEND_NAME}, group_conv_transpose_output_shape)
-{
-    const CoordinateDiff output_padding{};
-    const Shape output_shape{1, 1, 1, 14};
-    Strides strides{1, 1};
-    Strides dilations{1, 1};
-    size_t groups = 1;
-
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 10});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 5});
-
-    auto gct = make_shared<op::GroupConvolutionTranspose>(
-        data, filters, strides, dilations, output_padding, output_shape, groups);
-
-    auto function = make_shared<Function>(NodeVector{gct}, ParameterVector{data, filters});
-    auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
-
-    // X
-    test_case.add_input<float>(
-        vector<float>{0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f, 9.0f});
-    // W
-    test_case.add_input<float>({1.0f, 2.0f, 3.0f, 2.0f, 1.0f});
-    test_case.add_expected_output(Shape{1, 1, 1, 14},
-                                  vector<float>{0.0f,
-                                                1.0f,
-                                                4.0f,
-                                                10.0f,
-                                                18.0f,
-                                                27.0f,
-                                                36.0f,
-                                                45.0f,
-                                                54.0f,
-                                                63.0f,
-                                                62.0f,
-                                                50.0f,
-                                                26.0f,
-                                                9.0f});
-    test_case.run();
-}
-
 NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_no_bias)
 {
     const size_t batch_size = 2;
@@ -2529,59 +2486,56 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_bias_clip)
     const auto R =
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X,
+                                                   H_t,
                                                    W,
                                                    R,
-                                                   H_t,
-                                                   hidden_size,
                                                    B,
+                                                   hidden_size,
                                                    vector<string>{"sigmoid", "tanh"},
                                                    vector<float>{},
                                                    vector<float>{},
                                                    clip,
                                                    linear_before_reset);
-    auto function = make_shared<Function>(gru_cell, ParameterVector{X, W, R, H_t, B});
+    auto function = make_shared<Function>(gru_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // X
     test_case.add_input<float>(
         {0.52421564f, 0.78845507f, 0.9372873f, 0.59783894f, 0.18278378f, 0.2084126f});
+
+    // Ht
+    test_case.add_input<float>(
+        {0.45738035f, 0.996877f, 0.82882977f, 0.47492632f, 0.88471466f, 0.57833236f});
+
     // W
     test_case.add_input<float>(
         {0.5815369f, 0.16559383f, 0.08464007f, 0.843122f,   0.73968244f, 0.11359601f, 0.8295078f,
          0.9240567f, 0.10007995f, 0.20573162f, 0.09002485f, 0.2839569f,  0.3096991f,  0.5638341f,
          0.5787327f, 0.84552664f, 0.16263747f, 0.7243242f,  0.8049057f,  0.43966424f, 0.46294412f,
          0.9833361f, 0.31369713f, 0.1719934f,  0.4937093f,  0.6353004f,  0.77982515f});
+
     // R
     test_case.add_input<float>(
         {0.16510165f, 0.52435565f, 0.2788478f,  0.99427545f, 0.1623331f,  0.01389796f, 0.99669236f,
          0.53901845f, 0.8737506f,  0.9254788f,  0.21172932f, 0.11634306f, 0.40111724f, 0.37497616f,
          0.2903471f,  0.6796794f,  0.65131867f, 0.78163475f, 0.12058706f, 0.45591718f, 0.791677f,
          0.76497287f, 0.9895242f,  0.7845312f,  0.51267904f, 0.49030215f, 0.08498167f});
-    // Ht
-    test_case.add_input<float>(
-        {0.45738035f, 0.996877f, 0.82882977f, 0.47492632f, 0.88471466f, 0.57833236f});
-    // B
-    test_case.add_input<float>({0.8286678f,
-                                0.9153158f,
-                                0.9581612f,
-                                0.6639213f,
-                                0.84239805f,
-                                0.5282445f,
-                                0.14153397f,
-                                0.22404431f,
-                                0.6549655f,
-                                0.9175602f,
-                                0.14958014f,
-                                0.49230585f,
-                                0.63162816f,
-                                0.4161903f,
-                                0.22148274f,
-                                0.50496656f,
-                                0.34798595f,
-                                0.6699164f});
+
+    // B (the sum of biases for W and R)
+    test_case.add_input<float>({
+        0.8286678f + 0.9175602f,
+        0.9153158f + 0.14958014f,
+        0.9581612f + 0.49230585f,
+        0.6639213f + 0.63162816f,
+        0.84239805f + 0.4161903f,
+        0.5282445f + 0.22148274f,
+        0.14153397f + 0.50496656f,
+        0.22404431f + 0.34798595f,
+        0.6549655f + 0.6699164f,
+    });
 
     test_case.add_expected_output<float>(
         Shape{batch_size, hidden_size},
@@ -2605,25 +2559,29 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_linear_before_reset)
     const auto R =
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X,
+                                                   H_t,
                                                    W,
                                                    R,
-                                                   H_t,
-                                                   hidden_size,
                                                    B,
+                                                   hidden_size,
                                                    vector<string>{"sigmoid", "tanh"},
                                                    vector<float>{},
                                                    vector<float>{},
                                                    clip,
                                                    linear_before_reset);
-    auto function = make_shared<Function>(gru_cell, ParameterVector{X, W, R, H_t, B});
+    auto function = make_shared<Function>(gru_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // X
     test_case.add_input<float>(
         {0.12249453f, 0.6127907f, 0.5001741f, 0.5124603f, 0.04329684f, 0.023834f});
+    // Ht
+    test_case.add_input<float>(
+        {0.8598948f, 0.41189128f, 0.72824323f, 0.53940123f, 0.31485787f, 0.04053852f});
+
     // W
     test_case.add_input<float>(
         {0.72259396f, 0.11561195f, 0.9457856f,  0.19037509f, 0.6964006f,  0.33459795f, 0.5468904f,
@@ -2636,25 +2594,17 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_linear_before_reset)
          0.44844428f, 0.29384327f, 0.49037653f, 0.50421673f, 0.7366393f,  0.63143945f, 0.00277612f,
          0.37198433f, 0.06966069f, 0.4613444f,  0.10999731f, 0.78273284f, 0.21453214f, 0.10751773f,
          0.18332677f, 0.1326976f,  0.9998985f,  0.19263928f, 0.10979804f, 0.52575564f});
-    // Ht
-    test_case.add_input<float>(
-        {0.8598948f, 0.41189128f, 0.72824323f, 0.53940123f, 0.31485787f, 0.04053852f});
-    // B
-    test_case.add_input<float>({0.09875853f,
-                                0.37801138f,
-                                0.7729636f,
-                                0.78493553f,
-                                0.5662702f,
-                                0.12406381f,
+
+    // B (the sum of biases for W and R for z and r gates, and separately for W and R for h gate)
+    test_case.add_input<float>({0.61395123f, // 0.09875853f + 0.5151927f,
+                                1.08667738f, // 0.37801138f + 0.708666f,
+                                1.32600244f, // 0.7729636f + 0.55303884f,
+                                0.81917698f, // 0.78493553f + 0.03424145f,
+                                1.37736335f, // 0.5662702f + 0.81109315f,
+                                0.42931147f, // 0.12406381f + 0.30524766f,
                                 0.66729516f,
                                 0.7752771f,
                                 0.78819966f,
-                                0.5151927f,
-                                0.708666f,
-                                0.55303884f,
-                                0.03424145f,
-                                0.81109315f,
-                                0.30524766f,
                                 0.6606634f,
                                 0.99040645f,
                                 0.21112025f});
@@ -2681,25 +2631,30 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
     const auto R =
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{2 * gates_count * hidden_size});
+    const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
     const auto gru_cell = make_shared<op::GRUCell>(X,
+                                                   H_t,
                                                    W,
                                                    R,
-                                                   H_t,
-                                                   hidden_size,
                                                    B,
+                                                   hidden_size,
                                                    vector<string>{"hardsigmoid", "hardsigmoid"},
                                                    vector<float>{1.8345f, 1.8345f},
                                                    vector<float>{3.05f, 3.05f},
                                                    clip,
                                                    linear_before_reset);
-    auto function = make_shared<Function>(gru_cell, ParameterVector{X, W, R, H_t, B});
+    auto function = make_shared<Function>(gru_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     // X
     test_case.add_input<float>(
         {0.12249453f, 0.6127907f, 0.5001741f, 0.5124603f, 0.04329684f, 0.023834f});
+
+    // Ht
+    test_case.add_input<float>(
+        {0.8598948f, 0.41189128f, 0.72824323f, 0.53940123f, 0.31485787f, 0.04053852f});
+
     // W
     test_case.add_input<float>(
         {0.72259396f, 0.11561195f, 0.9457856f,  0.19037509f, 0.6964006f,  0.33459795f, 0.5468904f,
@@ -2712,25 +2667,17 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
          0.44844428f, 0.29384327f, 0.49037653f, 0.50421673f, 0.7366393f,  0.63143945f, 0.00277612f,
          0.37198433f, 0.06966069f, 0.4613444f,  0.10999731f, 0.78273284f, 0.21453214f, 0.10751773f,
          0.18332677f, 0.1326976f,  0.9998985f,  0.19263928f, 0.10979804f, 0.52575564f});
-    // Ht
-    test_case.add_input<float>(
-        {0.8598948f, 0.41189128f, 0.72824323f, 0.53940123f, 0.31485787f, 0.04053852f});
-    // B
-    test_case.add_input<float>({0.09875853f,
-                                0.37801138f,
-                                0.7729636f,
-                                0.78493553f,
-                                0.5662702f,
-                                0.12406381f,
+
+    // B (the sum of biases for W and R for z and r gates, and separately for W and R for h gate)
+    test_case.add_input<float>({0.09875853f + 0.5151927f,
+                                0.37801138f + 0.708666f,
+                                0.7729636f + 0.55303884f,
+                                0.78493553f + 0.03424145f,
+                                0.5662702f + 0.81109315f,
+                                0.12406381f + 0.30524766f,
                                 0.66729516f,
                                 0.7752771f,
                                 0.78819966f,
-                                0.5151927f,
-                                0.708666f,
-                                0.55303884f,
-                                0.03424145f,
-                                0.81109315f,
-                                0.30524766f,
                                 0.6606634f,
                                 0.99040645f,
                                 0.21112025f});

@@ -20,6 +20,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/result.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,8 +32,11 @@ op::Result::Result(const Output<Node>& arg, bool needs_default_layout)
     , m_needs_default_layout(needs_default_layout)
 {
     constructor_validate_and_infer_types();
-    // always borrow the placement conf even the default one
-    set_placement_index(input_value(0).get_node()->get_placement_index());
+}
+
+bool ngraph::op::v0::Result::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
 }
 
 void op::Result::validate_and_infer_types()
@@ -43,7 +47,7 @@ void op::Result::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::Result::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Result::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 
@@ -56,4 +60,18 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
     auto delta = deltas.at(0);
 
     adjoints.add_delta(input_value(0), delta);
+}
+
+bool op::Result::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    outputs[0]->set_unary(inputs[0]);
+    void* output = outputs[0]->get_data_ptr();
+    void* input = inputs[0]->get_data_ptr();
+    memcpy(output, input, outputs[0]->get_size_in_bytes());
+    return true;
+}
+
+bool op::Result::constant_fold(OutputVector& output_values, const OutputVector& inputs_values)
+{
+    return false;
 }

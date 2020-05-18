@@ -16,6 +16,9 @@
 
 #include "ngraph/op/negative.hpp"
 
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/negate.hpp"
+
 using namespace std;
 using namespace ngraph;
 
@@ -27,10 +30,69 @@ op::Negative::Negative(const Output<Node>& arg)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Negative::copy_with_new_args(const NodeVector& new_args) const
+bool ngraph::op::v0::Negative::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
+shared_ptr<Node> op::Negative::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Negative>(new_args.at(0));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        runtime::reference::negate<T>(arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), count);
+        return true;
+    }
+
+    bool evaluate_negative(const HostTensorPtr& arg0, const HostTensorPtr& out, const size_t count)
+    {
+        bool rc = true;
+        out->set_unary(arg0);
+
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(boolean)(arg0, out, count);
+            break;
+            TYPE_CASE(i8)(arg0, out, count);
+            break;
+            TYPE_CASE(i16)(arg0, out, count);
+            break;
+            TYPE_CASE(i32)(arg0, out, count);
+            break;
+            TYPE_CASE(i64)(arg0, out, count);
+            break;
+            TYPE_CASE(u8)(arg0, out, count);
+            break;
+            TYPE_CASE(u16)(arg0, out, count);
+            break;
+            TYPE_CASE(u32)(arg0, out, count);
+            break;
+            TYPE_CASE(u64)(arg0, out, count);
+            break;
+            TYPE_CASE(bf16)(arg0, out, count);
+            break;
+            TYPE_CASE(f16)(arg0, out, count);
+            break;
+            TYPE_CASE(f32)(arg0, out, count);
+            break;
+            TYPE_CASE(f64)(arg0, out, count);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::Negative::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_negative(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
 
 void op::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)

@@ -57,7 +57,7 @@ namespace ngraph
                                   const CoordinateDiff& pads_begin,
                                   const CoordinateDiff& pads_end,
                                   const Strides& dilations,
-                                  const BinaryConvolutionMode& mode,
+                                  BinaryConvolutionMode mode,
                                   float pad_value,
                                   const PadType& auto_pad = PadType::EXPLICIT);
 
@@ -76,8 +76,8 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
 
@@ -115,6 +115,7 @@ namespace ngraph
         }
     } // namespace op
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
                              const op::v1::BinaryConvolution::BinaryConvolutionMode& type);
 

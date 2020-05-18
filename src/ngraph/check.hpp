@@ -39,7 +39,7 @@ namespace ngraph
     };
 
     /// Base class for check failure exceptions.
-    class CheckFailure : public ngraph_error
+    class NGRAPH_API CheckFailure : public ngraph_error
     {
     public:
         CheckFailure(const CheckLocInfo& check_loc_info,

@@ -19,6 +19,5 @@ add_dependencies(mnist_mlp ngraph cpu_backend)
 target_link_libraries(mnist_mlp ngraph cpu_backend)
 
 add_executable(dist_mnist_mlp mnist_loader.cpp dist_mnist_mlp.cpp)
-target_compile_definitions(dist_mnist_mlp PRIVATE NGRAPH_DISTRIBUTED_ENABLE)
 add_dependencies(dist_mnist_mlp ngraph cpu_backend)
 target_link_libraries(dist_mnist_mlp ngraph cpu_backend)

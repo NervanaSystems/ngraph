@@ -90,6 +90,8 @@ namespace ngraph
 
 namespace std
 {
+    bool NGRAPH_API isnan(ngraph::float16 x);
+
     template <>
     class numeric_limits<ngraph::float16>
     {

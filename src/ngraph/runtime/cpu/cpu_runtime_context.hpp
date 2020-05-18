@@ -36,7 +36,7 @@
 
 namespace mkldnn
 {
-    class primitive;
+    struct primitive;
 }
 
 namespace ngraph

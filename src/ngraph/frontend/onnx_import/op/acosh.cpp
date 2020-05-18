@@ -40,15 +40,15 @@ namespace ngraph
                     // arccosh(x) = ln(x + sqrt(x^2 - 1))
                     //
 
-                    std::shared_ptr<ngraph::Node> one_node{default_opset::Constant::create(
-                        data->get_element_type(),
-                        data->get_shape(),
-                        std::vector<float>(ngraph::shape_size(data->get_shape()), 1.f))};
+                    const auto one =
+                        default_opset::Constant::create(data->get_element_type(), {}, {1.f});
 
-                    std::shared_ptr<ngraph::Node> sqrt_node{
-                        std::make_shared<default_opset::Sqrt>(data * data - one_node)};
+                    const auto x_square = std::make_shared<default_opset::Multiply>(data, data);
+                    const auto sqrt_args = std::make_shared<default_opset::Subtract>(x_square, one);
+                    const auto sqrt_node = std::make_shared<default_opset::Sqrt>(sqrt_args);
+                    const auto log_args = std::make_shared<default_opset::Add>(data, sqrt_node);
 
-                    return {std::make_shared<default_opset::Log>(data + sqrt_node)};
+                    return {std::make_shared<default_opset::Log>(log_args)};
                 }
 
             } // namespace set_1

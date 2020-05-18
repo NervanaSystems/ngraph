@@ -29,9 +29,12 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/op.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/serializer.hpp"
+#include "ngraph/type/element_type_traits.hpp"
 
 #ifdef NGRAPH_MLIR_ENABLE
 #define MLIR_DISABLE_TEST(name) DISABLED_##name
@@ -43,9 +46,48 @@ namespace ngraph
 {
     class Node;
     class Function;
+    class TestOpMultiOut : public op::Op
+    {
+    public:
+        static constexpr NodeTypeInfo type_info{"TestOpMultiOut", 0};
+        const NodeTypeInfo& get_type_info() const override { return type_info; }
+        TestOpMultiOut() = default;
+
+        TestOpMultiOut(const Output<Node>& output_1, const Output<Node>& output_2)
+            : Op({output_1, output_2})
+        {
+            validate_and_infer_types();
+        }
+        void validate_and_infer_types() override
+        {
+            set_output_size(2);
+            set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
+            set_output_type(1, get_input_element_type(1), get_input_partial_shape(1));
+        }
+
+        virtual std::shared_ptr<Node>
+            clone_with_new_inputs(const OutputVector& new_args) const override
+        {
+            return std::make_shared<TestOpMultiOut>(new_args.at(0), new_args.at(1));
+        }
+        bool evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) override;
+    };
 }
 
-bool validate_list(const std::list<std::shared_ptr<ngraph::Node>>& nodes);
+class DisableRemoveGOE
+{
+public:
+    DisableRemoveGOE()
+        : m_saved_remove_goe(ngraph::get_remove_goe())
+    {
+        ngraph::set_remove_goe(false);
+    }
+    ~DisableRemoveGOE() { ngraph::set_remove_goe(m_saved_remove_goe); }
+private:
+    bool m_saved_remove_goe;
+};
+
+bool validate_list(const std::vector<std::shared_ptr<ngraph::Node>>& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 #ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);
@@ -55,8 +97,25 @@ template <typename T>
 void copy_data(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<T>& data)
 {
     size_t data_size = data.size() * sizeof(T);
-    tv->write(data.data(), data_size);
+    if (data_size > 0)
+    {
+        tv->write(data.data(), data_size);
+    }
 }
+
+template <ngraph::element::Type_t ET>
+ngraph::HostTensorPtr
+    make_host_tensor(const ngraph::Shape& shape,
+                     const std::vector<typename ngraph::element_type_traits<ET>::value_type>& data)
+{
+    NGRAPH_CHECK(shape_size(shape) == data.size(), "Incorrect number of initialization elements");
+    auto host_tensor = std::make_shared<ngraph::HostTensor>(ET, shape);
+    copy_data(host_tensor, data);
+    return host_tensor;
+}
+
+template <>
+void copy_data<bool>(std::shared_ptr<ngraph::runtime::Tensor> tv, const std::vector<bool>& data);
 
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
@@ -68,7 +127,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), size);
+    if (size > 0)
+    {
+        tv->read(rc.data(), size);
+    }
     return rc;
 }
 
@@ -287,3 +349,12 @@ std::vector<T> read_binary_file(const std::string& path)
 
 testing::AssertionResult test_ordered_ops(std::shared_ptr<ngraph::Function> f,
                                           const ngraph::NodeVector& required_ops);
+
+template <ngraph::element::Type_t ET>
+ngraph::HostTensorPtr make_host_tensor(const ngraph::Shape& shape)
+{
+    auto host_tensor = std::make_shared<ngraph::HostTensor>(ET, shape);
+    static std::default_random_engine engine(2112);
+    random_init(host_tensor.get(), engine);
+    return host_tensor;
+}

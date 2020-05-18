@@ -47,14 +47,13 @@ namespace ngraph
                              bool use_seed = false);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const element::Type& get_element_type() const { return m_element_type; }
                 void set_element_type(const element::Type& element_type)
                 {
                     m_element_type = element_type;
                 }
-
                 /// Deprecated accessor for transitional attributes
                 const Shape& get_mask_shape() const { return m_shape; }
                 /// \brief Returns the probability of a trial generating 1 (i.e. an element being
@@ -72,7 +71,6 @@ namespace ngraph
                                                const OutputVector& /* deltas */) override
                 {
                 }
-
                 element::Type m_element_type;
                 // These will be deprecated
                 Shape m_shape;
@@ -106,14 +104,13 @@ namespace ngraph
 
                 size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const element::Type& get_element_type() const { return m_element_type; }
                 void set_element_type(const element::Type& element_type)
                 {
                     m_element_type = element_type;
                 }
-
                 /// Deprecated accessor for transitional attributes
                 const Shape get_mask_shape() const;
                 /// \brief Returns the probability of a trial generating 1 (i.e. an element being
@@ -131,7 +128,6 @@ namespace ngraph
                                                const OutputVector& /* deltas */) override
                 {
                 }
-
                 element::Type m_element_type;
                 // These will be deprecated
                 bool m_use_seed{false};

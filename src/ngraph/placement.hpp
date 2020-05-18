@@ -22,8 +22,6 @@
 #include <unordered_set>
 #include <vector>
 
-#include "ngraph/log.hpp"
-
 namespace ngraph
 {
     enum class Placement
@@ -33,7 +31,6 @@ namespace ngraph
         CPU,
         GPU,
         NNP,
-        PLAIDML,
     };
 
     std::string placement_to_string(Placement placement);

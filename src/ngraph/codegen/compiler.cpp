@@ -196,10 +196,6 @@ void codegen::CompilerCore::initialize()
     args.push_back("-DNGRAPH_TBB_ENABLE");
 #endif
 
-#if defined(NGRAPH_USE_LEGACY_MKLDNN)
-    args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
-#endif
-
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
@@ -441,12 +437,9 @@ void codegen::CompilerCore::configure_search_path()
     add_header_search_path("/Library/Developer/CommandLineTools/usr/include/c++/v1");
     add_header_search_path("/usr/local/include");
     add_header_search_path(CLANG_BUILTIN_HEADERS_PATH);
-    std::string mojave_isysroot = file_util::path_join(
-        "/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs",
-        "MacOSX10.14.sdk");
-    if (file_util::exists(mojave_isysroot))
+    if (file_util::exists(CMAKE_OSX_SYSROOT))
     {
-        add_header_search_path(file_util::path_join(mojave_isysroot, "usr/include"));
+        add_header_search_path(file_util::path_join(CMAKE_OSX_SYSROOT, "usr/include"));
     }
     else
     {

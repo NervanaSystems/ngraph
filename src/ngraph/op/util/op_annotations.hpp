@@ -56,7 +56,6 @@ namespace ngraph
                 {
                     return m_in_place_oi_pairs;
                 }
-
                 bool is_cacheable() const { return m_cacheable; }
                 void set_cacheable(bool val) { m_cacheable = val; }
             private:

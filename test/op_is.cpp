@@ -438,15 +438,6 @@ namespace
         EXPECT_FALSE(node.is_binary_elementwise_logical());
     }
 
-    void op_is_DynReshape()
-    {
-        op::DynReshape node;
-        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-        EXPECT_FALSE(node.is_binary_elementwise_comparison());
-        EXPECT_FALSE(node.is_binary_elementwise_logical());
-    }
-
     void op_is_DynSlice()
     {
         op::DynSlice node;
@@ -639,15 +630,6 @@ namespace
     void op_is_GroupConvolutionBackpropFilters()
     {
         op::GroupConvolutionBackpropFilters node;
-        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-        EXPECT_FALSE(node.is_binary_elementwise_comparison());
-        EXPECT_FALSE(node.is_binary_elementwise_logical());
-    }
-
-    void op_is_GroupConvolutionTranspose()
-    {
-        op::GroupConvolutionTranspose node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());

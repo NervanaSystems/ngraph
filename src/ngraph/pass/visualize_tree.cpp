@@ -203,10 +203,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         auto nodes = topological_sort(f->get_ops());
-        nodes.reverse();
 
-        for (auto& node : nodes)
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
+            auto& node = *it;
             for (auto& output : node->outputs())
             {
                 for (auto& input : output.get_target_inputs())
@@ -327,7 +327,7 @@ static std::string pretty_partial_shape(const PartialShape& shape)
         bool first = true;
 
         ss << "[";
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        for (size_t i = 0; i < shape.rank().get_length(); i++)
         {
             if (!first)
             {
@@ -339,7 +339,7 @@ static std::string pretty_partial_shape(const PartialShape& shape)
             }
             else
             {
-                ss << size_t(shape[i]);
+                ss << shape[i].get_length();
             }
             first = false;
         }

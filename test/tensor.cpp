@@ -44,7 +44,7 @@ TEST(tensor, size)
         pass_manager.run_passes(f0);
 
         ASSERT_EQ(1, arg0->get_output_size());
-        descriptor::Tensor& output = arg0->output(0).get_tensor();
+        descriptor::Tensor& output = arg0->get_output_tensor(0);
         EXPECT_EQ(2 * 3 * 4, output.size());
     }
 
@@ -56,7 +56,7 @@ TEST(tensor, size)
         pass_manager.run_passes(f0);
 
         ASSERT_EQ(1, arg0->get_output_size());
-        descriptor::Tensor& output = arg0->output(0).get_tensor();
+        descriptor::Tensor& output = arg0->get_output_tensor(0);
         EXPECT_EQ(1 * 4, output.size());
     }
 
@@ -68,7 +68,7 @@ TEST(tensor, size)
         pass_manager.run_passes(f0);
 
         ASSERT_EQ(1, arg0->get_output_size());
-        descriptor::Tensor& output = arg0->output(0).get_tensor();
+        descriptor::Tensor& output = arg0->get_output_tensor(0);
         EXPECT_EQ(1 * 4, output.size());
     }
 }

@@ -42,15 +42,10 @@ namespace ngraph
                         const Output<Node>& arg,
                         const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
 
-                    CPU_BACKEND_API ConvertLayout(
-                        const Output<Node>& arg,
-                        size_t output_index,
-                        const std::shared_ptr<ngraph::runtime::cpu::LayoutDescriptor>& layout);
-
                     virtual void validate_and_infer_types() override;
 
                     virtual std::shared_ptr<Node>
-                        copy_with_new_args(const NodeVector& new_args) const override;
+                        clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 protected:
                     size_t arg_output_index;

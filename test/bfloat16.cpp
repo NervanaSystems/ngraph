@@ -19,6 +19,7 @@
 
 #include "gtest/gtest.h"
 
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/type/bfloat16.hpp"
 #include "util/float_util.hpp"

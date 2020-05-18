@@ -27,10 +27,9 @@ namespace ngraph
         namespace v0
         {
             /// \brief Operator performing Stack.
-            class Stack : public ngraph::op::util::FusedOp
+            class NGRAPH_API Stack : public ngraph::op::util::FusedOp
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"Stack", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Stack() = default;
@@ -57,7 +56,7 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The stack axis
                 int64_t get_axis() const { return m_axis; }

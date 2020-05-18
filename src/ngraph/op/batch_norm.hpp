@@ -77,8 +77,8 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -144,8 +144,8 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& /* adjoints */,
@@ -194,8 +194,8 @@ namespace ngraph
 
                 double get_eps_value() const { return m_epsilon; }
                 void set_eps_value(double epsilon) { m_epsilon = epsilon; }
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             private:
                 static constexpr size_t INPUT_GAMMA = 0;

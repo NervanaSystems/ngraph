@@ -51,7 +51,7 @@ namespace ngraph
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_soft_label() const { return m_soft_label; }
                 int64_t get_ignore_index() const { return m_ignore_index; }
@@ -88,7 +88,7 @@ namespace ngraph
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool get_soft_label() const { return m_soft_label; }
                 int64_t get_ignore_index() const { return m_ignore_index; }
             private:

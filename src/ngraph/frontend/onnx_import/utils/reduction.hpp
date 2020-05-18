@@ -42,9 +42,11 @@ namespace ngraph
 
             } // namespace  detail
 
+            // An overload for reduction operators that take reduction axes as input
             using RuntimeReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
                 const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&, bool)>;
 
+            // An overload for reduction operators that take reduction axes as an attribute
             using ReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
                 const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&)>;
 

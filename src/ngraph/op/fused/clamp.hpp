@@ -49,7 +49,9 @@ namespace ngraph
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
 
                 double get_min() const { return m_min; }
                 double get_max() const { return m_max; }

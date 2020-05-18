@@ -103,7 +103,7 @@ TEST(reshape_sinking, broadcast_swimming)
     pass_manager.run_passes(func);
 
     ASSERT_EQ(add->get_shape(), conv_nchw);
-    ASSERT_EQ(add->get_argument(0)->get_shape(), conv_nchw);
+    ASSERT_EQ(add->get_input_shape(0), conv_nchw);
     ASSERT_EQ(add->get_argument(1), conv);
 }
 

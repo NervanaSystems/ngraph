@@ -16,6 +16,7 @@
 
 #include "matmul_integer.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {

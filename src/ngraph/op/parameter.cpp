@@ -49,7 +49,7 @@ void op::Parameter::validate_and_infer_types()
     set_output_type(0, m_element_type, m_partial_shape);
 }
 
-shared_ptr<Node> op::Parameter::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Parameter::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Parameter>(m_element_type, m_partial_shape);

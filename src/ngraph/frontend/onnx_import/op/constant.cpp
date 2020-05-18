@@ -121,6 +121,13 @@ namespace ngraph
                         return __make_ng_constant<uint64_t>(element::u64, tensor);
                     }
 
+                    template <>
+                    inline std::shared_ptr<default_opset::Constant>
+                        make_ng_constant<Tensor::Type::boolean>(const Tensor& tensor)
+                    {
+                        return __make_ng_constant<char>(element::boolean, tensor);
+                    }
+
                     inline std::shared_ptr<default_opset::Constant>
                         make_constant(const Tensor& tensor)
                     {
@@ -140,6 +147,7 @@ namespace ngraph
                             MAKE_NG_CONSTANT(Tensor::Type::uint16);
                             MAKE_NG_CONSTANT(Tensor::Type::uint32);
                             MAKE_NG_CONSTANT(Tensor::Type::uint64);
+                            MAKE_NG_CONSTANT(Tensor::Type::boolean);
                         default: throw error::tensor::invalid_data_type{tensor};
                         }
                     }

@@ -185,9 +185,24 @@ namespace ngraph
         NGRAPH_API
         std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
+
+    template <>
+    class NGRAPH_API AttributeAdapter<element::Type_t>
+        : public EnumAttributeAdapterBase<element::Type_t>
+    {
+    public:
+        AttributeAdapter(element::Type_t& value)
+            : EnumAttributeAdapterBase<element::Type_t>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type_t>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
+
     template <>
     class NGRAPH_API AttributeAdapter<element::Type> : public ValueReference<element::Type>,
-                                                       public ValueAccessor<void>
+                                                       public ValueAccessor<std::string>
     {
     public:
         AttributeAdapter(element::Type& value)
@@ -195,7 +210,13 @@ namespace ngraph
         {
         }
 
+        const std::string& get() override;
+        void set(const std::string& value) override;
+
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
+
+    /// \brief Return the number of bytes in the compile-time representation of the element type.
+    size_t compiler_byte_size(element::Type_t et);
 }

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -26,8 +27,8 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/chrome_trace.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -70,14 +71,24 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
 #else
     m_function = clone_function(*function);
 #endif
+    auto is_supported = [](const Node& node) {
+        bool retval = false;
+        switch (INTExecutable::get_typeid(node))
+        {
+        case OP_TYPEID::MatMul:
+        case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Unsqueeze: retval = true; break;
+        default: break;
+        }
+        return retval;
+    };
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
-    pass_manager.register_pass<pass::FusedOpDecomposition>();
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
-    pass_manager.register_pass<pass::Liveness>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {
@@ -101,7 +112,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    runtime::event::Duration d1("call", "Interpreter");
+    event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -143,14 +154,14 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->output(0).get_tensor();
+        descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        runtime::event::Duration d2(op->description(), "Interpreter");
+        event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
             continue;
@@ -173,10 +184,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                const Shape& shape = op->get_output_shape(i);
-                const element::Type& type = op->get_output_element_type(i);
-                string name = op->output(i).get_tensor().get_name();
-                host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
+                host_tensor = make_shared<HostTensor>(op->output(i));
                 tensor_map.insert({tensor, host_tensor});
             }
             else
@@ -214,7 +222,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             m_timer_map[op].start();
         }
-        generate_calls(type, *op.get(), op_outputs, op_inputs);
+        if (!op->evaluate(op_outputs, op_inputs))
+        {
+            generate_calls(type, *op.get(), op_outputs, op_inputs);
+        }
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();

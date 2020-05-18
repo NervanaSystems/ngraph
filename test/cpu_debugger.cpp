@@ -31,7 +31,7 @@
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debugger.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor_view.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/util.hpp"
 #include "util/test_tools.hpp"

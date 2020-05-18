@@ -15,6 +15,8 @@
 //*****************************************************************************
 
 #include "ngraph/op/multiply.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/multiply.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -31,7 +33,7 @@ op::v0::Multiply::Multiply(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v0::Multiply::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Multiply::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Multiply>(new_args.at(0), new_args.at(1), this->get_autob());
@@ -53,6 +55,63 @@ void op::v0::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     adjoints.add_delta(y, x * delta);
 }
 
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg0,
+                  const HostTensorPtr& arg1,
+                  const HostTensorPtr& out,
+                  const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        runtime::reference::multiply(arg0->get_data_ptr<ET>(),
+                                     arg1->get_data_ptr<ET>(),
+                                     out->get_data_ptr<ET>(),
+                                     arg0->get_shape(),
+                                     arg1->get_shape(),
+                                     broadcast_spec);
+        return true;
+    }
+
+    bool evaluate_multiply(const HostTensorPtr& arg0,
+                           const HostTensorPtr& arg1,
+                           const HostTensorPtr& out,
+                           const op::AutoBroadcastSpec& broadcast_spec)
+    {
+        bool rc = true;
+        out->set_broadcast(broadcast_spec, arg0, arg1);
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(i64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u8)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u16)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(u64)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f32)(arg0, arg1, out, broadcast_spec);
+            break;
+            TYPE_CASE(f64)(arg0, arg1, out, broadcast_spec);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Multiply::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_multiply(inputs[0], inputs[1], outputs[0], get_autob());
+}
+
 // ------------------------------------ v1 -------------------------------------
 
 constexpr NodeTypeInfo op::v1::Multiply::type_info;
@@ -65,7 +124,7 @@ op::v1::Multiply::Multiply(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::Multiply::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::Multiply::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::Multiply>(new_args.at(0), new_args.at(1), this->get_autob());
@@ -85,6 +144,11 @@ void op::v1::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
 
     adjoints.add_delta(x, delta * y);
     adjoints.add_delta(y, x * delta);
+}
+
+bool op::v1::Multiply::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_multiply(inputs[0], inputs[1], outputs[0], get_autob());
 }
 
 // -----------------------------------------------------------------------------

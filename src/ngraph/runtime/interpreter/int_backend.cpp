@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
@@ -43,6 +42,11 @@ runtime::interpreter::INTBackend::INTBackend()
 runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
     : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
 {
+}
+
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
+{
+    return make_shared<runtime::HostTensor>();
 }
 
 shared_ptr<runtime::Tensor>

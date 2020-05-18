@@ -250,8 +250,8 @@ func @depthToSpace(%arg0: !ng.tensor<1x8x2x2xf32>) -> !ng.tensor<1x2x4x4xf32>
 //CHECK-LABEL: func @convBias
 func @convBias(%arg0: !ng.tensor<1x3x2xf32>, %arg1: !ng.tensor<2x3x1xf32>, %arg2: !ng.tensor<2xf32>) -> (!ng.tensor<1x2x2xf32>)
 {
-  //CHECK: %{{.*}} = "ng.convBias"(%{{.*}}, %{{.*}}, %{{.*}}) {padAbove = [0], padBelow = [0], strides = [1]} : (!ng.tensor<1x3x2xf32>, !ng.tensor<2x3x1xf32>, !ng.tensor<2xf32>) -> !ng.tensor<1x2x2xf32>
-  %0 = "ng.convBias"(%arg0, %arg1, %arg2) {padAbove=[0], padBelow=[0], strides=[1]} 
+  //CHECK: %{{.*}} = "ng.convBias"(%{{.*}}, %{{.*}}, %{{.*}}) {dilation = [1], padAbove = [0], padBelow = [0], strides = [1]} : (!ng.tensor<1x3x2xf32>, !ng.tensor<2x3x1xf32>, !ng.tensor<2xf32>) -> !ng.tensor<1x2x2xf32>
+  %0 = "ng.convBias"(%arg0, %arg1, %arg2) {dilation=[1], padAbove=[0], padBelow=[0], strides=[1]} 
        : (!ng.tensor<1x3x2xf32>, !ng.tensor<2x3x1xf32>, !ng.tensor<2xf32>) -> !ng.tensor<1x2x2xf32>
   "ng.return"(%0) : (!ng.tensor<1x2x2xf32>) -> ()
 }

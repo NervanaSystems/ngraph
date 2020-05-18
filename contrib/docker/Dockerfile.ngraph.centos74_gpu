@@ -26,7 +26,7 @@ RUN gcc --version
 RUN c++ --version
 
 RUN easy_install pip
-RUN pip install virtualenv
+RUN pip install virtualenv==16.7.10
 
 # Install some pip packages
 

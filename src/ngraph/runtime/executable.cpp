@@ -89,11 +89,12 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
                << "' does not match Result type '" << results[i]->get_element_type() << "'";
             throw runtime_error(ss.str());
         }
-        if (!(outputs[i]->get_partial_shape()).relaxes(results[i]->get_output_partial_shape(0)))
+        if (!outputs[i]->get_partial_shape().relaxes(results[i]->get_output_partial_shape(0)))
         {
             stringstream ss;
             ss << "Output " << i << " shape " << outputs[i]->get_partial_shape()
-               << " does not match Result shape " << results[i]->get_output_partial_shape(0);
+               << " does not match max Result shape "
+               << results[i]->get_output_partial_shape(0).get_max_shape();
             throw runtime_error(ss.str());
         }
     }
@@ -112,16 +113,6 @@ const ngraph::ResultVector& runtime::Executable::get_results() const
 size_t runtime::Executable::get_preferred_pipeline_depth() const
 {
     return 2;
-}
-
-void runtime::Executable::set_parameters(const ngraph::ParameterVector& params)
-{
-    m_parameters = params;
-}
-
-void runtime::Executable::set_results(const ngraph::ResultVector& results)
-{
-    m_results = results;
 }
 
 void runtime::Executable::set_parameters_and_results(const Function& func)

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/binary_convolution.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/axis_vector.hpp"
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -33,7 +34,7 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
                                              const CoordinateDiff& pads_begin,
                                              const CoordinateDiff& pads_end,
                                              const Strides& dilations,
-                                             const BinaryConvolutionMode& mode,
+                                             BinaryConvolutionMode mode,
                                              float pad_value,
                                              const PadType& auto_pad)
     : Op({data, kernel})
@@ -57,16 +58,16 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
                                              const std::string& mode,
                                              float pad_value,
                                              const PadType& auto_pad)
-    : BinaryConvolution(data,
-                        kernel,
-                        strides,
-                        pads_begin,
-                        pads_end,
-                        dilations,
-                        mode_from_string(mode),
-                        pad_value,
-                        auto_pad)
+    : Op({data, kernel})
+    , m_strides(strides)
+    , m_dilations(dilations)
+    , m_pads_begin(pads_begin)
+    , m_pads_end(pads_end)
+    , m_mode(mode_from_string(mode))
+    , m_pad_value(pad_value)
+    , m_auto_pad(auto_pad)
 {
+    constructor_validate_and_infer_types();
 }
 
 void op::v1::BinaryConvolution::validate_and_infer_types()
@@ -115,20 +116,20 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
     }
 
     PartialShape result_shape;
-    result_shape =
-        infer_convolution_forward(this,
-                                  data_batch_shape,
-                                  Strides(static_cast<size_t>(data_batch_shape.rank()) - 2, 1),
-                                  m_pads_begin,
-                                  m_pads_end,
-                                  filters_shape,
-                                  m_strides,
-                                  m_dilations);
+    result_shape = infer_convolution_forward(this,
+                                             data_batch_shape,
+                                             Strides(data_batch_shape.rank().get_length() - 2, 1),
+                                             m_pads_begin,
+                                             m_pads_end,
+                                             filters_shape,
+                                             m_strides,
+                                             m_dilations);
 
     set_output_type(0, data_batch_et, result_shape);
 }
 
-shared_ptr<Node> op::v1::BinaryConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node>
+    op::v1::BinaryConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::BinaryConvolution>(new_args.at(0),

@@ -45,7 +45,7 @@ namespace ngraph
                 std::vector<size_t> buffer_indices;
                 std::vector<std::vector<size_t>> shape_vec;
                 std::vector<std::vector<size_t>> strides_vec;
-                for (const TensorViewWrapper& arg : args)
+                for (const TensorWrapper& arg : args)
                 {
                     auto buffer_index = external_function->get_buffer_index(arg.get_name());
                     buffer_indices.push_back(buffer_index);
@@ -66,7 +66,7 @@ namespace ngraph
                     strides_vec.push_back(strides);
                 }
 
-                for (const TensorViewWrapper& result : out)
+                for (const TensorWrapper& result : out)
                 {
                     auto buffer_index = external_function->get_buffer_index(result.get_name());
                     buffer_indices.push_back(buffer_index);
@@ -136,13 +136,13 @@ namespace ngraph
                         mlir_backend.codegen();
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
-                        mlir_runtime.run(mem_ref_arg_vec);
+                        mlir_runtime.run(mem_ref_arg_vec, true /*firstIteration*/);
                     }
                     else
                     {
                         // We have found a cached runtime, just invoke.
                         MLIRCPURuntime& mlir_runtime = it->second;
-                        mlir_runtime.run(mem_ref_arg_vec);
+                        mlir_runtime.run(mem_ref_arg_vec, false /*firstIteration*/);
                     }
                 };
 

@@ -30,10 +30,5 @@ namespace ngraph
 class NGRAPH_API ngraph::pass::AlgebraicSimplification : public FunctionPass
 {
 public:
-    AlgebraicSimplification()
-        : FunctionPass()
-    {
-        set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
-    }
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 };

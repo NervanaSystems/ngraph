@@ -429,9 +429,9 @@ void op::TensorIterator::validate_and_infer_types()
     }
 }
 
-std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::TensorIterator::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    auto op = make_shared<op::TensorIterator>(as_output_vector(new_args));
+    auto op = make_shared<op::TensorIterator>(new_args);
     op->set_output_size(m_output_descriptions.size());
 
     std::vector<::ngraph::element::Type> types(m_body->get_parameters().size());
@@ -444,9 +444,9 @@ std::shared_ptr<Node> op::TensorIterator::copy_with_new_args(const NodeVector& n
             if (input_description->m_input_index == input_index)
             {
                 types[input_description->m_body_parameter_index] =
-                    new_args[input_index]->get_element_type();
+                    new_args[input_index].get_element_type();
                 new_shapes[input_description->m_body_parameter_index] =
-                    new_args[input_index]->get_output_partial_shape(0);
+                    new_args[input_index].get_partial_shape();
 
                 if (new_shapes[input_description->m_body_parameter_index].is_static())
                 {

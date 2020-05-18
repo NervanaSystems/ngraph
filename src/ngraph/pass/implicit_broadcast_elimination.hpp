@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ngraph/op/util/broadcasting.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph

@@ -142,50 +142,19 @@ work for what will ultimately be a fragile setup that is costly to maintain.
    **Figure C**:  Inevitable scaling problem
 
 
-Integrating PlaidML with nGraph provides flexbility to support the latest deep
-learning models in the absence of hand-optimized kernels for new operations.
-PlaidML works together with nGraph to address the exponential growth of
-kernels.
 
-PlaidML takes two inputs: the operation defined by the user and the machine
-description of the hardware target. It then automatically generates kernels
-that are iteratively optimized through an IR known as `Stripe`_. Integration of
-PlaidML with nGraph allows users to choose the hardware and framework that
-suits their needs, resulting in freedom from kernel libraries. 
+Solution: A customizable graph compiler for complex operations
+==============================================================
 
+`OpenVINO toolkit`_ is powered by nGraph capabilities for Graph compilation. 
+To represent a :abbr:`DL (Deep Learning)` model in real-time and perform 
+complex operations on that model, users can `build an nGraph function`_.
 
-Solution: nGraph and PlaidML
-============================
+Once created, it can wrap into a ``CNNNetwork``, creating utility for data 
+scientists or application developers to use operations that do not depend 
+on existing Deep Learning (DL) frameworks. 
+ 
 
-We developed nGraph and integrated it with PlaidML to allow developers to
-accelerate deep learning performance and address the problem of scalable
-kernel libraries. To address the problem of scaling backends, nGraph applies 
-graph-level optimizations to deep learning computations and unifies 
-computational graphsfrom deep learning frameworks with nGraph IR.
-
-In conjunction with nGraph's graph-level optimizations, PlaidML automatically
-applies low-level optimizations to improve deep learning performance.
-Additionally, PlaidML offers extensive support for various hardware targets
-due to its ability to generate code in LLVM, OpenCL, OpenGL, and Metal.
-
-Given a backend with existing kernel libraries, nGraph can readily support the
-target hardware because the backend only needs to support a few primitive
-operations. If the hardware supports one of the coding languages supported by
-PlaidML, developers must specify the machine description to support the
-hardware. Together, nGraph and PlaidML provide the best of both worlds.
-
-This documentation provides technical details of nGraph's core functionality
-as well as framework and backend integrations. Creating a compiler stack like
-nGraph and PlaidML requires expert knowledge, and we're confident that nGraph
-and PlaidML will make life easier for many kinds of developers:
-
-#. Framework owners looking to support new hardware and custom chips.
-#. Data scientists and ML developers wishing to accelerate deep learning
-   performance.
-#. New DL accelerator developers creating an end-to-end software stack from a
-   deep learning framework to their silicon.
-
-.. _Stripe: https://arxiv.org/abs/1903.06498
-.. _publication: https://arxiv.org/abs/1801.08058
-.. _up to 45X: https://ai.intel.com/ngraph-compiler-stack-beta-release/
-.. _more transistors on denser and denser circuits: https://www.intel.com/content/www/us/en/silicon-innovations/moores-law-technology.html
+.. _OpenVINO toolkit: http://docs.openvinotoolkit.org/latest/_docs_IE_DG_Deep_Learning_Inference_Engine_DevGuide.html
+.. _build an nGraph function: http://docs.openvinotoolkit.org/latest/_docs_IE_DG_nGraphTutorial.html
+.. _add custom operations: http://docs.openvinotoolkit.org/latest/_docs_IE_DG_AddingNGraphOps.html

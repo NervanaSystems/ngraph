@@ -25,7 +25,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
 
 using namespace std;
 
@@ -51,23 +50,12 @@ int main(int argc, char** argv)
         }
     }
     ngraph::runtime::Backend::set_backend_shared_library_search_directory(cpath);
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
-#ifdef NGRAPH_INTERPRETER_ENABLE
-    ngraph_register_interpreter_backend();
-#endif
-
 #ifdef NGRAPH_MLIR_ENABLE
     // Initialize MLIR
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
-    auto start = std::chrono::system_clock::now();
     int rc = RUN_ALL_TESTS();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - start);
-    NGRAPH_DEBUG_PRINT("[MAIN] Tests finished: Time: %d ms Exit code: %d", elapsed.count(), rc);
 
     return rc;
 }

@@ -19,10 +19,10 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/runtime/gpu/gpu_primitive_emitter.hpp"
-#include "ngraph/runtime/gpu/gpu_util.hpp"
-#include "ngraph/runtime/gpu/nvshape.hpp"
 #include "ngraph/util.hpp"
+#include "runtime/gpu/gpu_primitive_emitter.hpp"
+#include "runtime/gpu/gpu_util.hpp"
+#include "runtime/gpu/nvshape.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/random.hpp"

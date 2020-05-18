@@ -91,7 +91,7 @@ void op::Slice::validate_and_infer_types()
     Dimension input_rank = input_shape.rank();
 
     NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || size_t(input_rank) == output_rank,
+                          input_rank.is_dynamic() || input_rank.get_length() == output_rank,
                           "Input rank does not match the rank of the lower bounds (",
                           m_lower_bounds,
                           "), upper bounds (",
@@ -106,7 +106,7 @@ void op::Slice::validate_and_infer_types()
     {
         NODE_VALIDATION_CHECK(this,
                               input_rank.is_dynamic() || input_shape[i].is_dynamic() ||
-                                  m_upper_bounds[i] <= size_t(input_shape[i]),
+                                  m_upper_bounds[i] <= input_shape[i].get_length(),
                               "Upper bound for slice at axis ",
                               i,
                               " is out of range ",
@@ -125,7 +125,7 @@ void op::Slice::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape{result_dims});
 }
 
-shared_ptr<Node> op::Slice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Slice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Slice>(new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);

@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ngraph/env_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;

@@ -301,11 +301,11 @@ TEST(type_prop, reverse_sequence_negative_axis_dynamic_input_rank)
         auto rs = make_shared<op::ReverseSequence>(data, seq_lengths, batch_axis, seq_axis);
         FAIL() << "Dynamic input rank for negative axis not detected";
     }
-    catch (const NodeValidationFailure& error)
+    catch (const CheckFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             std::string("In order to handle negative axes input_rank must be "
-                                         "static (batch_axis=1, seq_axis=-2)"));
+        EXPECT_HAS_SUBSTRING(
+            error.what(),
+            std::string("Rank must be static in order to normalize negative axis=-2"));
     }
     catch (...)
     {

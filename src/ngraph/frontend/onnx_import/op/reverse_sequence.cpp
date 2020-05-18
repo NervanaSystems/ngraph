@@ -39,13 +39,14 @@ namespace ngraph
                     // nGraph supports only int32 type of sequence_lengths
                     const auto sequence_lengths_i32 = std::make_shared<default_opset::Convert>(
                         node.get_ng_inputs().at(1), element::i32);
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
 
                     const auto batch_axis = node.get_attribute_value<int64_t>("batch_axis", 1);
-                    const auto normalized_batch_axis = ngraph::normalize_axis(
-                        node.get_description(), batch_axis, data->get_shape().size());
+                    const auto normalized_batch_axis =
+                        ngraph::normalize_axis(node.get_description(), batch_axis, data_rank);
                     const auto time_axis = node.get_attribute_value<int64_t>("time_axis", 0);
-                    const auto normalized_time_axis = ngraph::normalize_axis(
-                        node.get_description(), time_axis, data->get_shape().size());
+                    const auto normalized_time_axis =
+                        ngraph::normalize_axis(node.get_description(), time_axis, data_rank);
 
                     NGRAPH_CHECK(normalized_batch_axis == 0 || normalized_batch_axis == 1,
                                  "Allowed values of the 'batch_axis' attribute for ReverseSequence "

@@ -35,8 +35,8 @@ namespace
     {
         std::int64_t axis{node.get_attribute_value<std::int64_t>("axis", -1)};
 
-        auto data = node.get_ng_inputs().at(0);
-        auto data_rank = data->get_shape().size();
+        const auto data = node.get_ng_inputs().at(0);
+        const auto data_rank = data->get_output_partial_shape(0).rank();
         return ngraph::normalize_axis(node.get_description(), axis, data_rank);
     }
 
