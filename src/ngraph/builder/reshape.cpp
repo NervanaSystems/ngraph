@@ -182,7 +182,7 @@ NGRAPH_API
 shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
     shared_ptr<op::Constant> out_pattern;
-    if (value.get_shape() == shape)
+    if (value.get_partial_shape().same_scheme(shape))
     {
         return value.get_node_shared_ptr();
     }
