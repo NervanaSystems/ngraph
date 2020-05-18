@@ -1474,11 +1474,8 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
-<<<<<<< HEAD
-        case OP_TYPEID::Clamp:
-=======
         case OP_TYPEID::Broadcast:
->>>>>>> origin/dynamic
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
