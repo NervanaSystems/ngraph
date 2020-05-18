@@ -52,6 +52,7 @@ from ngraph.ops import cum_sum as cumsum
 from ngraph.ops import deformable_convolution
 from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space
+from ngraph.ops import detection_output
 from ngraph.ops import divide
 from ngraph.ops import elu
 from ngraph.ops import embedding_bag_offsets_sum
