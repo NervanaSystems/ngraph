@@ -75,13 +75,13 @@ class Computation(object):
         self.results = ng_function.get_results()
         self.handle = self.runtime.backend.compile(self.function)
 
-        self.tensor_views: List[Tensor] = []
+        self.tensor_views = []  # type: List[Tensor]
         for parameter in self.parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
 
-        self.result_views: List[Tensor] = []
+        self.result_views = []  # type: List[Tensor]
         for result in self.results:
             shape = result.get_shape()
             element_type = result.get_element_type()
