@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/ie/ie_executable.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset.hpp"
@@ -27,6 +27,7 @@
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
+#include "ngraph/runtime/ie/ie_executable.hpp"
 #include "ngraph/runtime/ie/ie_tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/shape.hpp"
@@ -129,11 +130,12 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     m_network = InferenceEngine::CNNNetwork(func);
     set_parameters_and_results(*func);
 
-#if defined(NGRAPH_IE_DUMP_GRAPHS)
-    auto& name = m_network.getName();
-    m_network.serialize(name + ".xml", name + ".bin");
-    serialize(name + ".json", func);
-#endif
+    if (getenv_bool("NGRAPH_IE_DUMP_GRAPHS"))
+    {
+        auto& name = m_network.getName();
+        m_network.serialize(name + ".xml", name + ".bin");
+        serialize(name + ".json", func);
+    }
 
     InferenceEngine::Core ie;
     //  Load model to the plugin (BACKEND_NAME)
