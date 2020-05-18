@@ -10,15 +10,14 @@ DEFAULT_OPSET = 'opset3'
 class NodeFactory(object):
     """Factory front-end to create node objects."""
 
-    def __init__(self, opset_version=DEFAULT_OPSET):  # type: (str) -> None
+    def __init__(self, opset_version: str = DEFAULT_OPSET) -> None:
         """Create the NodeFactory object.
 
         :param      opset_version:  The opset version the factory will use to produce ops from.
         """
         self.factory = _NodeFactory(opset_version)
 
-    def create(self, op_type_name, arguments, attributes=None):
-        # type: (str, List[Node], Optional[Dict[str, Any]]) -> Node
+    def create(self, op_type_name: str, arguments: List[Node], attributes: Optional[Dict[str, Any]] = None) -> Node:
         """Create node object from provided description.
 
         :param      op_type_name:  The operator type name.

@@ -24,8 +24,7 @@ from ngraph.utils.types import TensorShape, get_dtype, make_constant_node, NodeI
 log = logging.getLogger(__name__)
 
 
-def get_broadcast_axes(output_shape, input_shape, axis=None):
-    # type: (TensorShape, TensorShape, int) -> AxisSet
+def get_broadcast_axes(output_shape: TensorShape, input_shape: TensorShape, axis: int = None) -> AxisSet:
     """Generate a list of broadcast axes for ngraph++ broadcast.
 
     Informally, a broadcast "adds" axes to the input tensor,

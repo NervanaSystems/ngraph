@@ -27,7 +27,7 @@ from ngraph.exceptions import UserInputError
 log = logging.getLogger(__name__)
 
 
-def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
+def runtime(backend_name: str = 'CPU') -> 'Runtime':
     """Create a Runtime object (helper factory).
 
     Use signature to parameterize runtime as needed.
@@ -38,19 +38,18 @@ def runtime(backend_name='CPU'):  # type: (str) -> 'Runtime'
 class Runtime:
     """Represents the ngraph++ runtime environment."""
 
-    def __init__(self, backend_name):  # type: (str) -> None
+    def __init__(self, backend_name: str) -> None:
         self.backend_name = backend_name
         self.backend = Backend.create(backend_name)
 
-    def set_config(self, config):  # type: (Dict[str, str]) -> None
+    def set_config(self, config: Dict[str, str]) -> None:
         """Set the backend configuration."""
         self.backend.set_config(config, '')
 
-    def __repr__(self):  # type: () -> str
+    def __repr__(self) -> str:
         return "<Runtime: Backend='{}'>".format(self.backend_name)
 
-    def computation(self, node_or_function, *inputs):
-        # type: (Union[Node, Function], *Node) -> 'Computation'
+    def computation(self, node_or_function: Union[Node, Function], *inputs: Node) -> 'Computation':
         """Return a callable Computation object."""
         if isinstance(node_or_function, Node):
             ng_function = Function(node_or_function, inputs, node_or_function.name)
@@ -66,31 +65,30 @@ class Runtime:
 class Computation(object):
     """ngraph callable computation object."""
 
-    def __init__(self, runtime, ng_function):
-        # type: (Runtime, Function) -> None
+    def __init__(self, runtime: Runtime, ng_function: Function) -> None:
         self.runtime = runtime
         self.function = ng_function
         self.parameters = ng_function.get_parameters()
         self.results = ng_function.get_results()
         self.handle = self.runtime.backend.compile(self.function)
 
-        self.tensor_views = []  # type: List[Tensor]
+        self.tensor_views: List[Tensor] = []
         for parameter in self.parameters:
             shape = parameter.get_shape()
             element_type = parameter.get_element_type()
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
 
-        self.result_views = []  # type: List[Tensor]
+        self.result_views: List[Tensor] = []
         for result in self.results:
             shape = result.get_shape()
             element_type = result.get_element_type()
             self.result_views.append(runtime.backend.create_tensor(element_type, shape))
 
-    def __repr__(self):  # type: () -> str
+    def __repr__(self) -> str:
         params_string = ', '.join([param.name for param in self.parameters])
         return '<Computation: {}({})>'.format(self.function.get_name(), params_string)
 
-    def __call__(self, *input_values):  # type: (*NumericData) -> List[NumericData]
+    def __call__(self, *input_values: NumericData) -> List[NumericData]:
         """Run computation on input values and return result."""
         for tensor_view, value in zip(self.tensor_views, input_values):
             if not isinstance(value, np.ndarray):
@@ -107,7 +105,7 @@ class Computation(object):
 
         return results
 
-    def serialize(self, indent=0):  # type: (int) -> str
+    def serialize(self, indent: int = 0) -> str:
         """Serialize function (compute graph) to a JSON string.
 
         :param indent: set indent of serialized output
@@ -116,12 +114,11 @@ class Computation(object):
         return serialize(self.function, indent)
 
     @staticmethod
-    def _get_buffer_size(element_type, element_count):  # type: (Tensor, int) -> int
+    def _get_buffer_size(element_type: Tensor, element_count: int) -> int:
         return int((element_type.bitwidth / 8.0) * element_count)
 
     @staticmethod
-    def _write_ndarray_to_tensor_view(value, tensor_view):
-        # type: (np.ndarray, Tensor) -> None
+    def _write_ndarray_to_tensor_view(value: np.ndarray, tensor_view: Tensor) -> None:
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
             raise UserInputError("Provided tensor's shape: %s does not match the expected: %s.",
@@ -140,8 +137,7 @@ class Computation(object):
         tensor_view.write(util.numpy_to_c(nparray), buffer_size)
 
     @staticmethod
-    def _read_tensor_view_to_ndarray(tensor_view, output):
-        # type: (Tensor, np.ndarray) -> None
+    def _read_tensor_view_to_ndarray(tensor_view: Tensor, output: np.ndarray) -> None:
         buffer_size = Computation._get_buffer_size(
             tensor_view.element_type, tensor_view.element_count)
         tensor_view.read(util.numpy_to_c(output), buffer_size)
