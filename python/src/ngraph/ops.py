@@ -15,51 +15,50 @@
 # ******************************************************************************
 
 """Factory functions for all ngraph ops."""
+from typing import Callable, Iterable, List, Optional, Set, Union
+
 import numpy as np
 
-from ngraph.impl import AxisSet, AxisVector, Coordinate, CoordinateDiff, Function, Node, \
-    Shape, Strides
-
-from ngraph.impl.op import Abs, Acos, And, Asin, ArgMax, ArgMin, Atan, \
-    BatchNormTraining, BatchNormInference, Broadcast, Ceiling, Clamp, Concat, Constant, Convert, \
-    Cos, Cosh, DepthToSpace, Dequantize, Divide, Dot, Elu, \
-    FakeQuantize, Equal, Exp, Floor, Gelu, Gemm, GetOutputElement, Greater, GreaterEq, GRN, \
-    HardSigmoid, Less, LessEq, Log, LRN, Minimum, \
-    Multiply, MVN, Negative, Not, NotEqual, OneHot, Or, Pad, Parameter, Power, \
-    Quantize, QuantizedConvolution, QuantizedDot, PRelu, Relu, RNNCell, ReplaceSlice, Reshape, \
-    Reverse, ScaleShift, Select, ShuffleChannels, Sign, Sin, Sinh, Slice, SpaceToDepth, \
-    Sqrt, SquaredDifference, Squeeze, Subtract, Tan, Tanh
-
-
-from typing import Callable, Iterable, List, Set, Union
-
-from ngraph.utils.broadcasting import get_broadcast_axes
-from ngraph.utils.decorators import nameable_op, binary_op, unary_op
+from ngraph.impl import Node, Shape
+from ngraph.impl.op import Constant, GetOutputElement, Parameter
+from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import assert_list_of_ints
-from ngraph.utils.reduction import get_reduction_axes
-from ngraph.utils.types import NumericType, NumericData, TensorShape, make_constant_node, \
-    NodeInput, ScalarData, as_node
-from ngraph.utils.types import get_element_type
-
 from ngraph.utils.node_factory import NodeFactory
+from ngraph.utils.types import (
+    NodeInput,
+    NumericData,
+    NumericType,
+    ScalarData,
+    TensorShape,
+    as_node,
+    as_nodes,
+    get_dtype,
+    get_element_type,
+    get_element_type_str,
+    make_constant_node,
+)
 
 
-def _get_node_factory(opset_version='opset1'):  # type: (str) -> NodeFactory
+def _get_node_factory(opset_version: Optional[str] = None) -> NodeFactory:
     """Return NodeFactory configured to create operators from specified opset version."""
-    return NodeFactory(opset_version)
+    if opset_version:
+        return NodeFactory(opset_version)
+    else:
+        return NodeFactory()
 
 
 @nameable_op
-def parameter(shape, dtype=np.float32, name=None):
-    # type: (TensorShape, NumericType, str) -> Parameter
+def parameter(
+    shape: TensorShape, dtype: NumericType = np.float32, name: Optional[str] = None
+) -> Parameter:
     """Return an ngraph Parameter object."""
-    assert_list_of_ints(shape, 'Parameter shape must be a list of integer values.')
+    assert_list_of_ints(shape, "Parameter shape must be a list of integer values.")
     element_type = get_element_type(dtype)
     return Parameter(element_type, Shape(shape))
 
 
 @nameable_op
-def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, str) -> Constant
+def constant(value: NumericData, dtype: NumericType = None, name: Optional[str] = None) -> Constant:
     """Create a Constant node from provided value.
 
     :param value: One of: array of values or scalar to initialize node with.
@@ -71,7 +70,28 @@ def constant(value, dtype=None, name=None):  # type: (NumericData, NumericType, 
 
 
 @nameable_op
-def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
+def ctc_greedy_decoder(
+    data: NodeInput,
+    sequence_mask: NodeInput,
+    merge_repeated: bool = True,
+    name: Optional[str] = None,
+) -> Node:
+    """Perform greedy decoding on the logits given in input (best path).
+
+    :param data: Logits on which greedy decoding is performed.
+    :param sequence_mask: The tensor with sequence masks for each sequence in the batch.
+    :param merge_repeated: The flag for merging repeated labels during the CTC calculation.
+    :param name: Optional name for output node.
+    :return: The new node performing an CTCGreedyDecoder operation on input tensor.
+    """
+    node_inputs = as_nodes(data, sequence_mask)
+    return _get_node_factory().create(
+        "CTCGreedyDecoder", node_inputs, {"ctc_merge_repeated": merge_repeated}
+    )
+
+
+@nameable_op
+def elu(data: NodeInput, alpha: NumericType, name: Optional[str] = None) -> Node:
     """Perform Exponential Linear Unit operation element-wise on data from input node.
 
     Computes exponential linear: alpha * (exp(data) - 1) if < 0, data otherwise.
@@ -85,11 +105,11 @@ def elu(data, alpha, name=None):  # type: (NodeInput, NumericType, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing an ELU operation on its input data element-wise.
     """
-    return Elu(as_node(data), alpha)
+    return _get_node_factory().create("Elu", [as_node(data)], {"alpha": alpha})
 
 
 @nameable_op
-def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, str) -> Node
+def shuffle_channels(data: Node, axis: int, groups: int, name: Optional[str] = None) -> Node:
     """Perform permutation on data in the channel dimension of the input tensor.
 
     The operation is the equivalent with the following transformation of the input tensor
@@ -136,11 +156,13 @@ def shuffle_channels(data, axis, groups, name=None):  # type: (Node, int, int, s
     :return: The new node performing a permutation on data in the channel dimension
              of the input tensor.
     """
-    return ShuffleChannels(data, axis, groups)
+    return _get_node_factory().create(
+        "ShuffleChannels", [as_node(data)], {"axis": axis, "groups": groups}
+    )
 
 
 @nameable_op
-def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+def squeeze(data: NodeInput, axes: NodeInput, name: Optional[str] = None) -> Node:
     """Perform squeeze operation on input tensor.
 
     Remove single-dimensional entries from the shape of a tensor.
@@ -161,10 +183,10 @@ def squeeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
     :param name: Optional new name for output node.
     :return: The new node performing a squeeze operation on input tensor.
     """
-    return Squeeze(data, as_node(axes))
+    return _get_node_factory().create("Squeeze", as_nodes(data, axes))
 
 
-def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
+def unsqueeze(data: NodeInput, axes: NodeInput, name: Optional[str] = None) -> Node:
     """Perform unsqueeze operation on input tensor.
 
     Insert single-dimensional entries to the shape of a tensor. Takes one required argument axes,
@@ -179,10 +201,10 @@ def unsqueeze(data, axes, name=None):  # type: (Node, NodeInput, str) -> Node
                   One of: input node or array.
     :return: The new node performing an unsqueeze operation on input tensor.
     """
-    return _get_node_factory().create('Unsqueeze', [data, as_node(axes)])
+    return _get_node_factory().create("Unsqueeze", as_nodes(data, axes))
 
 
-def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
+def grn(data: Node, bias: float, name: Optional[str] = None) -> Node:
     r"""Perform Global Response Normalization with L2 norm (across channels only).
 
     Computes GRN operation on channels for input tensor:
@@ -194,20 +216,75 @@ def grn(data, bias, name=None):  # type: (Node, float, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a GRN operation on tensor's channels.
     """
-    return GRN(data, bias)
+    return _get_node_factory().create("GRN", [data], {"bias": bias})
 
 
 @nameable_op
-def group_convolution(data,                 # type: Node
-                      filters,              # type: Node
-                      strides,              # type: List[int]
-                      pads_begin,           # type: List[int]
-                      pads_end,             # type: List[int]
-                      dilations,            # type: List[int]
-                      auto_pad='EXPLICIT',  # type: str
-                      name=None,            # type: str
-                      ):
-    # type: (...) -> Node
+def gather(
+    data: NodeInput, indices: NodeInput, axis: NodeInput, name: Optional[str] = None
+) -> Node:
+    """Return Gather node which takes slices from axis of data according to indices.
+
+    :param data: The tensor from which slices are gathered.
+    :param indices: Tensor with indexes to gather.
+    :param axis: The dimension index to gather data from.
+    :param name: Optional name for output node.
+    :return: The new node performing a Gather operation on the data input tensor.
+    """
+    node_inputs = as_nodes(data, indices, axis)
+    return _get_node_factory().create("Gather", node_inputs)
+
+
+@nameable_op
+def gather_tree(
+    step_ids: NodeInput,
+    parent_idx: NodeInput,
+    max_seq_len: NodeInput,
+    end_token: NodeInput,
+    name: Optional[str] = None,
+) -> Node:
+    """Perform GatherTree operation.
+
+    The GatherTree node generates the complete beams from the indices per each step
+    and the parent beam indices.
+    GatherTree uses the following logic:
+
+    .. code-block:: python
+
+        for batch in range(BATCH_SIZE):
+            for beam in range(BEAM_WIDTH):
+                max_sequence_in_beam = min(MAX_TIME, max_seq_len[batch])
+
+                parent = parent_idx[max_sequence_in_beam - 1, batch, beam]
+
+                for level in reversed(range(max_sequence_in_beam - 1)):
+                    final_idx[level, batch, beam] = step_idx[level, batch, parent]
+
+                    parent = parent_idx[level, batch, parent]
+
+
+    :param step_ids: The tensor with indices from per each step.
+    :param parent_idx: The tensor with with parent beam indices.
+    :param max_seq_len: The tensor with maximum lengths for each sequence in the batch.
+    :param end_token: The scalar tensor with value of the end marker in a sequence.
+    :param name: Optional name for output node.
+    :return: The new node performing a GatherTree operation.
+    """
+    node_inputs = as_nodes(step_ids, parent_idx, max_seq_len, end_token)
+    return _get_node_factory().create("GatherTree", node_inputs)
+
+
+@nameable_op
+def group_convolution(
+    data: NodeInput,
+    filters: NodeInput,
+    strides: List[int],
+    pads_begin: List[int],
+    pads_end: List[int],
+    dilations: List[int],
+    auto_pad: str = "EXPLICIT",
+    name: Optional[str] = None,
+) -> Node:
     """Perform Group Convolution operation on data from input node.
 
     :param data:        The node producing input data.
@@ -229,28 +306,32 @@ def group_convolution(data,                 # type: Node
     :param name: Optional output node name.
     :return: The new node performing a Group Convolution operation on tensor from input node.
     """
-    return _get_node_factory().create('GroupConvolution',
-                                      [data, filters],
-                                      {'strides': strides,
-                                       'pads_begin': pads_begin,
-                                       'pads_end': pads_end,
-                                       'dilations': dilations,
-                                       'auto_pad': auto_pad.upper()})
+    return _get_node_factory().create(
+        "GroupConvolution",
+        as_nodes(data, filters),
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "dilations": dilations,
+            "auto_pad": auto_pad.upper(),
+        },
+    )
 
 
 @nameable_op
-def group_convolution_backprop_data(data,                 # type: Node
-                                    filters,              # type: Node
-                                    strides,              # type: List[int]
-                                    output_shape=None,    # type: Node
-                                    pads_begin=None,      # type: List[int]
-                                    pads_end=None,        # type: List[int]
-                                    dilations=None,       # type: List[int]
-                                    auto_pad='EXPLICIT',  # type: str
-                                    output_padding=None,  # type: List[int]
-                                    name=None,            # type: str
-                                    ):
-    # type: (...) -> Node
+def group_convolution_backprop_data(
+    data: NodeInput,
+    filters: NodeInput,
+    strides: List[int],
+    output_shape: Optional[NodeInput] = None,
+    pads_begin: Optional[List[int]] = None,
+    pads_end: Optional[List[int]] = None,
+    dilations: Optional[List[int]] = None,
+    auto_pad: str = "EXPLICIT",
+    output_padding: Optional[List[int]] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Perform Group Convolution operation on data from input node.
 
     :param data:            The node producing input data.
@@ -282,39 +363,249 @@ def group_convolution_backprop_data(data,                 # type: Node
     if output_padding is None:
         output_padding = [0] * spatial_dim_count
 
-    attributes = {'strides': strides,
-                  'dilations': dilations,
-                  'auto_pad': auto_pad.upper(),
-                  'output_padding': output_padding}
-    args = [data, filters]
+    attributes = {
+        "strides": strides,
+        "dilations": dilations,
+        "auto_pad": auto_pad.upper(),
+        "output_padding": output_padding,
+    }
+    args = as_nodes(data, filters)
 
     if output_shape is not None:
-        args.append(output_shape)
+        args.append(as_node(output_shape))
     else:
         if pads_begin is None:
             pads_begin = [0] * spatial_dim_count
         if pads_end is None:
             pads_end = [0] * spatial_dim_count
-        attributes['pads_begin'] = pads_begin
-        attributes['pads_end'] = pads_end
+        attributes["pads_begin"] = pads_begin
+        attributes["pads_end"] = pads_end
 
-    return _get_node_factory().create('GroupConvolutionBackpropData', args, attributes)
+    return _get_node_factory().create("GroupConvolutionBackpropData", args, attributes)
 
 
 @nameable_op
-def rnn_cell(X,                      # type: Node
-             H_t,                    # type: Node
-             W,                      # type: Node
-             R,                      # type: Node
-             B,                      # type: Node
-             hidden_size,            # type: int
-             activations,            # type: List[str]
-             activation_alpha,       # type: List[float]
-             activation_beta,        # type: List[float]
-             clip,                   # type: float
-             name=None,              # type: str
-             ):
-    # type: (...) -> Node
+def lstm_cell(
+    X: NodeInput,
+    initial_hidden_state: NodeInput,
+    initial_cell_state: NodeInput,
+    W: NodeInput,
+    R: NodeInput,
+    B: NodeInput,
+    hidden_size: int,
+    activations: List[str] = None,
+    activations_alpha: List[float] = None,
+    activations_beta: List[float] = None,
+    clip: float = 0.0,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which performs LSTMCell operation.
+
+    :param X: The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state: The hidden state tensor with shape: [batch_size, hidden_size].
+    :param initial_cell_state: The cell state tensor with shape: [batch_size, hidden_size].
+    :param W: The weight tensor with shape: [4*hidden_size, input_size].
+    :param R: The recurrence weight tensor with shape: [4*hidden_size, hidden_size].
+    :param B: The bias tensor for gates with shape: [4*hidden_size].
+    :param hidden_size: Specifies hidden state size.
+    :param activations: The list of three activation functions for gates.
+    :param activations_alpha: The list of alpha parameters for activation functions.
+    :param activations_beta: The list of beta parameters for activation functions.
+    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
+    :param name: An optional name of the output node.
+
+    :return: The new node represents LSTMCell. Node outputs count: 2.
+    """
+    if activations is None:
+        activations = ["sigmoid", "tanh", "tanh"]
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, W, R, B)
+
+    # P - nGraph additional input, no such input in the OV spec
+    peepholes_count = 3  # nGraph default
+    peepholes_shape = [peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape)  # nGraph default
+    data_dtype = get_dtype(node_inputs[0].get_output_element_type(0))
+    default_P = make_constant_node(peepholes_array, dtype=data_dtype)
+    node_inputs.append(default_P)
+
+    weights_format = "fico"  # IE LSTMWeightsFormat, no such attribute in the OV spec
+    input_forget = False  # nGraph default, no such attribute in the OV spec
+
+    attributes = {
+        "hidden_size": hidden_size,
+        "activations": activations,
+        "activations_alpha": activations_alpha,
+        "activations_beta": activations_beta,
+        "clip": clip,
+        "weights_format": weights_format,
+        "input_forget": input_forget,
+    }
+    return _get_node_factory().create("LSTMCell", node_inputs, attributes)
+
+
+@nameable_op
+def lstm_sequence(
+    X: NodeInput,
+    initial_hidden_state: NodeInput,
+    initial_cell_state: NodeInput,
+    sequence_lengths: NodeInput,
+    W: NodeInput,
+    R: NodeInput,
+    B: NodeInput,
+    hidden_size: int,
+    direction: str,
+    activations: List[str] = None,
+    activations_alpha: List[float] = None,
+    activations_beta: List[float] = None,
+    clip: float = 0.0,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which performs LSTMSequence operation.
+
+    :param X: The input tensor. Shape: [seq_length, batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor.
+                                    Shape: [num_directions, batch_size, hidden_size].
+    :param initial_cell_state:      The cell state tensor.
+                                    Shape: [num_directions, batch_size, hidden_size].
+    :param sequence_lengths:        Specifies real sequence lengths for each batch element.
+                                    Shape: [batch_size]. Integer type.
+    :param W: Tensor with weights for matrix multiplication operation with input portion of data.
+              Shape: [num_directions, 4*hidden_size, input_size].
+    :param R: The tensor with weights for matrix multiplication operation with hidden state.
+              Shape: [num_directions, 4*hidden_size, input_size].
+    :param B: The tensor with biases.
+              Shape: [num_directions, 4*hidden_size, hidden_size].
+    :param hidden_size: Specifies hidden state size.
+    :param direction: Specifies if the RNN is forward, reverse, or bidirectional.
+    :param activations: The list of three activation functions for gates.
+    :param activations_alpha: The list of alpha parameters for activation functions.
+    :param activations_beta: The list of beta parameters for activation functions.
+    :param clip: Specifies bound values [-C, C] for tensor clipping performed before activations.
+    :param name: An optional name of the output node.
+
+    :return: The new node represents LSTMSequence. Node outputs count: 3.
+    """
+    if activations is None:
+        activations = ["sigmoid", "tanh", "tanh"]
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    node_inputs = as_nodes(X, initial_hidden_state, initial_cell_state, sequence_lengths, W, R, B)
+
+    # P - nGraph additional input, no such input in the OV spec
+    peepholes_count = 3  # nGraph default
+    if direction.lower() == "bidirectional":
+        num_directions = 2
+    else:
+        num_directions = 1
+    peepholes_shape = [num_directions, peepholes_count * hidden_size]
+    peepholes_array = np.zeros(peepholes_shape)  # nGraph default
+    data_dtype = get_dtype(node_inputs[0].get_output_element_type(0))
+    default_P = make_constant_node(peepholes_array, dtype=data_dtype)
+    node_inputs.append(default_P)
+
+    weights_format = "fico"  # IE LSTMWeightsFormat, no such attribute in the OV spec
+    input_forget = False  # nGraph default, no such attribute in the OV spec
+
+    attributes = {
+        "hidden_size": hidden_size,
+        "direction": direction.lower(),
+        "activations": activations,
+        "activations_alpha": activations_alpha,
+        "activations_beta": activations_beta,
+        "clip": clip,
+        "weights_format": weights_format,
+        "input_forget": input_forget,
+    }
+    return _get_node_factory().create("LSTMSequence", node_inputs, attributes)
+
+
+@nameable_op
+def gru_cell(
+    X: NodeInput,
+    initial_hidden_state: NodeInput,
+    W: NodeInput,
+    R: NodeInput,
+    B: NodeInput,
+    hidden_size: int,
+    activations: List[str] = None,
+    activations_alpha: List[float] = None,
+    activations_beta: List[float] = None,
+    clip: float = 0.0,
+    linear_before_reset: bool = False,
+    name: Optional[str] = None,
+) -> Node:
+    """Perform GRUCell operation on the tensor from input node.
+
+    GRUCell represents a single GRU Cell that computes the output
+    using the formula described in the paper: https://arxiv.org/abs/1406.1078
+
+    Note this class represents only single *cell* and not whole *layer*.
+
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weights for matrix multiplication, gate order: zrh.
+                                    Shape: [3*hidden_size, input_size].
+    :param R:                       The recurrence weights for matrix multiplication.
+                                    Shape: [3*hidden_size, hidden_size].
+    :param B:                       The sum of biases (weight and recurrence).
+                                    For linear_before_reset set True the shape is [4*hidden_size].
+                                    Otherwise the shape is [3*hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param linear_before_reset:     Flag denotes if the layer behaves according to the modification
+                                    of GRUCell described in the formula in the ONNX documentation.
+    :param name:                    Optional output node name.
+    :returns:   The new node performing a GRUCell operation on tensor from input node.
+    """
+    if activations is None:
+        activations = ["relu", "sigmoid", "tanh"]
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {
+        "hidden_size": hidden_size,
+        "activations": activations,
+        "activations_alpha": activations_alpha,
+        "activations_beta": activations_beta,
+        "linear_before_reset": linear_before_reset,
+        "clip": clip,
+    }
+    return _get_node_factory().create("GRUCell", input_nodes, attributes)
+
+
+@nameable_op
+def rnn_cell(
+    X: NodeInput,
+    initial_hidden_state: NodeInput,
+    W: NodeInput,
+    R: NodeInput,
+    B: NodeInput,
+    hidden_size: int,
+    activations: List[str],
+    activations_alpha: List[float],
+    activations_beta: List[float],
+    clip: float = 0.0,
+    name: Optional[str] = None,
+) -> Node:
     """Perform RNNCell operation on tensor from input node.
 
     It follows notation and equations defined as in ONNX standard:
@@ -322,56 +613,45 @@ def rnn_cell(X,                      # type: Node
 
     Note this class represents only single *cell* and not whole RNN *layer*.
 
-    :param      X:                 The input tensor with shape: [batch_size, input_size].
-    :param      H_t:               The hidden state tensor at current time step with shape:
-                                   [batch_size, hidden_size].
-    :param      W:                 The weight tensor with shape: [hidden_size, input_size].
-    :param      R:                 The recurrence weight tensor with shape: [hidden_size,
-                                   hidden_size].
-    :param      B:                 The bias tensor for input gate with shape: [2*hidden_size].
-    :param      hidden_size:       The number of hidden units for recurrent cell.
-    :param      activations:       The vector of activation functions used inside recurrent cell.
-    :param      activation_alpha:  The vector of alpha parameters for activation functions in
-                                   order respective to activation list.
-    :param      activation_beta:   The vector of beta parameters for activation functions in order
-                                   respective to activation list.
-    :param      clip:              The value defining clipping range [-clip, clip] on input of
-                                   activation functions.
-    :param      name:              Optional output node name.
+    :param X:                       The input tensor with shape: [batch_size, input_size].
+    :param initial_hidden_state:    The hidden state tensor at current time step with shape:
+                                    [batch_size, hidden_size].
+    :param W:                       The weight tensor with shape: [hidden_size, input_size].
+    :param R:                       The recurrence weight tensor with shape: [hidden_size,
+                                    hidden_size].
+    :param B:                       The bias tensor for input gate with shape: [2*hidden_size].
+    :param hidden_size:             The number of hidden units for recurrent cell.
+                                    Specifies hidden state size.
+    :param activations:             The vector of activation functions used inside recurrent cell.
+    :param activation_alpha:        The vector of alpha parameters for activation functions in
+                                    order respective to activation list.
+    :param activation_beta:         The vector of beta parameters for activation functions in order
+                                    respective to activation list.
+    :param clip:                    The value defining clipping range [-clip, clip] on input of
+                                    activation functions.
+    :param name:                    Optional output node name.
     :returns:   The new node performing a RNNCell operation on tensor from input node.
     """
-    return RNNCell(X,
-                   H_t,
-                   W,
-                   R,
-                   B,
-                   hidden_size,
-                   activations,
-                   activation_alpha,
-                   activation_beta,
-                   clip)
+    if activations is None:
+        activations = ["sigmoid", "tanh"]
+    if activations_alpha is None:
+        activations_alpha = []
+    if activations_beta is None:
+        activations_beta = []
+
+    input_nodes = as_nodes(X, initial_hidden_state, W, R, B)
+    attributes = {
+        "hidden_size": hidden_size,
+        "activations": activations,
+        "activations_alpha": activations_alpha,
+        "activations_beta": activations_beta,
+        "clip": clip,
+    }
+    return _get_node_factory().create("RNNCell", input_nodes, attributes)
 
 
 @nameable_op
-def scale_shift(data, scale, shift, name=None):  # type: (Node, Node, Node, str) -> Node
-    r"""Perform ScaleShift transformation on input node.
-
-    Computes ScaleShift:
-
-    .. math:: Y = scale\cdot data + shift
-
-
-    :param data: The node with data tensor.
-    :param scale: The node with data tensor that scale input data.
-    :param shift: The node with data tensor that shift input data.
-    :param name: Optional output node name.
-    :return: The new node performing a ScaleShift operation on input tensor.
-    """
-    return ScaleShift(data, scale, shift)
-
-
-@nameable_op
-def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
+def space_to_depth(data: Node, mode: str, block_size: int = 1, name: str = None) -> Node:
     """Perform SpaceToDepth operation on the input tensor.
 
     SpaceToDepth rearranges blocks of spatial data into depth.
@@ -388,12 +668,69 @@ def space_to_depth(data, mode, block_size, name=None):  # type: (Node, str, int,
     :param name: Optional output node name.
     :return: The new node performing a SpaceToDepth operation on input tensor.
     """
-    return SpaceToDepth(data, mode, block_size)
+    return _get_node_factory().create(
+        "SpaceToDepth", [data], {"mode": mode, "block_size": block_size},
+    )
 
 
 @nameable_op
-def mvn(data, axes, normalize_variance, eps, name=None):
-    # type: (Node, Set[int], bool, float, str) -> Node
+def batch_to_space(
+    data: NodeInput,
+    block_shape: NodeInput,
+    crops_begin: NodeInput,
+    crops_end: NodeInput,
+    name: Optional[str] = None,
+) -> Node:
+    """Perform BatchToSpace operation on the input tensor.
+
+    BatchToSpace permutes data from the batch dimension of the data tensor into spatial dimensions.
+
+    :param data: Node producing the data tensor.
+    :param block_shape: The sizes of the block of values to be moved.
+    :param crops_begin: Specifies the amount to crop from the beginning along each axis of `data`.
+    :param crops_end: Specifies the amount to crop from the end along each axis of `data`.
+    :param name: Optional output node name.
+    :return: The new node performing a BatchToSpace operation.
+    """
+    return _get_node_factory().create(
+        "BatchToSpace", as_nodes(data, block_shape, crops_begin, crops_end)
+    )
+
+
+@nameable_op
+def space_to_batch(
+    data: NodeInput,
+    block_shape: NodeInput,
+    pads_begin: NodeInput,
+    pads_end: NodeInput,
+    name: Optional[str] = None,
+) -> Node:
+    """Perform SpaceToBatch operation on the input tensor.
+
+    SpaceToBatch permutes data tensor blocks of spatial data into batch dimension.
+    The operator returns a copy of the input tensor where values from spatial blocks dimensions
+    are moved in the batch dimension
+
+    :param data: Node producing the data tensor.
+    :param block_shape: The sizes of the block of values to be moved.
+    :param pads_begin: Specifies the padding for the beginning along each axis of `data`.
+    :param pads_end: Specifies the padding for the ending along each axis of `data`.
+    :param name: Optional output node name.
+    :return: The new node performing a SpaceToBatch operation.
+    """
+    return _get_node_factory().create(
+        "SpaceToBatch", as_nodes(data, block_shape, pads_begin, pads_end)
+    )
+
+
+@nameable_op
+def mvn(
+    data: Node,
+    across_channels: bool = False,
+    normalize_variance: bool = False,
+    eps: float = 1e-9,
+    name: str = None,
+) -> Node:
     r"""Perform Mean Variance Normalization operation on data from input node.
 
     Computes MVN on the input tensor :code:`data` (called `X`) using formula:
@@ -401,332 +738,163 @@ def mvn(data, axes, normalize_variance, eps, name=None):
     .. math:: Y = \dfrac{X-EX}{\sqrt{E(X-EX)^2}}
 
     :param data: The node with data tensor.
-    :param axes: A list of axes, along which to reduce. Array of integers.
-    :param normalize_variance: Flag that denotes if mean values are shared across channels.
-                               Boolen value.
+    :param across_channels: Denotes if mean values are shared across channels.
+    :param normalize_variance: Denotes whether to perform variance normalization.
     :param eps: The number added to the variance to avoid division by zero
                when normalizing the value. Scalar value.
     :param name: Optional output node name.
     :return: The new node performing a MVN operation on input tensor.
     """
-    return MVN(data, AxisSet(axes), normalize_variance, eps)
-
-
-@nameable_op
-def quantize(data, scale, zero_point, new_type, axes, round_mode, name=None):
-    # type: (Node, Node, Node, NumericType, Set[int], Quantize.RoundMode, str) -> Node
-    r"""Perform quantize operation on data from input node.
-
-    Computes quantize on the input tensor:
-
-    .. math:: output = ROUND((input / scale) + zero\_point)
-
-    :param data: The node with data tensor.
-    :param scale: Scale used for mapping.
-    :param zero_point: Zero point used for mapping.
-    :param new_type: Output element type.
-    :param round_mode: Number describes how to perform ROUND function.
-
-                 ROUND_NEAREST_TOWARD_INFINITY: Round to nearest integer. In case of two
-                 equidistant integers round away from zero e.g. 2.5 -> 3,  -3.5 -> -4
-
-                 ROUND_NEAREST_TOWARD_ZERO: Round to nearest integer. In case of two equidistant
-                 integers round toward zero e.g. 2.5 -> 2,  -3.5 -> -3
-
-                 ROUND_NEAREST_UPWARD: Round to nearest integer. In case of two equidistant
-                 integers round up e.g. 2.5 -> 2,  -3.5 -> -3
-
-                 ROUND_NEAREST_DOWNWARD: Round to nearest integer. In case of two equidistant
-                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
-
-                 ROUND_NEAREST_TOWARD_EVEN: Round to nearest integer. In case of two equidistant
-                 integers round down e.g. 2.5 -> 2,  -3.5 -> -4
-
-                 ROUND_TOWARD_INFINITY: Round to nearest integer away from zero.
-
-                 ROUND_TOWARD_ZERO: Round to nearest integer toward zero.
-
-                 ROUND_UP: Round to nearest integer toward infinity (ceiling).
-
-                 ROUND_DOWN: Round to nearest integer toward negative infinity (floor).
-
-    :param name: Optional output node name.
-    :return: The new node performing a quantize operation on input tensor.
-    """
-    new_element_type = get_element_type(new_type)
-    return Quantize(data,
-                    scale,
-                    zero_point,
-                    new_element_type,
-                    AxisSet(axes),
-                    round_mode)
-
-
-@nameable_op
-def dequantize(data, scale, zero_point, element_type, axes, name=None):
-    # type: (Node, Node, Node, NumericType, Set[int], str) -> Node
-    r"""Perform dequantize operation on data from input node.
-
-    Computes dequantize on the input tensor:
-
-    .. math:: output = (input - zero\_point) * scale
-
-    :param data: The node with data tensor.
-    :param scale: Scale used for mapping.
-    :param zero_point: Zero point used for mapping.
-    :param element_type: Output element type.
-    :param name: Optional output node name.
-    :return: The new node performing a dequantize operation on input tensor.
-    """
-    new_element_type = get_element_type(element_type)
-    return Dequantize(data, scale, zero_point, new_element_type, AxisSet(axes))
-
-
-@nameable_op
-def quantized_convolution(data,                      # type: Node
-                          filters,                   # type: Node
-                          window_movement_strides,   # type: List[int]
-                          window_dilation_strides,   # type: List[int]
-                          padding_below,             # type: List[int]
-                          padding_above,             # type: List[int]
-                          data_dilation_strides,     # type: List[int]
-                          input_scale,               # type: Node
-                          input_zero_point,          # type: Node
-                          filter_scale,              # type: Node
-                          filter_zero_point,         # type: Node
-                          output_scale,              # type: Node
-                          output_zero_point,         # type: Node
-                          output_type,               # type: NumericType
-                          input_axes,                # type: Set[int]
-                          filter_axes,               # type: Set[int]
-                          output_axes,               # type: Set[int]
-                          name=None,                 # type: str
-                          ):
-    # type: (...) -> Node
-    r"""Perform quantized convolution operation on data from input node.
-
-    :param data: The node producing the input data batch tensor.
-    :param filters: The node producing the filters tensor.
-    :param window_movement_strides: The window movement strides.
-    :param window_dilation_strides: he window dilation strides.
-    :param padding_below: The padding-below sizes.
-    :param padding_above: The padding-above sizes.
-    :param data_dilation_strides: The data dilation strides.
-    :param input_scale: Scale to transform the input.
-    :param input_zero_point: Zero point used for mapping.
-    :param filter_scale: Scale to transform the filters.
-    :param filter_zero_point: Zero point used for mapping.
-    :param output_scale: Scale to transform the output.
-    :param output_zero_point: Zero point used for mapping.
-    :param output_type: Output element type.
-    :param input_axes: Input axes set for channel wise quantization.
-    :param filter_axes: Filter axes set for channel wise quantization.
-    :param output_type: Output axes set for channel wise quantization.
-    :param name: Optional output node name.
-    :return: The new node performing a quantized convolution operation on input tensor.
-    """
-    new_output_type = get_element_type(output_type)
-    return QuantizedConvolution(data,
-                                filters,
-                                Strides(window_movement_strides),
-                                Strides(window_dilation_strides),
-                                CoordinateDiff(padding_below),
-                                CoordinateDiff(padding_above),
-                                Strides(data_dilation_strides),
-                                input_scale,
-                                input_zero_point,
-                                filter_scale,
-                                filter_zero_point,
-                                output_scale,
-                                output_zero_point,
-                                new_output_type,
-                                AxisSet(input_axes),
-                                AxisSet(filter_axes),
-                                AxisSet(output_axes))
-
-
-@nameable_op
-def quantized_dot(input0,                      # type: Node
-                  input1,                      # type: Node
-                  reduction_axes_count,        # type: int
-                  input0_scale,                # type: Node
-                  input0_zero_point,           # type: Node
-                  input1_scale,                # type: Node
-                  input1_zero_point,           # type: Node
-                  output_scale,                # type: Node
-                  output_zero_point,           # type: Node
-                  output_type,                 # type: NumericType
-                  input0_axes,                 # type: Set[int]
-                  input1_axes,                 # type: Set[int]
-                  output_axes,                 # type: Set[int]
-                  name=None,                   # type: str
-                  ):
-    # type: (...) -> Node
-    r"""Perform quantized dot operation on data from input node.
-
-    :param input0: The node producing the input data batch tensor.
-    :param input1: The node producing the filters tensor.
-    :param reduction_axes_count: Number of reduction axes.
-    :param input0_scale: Scale to transform the input.
-    :param input0_zero_point: Zero point used for mapping.
-    :param input1_scale: Scale to transform the filters.
-    :param input1_zero_point: Zero point used for mapping.
-    :param output_scale: Scale to transform the output.
-    :param output_zero_point: Zero point used for mapping.
-    :param output_type: Output element type.
-    :param input0_axes: Input0 axes set for channel wise quantization
-    :param input1_axes: Input1 axes set for channel wise quantization
-    :param output_axes: Output axes set for channel wise quantization
-    :param name: Optional output node name.
-    :return: The new node performing a quantized dot operation on input tensor.
-    """
-    new_output_type = get_element_type(output_type)
-    return QuantizedDot(input0,
-                        input1,
-                        reduction_axes_count,
-                        input0_scale,
-                        input0_zero_point,
-                        input1_scale,
-                        input1_zero_point,
-                        output_scale,
-                        output_zero_point,
-                        new_output_type,
-                        AxisSet(input0_axes),
-                        AxisSet(input1_axes),
-                        AxisSet(output_axes))
+    return _get_node_factory().create(
+        "MVN",
+        [data],
+        {"across_channels": across_channels, "normalize_variance": normalize_variance, "eps": eps},
+    )
 
 
 # Unary ops
 @unary_op
-def absolute(node, name=None):  # type: (NodeInput, str) -> Node
+def absolute(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies f(x) = abs(x) to the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with Abs operation applied on it.
     """
-    return Abs(node)
+    return _get_node_factory().create("Abs", [node])
 
 
 @unary_op
-def acos(node, name=None):  # type: (NodeInput, str) -> Node
+def acos(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply inverse cosine function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with arccos operation applied on it.
     """
-    return Acos(node)
+    return _get_node_factory().create("Acos", [node])
 
 
 @unary_op
-def asin(node, name=None):  # type: (NodeInput, str) -> Node
+def asin(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply inverse sine function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with arcsin operation applied on it.
     """
-    return Asin(node)
+    return _get_node_factory().create("Asin", [node])
 
 
 @unary_op
-def atan(node, name=None):  # type: (NodeInput, str) -> Node
+def atan(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply inverse tangent function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with arctan operation applied on it.
     """
-    return Atan(node)
+    return _get_node_factory().create("Atan", [node])
 
 
 @unary_op
-def cos(node, name=None):  # type: (NodeInput, str) -> Node
+def cos(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply cosine function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with cos operation applied on it.
     """
-    return Cos(node)
+    return _get_node_factory().create("Cos", [node])
 
 
 @unary_op
-def cosh(node, name=None):  # type: (NodeInput, str) -> Node
+def cosh(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply hyperbolic cosine function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with cosh operation applied on it.
     """
-    return Cosh(node)
+    return _get_node_factory().create("Cosh", [node])
 
 
 @unary_op
-def sqrt(node, name=None):  # type: (NodeInput, str) -> Node
+def sqrt(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies square root to the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: The new node with sqrt operation applied element-wise.
     """
-    return Sqrt(node)
+    return _get_node_factory().create("Sqrt", [node])
 
 
 @unary_op
-def exp(node, name=None):  # type: (NodeInput, str) -> Node
-    """Return node which applies exp to the input node element-wise.
+def erf(node: NodeInput, name: Optional[str] = None) -> Node:
+    """Return node which calculates Gauss error function element-wise with given tensor.
+
+    :param node: The node providing data for operation.
+    :param name: The optional name for new output node.
+    :return: The new node performing element-wise Erf operation.
+    """
+    return _get_node_factory().create("Erf", [node])
+
+
+@unary_op
+def exp(node: NodeInput, name: Optional[str] = None) -> Node:
+    """Return node which applies exponential function to the input node element-wise.
 
     :param node: The node providing data for operation.
     :param name: The optional name for new output node.
     :return: The new node performing natural exponential operation.
     """
-    return Exp(node)
+    return _get_node_factory().create("Exp", [node])
 
 
 @unary_op
-def log(node, name=None):  # type: (NodeInput, str) -> Node
+def log(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies natural logarithm to the input node element-wise.
 
     :param node: The input node providing data for operation.
     :param name: The optional new name for output node.
     :return: The new node performing log operation element-wise.
     """
-    return Log(node)
+    return _get_node_factory().create("Log", [node])
 
 
 @unary_op
-def negative(node, name=None):  # type: (NodeInput, str) -> Node
+def negative(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies f(x) = -x to the input node elementwise."""
-    return Negative(node)
+    return _get_node_factory().create("Negative", [node])
 
 
 @unary_op
-def floor(node, name=None):  # type: (NodeInput, str) -> Node
+def floor(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies floor to the input node element-wise.
 
     :param node: The input node providing data.
     :param name: The optional name for new output node.
     :return: The node performing element-wise floor operation.
     """
-    return Floor(node)
+    return _get_node_factory().create("Floor", [node])
 
 
 @unary_op
-def ceiling(node, name=None):  # type: (NodeInput, str) -> Node
+def ceiling(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies ceiling to the input node element-wise.
 
     :param node: The node providing data to ceiling operation.
     :param name: Optional name for output node.
     :return: The node performing element-wise ceiling.
     """
-    return Ceiling(node)
+    return _get_node_factory().create("Ceiling", [node])
 
 
-@unary_op
-def reshape(node, output_shape, special_zero, name=None):
-    # type: (Node,Node, bool, str) -> Node
+@nameable_op
+def reshape(
+    node: NodeInput, output_shape: NodeInput, special_zero: bool, name: Optional[str] = None
+) -> Node:
     """Return reshaped node according to provided parameters.
 
     :param node: The tensor we want to reshape.
@@ -739,253 +907,458 @@ def reshape(node, output_shape, special_zero, name=None):
                          of corresponding dimensions from data.shape into the output shape.
                          Range of values: False or True
     """
-    return _get_node_factory().create('Reshape',
-                                      [node, output_shape],
-                                      {'special_zero': special_zero})
+    return _get_node_factory().create(
+        "Reshape", as_nodes(node, output_shape), {"special_zero": special_zero}
+    )
 
 
 @unary_op
-def relu(node, name=None):  # type: (NodeInput, str) -> Node
+def relu(node: NodeInput, name: Optional[str] = None) -> Node:
     """Perform rectified linear unit operation on input node element-wise.
 
     :param node: One of: input node, array or scalar.
-    :param name: The optional ouptut node name.
+    :param name: The optional output node name.
     :return: The new node performing relu operation on its input element-wise.
     """
-    return Relu(node)
+    return _get_node_factory().create("Relu", [node])
+
+
+@nameable_op
+def selu(
+    data: NodeInput, alpha: NodeInput, lambda_value: NodeInput, name: Optional[str] = None
+) -> Node:
+    """Perform a Scaled Exponential Linear Unit (SELU) operation on input node element-wise.
+
+    :param data: input node, array or scalar.
+    :param alpha: Alpha coefficient of SELU operation
+    :param lambda_value: Lambda coefficient of SELU operation
+    :param name: The optional output node name.
+    :return: The new node performing relu operation on its input element-wise.
+    """
+    return _get_node_factory().create("Selu", as_nodes(data, alpha, lambda_value))
 
 
 @unary_op
-def sign(node, name=None):  # type: (NodeInput, str) -> Node
+def sign(node: NodeInput, name: Optional[str] = None) -> Node:
     """Perform element-wise sign operation.
 
     :param node: One of: input node, array or scalar.
-    :param name: The optional new name for ouptut node.
+    :param name: The optional new name for output node.
     :return: The node with mapped elements of the input tensor to -1 (if it is negative),
              0 (if it is zero), or 1 (if it is positive).
     """
-    return Sign(node)
+    return _get_node_factory().create("Sign", [node])
 
 
 @unary_op
-def sin(node, name=None):  # type: (NodeInput, str) -> Node
+def sin(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply sine function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with sin operation applied on it.
     """
-    return Sin(node)
+    return _get_node_factory().create("Sin", [node])
 
 
 @unary_op
-def sinh(node, name=None):  # type: (NodeInput, str) -> Node
+def sinh(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply hyperbolic sine function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with sin operation applied on it.
     """
-    return Sinh(node)
+    return _get_node_factory().create("Sinh", [node])
 
 
 @unary_op
-def tan(node, name=None):  # type: (NodeInput, str) -> Node
+def tan(node: NodeInput, name: Optional[str] = None) -> Node:
     """Apply tangent function on the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with tan operation applied on it.
     """
-    return Tan(node)
+    return _get_node_factory().create("Tan", [node])
 
 
 # Binary ops
 @binary_op
-def divide(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def divide(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which applies f(x) = A/B to the input nodes element-wise.
 
     :param left_node: The node providing dividend data.
     :param right_node: The node providing divisor data.
+    :param auto_broadcast: Specifies rules used for auto-broadcasting of input tensors.
     :param name: Optional name for output node.
     :return: The node performing element-wise division.
     """
-    return Divide(left_node, right_node)
+    return _get_node_factory().create(
+        "Divide", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def multiply(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+def floor_mod(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
+    """Return node performing element-wise FloorMod (division reminder) with two given tensors.
+
+    :param left_node: The first input node for FloorMod operation.
+    :param right_node: The second input node for FloorMod operation.
+    :param auto_broadcast: Specifies rules used for auto-broadcasting of input tensors.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise FloorMod operation.
+    """
+    return _get_node_factory().create(
+        "FloorMod", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
+
+
+@binary_op
+def mod(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
+    """Return node performing element-wise division reminder with two given tensors.
+
+    :param left_node: The first input node for mod operation.
+    :param right_node: The second input node for mod operation.
+    :param auto_broadcast: Specifies rules used for auto-broadcasting of input tensors.
+    :param name: Optional name for output node.
+    :return: The node performing element-wise Mod operation.
+    """
+    return _get_node_factory().create(
+        "Mod", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
+
+
+@binary_op
+def multiply(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which applies f(x) = A*B to the input nodes elementwise."""
-    return _get_node_factory().create('Multiply',
-                                      [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+    return _get_node_factory().create(
+        "Multiply", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def subtract(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def subtract(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which applies f(x) = A-B to the input nodes element-wise.
 
     :param left_node: The node providing data for left hand side of operator.
     :param right_node: The node providing data for right hand side of operator.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: The optional name for output node.
     :return: The new output node performing subtraction operation on both tensors element-wise.
     """
-    return Subtract(left_node, right_node)
+    return _get_node_factory().create(
+        "Subtract", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def add(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def add(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which applies f(x) = A+B to the input nodes element-wise."""
-    return _get_node_factory().create('Add', [left_node, right_node])
+    return _get_node_factory().create(
+        "Add", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def minimum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def minimum(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which applies the minimum operation to input nodes elementwise."""
-    return Minimum(left_node, right_node)
+    return _get_node_factory().create(
+        "Minimum", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def maximum(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def maximum(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which applies the maximum operation to input nodes elementwise."""
-    return _get_node_factory().create('Maximum', [left_node, right_node])
+    return _get_node_factory().create(
+        "Maximum", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def power(left_node, right_node, auto_broadcast='NUMPY', name=None):
-    # type: (NodeInput, NodeInput, str, str) -> Node
+def power(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which perform element-wise exponentiation operation.
 
     :param left_node: The node providing the base of operation.
     :param right_node: The node providing the exponent of operation.
     :param name: The optional name for the new output node.
     :param auto_broadcast: The type of broadcasting specifies rules used for
-                           auto-broadcasting of input tensors
+                           auto-broadcasting of input tensors.
     :return: The new node performing element-wise exponentiation operation on input nodes.
     """
-    return _get_node_factory().create('Power',
-                                      [left_node, right_node],
-                                      {'auto_broadcast': auto_broadcast})
+    return _get_node_factory().create(
+        "Power", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 # Logical ops
 @binary_op
-def equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def equal(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which checks if input nodes are equal element-wise.
 
     :param left_node: The first input node for equal operation.
     :param right_node: The second input node for equal operation.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional name for output new node.
     :return: The node performing element-wise equality check.
     """
-    return Equal(left_node, right_node)
+    return _get_node_factory().create(
+        "Equal", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def not_equal(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def not_equal(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which checks if input nodes are unequal element-wise.
 
     :param left_node: The first input node for not-equal operation.
     :param right_node: The second input node for not-equal operation.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional name for output new node.
     :return: The node performing element-wise inequality check.
     """
-    return NotEqual(left_node, right_node)
+    return _get_node_factory().create(
+        "NotEqual", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def greater(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def greater(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which checks if left input node is greater than the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is greater than right_node.
     """
-    return Greater(left_node, right_node)
+    return _get_node_factory().create(
+        "Greater", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def greater_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def greater_equal(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which checks if left node is greater or equal to the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is greater than or equal
              right_node.
     """
-    return GreaterEq(left_node, right_node)
+    return _get_node_factory().create(
+        "GreaterEqual", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def less(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def less(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which checks if left input node is less than the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is less than the right_node.
     """
-    return Less(left_node, right_node)
+    return _get_node_factory().create(
+        "Less", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def less_eq(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def less_equal(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which checks if left input node is less or equal the right node element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The node performing element-wise check whether left_node is less than or equal the
              right_node.
     """
-    return LessEq(left_node, right_node)
+    return _get_node_factory().create(
+        "LessEqual", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def logical_and(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
+def logical_and(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Return node which perform logical and operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: The optional new name for output node.
     :return: The node performing logical and operation on input nodes corresponding elements.
     """
-    return And(left_node, right_node)
+    return _get_node_factory().create(
+        "LogicalAnd", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def logical_or(left_node, right_node, name=None):  # type: (NodeInput, NodeInput, str) -> Node
-    """Return node which performs logical or operation on input nodes element-wise.
+def logical_or(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
+    """Return node which performs logical OR operation on input nodes element-wise.
 
     :param left_node: The first input node providing data.
     :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: The optional new name for output node.
     :return: The node performing logical or operation on input nodes corresponding elements.
     """
-    return Or(left_node, right_node)
-
-
-@unary_op
-def logical_not(node, name=None):  # type: (Node, str) -> Node
-    """Return node which applies logical negation to the input node elementwise."""
-    return Not(node)
+    return _get_node_factory().create(
+        "LogicalOr", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 @binary_op
-def squared_difference(x1, x2, name=None):  # type: (Node, Node, str) -> Node
+def logical_xor(
+    left_node: NodeInput,
+    right_node: NodeInput,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
+    """Return node which performs logical XOR operation on input nodes element-wise.
+
+    :param left_node: The first input node providing data.
+    :param right_node: The second input node providing data.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
+    :param name: The optional new name for output node.
+    :return: The node performing logical or operation on input nodes corresponding elements.
+    """
+    return _get_node_factory().create(
+        "LogicalXor", [left_node, right_node], {"auto_broadcast": auto_broadcast.upper()}
+    )
+
+
+@unary_op
+def logical_not(node: NodeInput, name: Optional[str] = None) -> Node:
+    """Return node which applies element-wise logical negation to the input node.
+
+    :param node: The input node providing data.
+    :param name: The optional new name for output node.
+    :return: The node performing element-wise logical NOT operation with given tensor.
+    """
+    return _get_node_factory().create("LogicalNot", [node])
+
+
+@binary_op
+def squared_difference(
+    x1: NodeInput, x2: NodeInput, auto_broadcast: str = "NUMPY", name: Optional[str] = None
+) -> Node:
     """Perform an element-wise squared difference between two tensors.
 
     .. math:: y[i] = (x_1[i] - x_2[i])^2
 
     :param x1: The node with first input tensor.
     :param x2: The node with second input tensor.
+    :param auto_broadcast: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: numpy, explicit.
     :param name: Optional new name for output node.
     :return: The new node performing a squared difference between two tensors.
     """
-    return SquaredDifference(x1, x2)
+    return _get_node_factory().create(
+        "SquaredDifference", [x1, x2], {"auto_broadcast": auto_broadcast.upper()}
+    )
 
 
 # Extend Node class to support binary operators
@@ -1002,78 +1375,50 @@ Node.__rtruediv__ = lambda left, right: divide(right, left)
 Node.__eq__ = equal
 Node.__ne__ = not_equal
 Node.__lt__ = less
-Node.__le__ = less_eq
+Node.__le__ = less_equal
 Node.__gt__ = greater
-Node.__ge__ = greater_eq
+Node.__ge__ = greater_equal
 
 
 # Custom ops
 @nameable_op
-def broadcast(node, new_shape, broadcast_axes=None, auto_broadcast='numpy', name=None):
-    # type: (Node, Node, Node, str, str) -> Node
+def broadcast(
+    data: NodeInput,
+    target_shape: NodeInput,
+    axes_mapping: Optional[NodeInput] = None,
+    broadcast_spec: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     """Create a node which broadcasts the input node's values along specified axes to a desired shape.
 
-    :param node: The node with input tensor data.
-    :param new_shape: The node with a new shape we want to broadcast tensor to.
-    :param broadcast_axes: The node with a axis positions (0-based) in the result
+    :param data: The node with input tensor data.
+    :param target_shape: The node with a new shape we want to broadcast tensor to.
+    :param axes_mapping: The node with a axis positions (0-based) in the result
                            that are being broadcast.
-    :param auto_broadcast: The type of broadcating that specifies mapping of input tensor axes
-                           to output shape axes. Range of values: numpy, explicit.
+    :param broadcast_spec: The type of broadcasting that specifies mapping of input tensor axes
+                           to output shape axes. Range of values: NUMPY, EXPLICIT, BIDIRECTIONAL.
     :param name: Optional new name for output node.
     :return: New node with broadcast shape.
     """
-    return _get_node_factory().create('Broadcast',
-                                      [node, new_shape, broadcast_axes],
-                                      {'auto_broadcast': auto_broadcast})
+    inputs = as_nodes(data, target_shape)
+    if broadcast_spec.upper() == "EXPLICIT":
+        inputs.append(as_node(axes_mapping))
+    return _get_node_factory().create(
+        "Broadcast", inputs, {"broadcast_spec": broadcast_spec.upper()}
+    )
 
 
 @nameable_op
-def broadcast_to(node, new_shape, axis=None, name=None):
-    # type: (Node, TensorShape, int, str) -> Node
-    """Create a node which broadcasts the input node's values to a desired shape.
-
-    `broadcast_to` will attempt to automatically determine which axes need broadcasting.
-
-    The optional `axis` parameter specifies the starting axis position (0-based) in the output
-    shape from which the current shape of the tensor matches the desired new shape.
-
-    e.g. current_shape: [4, 5], new_shape: [2, 3, 4, 5, 6], axis: 2
-
-    By using the `axis` parameter you can control which output axis to broadcast along.
-
-    Example:
-
-    >>> input_node = ng.constant([1, 2, 3])
-    >>> current_shape = [3]
-    >>> new_shape = [3, 3]
-    >>> ng.broadcast_to(input_node, new_shape, axis=1)
-    array([[1, 2, 3],
-           [1, 2, 3],
-           [1, 2, 3]])
-
-    >>> ng.broadcast_to(input_node, new_shape, axis=0)
-    array([[1, 1, 1],
-           [2, 2, 2],
-           [3, 3, 3]])
-
-    If the `axis` parameter is not specified, `broadcast_to` will attempt to match shapes,
-    assuming the current shape matches the rightmost positions of the desired new shape.
-    This behaviour is similar to NumPy's broadcasting.
-
-    i.e. default `axis = len(new_shape) - len(current_shape)`
-
-    :param node: The node with input tensor data.
-    :param new_shape: The new shape we want to broadcast tensor to.
-    :param axis: The axis along which we perform broadcasting.
-    :param name: Optional new name for output node.
-    :return: New node with broadcast shape.
-    """
-    return Broadcast(node, Shape(new_shape), get_broadcast_axes(new_shape, node.shape, axis))
-
-
-@nameable_op
-def fake_quantize(data, input_low, input_high, output_low, output_high, levels, name=None):
-    # type: (Node, Node, Node, Node, Node, int, str) -> Node
+def fake_quantize(
+    data: NodeInput,
+    input_low: NodeInput,
+    input_high: NodeInput,
+    output_low: NodeInput,
+    output_high: NodeInput,
+    levels: int,
+    auto_broadcast: str = "NUMPY",
+    name: Optional[str] = None,
+) -> Node:
     r"""Perform an element-wise linear quantization on input data.
 
     Input floating point values are quantized into a discrete set of floating point values.
@@ -1092,66 +1437,55 @@ def fake_quantize(data, input_low, input_high, output_low, output_high, levels, 
             \dfrac{round( \dfrac{data - input\_low}{(input\_high - input\_low)\cdot (levels-1)})}
             {(levels-1)\cdot (output\_high - output\_low)} + output\_low
 
-    :param data:         The node with data tensor.
-    :param input_low:    The node with the minimum for input values.
-    :param input_high:   The node with the maximum for input values.
-    :param output_low:   The node with the minimum quantized value.
-    :param output_high:  The node with the maximum quantized value.
-    :param levels:       The number of quantization levels. Integer value.
+    :param data:           The node with data tensor.
+    :param input_low:      The node with the minimum for input values.
+    :param input_high:     The node with the maximum for input values.
+    :param output_low:     The node with the minimum quantized value.
+    :param output_high:    The node with the maximum quantized value.
+    :param levels:         The number of quantization levels. Integer value.
+    :param auto_broadcast: The type of broadcasting specifies rules used for
+                           auto-broadcasting of input tensors.
     :return: New node with quantized value.
     """
-    return FakeQuantize(data, input_low, input_high, output_low, output_high, levels)
+    return _get_node_factory().create(
+        "FakeQuantize",
+        as_nodes(data, input_low, input_high, output_low, output_high),
+        {"levels": levels, "auto_broadcast": auto_broadcast.upper()},
+    )
 
 
 @nameable_op
-def gemm(A,                      # type: Node
-         B,                      # type: Node
-         C,                      # type: Node
-         alpha,                  # type: ScalarData
-         beta,                   # type: ScalarData
-         transA,                 # type: bool
-         transB,                 # type: bool
-         name=None,              # type: str
-         ):
-    # type: (...) -> Node
-    r"""Perform General matrix-matrix multiplication on input tensors A, B and C.
+def convert(
+    data: NodeInput, destination_type: Union[str, NumericType], name: Optional[str] = None
+) -> Node:
+    """Return node which casts input node values to specified type.
 
-    Computes:
-
-    .. math:: Y = alpha\cdot A'\cdot B' +  beta\cdot C
-
-    :code:`A'` is the transpose of matrix :code:`A` with shape (M, K),
-    if :code:`transA` is :code:`True`, otherwise :code:`A` with shape (K, N).
-
-    :code:`B'` is the transpose of matrix :code:`B` with shape (K, N),
-    if :code:`transB` is :code:`True`, otherwise :code:`B` with shape (N, K).
-
-    :code:`C`: Matrix broadcastable to shape (M, N).
-
-    :code:`Y`: Matrix with shape (M, N).
-
-    :param A: The node with input tensor A.
-    :param B: The node with input tensor B.
-    :param C: The node with input tensor C.
-    :param alpha: Scalar multiplier for the product of input tensors A * B.
-    :param beta: Scalar multiplier for input tensor C.
-    :param transA: Whether A should be transposed. Boolean value.
-    :param transB: Whether B should be transposed. Boolean value.
+    :param data: Node which produces the input tensor.
+    :param destination_type: Provides the target type for the conversion.
     :param name: Optional name for the output node.
-    :return: Return node with tensor of shape (M, N).
+    :return: New node performing the conversion operation.
     """
-    return Gemm(A, B, C, alpha, beta, transA, transB)
+    if not isinstance(destination_type, str):
+        destination_type = get_element_type_str(destination_type)
+    return _get_node_factory().create(
+        "Convert", [as_node(data)], {"destination_type": destination_type.lower()}
+    )
+
+
+@binary_op
+def convert_like(data: NodeInput, like: NodeInput, name: Optional[str] = None) -> Node:
+    """Return node which casts data node values to the type of another node.
+
+    :param data: Node which produces the input tensor
+    :param like: Node which provides the target type information for the conversion
+    :param name: Optional name for the output node.
+    :return: New node performing the conversion operation.
+    """
+    return _get_node_factory().create("ConvertLike", [data, like])
 
 
 @nameable_op
-def convert(node, new_type, name=None):  # type: (Node, NumericType, str) -> Node
-    """Return node which casts input node values to specified type."""
-    new_element_type = get_element_type(new_type)
-    return Convert(node, new_element_type)
-
-
-@nameable_op
-def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int, str) -> Node
+def depth_to_space(node: Node, mode: str, block_size: int = 1, name: str = None) -> Node:
     """Rearranges input tensor from depth into blocks of spatial data.
 
     Values from the height and width dimensions are moved to the depth dimension.
@@ -1174,10 +1508,13 @@ def depth_to_space(node, mode, block_size, name=None):  # type: (Node, str, int,
     :param name: Optional output node name.
     :return: The new node performing an DepthToSpace operation on its input tensor.
     """
-    return DepthToSpace(node, mode, block_size)
+    return _get_node_factory().create(
+        "DepthToSpace", [node], {"mode": mode, "block_size": block_size},
+    )
 
 
-def gelu(node, name=None):  # type: (NodeInput, str) -> Node
+@unary_op
+def gelu(node: NodeInput, name: Optional[str] = None) -> Node:
     r"""Perform Gaussian Error Linear Unit operation element-wise on data from input node.
 
     Computes GELU function:
@@ -1191,40 +1528,48 @@ def gelu(node, name=None):  # type: (NodeInput, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a GELU operation on its input data element-wise.
     """
-    return Gelu(as_node(node))
+    return _get_node_factory().create("Gelu", [node])
 
 
 @nameable_op
-def select(selection_node, input_node1, input_node2, name=None):
-    # type: (Node, Node, Node, str) -> Node
+def select(
+    cond: NodeInput,
+    then_node: NodeInput,
+    else_node: NodeInput,
+    auto_broadcast: str = "numpy",
+    name: Optional[str] = None,
+) -> Node:
     """Perform an element-wise selection operation on input tensors.
 
-    :param selection_node: The node providing selection values of `bool` type.
-    :param input_node1: The node providing data to be selected if respective `selection_node`
+    :param cond: Tensor with selection mask of type `boolean`.
+    :param then_node: Tensor providing data to be selected if respective `cond`
                         item value is `True`.
-    :param input_node2: The node providing data to be selected if respective `selection_node`
+    :param else_node: Tensor providing data to be selected if respective `cond`
                         item value is `False`.
+    :param auto_broadcast: Mode specifies rules used for auto-broadcasting of input tensors.
     :param name: The optional new name for output node.
     :return: The new node with values selected according to provided arguments.
     """
-    return Select(selection_node, input_node1, input_node2)
+    inputs = as_nodes(cond, then_node, else_node)
+    return _get_node_factory().create("Select", inputs, {"auto_broadcast": auto_broadcast.upper()})
 
 
 # Non-linear ops
 @unary_op
-def tanh(node, name=None):  # type: (Node, str) -> Node
+def tanh(node: NodeInput, name: Optional[str] = None) -> Node:
     """Return node which applies hyperbolic tangent to the input node element-wise.
 
     :param node: One of: input node, array or scalar.
     :param name: Optional new name for output node.
     :return: New node with tanh operation applied on it.
     """
-    return Tanh(node)
+    return _get_node_factory().create("Tanh", [node])
 
 
 @nameable_op
-def clamp(data, min_value, max_value, name=None):
-    # type: (NodeInput, ScalarData, ScalarData, str) -> Node
+def clamp(
+    data: NodeInput, min_value: ScalarData, max_value: ScalarData, name: Optional[str] = None
+) -> Node:
     """Perform clamp element-wise on data from input node.
 
     Performs a clipping operation on an input value between a pair of boundary values.
@@ -1249,42 +1594,65 @@ def clamp(data, min_value, max_value, name=None):
     :param name: Optional output node name.
     :return: The new node performing a clamp operation on its input data element-wise.
     """
-    return Clamp(as_node(data), min_value, max_value)
+    return _get_node_factory().create(
+        "Clamp", [as_node(data)], {"min": min_value, "max": max_value}
+    )
 
 
-# matmul ops
 @nameable_op
-def dot(left_node, right_node, reduction_axes_count=None, name=None):
-    # type: (Node, Node, int, str) -> Node
-    """Return node which performs generalized dot product of two input nodes.
+def binary_convolution(
+    data: NodeInput,
+    filters: NodeInput,
+    strides: List[int],
+    pads_begin: List[int],
+    pads_end: List[int],
+    dilations: List[int],
+    mode: str,
+    pad_value: float,
+    auto_pad: str = "EXPLICIT",
+    name: Optional[str] = None,
+) -> Node:
+    """Create node performing convolution with binary weights, binary input and integer output.
 
-    This operation is capable of performing scalar-tensor, matrix-vector product and matrix
-    multiplication.
-
-    :param left_node: The node providing left hand side data.
-    :param right_node: The node providing right hand side data.
-    :param reduction_axes_count: The number of axes to reduce during dot-product.
-    :param name: The optional name for output node.
-    :return: The new node performing dot-product on input two nodes.
+    :param data: The node providing data batch tensor.
+    :param filter: The node providing filters tensor.
+    :param strides: The kernel window movement strides.
+    :param pads_begin: The number of pixels to add to the beginning along each axis.
+    :param pads_end: The number of pixels to add to the end along each axis.
+    :param dilations: The distance in width and height between elements (weights) in the filter.
+    :param mode: Defines how input tensor 0/1 values and weights 0/1 are interpreted.
+    :param pad_value: Floating-point value used to fill pad area.
+    :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
+    :param name: The optional new name for output node.
+    :return: New node performing binary convolution operation.
     """
-    if reduction_axes_count is None:
-        return Dot(left_node, right_node)
-    else:
-        return Dot(left_node, right_node, reduction_axes_count)
+    return _get_node_factory().create(
+        "BinaryConvolution",
+        as_nodes(data, filters),
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "dilations": dilations,
+            "mode": mode,
+            "pad_value": pad_value,
+            "auto_pad": auto_pad,
+        },
+    )
 
 
 # convpool ops
 @nameable_op
-def convolution(data,                           # type: Node
-                filters,                        # type: Node
-                strides,                        # type: List[int]
-                pads_begin,                     # type: List[int]
-                pads_end,                       # type: List[int]
-                dilations,                      # type: List[int]
-                auto_pad='EXPLICIT',            # type: str
-                name=None,                      # type: str
-                ):
-    # type: (...) -> Node
+def convolution(
+    data: NodeInput,
+    filters: NodeInput,
+    strides: List[int],
+    pads_begin: List[int],
+    pads_end: List[int],
+    dilations: List[int],
+    auto_pad: str = "EXPLICIT",
+    name: Optional[str] = None,
+) -> Node:
     """Return node performing batched convolution operation.
 
     :param data: The node providing data batch tensor.
@@ -1297,28 +1665,32 @@ def convolution(data,                           # type: Node
     :param name: The optional new name for output node.
     :return: New node performing batched convolution operation.
     """
-    return _get_node_factory().create('Convolution',
-                                      [data, filters],
-                                      {'strides': strides,
-                                       'pads_begin': pads_begin,
-                                       'pads_end': pads_end,
-                                       'dilations': dilations,
-                                       'auto_pad': auto_pad})
+    return _get_node_factory().create(
+        "Convolution",
+        as_nodes(data, filters),
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "dilations": dilations,
+            "auto_pad": auto_pad,
+        },
+    )
 
 
 @nameable_op
-def convolution_backprop_data(data,                 # type: Node
-                              filters,              # type: Node
-                              strides,              # type: List[int]
-                              output_shape=None,    # type: Node
-                              pads_begin=None,      # type: List[int]
-                              pads_end=None,        # type: List[int]
-                              dilations=None,       # type: List[int]
-                              auto_pad=None,        # type: str
-                              output_padding=None,  # type: List[int]
-                              name=None,            # type: str
-                              ):
-    # type: (...) -> Node
+def convolution_backprop_data(
+    data: NodeInput,
+    filters: NodeInput,
+    strides: List[int],
+    output_shape: Optional[NodeInput] = None,
+    pads_begin: Optional[List[int]] = None,
+    pads_end: Optional[List[int]] = None,
+    dilations: Optional[List[int]] = None,
+    auto_pad: Optional[str] = None,
+    output_padding: Optional[List[int]] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Create node performing a batched-convolution backprop data operation.
 
     :param      data:         The node producing data from forward-prop
@@ -1342,35 +1714,137 @@ def convolution_backprop_data(data,                 # type: Node
     if dilations is None:
         dilations = [1] * spatial_dim_count
     if auto_pad is None:
-        auto_pad = 'explicit'
+        auto_pad = "explicit"
     if output_padding is None:
         output_padding = [0] * spatial_dim_count
-    args = [data, filters]
+    args = as_nodes(data, filters)
     if output_shape is not None:
-        args.append(output_shape)
+        args.append(as_node(output_shape))
 
-    return _get_node_factory().create('ConvolutionBackpropData',
-                                      args,
-                                      {'strides': strides,
-                                       'pads_begin': pads_begin,
-                                       'pads_end': pads_end,
-                                       'dilations': dilations,
-                                       'auto_pad': auto_pad.upper(),
-                                       'output_padding': output_padding})
+    return _get_node_factory().create(
+        "ConvolutionBackpropData",
+        args,
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "dilations": dilations,
+            "auto_pad": auto_pad.upper(),
+            "output_padding": output_padding,
+        },
+    )
 
 
 @nameable_op
-def avg_pool(data_batch,            # type: Node
-             strides,               # type: List[int]
-             pads_begin,            # type: TensorShape
-             pads_end,              # type: TensorShape
-             kernel_shape,          # type: TensorShape
-             exclude_pad,           # type: bool
-             rounding_type='floor',  # type: str
-             auto_pad=None,         # type: str
-             name=None,             # type: str
-             ):
-    # type: (...) -> Node
+def deformable_convolution(
+    data: NodeInput,
+    deformable_values: NodeInput,
+    filters: NodeInput,
+    strides: List[int],
+    pads_begin: List[int],
+    pads_end: List[int],
+    dilations: List[int],
+    auto_pad: str = "EXPLICIT",
+    group: int = 1,
+    deformable_group: int = 1,
+    name: Optional[str] = None,
+) -> Node:
+    """Create node performing deformable convolution.
+
+    :param data: The node providing data batch tensor.
+    :param filter: The node providing filters tensor.
+    :param strides: The distance (in pixels) to slide the filter on the feature map over the axes.
+    :param pads_begin: The number of pixels to add to the beginning along each axis.
+    :param pads_end: The number of pixels to add to the end along each axis.
+    :param dilations: The distance in width and height between elements (weights) in the filter.
+    :param auto_pad: The type of padding. Range of values: explicit, same_upper, same_lower, valid.
+    :param group: The number of groups which both output and input should be split into.
+    :param deformable_group: The number of groups which deformable values and output should be split
+                             into along the channel axis.
+    :param name: The optional new name for output node.
+    :return: New node performing deformable convolution operation.
+    """
+    return _get_node_factory().create(
+        "DeformableConvolution",
+        as_nodes(data, deformable_values, filters),
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "dilations": dilations,
+            "auto_pad": auto_pad,
+            "group": group,
+            "deformable_group": deformable_group,
+        },
+    )
+
+
+@nameable_op
+def deformable_psroi_pooling(
+    feature_maps: NodeInput,
+    coords: NodeInput,
+    output_dim: int,
+    spatial_scale: float,
+    group_size: int = 1,
+    mode: str = "bilinear_deformable",
+    spatial_bins_x: int = 1,
+    spatial_bins_y: int = 1,
+    trans_std: float = 1.0,
+    part_size: int = 1,
+    offsets: Optional[NodeInput] = None,
+    name: Optional[str] = None,
+) -> Node:
+    """Return node performing DeformablePSROIPooling operation.
+
+    DeformablePSROIPooling computes position-sensitive pooling
+    on regions of interest specified by input.
+
+    :param feature_maps: 4D tensor with feature maps.
+    :param coords: 2D tensor describing box consisting of tuples: [batch_id, x_1, y_1, x_2, y_2].
+    :param output_dim: A pooled output channel number.
+    :param spatial_scale: A multiplicative spatial scale factor to translate ROI.
+    :param group_size: The number of groups to encode position-sensitive score.
+    :param mode: Specifies mode for pooling. Range of values: ['bilinear_deformable'].
+    :param spatial_bins_x: Specifies numbers of bins to divide the input feature maps over width.
+    :param spatial_bins_y: Specifies numbers of bins to divide the input feature maps over height.
+    :param trans_std: The value that all transformation (offset) values are multiplied with.
+    :param part_size: The number of parts the output tensor spatial dimensions are divided into.
+    :param offsets: Optional node. 4D input blob with transformation values (offsets).
+    :param name: The optional new name for output node.
+    :return: New node performing DeformablePSROIPooling operation.
+    """
+    node_inputs = as_nodes(feature_maps, coords)
+    if offsets is not None:
+        node_inputs.append(as_node(offsets))
+
+    return _get_node_factory().create(
+        "DeformablePSROIPooling",
+        node_inputs,
+        {
+            "output_dim": output_dim,
+            "spatial_scale": spatial_scale,
+            "group_size": group_size,
+            "mode": mode,
+            "spatial_bins_x": spatial_bins_x,
+            "spatial_bins_y": spatial_bins_y,
+            "trans_std": trans_std,
+            "part_size": part_size,
+        },
+    )
+
+
+@nameable_op
+def avg_pool(
+    data_batch: NodeInput,
+    strides: List[int],
+    pads_begin: TensorShape,
+    pads_end: TensorShape,
+    kernel_shape: TensorShape,
+    exclude_pad: bool,
+    rounding_type: str = "floor",
+    auto_pad: Optional[str] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Return average pooling node.
 
     :param data_batch:      The input node providing data.
@@ -1388,29 +1862,33 @@ def avg_pool(data_batch,            # type: Node
     :return: New node with AvgPool operation applied on its data.
     """
     if auto_pad is None:
-        auto_pad = 'explicit'
-    return _get_node_factory().create('AvgPool',
-                                      [data_batch],
-                                      {'strides': strides,
-                                       'pads_begin': pads_begin,
-                                       'pads_end': pads_end,
-                                       'kernel': kernel_shape,
-                                       'exclude_pad': exclude_pad,
-                                       'rounding_type': rounding_type.upper(),
-                                       'auto_pad': auto_pad.upper()})
+        auto_pad = "explicit"
+    return _get_node_factory().create(
+        "AvgPool",
+        [as_node(data_batch)],
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "kernel": kernel_shape,
+            "exclude_pad": exclude_pad,
+            "rounding_type": rounding_type.upper(),
+            "auto_pad": auto_pad.upper(),
+        },
+    )
 
 
 @nameable_op
-def max_pool(data,                    # type: Node
-             strides,                 # type: List[int]
-             pads_begin,              # type: List[int]
-             pads_end,                # type: List[int]
-             kernel_shape,            # type: TensorShape
-             rounding_type='floor',   # type: str
-             auto_pad=None,           # type: str
-             name=None,               # type: str
-             ):
-    # type: (...) -> Node
+def max_pool(
+    data: NodeInput,
+    strides: List[int],
+    pads_begin: List[int],
+    pads_end: List[int],
+    kernel_shape: TensorShape,
+    rounding_type: str = "floor",
+    auto_pad: Optional[str] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Perform max pooling operation with given parameters on provided data.
 
     :param  data:           The node providing input data.
@@ -1428,35 +1906,43 @@ def max_pool(data,                    # type: Node
     :returns:   The new node performing max pooling operation.
     """
     if auto_pad is None:
-        auto_pad = 'explicit'
-    return _get_node_factory().create('MaxPool',
-                                      [data],
-                                      {'strides': strides,
-                                       'pads_begin': pads_begin,
-                                       'pads_end': pads_end,
-                                       'kernel': kernel_shape,
-                                       'rounding_type': rounding_type.upper(),
-                                       'auto_pad': auto_pad.upper()})
+        auto_pad = "explicit"
+    return _get_node_factory().create(
+        "MaxPool",
+        [as_node(data)],
+        {
+            "strides": strides,
+            "pads_begin": pads_begin,
+            "pads_end": pads_end,
+            "kernel": kernel_shape,
+            "rounding_type": rounding_type.upper(),
+            "auto_pad": auto_pad.upper(),
+        },
+    )
 
 
 # reduction ops
 @nameable_op
-def reduce_sum(node, reduction_axes, keep_dims=False, name=None):
-    # type: (Node, Node, bool, str) -> Node
+def reduce_sum(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
     """Perform element-wise sums of the input tensor, eliminating the specified reduction axes.
 
     :param node:           The node providing data for operation.
     :param reduction_axes: The axes to eliminate through summation.
     :param keep_dims:      If set to True it holds axes that are used for reduction
-    :param name:           The optional new name for ouptut node.
+    :param name:           The optional new name for output node.
     :return: The new node performing summation along `reduction_axes` element-wise.
     """
-    return _get_node_factory().create('ReduceSum', [node, reduction_axes], {'keep_dims': keep_dims})
+    return _get_node_factory().create(
+        "ReduceSum", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
 
 
 @nameable_op
-def reduce_max(node, reduction_axes, keep_dims=False, name=None):
-    # type: (Node, Node, bool, str) -> Node
+def reduce_max(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
     """Max-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node:           The tensor we want to max-reduce.
@@ -1464,12 +1950,15 @@ def reduce_max(node, reduction_axes, keep_dims=False, name=None):
     :param keep_dims:      If set to True it holds axes that are used for reduction
     :param name: Optional name for output node.
     """
-    return _get_node_factory().create('ReduceMax', [node, reduction_axes], {'keep_dims': keep_dims})
+    return _get_node_factory().create(
+        "ReduceMax", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
 
 
 @nameable_op
-def reduce_min(node, reduction_axes, keep_dims=False, name=None):
-    # type: (Node, Node, bool, str) -> Node
+def reduce_min(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
     """Min-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node:           The tensor we want to min-reduce.
@@ -1477,12 +1966,15 @@ def reduce_min(node, reduction_axes, keep_dims=False, name=None):
     :param keep_dims:      If set to True it holds axes that are used for reduction
     :param name:           Optional name for output node.
     """
-    return _get_node_factory().create('ReduceMin', [node, reduction_axes], {'keep_dims': keep_dims})
+    return _get_node_factory().create(
+        "ReduceMin", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
 
 
 @nameable_op
-def reduce_prod(node, reduction_axes, keep_dims=False, name=None):
-    # type: (Node, Node, bool, str) -> Node
+def reduce_prod(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
     """Product-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node:           The tensor we want to product-reduce.
@@ -1491,14 +1983,15 @@ def reduce_prod(node, reduction_axes, keep_dims=False, name=None):
     :param name:           Optional name for output node.
     :return: The new node performing product-reduction operation.
     """
-    return _get_node_factory().create('ReduceProd',
-                                      [node, reduction_axes],
-                                      {'keep_dims': keep_dims})
+    return _get_node_factory().create(
+        "ReduceProd", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
 
 
 @nameable_op
-def reduce_mean(node, reduction_axes, keep_dims=False, name=None):
-    # type: (Node, Node, bool, str) -> Node
+def reduce_mean(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
     """Mean-reduction operation on input tensor, eliminating the specified reduction axes.
 
     :param node:           The tensor we want to mean-reduce.
@@ -1507,13 +2000,68 @@ def reduce_mean(node, reduction_axes, keep_dims=False, name=None):
     :param name:           Optional name for output node.
     :return: The new node performing mean-reduction operation.
     """
-    return _get_node_factory().create('ReduceMean',
-                                      [node, reduction_axes],
-                                      {'keep_dims': keep_dims})
+    return _get_node_factory().create(
+        "ReduceMean", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
 
 
 @nameable_op
-def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
+def reduce_logical_and(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
+    """Logical AND reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node:           The tensor we want to reduce.
+    :param reduction_axes: The axes to eliminate through AND operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
+    :return: The new node performing reduction operation.
+    """
+    return _get_node_factory().create(
+        "ReduceLogicalAnd", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
+
+
+@nameable_op
+def reduce_logical_or(
+    node: NodeInput, reduction_axes: NodeInput, keep_dims: bool = False, name: Optional[str] = None
+) -> Node:
+    """Logical OR reduction operation on input tensor, eliminating the specified reduction axes.
+
+    :param node:           The tensor we want to reduce.
+    :param reduction_axes: The axes to eliminate through OR operation.
+    :param keep_dims:      If set to True it holds axes that are used for reduction
+    :param name:           Optional name for output node.
+    :return: The new node performing reduction operation.
+    """
+    return _get_node_factory().create(
+        "ReduceLogicalOr", as_nodes(node, reduction_axes), {"keep_dims": keep_dims}
+    )
+
+
+@nameable_op
+def cum_sum(
+    arg: NodeInput,
+    axis: NodeInput,
+    exclusive: bool = False,
+    reverse: bool = False,
+    name: Optional[str] = None,
+) -> Node:
+    """Construct a cumulative summation operation.
+
+    :param arg: The tensor to be summed.
+    :param axis: zero dimension tensor specifying axis position along which sum will be performed.
+    :param exclusive: if set to true, the top element is not included
+    :param reverse: if set to true, will perform the sums in reverse direction
+    :return: New node performing the operation
+    """
+    return _get_node_factory().create(
+        "CumSum", as_nodes(arg, axis), {"exclusive": exclusive, "reverse": reverse}
+    )
+
+
+@nameable_op
+def prelu(data: NodeInput, slope: NodeInput, name: Optional[str] = None) -> Node:
     """Perform Parametrized Relu operation element-wise on data from input node.
 
     PRelu uses the following logic:
@@ -1530,11 +2078,11 @@ def prelu(data, slope, name=None):  # type: (Node, Node, str) -> Node
     :param name: Optional output node name.
     :return: The new node performing a PRelu operation on tensor's channels.
     """
-    return PRelu(data, slope)
+    return _get_node_factory().create("PRelu", as_nodes(data, slope))
 
 
 @nameable_op
-def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, str) -> Node
+def hard_sigmoid(data: Node, alpha: NodeInput, beta: NodeInput, name: Optional[str] = None) -> Node:
     """Perform Hard Sigmoid operation element-wise on data from input node.
 
     Hard Sigmoid uses the following logic:
@@ -1544,37 +2092,16 @@ def hard_sigmoid(data, alpha, beta, name=None):  # type: (Node, float, float, st
         y = max(0, min(1, alpha * data + beta))
 
     :param data: The node with data tensor.
-    :param alpha: Alpha parameter. Scalar value.
-    :param beta: Beta parameter. Scalar value.
+    :param alpha: A node producing the alpha parameter.
+    :param beta: A node producing the beta parameter
     :param name: Optional output node name.
     :return: The new node performing a Hard Sigmoid element-wise on input tensor.
     """
-    return HardSigmoid(data, alpha, beta)
-
-
-# reshape ops
-@nameable_op
-def slice(node, lower_bounds, upper_bounds, strides=None, name=None):
-    # type: (Node, List[int], List[int], List[int], str) -> Node
-    """Take a slice of an input tensor, (sub-tensor) that resides within a bounding box.
-
-    Optionally this function may be provided with stride along each axis.
-
-    :param node: The tensor we want to slice.
-    :param lower_bounds: The (inclusive) lower-bound coordinates for the tensor slice.
-    :param upper_bounds: The (exclusive) upper-bound coordinates for the tensor slice.
-    :param strides: The strides for the tensor slice.
-    :param name: Optional name for the output node.
-    :return: Return node that represents a slice of input nodes data.
-    """
-    if strides is None:
-        return Slice(node, Coordinate(lower_bounds), Coordinate(upper_bounds))
-    else:
-        return Slice(node, Coordinate(lower_bounds), Coordinate(upper_bounds), Strides(strides))
+    return _get_node_factory().create("HardSigmoid", [data, as_node(alpha), as_node(beta)])
 
 
 @nameable_op
-def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
+def concat(nodes: List[NodeInput], axis: int, name: Optional[str] = None) -> Node:
     """Concatenate input nodes into single new node along specified axis.
 
     :param nodes: The nodes we want concatenate into single new node.
@@ -1582,128 +2109,144 @@ def concat(nodes, axis, name=None):  # type: (List[Node], int, str) -> Node
     :param name: The optional new name for output node.
     :return: Return new node that is a concatenation of input nodes.
     """
-    return Concat(nodes, axis)
+    return _get_node_factory().create("Concat", as_nodes(*nodes), {"axis": axis})
 
 
 @nameable_op
-def softmax(data, axis):  # type: (Node, int) -> Node
+def softmax(data: NodeInput, axis: int, name: Optional[str] = None) -> Node:
     """Apply softmax operation on each element of input tensor.
 
     :param data: The tensor providing input data.
     :param axis: An axis along which Softmax should be calculated
     :return: The new node with softmax operation applied on each element.
     """
-    return _get_node_factory().create('Softmax', [data], {'axis': axis})
+    return _get_node_factory().create("Softmax", [as_node(data)], {"axis": axis})
 
 
 @nameable_op
-def pad(data_batch,          # type: Node
-        value,               # type: Node
-        padding_below=None,  # type: TensorShape
-        padding_above=None,  # type: TensorShape
-        padding_in=None,     # type: TensorShape
-        name=None,           # type: str
-        ):
-    # type: (...) -> Node
-    """Return padding node.
+def pad(
+    arg: NodeInput,
+    pads_begin: NodeInput,
+    pads_end: NodeInput,
+    pad_mode: str,
+    arg_pad_value: Optional[NodeInput] = None,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a generic padding operation.
 
-    :param data_batch: The input node providing data.
-    :param value: The node producing the scalar value to be inserted for padding.
-    :param padding_below: The padding-below widths.
-    :param padding_above: The padding-above widths.
-    :param padding_in: The interior-padding widths.
-    :param name: The optional new name for output node.
-    :return: Return node that represents a padding of input nodes data.
+    :param arg: The node producing input tensor to be padded.
+    :param pads_begin: number of padding elements to be added before position 0
+                       on each axis of arg.
+    :param pads_end: number of padding elements to be added after the last element.
+    :param pad_mode: "constant", "edge", "reflect" or "symmetric"
+    :param arg_pad_value: value used for padding if pad_mode is "constant"
+    :return: Pad operation node.
     """
-    dim_count = len(data_batch.shape)
-    if padding_above is None:
-        padding_above = [0] * dim_count
-    if padding_below is None:
-        padding_below = [0] * dim_count
-    if padding_in is None:
-        padding_in = [0] * dim_count
+    input_nodes = as_nodes(arg, pads_begin, pads_end)
+    if arg_pad_value:
+        input_nodes.append(as_node(arg_pad_value))
 
-    return Pad(data_batch, value, Shape(padding_below), Shape(padding_above), Shape(padding_in))
+    pad_mode = pad_mode.upper()
+    return _get_node_factory().create("Pad", input_nodes, {"pad_mode": pad_mode})
 
 
 @nameable_op
-def one_hot(node, shape, one_hot_axis, name=None):  # type: (Node, TensorShape, int, str) -> Node
+def one_hot(
+    indices: NodeInput,
+    depth: NodeInput,
+    on_value: NodeInput,
+    off_value: NodeInput,
+    axis: int,
+    name: Optional[str] = None,
+) -> Node:
     """Create node performing one-hot encoding on input data.
 
-    :param node: The input node providing data for operation.
-    :param shape: The output node shape including the new one-hot axis.
-    :param one_hot_axis: The index within the output shape of the new one-hot axis.
+    :param indices: Input tensor of rank N with indices of any supported integer data type.
+    :param depth: Scalar of any supported integer type that specifies number of classes and
+                  the size of one-hot dimension.
+    :param on_value: Scalar of any type that is the value that the locations
+                     in output tensor represented by indices in input take.
+    :param off_value: Scalar of any type that is the value that the locations not represented
+                      by indices in input take.
+
     :param name: The optional name for new output node.
     :return: New node performing one-hot operation.
     """
-    return OneHot(node, Shape(shape), one_hot_axis)
+    return _get_node_factory().create(
+        "OneHot", as_nodes(indices, depth, on_value, off_value), {"axis": axis}
+    )
 
 
 @nameable_op
-def replace_slice(dest_node,        # type: Node
-                  src_node,         # type: Node
-                  lower_bounds,     # type: List[int]
-                  upper_bounds,     # type: List[int]
-                  strides=None,     # type: List[int]
-                  name=None,        # type: str
-                  ):
-    # type: (...) -> Node
-    """Return a copy of `dest_node` with the specified slice overwritten by the `src_node` data.
-
-    :param dest_node: The node providing data to be overwritten by the specified slice.
-    :param src_node: The node providing data for overwriting.
-    :param lower_bounds: The (inclusive) lower-bound coordinates for the replaced slice.
-    :param upper_bounds: The (exclusive) upper-bound coordinates for the replaced slice.
-    :param strides: The strides for the replaced slice.
-    :param name: The optional name for the output new node.
-    :return: The new node with copy of `dest_node` with the specified slice overwritten
-             by the `src_node`.
-    """
-    if strides is None:
-        return ReplaceSlice(dest_node, src_node, Coordinate(lower_bounds), Coordinate(upper_bounds))
-    else:
-        return ReplaceSlice(dest_node, src_node, Coordinate(lower_bounds), Coordinate(upper_bounds),
-                            Strides(strides))
-
-
-@nameable_op
-def reverse(node, reversed_axes, name=None):  # type: (Node, List[int], str) -> Node
+def reverse(data: NodeInput, axis: NodeInput, mode: str, name: Optional[str] = None) -> Node:
     """Perform axis-reverse operation.
 
-    :param node: The input node on which operation will be carried out.
-    :param reversed_axes: The list of indices of axes to be reversed.
+    :param data: The input node on which operation will be carried out.
+    :param axis: The list of indices of axes to be reversed.
+    :param mode: The mode specifies how the second input tensor should be interpreted:
+                 as a set of indices or a mask. Range of values: index, mask.
     :param name: The optional name of the output node.
     :return: The new node with reversed axes.
     """
-    return Reverse(node, AxisSet(reversed_axes))
+    return _get_node_factory("opset1").create(
+        "Reverse", as_nodes(data, axis), {"mode": mode.lower()}
+    )
 
 
 @nameable_op
-def batch_norm(eps,             # type: float
-               gamma,           # type: Node
-               beta,            # type: Node
-               data,            # type: Node
-               mean=None,       # type: Node
-               variance=None,   # type: Node
-               name=None,       # type: str
-               ):
-    # type: (...) -> Node
-    """Return batch normalization node."""
-    if mean is None and variance is None:
-        return BatchNormTraining(data, gamma, beta, eps)
-    else:
-        return BatchNormInference(data, gamma, beta, mean, variance, eps)
+def batch_norm_inference(
+    data: NodeInput,
+    gamma: NodeInput,
+    beta: NodeInput,
+    mean: NodeInput,
+    variance: NodeInput,
+    epsilon: float,
+    name: Optional[str] = None,
+) -> Node:
+    """Perform layer normalizes a input tensor by mean and variance with appling scale and offset.
+
+    :param data: The input tensor with data for normalization.
+    :param gamma: The scalar scaling for normalized value.
+    :param beta: The bias added to the scaled normalized value.
+    :param mean: The value for mean normalization.
+    :param variance: The value for variance normalization.
+    :param epsilon: The  number to be added to the variance to avoid division
+                    by zero when normalizing a value.
+    :param name: The optional name of the output node.
+    :return: The new node which performs BatchNormInference.
+    """
+    # inputs = [as_node(gamma), as_node(beta), data, as_node(mean), as_node(variance)]
+    inputs = as_nodes(gamma, beta, data, mean, variance)
+    return _get_node_factory().create("BatchNormInference", inputs, {"epsilon": epsilon})
 
 
 @nameable_op
-def lrn(data,       # type: Node
-        alpha=1,    # type: float
-        beta=0.5,   # type: float
-        bias=1,     # type: float
-        size=5,     # type: int
-        name=None,  # type: str
-        ):
-    # type: (...) -> Node
+def normalize_l2(
+    data: NodeInput, axes: NodeInput, eps: float, eps_mode: str, name: Optional[str] = None
+) -> Node:
+    """Construct an NormalizeL2 operation.
+
+    :param data: Node producing the input tensor
+    :param axes: Node indicating axes along which L2 reduction is calculated
+    :param eps: The epsilon added to L2 norm
+    :param eps_mode: how eps is combined with L2 value (`add` or `max`)
+    :return: New node which performs the L2 normalization.
+    """
+    return _get_node_factory().create(
+        "NormalizeL2", as_nodes(data, axes), {"eps": eps, "mode": eps_mode}
+    )
+
+
+@nameable_op
+def lrn(
+    data: NodeInput,
+    axes: NodeInput,
+    alpha: float = 1,
+    beta: float = 0.5,
+    bias: float = 1,
+    size: int = 5,
+    name: Optional[str] = None,
+) -> Node:
     """Return a node which performs element-wise Local Response Normalization (LRN) operation.
 
     :param data: Input data.
@@ -1714,45 +2257,167 @@ def lrn(data,       # type: Node
     :param name: An optional name of the output node.
     :return: The new node which performs LRN.
     """
-    return LRN(data, alpha, beta, bias, size)
+    attributes = {"alpha": alpha, "beta": beta, "bias": bias, "size": size}
+    return _get_node_factory().create("LRN", as_nodes(data, axes), attributes)
 
 
 @nameable_op
-def argmax(data,     # type: Node
-           axis=0,   # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMax index reduction operation.
+def embedding_bag_offsets_sum(
+    emb_table: Node,
+    indices: NodeInput,
+    offsets: NodeInput,
+    default_index: Optional[NodeInput] = None,
+    per_sample_weights: Optional[NodeInput] = None,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which performs sums of bags of embeddings without the intermediate embeddings.
+
+    :param emb_table: Tensor containing the embedding lookup table.
+    :param indices: Tensor with indices.
+    :param offsets: Tensor containing the starting index positions of each bag in indices.
+    :param per_sample_weights: Tensor with weights for each sample.
+    :param default_index: Scalar containing default index in embedding table to fill empty bags.
+    :param name: Optional name for output node.
+    :return: The new node which performs EmbeddingBagOffsetsSum
+    """
+    inputs = [emb_table, as_node(indices), as_node(offsets)]
+    if per_sample_weights is not None:
+        inputs.append(default_index)
+        inputs.append(per_sample_weights)
+    elif default_index is not None:
+        inputs.append(default_index)
+
+    return _get_node_factory().create("EmbeddingBagOffsetsSum", inputs, {})
+
+
+@nameable_op
+def embedding_segments_sum(
+    emb_table: Node,
+    indices: NodeInput,
+    segment_ids: NodeInput,
+    num_segments: Optional[NodeInput] = None,
+    default_index: Optional[NodeInput] = None,
+    per_sample_weights: Optional[NodeInput] = None,
+    name: Optional[str] = None,
+) -> Node:
+    """Return an EmbeddingSegmentsSum node.
+
+    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a given
+    input tensor with a row (from the weights matrix) at that index
+
+    :param emb_table: Tensor containing the embedding lookup table.
+    :param indices: Tensor with indices.
+    :param segment_ids: Tensor with indices into the output Tensor
+    :param num_segments: Tensor with number of segments.
+    :param default_index: Scalar containing default index in embedding table to fill empty bags.
+    :param per_sample_weights: Weights to be multiplied with embedding table.
+    :param name: Optional name for output node.
+    :return: EmbeddingSegmentsSum node
+    """
+    inputs = [as_node(emb_table), as_node(indices), as_node(segment_ids)]
+    if per_sample_weights is not None:
+        inputs.append(as_node(num_segments))
+        inputs.append(as_node(default_index))
+        inputs.append(as_node(per_sample_weights))
+    elif default_index is not None:
+        inputs.append(as_node(num_segments))
+        inputs.append(as_node(default_index))
+    elif num_segments is not None:
+        inputs.append(as_node(num_segments))
+
+    return _get_node_factory().create("EmbeddingSegmentsSum", inputs, {})
+
+
+@nameable_op
+def embedding_bag_packed_sum(
+    emb_table: NodeInput,
+    indices: NodeInput,
+    per_sample_weights: Optional[NodeInput] = None,
+    name: Optional[str] = None,
+) -> Node:
+    """Return an EmbeddingBagPackedSum node.
+
+    EmbeddingSegmentsSum constructs an output tensor by replacing every index in a given
+    input tensor with a row (from the weights matrix) at that index
+
+    :param emb_table: Tensor containing the embedding lookup table.
+    :param indices: Tensor with indices.
+    :param per_sample_weights: Weights to be multiplied with embedding table.
+    :param name: Optional name for output node.
+    :return: EmbeddingBagPackedSum node
+    """
+    inputs = [as_node(emb_table), as_node(indices)]
+    if per_sample_weights is not None:
+        inputs.append(as_node(per_sample_weights))
+
+    return _get_node_factory().create("EmbeddingBagPackedSum", inputs, {})
+
+
+@nameable_op
+def non_max_suppression(
+    boxes: NodeInput,
+    scores: NodeInput,
+    max_output_boxes_per_class: Optional[NodeInput] = None,
+    iou_threshold: Optional[NodeInput] = None,
+    score_threshold: Optional[NodeInput] = None,
+    box_encoding: str = "corner",
+    sort_result_descending: bool = True,
+    output_type: str = "i64",
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which performs NonMaxSuppression.
+
+    :param boxes: Tensor with box coordinates.
+    :param scores: Tensor with box scores.
+    :param max_output_boxes_per_class: Tensor Specifying maximum number of boxes
+                                        to be selected per class.
+    :param iou_threshold: Tensor specifying intersection over union threshold
+    :param score_threshold: Tensor specifying minimum score to consider box for the processing.
+    :param box_encoding: Format of boxes data encoding.
+    :param sort_result_descending: Flag that specifies whenever it is necessary to sort selected
+                                   boxes across batches or not.
+    :param output_type: Output element type.
+    :return: The new node which performs NonMaxSuppression
+    """
+    if max_output_boxes_per_class is None:
+        max_output_boxes_per_class = make_constant_node(0, np.int64)
+    if iou_threshold is None:
+        iou_threshold = make_constant_node(0, np.float32)
+    if score_threshold is None:
+        score_threshold = make_constant_node(0, np.float32)
+
+    inputs = as_nodes(boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold)
+    attributes = {
+        "box_encoding": box_encoding,
+        "sort_result_descending": sort_result_descending,
+        "output_type": output_type,
+    }
+
+    return _get_node_factory().create("NonMaxSuppression", inputs, attributes)
+
+
+@nameable_op
+def non_zero(data: NodeInput, output_type: str = "i64", name: Optional[str] = None,) -> Node:
+    """Return the indices of the elements that are non-zero.
 
     :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMax
+    :param output_type: Output tensor type.
+
+    :return: The new node which performs NonZero
     """
-    return ArgMax(data, axis, get_element_type(np.int32))
+    return _get_node_factory().create("NonZero", [as_node(data)], {"output_type": output_type})
 
 
 @nameable_op
-def argmin(data,    # type: Node
-           axis=0,  # type: int
-           ):
-    # type: (...) -> Node
-    """Return a node which performs ArgMin index reduction operation.
-
-    :param data: Input data.
-    :param axis: Reduction Axis.
-    :return: The new node which performs ArgMin
-    """
-    return ArgMin(data, axis, get_element_type(np.int32))
-
-
-@nameable_op
-def topk(data,   # type: Node
-         k,      # type: Node
-         axis,   # type: int
-         mode,   # type: str
-         sort,   # type: str
-         ):
-    # type: (...) -> Node
+def topk(
+    data: NodeInput,
+    k: NodeInput,
+    axis: int,
+    mode: str,
+    sort: str,
+    index_element_type: str = "i32",
+    name: Optional[str] = None,
+) -> Node:
     """Return a node which performs TopK.
 
     :param data: Input data.
@@ -1760,20 +2425,68 @@ def topk(data,   # type: Node
     :param axis: TopK Axis.
     :param mode: Compute TopK largest ('max') or smallest ('min')
     :param sort: Order of output elements (sort by: 'none', 'index' or 'value')
+    :param index_element_type: Type of output tensor with indices.
     :return: The new node which performs TopK (both indices and values)
     """
-    return _get_node_factory().create('TopK', [data, k],
-                                      {'axis': axis, 'mode': mode, 'sort': sort})
+    return _get_node_factory().create(
+        "TopK",
+        as_nodes(data, k),
+        {"axis": axis, "mode": mode, "sort": sort, "index_element_type": index_element_type},
+    )
 
 
 @nameable_op
-def get_output_element(data, index):  # type: (Node, int) -> Node
+def roi_align(
+    data: NodeInput,
+    rois: NodeInput,
+    batch_indices: NodeInput,
+    pooled_h: int,
+    pooled_w: int,
+    sampling_ratio: int,
+    spatial_scale: float,
+    mode: str,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which performs ROIAlign.
+
+    :param data: Input data.
+    :param rois: RoIs (Regions of Interest) to pool over.
+    :param batch_indices: Tensor with each element denoting the index of
+                          the corresponding image in the batch.
+    :param pooled_h: Height of the ROI output feature map.
+    :param pooled_w: Width of the ROI output feature map.
+    :param sampling_ratio: Number of bins over height and width to use to calculate
+                           each output feature map element.
+    :param spatial_scale: Multiplicative spatial scale factor to translate ROI coordinates.
+    :param mode: Method to perform pooling to produce output feature map elements.
+
+    :return: The new node which performs ROIAlign
+    """
+    inputs = as_nodes(data, rois, batch_indices)
+    attributes = {
+        "pooled_h": pooled_h,
+        "pooled_w": pooled_w,
+        "sampling_ratio": sampling_ratio,
+        "spatial_scale": spatial_scale,
+        "mode": mode,
+    }
+    return _get_node_factory().create("ROIAlign", inputs, attributes)
+
+
+@nameable_op
+def get_output_element(data: NodeInput, index: int, name: Optional[str] = None) -> Node:
     """Return the n-th element of the input tuple."""
-    return GetOutputElement(data, index)
+    return GetOutputElement(as_node(data), index)
 
 
 @nameable_op
-def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool, bool) -> Node
+def matmul(
+    data_a: NodeInput,
+    data_b: NodeInput,
+    transpose_a: bool,
+    transpose_b: bool,
+    name: Optional[str] = None,
+) -> Node:
     """Return the Matrix Multiplication operation.
 
     :param data_a: left-hand side matrix
@@ -1782,13 +2495,16 @@ def matmul(data_a, data_b, transpose_a, transpose_b):  # type: (Node, Node, bool
     :param transpose_b: should the second matrix be transposed
     :return: MatMul operation node
     """
-    print('transpose_a', transpose_a, 'transpose_b', transpose_b)
-    return _get_node_factory().create('MatMul', [data_a, data_b],
-                                      {'transpose_a': transpose_a, 'transpose_b': transpose_b})
+    print("transpose_a", transpose_a, "transpose_b", transpose_b)
+    return _get_node_factory().create(
+        "MatMul", as_nodes(data_a, data_b), {"transpose_a": transpose_a, "transpose_b": transpose_b}
+    )
 
 
 @nameable_op
-def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> Node
+def variadic_split(
+    data: NodeInput, axis: NodeInput, split_lengths: NodeInput, name: Optional[str] = None
+) -> Node:
     """Return a node which splits the input tensor into variadic length slices.
 
     :param data: The input tensor to be split
@@ -1796,43 +2512,44 @@ def variadic_split(data, axis, split_lengths):  # type: (Node, Node, Node) -> No
     :param split_lengths: Sizes of the output tensors along the split axis
     :return: VariadicSplit node
     """
-    return _get_node_factory().create('VariadicSplit', [data, axis, split_lengths])
+    return _get_node_factory().create("VariadicSplit", as_nodes(data, axis, split_lengths))
 
 
 @nameable_op
-def transpose(data, input_order):  # type: (Node, Node) -> Node
+def transpose(data: NodeInput, input_order: NodeInput, name: Optional[str] = None) -> Node:
     """Return a node which transposes the data in the input tensor.
 
     :param data: The input tensor to be transposed
     :param input_order: Permutation of axes to be applied to the input tensor
     :return: Transpose node
     """
-    return _get_node_factory().create('Transpose', [data, input_order])
+    return _get_node_factory().create("Transpose", as_nodes(data, input_order))
 
 
 @nameable_op
-def tile(data, repeats):  # type: (Node, Node) -> Node
+def tile(data: NodeInput, repeats: NodeInput, name: Optional[str] = None) -> Node:
     """Return a node which dynamically repeats(replicates) the input data tensor.
 
     :param data: The input tensor to be tiled
     :param repeats: Per-dimension replication factors
     :return: Tile node
     """
-    return _get_node_factory().create('Tile', [data, repeats])
+    return _get_node_factory().create("Tile", as_nodes(data, repeats))
 
 
 @nameable_op
-def strided_slice(data,                   # type: Node
-                  begin,                  # type: Node
-                  end,                    # type: Node
-                  strides,                # type: Node
-                  begin_mask,             # type: List[int]
-                  end_mask,               # type: List[int]
-                  new_axis_mask=None,     # type: List[int]
-                  shrink_axis_mask=None,  # type: List[int]
-                  ellipsis_mask=None,     # type: List[int]
-                  ):
-    # type: (...) -> Node
+def strided_slice(
+    data: NodeInput,
+    begin: NodeInput,
+    end: NodeInput,
+    strides: NodeInput,
+    begin_mask: List[int],
+    end_mask: List[int],
+    new_axis_mask: Optional[List[int]] = None,
+    shrink_axis_mask: Optional[List[int]] = None,
+    ellipsis_mask: Optional[List[int]] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Return a node which dynamically repeats(replicates) the input data tensor.
 
     :param      data:              The tensor to be sliced
@@ -1854,14 +2571,21 @@ def strided_slice(data,                   # type: Node
         shrink_axis_mask = []
     if ellipsis_mask is None:
         ellipsis_mask = []
-    attributes = {'begin_mask': begin_mask, 'end_mask': end_mask, 'new_axis_mask': new_axis_mask,
-                  'shrink_axis_mask': shrink_axis_mask, 'ellipsis_mask': ellipsis_mask}
+    attributes = {
+        "begin_mask": begin_mask,
+        "end_mask": end_mask,
+        "new_axis_mask": new_axis_mask,
+        "shrink_axis_mask": shrink_axis_mask,
+        "ellipsis_mask": ellipsis_mask,
+    }
 
-    return _get_node_factory().create('StridedSlice', [data, begin, end, strides], attributes)
+    return _get_node_factory().create(
+        "StridedSlice", as_nodes(data, begin, end, strides), attributes
+    )
 
 
 @nameable_op
-def split(data, axis, num_splits):  # type: (Node, Node, int) -> Node
+def split(data: NodeInput, axis: NodeInput, num_splits: int, name: Optional[str] = None) -> Node:
     """Return a node which splits the input tensor into same-length slices.
 
     :param data: The input tensor to be split
@@ -1869,34 +2593,286 @@ def split(data, axis, num_splits):  # type: (Node, Node, int) -> Node
     :param num_splits: Number of the output tensors that should be produced
     :return: Split node
     """
-    return _get_node_factory().create('Split', [data, axis], {'num_splits': num_splits})
+    return _get_node_factory().create("Split", as_nodes(data, axis), {"num_splits": num_splits})
 
 
-@nameable_op
-def sigmoid(data):  # type: (Node) -> Node
+@unary_op
+def sigmoid(data: NodeInput, name: Optional[str] = None) -> Node:
     """Return a node which applies the sigmoid function element-wise.
 
     :param data: The tensor containing the input data
     :return: Sigmoid node
     """
-    return _get_node_factory().create('Sigmoid', [data])
+    return _get_node_factory().create("Sigmoid", [data])
 
 
 @nameable_op
-def shape_of(data):  # type: (Node) -> Node
+def shape_of(data: NodeInput, output_type: str = "i64", name: Optional[str] = None) -> Node:
     """Return a node which produces a tensor containing the shape of its input data.
 
-    :param data: The tensor containing the input data
+    :param data: The tensor containing the input data.
+    :para output_type: Output element type.
     :return: ShapeOf node
     """
-    return _get_node_factory().create('ShapeOf', [data])
+    return _get_node_factory().create("ShapeOf", [as_node(data)], {"output_type": output_type})
 
 
-@nameable_op
-def result(data):  # type: (Node) -> Node
+@unary_op
+def result(data: NodeInput, name: Optional[str] = None) -> Node:
     """Return a node which represents an output of a graph (Function).
 
     :param data: The tensor containing the input data
     :return: Result node
     """
-    return _get_node_factory().create('Result', [data])
+    return _get_node_factory().create("Result", [data])
+
+
+@nameable_op
+def scatter_nd_update(
+    data: NodeInput, indices: NodeInput, updates: NodeInput, name: str = None
+) -> Node:
+    """Return a node which produces a ScatterNDUpdate operation.
+
+    ScatterNDUpdate creates a copy of the first input tensor
+    with updated elements specified with second and third input tensors.
+
+    :param data:    The input tensor to be updated.
+    :param indices: The tensor with indexes which will be updated.
+    :param updates: The tensor with update values.
+    :param name:    Optional name for output node.
+    :return: ScatterNDUpdate node
+    """
+    node_inputs = as_nodes(data, indices, updates)
+    return _get_node_factory().create("ScatterNDUpdate", node_inputs)
+
+
+@nameable_op
+def scatter_update(
+    data: Node, indices: NodeInput, updates: NodeInput, axis: NodeInput, name: Optional[str] = None
+) -> Node:
+    """Return a node which produces a ScatterUpdate operation.
+
+    ScatterUpdate sets new values to slices from data addressed by indices.
+
+    :param data:    The input tensor to be updated.
+    :param indices: The tensor with indexes which will be updated.
+    :param updates: The tensor with update values.
+    :param axis:    The axis at which elements will be updated.
+    :return: ScatterUpdate node
+    """
+    return _get_node_factory().create("ScatterUpdate", as_nodes(data, indices, updates, axis))
+
+
+@nameable_op
+def scatter_elements_update(
+    data: NodeInput,
+    indices: NodeInput,
+    updates: NodeInput,
+    axis: NodeInput,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which produces a ScatterElementsUpdate operation.
+
+    ScatterElementsUpdate creates a copy of the first input tensor with updated elements
+    specified with second and third input tensors.
+
+
+    For each entry in `updates`, the target index in `data` is obtained by combining
+    the corresponding entry in `indices` with the index of the entry itself: the
+    index-value for dimension equal to `axis` is obtained from the value of the
+    corresponding entry in `indices` and the index-value for dimension not equal
+    to `axis` is obtained from the index of the entry itself.
+
+    :param data:    The input tensor to be updated.
+    :param indices: The tensor with indexes which will be updated.
+    :param updates: The tensor with update values.
+    :param axis:    The axis for scatter.
+    :return: ScatterElementsUpdate node
+    """
+    return _get_node_factory().create(
+        "ScatterElementsUpdate", as_nodes(data, indices, updates, axis)
+    )
+
+
+@nameable_op
+def roi_pooling(
+    input: NodeInput,
+    coords: NodeInput,
+    output_size: TensorShape,
+    spatial_scale: NumericData,
+    method: str,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which produces an ROIPooling operation.
+
+    :param input:          Input feature map {N, C, ...}
+    :param coords:         Coordinates of bounding boxes
+    :param output_size:    Height/Width of ROI output features (shape)
+    :param spatial_scale:  Ratio of input feature map over input image size (float)
+    :param method:         Method of pooling - string: "max" or "bilinear"
+    :return:               ROIPooling node
+    """
+    method = method.lower()
+    return _get_node_factory().create(
+        "ROIPooling",
+        as_nodes(input, coords),
+        {"output_size": Shape(output_size), "spatial_scale": spatial_scale, "method": method},
+    )
+
+
+@nameable_op
+def psroi_pooling(
+    input: NodeInput,
+    coords: NodeInput,
+    output_dim: int,
+    group_size: int,
+    spatial_scale: float,
+    spatial_bins_x: int,
+    spatial_bins_y: int,
+    mode: str,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which produces a PSROIPooling operation.
+
+    :param input: Input feature map {N, C, ...}
+    :param coords: Coordinates of bounding boxes
+    :param output_dim: Output channel number
+    :param group_size: Number of groups to encode position-sensitive scores
+    :param spatial_scale: Ratio of input feature map over input image size
+    :param spatial_bins_x: Numbers of bins to divide the input feature maps over
+    :param spatial_bins_y: Numbers of bins to divide the input feature maps over
+    :param mode: Mode of pooling - "avg" or "bilinear"
+    :return: PSROIPooling node
+    """
+    mode = mode.lower()
+    return _get_node_factory().create(
+        "PSROIPooling",
+        as_nodes(input, coords),
+        {
+            "output_dim": output_dim,
+            "group_size": group_size,
+            "spatial_scale": spatial_scale,
+            "spatial_bins_x": spatial_bins_x,
+            "spatial_bins_y": spatial_bins_y,
+            "mode": mode,
+        },
+    )
+
+
+@nameable_op
+def reverse_sequence(
+    input: NodeInput,
+    seq_lengths: NodeInput,
+    batch_axis: NumericData,
+    seq_axis: NumericData,
+    name: Optional[str] = None,
+) -> Node:
+    """Return a node which produces a ReverseSequence operation.
+
+    :param input: tensor with input data to reverse
+    :param seq_lengths: 1D tensor of integers with sequence lengths in the input tensor.
+    :param batch_axis: index of the batch dimension.
+    :param seq_axis: index of the sequence dimension.
+    :return: ReverseSequence node
+    """
+    return _get_node_factory().create(
+        "ReverseSequence",
+        as_nodes(input, seq_lengths),
+        {"batch_axis": batch_axis, "seq_axis": seq_axis},
+    )
+
+
+@nameable_op
+def bucketize(
+    data: Node,
+    buckets: NodeInput,
+    output_type: str = "i64",
+    with_right_bound: bool = True,
+    name: str = None,
+) -> Node:
+    """Return a node which produces the Bucketize operation.
+
+    :param data:              Input data to bucketize
+    :param buckets:           1-D of sorted unique boundaries for buckets
+    :param output_type:       Output tensor type, "i64" or "i32", defaults to i64
+    :param with_right_bound:  indicates whether bucket includes the right or left
+                              edge of interval. default true = includes right edge
+    :param name:              Optional name for output node.
+    :return: Bucketize node
+    """
+    return _get_node_factory().create(
+        "Bucketize",
+        [data, as_node(buckets)],
+        {"output_type": output_type, "with_right_bound": with_right_bound},
+    )
+
+
+@nameable_op
+def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> Node:
+    """Return a node which produces the Range operation.
+
+    :param start:  The start value of the generated range
+    :param stop:   The stop value of the generated range
+    :param step:   The step value for the generated range
+    :param name:   Optional name for output node.
+    :return: Range node
+    """
+    return _get_node_factory().create("Range", as_nodes(start, stop, step))
+
+
+@nameable_op
+def region_yolo(
+    input,  # type: Node
+    coords,  # type: int
+    classes,  # type: int
+    num,  # type: int
+    do_softmax,  # type: bool
+    mask,  # type: List[int]
+    axis,  # type: int
+    end_axis,  # type: int
+    anchors=None,  # type: List[float]
+    name=None,  # type: str
+):  # type: (...) -> Node
+    """Return a node which produces the RegionYolo operation.
+
+    :param input:       Input data
+    :param coords:      Number of coordinates for each region
+    :param classes:     Number of classes for each region
+    :param num:         Number of regions
+    :param do_softmax:  Compute softmax
+    :param mask:        Mask
+    :param axis:        Axis to begin softmax on
+    :param end_axis:    Axis to end softmax on
+    :param anchors:     A flattened list of pairs `[width, height]` that describes prior box sizes
+    :param name:        Optional name for output node.
+    :return: RegionYolo node
+    """
+    if anchors is None:
+        anchors = []
+
+    return _get_node_factory().create(
+        "RegionYolo",
+        [input],
+        {
+            "coords": coords,
+            "classes": classes,
+            "num": num,
+            "do_softmax": do_softmax,
+            "mask": mask,
+            "axis": axis,
+            "end_axis": end_axis,
+            "anchors": anchors,
+        },
+    )
+
+
+@nameable_op
+def reorg_yolo(input: Node, stride: List[int], name: str = None) -> Node:
+    """Return a node which produces the ReorgYolo operation.
+
+    :param input:   Input data
+    :param stride:  Stride to reorganize input by
+    :param name:    Optional name for output node.
+    :return: ReorgYolo node
+    """
+    return _get_node_factory().create("ReorgYolo", [input], {"stride": stride})

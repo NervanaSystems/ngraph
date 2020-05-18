@@ -54,7 +54,7 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
-}
+} // namespace ngraph
 
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
@@ -1395,6 +1395,72 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, extractimagepatches_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ExtractImagePatches>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
+
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{1, 1};
+    auto padtype_padding = ngraph::op::PadType::VALID;
+
+    auto extractimagepatches =
+        make_shared<opset3::ExtractImagePatches>(data, sizes, strides, rates, padtype_padding);
+    NodeBuilder builder(extractimagepatches);
+    auto g_extractimagepatches = as_type_ptr<opset3::ExtractImagePatches>(builder.create());
+
+    EXPECT_EQ(g_extractimagepatches->get_sizes(), sizes);
+    EXPECT_EQ(g_extractimagepatches->get_strides(), strides);
+    EXPECT_EQ(g_extractimagepatches->get_rates(), rates);
+    EXPECT_EQ(g_extractimagepatches->get_auto_pad(), padtype_padding);
+}
+
+TEST(attributes, mvn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::MVN>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto axes = AxisSet{0, 1};
+
+    const auto op = make_shared<opset3::MVN>(data, true, false, 0.1);
+    op->set_reduction_axes(axes);
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::MVN>(builder.create());
+
+    EXPECT_EQ(g_op->get_reduction_axes(), op->get_reduction_axes());
+    EXPECT_EQ(g_op->get_across_channels(), op->get_across_channels());
+    EXPECT_EQ(g_op->get_normalize_variance(), op->get_normalize_variance());
+    EXPECT_EQ(g_op->get_eps(), op->get_eps());
+}
+
+TEST(attributes, reorg_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ReorgYolo>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto op = make_shared<opset3::ReorgYolo>(data, Strides{2});
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ReorgYolo>(builder.create());
+
+    EXPECT_EQ(g_op->get_strides(), op->get_strides());
+}
+
+TEST(attributes, roi_pooling_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ROIPooling>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    const auto coords = make_shared<op::Parameter>(element::i32, Shape{2, 3});
+
+    const auto op = make_shared<opset3::ROIPooling>(data, coords, Shape{5, 5}, 0.123, "Bilinear");
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ROIPooling>(builder.create());
+
+    EXPECT_EQ(g_op->get_output_size(), op->get_output_size());
+    EXPECT_EQ(g_op->get_spatial_scale(), op->get_spatial_scale());
+    EXPECT_EQ(g_op->get_method(), op->get_method());
 }
 
 TEST(attributes, constant_op)
