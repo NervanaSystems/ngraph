@@ -20,20 +20,23 @@ import ngraph as ng
 from test.ngraph.util import run_op_node, get_runtime
 
 
-@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
-    (ng.reduce_max, np.max, [0, 1, 2, 3]),
-    (ng.reduce_min, np.min, [0, 1, 2, 3]),
-    (ng.reduce_sum, np.sum, [0, 1, 2, 3]),
-    (ng.reduce_prod, np.prod, [0, 1, 2, 3]),
-    (ng.reduce_max, np.max, [0]),
-    (ng.reduce_min, np.min, [0]),
-    (ng.reduce_sum, np.sum, [0]),
-    (ng.reduce_prod, np.prod, [0]),
-    (ng.reduce_max, np.max, [0, 2]),
-    (ng.reduce_min, np.min, [0, 2]),
-    (ng.reduce_sum, np.sum, [0, 2]),
-    (ng.reduce_prod, np.prod, [0, 2]),
-])
+@pytest.mark.parametrize(
+    "ng_api_helper, numpy_function, reduction_axes",
+    [
+        (ng.reduce_max, np.max, [0, 1, 2, 3]),
+        (ng.reduce_min, np.min, [0, 1, 2, 3]),
+        (ng.reduce_sum, np.sum, [0, 1, 2, 3]),
+        (ng.reduce_prod, np.prod, [0, 1, 2, 3]),
+        (ng.reduce_max, np.max, [0]),
+        (ng.reduce_min, np.min, [0]),
+        (ng.reduce_sum, np.sum, [0]),
+        (ng.reduce_prod, np.prod, [0]),
+        (ng.reduce_max, np.max, [0, 2]),
+        (ng.reduce_min, np.min, [0, 2]),
+        (ng.reduce_sum, np.sum, [0, 2]),
+        (ng.reduce_prod, np.prod, [0, 2]),
+    ],
+)
 def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
     np.random.seed(133391)
@@ -44,14 +47,17 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
-    (ng.reduce_logical_and, np.logical_and.reduce, [0]),
-    (ng.reduce_logical_or, np.logical_or.reduce, [0]),
-    (ng.reduce_logical_and, np.logical_and.reduce, [0, 2]),
-    (ng.reduce_logical_or, np.logical_or.reduce, [0, 2]),
-    (ng.reduce_logical_and, np.logical_and.reduce, [0, 1, 2, 3]),
-    (ng.reduce_logical_or, np.logical_or.reduce, [0, 1, 2, 3]),
-])
+@pytest.mark.parametrize(
+    "ng_api_helper, numpy_function, reduction_axes",
+    [
+        (ng.reduce_logical_and, np.logical_and.reduce, [0]),
+        (ng.reduce_logical_or, np.logical_or.reduce, [0]),
+        (ng.reduce_logical_and, np.logical_and.reduce, [0, 2]),
+        (ng.reduce_logical_or, np.logical_or.reduce, [0, 2]),
+        (ng.reduce_logical_and, np.logical_and.reduce, [0, 1, 2, 3]),
+        (ng.reduce_logical_or, np.logical_or.reduce, [0, 1, 2, 3]),
+    ],
+)
 @pytest.mark.skip_on_interpreter
 def test_reduction_logical_ops(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
@@ -65,21 +71,24 @@ def test_reduction_logical_ops(ng_api_helper, numpy_function, reduction_axes):
 
 def test_topk():
     data_shape = [6, 12, 10, 24]
-    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    data_parameter = ng.parameter(data_shape, name="Data", dtype=np.float32)
     K = np.int32(3)
     axis = np.int32(1)
-    node = ng.topk(data_parameter, K, axis, 'max', 'value')
-    assert node.get_type_name() == 'TopK'
+    node = ng.topk(data_parameter, K, axis, "max", "value")
+    assert node.get_type_name() == "TopK"
     assert node.get_output_size() == 2
     assert list(node.get_output_shape(0)) == [6, 3, 10, 24]
     assert list(node.get_output_shape(1)) == [6, 3, 10, 24]
 
 
-@pytest.mark.parametrize('ng_api_helper, numpy_function, reduction_axes', [
-    (ng.reduce_mean, np.mean, [0, 1, 2, 3]),
-    (ng.reduce_mean, np.mean, [0]),
-    (ng.reduce_mean, np.mean, [0, 2]),
-])
+@pytest.mark.parametrize(
+    "ng_api_helper, numpy_function, reduction_axes",
+    [
+        (ng.reduce_mean, np.mean, [0, 1, 2, 3]),
+        (ng.reduce_mean, np.mean, [0]),
+        (ng.reduce_mean, np.mean, [0, 2]),
+    ],
+)
 @pytest.mark.skip_on_cpu
 @pytest.mark.skip_on_interpreter
 def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
@@ -97,12 +106,12 @@ def test_non_max_suppression():
     boxes_shape = [1, 1000, 4]
     scores_shape = [1, 1, 1000]
     expected_shape = [0, 3]
-    boxes_parameter = ng.parameter(boxes_shape, name='Boxes', dtype=np.float32)
-    scores_parameter = ng.parameter(scores_shape, name='Scores', dtype=np.float32)
+    boxes_parameter = ng.parameter(boxes_shape, name="Boxes", dtype=np.float32)
+    scores_parameter = ng.parameter(scores_shape, name="Scores", dtype=np.float32)
 
     node = ng.non_max_suppression(boxes_parameter, scores_parameter)
 
-    assert node.get_type_name() == 'NonMaxSuppression'
+    assert node.get_type_name() == "NonMaxSuppression"
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
 
@@ -111,11 +120,11 @@ def test_non_zero():
 
     data_shape = [3, 10, 100, 200]
 
-    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
+    data_parameter = ng.parameter(data_shape, name="Data", dtype=np.float32)
 
     node = ng.non_zero(data_parameter)
 
-    assert node.get_type_name() == 'NonZero'
+    assert node.get_type_name() == "NonZero"
     assert node.get_output_size() == 1
 
 
@@ -126,29 +135,35 @@ def test_roi_align():
     batch_indices = [1000]
     expected_shape = [1000, 256, 6, 6]
 
-    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
-    rois_parameter = ng.parameter(rois, name='Rois', dtype=np.float32)
-    batch_indices_parameter = ng.parameter(batch_indices, name='Batch_indices', dtype=np.int32)
+    data_parameter = ng.parameter(data_shape, name="Data", dtype=np.float32)
+    rois_parameter = ng.parameter(rois, name="Rois", dtype=np.float32)
+    batch_indices_parameter = ng.parameter(batch_indices, name="Batch_indices", dtype=np.int32)
     pooled_h = 6
     pooled_w = 6
     sampling_ratio = 2
     spatial_scale = np.float32(16)
-    mode = 'avg'
+    mode = "avg"
 
-    node = ng.roi_align(data_parameter, rois_parameter, batch_indices_parameter,
-                        pooled_h, pooled_w, sampling_ratio, spatial_scale, mode)
+    node = ng.roi_align(
+        data_parameter,
+        rois_parameter,
+        batch_indices_parameter,
+        pooled_h,
+        pooled_w,
+        sampling_ratio,
+        spatial_scale,
+        mode,
+    )
 
-    assert node.get_type_name() == 'ROIAlign'
+    assert node.get_type_name() == "ROIAlign"
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
 
 
-@pytest.mark.parametrize('input_shape, cumsum_axis, reverse', [
-    ([5, 2], 0, False),
-    ([5, 2], 1, False),
-    ([5, 2, 6], 2, False),
-    ([5, 2], 0, True),
-])
+@pytest.mark.parametrize(
+    "input_shape, cumsum_axis, reverse",
+    [([5, 2], 0, False), ([5, 2], 1, False), ([5, 2, 6], 2, False), ([5, 2], 0, True),],
+)
 def test_cum_sum(input_shape, cumsum_axis, reverse):
     input_data = np.arange(np.prod(input_shape)).reshape(input_shape)
 
@@ -170,17 +185,40 @@ def test_normalize_l2():
     input_data += 1
     axes = np.array([1, 2, 3]).astype(np.int64)
     eps = 1e-6
-    eps_mode = 'add'
+    eps_mode = "add"
 
     runtime = get_runtime()
     node = ng.normalize_l2(input_data, axes, eps, eps_mode)
     computation = runtime.computation(node)
     result = computation()
 
-    expected = np.array([0.01428571, 0.02857143, 0.04285714, 0.05714286, 0.07142857, 0.08571429,
-                         0.1, 0.11428571, 0.12857144, 0.14285715, 0.15714286, 0.17142858,
-                         0.18571429, 0.2, 0.21428572, 0.22857143, 0.24285714, 0.25714287,
-                         0.27142859, 0.2857143, 0.30000001, 0.31428573, 0.32857144, 0.34285715,
-                         ]).reshape(input_shape)
+    expected = np.array(
+        [
+            0.01428571,
+            0.02857143,
+            0.04285714,
+            0.05714286,
+            0.07142857,
+            0.08571429,
+            0.1,
+            0.11428571,
+            0.12857144,
+            0.14285715,
+            0.15714286,
+            0.17142858,
+            0.18571429,
+            0.2,
+            0.21428572,
+            0.22857143,
+            0.24285714,
+            0.25714287,
+            0.27142859,
+            0.2857143,
+            0.30000001,
+            0.31428573,
+            0.32857144,
+            0.34285715,
+        ]
+    ).reshape(input_shape)
 
     assert np.allclose(result, expected)
