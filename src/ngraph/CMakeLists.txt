@@ -390,7 +390,6 @@ set (SRC
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
-    op/variable.hpp
     op/variadic_split.cpp
     op/variadic_split.hpp
     op/tan.cpp
@@ -513,6 +512,7 @@ set (SRC
     op/util/scatter_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    op/util/variable.hpp
     ops.hpp
     opsets/opset.cpp
     partial_shape.cpp

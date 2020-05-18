@@ -33,7 +33,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Assign() = default;
 
-                /// \brief Constructs a Assign operation.
+                /// \brief Constructs an Assign operation.
                 ///
                 /// \param new_value   Node that produces the input tensor.
                 /// \param variable_id identificator of the variable to be updated.
@@ -50,7 +50,7 @@ namespace ngraph
                 std::string m_variable_id;
                 std::shared_ptr<ngraph::Variable> m_variable;
 
-                void find_variable(const std::shared_ptr<Node>& node,
+                void find_variable(const std::vector<Input<Node>>& inputs,
                                    const std::shared_ptr<ngraph::Variable>& variable);
             };
         }

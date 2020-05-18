@@ -23,10 +23,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::Assign::type_info;
 
-void op::v3::Assign::find_variable(const std::shared_ptr<Node>& node,
+void op::v3::Assign::find_variable(const vector<Input<Node>>& inputs,
                                    const std::shared_ptr<ngraph::Variable>& variable)
 {
-    for (const auto& input : node->inputs())
+    for (const auto& input : inputs)
     {
         auto input_value_node = input.get_source_output().get_node_shared_ptr();
         if (auto read_value = as_type_ptr<op::v3::ReadValue>(input_value_node))
@@ -34,7 +34,7 @@ void op::v3::Assign::find_variable(const std::shared_ptr<Node>& node,
             if (read_value->get_variable_id() == m_variable_id)
                 m_variable = read_value->get_variable();
         }
-        find_variable(input_value_node, variable);
+        find_variable(input_value_node->inputs(), variable);
     }
 }
 
@@ -52,8 +52,7 @@ void op::v3::Assign::validate_and_infer_types()
     auto output_shape = get_input_partial_shape(0);
     if (!m_variable)
     {
-        auto node = value.get_node_shared_ptr();
-        find_variable(node, m_variable);
+        find_variable(inputs(), m_variable);
         NODE_VALIDATION_CHECK(
             this, m_variable != nullptr, "Can't find variable with id = ", m_variable_id);
     }
