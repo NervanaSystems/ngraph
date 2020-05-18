@@ -28,7 +28,7 @@ TEST(opset_transform, opset1_pad_upgrade_pass)
     pass_manager.run_passes(f);
 
     auto pad_s1_result = f->get_results().at(0);
-    auto node = pad_s1_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = pad_s1_result->get_input_node_shared_ptr(0);
     auto pad_v1_node = as_type_ptr<op::v1::Pad>(node);
     ASSERT_TRUE(pad_v1_node);
     EXPECT_EQ(pad_v1_node->get_pad_mode(), pad_mode);
@@ -55,7 +55,7 @@ TEST(opset_transform, opset1_pad_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto pad_s0_result = f->get_results().at(0);
-    auto node = pad_s0_result->input(0).get_source_output().get_node_shared_ptr();
+    auto node = pad_s0_result->get_input_node_shared_ptr(0);
     auto pad_v0_node = as_type_ptr<op::v0::Pad>(node);
     ASSERT_TRUE(pad_v0_node);
     EXPECT_EQ(pad_v0_node->get_pad_mode(), pad_mode);

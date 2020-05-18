@@ -29,15 +29,14 @@ void op::EmbeddingLookup::validate_and_infer_types()
     const PartialShape& arg1_shape = get_input_partial_shape(1);
 
     NODE_VALIDATION_CHECK(this,
-                          arg1_shape.rank().is_dynamic() ||
-                              static_cast<size_t>(arg1_shape.rank()) == 2,
+                          arg1_shape.rank().is_dynamic() || arg1_shape.rank().get_length() == 2,
                           "weights are expected to be a matrix");
 
     PartialShape result_shape;
     if (arg0_shape.rank().is_static())
     {
-        std::vector<Dimension> result_dims(static_cast<size_t>(arg0_shape.rank()) + 1);
-        for (size_t i = 0; i < static_cast<size_t>(arg0_shape.rank()); i++)
+        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() + 1);
+        for (size_t i = 0; i < arg0_shape.rank().get_length(); i++)
         {
             result_dims[i] = arg0_shape[i];
         }
@@ -54,7 +53,7 @@ void op::EmbeddingLookup::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::EmbeddingLookup::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::EmbeddingLookup::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<EmbeddingLookup>(new_args.at(0), new_args.at(1));

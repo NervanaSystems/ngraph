@@ -103,7 +103,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
                                                const Shape& output_shape,
                                                bool with_relu,
                                                float alpha)
-    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), bias})
+    : Op({conv->input_value(0), conv->input_value(1), bias})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -115,16 +115,13 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
 {
     constructor_validate_and_infer_types();
 
-    if (conv->output(0).get_element_type() != bias.get_element_type())
+    if (conv->get_output_element_type(0) != bias.get_element_type())
     {
         throw ngraph_error("GroupConvolution's element type isn't equal to bias!");
     }
 
-    validate_groupconvbias_shapes(conv->input(0).get_shape(),
-                                  conv->input(1).get_shape(),
-                                  bias.get_shape(),
-                                  output_shape,
-                                  groups);
+    validate_groupconvbias_shapes(
+        conv->get_input_shape(0), conv->get_input_shape(1), bias.get_shape(), output_shape, groups);
 
     set_output_type(0, conv->get_element_type(), output_shape);
 }
@@ -172,7 +169,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const Output<Node>& data_batch,
     set_output_type(0, data_batch_et, output_shape);
 }
 
-shared_ptr<Node> op::GroupConvolutionBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GroupConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

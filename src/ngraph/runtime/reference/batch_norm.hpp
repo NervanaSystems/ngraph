@@ -26,6 +26,7 @@
 #include "ngraph/runtime/reference/divide.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph

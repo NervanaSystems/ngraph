@@ -382,8 +382,8 @@ namespace ngraph
 
             static void batchMatMul(CPU_ExternalFunction* external_function,
                                     const ngraph::Node* node,
-                                    const std::vector<TensorViewWrapper>& args,
-                                    const std::vector<TensorViewWrapper>& out,
+                                    const std::vector<TensorWrapper>& args,
+                                    const std::vector<TensorWrapper>& out,
                                     bool transpose0,
                                     bool transpose1)
             {

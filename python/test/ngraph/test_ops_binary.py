@@ -19,7 +19,7 @@ import numpy as np
 import pytest
 
 import ngraph as ng
-from test.ngraph.util import get_runtime
+from test.ngraph.util import get_runtime, run_op_node
 
 
 @pytest.mark.parametrize('ng_api_helper,numpy_function', [
@@ -29,12 +29,13 @@ from test.ngraph.util import get_runtime
     (ng.subtract, np.subtract),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
+    (ng.mod, np.mod),
     (ng.equal, np.equal),
     (ng.not_equal, np.not_equal),
     (ng.greater, np.greater),
-    (ng.greater_eq, np.greater_equal),
+    (ng.greater_equal, np.greater_equal),
     (ng.less, np.less),
-    (ng.less_eq, np.less_equal),
+    (ng.less_equal, np.less_equal),
 ])
 def test_binary_op(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -61,12 +62,13 @@ def test_binary_op(ng_api_helper, numpy_function):
     (ng.subtract, np.subtract),
     (ng.minimum, np.minimum),
     (ng.maximum, np.maximum),
+    (ng.mod, np.mod),
     (ng.equal, np.equal),
     (ng.not_equal, np.not_equal),
     (ng.greater, np.greater),
-    (ng.greater_eq, np.greater_equal),
+    (ng.greater_equal, np.greater_equal),
     (ng.less, np.less),
-    (ng.less_eq, np.less_equal),
+    (ng.less_equal, np.less_equal),
 ])
 def test_binary_op_with_scalar(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -88,6 +90,7 @@ def test_binary_op_with_scalar(ng_api_helper, numpy_function):
 @pytest.mark.parametrize('ng_api_helper,numpy_function', [
     (ng.logical_and, np.logical_and),
     (ng.logical_or, np.logical_or),
+    (ng.logical_xor, np.logical_xor),
 ])
 def test_binary_logical_op(ng_api_helper, numpy_function):
     runtime = get_runtime()
@@ -99,7 +102,7 @@ def test_binary_logical_op(ng_api_helper, numpy_function):
     model = ng_api_helper(parameter_a, parameter_b)
     computation = runtime.computation(model, parameter_a, parameter_b)
 
-    value_a = np.array([[True, False], [False, False]], dtype=np.bool)
+    value_a = np.array([[True, False], [False, True]], dtype=np.bool)
     value_b = np.array([[False, True], [False, True]], dtype=np.bool)
 
     result = computation(value_a, value_b)
@@ -110,11 +113,12 @@ def test_binary_logical_op(ng_api_helper, numpy_function):
 @pytest.mark.parametrize('ng_api_helper,numpy_function', [
     (ng.logical_and, np.logical_and),
     (ng.logical_or, np.logical_or),
+    (ng.logical_xor, np.logical_xor),
 ])
 def test_binary_logical_op_with_scalar(ng_api_helper, numpy_function):
     runtime = get_runtime()
 
-    value_a = np.array([[True, False], [False, False]], dtype=np.bool)
+    value_a = np.array([[True, False], [False, True]], dtype=np.bool)
     value_b = np.array([[False, True], [False, True]], dtype=np.bool)
 
     shape = [2, 2]
@@ -183,4 +187,26 @@ def test_binary_operators_with_scalar(operator, numpy_function):
 
     result = computation(value_a)
     expected = numpy_function(value_a, value_b)
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_multiply():
+    A = np.arange(48).reshape((8, 1, 6, 1))
+    B = np.arange(35).reshape((7, 1, 5))
+
+    expected = np.multiply(A, B)
+    result = run_op_node([A, B], ng.multiply)
+
+    assert np.allclose(result, expected)
+
+
+@pytest.mark.skip_on_gpu
+def test_power_v1():
+    A = np.arange(48, dtype=np.float32).reshape((8, 1, 6, 1))
+    B = np.arange(35, dtype=np.float32).reshape((7, 1, 5))
+
+    expected = np.power(A, B)
+    result = run_op_node([A, B], ng.power)
+
     assert np.allclose(result, expected)

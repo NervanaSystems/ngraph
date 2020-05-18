@@ -23,9 +23,7 @@
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
 #include <llvm/IR/Module.h>
-#include <mlir/EDSC/Builders.h>
-#include <mlir/EDSC/Helpers.h>
-#include <mlir/EDSC/Intrinsics.h>
+#include <mlir/Dialect/AffineOps/EDSC/Builders.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>

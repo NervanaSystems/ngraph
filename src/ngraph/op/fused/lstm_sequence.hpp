@@ -49,6 +49,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 LSTMSequence() = default;
 
+                size_t get_default_output_index() const override { return no_default_index(); }
                 enum class direction
                 {
                     FORWARD,
@@ -135,10 +136,11 @@ namespace ngraph
                 {
                 }
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual NodeVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 std::vector<float> get_activations_alpha() const { return m_activations_alpha; }
                 std::vector<float> get_activations_beta() const { return m_activations_beta; }
@@ -185,4 +187,22 @@ namespace ngraph
         }
         using v0::LSTMSequence;
     } // namespace op
+
+    NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type);
+
+    template <>
+    class NGRAPH_API AttributeAdapter<op::v0::LSTMSequence::direction>
+        : public EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>
+    {
+    public:
+        AttributeAdapter(op::v0::LSTMSequence::direction& value)
+            : EnumAttributeAdapterBase<op::v0::LSTMSequence::direction>(value)
+        {
+        }
+
+        static constexpr DiscreteTypeInfo type_info{
+            "AttributeAdapter<op::v0::LSTMSequence::direction>", 1};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    };
 } // namespace ngraph

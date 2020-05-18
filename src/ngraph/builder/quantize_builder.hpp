@@ -26,6 +26,7 @@ namespace ngraph
 {
     namespace builder
     {
+        NGRAPH_API
         std::shared_ptr<Node> QuantizeBuilder(const Output<Node>& input,
                                               const Output<Node>& min,
                                               const Output<Node>& max,

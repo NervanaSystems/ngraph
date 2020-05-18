@@ -119,9 +119,9 @@ void op::DynReplaceSlice::validate_and_infer_types()
     {
         slice_shape = infer_slice_shape(this,
                                         get_input_partial_shape(0),
-                                        lower_bounds->get_vector<int64_t>(),
-                                        upper_bounds->get_vector<int64_t>(),
-                                        strides->get_vector<int64_t>(),
+                                        lower_bounds->cast_vector<int64_t>(),
+                                        upper_bounds->cast_vector<int64_t>(),
+                                        strides->cast_vector<int64_t>(),
                                         m_lower_bounds_mask,
                                         m_upper_bounds_mask,
                                         m_new_axis,
@@ -139,7 +139,7 @@ void op::DynReplaceSlice::validate_and_infer_types()
     set_output_type(0, result_et, arg_shape);
 }
 
-shared_ptr<Node> op::DynReplaceSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::DynReplaceSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynReplaceSlice>(new_args.at(0),

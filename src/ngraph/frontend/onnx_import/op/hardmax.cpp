@@ -57,11 +57,11 @@ namespace ngraph
                         1);
 
                     const auto depth =
-                        ngraph::op::Constant::create(ngraph::element::i64, Shape{}, {row_size});
+                        default_opset::Constant::create(ngraph::element::i64, Shape{}, {row_size});
                     const auto on_value =
-                        ngraph::op::Constant::create(ngraph::element::i64, Shape{}, {1});
+                        default_opset::Constant::create(ngraph::element::i64, Shape{}, {1});
                     const auto off_value =
-                        ngraph::op::Constant::create(ngraph::element::i64, Shape{}, {0});
+                        default_opset::Constant::create(ngraph::element::i64, Shape{}, {0});
 
                     const auto results = std::make_shared<default_opset::OneHot>(
                         max_indices, depth, on_value, off_value, indices_axis);

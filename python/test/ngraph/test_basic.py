@@ -18,10 +18,32 @@ import pytest
 import json
 
 import ngraph as ng
+from ngraph.impl import Function
 from ngraph.exceptions import UserInputError
 
 import test
 from test.ngraph.util import get_runtime, run_op_node
+
+
+def test_ngraph_function_api():
+    shape = [2, 2]
+    parameter_a = ng.parameter(shape, dtype=np.float32, name='A')
+    parameter_b = ng.parameter(shape, dtype=np.float32, name='B')
+    parameter_c = ng.parameter(shape, dtype=np.float32, name='C')
+    model = (parameter_a + parameter_b) * parameter_c
+    function = Function(model, [parameter_a, parameter_b, parameter_c], 'TestFunction')
+
+    ordered_ops = function.get_ordered_ops()
+    op_types = [op.get_type_name() for op in ordered_ops]
+    assert op_types == ['Parameter', 'Parameter', 'Parameter', 'Add', 'Multiply', 'Result']
+    assert len(function.get_ops()) == 6
+    assert function.get_output_size() == 1
+    assert function.get_output_op(0).get_type_name() == 'Result'
+    assert function.get_output_element_type(0) == parameter_a.get_element_type()
+    assert list(function.get_output_shape(0)) == [2, 2]
+    assert len(function.get_parameters()) == 3
+    assert len(function.get_results()) == 1
+    assert function.get_name() == 'TestFunction'
 
 
 @pytest.mark.parametrize('dtype', [np.float32, np.float64,
@@ -71,77 +93,100 @@ def test_serialization():
     except Exception:
         pass
 
+
+def test_broadcast_1():
     input_data = np.array([1, 2, 3])
 
     new_shape = [3, 3]
     expected = [[1, 2, 3],
                 [1, 2, 3],
                 [1, 2, 3]]
-    result = run_op_node([input_data], ng.broadcast_to, new_shape)
+    result = run_op_node([input_data], ng.broadcast, new_shape)
     assert np.allclose(result, expected)
 
-    axis = 0
+
+def test_broadcast_2():
+    input_data = np.arange(4)
+    new_shape = [3, 4, 2, 4]
+    expected = np.broadcast_to(input_data, new_shape)
+    result = run_op_node([input_data], ng.broadcast, new_shape)
+    assert np.allclose(result, expected)
+
+
+def test_broadcast_3():
+    input_data = np.array([1, 2, 3])
+    new_shape = [3, 3]
+    axis_mapping = [0]
     expected = [[1, 1, 1],
                 [2, 2, 2],
                 [3, 3, 3]]
 
-    result = run_op_node([input_data], ng.broadcast_to, new_shape, axis)
-    assert np.allclose(result, expected)
-
-    input_data = np.arange(4)
-    new_shape = [3, 4, 2, 4]
-    expected = np.broadcast_to(input_data, new_shape)
-    result = run_op_node([input_data], ng.broadcast_to, new_shape)
+    result = run_op_node([input_data], ng.broadcast, new_shape, axis_mapping, 'EXPLICIT')
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize('val_type, input_data', [
+@pytest.mark.parametrize('destination_type, input_data', [
     (bool, np.zeros((2, 2), dtype=int)),
+    ('boolean', np.zeros((2, 2), dtype=int)),
 ])
-def test_convert_to_bool(val_type, input_data):
-    expected = np.array(input_data, dtype=val_type)
-    result = run_op_node([input_data], ng.convert, val_type)
+def test_convert_to_bool(destination_type, input_data):
+    expected = np.array(input_data, dtype=bool)
+    result = run_op_node([input_data], ng.convert, destination_type)
     assert np.allclose(result, expected)
+    assert np.array(result).dtype == bool
 
 
-@pytest.mark.parametrize('val_type, range_start, range_end, in_dtype', [
-    (np.float32, -8, 8, np.int32),
-    (np.float64, -16383, 16383, np.int64),
+@pytest.mark.parametrize('destination_type, rand_range, in_dtype, expected_type', [
+    (np.float32, (-8, 8), np.int32, np.float32),
+    (np.float64, (-16383, 16383), np.int64, np.float64),
+    ('f32', (-8, 8), np.int32, np.float32),
+    ('f64', (-16383, 16383), np.int64, np.float64),
 ])
-def test_convert_to_float(val_type, range_start, range_end, in_dtype):
+def test_convert_to_float(destination_type, rand_range, in_dtype, expected_type):
     np.random.seed(133391)
-    input_data = np.random.randint(range_start, range_end, size=(2, 2), dtype=in_dtype)
-    expected = np.array(input_data, dtype=val_type)
-    result = run_op_node([input_data], ng.convert, val_type)
+    input_data = np.random.randint(*rand_range, size=(2, 2), dtype=in_dtype)
+    expected = np.array(input_data, dtype=expected_type)
+    result = run_op_node([input_data], ng.convert, destination_type)
     assert np.allclose(result, expected)
+    assert np.array(result).dtype == expected_type
 
 
-@pytest.mark.parametrize('val_type', [
-    np.int8,
-    np.int16,
-    np.int32,
-    np.int64,
+@pytest.mark.parametrize('destination_type, expected_type', [
+    (np.int8, np.int8),
+    (np.int16, np.int16),
+    (np.int32, np.int32),
+    (np.int64, np.int64),
+    ('i8', np.int8),
+    ('i16', np.int16),
+    ('i32', np.int32),
+    ('i64', np.int64),
 ])
-def test_convert_to_int(val_type):
+def test_convert_to_int(destination_type, expected_type):
     np.random.seed(133391)
     input_data = np.ceil(-8 + np.random.rand(2, 3, 4) * 16)
-    expected = np.array(input_data, dtype=val_type)
-    result = run_op_node([input_data], ng.convert, val_type)
+    expected = np.array(input_data, dtype=expected_type)
+    result = run_op_node([input_data], ng.convert, destination_type)
     assert np.allclose(result, expected)
+    assert np.array(result).dtype == expected_type
 
 
-@pytest.mark.parametrize('val_type', [
-    np.uint8,
-    np.uint16,
-    np.uint32,
-    np.uint64,
+@pytest.mark.parametrize('destination_type, expected_type', [
+    (np.uint8, np.uint8),
+    (np.uint16, np.uint16),
+    (np.uint32, np.uint32),
+    (np.uint64, np.uint64),
+    ('u8', np.uint8),
+    ('u16', np.uint16),
+    ('u32', np.uint32),
+    ('u64', np.uint64),
 ])
-def test_convert_to_uint(val_type):
+def test_convert_to_uint(destination_type, expected_type):
     np.random.seed(133391)
     input_data = np.ceil(np.random.rand(2, 3, 4) * 16)
-    expected = np.array(input_data, dtype=val_type)
-    result = run_op_node([input_data], ng.convert, val_type)
+    expected = np.array(input_data, dtype=expected_type)
+    result = run_op_node([input_data], ng.convert, destination_type)
     assert np.allclose(result, expected)
+    assert np.array(result).dtype == expected_type
 
 
 def test_bad_data_shape():
@@ -211,3 +256,9 @@ def test_constant_get_data_unsigned_integer(data_type):
     node = ng.constant(input_data, dtype=data_type)
     retrieved_data = node.get_data()
     assert np.allclose(input_data, retrieved_data)
+
+
+def test_backend_config():
+    dummy_config = {'dummy_option': 'dummy_value'}
+    # Expect no throw
+    ng.runtime(backend_name=test.BACKEND_NAME).set_config(dummy_config)

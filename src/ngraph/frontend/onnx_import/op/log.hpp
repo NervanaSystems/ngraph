@@ -16,11 +16,8 @@
 
 #pragma once
 
-#include <memory>
-
 #include "core/node.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/op/log.hpp"
+#include "ngraph/output_vector.hpp"
 
 namespace ngraph
 {
@@ -30,14 +27,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector log(const Node& node)
-                {
-                    return {std::make_shared<ngraph::op::Log>(node.get_ng_inputs().at(0))};
-                }
-
-            } // namespace set_1
-
-        } // namespace op
+                NodeVector log(const Node& node);
+            }
+        }
 
     } // namespace onnx_import
 

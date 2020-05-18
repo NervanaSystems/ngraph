@@ -27,6 +27,8 @@ endif()
 
 add_subdirectory(ngraph)
 
+add_subdirectory(runtime)
+
 if (NGRAPH_TOOLS_ENABLE)
     add_subdirectory(tools)
     message(STATUS "tools enabled")

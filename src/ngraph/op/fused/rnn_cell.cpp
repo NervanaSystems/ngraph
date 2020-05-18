@@ -31,6 +31,12 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::RNNCell::type_info;
 
+op::RNNCell::RNNCell()
+{
+    m_activations = {"tanh"};
+    m_activation_f = get_activation_function(0);
+}
+
 op::RNNCell::RNNCell(const Output<Node>& X,
                      const Output<Node>& initial_hidden_state,
                      const Output<Node>& W,
@@ -63,6 +69,11 @@ op::RNNCell::RNNCell(const Output<Node>& X,
     , m_activation_f{get_activation_function(0)}
 {
     constructor_validate_and_infer_types();
+}
+
+bool op::RNNCell::visit_attributes(AttributeVisitor& visitor)
+{
+    return op::util::RNNCellBase::visit_attributes(visitor);
 }
 
 void op::RNNCell::pre_validate_and_infer_types()
@@ -184,12 +195,12 @@ NodeVector op::RNNCell::decompose_op() const
 Output<Node> op::RNNCell::get_default_bias_input() const
 {
     return Output<Node>{
-        op::Constant::create(input(0).get_element_type(),
+        op::Constant::create(get_input_element_type(0),
                              Shape{s_gates_count * get_hidden_size()},
                              vector<float>(s_gates_count * get_hidden_size(), 0.f))};
 }
 
-shared_ptr<Node> op::RNNCell::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::RNNCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)

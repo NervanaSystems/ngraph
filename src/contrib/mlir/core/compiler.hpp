@@ -23,6 +23,7 @@
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
@@ -41,10 +42,6 @@ namespace ngraph
     namespace element
     {
         class Type;
-    }
-    namespace op
-    {
-        class CompiledKernel;
     }
     namespace runtime
     {

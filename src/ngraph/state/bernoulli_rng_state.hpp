@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    class BernoulliRNGState : public State
+    class NGRAPH_API BernoulliRNGState : public State
     {
     public:
         BernoulliRNGState(unsigned int seed, double probability)

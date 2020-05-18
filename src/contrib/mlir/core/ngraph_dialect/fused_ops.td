@@ -942,8 +942,8 @@ def NGDepthToSpaceOp :
 def NGConvBiasOp :
     NG_OneResult_Op<"convBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, NG_TensorType:$bias,
-               I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove,
-               DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
+               I64ArrayAttr:$strides, I64ArrayAttr:$dilation, I64ArrayAttr:$padBelow,
+               I64ArrayAttr:$padAbove, DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
 {
   let summary = "Convolution Bias Op";
   let description = "Convolution + bias forward prop for batched convolution operation.";
@@ -967,9 +967,10 @@ def NGConvBiasOp :
 
   let extraClassDeclaration = [{
     void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
+    void setDilation(const ArrayAttr& attr) { this->setAttr("dilation", attr); }
     void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
     void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
-    void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
+    void setWithRelu(const Attribute& attr) { this->setAttr("withRelu", attr); }
   }];
 }
 

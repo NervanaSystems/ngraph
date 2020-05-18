@@ -16,6 +16,7 @@
 
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/op/util/binary_elementwise_comparison.hpp"
@@ -24,7 +25,7 @@
 using namespace std;
 using namespace ngraph;
 
-bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<ngraph::Node> node)
+bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<Node> node)
 {
     if (node->supports_auto_broadcast())
     {
@@ -53,11 +54,11 @@ NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
         }
         else if (autob.m_type == op::AutoBroadcastType::NUMPY)
         {
-            rc = op::numpy_style_broadcast(node->get_arguments());
+            rc = as_node_vector(builder::numpy_broadcast_outputs(node->input_values()));
         }
         else if (autob.m_type == op::AutoBroadcastType::PDPD)
         {
-            rc = op::pdpd_style_broadcast(node->get_arguments(), autob.m_axis);
+            rc = as_node_vector(builder::pdpd_broadcast(node->input_values(), autob.m_axis));
         }
         else
         {

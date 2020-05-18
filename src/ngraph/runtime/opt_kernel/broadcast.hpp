@@ -40,7 +40,11 @@ namespace ngraph
                 {
                     for (index[1] = 0; index[1] < out_shape[1]; ++index[1])
                     {
-                        out[index[0] * out_strides[0] + index[1]] = in[in_index];
+                        // clang-format off
+                        out[index[0] * out_strides[0] +
+                            index[1]] =
+                                in[in_index];
+                        // clang-format on
                     }
                 }
             }
@@ -59,8 +63,12 @@ namespace ngraph
                     {
                         for (index[2] = 0; index[2] < out_shape[2]; ++index[2])
                         {
-                            out[index[0] * out_strides[0] + index[1] * out_strides[1] + index[2]] =
-                                in[in_index];
+                            // clang-format off
+                            out[index[0] * out_strides[0] +
+                                index[1] * out_strides[1] +
+                                index[2]] =
+                                    in[in_index];
+                            // clang-format on
                         }
                     }
                 }
@@ -81,8 +89,13 @@ namespace ngraph
                         {
                             for (index[3] = 0; index[3] < out_shape[3]; ++index[3])
                             {
-                                out[index[0] * out_strides[0] + index[1] * out_strides[1] +
-                                    index[2] * out_strides[2] + index[3]] = in[in_index];
+                                // clang-format off
+                                out[index[0] * out_strides[0] +
+                                    index[1] * out_strides[1] +
+                                    index[2] * out_strides[2] +
+                                    index[3]] =
+                                        in[in_index];
+                                // clang-format on
                             }
                         }
                     }
@@ -106,9 +119,14 @@ namespace ngraph
                             {
                                 for (index[4] = 0; index[4] < out_shape[4]; ++index[4])
                                 {
-                                    out[index[0] * out_strides[0] + index[1] * out_strides[1] +
-                                        index[2] * out_strides[2] + index[3] * out_strides[3] +
-                                        index[4]] = in[in_index];
+                                    // clang-format off
+                                    out[index[0] * out_strides[0] +
+                                        index[1] * out_strides[1] +
+                                        index[2] * out_strides[2] +
+                                        index[3] * out_strides[3] +
+                                        index[4]] =
+                                            in[in_index];
+                                    // clang-format on
                                 }
                             }
                         }
@@ -135,9 +153,15 @@ namespace ngraph
                                 {
                                     for (index[5] = 0; index[5] < out_shape[5]; ++index[5])
                                     {
-                                        out[index[0] * out_strides[0] + index[1] * out_strides[1] +
-                                            index[2] * out_strides[2] + index[3] * out_strides[3] +
-                                            index[4] * out_strides[4] + index[5]] = in[in_index];
+                                        // clang-format off
+                                        out[index[0] * out_strides[0] +
+                                            index[1] * out_strides[1] +
+                                            index[2] * out_strides[2] +
+                                            index[3] * out_strides[3] +
+                                            index[4] * out_strides[4] +
+                                            index[5]] =
+                                                in[in_index];
+                                        // clang-format on
                                     }
                                 }
                             }

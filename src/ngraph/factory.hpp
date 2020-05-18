@@ -77,7 +77,7 @@ namespace ngraph
         }
 
         /// \brief Create an instance for type_info
-        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info)
+        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info) const
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);
@@ -86,7 +86,7 @@ namespace ngraph
 
         /// \brief Create an instance using factory for DERIVED_TYPE
         template <typename DERIVED_TYPE>
-        BASE_TYPE* create()
+        BASE_TYPE* create() const
         {
             return create(DERIVED_TYPE::type_info);
         }

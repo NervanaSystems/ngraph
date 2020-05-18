@@ -262,7 +262,8 @@ namespace ngraph
                                                      int64_t end,
                                                      int64_t axis);
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 NodeVector decompose_op() const override;
                 /// \return the body of the iteration
                 std::shared_ptr<BodyLambda> get_body() const { return m_body; }
@@ -280,14 +281,12 @@ namespace ngraph
                 {
                     return m_input_descriptions;
                 }
-
                 /// \return a reference to the output descriptions.
                 const std::vector<std::shared_ptr<OutputDescription>>&
                     get_output_descriptions() const
                 {
                     return m_output_descriptions;
                 }
-
                 /// \return a reference to the output descriptions. Can add output descriptions
                 /// before
                 /// validation.
@@ -295,7 +294,6 @@ namespace ngraph
                 {
                     return m_output_descriptions;
                 }
-
                 virtual void validate_and_infer_types() override;
                 void revalidate_and_infer_types_for_body_ops();
 

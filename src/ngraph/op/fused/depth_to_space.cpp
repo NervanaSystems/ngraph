@@ -46,8 +46,8 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 
 bool op::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("blocksize", m_blocksize);
-    visitor.on_attribute("m_mode", m_mode);
+    visitor.on_attribute("block_size", m_blocksize);
+    visitor.on_attribute("mode", m_mode);
     return true;
 }
 
@@ -151,7 +151,7 @@ NodeVector op::DepthToSpace::decompose_op() const
     return NodeVector{flat_node};
 }
 
-shared_ptr<Node> op::DepthToSpace::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::DepthToSpace::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

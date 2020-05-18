@@ -52,6 +52,7 @@ namespace ngraph
                             float eps,
                             EpsMode eps_mode);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 float get_eps() const { return m_eps; }
                 EpsMode get_eps_mode() const { return m_eps_mode; }
                 virtual NodeVector decompose_op() const override;
@@ -59,7 +60,7 @@ namespace ngraph
                 AxisSet get_reduction_axes() const;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 float m_eps;

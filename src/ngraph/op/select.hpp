@@ -58,7 +58,7 @@ namespace ngraph
                        const Output<Node>& arg2);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
 
             protected:
@@ -112,7 +112,7 @@ namespace ngraph
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 

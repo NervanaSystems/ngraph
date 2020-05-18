@@ -51,9 +51,12 @@ namespace ngraph
                            const AutoBroadcastSpec& auto_broadcast =
                                AutoBroadcastSpec(AutoBroadcastType::NUMPY));
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
         } // namespace v0
         namespace v0
@@ -82,9 +85,12 @@ namespace ngraph
                     const Output<Node>& arg1,
                     const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual bool is_commutative() const override { return true; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
         }
 

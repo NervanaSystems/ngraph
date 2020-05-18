@@ -18,9 +18,6 @@
 #include "common.hpp"
 #include "default_opset.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset0.hpp"
-#include "validation_util.hpp"
 
 namespace ngraph
 {
@@ -32,41 +29,42 @@ namespace ngraph
             {
                 switch (onnx_type)
                 {
-                case onnx::TensorProto_DataType_BOOL: return element::boolean;
-                case onnx::TensorProto_DataType_DOUBLE: return element::f64;
-                case onnx::TensorProto_DataType_FLOAT16: return element::f16;
-                case onnx::TensorProto_DataType_FLOAT: return element::f32;
-                case onnx::TensorProto_DataType_INT8: return element::i8;
-                case onnx::TensorProto_DataType_INT16: return element::i16;
-                case onnx::TensorProto_DataType_INT32: return element::i32;
-                case onnx::TensorProto_DataType_INT64: return element::i64;
-                case onnx::TensorProto_DataType_UINT8: return element::u8;
-                case onnx::TensorProto_DataType_UINT16: return element::u16;
-                case onnx::TensorProto_DataType_UINT32: return element::u32;
-                case onnx::TensorProto_DataType_UINT64: return element::u64;
-                case onnx::TensorProto_DataType_UNDEFINED: return element::dynamic;
+                case ONNX_NAMESPACE::TensorProto_DataType_BOOL: return element::boolean;
+                case ONNX_NAMESPACE::TensorProto_DataType_DOUBLE: return element::f64;
+                case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16: return element::f16;
+                case ONNX_NAMESPACE::TensorProto_DataType_FLOAT: return element::f32;
+                case ONNX_NAMESPACE::TensorProto_DataType_INT8: return element::i8;
+                case ONNX_NAMESPACE::TensorProto_DataType_INT16: return element::i16;
+                case ONNX_NAMESPACE::TensorProto_DataType_INT32: return element::i32;
+                case ONNX_NAMESPACE::TensorProto_DataType_INT64: return element::i64;
+                case ONNX_NAMESPACE::TensorProto_DataType_UINT8: return element::u8;
+                case ONNX_NAMESPACE::TensorProto_DataType_UINT16: return element::u16;
+                case ONNX_NAMESPACE::TensorProto_DataType_UINT32: return element::u32;
+                case ONNX_NAMESPACE::TensorProto_DataType_UINT64: return element::u64;
+                case ONNX_NAMESPACE::TensorProto_DataType_UNDEFINED: return element::dynamic;
                 }
-                throw ngraph_error("unsupported element type: " +
-                                   onnx::TensorProto_DataType_Name(
-                                       static_cast<onnx::TensorProto_DataType>(onnx_type)));
+                throw ngraph_error(
+                    "unsupported element type: " +
+                    ONNX_NAMESPACE::TensorProto_DataType_Name(
+                        static_cast<ONNX_NAMESPACE::TensorProto_DataType>(onnx_type)));
             }
 
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
+            std::shared_ptr<ngraph::Node> get_monotonic_range_along_node_rank(
+                const Output<ngraph::Node>& value, int64_t start_value, int64_t step)
             {
-                const auto outputs_number = node->get_output_size();
-                ngraph::NodeVector outputs(outputs_number);
-                for (int i = 0; i < outputs_number; ++i)
+                if (value.get_partial_shape().rank().is_static())
                 {
-                    if (node->output(i).get_node_shared_ptr()->get_output_size() == 1)
-                    {
-                        outputs[i] = node->get_output_as_single_output_node(i);
-                    }
-                    else
-                    {
-                        outputs[i] = std::make_shared<ngraph::opset0::GetOutputElement>(node, i);
-                    }
+                    const auto range_value = get_monotonic_range<int64_t>(
+                        value.get_partial_shape().rank().get_length(), start_value, step);
+                    return default_opset::Constant::create(
+                        element::i64, {range_value.size()}, range_value);
                 }
-                return outputs;
+
+                const auto value_shape = std::make_shared<default_opset::ShapeOf>(value);
+                return std::make_shared<default_opset::Range>(
+                    default_opset::Constant::create(element::i64, {}, {start_value}),
+                    std::make_shared<default_opset::ShapeOf>(value_shape),
+                    default_opset::Constant::create(element::i64, {}, {step}));
             }
 
         } // namespace  common

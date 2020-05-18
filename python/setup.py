@@ -24,6 +24,7 @@ import distutils.ccompiler
 
 __version__ = os.environ.get('NGRAPH_VERSION', '0.0.0-dev')
 PYNGRAPH_ROOT_DIR = os.path.abspath(os.path.dirname(__file__))
+PYNGRAPH_SRC_DIR = os.path.join(PYNGRAPH_ROOT_DIR, 'src')
 NGRAPH_DEFAULT_INSTALL_DIR = os.environ.get('HOME')
 NGRAPH_ONNX_IMPORT_ENABLE = os.environ.get('NGRAPH_ONNX_IMPORT_ENABLE')
 NGRAPH_PYTHON_DEBUG = os.environ.get('NGRAPH_PYTHON_DEBUG')
@@ -66,19 +67,29 @@ def find_pybind_headers_dir():
 NGRAPH_CPP_DIST_DIR = find_ngraph_dist_dir()
 PYBIND11_INCLUDE_DIR = find_pybind_headers_dir() + '/include'
 NGRAPH_CPP_INCLUDE_DIR = NGRAPH_CPP_DIST_DIR + '/include'
-if os.path.exists(NGRAPH_CPP_DIST_DIR + '/lib'):
-    NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib'
-elif os.path.exists(NGRAPH_CPP_DIST_DIR + '/lib64'):
-    NGRAPH_CPP_LIBRARY_DIR = NGRAPH_CPP_DIST_DIR + '/lib64'
+if os.path.exists(os.path.join(NGRAPH_CPP_DIST_DIR, 'lib')):
+    NGRAPH_CPP_LIBRARY_DIR = os.path.join(NGRAPH_CPP_DIST_DIR, 'lib')
+elif os.path.exists(os.path.join(NGRAPH_CPP_DIST_DIR, 'lib64')):
+    NGRAPH_CPP_LIBRARY_DIR = os.path.join(NGRAPH_CPP_DIST_DIR, 'lib64')
 else:
     print('Cannot find library directory in {}, make sure that nGraph is installed '
           'correctly'.format(NGRAPH_CPP_DIST_DIR))
     sys.exit(1)
 
+if sys.platform == 'win32':
+    NGRAPH_CPP_DIST_DIR = os.path.normpath(NGRAPH_CPP_DIST_DIR)
+    PYBIND11_INCLUDE_DIR = os.path.normpath(PYBIND11_INCLUDE_DIR)
+    NGRAPH_CPP_INCLUDE_DIR = os.path.normpath(NGRAPH_CPP_INCLUDE_DIR)
+    NGRAPH_CPP_LIBRARY_DIR = os.path.normpath(NGRAPH_CPP_LIBRARY_DIR)
+
 NGRAPH_CPP_LIBRARY_NAME = 'ngraph'
 """For some platforms OpenVINO adds 'd' suffix to library names in debug configuration"""
 if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('ngraphd', fn)]):
     NGRAPH_CPP_LIBRARY_NAME = 'ngraphd'
+
+ONNX_IMPORTER_CPP_LIBRARY_NAME = 'onnx_importer'
+if len([fn for fn in os.listdir(NGRAPH_CPP_LIBRARY_DIR) if re.search('onnx_importerd', fn)]):
+    ONNX_IMPORTER_CPP_LIBRARY_NAME = 'onnx_importerd'
 
 
 def parallelCCompile(
@@ -102,6 +113,16 @@ def parallelCCompile(
     macros, objects, extra_postargs, pp_opts, build = self._setup_compile(
         output_dir, macros, include_dirs, sources, depends, extra_postargs)
     cc_args = self._get_cc_args(pp_opts, debug, extra_preargs)
+
+    if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+        try:
+            # pybind11 is much more verbose without -DNDEBUG
+            self.compiler.remove('-DNDEBUG')
+            self.compiler.remove('-O2')
+            self.compiler_so.remove('-DNDEBUG')
+            self.compiler_so.remove('-O2')
+        except (AttributeError, ValueError):
+            pass
     # parallel code
     import multiprocessing.pool
 
@@ -140,140 +161,60 @@ def has_flag(compiler, flagname):
 
 def cpp_flag(compiler):
     """Check and return the -std=c++11 compiler flag."""
-    if has_flag(compiler, '-std=c++11'):
+    if sys.platform == 'win32':
+        return ''  # C++11 is on by default in MSVC
+    elif has_flag(compiler, '-std=c++11'):
         return '-std=c++11'
     else:
         raise RuntimeError('Unsupported compiler -- C++11 support is needed!')
 
 
 sources = [
-    'pyngraph/function.cpp',
-    'pyngraph/serializer.cpp',
-    'pyngraph/node.cpp',
-    'pyngraph/shape.cpp',
-    'pyngraph/strides.cpp',
-    'pyngraph/coordinate_diff.cpp',
     'pyngraph/axis_set.cpp',
     'pyngraph/axis_vector.cpp',
     'pyngraph/coordinate.cpp',
-    'pyngraph/pyngraph.cpp',
-    'pyngraph/util.cpp',
+    'pyngraph/coordinate_diff.cpp',
+    'pyngraph/dimension.cpp',
+    'pyngraph/function.cpp',
+    'pyngraph/node.cpp',
+    'pyngraph/node_factory.cpp',
+    'pyngraph/ops/constant.cpp',
+    'pyngraph/ops/fused/depth_to_space.cpp',
+    'pyngraph/ops/fused/gelu.cpp',
+    'pyngraph/ops/fused/grn.cpp',
+    'pyngraph/ops/fused/hard_sigmoid.cpp',
+    'pyngraph/ops/fused/mvn.cpp',
+    'pyngraph/ops/fused/shuffle_channels.cpp',
+    'pyngraph/ops/fused/space_to_depth.cpp',
+    'pyngraph/ops/get_output_element.cpp',
+    'pyngraph/ops/op.cpp',
+    'pyngraph/ops/parameter.cpp',
+    'pyngraph/ops/regmodule_pyngraph_op.cpp',
+    'pyngraph/ops/result.cpp',
     'pyngraph/ops/util/arithmetic_reduction.cpp',
-    'pyngraph/ops/util/binary_elementwise_comparison.cpp',
-    'pyngraph/ops/util/op_annotations.cpp',
     'pyngraph/ops/util/binary_elementwise_arithmetic.cpp',
+    'pyngraph/ops/util/binary_elementwise_comparison.cpp',
     'pyngraph/ops/util/binary_elementwise_logical.cpp',
+    'pyngraph/ops/util/index_reduction.cpp',
+    'pyngraph/ops/util/op_annotations.cpp',
     'pyngraph/ops/util/regmodule_pyngraph_op_util.cpp',
     'pyngraph/ops/util/unary_elementwise_arithmetic.cpp',
-    'pyngraph/ops/util/index_reduction.cpp',
-    'pyngraph/ops/abs.cpp',
-    'pyngraph/ops/acos.cpp',
-    'pyngraph/ops/add.cpp',
-    'pyngraph/ops/and.cpp',
-    'pyngraph/ops/argmax.cpp',
-    'pyngraph/ops/argmin.cpp',
-    'pyngraph/ops/asin.cpp',
-    'pyngraph/ops/atan.cpp',
-    'pyngraph/ops/avg_pool.cpp',
-    'pyngraph/ops/broadcast.cpp',
-    'pyngraph/ops/broadcast_distributed.cpp',
-    'pyngraph/ops/fused/clamp.cpp',
-    'pyngraph/ops/concat.cpp',
-    'pyngraph/ops/constant.cpp',
-    'pyngraph/ops/convert.cpp',
-    'pyngraph/ops/convolution.cpp',
-    'pyngraph/ops/cos.cpp',
-    'pyngraph/ops/cosh.cpp',
-    'pyngraph/ops/ceiling.cpp',
-    'pyngraph/ops/fused/depth_to_space.cpp',
-    'pyngraph/ops/dequantize.cpp',
-    'pyngraph/ops/divide.cpp',
-    'pyngraph/ops/dot.cpp',
-    'pyngraph/ops/fused/elu.cpp',
-    'pyngraph/ops/equal.cpp',
-    'pyngraph/ops/exp.cpp',
-    'pyngraph/ops/fused/fake_quantize.cpp',
-    'pyngraph/ops/floor.cpp',
-    'pyngraph/ops/fused/gelu.cpp',
-    'pyngraph/ops/fused/gemm.cpp',
-    'pyngraph/ops/greater.cpp',
-    'pyngraph/ops/greater_eq.cpp',
-    'pyngraph/ops/fused/grn.cpp',
-    'pyngraph/ops/fused/group_conv.cpp',
-    'pyngraph/ops/fused/hard_sigmoid.cpp',
-    'pyngraph/ops/less.cpp',
-    'pyngraph/ops/less_eq.cpp',
-    'pyngraph/ops/log.cpp',
-    'pyngraph/ops/lrn.cpp',
-    'pyngraph/ops/maximum.cpp',
-    'pyngraph/ops/max.cpp',
-    'pyngraph/ops/product.cpp',
-    'pyngraph/ops/max_pool.cpp',
-    'pyngraph/ops/minimum.cpp',
-    'pyngraph/ops/multiply.cpp',
-    'pyngraph/ops/fused/mvn.cpp',
-    'pyngraph/ops/negative.cpp',
-    'pyngraph/ops/not.cpp',
-    'pyngraph/ops/not_equal.cpp',
-    'pyngraph/ops/op.cpp',
-    'pyngraph/ops/one_hot.cpp',
-    'pyngraph/ops/or.cpp',
-    'pyngraph/ops/pad.cpp',
-    'pyngraph/ops/parameter.cpp',
-    'pyngraph/ops/passthrough.cpp',
-    'pyngraph/ops/power.cpp',
-    'pyngraph/ops/fused/prelu.cpp',
-    'pyngraph/ops/quantize.cpp',
-    'pyngraph/ops/quantized_convolution.cpp',
-    'pyngraph/ops/quantized_dot.cpp',
-    'pyngraph/ops/regmodule_pyngraph_op.cpp',
-    'pyngraph/ops/relu.cpp',
-    'pyngraph/ops/replace_slice.cpp',
-    'pyngraph/ops/reshape.cpp',
-    'pyngraph/ops/reverse.cpp',
-    'pyngraph/ops/fused/rnn_cell.cpp',
-    'pyngraph/ops/fused/scale_shift.cpp',
-    'pyngraph/ops/select.cpp',
-    'pyngraph/ops/fused/shuffle_channels.cpp',
-    'pyngraph/ops/sign.cpp',
-    'pyngraph/ops/sin.cpp',
-    'pyngraph/ops/sinh.cpp',
-    'pyngraph/ops/slice.cpp',
-    'pyngraph/ops/fused/space_to_depth.cpp',
-    'pyngraph/ops/sqrt.cpp',
-    'pyngraph/ops/fused/squared_difference.cpp',
-    'pyngraph/ops/fused/squeeze.cpp',
-    'pyngraph/ops/subtract.cpp',
-    'pyngraph/ops/sum.cpp',
-    'pyngraph/ops/tan.cpp',
-    'pyngraph/ops/tanh.cpp',
-    'pyngraph/ops/topk.cpp',
-    'pyngraph/ops/allreduce.cpp',
-    'pyngraph/ops/get_output_element.cpp',
-    'pyngraph/ops/min.cpp',
-    'pyngraph/ops/batch_norm.cpp',
-    'pyngraph/ops/softmax.cpp',
-    'pyngraph/ops/result.cpp',
-    'pyngraph/ops/fused/unsqueeze.cpp',
+    'pyngraph/passes/manager.cpp',
+    'pyngraph/passes/regmodule_pyngraph_passes.cpp',
+    'pyngraph/partial_shape.cpp',
+    'pyngraph/pyngraph.cpp',
     'pyngraph/runtime/backend.cpp',
     'pyngraph/runtime/executable.cpp',
     'pyngraph/runtime/regmodule_pyngraph_runtime.cpp',
     'pyngraph/runtime/tensor.cpp',
-    'pyngraph/passes/manager.cpp',
-    'pyngraph/passes/regmodule_pyngraph_passes.cpp',
+    'pyngraph/serializer.cpp',
+    'pyngraph/shape.cpp',
+    'pyngraph/strides.cpp',
     'pyngraph/types/element_type.cpp',
     'pyngraph/types/regmodule_pyngraph_types.cpp',
+    'pyngraph/util.cpp',
 ]
 
-package_dir = {
-    'ngraph': PYNGRAPH_ROOT_DIR + '/ngraph',
-    'ngraph.utils': PYNGRAPH_ROOT_DIR + '/ngraph/utils',
-    'ngraph.impl': PYNGRAPH_ROOT_DIR + '/ngraph/impl',
-    'ngraph.impl.op': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op',
-    'ngraph.impl.op.util': PYNGRAPH_ROOT_DIR + '/ngraph/impl/op/util',
-    'ngraph.impl.passes': PYNGRAPH_ROOT_DIR + '/ngraph/impl/passes',
-    'ngraph.impl.runtime': PYNGRAPH_ROOT_DIR + '/ngraph/impl/runtime',
-}
 packages = [
     'ngraph',
     'ngraph.utils',
@@ -284,13 +225,13 @@ packages = [
     'ngraph.impl.runtime',
 ]
 
-sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in sources]
+sources = [PYNGRAPH_SRC_DIR + '/' + source for source in sources]
 
-include_dirs = [PYNGRAPH_ROOT_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
+include_dirs = [PYNGRAPH_SRC_DIR, NGRAPH_CPP_INCLUDE_DIR, PYBIND11_INCLUDE_DIR]
 
 library_dirs = [NGRAPH_CPP_LIBRARY_DIR]
 
-libraries = [NGRAPH_CPP_LIBRARY_NAME]
+libraries = [NGRAPH_CPP_LIBRARY_NAME, ONNX_IMPORTER_CPP_LIBRARY_NAME]
 
 extra_compile_args = []
 if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
@@ -302,20 +243,20 @@ data_files = [
     (
         'lib',
         [
-            NGRAPH_CPP_LIBRARY_DIR + '/' + library
+            os.path.join(NGRAPH_CPP_LIBRARY_DIR, library)
             for library in os.listdir(NGRAPH_CPP_LIBRARY_DIR)
         ],
     ),
     (
         'licenses',
         [
-            NGRAPH_CPP_DIST_DIR + '/licenses/' + license
-            for license in os.listdir(NGRAPH_CPP_DIST_DIR + '/licenses')
+            os.path.join(NGRAPH_CPP_DIST_DIR, 'licenses', license)
+            for license in os.listdir(os.path.join(NGRAPH_CPP_DIST_DIR, 'licenses'))
         ],
     ),
     (
         '',
-        [NGRAPH_CPP_DIST_DIR + '/LICENSE'],
+        [os.path.join(NGRAPH_CPP_DIST_DIR, 'LICENSE')],
     ),
 ]
 
@@ -323,12 +264,9 @@ if NGRAPH_ONNX_IMPORT_ENABLE in ['TRUE', 'ON', True]:
     onnx_sources = [
         'pyngraph/onnx_import/onnx_import.cpp',
     ]
-    onnx_sources = [PYNGRAPH_ROOT_DIR + '/' + source for source in onnx_sources]
+    onnx_sources = [PYNGRAPH_SRC_DIR + '/' + source for source in onnx_sources]
     sources = sources + onnx_sources
 
-    package_dir['ngraph.impl.onnx_import'] = (
-        PYNGRAPH_ROOT_DIR + '/ngraph/impl/onnx_import'
-    )
     packages.append('ngraph.impl.onnx_import')
 
 ext_modules = [
@@ -347,7 +285,7 @@ ext_modules = [
 
 
 def add_platform_specific_link_args(link_args):
-    """Add linker flags specific for actual OS."""
+    """Add linker flags specific for the OS detected during the build."""
     if sys.platform.startswith('linux'):
         link_args += ['-Wl,-rpath,$ORIGIN/../..']
         link_args += ['-z', 'noexecstack']
@@ -356,6 +294,8 @@ def add_platform_specific_link_args(link_args):
     elif sys.platform == 'darwin':
         link_args += ['-Wl,-rpath,@loader_path/../..']
         link_args += ['-stdlib=libc++']
+    elif sys.platform == 'win32':
+        link_args += ['/LTCG']
 
 
 class BuildExt(build_ext):
@@ -368,38 +308,63 @@ class BuildExt(build_ext):
             return True
         return False
 
-    def add_debug_or_release_flags(self):
+    def _add_debug_or_release_flags(self):
         """Return compiler flags for Release and Debug build types."""
         if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
-            return ['-O0', '-g']
+            if sys.platform == 'win32':
+                return ['/Od', '/Zi', '/RTC1']
+            else:
+                return ['-O0', '-g']
         else:
-            return ['-O2', '-D_FORTIFY_SOURCE=2']
+            if sys.platform == 'win32':
+                return ['/O2']
+            else:
+                return ['-O2', '-D_FORTIFY_SOURCE=2']
+
+    def _add_win_compiler_flags(self, ext):
+        self._add_extra_compile_arg('/GL', ext.extra_compile_args)  # Whole Program Optimization
+        self._add_extra_compile_arg('/analyze', ext.extra_compile_args)
+
+    def _add_unix_compiler_flags(self, ext):
+        if not self._add_extra_compile_arg('-fstack-protector-strong', ext.extra_compile_args):
+            self._add_extra_compile_arg('-fstack-protector', ext.extra_compile_args)
+
+        self._add_extra_compile_arg('-fvisibility=hidden', ext.extra_compile_args)
+        self._add_extra_compile_arg('-flto', ext.extra_compile_args)
+        self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
+
+        ext.extra_compile_args += ['-Wformat', '-Wformat-security']
+
+    def _customize_compiler_flags(self):
+        """Modify standard compiler flags."""
+        try:
+            # -Wstrict-prototypes is not a valid option for c++
+            self.compiler.compiler_so.remove('-Wstrict-prototypes')
+            if NGRAPH_PYTHON_DEBUG in ['TRUE', 'ON', True]:
+                # pybind11 is much more verbose without -DNDEBUG
+                self.compiler.compiler_so.remove('-DNDEBUG')
+                self.compiler.compiler_so.remove('-O2')
+        except (AttributeError, ValueError):
+            pass
 
     def build_extensions(self):
         """Build extension providing extra compiler flags."""
-        if sys.platform == 'win32':
-            raise RuntimeError('Unsupported platform: win32!')
-        # -Wstrict-prototypes is not a valid option for c++
-        try:
-            self.compiler.compiler_so.remove('-Wstrict-prototypes')
-        except (AttributeError, ValueError):
-            pass
+        self._customize_compiler_flags()
         for ext in self.extensions:
             ext.extra_compile_args += [cpp_flag(self.compiler)]
 
-            if not self._add_extra_compile_arg('-fstack-protector-strong', ext.extra_compile_args):
-                self._add_extra_compile_arg('-fstack-protector', ext.extra_compile_args)
+            if sys.platform == 'win32':
+                self._add_win_compiler_flags(ext)
+            else:
+                self._add_unix_compiler_flags(ext)
 
-            self._add_extra_compile_arg('-fvisibility=hidden', ext.extra_compile_args)
-            self._add_extra_compile_arg('-flto', ext.extra_compile_args)
-            self._add_extra_compile_arg('-fPIC', ext.extra_compile_args)
             add_platform_specific_link_args(ext.extra_link_args)
 
-            ext.extra_compile_args += ['-Wformat', '-Wformat-security']
-            ext.extra_compile_args += self.add_debug_or_release_flags()
+            ext.extra_compile_args += self._add_debug_or_release_flags()
 
             if sys.platform == 'darwin':
                 ext.extra_compile_args += ['-stdlib=libc++']
+
         build_ext.build_extensions(self)
 
 
@@ -420,14 +385,12 @@ setup(
     long_description=open(os.path.join(PYNGRAPH_ROOT_DIR, 'README.md')).read(),
     long_description_content_type='text/markdown',
     ext_modules=ext_modules,
-    package_dir=package_dir,
+    package_dir={'': 'src'},
     packages=packages,
     cmdclass={'build_ext': BuildExt},
     data_files=data_files,
     setup_requires=setup_requires,
     install_requires=requirements,
     zip_safe=False,
-    extras_require={
-        'plaidml': ['plaidml>=0.6.3'],
-    },
+    extras_require={},
 )

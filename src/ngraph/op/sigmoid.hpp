@@ -35,9 +35,11 @@ namespace ngraph
                 Sigmoid(const Output<Node>& arg);
                 Sigmoid() = default;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
 
             /// \brief Elementwise SigmoidBackprop operation.
@@ -58,7 +60,7 @@ namespace ngraph
                 SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         using v0::Sigmoid;

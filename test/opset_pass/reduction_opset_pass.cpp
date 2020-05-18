@@ -50,8 +50,8 @@ void test_reduce_op_opset1_upgrade_pass()
 
     ASSERT_TRUE(v1_node);
     EXPECT_EQ(v1_node->get_keep_dims(), false);
-    EXPECT_EQ(v1_node->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(v1_node->output(0).get_shape(), (Shape{1}));
+    EXPECT_EQ(v1_node->get_output_element_type(0), element::f32);
+    EXPECT_EQ(v1_node->get_output_shape(0), (Shape{1}));
 }
 
 template <typename OpV0, typename OpV1>
@@ -71,8 +71,8 @@ void test_reduce_op_opset0_downgrade_pass()
     const auto reshape_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
     const auto reshape_node = as_type_ptr<op::Reshape>(reshape_replacement_node);
     ASSERT_TRUE(reshape_node);
-    EXPECT_EQ(reshape_node->output(0).get_element_type(), element::f32);
-    EXPECT_EQ(reshape_node->output(0).get_shape(), (Shape{1, 1, 3}));
+    EXPECT_EQ(reshape_node->get_output_element_type(0), element::f32);
+    EXPECT_EQ(reshape_node->get_output_shape(0), (Shape{1, 1, 3}));
 
     const auto op_replace_node = reshape_replacement_node->input_value(0).get_node_shared_ptr();
     const auto v0_node = as_type_ptr<OpV0>(op_replace_node);

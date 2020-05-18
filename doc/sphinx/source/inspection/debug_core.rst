@@ -25,8 +25,6 @@ Compile Flags
    ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements, ``FALSE``
    ``NGRAPH_DEPRECATED_ENABLE``, Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use), ``FALSE``
    ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen, ``FALSE``
-   ``NGRAPH_DISTRIBUTED_ENABLE``, Enable distributed training using MLSL/OpenMPI, ``OFF``
-   ``NGRAPH_DISTRIBUTED_MLSL_ENABLE``, Use MLSL, ``OFF``
    ``NGRAPH_DOC_BUILD_ENABLE``,  Automatically build documentation, ``OFF``
    ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math, ``ON``
    ``NGRAPH_HALIDE``,  ,``OFF``

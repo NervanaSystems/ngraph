@@ -2841,6 +2841,27 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
     ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
 }
 
+TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic_static_rank)
+{
+    PartialShape shape_filter{20, 10, 3, 3};
+    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    PartialShape shape_delta{Dimension(), 20, 224, 224};
+    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto strides = Strides{2, 2};
+    auto dilations = Strides{1, 1};
+    auto padding_begin = CoordinateDiff{1, 1};
+    auto padding_end = CoordinateDiff{1, 1};
+
+    auto conv1 = make_shared<op::v1::ConvolutionBackpropData>(
+        deltas, filters, strides, padding_begin, padding_end, dilations);
+
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().is_static());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).rank().same_scheme(Rank{4}));
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).is_dynamic());
+    ASSERT_TRUE(conv1->get_output_partial_shape(0).same_scheme(
+        PartialShape{Dimension::dynamic(), 10, 447, 447}));
+}
+
 TEST(type_prop, conv_v1_partial_rank)
 {
     PartialShape data_batch_shape{PartialShape::dynamic()};

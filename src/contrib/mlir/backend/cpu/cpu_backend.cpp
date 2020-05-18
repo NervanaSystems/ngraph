@@ -21,6 +21,7 @@
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
+#include "ngraph/env_util.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -71,7 +72,11 @@ static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
         "inferred from the host CPU using for the cache level specified by "
         "-ngraph-loop-tile-cache-level."));
 
+// Enable the lowering of MemRefs to LLVM bare pointers.
+extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
+
 using namespace ngraph::runtime::ngmlir;
+using namespace mlir;
 
 // Default optimization level.
 llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
@@ -140,9 +145,10 @@ void MLIRCPUBackend::init()
     if (!initialized)
     {
         // Override default optimization level with macro value.
-        if (char* optLevelStr = std::getenv("NGRAPH_MLIR_OPT_LEVEL"))
+        int32_t clOptLevel = getenv_int("NGRAPH_MLIR_OPT_LEVEL");
+        // -1 is the value returned if the env variable is not set
+        if (clOptLevel != -1)
         {
-            unsigned clOptLevel = std::stoi(optLevelStr);
             NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
             mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
         }
@@ -194,7 +200,19 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    pm.addPass(mlir::createLowerToLLVMPass());
+    // We lower memrefs to a fat memref descriptor by default. If 'clEnableBarePtrMemRefLowering' is
+    // specified, we lower memref arguments to bare pointers to the memref element type.
+    if (clEnableBarePtrMemRefLowering)
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
+                                               /*useBarePtrCallConv=*/true,
+                                               /*emitCWrappers=*/false));
+    }
+    else
+    {
+        pm.addPass(mlir::createLowerToLLVMPass(
+            /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
+    }
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);

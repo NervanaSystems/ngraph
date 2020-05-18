@@ -27,7 +27,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/softmax.hpp"

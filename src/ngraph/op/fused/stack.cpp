@@ -39,7 +39,7 @@ op::Stack::Stack(const NodeVector& args, int64_t axis)
 {
 }
 
-shared_ptr<Node> op::Stack::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Stack::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return make_shared<Stack>(new_args, m_axis);
 }

@@ -47,7 +47,7 @@ namespace ngraph
             Shape get_b_shape() const { return m_shape_x; }
             const AxisSet& get_broadcast_axes() const { return m_broadcast_axes; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
         private:
             Shape m_shape_w;

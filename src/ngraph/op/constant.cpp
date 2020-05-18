@@ -19,6 +19,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -47,13 +48,17 @@ string to_cpp_string(T value)
 
 constexpr NodeTypeInfo op::Constant::type_info;
 
+op::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
+    : Constant(tensor->get_element_type(), tensor->get_shape())
+{
+    tensor->read(get_data_ptr_nc(), tensor->get_size_in_bytes());
+    m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
+}
+
 op::Constant::Constant(const element::Type& type,
                        Shape shape,
                        const std::vector<std::string>& values)
-    : m_element_type(type)
-    , m_shape(shape)
-    , m_data(
-          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
+    : Constant(type, shape)
 {
     NODE_VALIDATION_CHECK(this,
                           values.size() == shape_size(m_shape) || values.size() == 1,
@@ -75,91 +80,91 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::boolean:
         {
             bool value = stoi(values[0]) != 0;
-            bool* target = m_data->get_ptr<bool>();
+            auto target = get_data_ptr_nc<element::Type_t::boolean>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::bf16:
         {
             bfloat16 value = parse_string<float>(values[0]);
-            bfloat16* target = m_data->get_ptr<bfloat16>();
+            auto target = get_data_ptr_nc<element::Type_t::bf16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::f16:
         {
             float16 value = parse_string<float>(values[0]);
-            float16* target = m_data->get_ptr<float16>();
+            auto target = get_data_ptr_nc<element::Type_t::f16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::f32:
         {
             float value = parse_string<float>(values[0]);
-            float* target = m_data->get_ptr<float>();
+            auto target = get_data_ptr_nc<element::Type_t::f32>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::f64:
         {
             double value = parse_string<double>(values[0]);
-            double* target = m_data->get_ptr<double>();
+            auto target = get_data_ptr_nc<element::Type_t::f64>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i8:
         {
             int8_t value = parse_string<int64_t>(values[0]);
-            int8_t* target = m_data->get_ptr<int8_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i8>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i16:
         {
             int16_t value = parse_string<int64_t>(values[0]);
-            int16_t* target = m_data->get_ptr<int16_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i32:
         {
             int32_t value = parse_string<int64_t>(values[0]);
-            int32_t* target = m_data->get_ptr<int32_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i32>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::i64:
         {
             int64_t value = parse_string<int64_t>(values[0]);
-            int64_t* target = m_data->get_ptr<int64_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i64>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u8:
         {
             uint8_t value = parse_string<uint64_t>(values[0]);
-            uint8_t* target = m_data->get_ptr<uint8_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u8>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u16:
         {
             uint16_t value = parse_string<uint64_t>(values[0]);
-            uint16_t* target = m_data->get_ptr<uint16_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u16>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u32:
         {
             uint32_t value = parse_string<uint64_t>(values[0]);
-            uint32_t* target = m_data->get_ptr<uint32_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u32>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
         case element::Type_t::u64:
         {
             uint64_t value = parse_string<uint64_t>(values[0]);
-            uint64_t* target = m_data->get_ptr<uint64_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u64>();
             std::fill(target, target + shape_size(m_shape), value);
             break;
         }
@@ -183,14 +188,14 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::boolean:
         {
             vector<uint8_t> value = parse_string<uint8_t>(values);
-            uint8_t* target = m_data->get_ptr<uint8_t>();
+            auto target = get_data_ptr_nc<element::Type_t::boolean>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::bf16:
         {
             vector<float> value = parse_string<float>(values);
-            bfloat16* target = m_data->get_ptr<bfloat16>();
+            auto target = get_data_ptr_nc<element::Type_t::bf16>();
             for (size_t i = 0; i < value.size(); i++)
             {
                 target[i] = value[i];
@@ -200,7 +205,7 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::f16:
         {
             vector<float> value = parse_string<float>(values);
-            float16* target = m_data->get_ptr<float16>();
+            auto target = get_data_ptr_nc<element::Type_t::f16>();
             for (size_t i = 0; i < value.size(); i++)
             {
                 target[i] = value[i];
@@ -210,70 +215,70 @@ op::Constant::Constant(const element::Type& type,
         case element::Type_t::f32:
         {
             vector<float> value = parse_string<float>(values);
-            float* target = m_data->get_ptr<float>();
+            auto target = get_data_ptr_nc<element::Type_t::f32>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::f64:
         {
             vector<double> value = parse_string<double>(values);
-            double* target = m_data->get_ptr<double>();
+            auto target = get_data_ptr_nc<element::Type_t::f64>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i8:
         {
             vector<int8_t> value = parse_string<int8_t>(values);
-            int8_t* target = m_data->get_ptr<int8_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i8>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i16:
         {
             vector<int16_t> value = parse_string<int16_t>(values);
-            int16_t* target = m_data->get_ptr<int16_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i16>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i32:
         {
             vector<int32_t> value = parse_string<int32_t>(values);
-            int32_t* target = m_data->get_ptr<int32_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i32>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::i64:
         {
             vector<int64_t> value = parse_string<int64_t>(values);
-            int64_t* target = m_data->get_ptr<int64_t>();
+            auto target = get_data_ptr_nc<element::Type_t::i64>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u8:
         {
             vector<uint8_t> value = parse_string<uint8_t>(values);
-            uint8_t* target = m_data->get_ptr<uint8_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u8>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u16:
         {
             vector<uint16_t> value = parse_string<uint16_t>(values);
-            uint16_t* target = m_data->get_ptr<uint16_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u16>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u32:
         {
             vector<uint32_t> value = parse_string<uint32_t>(values);
-            uint32_t* target = m_data->get_ptr<uint32_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u32>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
         case element::Type_t::u64:
         {
             vector<uint64_t> value = parse_string<uint64_t>(values);
-            uint64_t* target = m_data->get_ptr<uint64_t>();
+            auto target = get_data_ptr_nc<element::Type_t::u64>();
             std::copy(value.begin(), value.end(), target);
             break;
         }
@@ -287,24 +292,35 @@ op::Constant::Constant(const element::Type& type,
     }
 }
 
-op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
+op::Constant::Constant(const element::Type& type, const Shape& shape)
     : m_element_type(type)
     , m_shape(shape)
-    , m_data(
-          new runtime::AlignedBuffer(shape_size(m_shape) * m_element_type.size(), host_alignment()))
 {
-    size_t size = shape_size(m_shape) * m_element_type.size();
-    std::memcpy(m_data->get_ptr(), data, size);
+    allocate_buffer();
+    constructor_validate_and_infer_types();
+}
+
+void* op::Constant::allocate_buffer()
+{
+    m_data = make_shared<runtime::AlignedBuffer>(shape_size(m_shape) * m_element_type.size(),
+                                                 host_alignment());
+    return get_data_ptr_nc();
+}
+
+op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
+    : Constant(type, shape)
+{
+    size_t size = ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
+    std::memcpy(get_data_ptr_nc(), data, size);
     constructor_validate_and_infer_types();
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
 
 op::Constant::Constant(const Constant& other)
-    : m_element_type(other.m_element_type)
-    , m_shape(other.m_shape)
-    , m_data(other.m_data)
-    , m_all_elements_bitwise_identical(other.m_all_elements_bitwise_identical)
+    : Constant(other.m_element_type, other.m_shape)
 {
+    m_data = other.m_data;
+    m_all_elements_bitwise_identical = other.m_all_elements_bitwise_identical;
     constructor_validate_and_infer_types();
 }
 
@@ -465,7 +481,7 @@ Shape op::Constant::get_shape_val() const
 Strides op::Constant::get_strides_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_strides = get_vector<int64_t>();
+    std::vector<int64_t> out_strides = cast_vector<int64_t>();
     Strides output_strides(shape_size(m_shape));
     std::transform(out_strides.begin(),
                    out_strides.end(),
@@ -477,7 +493,7 @@ Strides op::Constant::get_strides_val() const
 Coordinate op::Constant::get_coordinate_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_coordinate = get_vector<int64_t>();
+    std::vector<int64_t> out_coordinate = cast_vector<int64_t>();
     Coordinate output_coordinate(shape_size(m_shape));
     std::transform(out_coordinate.begin(),
                    out_coordinate.end(),
@@ -489,7 +505,7 @@ Coordinate op::Constant::get_coordinate_val() const
 CoordinateDiff op::Constant::get_coordinate_diff_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_coordinate_diff = get_vector<int64_t>();
+    std::vector<int64_t> out_coordinate_diff = cast_vector<int64_t>();
     CoordinateDiff output_coordinate_diff(shape_size(m_shape));
     std::transform(out_coordinate_diff.begin(),
                    out_coordinate_diff.end(),
@@ -522,7 +538,7 @@ AxisSet op::Constant::get_axis_set_val() const
     return output_axis_set;
 }
 
-shared_ptr<Node> op::Constant::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Constant>(*this);
@@ -598,14 +614,35 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
     return rc;
 }
 
+bool op::v0::Constant::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("element_type", m_element_type);
+    visitor.on_attribute("shape", m_shape);
+    if (m_data == nullptr)
+    {
+        // Filling in a fresh constant
+        allocate_buffer();
+    }
+    visitor.on_attribute("value", get_data_ptr_nc(), shape_size(m_shape) * m_element_type.size());
+    return true;
+}
+
+bool op::v0::Constant::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    auto output = outputs[0];
+    output->write(get_data_ptr(), output->get_size_in_bytes());
+    return true;
+}
+
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
 
 shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
 {
-    return std::make_shared<op::Constant>(m_element_type, m_shape, m_data->get_ptr());
+    return std::make_shared<op::Constant>(m_element_type, m_shape, get_data_ptr());
 }
 
-std::shared_ptr<Node> op::ScalarConstantLike::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node>
+    op::ScalarConstantLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
 }
@@ -615,7 +652,7 @@ void op::ScalarConstantLike::infer_element_type()
     m_element_type = get_input_element_type(0);
     if (nullptr == m_data)
     {
-        m_data.reset(new runtime::AlignedBuffer(m_element_type.size(), m_element_type.size()));
+        allocate_buffer();
         write_values(std::vector<double>(1, m_value));
     }
 }

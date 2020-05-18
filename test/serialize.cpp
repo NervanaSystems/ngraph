@@ -20,10 +20,12 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "ngraph/coordinate_transform.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/interpolate.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -230,7 +232,7 @@ TEST(serialize, passthrough)
         "SerializationTest",
         "Plain",
         "Hello, world!",
-        NodeVector{},
+        OutputVector{},
         std::vector<estuple>{estuple{element::f32, PartialShape{2, 3}},
                              estuple{element::i8, PartialShape{4, 5}}});
     auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),
@@ -351,7 +353,7 @@ TEST(serialize, opset1_softmax)
 
     shared_ptr<Function> g = deserialize(s);
     const auto g_result = g->get_results().at(0);
-    const auto g_softmax = g_result->input(0).get_source_output().get_node_shared_ptr();
+    const auto g_softmax = g_result->get_input_node_shared_ptr(0);
     EXPECT_TRUE(is_type<op::v1::Softmax>(g_softmax));
 }
 
@@ -368,7 +370,7 @@ TEST(serialize, opset1_gather)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_gather = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_gather = g_result->get_input_node_shared_ptr(0);
     EXPECT_TRUE(is_type<op::v1::Gather>(g_gather));
 }
 
@@ -384,7 +386,7 @@ TEST(serialize, opset1_product)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_red_prod = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_red_prod = g_result->get_input_node_shared_ptr(0);
     auto node = as_type_ptr<op::v1::ReduceProd>(g_red_prod);
     EXPECT_TRUE(node);
     EXPECT_EQ(node->get_keep_dims(), 1);
@@ -403,7 +405,7 @@ TEST(serialize, opset1_sum)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_red_sum = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_red_sum = g_result->get_input_node_shared_ptr(0);
     auto node = as_type_ptr<op::v1::ReduceSum>(g_red_sum);
     EXPECT_TRUE(node);
     EXPECT_EQ(node->get_keep_dims(), 1);
@@ -593,8 +595,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
 
     auto results = ResultVector{result0, result1};
     auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
-    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
-    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+    EXPECT_EQ(result0->get_output_shape(0), out0_shape);
+    EXPECT_EQ(result1->get_output_shape(0), out1_shape);
 
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -680,10 +682,10 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
 
     auto results = ResultVector{result0, result1};
     auto f = make_shared<Function>(results, ParameterVector{X, Y, M});
-    EXPECT_EQ(result0->output(0).get_shape(), out0_shape);
-    EXPECT_EQ(result1->output(0).get_shape(), out1_shape);
+    EXPECT_EQ(result0->get_output_shape(0), out0_shape);
+    EXPECT_EQ(result1->get_output_shape(0), out1_shape);
 
-    EXPECT_EQ(body->get_results()[0]->output(0).get_shape(), out0_shape);
+    EXPECT_EQ(body->get_results()[0]->get_output_shape(0), out0_shape);
 
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -719,7 +721,7 @@ TEST(serialize, opset1_strided_slice)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_strided_slice_v1 = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_strided_slice_v1 = g_result->get_input_node_shared_ptr(0);
     auto strided_slice_out = as_type_ptr<op::v1::StridedSlice>(g_strided_slice_v1);
 
     ASSERT_TRUE(strided_slice_out);
@@ -738,7 +740,7 @@ TEST(serialize, opset1_binary_convolution)
     const CoordinateDiff pads_begin{0, 0};
     const CoordinateDiff pads_end{0, 0};
     const Strides dilations{1, 1};
-    const std::string mode = "xnor-popcount";
+    auto mode = op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT;
     const float pad_value = 2.1f;
     const auto auto_pad = op::PadType::NOTSET;
 
@@ -751,7 +753,7 @@ TEST(serialize, opset1_binary_convolution)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_binary_conv = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_binary_conv = g_result->get_input_node_shared_ptr(0);
     auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
     ASSERT_TRUE(binary_conv_out);
 
@@ -763,6 +765,73 @@ TEST(serialize, opset1_binary_convolution)
               op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
     EXPECT_EQ(binary_conv_out->get_pad_value(), pad_value);
     EXPECT_EQ(binary_conv_out->get_auto_pad(), auto_pad);
+}
+
+TEST(serialize, opset1_interpolate)
+{
+    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+    op::InterpolateAttrs attrs;
+    attrs.axes = {2, 3};
+    attrs.mode = "linear";
+    attrs.align_corners = true;
+    attrs.antialias = false;
+    attrs.pads_begin = {0, 0, 0, 0};
+    attrs.pads_end = {0, 0, 0, 0};
+
+    auto op = make_shared<op::Interpolate>(image, output_shape, attrs);
+    auto result = make_shared<op::Result>(op);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_interpolate = g_result->get_input_node_shared_ptr(0);
+    auto g_op = as_type_ptr<op::Interpolate>(g_interpolate);
+    ASSERT_TRUE(g_op);
+    op::InterpolateAttrs g_attrs = g_op->get_attrs();
+    EXPECT_EQ(g_attrs.axes, attrs.axes);
+    EXPECT_EQ(g_attrs.mode, attrs.mode);
+    EXPECT_EQ(g_attrs.align_corners, attrs.align_corners);
+    EXPECT_EQ(g_attrs.antialias, attrs.antialias);
+    EXPECT_EQ(g_attrs.pads_begin, attrs.pads_begin);
+    EXPECT_EQ(g_attrs.pads_end, attrs.pads_end);
+}
+
+TEST(serialize, opset3_interpolate)
+{
+    using op::v3::Interpolate;
+    using InterpolateMode = op::v3::Interpolate::InterpolateMode;
+    using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
+    using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
+
+    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+    InterpolateAttrs attrs;
+    attrs.axes = {2, 3};
+    attrs.mode = InterpolateMode::linear;
+    attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
+    attrs.antialias = false;
+    attrs.pads_begin = {0, 0, 0, 0};
+    attrs.pads_end = {0, 0, 0, 0};
+
+    auto op = make_shared<Interpolate>(image, output_shape, attrs);
+    auto result = make_shared<op::Result>(op);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_interpolate = g_result->get_input_node_shared_ptr(0);
+    auto g_op = as_type_ptr<op::v3::Interpolate>(g_interpolate);
+    ASSERT_TRUE(g_op);
+    InterpolateAttrs g_attrs = g_op->get_attrs();
+    EXPECT_EQ(g_attrs.axes, attrs.axes);
+    EXPECT_EQ(g_attrs.mode, attrs.mode);
+    EXPECT_EQ(g_attrs.coordinate_transformation_mode, attrs.coordinate_transformation_mode);
+    EXPECT_EQ(g_attrs.antialias, attrs.antialias);
+    EXPECT_EQ(g_attrs.pads_begin, attrs.pads_begin);
+    EXPECT_EQ(g_attrs.pads_end, attrs.pads_end);
 }
 
 TEST(serialize, depth_to_space)
@@ -778,7 +847,7 @@ TEST(serialize, depth_to_space)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_depth_to_space = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_depth_to_space = g_result->get_input_node_shared_ptr(0);
     auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
     ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
@@ -798,7 +867,7 @@ TEST(serialize, space_to_depth)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_space_to_depth = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_space_to_depth = g_result->get_input_node_shared_ptr(0);
     auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
     ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
@@ -837,7 +906,7 @@ TEST(serialize, deformable_psroi_pooling)
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
-    auto g_def_psroi_pool = g_result->input(0).get_source_output().get_node_shared_ptr();
+    auto g_def_psroi_pool = g_result->get_input_node_shared_ptr(0);
     auto def_psroi_pool_out = as_type_ptr<op::v1::DeformablePSROIPooling>(g_def_psroi_pool);
 
     EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/util/logical_reduction_keep_dims.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -28,6 +29,12 @@ op::util::LogicalReductionKeepDims::LogicalReductionKeepDims(
     : LogicalReduction(arg, reduction_axes)
     , m_keep_dims{keep_dims}
 {
+}
+
+bool ngraph::op::util::LogicalReductionKeepDims::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("keep_dims", m_keep_dims);
+    return true;
 }
 
 void op::util::LogicalReductionKeepDims::validate_and_infer_types()
@@ -71,7 +78,7 @@ void op::util::LogicalReductionKeepDims::validate_and_infer_types()
             }
 
             std::vector<Dimension> dims;
-            for (size_t i = 0; i < size_t(input_rank); i++)
+            for (size_t i = 0; i < input_rank.get_length(); i++)
             {
                 if (reduction_axes.count(i) == 0)
                 {
