@@ -22,7 +22,12 @@ import numpy as np
 from ngraph.impl import Node, Shape
 from ngraph.impl.op import Constant, GetOutputElement, Parameter
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
-from ngraph.utils.input_validation import assert_list_of_ints
+from ngraph.utils.input_validation import (
+    assert_list_of_ints,
+    check_valid_attributes,
+    is_non_negative_value,
+    is_positive_value,
+)
 from ngraph.utils.node_factory import NodeFactory
 from ngraph.utils.types import (
     NodeInput,
@@ -2215,7 +2220,6 @@ def batch_norm_inference(
     :param name: The optional name of the output node.
     :return: The new node which performs BatchNormInference.
     """
-    # inputs = [as_node(gamma), as_node(beta), data, as_node(mean), as_node(variance)]
     inputs = as_nodes(gamma, beta, data, mean, variance)
     return _get_node_factory().create("BatchNormInference", inputs, {"epsilon": epsilon})
 
@@ -2788,7 +2792,7 @@ def bucketize(
     buckets: NodeInput,
     output_type: str = "i64",
     with_right_bound: bool = True,
-    name: str = None,
+    name: Optional[str] = None,
 ) -> Node:
     """Return a node which produces the Bucketize operation.
 
@@ -2808,7 +2812,7 @@ def bucketize(
 
 
 @nameable_op
-def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> Node:
+def range(start: Node, stop: NodeInput, step: NodeInput, name: Optional[str] = None) -> Node:
     """Return a node which produces the Range operation.
 
     :param start:  The start value of the generated range
@@ -2822,17 +2826,17 @@ def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> No
 
 @nameable_op
 def region_yolo(
-    input,  # type: Node
-    coords,  # type: int
-    classes,  # type: int
-    num,  # type: int
-    do_softmax,  # type: bool
-    mask,  # type: List[int]
-    axis,  # type: int
-    end_axis,  # type: int
-    anchors=None,  # type: List[float]
-    name=None,  # type: str
-):  # type: (...) -> Node
+    input: Node,
+    coords: int,
+    classes: int,
+    num: int,
+    do_softmax: bool,
+    mask: List[int],
+    axis: int,
+    end_axis: int,
+    anchors: List[float] = None,
+    name: Optional[str] = None,
+) -> Node:
     """Return a node which produces the RegionYolo operation.
 
     :param input:       Input data
@@ -2867,7 +2871,7 @@ def region_yolo(
 
 
 @nameable_op
-def reorg_yolo(input: Node, stride: List[int], name: str = None) -> Node:
+def reorg_yolo(input: Node, stride: List[int], name: Optional[str] = None) -> Node:
     """Return a node which produces the ReorgYolo operation.
 
     :param input:   Input data
@@ -2876,3 +2880,580 @@ def reorg_yolo(input: Node, stride: List[int], name: str = None) -> Node:
     :return: ReorgYolo node
     """
     return _get_node_factory().create("ReorgYolo", [input], {"stride": stride})
+
+
+@nameable_op
+def interpolate(
+    image: Node, output_shape: NodeInput, attrs: dict, name: Optional[str] = None
+) -> Node:
+    """Perform interpolation of independent slices in input tensor.
+
+    :param  image:         The node providing input tensor with data for interpolation.
+    :param  output_shape:  1D tensor describing output shape for spatial axes.
+    :param  attrs:         The dictionary containing key, value pairs for attributes.
+    :param  name:          Optional name for the output node.
+
+    Available attributes are:
+
+    * axes              Specify spatial dimension indices where interpolation is applied.
+                        Type: List of non-negative integer numbers.
+                        Required: yes.
+
+    * mode              Specifies type of interpolation.
+                        Range of values: one of {nearest, linear, cubic, area}
+                        Type: string
+                        Required: yes
+
+    * align_corners     A flag that specifies whether to align corners or not. True means the
+                        alignment is applied, False means the alignment isn't applied.
+                        Range of values: True or False. Default: True.
+                        Required: no
+
+    * antialias         A flag that specifies whether to perform anti-aliasing.
+                        Range of values: False - do not perform anti-aliasing
+                                         True - perform anti-aliasing
+                        Default value: False
+                        Required: no
+
+    * pads_begin        Specify the number of pixels to add to the beginning of the image being
+                        interpolated. A scalar that specifies padding for each spatial dimension.
+                        Range of values: list of non-negative integer numbers. Default value: 0
+                        Required: no
+
+    * pads_end          Specify the number of pixels to add to the beginning of the image being
+                        interpolated. A scalar that specifies padding for each spatial dimension.
+                        Range of values: list of non-negative integer numbers. Default value: 0
+                        Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'axes': [2, 3],
+            'mode': 'cubic',
+        }
+
+        attrs = {
+            'axes': [2, 3],
+            'mode': 'cubic',
+            'antialias': True,
+            'pads_begin': [2, 2, 2],
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing interpolation operation.
+    """
+    requirements = [
+        ("attrs.axes", True, np.integer, is_non_negative_value),
+        ("attrs.mode", True, np.str_, None),
+        ("attrs.align_corners", False, np.bool_, None),
+        ("attrs.antialias", False, np.bool_, None),
+        ("attrs.pads_begin", False, np.integer, is_non_negative_value),
+        ("attrs.pads_end", False, np.integer, is_non_negative_value),
+    ]
+
+    check_valid_attributes("Interpolate", attrs, requirements)
+
+    return _get_node_factory().create("Interpolate", [image, as_node(output_shape)], attrs)
+
+
+@nameable_op
+def prior_box(
+    layer_shape: Node, image_shape: NodeInput, attrs: dict, name: Optional[str] = None
+) -> Node:
+    """Generate prior boxes of specified sizes and aspect ratios across all dimensions.
+
+    :param  layer_shape:  Shape of layer for which prior boxes are computed.
+    :param  image_shape:  Shape of image to which prior boxes are scaled.
+    :param  attrs:        The dictionary containing key, value pairs for attributes.
+    :param  name:         Optional name for the output node.
+
+    Available attributes are:
+
+    * min_size          The minimum box size (in pixels).
+                        Range of values: positive floating point numbers
+                        Default value: []
+                        Required: no
+
+    * max_size          The maximum box size (in pixels).
+                        Range of values: positive floating point numbers
+                        Default value: []
+                        Required: no
+
+    * aspect_ratio      Aspect ratios of prior boxes.
+                        Range of values: set of positive floating point numbers
+                        Default value: []
+                        Required: no
+
+    * flip              The flag that denotes that each aspect_ratio is duplicated and flipped.
+                        Range of values: {True, False}
+                        Default value: False
+                        Required: no
+
+    * clip              The flag that denotes if each value in the output tensor should be clipped
+                        to [0,1] interval.
+                        Range of values: {True, False}
+                        Default value: False
+                        Required: no
+
+    * step              The distance between box centers.
+                        Range of values: floating point non-negative number
+                        Default value: 0
+                        Required: no
+
+    * offset            This is a shift of box respectively to top left corner.
+                        Range of values: floating point non-negative number
+                        Default value: None
+                        Required: yes
+
+    * variance          The variance denotes a variance of adjusting bounding boxes. The attribute
+                        could contain 0, 1 or 4 elements.
+                        Range of values: floating point positive numbers
+                        Default value: []
+                        Required: no
+
+    * scale_all_sizes   The flag that denotes type of inference.
+                        Range of values: False - max_size is ignored
+                                         True  - max_size is used
+                        Default value: True
+                        Required: no
+
+    * fixed_ratio       This is an aspect ratio of a box.
+                        Range of values: a list of positive floating-point numbers
+                        Default value: None
+                        Required: no
+
+    * fixed_size        This is an initial box size (in pixels).
+                        Range of values: a list of positive floating-point numbers
+                        Default value: None
+                        Required: no
+
+    * density           This is the square root of the number of boxes of each type.
+                        Range of values: a list of positive floating-point numbers
+                        Default value: None
+                        Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'offset': 85,
+        }
+
+        attrs = {
+            'offset': 85,
+            'flip': True,
+            'clip': True,
+            'fixed_size': [32, 64, 128]
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing prior box operation.
+    """
+    requirements = [
+        ("attrs.offset", True, np.floating, is_non_negative_value),
+        ("attrs.min_size", False, np.floating, is_positive_value),
+        ("attrs.max_size", False, np.floating, is_positive_value),
+        ("attrs.aspect_ratio", False, np.floating, is_positive_value),
+        ("attrs.flip", False, np.bool_, None),
+        ("attrs.clip", False, np.bool_, None),
+        ("attrs.step", False, np.floating, is_non_negative_value),
+        ("attrs.variance", False, np.floating, is_positive_value),
+        ("attrs.scale_all_sizes", False, np.bool_, None),
+        ("attrs.fixed_ratio", False, np.floating, is_positive_value),
+        ("attrs.fixed_size", False, np.floating, is_positive_value),
+        ("attrs.density", False, np.floating, is_positive_value),
+    ]
+
+    check_valid_attributes("PriorBox", attrs, requirements)
+
+    return _get_node_factory().create("PriorBox", [layer_shape, as_node(image_shape)], attrs)
+
+
+@nameable_op
+def prior_box_clustered(
+    output_size: Node, image_size: NodeInput, attrs: dict, name: Optional[str] = None
+) -> Node:
+    """Generate prior boxes of specified sizes normalized to the input image size.
+
+    :param  output_size:    1D tensor with two integer elements [height, width]. Specifies the
+                            spatial size of generated grid with boxes.
+    :param  image_size:     1D tensor with two integer elements [image_height, image_width] that
+                            specifies shape of the image for which boxes are generated.
+    :param  attrs:          The dictionary containing key, value pairs for attributes.
+    :param  name:           Optional name for the output node.
+
+     Available attributes are:
+
+    * widths        Specifies desired boxes widths in pixels.
+                    Range of values: floating point positive numbers.
+                    Default value: 1.0
+                    Required: no
+
+    * heights       Specifies desired boxes heights in pixels.
+                    Range of values: floating point positive numbers.
+                    Default value: 1.0
+                    Required: no
+
+    * clip          The flag that denotes if each value in the output tensor should be clipped
+                    within [0,1].
+                    Range of values: {True, False}
+                    Default value: True
+                    Required: no
+
+    * step_widths   The distance between box centers.
+                    Range of values: floating point positive number
+                    Default value: 0.0
+                    Required: no
+
+    * step_heights  The distance between box centers.
+                    Range of values: floating point positive number
+                    Default value: 0.0
+                    Required: no
+
+    * offset        The shift of box respectively to the top left corner.
+                    Range of values: floating point positive number
+                    Default value: None
+                    Required: yes
+
+    * variance      Denotes a variance of adjusting bounding boxes.
+                    Range of values: floating point positive numbers
+                    Default value: []
+                    Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'offset': 85,
+        }
+
+        attrs = {
+            'offset': 85,
+            'clip': False,
+            'step_widths': [1.5, 2.0, 2.5]
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing PriorBoxClustered operation.
+    """
+    requirements = [
+        ("attrs.widths", False, np.floating, is_positive_value),
+        ("attrs.heights", False, np.floating, is_positive_value),
+        ("attrs.clip", False, np.bool_, None),
+        ("attrs.step_widths", False, np.floating, is_positive_value),
+        ("attrs.step_heights", False, np.floating, is_positive_value),
+        ("attrs.offset", True, np.floating, is_positive_value),
+        ("attrs.variance", False, np.floating, is_positive_value),
+    ]
+
+    check_valid_attributes("PriorBoxClustered", attrs, requirements)
+
+    return _get_node_factory().create(
+        "PriorBoxClustered", [output_size, as_node(image_size)], attrs
+    )
+
+
+@nameable_op
+def detection_output(
+    box_logits: Node,
+    class_preds: Node,
+    proposals: Node,
+    attrs: dict,
+    aux_class_preds: NodeInput = None,
+    aux_box_preds: NodeInput = None,
+    name: Optional[str] = None,
+) -> Node:
+    """Generate the detection output using information on location and confidence predictions.
+
+    :param  box_logits:         The 2D input tensor with box logits.
+    :param  class_preds:        The 2D input tensor with class predictions.
+    :param  proposals:          The 3D input tensor with proposals.
+    :param  attrs:              The dictionary containing key, value pairs for attributes.
+    :param  aux_class_preds:    The 2D input tensor with additional class predictions information.
+    :param  aux_box_preds:      The 2D input tensor with additional box predictions information.
+    :param  name:               Optional name for the output node.
+
+     Available attributes are:
+
+    * num_classes       The number of classes to be predicted.
+                        Range of values: positive integer number
+                        Default value: None
+                        Required: yes
+
+    * background_label_id   The background label id.
+                            Range of values: integer value
+                            Default value: 0
+                            Required: no
+
+    * top_k                 Maximum number of results to be kept per batch after NMS step.
+                            Range of values: integer value
+                            Default value: -1
+                            Required: no
+
+    * variance_encoded_in_target    The flag that denotes if variance is encoded in target.
+                                    Range of values: {False, True}
+                                    Default value: False
+                                    Required: no
+
+    * keep_top_k            Maximum number of bounding boxes per batch to be kept after NMS step.
+                            Range of values: integer values
+                            Default value: None
+                            Required: yes
+
+    * code_type             The type of coding method for bounding boxes.
+                            Range of values: {'caffe.PriorBoxParameter.CENTER_SIZE',
+                                             'caffe.PriorBoxParameter.CORNER'}
+                            Default value: 'caffe.PriorBoxParameter.CORNER'
+                            Required: no
+
+    * share_location        The flag that denotes if bounding boxes are shared among different
+                            classes.
+                            Range of values: {True, False}
+                            Default value: True
+                            Required: no
+
+    * nms_threshold         The threshold to be used in the NMS stage.
+                            Range of values: floating point value
+                            Default value: None
+                            Required: yes
+
+    * confidence_threshold  Specifies the minimum confidence threshold for detection boxes to be
+                            considered.
+                            Range of values: floating point value
+                            Default value: 0
+                            Required: no
+
+    * clip_after_nms        The flag that denotes whether to perform clip bounding boxes after
+                            non-maximum suppression or not.
+                            Range of values: {True, False}
+                            Default value: False
+                            Required: no
+
+    * clip_before_nms       The flag that denotes whether to perform clip bounding boxes before
+                            non-maximum suppression or not.
+                            Range of values: {True, False}
+                            Default value: False
+                            Required: no
+
+    * decrease_label_id     The flag that denotes how to perform NMS.
+                            Range of values: False - perform NMS like in Caffe*.
+                                             True  - perform NMS like in MxNet*.
+
+                            Default value: False
+                            Required: no
+
+    * normalized            The flag that denotes whether input tensors with boxes are normalized.
+                            Range of values: {True, False}
+                            Default value: False
+                            Required: no
+
+    * input_height          The input image height.
+                            Range of values: positive integer number
+                            Default value: 1
+                            Required: no
+
+    * input_width           The input image width.
+                            Range of values: positive integer number
+                            Default value: 1
+                            Required: no
+
+    * objectness_score      The threshold to sort out confidence predictions.
+                            Range of values: non-negative float number
+                            Default value: 0
+                            Required: no
+
+    Example of attribute dictionary:
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'num_classes': 85,
+            'keep_top_k': [1, 2, 3],
+            'nms_threshold': 0.645,
+        }
+
+        attrs = {
+            'num_classes': 85,
+            'keep_top_k': [1, 2, 3],
+            'nms_threshold': 0.645,
+            'normalized': True,
+            'clip_before_nms': True,
+            'input_height': [32],
+            'input_width': [32],
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing DetectionOutput operation.
+    """
+    requirements = [
+        ("attrs.num_classes", True, np.integer, is_positive_value),
+        ("attrs.background_label_id", False, np.integer, None),
+        ("attrs.top_k", False, np.integer, None),
+        ("attrs.variance_encoded_in_target", False, np.bool_, None),
+        ("attrs.keep_top_k", True, np.integer, None),
+        ("attrs.code_type", False, np.str_, None),
+        ("attrs.share_location", False, np.bool_, None),
+        ("attrs.nms_threshold", True, np.floating, None),
+        ("attrs.confidence_threshold", False, np.floating, None),
+        ("attrs.clip_after_nms", False, np.bool_, None),
+        ("attrs.clip_before_nms", False, np.bool_, None),
+        ("attrs.decrease_label_id", False, np.bool_, None),
+        ("attrs.normalized", False, np.bool_, None),
+        ("attrs.input_height", False, np.integer, is_positive_value),
+        ("attrs.input_width", False, np.integer, is_positive_value),
+        ("attrs.objectness_score", False, np.floating, is_non_negative_value),
+    ]
+
+    check_valid_attributes("DetectionOutput", attrs, requirements)
+
+    inputs = [box_logits, class_preds, proposals]
+    if aux_class_preds is not None:
+        inputs.append(aux_class_preds)
+    if aux_box_preds is not None:
+        inputs.append(aux_box_preds)
+
+    return _get_node_factory().create("DetectionOutput", inputs, attrs)
+
+
+@nameable_op
+def proposal(
+    class_probs: Node,
+    box_logits: Node,
+    image_shape: NodeInput,
+    attrs: dict,
+    name: Optional[str] = None,
+) -> Node:
+    """Filter bounding boxes and outputs only those with the highest prediction confidence.
+
+    :param  class_probs:        4D input floating point tensor with class prediction scores.
+    :param  box_logits:         4D input floating point tensor with box logits.
+    :param  image_shape:        The 1D input tensor with 3 or 4 elements describing image shape.
+    :param  attrs:              The dictionary containing key, value pairs for attributes.
+    :param  name:               Optional name for the output node.
+
+    * base_size     The size of the anchor to which scale and ratio attributes are applied.
+                    Range of values: a positive unsigned integer number
+                    Default value: None
+                    Required: yes
+
+    * pre_nms_topn  The number of bounding boxes before the NMS operation.
+                    Range of values: a positive unsigned integer number
+                    Default value: None
+                    Required: yes
+
+    * post_nms_topn The number of bounding boxes after the NMS operation.
+                    Range of values: a positive unsigned integer number
+                    Default value: None
+                    Required: yes
+
+    * nms_thresh    The minimum value of the proposal to be taken into consideration.
+                    Range of values: a positive floating-point number
+                    Default value: None
+                    Required: yes
+
+    * feat_stride   The step size to slide over boxes (in pixels).
+                    Range of values: a positive unsigned integer
+                    Default value: None
+                    Required: yes
+
+    * min_size      The minimum size of box to be taken into consideration.
+                    Range of values: a positive unsigned integer number
+                    Default value: None
+                    Required: yes
+
+    * ratio         The ratios for anchor generation.
+                    Range of values: a list of floating-point numbers
+                    Default value: None
+                    Required: yes
+
+    * scale         The scales for anchor generation.
+                    Range of values: a list of floating-point numbers
+                    Default value: None
+                    Required: yes
+
+    * clip_before_nms   The flag that specifies whether to perform clip bounding boxes before
+                        non-maximum suppression or not.
+                        Range of values: True or False
+                        Default value: True
+                        Required: no
+
+    * clip_after_nms    The flag that specifies whether to perform clip bounding boxes after
+                        non-maximum suppression or not.
+                        Range of values: True or False
+                        Default value: False
+                        Required: no
+
+    * normalize     The flag that specifies whether to perform normalization of output boxes to
+                    [0,1] interval or not.
+                    Range of values: True or False
+                    Default value: False
+                    Required: no
+
+    * box_size_scale    Specifies the scale factor applied to logits of box sizes before decoding.
+                        Range of values: a positive floating-point number
+                        Default value: 1.0
+                        Required: no
+
+    * box_coordinate_scale  Specifies the scale factor applied to logits of box coordinates
+                            before decoding.
+                            Range of values: a positive floating-point number
+                            Default value: 1.0
+                            Required: no
+
+    * framework     Specifies how the box coordinates are calculated.
+                    Range of values: "" (empty string) - calculate box coordinates like in Caffe*
+                                     tensorflow - calculate box coordinates like in the TensorFlow*
+                                                  Object Detection API models
+                    Default value: "" (empty string)
+                    Required: no
+
+    Example of attribute dictionary:
+
+    .. code-block:: python
+
+        # just required ones
+        attrs = {
+            'base_size': 85,
+            'pre_nms_topn': 10,
+            'post_nms_topn': 20,
+            'nms_thresh': 0.34,
+            'feat_stride': 16,
+            'min_size': 32,
+            'ratio': [0.1, 1.5, 2.0, 2.5],
+            'scale': [2, 3, 3, 4],
+        }
+
+    Optional attributes which are absent from dictionary will be set with corresponding default.
+
+    :return: Node representing Proposal operation.
+    """
+    requirements = [
+        ("attrs.base_size", True, np.unsignedinteger, is_positive_value),
+        ("attrs.pre_nms_topn", True, np.unsignedinteger, is_positive_value),
+        ("attrs.post_nms_topn", True, np.unsignedinteger, is_positive_value),
+        ("attrs.nms_thresh", True, np.floating, is_positive_value),
+        ("attrs.feat_stride", True, np.unsignedinteger, is_positive_value),
+        ("attrs.min_size", True, np.unsignedinteger, is_positive_value),
+        ("attrs.ratio", True, np.floating, None),
+        ("attrs.scale", True, np.floating, None),
+        ("attrs.clip_before_nms", False, np.bool_, None),
+        ("attrs.clip_after_nms", False, np.bool_, None),
+        ("attrs.normalize", False, np.bool_, None),
+        ("attrs.box_size_scale", False, np.floating, is_positive_value),
+        ("attrs.box_coordinate_scale", False, np.floating, is_positive_value),
+        ("attrs.framework", False, np.str_, None),
+    ]
+
+    check_valid_attributes("Proposal", attrs, requirements)
+
+    return _get_node_factory().create(
+        "Proposal", [class_probs, box_logits, as_node(image_shape)], attrs
+    )

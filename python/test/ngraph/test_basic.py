@@ -266,3 +266,10 @@ def test_backend_config():
     dummy_config = {"dummy_option": "dummy_value"}
     # Expect no throw
     ng.runtime(backend_name=test.BACKEND_NAME).set_config(dummy_config)
+
+
+def test_result():
+    node = [[11, 10], [1, 8], [3, 4]]
+
+    result = test.ngraph.util.run_op_node([node], ng.ops.result)
+    assert np.allclose(result, node)
