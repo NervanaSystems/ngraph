@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-#include "variable.hpp"
+#include "ngraph/op/util/variable.hpp"
 
 namespace ngraph
 {
@@ -25,6 +25,7 @@ namespace ngraph
     {
         namespace v3
         {
+            /// \brief ReadValue operation creates the variable with `variable_id` and returns value of this variable.
             class NGRAPH_API ReadValue : public Op
             {
             public:
@@ -32,7 +33,11 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReadValue() = default;
 
-                ReadValue(const Output<Node>& new_value, std::string variable_id);
+                /// \brief Constructs a ReadValue operation.
+                ///
+                /// \param new_value   Node that produces the input tensor.
+                /// \param variable_id identificator of the variable to create.
+                ReadValue(const Output<Node>& new_value, const std::string& variable_id);
 
                 void validate_and_infer_types() override;
 
@@ -42,10 +47,10 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 std::string get_variable_id() { return m_variable_id; }
-                std::shared_ptr<::ngraph::v3::Variable> get_variable() { return m_variable; }
+                std::shared_ptr<ngraph::Variable> get_variable() { return m_variable; }
             private:
                 std::string m_variable_id;
-                std::shared_ptr<::ngraph::v3::Variable> m_variable;
+                std::shared_ptr<ngraph::Variable> m_variable;
             };
         }
         using v3::ReadValue;

@@ -15,14 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/op/read_value.hpp"
-#include "ngraph/op/variable.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::ReadValue::type_info;
 
-op::ReadValue::ReadValue(const Output<Node>& new_value, std::string variable_id)
+op::ReadValue::ReadValue(const Output<Node>& new_value, const std::string& variable_id)
     : Op({new_value})
     , m_variable_id(variable_id)
 {
@@ -34,8 +33,7 @@ void op::ReadValue::validate_and_infer_types()
     auto arg_t = get_input_element_type(0);
     auto output_shape = get_input_partial_shape(0);
 
-    // NODE_VALIDATION_CHECK(this, m_variable == nullptr, "TODO: error message");
-    m_variable = std::make_shared<::v3::Variable>(output_shape, arg_t, m_variable_id);
+    m_variable = std::make_shared<Variable>(output_shape, arg_t, m_variable_id);
     set_output_type(0, arg_t, output_shape);
 }
 

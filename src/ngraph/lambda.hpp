@@ -41,12 +41,16 @@ namespace ngraph
         /// \param inputs Tensors for the inputs. One for each inputs.
         bool evaluate(const HostTensorVector& output_tensors,
                       const HostTensorVector& input_tensors);
-
+        /// Set function's leaf nodes
+        void set_leaf_nodes(const NodeVector& nodes) { m_leaf_nodes = nodes; }
+        /// Return a list of function's leaf nodes
+        NodeVector get_leaf_nodes() const { return m_leaf_nodes; }
     protected:
         Lambda(const ResultVector& results, const ParameterVector& parameters);
         Lambda(const OutputVector& results, const ParameterVector& parameters);
 
         ResultVector m_results;
         ParameterVector m_parameters;
+        NodeVector m_leaf_nodes;
     };
 }

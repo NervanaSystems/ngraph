@@ -129,7 +129,7 @@ std::shared_ptr<Function>
     }
 
     auto function = std::make_shared<Function>(new_results, new_parameters);
-    function->set_assign_nodes(new_assign_nodes);
+    function->set_leaf_nodes(new_assign_nodes);
     if (constant_folding)
     {
         ngraph::pass::ConstantFolding().run_on_function(function);

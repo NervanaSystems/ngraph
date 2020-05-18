@@ -110,9 +110,9 @@ std::vector<shared_ptr<Node>> Function::get_ordered_ops() const
     {
         nodes.push_back(param);
     }
-    for (auto& assign : get_assign_nodes())
+    for (auto& leaf : get_leaf_nodes())
     {
-        nodes.push_back(assign);
+        nodes.push_back(leaf);
     }
     return m_topological_sorter(nodes);
 }

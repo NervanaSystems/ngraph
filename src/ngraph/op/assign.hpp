@@ -17,7 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/variable.hpp"
+#include "ngraph/op/util/variable.hpp"
 
 namespace ngraph
 {
@@ -25,6 +25,7 @@ namespace ngraph
     {
         namespace v3
         {
+            /// \brief Assign operation sets an input value to the variable with `variable_id`
             class NGRAPH_API Assign : public Op
             {
             public:
@@ -32,7 +33,11 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Assign() = default;
 
-                Assign(const Output<Node>& new_value, std::string variable_id);
+                /// \brief Constructs a Assign operation.
+                ///
+                /// \param new_value   Node that produces the input tensor.
+                /// \param variable_id identificator of the variable to be updated.
+                Assign(const Output<Node>& new_value, const std::string& variable_id);
 
                 void validate_and_infer_types() override;
 
@@ -43,10 +48,10 @@ namespace ngraph
 
             private:
                 std::string m_variable_id;
-                std::shared_ptr<ngraph::v3::Variable> m_variable;
+                std::shared_ptr<ngraph::Variable> m_variable;
 
-                void dfs(const std::shared_ptr<Node>& node,
-                         const std::shared_ptr<ngraph::v3::Variable>& variable);
+                void find_variable(const std::shared_ptr<Node>& node,
+                                   const std::shared_ptr<ngraph::Variable>& variable);
             };
         }
         using v3::Assign;

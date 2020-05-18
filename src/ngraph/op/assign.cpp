@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/assign.hpp"
 #include <ops.hpp>
+#include "ngraph/op/assign.hpp"
 #include "ngraph/op/read_value.hpp"
 
 using namespace std;
@@ -23,10 +23,10 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::v3::Assign::type_info;
 
-void op::v3::Assign::dfs(const std::shared_ptr<Node>& node,
-                         const std::shared_ptr<ngraph::v3::Variable>& variable)
+void op::v3::Assign::find_variable(const std::shared_ptr<Node>& node,
+                                   const std::shared_ptr<ngraph::Variable>& variable)
 {
-    for (auto& input : node->inputs())
+    for (const auto& input : node->inputs())
     {
         auto input_value_node = input.get_source_output().get_node_shared_ptr();
         if (auto read_value = as_type_ptr<op::v3::ReadValue>(input_value_node))
@@ -34,11 +34,11 @@ void op::v3::Assign::dfs(const std::shared_ptr<Node>& node,
             if (read_value->get_variable_id() == m_variable_id)
                 m_variable = read_value->get_variable();
         }
-        dfs(input_value_node, variable);
+        find_variable(input_value_node, variable);
     }
 }
 
-op::v3::Assign::Assign(const Output<Node>& new_value, std::string variable_id)
+op::v3::Assign::Assign(const Output<Node>& new_value, const std::string& variable_id)
     : Op({new_value})
     , m_variable_id(variable_id)
 {
@@ -53,13 +53,13 @@ void op::v3::Assign::validate_and_infer_types()
     if (!m_variable)
     {
         auto node = value.get_node_shared_ptr();
-        dfs(node, m_variable);
-        NODE_VALIDATION_CHECK(this, m_variable != nullptr, "TODO: error message");
+        find_variable(node, m_variable);
+        NODE_VALIDATION_CHECK(this, m_variable != nullptr, "Can't find variable with id = ", m_variable_id);
     }
 
-    NODE_VALIDATION_CHECK(this, m_variable_id == m_variable->get_id(), "TODO: error message");
-    NODE_VALIDATION_CHECK(this, arg_t == m_variable->get_type(), "TODO: error message");
-    NODE_VALIDATION_CHECK(this, output_shape == m_variable->get_shape(), "TODO: error message");
+    NODE_VALIDATION_CHECK(this, m_variable_id == m_variable->get_id(), "Variables identifiers are inconsistent.");
+    NODE_VALIDATION_CHECK(this, arg_t == m_variable->get_type(), "Variables types are inconsistent.");
+    NODE_VALIDATION_CHECK(this, output_shape == m_variable->get_shape(), "Variables output shapes are inconsistent.");
     m_variable->update(output_shape, arg_t, m_variable_id);
 
     set_output_type(0, arg_t, output_shape);
