@@ -49,6 +49,93 @@ typename std::enable_if<std::is_integral<T>::value>::type
     ASSERT_EQ(values_out, values_expected);
 }
 
+TEST(constant_folding, acosh)
+{
+    Shape shape_in{2, 4, 1};
+
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    vector<float> expected;
+    for (float f : values_in)
+    {
+        expected.push_back(std::acosh(f));
+    }
+    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto acosh = make_shared<op::Acosh>(constant);
+    auto f = make_shared<Function>(acosh, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    EXPECT_EQ(count_ops_of_type<op::Acosh>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(f->get_results().size(), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results()[0]->get_argument(0));
+    EXPECT_TRUE(new_const);
+
+    auto values_out = new_const->get_vector<float>();
+    EXPECT_TRUE(test::all_close_f(expected, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(constant_folding, asinh)
+{
+    Shape shape_in{2, 4, 1};
+
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    vector<float> expected;
+    for (float f : values_in)
+    {
+        expected.push_back(std::asinh(f));
+    }
+    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto asinh = make_shared<op::Asinh>(constant);
+    auto f = make_shared<Function>(asinh, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    EXPECT_EQ(count_ops_of_type<op::Asinh>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(f->get_results().size(), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results()[0]->get_argument(0));
+    EXPECT_TRUE(new_const);
+
+    auto values_out = new_const->get_vector<float>();
+    EXPECT_TRUE(test::all_close_f(expected, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
+TEST(constant_folding, atanh)
+{
+    Shape shape_in{2, 4, 1};
+
+    vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
+    vector<float> expected;
+    for (float f : values_in)
+    {
+        expected.push_back(std::atanh(f));
+    }
+    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
+    auto atanh = make_shared<op::Atanh>(constant);
+    auto f = make_shared<Function>(atanh, ParameterVector{});
+
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::ConstantFolding>();
+    pass_manager.run_passes(f);
+
+    EXPECT_EQ(count_ops_of_type<op::Atanh>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(f->get_results().size(), 1);
+
+    auto new_const = as_type_ptr<op::Constant>(f->get_results()[0]->get_argument(0));
+    EXPECT_TRUE(new_const);
+
+    auto values_out = new_const->get_vector<float>();
+    EXPECT_TRUE(test::all_close_f(expected, values_out, MIN_FLOAT_TOLERANCE_BITS));
+}
+
 TEST(constant_folding, constant_squeeze)
 {
     Shape shape_in{2, 4, 1};
