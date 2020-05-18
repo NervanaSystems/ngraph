@@ -1672,7 +1672,7 @@ def convolution(
     """
     return _get_node_factory().create(
         "Convolution",
-        [data, filters],
+        as_nodes(data, filters),
         {
             "strides": strides,
             "pads_begin": pads_begin,
