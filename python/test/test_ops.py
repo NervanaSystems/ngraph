@@ -32,73 +32,71 @@ import test
 
 def binary_op(op_str, a, b):
 
-    if op_str == '+':
+    if op_str == "+":
         return a + b
-    elif op_str == 'Add':
+    elif op_str == "Add":
         return ng.add(a, b)
-    elif op_str == '-':
+    elif op_str == "-":
         return a - b
-    elif op_str == 'Sub':
+    elif op_str == "Sub":
         return ng.subtract(a, b)
-    elif op_str == '*':
+    elif op_str == "*":
         return a * b
-    elif op_str == 'Mul':
+    elif op_str == "Mul":
         return ng.multiply(a, b)
-    elif op_str == '/':
+    elif op_str == "/":
         return a / b
-    elif op_str == 'Div':
+    elif op_str == "Div":
         return ng.divide(a, b)
-    elif op_str == 'Dot':
-        return Dot(a, b)
-    elif op_str == 'Equal':
+    elif op_str == "Equal":
         return ng.equal(a, b)
-    elif op_str == 'Greater':
+    elif op_str == "Greater":
         return ng.greater(a, b)
-    elif op_str == 'GreaterEq':
+    elif op_str == "GreaterEq":
         return ng.greater_equal(a, b)
-    elif op_str == 'Less':
+    elif op_str == "Less":
         return ng.less(a, b)
-    elif op_str == 'LessEq':
+    elif op_str == "LessEq":
         return ng.less_equal(a, b)
-    elif op_str == 'Maximum':
+    elif op_str == "Maximum":
         return ng.maximum(a, b)
-    elif op_str == 'Minimum':
+    elif op_str == "Minimum":
         return ng.minimum(a, b)
-    elif op_str == 'NotEqual':
+    elif op_str == "NotEqual":
         return ng.not_equal(a, b)
-    elif op_str == 'Power':
+    elif op_str == "Power":
         return ng.power(a, b)
 
 
 def binary_op_ref(op_str, a, b):
 
-    if op_str == '+' or op_str == 'Add':
+    if op_str == "+" or op_str == "Add":
         return a + b
-    elif op_str == '-' or op_str == 'Sub':
+    elif op_str == "-" or op_str == "Sub":
         return a - b
-    elif op_str == '*' or op_str == 'Mul':
+    elif op_str == "*" or op_str == "Mul":
         return a * b
-    elif op_str == '/' or op_str == 'Div':
+    elif op_str == "/" or op_str == "Div":
         return a / b
-    elif op_str == 'Dot':
+    elif op_str == "Dot":
         return np.dot(a, b)
-    elif op_str == 'Equal':
+    elif op_str == "Equal":
         return np.equal(a, b)
-    elif op_str == 'Greater':
+    elif op_str == "Greater":
         return np.greater(a, b)
-    elif op_str == 'GreaterEq':
+    elif op_str == "GreaterEq":
         return np.greater_equal(a, b)
-    elif op_str == 'Less':
+    elif op_str == "Less":
         return np.less(a, b)
-    elif op_str == 'LessEq':
+    elif op_str == "LessEq":
         return np.less_equal(a, b)
-    elif op_str == 'Maximum':
+    elif op_str == "Maximum":
         return np.maximum(a, b)
-    elif op_str == 'Minimum':
+    elif op_str == "Minimum":
         return np.minimum(a, b)
-    elif op_str == 'NotEqual':
+    elif op_str == "NotEqual":
         return np.not_equal(a, b)
-    elif op_str == 'Power':
+    elif op_str == "Power":
         return np.power(a, b)
 
 
@@ -109,7 +107,7 @@ def binary_op_exec(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function([binary_op(op_str, A, B)], parameter_list, 'test')
+    function = Function([binary_op(op_str, A, B)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -139,7 +137,7 @@ def binary_op_comparison(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function([binary_op(op_str, A, B)], parameter_list, 'test')
+    function = Function([binary_op(op_str, A, B)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -163,67 +161,67 @@ def binary_op_comparison(op_str):
 
 
 def test_add():
-    binary_op_exec('+')
+    binary_op_exec("+")
 
 
 def test_add_op():
-    binary_op_exec('Add')
+    binary_op_exec("Add")
 
 
 def test_sub():
-    binary_op_exec('-')
+    binary_op_exec("-")
 
 
 def test_sub_op():
-    binary_op_exec('Sub')
+    binary_op_exec("Sub")
 
 
 def test_mul():
-    binary_op_exec('*')
+    binary_op_exec("*")
 
 
 def test_mul_op():
-    binary_op_exec('Mul')
+    binary_op_exec("Mul")
 
 
 def test_div():
-    binary_op_exec('/')
+    binary_op_exec("/")
 
 
 def test_div_op():
-    binary_op_exec('Div')
+    binary_op_exec("Div")
 
 
 def test_maximum():
-    binary_op_exec('Maximum')
+    binary_op_exec("Maximum")
 
 
 def test_minimum():
-    binary_op_exec('Minimum')
+    binary_op_exec("Minimum")
 
 
 def test_power():
-    binary_op_exec('Power')
+    binary_op_exec("Power")
 
 
 def test_greater():
-    binary_op_comparison('Greater')
+    binary_op_comparison("Greater")
 
 
 def test_greater_eq():
-    binary_op_comparison('GreaterEq')
+    binary_op_comparison("GreaterEq")
 
 
 def test_less():
-    binary_op_comparison('Less')
+    binary_op_comparison("Less")
 
 
 def test_less_eq():
-    binary_op_comparison('LessEq')
+    binary_op_comparison("LessEq")
 
 
 def test_not_equal():
-    binary_op_comparison('NotEqual')
+    binary_op_comparison("NotEqual")
 
 
 def test_add_with_mul():
@@ -234,7 +232,7 @@ def test_add_with_mul():
     B = Parameter(element_type, shape)
     C = Parameter(element_type, shape)
     parameter_list = [A, B, C]
-    function = Function([ng.multiply(ng.add(A, B), C)], parameter_list, 'test')
+    function = Function([ng.multiply(ng.add(A, B), C)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -261,80 +259,80 @@ def test_add_with_mul():
 
 
 def unary_op(op_str, a):
-    if op_str == 'Abs':
+    if op_str == "Abs":
         return ng.abs(a)
-    elif op_str == 'Acos':
+    elif op_str == "Acos":
         return ng.acos(a)
-    elif op_str == 'Asin':
+    elif op_str == "Asin":
         return ng.asin(a)
-    elif op_str == 'Atan':
+    elif op_str == "Atan":
         return ng.atan(a)
-    elif op_str == 'Ceiling':
+    elif op_str == "Ceiling":
         return ng.ceiling(a)
-    elif op_str == 'Cos':
+    elif op_str == "Cos":
         return ng.cos(a)
-    elif op_str == 'Cosh':
+    elif op_str == "Cosh":
         return ng.cosh(a)
-    elif op_str == 'Floor':
+    elif op_str == "Floor":
         return ng.floor(a)
-    elif op_str == 'log':
+    elif op_str == "log":
         return ng.log(a)
-    elif op_str == 'exp':
+    elif op_str == "exp":
         return ng.exp(a)
-    elif op_str == 'negative':
+    elif op_str == "negative":
         return ng.negative(a)
-    elif op_str == 'Reverse':
-        return ng.reverse(a, np.array([1]), 'index')
-    elif op_str == 'Sign':
+    elif op_str == "Reverse":
+        return ng.reverse(a, np.array([1]), "index")
+    elif op_str == "Sign":
         return ng.sign(a)
-    elif op_str == 'Sin':
+    elif op_str == "Sin":
         return ng.sin(a)
-    elif op_str == 'Sinh':
+    elif op_str == "Sinh":
         return ng.sinh(a)
-    elif op_str == 'Sqrt':
+    elif op_str == "Sqrt":
         return ng.sqrt(a)
-    elif op_str == 'Tan':
+    elif op_str == "Tan":
         return ng.tan(a)
-    elif op_str == 'Tanh':
+    elif op_str == "Tanh":
         return ng.tanh(a)
 
 
 def unary_op_ref(op_str, a):
-    if op_str == 'Abs':
+    if op_str == "Abs":
         return np.abs(a)
-    elif op_str == 'Acos':
+    elif op_str == "Acos":
         return np.arccos(a)
-    elif op_str == 'Asin':
+    elif op_str == "Asin":
         return np.arcsin(a)
-    elif op_str == 'Atan':
+    elif op_str == "Atan":
         return np.arctan(a)
-    elif op_str == 'Ceiling':
+    elif op_str == "Ceiling":
         return np.ceil(a)
-    elif op_str == 'Cos':
+    elif op_str == "Cos":
         return np.cos(a)
-    elif op_str == 'Cosh':
+    elif op_str == "Cosh":
         return np.cosh(a)
-    elif op_str == 'Floor':
+    elif op_str == "Floor":
         return np.floor(a)
-    elif op_str == 'log':
+    elif op_str == "log":
         return np.log(a)
-    elif op_str == 'exp':
+    elif op_str == "exp":
         return np.exp(a)
-    elif op_str == 'negative':
+    elif op_str == "negative":
         return np.negative(a)
-    elif op_str == 'Reverse':
+    elif op_str == "Reverse":
         return np.fliplr(a)
-    elif op_str == 'Sign':
+    elif op_str == "Sign":
         return np.sign(a)
-    elif op_str == 'Sin':
+    elif op_str == "Sin":
         return np.sin(a)
-    elif op_str == 'Sinh':
+    elif op_str == "Sinh":
         return np.sinh(a)
-    elif op_str == 'Sqrt':
+    elif op_str == "Sqrt":
         return np.sqrt(a)
-    elif op_str == 'Tan':
+    elif op_str == "Tan":
         return np.tan(a)
-    elif op_str == 'Tanh':
+    elif op_str == "Tanh":
         return np.tanh(a)
 
 
@@ -347,7 +345,7 @@ def unary_op_exec(op_str, input_list):
     shape_np = np.array(input_list).shape
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function([unary_op(op_str, A)], parameter_list, 'test')
+    function = Function([unary_op(op_str, A)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -369,110 +367,109 @@ def unary_op_exec(op_str, input_list):
 
 def test_abs():
     input_list = [-1, 0, 1, 2]
-    op_str = 'Abs'
+    op_str = "Abs"
     unary_op_exec(op_str, input_list)
 
 
 def test_acos():
     input_list = [-1, 0, 0.5, 1]
-    op_str = 'Acos'
+    op_str = "Acos"
     unary_op_exec(op_str, input_list)
 
 
 def test_asin():
     input_list = [-1, 0, 0.5, 1]
-    op_str = 'Asin'
+    op_str = "Asin"
     unary_op_exec(op_str, input_list)
 
 
 def test_atan():
     input_list = [-1, 0, 0.5, 1]
-    op_str = 'Atan'
+    op_str = "Atan"
     unary_op_exec(op_str, input_list)
 
 
 def test_ceiling():
     input_list = [0.5, 0, 0.4, 0.5]
-    op_str = 'Ceiling'
+    op_str = "Ceiling"
     unary_op_exec(op_str, input_list)
 
 
 def test_cos():
     input_list = [0, 0.7, 1.7, 3.4]
-    op_str = 'Cos'
+    op_str = "Cos"
     unary_op_exec(op_str, input_list)
 
 
 def test_cosh():
-    input_list = [-1, 0., 0.5, 1]
-    op_str = 'Cosh'
+    input_list = [-1, 0.0, 0.5, 1]
+    op_str = "Cosh"
     unary_op_exec(op_str, input_list)
 
 
 def test_floor():
     input_list = [-0.5, 0, 0.4, 0.5]
-    op_str = 'Floor'
+    op_str = "Floor"
     unary_op_exec(op_str, input_list)
 
 
 def test_log():
     input_list = [1, 2, 3, 4]
-    op_str = 'log'
+    op_str = "log"
     unary_op_exec(op_str, input_list)
 
 
 def test_exp():
     input_list = [-1, 0, 1, 2]
-    op_str = 'exp'
+    op_str = "exp"
     unary_op_exec(op_str, input_list)
 
 
 def test_negative():
     input_list = [-1, 0, 1, 2]
-    op_str = 'negative'
+    op_str = "negative"
     unary_op_exec(op_str, input_list)
 
 
 def test_sign():
     input_list = [-1, 0, 0.5, 1]
-    op_str = 'Sign'
+    op_str = "Sign"
     unary_op_exec(op_str, input_list)
 
 
 def test_sin():
     input_list = [0, 0.7, 1.7, 3.4]
-    op_str = 'Sin'
+    op_str = "Sin"
     unary_op_exec(op_str, input_list)
 
 
 def test_sinh():
-    input_list = [-1, 0., 0.5, 1]
-    op_str = 'Sinh'
+    input_list = [-1, 0.0, 0.5, 1]
+    op_str = "Sinh"
     unary_op_exec(op_str, input_list)
 
 
 def test_sqrt():
-    input_list = [0., 0.5, 1, 2]
-    op_str = 'Sqrt'
+    input_list = [0.0, 0.5, 1, 2]
+    op_str = "Sqrt"
     unary_op_exec(op_str, input_list)
 
 
 def test_tan():
     input_list = [-np.pi / 4, 0, np.pi / 8, np.pi / 8]
-    op_str = 'Tan'
+    op_str = "Tan"
     unary_op_exec(op_str, input_list)
 
 
 def test_tanh():
     input_list = [-1, 0, 0.5, 1]
-    op_str = 'Tanh'
+    op_str = "Tanh"
     unary_op_exec(op_str, input_list)
 
 
-@pytest.mark.skip_on_gpu
 def test_reverse():
     input_list = [[-1, 0], [0.5, 1]]
-    op_str = 'Reverse'
+    op_str = "Reverse"
     unary_op_exec(op_str, input_list)
 
 
@@ -482,7 +479,7 @@ def test_reshape():
     shape = Shape([2, 3])
     A = Parameter(element_type, shape)
     parameter_list = [A]
-    function = Function([ng.reshape(A, Shape([3, 2]), special_zero=False)], parameter_list, 'test')
+    function = Function([ng.reshape(A, Shape([3, 2]), special_zero=False)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -507,7 +504,7 @@ def test_broadcast():
     element_type = Type.f32
     A = Parameter(element_type, Shape([3]))
     parameter_list = [A]
-    function = Function([ng.broadcast(A, [3, 3])], parameter_list, 'test')
+    function = Function([ng.broadcast(A, [3, 3])], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([3]))
@@ -532,8 +529,9 @@ def test_constant():
 
     element_type = Type.f32
     parameter_list = []
-    function = Function([Constant(element_type, Shape([3, 3]), list(range(9)))],
-                        parameter_list, 'test')
+    function = Function(
+        [Constant(element_type, Shape([3, 3]), list(range(9)))], parameter_list, "test"
+    )
     backend = Backend.create(test.BACKEND_NAME)
 
     result = backend.create_tensor(element_type, Shape([3, 3]))
@@ -549,7 +547,6 @@ def test_constant():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_concat():
 
     element_type = Type.f32
@@ -558,7 +555,7 @@ def test_concat():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
     axis = 0
-    function = Function([ng.concat([A, B, C], axis)], parameter_list, 'test')
+    function = Function([ng.concat([A, B, C], axis)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, Shape([1, 2]))
@@ -584,7 +581,6 @@ def test_concat():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_axisset():
 
     set_axisset = AxisSet({1, 2, 3})
@@ -601,7 +597,6 @@ def test_axisset():
     assert set(tuple_axisset) == set(set_axisset)
 
 
-@pytest.mark.skip_on_gpu
 def test_select():
 
     element_type = Type.f32
@@ -610,7 +605,7 @@ def test_select():
     C = Parameter(element_type, Shape([1, 2]))
     parameter_list = [A, B, C]
 
-    function = Function([ng.select(A, B, C)], parameter_list, 'test')
+    function = Function([ng.select(A, B, C)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(Type.boolean, Shape([1, 2]))
@@ -633,9 +628,8 @@ def test_select():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_max_pool():
-    #test 1d
+    # test 1d
     element_type = Type.f32
     shape = Shape([1, 1, 10])
     A = Parameter(element_type, shape)
@@ -649,16 +643,16 @@ def test_max_pool():
     pads_end = [0] * len(window_shape)
 
     model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8]))
 
-    a.write(util.numpy_to_c(input_arr), 10*4)
+    a.write(util.numpy_to_c(input_arr), 10 * 4)
 
     result_arr = np.zeros(8, dtype=np.float32).reshape(1, 1, 8)
-    result.write(util.numpy_to_c(result_arr), 8*4)
+    result.write(util.numpy_to_c(result_arr), 8 * 4)
     handle = backend.compile(function)
     handle.call([result], [a])
     result.read(util.numpy_to_c(result_arr), 32)
@@ -666,28 +660,28 @@ def test_max_pool():
     result_arr_ref = (np.arange(8) + 2).reshape(1, 1, 8)
     assert np.allclose(result_arr, result_arr_ref)
 
-    #test 1d with strides
+    # test 1d with strides
     strides = [2]
     pads_begin = [0] * len(window_shape)
     pads_end = [0] * len(window_shape)
 
     model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
 
     size = 4
     result = backend.create_tensor(element_type, Shape([1, 1, size]))
     result_arr = np.zeros(size, dtype=np.float32).reshape(1, 1, size)
 
     backend = Backend.create(test.BACKEND_NAME)
-    result.write(util.numpy_to_c(result_arr), size*4)
+    result.write(util.numpy_to_c(result_arr), size * 4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), size*4)
+    result.read(util.numpy_to_c(result_arr), size * 4)
 
     result_arr_ref = ((np.arange(size) + 1) * 2).reshape(1, 1, size)
     assert np.allclose(result_arr, result_arr_ref)
 
-    #test 2d
+    # test 2d
     element_type = Type.f32
     shape = Shape([1, 1, 10, 10])
     A = Parameter(element_type, shape)
@@ -701,49 +695,54 @@ def test_max_pool():
     pads_end = [0, 0]
 
     model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
 
     backend = Backend.create(test.BACKEND_NAME)
     a = backend.create_tensor(element_type, shape)
     result = backend.create_tensor(element_type, Shape([1, 1, 8, 8]))
 
-    a.write(util.numpy_to_c(input_arr), 10*10*4)
+    a.write(util.numpy_to_c(input_arr), 10 * 10 * 4)
 
     result_arr = np.zeros(64, dtype=np.float32).reshape(1, 1, 8, 8)
-    result.write(util.numpy_to_c(result_arr), 8*8*4)
+    result.write(util.numpy_to_c(result_arr), 8 * 8 * 4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), 8*8*4)
+    result.read(util.numpy_to_c(result_arr), 8 * 8 * 4)
 
     result_arr_ref = ((np.arange(100).reshape(10, 10))[2:, 2:]).reshape(1, 1, 8, 8)
     assert np.allclose(result_arr, result_arr_ref)
 
-    #test 2d with strides
+    # test 2d with strides
     strides = [2, 2]
     pads_begin = [0, 0]
     pads_end = [0, 0]
 
     model = ng.max_pool(A, strides, pads_begin, pads_end, window_shape)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     size = 4
     result = backend.create_tensor(element_type, Shape([1, 1, size, size]))
-    result_arr = np.zeros(size*size, dtype=np.float32).reshape(1, 1, size, size)
+    result_arr = np.zeros(size * size, dtype=np.float32).reshape(1, 1, size, size)
 
-    result.write(util.numpy_to_c(result_arr), size*size*4)
+    result.write(util.numpy_to_c(result_arr), size * size * 4)
     handle = backend.compile(function)
     handle.call([result], [a])
-    result.read(util.numpy_to_c(result_arr), size*size*4)
+    result.read(util.numpy_to_c(result_arr), size * size * 4)
 
     result_arr_ref = ((np.arange(100).reshape(10, 10))[2::2, 2::2]).reshape(1, 1, size, size)
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
-def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_below=(0, 0),
-                  padding_above=(0, 0), data_dilation=(1, 1)):
-
+def convolution2d(
+    image,
+    filterit,
+    strides=(1, 1),
+    dilation=(1, 1),
+    padding_below=(0, 0),
+    padding_above=(0, 0),
+    data_dilation=(1, 1),
+):
     def dilate(arr, dil=(1, 1)):
         m, n = arr.shape
         new_m, new_n = (m - 1) * dil[0] + 1, (n - 1) * dil[1] + 1
@@ -754,12 +753,13 @@ def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_belo
         return new_arr
 
     i_m, i_n = image.shape
-    new_image = np.zeros((i_m + padding_below[0] + padding_above[0]) * \
-                         (i_n + padding_below[1] + padding_above[1]),
-                         dtype=np.float32).reshape(i_m + padding_below[0] + padding_above[0],
-                                                   i_n + padding_below[1] + padding_above[1])
-    new_image[padding_below[0] : padding_below[0] + i_m,
-              padding_below[1] : padding_below[1] + i_n] = image
+    new_image = np.zeros(
+        (i_m + padding_below[0] + padding_above[0]) * (i_n + padding_below[1] + padding_above[1]),
+        dtype=np.float32,
+    ).reshape(i_m + padding_below[0] + padding_above[0], i_n + padding_below[1] + padding_above[1])
+    new_image[
+        padding_below[0] : padding_below[0] + i_m, padding_below[1] : padding_below[1] + i_n
+    ] = image
     image = new_image
     image = image if data_dilation[0] == data_dilation[1] == 1 else dilate(image, data_dilation)
     i_m, i_n = image.shape
@@ -767,7 +767,7 @@ def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_belo
     filterit = filterit if dilation[0] == dilation[1] == 1 else dilate(filterit, dilation)
     f_m, f_n = filterit.shape
 
-    #result_shape
+    # result_shape
     r_m = i_m - f_m + 1
     r_n = i_n - f_n + 1
     r_m //= strides[0]
@@ -777,13 +777,13 @@ def convolution2d(image, filterit, strides=(1, 1), dilation=(1, 1), padding_belo
 
     for i in range(r_m):
         for j in range(r_n):
-            sub_m = image[i * strides[0] : i * strides[0] + f_m,
-                          j * strides[1] : j * strides[1] + f_n]
+            sub_m = image[
+                i * strides[0] : i * strides[0] + f_m, j * strides[1] : j * strides[1] + f_n
+            ]
             result[i][j] = np.sum(sub_m * filterit)
     return result
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_simple():
 
     element_type = Type.f32
@@ -808,26 +808,25 @@ def test_convolution_simple():
     dilations = [1, 1]
 
     model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 16*16*4)
-    b.write(util.numpy_to_c(filter_arr), 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 16 * 16 * 4)
+    b.write(util.numpy_to_c(filter_arr), 3 * 3 * 4)
 
     result = backend.create_tensor(element_type, Shape([1, 1, 14, 14]))
-    result.write(util.numpy_to_c(result_arr), 14*14*4)
+    result.write(util.numpy_to_c(result_arr), 14 * 14 * 4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
-    result.read(util.numpy_to_c(result_arr), 14*14*4)
+    result.read(util.numpy_to_c(result_arr), 14 * 14 * 4)
 
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0]).reshape(1, 1, 14, 14)
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_strides():
 
     element_type = Type.f32
@@ -846,27 +845,26 @@ def test_convolution_with_strides():
     dilations = [1, 1]
 
     model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10 * 10 * 4)
+    b.write(util.numpy_to_c(filter_arr), 3 * 3 * 4)
 
     result_arr = np.zeros(16, dtype=np.float32).reshape(1, 1, 4, 4)
     result = backend.create_tensor(element_type, Shape([1, 1, 4, 4]))
-    result.write(util.numpy_to_c(result_arr), 4*4*4)
+    result.write(util.numpy_to_c(result_arr), 4 * 4 * 4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 4*4*4)
+    result.read(util.numpy_to_c(result_arr), 4 * 4 * 4)
     result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides).reshape(1, 1, 4, 4)
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_filter_dilation():
 
     element_type = Type.f32
@@ -884,28 +882,28 @@ def test_convolution_with_filter_dilation():
     dilations = [2, 2]
 
     model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10 * 10 * 4)
+    b.write(util.numpy_to_c(filter_arr), 3 * 3 * 4)
 
     result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
     result = backend.create_tensor(element_type, Shape([1, 1, 6, 6]))
-    result.write(util.numpy_to_c(result_arr), 6*6*4)
+    result.write(util.numpy_to_c(result_arr), 6 * 6 * 4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 6*6*4)
-    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilations).reshape(1, 1, 6, 6)
+    result.read(util.numpy_to_c(result_arr), 6 * 6 * 4)
+    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides, dilations).reshape(
+        1, 1, 6, 6
+    )
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_padding():
 
     element_type = Type.f32
@@ -924,29 +922,28 @@ def test_convolution_with_padding():
     pads_end = [0, 0]
 
     model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10 * 10 * 4)
+    b.write(util.numpy_to_c(filter_arr), 3 * 3 * 4)
 
     result_arr = np.zeros(36, dtype=np.float32).reshape(1, 1, 6, 6)
     result = backend.create_tensor(element_type, Shape([1, 1, 6, 6]))
-    result.write(util.numpy_to_c(result_arr), 6*6*4)
+    result.write(util.numpy_to_c(result_arr), 6 * 6 * 4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 6*6*4)
-    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilations, pads_begin,
-                                   pads_end).reshape(1, 1, 6, 6)
+    result.read(util.numpy_to_c(result_arr), 6 * 6 * 4)
+    result_arr_ref = convolution2d(
+        image_arr[0][0], filter_arr[0][0], strides, dilations, pads_begin, pads_end
+    ).reshape(1, 1, 6, 6)
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_non_zero_padding():
     element_type = Type.f32
     image_shape = Shape([1, 1, 10, 10])
@@ -964,23 +961,23 @@ def test_convolution_with_non_zero_padding():
     pads_end = [1, 2]
 
     model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
-    function = Function([model], parameter_list, 'test')
+    function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, image_shape)
     b = backend.create_tensor(element_type, filter_shape)
 
-    a.write(util.numpy_to_c(image_arr), 10*10*4)
-    b.write(util.numpy_to_c(filter_arr), 3*3*4)
+    a.write(util.numpy_to_c(image_arr), 10 * 10 * 4)
+    b.write(util.numpy_to_c(filter_arr), 3 * 3 * 4)
 
     result_arr = np.zeros(81, dtype=np.float32).reshape(1, 1, 9, 9)
     result = backend.create_tensor(element_type, Shape([1, 1, 9, 9]))
-    result.write(util.numpy_to_c(result_arr), 9*9*4)
+    result.write(util.numpy_to_c(result_arr), 9 * 9 * 4)
     handle = backend.compile(function)
     handle.call([result], [a, b])
 
-    result.read(util.numpy_to_c(result_arr), 9*9*4)
-    result_arr_ref = convolution2d(image_arr[0][0], filter_arr[0][0], strides,
-                                   dilations, pads_begin,
-                                   pads_end).reshape(1, 1, 9, 9)
+    result.read(util.numpy_to_c(result_arr), 9 * 9 * 4)
+    result_arr_ref = convolution2d(
+        image_arr[0][0], filter_arr[0][0], strides, dilations, pads_begin, pads_end
+    ).reshape(1, 1, 9, 9)
     assert np.allclose(result_arr, result_arr_ref)
