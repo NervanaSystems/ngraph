@@ -24,12 +24,14 @@
 import sys
 import numpy as np
 
+
 def make_iterable(x):
     try:
         _ = iter(x)
     except TypeError as _:
         return [x]
     return x
+
 
 def print_lb_values(slices):
     slices = make_iterable(slices)
@@ -47,6 +49,7 @@ def print_lb_values(slices):
                 strs.append('0')
     return ','.join(strs)
 
+
 def print_ub_values(slices):
     slices = make_iterable(slices)
 
@@ -58,6 +61,7 @@ def print_ub_values(slices):
         else:
             strs.append('0')
     return ','.join(strs)
+
 
 def print_stride_values(slices):
     slices = make_iterable(slices)
@@ -71,6 +75,7 @@ def print_stride_values(slices):
             strs.append('1')
     return ','.join(strs)
 
+
 def print_lb_mask_axes(slices):
     slices = make_iterable(slices)
 
@@ -82,6 +87,7 @@ def print_lb_mask_axes(slices):
             mask_strs.append(str(i))
         i += 1
     return ','.join(mask_strs)
+
 
 def print_ub_mask_axes(slices):
     slices = make_iterable(slices)
@@ -95,6 +101,7 @@ def print_ub_mask_axes(slices):
         i += 1
     return ','.join(mask_strs)
 
+
 def print_new_mask_axes(slices):
     slices = make_iterable(slices)
 
@@ -106,6 +113,7 @@ def print_new_mask_axes(slices):
             mask_strs.append(str(i))
         i += 1
     return ','.join(mask_strs)
+
 
 def print_shrink_mask_axes(slices):
     slices = make_iterable(slices)
@@ -122,6 +130,7 @@ def print_shrink_mask_axes(slices):
         i += 1
     return ','.join(mask_strs)
 
+
 def print_ellipsis_mask_axes(slices):
     slices = make_iterable(slices)
 
@@ -134,61 +143,64 @@ def print_ellipsis_mask_axes(slices):
         i += 1
     return ','.join(mask_strs)
 
+
 def np_dt_to_c(dtype):
-    if dtype=='int8':
+    if dtype == 'int8':
         return 'int8_t'
-    elif dtype=='uint8':
+    elif dtype == 'uint8':
         return 'uint8_t'
-    elif dtype=='int16':
+    elif dtype == 'int16':
         return 'int16_t'
-    elif dtype=='uint16':
+    elif dtype == 'uint16':
         return 'uint16_t'
-    elif dtype=='int32':
+    elif dtype == 'int32':
         return 'int32_t'
-    elif dtype=='uint32':
+    elif dtype == 'uint32':
         return 'uint32_t'
-    elif dtype=='int64':
+    elif dtype == 'int64':
         return 'int64_t'
-    elif dtype=='uint64':
+    elif dtype == 'uint64':
         return 'uint64_t'
-    elif dtype=='float16':
+    elif dtype == 'float16':
         return 'float16'
-    elif dtype=='float32':
+    elif dtype == 'float32':
         return 'float'
-    elif dtype=='float64':
+    elif dtype == 'float64':
         return 'double'
-    elif dtype=='bool':
+    elif dtype == 'bool':
         return 'char'
     else:
         raise ValueError('Unsupported numpy data type: %s' % dtype)
 
+
 def np_dt_to_ng(dtype):
-    if dtype=='int8':
+    if dtype == 'int8':
         return 'element::i8'
-    elif dtype=='uint8':
+    elif dtype == 'uint8':
         return 'element::u8'
-    elif dtype=='int16':
+    elif dtype == 'int16':
         return 'element::i16'
-    elif dtype=='uint16':
+    elif dtype == 'uint16':
         return 'element::u16'
-    elif dtype=='int32':
+    elif dtype == 'int32':
         return 'element::i32'
-    elif dtype=='uint32':
+    elif dtype == 'uint32':
         return 'element::u32'
-    elif dtype=='int64':
+    elif dtype == 'int64':
         return 'element::i64'
-    elif dtype=='uint64':
+    elif dtype == 'uint64':
         return 'element::u64'
-    elif dtype=='float16':
+    elif dtype == 'float16':
         return 'element::f16'
-    elif dtype=='float32':
+    elif dtype == 'float32':
         return 'element::f32'
-    elif dtype=='float64':
+    elif dtype == 'float64':
         return 'element::f64'
-    elif dtype=='bool':
+    elif dtype == 'bool':
         return 'element::boolean'
     else:
         raise ValueError('Unsupported numpy data type: %s' % dtype)
+
 
 def print_values(values):
     values = make_iterable(values)
@@ -199,6 +211,7 @@ def print_values(values):
 
     return ','.join(strs)
 
+
 def print_shape(dims):
     dims = make_iterable(dims)
     strs = []
@@ -207,6 +220,7 @@ def print_shape(dims):
         strs.append(str(d))
 
     return 'Shape{' + ','.join(strs) + '}'
+
 
 def print_slice(sl):
     if sl is None:
@@ -227,6 +241,7 @@ def print_slice(sl):
     else:
         return str(sl)
 
+
 def print_slices(slices):
     slices = make_iterable(slices)
     strs = []
@@ -235,6 +250,7 @@ def print_slices(slices):
         strs.append(print_slice(sl))
 
     return '[' + ','.join(strs) + ']'
+
 
 #
 # Class to intercept indexing operations and write an nGraph C++ test case. The
@@ -272,7 +288,7 @@ class SliceTestWriter:
         self.write_test(slices)
 
     def write_test(self, slices):
-        data_in = np.linspace(0,np.prod(self._shape)-1,np.prod(self._shape),dtype=self._dtype).reshape(self._shape)
+        data_in = np.linspace(0, np.prod(self._shape) - 1, np.prod(self._shape), dtype=self._dtype).reshape(self._shape)
 
         self._stream.write('\n')
         self._stream.write('// slices are: %s\n' % print_slices(slices))
@@ -297,59 +313,51 @@ class SliceTestWriter:
                                '                  AxisSet{%s},\n'
                                '                  AxisSet{%s});\n'
                                '}\n'
-                                  % (self._test_counter,
-                                     np_dt_to_c(self._dtype),
-                                     np_dt_to_ng(self._dtype),
-                                     print_shape(data_in.shape),
-                                     print_lb_values(slices),
-                                     print_ub_values(slices),
-                                     print_stride_values(slices),
-                                     print_lb_mask_axes(slices),
-                                     print_ub_mask_axes(slices),
-                                     print_new_mask_axes(slices),
-                                     print_shrink_mask_axes(slices),
-                                     print_ellipsis_mask_axes(slices)))
+                               % (self._test_counter,
+                                  np_dt_to_c(self._dtype),
+                                  np_dt_to_ng(self._dtype),
+                                  print_shape(data_in.shape),
+                                  print_lb_values(slices),
+                                  print_ub_values(slices),
+                                  print_stride_values(slices),
+                                  print_lb_mask_axes(slices),
+                                  print_ub_mask_axes(slices),
+                                  print_new_mask_axes(slices),
+                                  print_shrink_mask_axes(slices),
+                                  print_ellipsis_mask_axes(slices)))
         else:
             self._stream.write('// expected output shape is %s\n'
                                'NGRAPH_TEST(${BACKEND_NAME}, dyn_slice_%d)\n'
                                '{\n'
-                               '    check_success<%s>\n'
+                               '    check\n'
                                '                 (%s,\n'
-                               '                  %s,\n'
                                '                  std::vector<int64_t>{%s},\n'
                                '                  std::vector<int64_t>{%s},\n'
                                '                  std::vector<int64_t>{%s},\n'
+                               '                  std::vector<int64_t>{%s},\n'
                                '                  AxisSet{%s},\n'
                                '                  AxisSet{%s},\n'
-                               '                  AxisSet{%s},\n'
-                               '                  AxisSet{%s},\n'
-                               '                  AxisSet{%s},\n'
-                               '                  %s,\n'
-                               '                  std::vector<%s>{%s});\n'
+                               '                  std::vector<int64_t>{%s});\n'
                                '}\n'
-                                  % (print_shape(data_out.shape),
-                                     self._test_counter,
-                                     np_dt_to_c(self._dtype),
-                                     np_dt_to_ng(self._dtype),
-                                     print_shape(data_in.shape),
-                                     print_lb_values(slices),
-                                     print_ub_values(slices),
-                                     print_stride_values(slices),
-                                     print_lb_mask_axes(slices),
-                                     print_ub_mask_axes(slices),
-                                     print_new_mask_axes(slices),
-                                     print_shrink_mask_axes(slices),
-                                     print_ellipsis_mask_axes(slices),
-                                     print_shape(data_out.shape),
-                                     np_dt_to_c(self._dtype), print_values(data_out.reshape(-1))))
+                               % (print_shape(data_out.shape),
+                                  self._test_counter,
+                                  np_dt_to_ng(self._dtype),
+                                  print_values(data_in.shape),
+                                  print_lb_values(slices),
+                                  print_ub_values(slices),
+                                  print_stride_values(slices),
+                                  print_lb_mask_axes(slices),
+                                  print_ub_mask_axes(slices),
+                                  print_values(data_out.shape)))
 
         self._test_counter += 1
 
-    def set_shape(self,shape):
+    def set_shape(self, shape):
         self._shape = shape
 
-    def set_dtype(self,dtype):
+    def set_dtype(self, dtype):
         self._dtype = dtype
+
 
 def write_header(f):
     f.write('''\
@@ -391,6 +399,8 @@ def write_header(f):
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "util/test_tools.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/all_close_f.hpp"
@@ -443,57 +453,122 @@ void check_failure(const element::Type& input_element_type,
         ex->call_with_validate({output}, {input_arg, input_lb, input_ub, input_strides});
     });
 }
+std::shared_ptr<ngraph::Node> calculate_output_shape(
+        const std::vector<int64_t> & begin,
+        const std::vector<int64_t> & end,
+        const std::vector<int64_t> & strides,
+        const ngraph::AxisSet & begin_mask,
+        const ngraph::AxisSet & end_mask,
+        const ngraph::Output<ngraph::Node> & input_shape) {
+    const auto shape_type = input_shape.get_element_type();
 
-template <typename T>
-void check_success(const element::Type& input_element_type,
-                   const Shape& input_shape,
+    ngraph::OutputVector output_dimensions;
+    for (int64_t axis = 0; axis < input_shape.get_partial_shape()[0].get_length(); ++axis) {
+        auto lb = begin[axis], ub = end[axis], stride = strides[axis];
+
+        ngraph::Output<ngraph::Node> lower_bound = ngraph::opset3::Constant::create(shape_type, {1}, {lb});
+        ngraph::Output<ngraph::Node> upper_bound = ngraph::opset3::Constant::create(shape_type, {1}, {ub});
+
+        const auto shape_dim = std::make_shared<ngraph::opset3::Gather>(input_shape, ngraph::opset3::Constant::create(shape_type, {1}, {axis}),
+                                                                        ngraph::opset3::Constant::create(shape_type, {}, {0}));
+        const auto shape_dim_minus_one = std::make_shared<ngraph::opset3::Add>(shape_dim, ngraph::opset3::Constant::create(shape_type, {1}, {-1}));
+
+
+        // convert negative indexes to positive
+        // take max for this case: if abs(lb) > input_shape[input_shape_idx],then after
+        // conversion lb < 0
+        // so according to tensorflow and numpy we just get 0
+        if (lb < 0)
+            lower_bound = std::make_shared<ngraph::opset3::Maximum>(
+                    std::make_shared<ngraph::opset3::Add>(lower_bound, shape_dim),
+                    ngraph::opset3::Constant::create(shape_type, {1}, {0}));
+        if (ub < 0)
+            upper_bound = std::make_shared<ngraph::opset3::Maximum>(
+                    std::make_shared<ngraph::opset3::Add>(upper_bound, shape_dim),
+                    ngraph::opset3::Constant::create(shape_type, {1}, {0}));
+
+        // apply restrictions when begin or end values more than max possible values.
+        lower_bound = std::make_shared<ngraph::opset3::Minimum>(shape_dim, lower_bound);
+        upper_bound = std::make_shared<ngraph::opset3::Minimum>(shape_dim, upper_bound);
+
+        ngraph::Output<ngraph::Node> output_dimension = ngraph::opset3::Constant::create(shape_type, {1}, {0});
+        if (stride < 0) {
+            // apply masks
+            if (begin_mask.count(axis))
+                lower_bound = shape_dim_minus_one;
+            if (end_mask.count(axis))
+                upper_bound = ngraph::opset3::Constant::create(shape_type, {1}, {-1});
+
+            lower_bound = std::make_shared<ngraph::opset3::Minimum>(lower_bound, shape_dim_minus_one);
+            // we always get 1st element, so we need decrease range
+            lower_bound = std::make_shared<ngraph::opset3::Add>(lower_bound, ngraph::opset3::Constant::create(shape_type, {1}, {-1}));
+            output_dimension = std::make_shared<ngraph::opset3::Select>(
+                    std::make_shared<ngraph::opset3::LessEqual>(upper_bound, lower_bound),
+                    std::make_shared<ngraph::opset3::Add>(
+                            std::make_shared<ngraph::opset3::Divide>(std::make_shared<ngraph::opset3::Subtract>(upper_bound, lower_bound),
+                                                                     ngraph::opset3::Constant::create(shape_type, {1}, {stride})),
+                            ngraph::opset3::Constant::create(shape_type, {1}, {1})),
+                    output_dimension);
+        } else {
+            // apply masks
+            if (begin_mask.count(axis))
+                lower_bound = ngraph::opset3::Constant::create(shape_type, {1}, {0});
+            if (end_mask.count(axis))
+                upper_bound = shape_dim;
+            // we always get 1st element, so we need decrease range
+            lower_bound = std::make_shared<ngraph::opset3::Add>(lower_bound, ngraph::opset3::Constant::create(shape_type, {1}, {1}));
+            output_dimension = std::make_shared<ngraph::opset3::Select>(
+                    std::make_shared<ngraph::opset3::GreaterEqual>(upper_bound, lower_bound),
+                    std::make_shared<ngraph::opset3::Add>(
+                            std::make_shared<ngraph::opset3::Divide>(std::make_shared<ngraph::opset3::Subtract>(upper_bound, lower_bound),
+                                                                     ngraph::opset3::Constant::create(shape_type, {1}, {stride})),
+                            ngraph::opset3::Constant::create(shape_type, {1}, {1})),
+                    output_dimension);
+        }
+        output_dimensions.push_back(output_dimension);
+    }
+    const auto output_shape = std::make_shared<ngraph::opset3::Concat>(output_dimensions, 0);
+    return output_shape;
+}
+
+void check(const element::Type& input_element_type,
+                   const std::vector<int64_t>& input_shape,
                    const std::vector<int64_t>& lb_values,
                    const std::vector<int64_t>& ub_values,
                    const std::vector<int64_t>& strides_values,
                    const AxisSet& lb_mask,
                    const AxisSet& ub_mask,
-                   const AxisSet& new_mask,
-                   const AxisSet& shrink_mask,
-                   const AxisSet& ellipsis_mask,
-                   const Shape& expected_output_shape,
-                   const std::vector<T>& expected_values)
+                   const std::vector<int64_t>& expected_output_shape)
 {
-    auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
-    auto lb = std::make_shared<op::Parameter>(element::i64, Shape{lb_values.size()});
-    auto ub = std::make_shared<op::Parameter>(element::i64, Shape{ub_values.size()});
-    auto strides = std::make_shared<op::Parameter>(element::i64, Shape{strides_values.size()});
+    std::cout << "REAL PASS" << std::endl;
 
-    std::vector<T> input_values(shape_size(input_shape));
-    std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
+    std::vector<uint32_t> input_values(shape_size(input_shape));
+    std::iota(input_values.begin(), input_values.end(), static_cast<int64_t >(0));
 
-    auto slice = std::make_shared<op::DynSlice>(arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
-
-    auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+    auto in_shape = std::make_shared<op::Parameter>(element::i64, Shape{input_shape.size()});
+    auto out_node = calculate_output_shape(lb_values, ub_values, strides_values, lb_mask, ub_mask, in_shape);
+    auto f = std::make_shared<Function>(NodeVector{out_node}, ParameterVector{in_shape});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}",true);
     auto ex = backend->compile(f);
 
-    auto input_arg = backend->create_tensor(input_element_type, input_shape);
-    auto input_lb = backend->create_tensor(element::i64, Shape{lb_values.size()});
-    auto input_ub = backend->create_tensor(element::i64, Shape{ub_values.size()});
-    auto input_strides = backend->create_tensor(element::i64, Shape{strides_values.size()});
-    copy_data(input_arg, input_values);
-    copy_data(input_lb, lb_values);
-    copy_data(input_ub, ub_values);
-    copy_data(input_strides, strides_values);
-
+    auto input_shape_tensor = backend->create_tensor(element::i64, Shape{input_shape.size()});
+    copy_data(input_shape_tensor, input_shape);
     auto output = backend->create_dynamic_tensor(input_element_type, PartialShape::dynamic());
 
-    ex->call_with_validate({output}, {input_arg, input_lb, input_ub, input_strides});
+    ex->call_with_validate({output}, {input_shape_tensor});
+    auto output_values = read_vector<int64_t>(output);
+    for(auto &i : output_values)
+        cout << i << " ";
+    cout << endl;
+    for (auto &i : expected_output_shape)
+        cout << i << " ";
 
     EXPECT_EQ(output->get_element_type(), input_element_type);
-    EXPECT_EQ(output->get_shape(), expected_output_shape);
-
-    auto output_values = read_vector<T>(output);
-
-    EXPECT_EQ(output_values, expected_values);
+    EXPECT_EQ(output_values, expected_output_shape);
 }
 ''')
+
 
 def write_footer(f):
     f.write('''\
@@ -512,11 +587,9 @@ def main():
     t = SliceTestWriter(stream=f)
 
     t.set_shape((4,))
-    for dt in ['int32','int64','float32','uint32']:
+    for dt in ['int64']:
         t.set_dtype(dt)
 
-        t[np.newaxis,3:0:-1]
-        t[...]
         t[1:3]
         t[2]
         t[3:0:-2]
@@ -526,9 +599,6 @@ def main():
         t[-9000:-8000:2]
         t[-9000:8000:2]
         t[-5:5:2]
-        t[np.newaxis]
-        t[np.newaxis,np.newaxis]
-        t[np.newaxis,np.newaxis,...,np.newaxis]
 
         t.set_shape((5,))
         t[3:0:-2]
@@ -543,8 +613,6 @@ def main():
         t[4::-2]
         t[1:-5:-1]
         t[1:-1:-1]
-        t[1:None]
-        t[1:None:-1]
         t[-5:5:2]
         t[-1:5:1]
         t[-1:1:1]
@@ -595,32 +663,15 @@ def main():
         t[7:0:-3]
         t[7::-3]
 
-    t.set_dtype('int32')
-    t[80000] # error expected (shrink-axis OOB)
-    t[-80000] # error expected (shrink-axis OOB)
-    t[:,:] # error expected (too many indices)
-    t[0:0:0] # error expected (stride==0)
-    t[0:1:0] # error expected (stride==0)
-    t[0:2:0] # error expected (stride==0)
-    t[::0] # error expected (stride==0)
 
-    t.set_shape((2,3,4))
-    for dt in ['int32','int64','float32','uint32']:
+    t.set_shape((2, 4, 6, 8, 2, 2, 2))
+    for dt in ['int64']:
         t.set_dtype(dt)
-
-        t[1,np.newaxis]
-        t[-1,-1,np.newaxis]
-
-    t.set_shape((2,4,6,8,2,2,2))
-    for dt in ['int32','int64','float32','uint32']:
-        t.set_dtype(dt)
-        t[0:,:4,2:6:2,7:3:-2,np.newaxis,...,1]
-
-    t.set_dtype('int32')
-    t[...,...] # error expected (too many ellipses)
+        t[0:, :4, 2:6:2, 7:3:-2, 1:, :, :]
 
     write_footer(f)
     f.close()
+
 
 if __name__ == "__main__":
     main()
