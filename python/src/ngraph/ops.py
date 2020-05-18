@@ -2821,17 +2821,18 @@ def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> No
 
 
 @nameable_op
-def region_yolo(input,  # type: Node
-                coords,  # type: int
-                classes,  # type: int
-                num,  # type: int
-                do_softmax,  # type: bool
-                mask,  # type: List[int]
-                axis,  # type: int
-                end_axis,  # type: int
-                anchors=None,  # type: List[float]
-                name=None,  # type: str
-                ):  # type: (...) -> Node
+def region_yolo(
+    input,  # type: Node
+    coords,  # type: int
+    classes,  # type: int
+    num,  # type: int
+    do_softmax,  # type: bool
+    mask,  # type: List[int]
+    axis,  # type: int
+    end_axis,  # type: int
+    anchors=None,  # type: List[float]
+    name=None,  # type: str
+):  # type: (...) -> Node
     """Return a node which produces the RegionYolo operation.
 
     :param input:       Input data
@@ -2849,16 +2850,20 @@ def region_yolo(input,  # type: Node
     if anchors is None:
         anchors = []
 
-    return _get_node_factory().create('RegionYolo', [input], {
-                                      'coords': coords,
-                                      'classes': classes,
-                                      'num': num,
-                                      'do_softmax': do_softmax,
-                                      'mask': mask,
-                                      'axis': axis,
-                                      'end_axis': end_axis,
-                                      'anchors': anchors,
-                                      })
+    return _get_node_factory().create(
+        "RegionYolo",
+        [input],
+        {
+            "coords": coords,
+            "classes": classes,
+            "num": num,
+            "do_softmax": do_softmax,
+            "mask": mask,
+            "axis": axis,
+            "end_axis": end_axis,
+            "anchors": anchors,
+        },
+    )
 
 
 @nameable_op
