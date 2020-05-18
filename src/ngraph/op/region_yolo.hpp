@@ -49,10 +49,10 @@ namespace ngraph
                            const size_t coords,
                            const size_t classes,
                            const size_t regions,
+                           const bool do_softmax,
                            const std::vector<int64_t>& mask,
                            const int axis,
                            const int end_axis,
-                           const bool do_softmax = true,
                            const std::vector<float>& anchors = std::vector<float>{});
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
@@ -73,7 +73,7 @@ namespace ngraph
                 size_t m_num_coords;
                 size_t m_num_classes;
                 size_t m_num_regions;
-                bool m_do_softmax = true;
+                bool m_do_softmax;
                 std::vector<int64_t> m_mask;
                 std::vector<float> m_anchors{};
                 int m_axis;
