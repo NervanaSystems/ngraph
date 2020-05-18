@@ -65,6 +65,7 @@
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
+#include "ngraph/runtime/reference/matmul.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
@@ -336,8 +337,8 @@ protected:
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] =
-                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
+                m_states[&node] = std::unique_ptr<BernoulliRNGState>(
+                    new BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
@@ -374,7 +375,6 @@ protected:
                                      node.get_output_shape(0));
             break;
         }
-
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -432,19 +432,6 @@ protected:
                                             apb->get_padding_below(),
                                             apb->get_padding_above(),
                                             apb->get_include_padding_in_avg_computation());
-            break;
-        }
-        case OP_TYPEID::Broadcast:
-        {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
-            Shape out_shape = node.get_output_shape(0);
-            AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    in_shape,
-                                    out_shape,
-                                    broadcast_axes);
             break;
         }
         case OP_TYPEID::BroadcastDistributed:
@@ -828,30 +815,6 @@ protected:
                               lrn->get_nsize());
             break;
         }
-        case OP_TYPEID::Max:
-        {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            reference::max<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              max->get_reduction_axes());
-            break;
-        }
-        case OP_TYPEID::MaxPool:
-        {
-            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
-
-            reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_output_shape(0),
-                                   max_pool->get_window_shape(),
-                                   max_pool->get_window_movement_strides(),
-                                   max_pool->get_padding_below(),
-                                   max_pool->get_padding_above());
-            break;
-        }
         case OP_TYPEID::MaxPoolBackprop:
         {
             const op::MaxPoolBackprop* max_pool_backprop =
@@ -866,16 +829,6 @@ protected:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
-            break;
-        }
-        case OP_TYPEID::Min:
-        {
-            const op::Min* min = static_cast<const op::Min*>(&node);
-            reference::min<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              min->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Negative:
@@ -916,16 +869,6 @@ protected:
                            pad->get_padding_below(),
                            pad->get_padding_above(),
                            pad->get_pad_mode());
-            break;
-        }
-        case OP_TYPEID::Product:
-        {
-            const op::Product* product = static_cast<const op::Product*>(&node);
-            reference::product<T>(args[0]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_output_shape(0),
-                                  product->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Quantize:
@@ -1428,16 +1371,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Sum:
-        {
-            const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            reference::sum<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              sum->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::Tan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1516,7 +1449,6 @@ protected:
         case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
-        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PartialSlice:
@@ -1542,6 +1474,7 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
+        case OP_TYPEID::Broadcast:
         case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
@@ -1555,13 +1488,18 @@ protected:
         case OP_TYPEID::LogicalAnd_v1:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::MatMul:
+        case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::MaxPool:
+        case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
+        case OP_TYPEID::Product:
         case OP_TYPEID::Range:
         case OP_TYPEID::Reshape:
         case OP_TYPEID::Result:
@@ -1569,6 +1507,7 @@ protected:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::Softmax:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Sum:
         case OP_TYPEID::Subtract:
         case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Xor:

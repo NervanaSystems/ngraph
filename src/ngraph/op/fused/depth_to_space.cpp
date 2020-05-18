@@ -46,8 +46,8 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
 
 bool op::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("blocksize", m_blocksize);
-    visitor.on_attribute("m_mode", m_mode);
+    visitor.on_attribute("block_size", m_blocksize);
+    visitor.on_attribute("mode", m_mode);
     return true;
 }
 

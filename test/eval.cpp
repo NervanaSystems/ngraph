@@ -29,6 +29,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
@@ -42,6 +43,7 @@
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/negative.hpp"
@@ -52,6 +54,7 @@
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/round.hpp"
+#include "ngraph/op/scatter_elements_update.hpp"
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/sign.hpp"
@@ -61,9 +64,12 @@
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
+#include "ngraph/op/transpose.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
+#include "util/all_close_f.hpp"
+#include "util/ndarray.hpp"
 #include "util/test_tools.hpp"
 #include "util/type_prop.hpp"
 
@@ -217,6 +223,393 @@ TEST(eval, interpret_dynamic_range_sum)
     ASSERT_EQ(result_val, seq);
 }
 #endif
+
+TEST(eval, evaluate_broadcast_v3_bidirectional)
+{
+    Shape shape_a{4, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int32_t>(element::i32, Shape{3}, {2, 1, 4});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{4, 1}, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 4, 4}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+                        1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_bidirectional_dyn)
+{
+    Shape shape_a{4, 1};
+    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result},
+                              {make_host_tensor<element::Type_t::i32>(Shape{4, 1}, {1, 2, 3, 4}),
+                               make_host_tensor<element::Type_t::i32>(Shape{3}, {2, 1, 4})}));
+    EXPECT_EQ(result->get_element_type(), element::i32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 4, 4}));
+    auto result_val = read_vector<int32_t>(result);
+    vector<int32_t> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4,
+                          1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_numpy)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_numpy_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i32>(Shape{3}, {2, 3, 6})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
+{
+    Shape in_shape{1, 4, 1};
+
+    auto A = make_shared<op::Parameter>(element::f32, in_shape);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 4});
+    auto bcast_v3_num = make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::NUMPY);
+    auto fun_num = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun_num->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(in_shape, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1, 4, 4}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(expec, result_val);
+
+    auto target_shape2 = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 4});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape2, op::BroadcastType::BIDIRECTIONAL);
+    auto fun_bidi = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
+
+    auto result2 = make_shared<HostTensor>();
+    ASSERT_TRUE(fun_bidi->evaluate(
+        {result2}, {make_host_tensor<element::Type_t::f32>(in_shape, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result2->get_element_type(), element::f32);
+    EXPECT_EQ(result2->get_partial_shape(), (PartialShape{1, 4, 4}));
+    auto result_val2 = read_vector<float>(result2);
+    vector<float> expec2{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(expec2, result_val2);
+}
+
+TEST(eval, evaluate_broadcast_v3_bidi_4d)
+{
+    Shape in_shape{4, 1, 1};
+    Shape expec_shape{1, 4, 2, 2};
+
+    auto A = make_shared<op::Parameter>(element::f32, in_shape);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{4}, {1, 1, 2, 2});
+    auto bcast_v3 =
+        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(in_shape, {1.0f, 2.0f, 3.0f, 4.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1, 4, 2, 2}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_pdpd)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+        A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_pdpd_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+        A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i32>(Shape{3}, {2, 3, 6})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_numpy)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto bcast_v3 = make_shared<op::v1::Broadcast>(A, target_shape);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_numpy_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto bcast_v3 = make_shared<op::v1::Broadcast>(A, target_shape);
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i64>(Shape{3}, {2, 3, 6})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_pdpd)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto bcast_v3 = make_shared<op::v1::Broadcast>(
+        A, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_pdpd_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto bcast_v3 = make_shared<op::v1::Broadcast>(
+        A, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i64>(Shape{3}, {2, 3, 6})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 6}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+        1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
+    };
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_explicit)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
+    auto axes_mapping = op::Constant::create<int32_t>(element::i32, Shape{2}, {1, 2});
+    auto bcast_v3 = make_shared<op::v1::Broadcast>(
+        A, target_shape, axes_mapping, op::AutoBroadcastSpec(op::AutoBroadcastType::EXPLICIT));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 1}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 2, 3, 1, 2, 3};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v1_explicit_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    auto bcast_v1 = make_shared<op::v1::Broadcast>(
+        A, target_shape, axes_mapping, op::AutoBroadcastSpec(op::AutoBroadcastType::EXPLICIT));
+    auto fun = make_shared<Function>(OutputVector{bcast_v1},
+                                     ParameterVector{A, target_shape, axes_mapping});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i64>(Shape{3}, {2, 3, 1}),
+                       make_host_tensor<element::Type_t::i32>(Shape{2}, {1, 2})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 1}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 2, 3, 1, 2, 3};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v3_explicit_dyn)
+{
+    Shape shape_a{3, 1};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+        A, target_shape, axes_mapping, op::BroadcastModeSpec(op::BroadcastType::EXPLICIT));
+    auto fun = make_shared<Function>(OutputVector{bcast_v3},
+                                     ParameterVector{A, target_shape, axes_mapping});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result},
+                      {make_host_tensor<element::Type_t::f32>(Shape{3, 1}, {1.0f, 2.0f, 3.0f}),
+                       make_host_tensor<element::Type_t::i64>(Shape{3}, {2, 3, 1}),
+                       make_host_tensor<element::Type_t::i32>(Shape{2}, {1, 2})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 1}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 2, 3, 1, 2, 3};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, evaluate_broadcast_v0)
+{
+    Shape shape_a{2, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    Shape target_shape = Shape{2, 3, 4};
+    auto bcast_v0 = make_shared<op::v0::Broadcast>(A, target_shape, AxisSet{1});
+    auto fun = make_shared<Function>(OutputVector{bcast_v0}, ParameterVector{A});
+
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate(
+        {result}, {make_host_tensor<element::Type_t::f32>(Shape{2, 4}, {1, 2, 3, 4, 1, 2, 3, 4})}));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3, 4}));
+    auto result_val = read_vector<float>(result);
+    vector<float> expec{1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4};
+    ASSERT_EQ(result_val, expec);
+}
+
+TEST(eval, test_op_multi_out)
+{
+    auto p = make_shared<op::Parameter>(element::f32, PartialShape{2, 3});
+    auto p2 = make_shared<op::Parameter>(element::f64, PartialShape{2, 2});
+    auto so = make_shared<TestOpMultiOut>(p, p2);
+    auto fun =
+        make_shared<Function>(OutputVector{so->output(0), so->output(1)}, ParameterVector{p, p2});
+    auto result = make_shared<HostTensor>(element::Type_t::f32, Shape{2, 3});
+    auto result2 = make_shared<HostTensor>(element::Type_t::f64, Shape{2, 2});
+    HostTensorVector ins{make_host_tensor<element::Type_t::f32>(Shape{2, 3}),
+                         make_host_tensor<element::Type_t::f64>(Shape{2, 2})};
+    ASSERT_TRUE(fun->evaluate({result, result2}, ins));
+    EXPECT_EQ(result->get_element_type(), element::f32);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{2, 3}));
+    auto result_val = read_vector<float>(result);
+    auto arg_val = read_vector<float>(ins[0]);
+    ASSERT_EQ(result_val, arg_val);
+    EXPECT_EQ(result2->get_element_type(), element::f64);
+    EXPECT_EQ(result2->get_partial_shape(), (PartialShape{2, 2}));
+    auto result_val2 = read_vector<double>(result2);
+    auto arg_val2 = read_vector<double>(ins[1]);
+    ASSERT_EQ(result_val2, arg_val2);
+}
 
 TEST(eval, evaluate_reshape_v1)
 {
@@ -855,5 +1248,310 @@ TEST(eval, evaluate_dynamic_concat)
     EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{1, 3}));
     auto cval = read_vector<float>(result_tensor);
     vector<float> out{1.0f, 8.0f, 10.0f};
+    ASSERT_EQ(cval, out);
+}
+
+template <element::Type_t T>
+void test_eval(shared_ptr<Function> fun,
+               vector<vector<float>>& inputs,
+               vector<Shape>& x_shapes,
+               vector<Shape>& result_shapes,
+               vector<vector<float>>& results)
+{
+    using IN_T = typename element_type_traits<T>::value_type;
+    std::vector<std::vector<IN_T>> perms{{0, 1}, {1, 0}, {2, 1, 0}};
+    for (size_t i = 0; i < x_shapes.size(); i++)
+    {
+        auto result_tensor = make_shared<HostTensor>();
+        ASSERT_TRUE(fun->evaluate({result_tensor},
+                                  {make_host_tensor<element::Type_t::f32>(x_shapes[i], inputs[i]),
+                                   make_host_tensor<T>(Shape{perms[i].size()}, perms[i])}));
+
+        ASSERT_EQ(result_tensor->get_shape(), result_shapes[i]);
+        auto actual_results = read_vector<float>(result_tensor);
+        ASSERT_EQ(actual_results, results[i]);
+    }
+}
+
+TEST(eval, eval_transpose)
+{
+    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    vector<shared_ptr<op::Parameter>> axes;
+    axes.push_back(make_shared<op::Parameter>(element::i8, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::Parameter>(element::i16, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()}));
+
+    axes.push_back(make_shared<op::Parameter>(element::u8, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::Parameter>(element::u16, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::Parameter>(element::u32, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::Parameter>(element::u64, PartialShape{Dimension::dynamic()}));
+
+    std::vector<Shape> x_shapes{Shape{2, 3}, Shape{2, 3}, Shape{2, 2, 3}};
+
+    std::vector<std::vector<float>> inputs{
+        {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6}, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}};
+    std::vector<Shape> result_shapes{Shape{2, 3}, Shape{3, 2}, {3, 2, 2}};
+    std::vector<std::vector<float>> results{
+        {1, 2, 3, 4, 5, 6}, {1, 4, 2, 5, 3, 6}, {1, 7, 4, 10, 2, 8, 5, 11, 3, 9, 6, 12}};
+
+    for (auto& axis : axes)
+    {
+        auto x_transpose = make_shared<op::v1::Transpose>(x, axis);
+        auto fun = make_shared<Function>(NodeVector{x_transpose}, ParameterVector{x, axis});
+
+        switch (axis->get_element_type())
+        {
+        case element::Type_t::i8:
+            test_eval<element::Type_t::i8>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::i16:
+            test_eval<element::Type_t::i16>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::i32:
+            test_eval<element::Type_t::i32>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::i64:
+            test_eval<element::Type_t::i64>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u8:
+            test_eval<element::Type_t::u8>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u16:
+            test_eval<element::Type_t::u16>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u32:
+            test_eval<element::Type_t::u32>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        case element::Type_t::u64:
+            test_eval<element::Type_t::u64>(fun, inputs, x_shapes, result_shapes, results);
+            break;
+        default: NGRAPH_CHECK(false, "Invalid type"); break;
+        }
+    }
+}
+
+TEST(eval, max_pool_v0_dynamic)
+{
+    Shape window_shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto f =
+        make_shared<Function>(make_shared<op::v0::MaxPool>(A, window_shape), ParameterVector{A});
+    auto result_tensor = make_shared<HostTensor>();
+
+    ASSERT_TRUE(f->evaluate({result_tensor},
+                            {make_host_tensor<element::Type_t::f32>(
+                                {1, 1, 14}, {0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{1, 1, 12}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0};
+    ASSERT_EQ(cval, out);
+}
+
+TEST(eval, max_pool_v1_dynamic)
+{
+    Shape window_shape{3};
+    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto f = make_shared<Function>(
+        make_shared<op::v1::MaxPool>(
+            A, Strides(), Shape(), Shape(), window_shape, op::RoundingType::FLOOR),
+        ParameterVector{A});
+    auto result_tensor = make_shared<HostTensor>();
+
+    ASSERT_TRUE(f->evaluate({result_tensor},
+                            {make_host_tensor<element::Type_t::f32>(
+                                {1, 1, 14}, {0, 1, 0, 2, 1, 0, 3, 2, 0, 0, 2, 0, 0, 0})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{1, 1, 12}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{1, 2, 2, 2, 3, 3, 3, 2, 2, 2, 2, 0};
+}
+
+TEST(eval, evaluate_static_scatter_elements_update_basic)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+    auto arg1 = make_shared<op::Parameter>(element::f32, data_shape);
+    auto arg2 = make_shared<op::Parameter>(element::i32, indices_shape);
+    auto arg3 = make_shared<op::Parameter>(element::f32, indices_shape);
+    auto arg4 = make_shared<op::Parameter>(element::i64, Shape{});
+    auto scatter_elements_update =
+        make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
+    auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
+                                     ParameterVector{arg1, arg2, arg3, arg4});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result_tensor},
+                      {make_host_tensor<element::Type_t::f32>(
+                           data_shape, {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f}),
+                       make_host_tensor<element::Type_t::i32>(indices_shape, {1, 0, 2, 0, 2, 1}),
+                       make_host_tensor<element::Type_t::f32>(indices_shape,
+                                                              {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f}),
+                       make_host_tensor<element::Type_t::i64>({}, {0})}));
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_shape(), (Shape{3, 3}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{2.f, 1.1f, 0.0f, 1.f, 0.0f, 2.2f, 0.f, 2.1f, 1.2f};
+    ASSERT_EQ(cval, out);
+}
+
+TEST(eval, evaluate_dynamic_scatter_elements_update_basic)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+
+    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto scatter_elements_update =
+        make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
+    auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
+                                     ParameterVector{arg1, arg2, arg3, arg4});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result_tensor},
+                      {make_host_tensor<element::Type_t::f32>(
+                           data_shape, {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f}),
+                       make_host_tensor<element::Type_t::i32>(indices_shape, {1, 0, 2, 0, 2, 1}),
+                       make_host_tensor<element::Type_t::f32>(indices_shape,
+                                                              {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f}),
+                       make_host_tensor<element::Type_t::i64>({}, {0})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3, 3}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{2.f, 1.1f, 0.0f, 1.f, 0.0f, 2.2f, 0.f, 2.1f, 1.2f};
+    ASSERT_EQ(cval, out);
+}
+
+TEST(eval, evaluate_dynamic_scatter_elements_update_negative_axis)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+    const Shape axis_shape{};
+
+    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto scatter_elements_update =
+        make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
+    auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
+                                     ParameterVector{arg1, arg2, arg3, arg4});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result_tensor},
+                      {make_host_tensor<element::Type_t::f32>(
+                           data_shape, {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f}),
+                       make_host_tensor<element::Type_t::i32>(indices_shape, {1, 0, 2, 0, 2, 1}),
+                       make_host_tensor<element::Type_t::f32>(indices_shape,
+                                                              {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f}),
+                       make_host_tensor<element::Type_t::i64>(axis_shape, {-1})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3, 3}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{1.1f, 1.0f, 1.2f, 2.0f, 2.2f, 2.1f, 0.0f, 0.0f, 0.0f};
+    ASSERT_EQ(cval, out);
+}
+
+TEST(eval, evaluate_dynamic_scatter_elements_update_1d_axis)
+{
+    const Shape data_shape{3, 3};
+    const Shape indices_shape{2, 3};
+
+    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto scatter_elements_update =
+        make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
+    auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
+                                     ParameterVector{arg1, arg2, arg3, arg4});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(
+        fun->evaluate({result_tensor},
+                      {make_host_tensor<element::Type_t::f32>(
+                           data_shape, {0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f}),
+                       make_host_tensor<element::Type_t::i32>(indices_shape, {1, 0, 2, 0, 2, 1}),
+                       make_host_tensor<element::Type_t::f32>(indices_shape,
+                                                              {1.0f, 1.1f, 1.2f, 2.0f, 2.1f, 2.2f}),
+                       make_host_tensor<element::Type_t::i64>({1}, {0})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::f32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3, 3}));
+    auto cval = read_vector<float>(result_tensor);
+    vector<float> out{2.f, 1.1f, 0.0f, 1.f, 0.0f, 2.2f, 0.f, 2.1f, 1.2f};
+    ASSERT_EQ(cval, out);
+}
+
+TEST(eval, evaluate_dynamic_scatter_elements_update_3d_i16)
+{
+    const Shape data_shape{3, 3, 3};
+    const Shape indices_shape{2, 2, 3};
+
+    auto arg1 = make_shared<op::Parameter>(element::i16, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::i16, PartialShape::dynamic());
+    auto arg3 = make_shared<op::Parameter>(element::i16, PartialShape::dynamic());
+    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto scatter_elements_update =
+        make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
+    auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
+                                     ParameterVector{arg1, arg2, arg3, arg4});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result_tensor},
+                              {make_host_tensor<element::Type_t::i16>(
+                                   data_shape, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+                               make_host_tensor<element::Type_t::i16>(
+                                   indices_shape, {1, 0, 2, 0, 2, 1, 2, 2, 2, 0, 1, 0}),
+                               make_host_tensor<element::Type_t::i16>(
+                                   indices_shape, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12}),
+                               make_host_tensor<element::Type_t::i64>({}, {1})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::i16);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3, 3, 3}));
+    auto cval = read_vector<int16_t>(result_tensor);
+    vector<int16_t> out{4, 2, 0, 1, 0, 6, 0, 5, 3, 10, 0, 12, 0, 11,
+                        0, 7, 8, 9, 0, 0, 0, 0, 0, 0,  0, 0,  0};
+    ASSERT_EQ(cval, out);
+}
+
+TEST(eval, evaluate_dynamic_scatter_elements_update_one_elem_i32)
+{
+    const Shape data_shape{3, 3, 3};
+    const Shape indices_shape{1, 1, 1};
+
+    auto arg1 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+
+    auto scatter_elements_update =
+        make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
+    auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
+                                     ParameterVector{arg1, arg2, arg3, arg4});
+    auto result_tensor = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result_tensor},
+                              {make_host_tensor<element::Type_t::i32>(
+                                   data_shape, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}),
+                               make_host_tensor<element::Type_t::i32>(indices_shape, {1}),
+                               make_host_tensor<element::Type_t::i32>(indices_shape, {2}),
+                               make_host_tensor<element::Type_t::i64>({}, {0})}));
+
+    EXPECT_EQ(result_tensor->get_element_type(), element::i32);
+    EXPECT_EQ(result_tensor->get_partial_shape(), (PartialShape{3, 3, 3}));
+    auto cval = read_vector<int32_t>(result_tensor);
+    vector<int32_t> out{0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0,
+                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     ASSERT_EQ(cval, out);
 }

@@ -71,7 +71,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                static size_t number_of_priors(const PriorBoxAttrs& attrs);
+                static int64_t number_of_priors(const PriorBoxAttrs& attrs);
 
                 static std::vector<float>
                     normalized_aspect_ratio(const std::vector<float>& aspect_ratio, bool flip);
