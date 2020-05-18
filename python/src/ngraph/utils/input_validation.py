@@ -25,7 +25,7 @@ from ngraph.exceptions import UserInputError
 log = logging.getLogger(__name__)
 
 
-def assert_list_of_ints(value_list, message):  # type: (Iterable[int], str) -> None
+def assert_list_of_ints(value_list: Iterable[int], message: str) -> None:
     """Verify that the provided value is an iterable of integers."""
     try:
         for value in value_list:

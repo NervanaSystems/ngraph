@@ -19,7 +19,7 @@ import pytest
 import ngraph as ng
 from ngraph.impl import Type
 from _pyngraph import PartialShape
-
+import test
 
 np_types = [np.float32, np.int32]
 integral_np_types = [
@@ -537,6 +537,18 @@ def test_convert_like():
     assert node.get_output_element_type(0) == Type.i8
 
 
+def test_one_hot():
+    data = np.array([0, 1, 2], dtype=np.int32)
+    depth = 2
+    on_value = 5
+    off_value = 10
+    axis = -1
+    excepted = [[5, 10], [10, 5], [10, 10]]
+
+    result = test.ngraph.util.run_op_node([data, depth, on_value, off_value], ng.ops.one_hot, axis)
+    assert np.allclose(result, excepted)
+
+
 def test_reverse():
     parameter_data = ng.parameter([3, 10, 100, 200], name="data", dtype=np.float32)
     parameter_axis = ng.parameter([1], name="axis", dtype=np.int64)
@@ -548,6 +560,23 @@ def test_reverse():
     assert node.get_output_size() == 1
     assert list(node.get_output_shape(0)) == expected_shape
     assert node.get_output_element_type(0) == Type.f32
+
+
+def test_select():
+    cond = [[False, False], [True, False], [True, True]]
+    then_node = [[-1, 0], [1, 2], [3, 4]]
+    else_node = [[11, 10], [9, 8], [7, 6]]
+    excepted = [[11, 10], [1, 8], [3, 4]]
+
+    result = test.ngraph.util.run_op_node([cond, then_node, else_node], ng.ops.select)
+    assert np.allclose(result, excepted)
+
+
+def test_result():
+    node = [[11, 10], [1, 8], [3, 4]]
+
+    result = test.ngraph.util.run_op_node([node], ng.ops.result)
+    assert np.allclose(result, node)
 
 
 def test_bucketize():
@@ -562,6 +591,15 @@ def test_bucketize():
     assert node.get_output_element_type(0) == Type.i32
 
 
+def test_range():
+    start = 5
+    stop = 35
+    step = 5
+
+    result = test.ngraph.util.run_op_node([start, stop, step], ng.ops.range)
+    assert np.allclose(result, [5, 10, 15, 20, 25, 30])
+
+
 def test_region_yolo():
     data = ng.parameter([1, 125, 13, 13], name="input", dtype=np.float32)
     num_coords = 4
@@ -572,9 +610,8 @@ def test_region_yolo():
     end_axis = 3
     do_softmax = False
 
-    node = ng.region_yolo(
-        data, num_coords, num_classes, num_regions, do_softmax, mask, axis, end_axis
-    )
+    node = ng.region_yolo(data, num_coords, num_classes, num_regions,
+                          do_softmax, mask, axis, end_axis)
 
     assert node.get_type_name() == "RegionYolo"
     assert node.get_output_size() == 1
@@ -594,7 +631,6 @@ def test_reorg_yolo():
     assert node.get_output_element_type(0) == Type.i32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_bag_offsets_sum_1():
     emb_table = ng.parameter([5, 2], name="emb_table", dtype=np.float32)
     indices = ng.parameter([4], name="indices", dtype=np.int64)
@@ -609,7 +645,6 @@ def test_embedding_bag_offsets_sum_1():
     assert node.get_output_element_type(0) == Type.f32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_segments_sum_all_inputs():
     emb_table = ng.parameter([5, 2], name="emb_table", dtype=np.float32)
     indices = ng.parameter([4], name="indices", dtype=np.int64)
@@ -628,7 +663,6 @@ def test_embedding_segments_sum_all_inputs():
     assert node.get_output_element_type(0) == Type.f32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_segments_sum_with_some_opt_inputs():
     emb_table = ng.parameter([5, 2], name="emb_table", dtype=np.float32)
     indices = ng.parameter([4], name="indices", dtype=np.int64)
@@ -644,7 +678,6 @@ def test_embedding_segments_sum_with_some_opt_inputs():
     assert node.get_output_element_type(0) == Type.f32
 
 
-@pytest.mark.skip_on_gpu
 def test_embedding_bag_packed_sum():
     emb_table = ng.parameter([5, 2], name="emb_table", dtype=np.float32)
     indices = ng.parameter([3, 3], name="indices", dtype=np.int64)

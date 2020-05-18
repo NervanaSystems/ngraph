@@ -16,16 +16,14 @@
 """Functions related to converting between Python and numpy types and ngraph types."""
 
 import logging
-from typing import Union, List
+from typing import List, Union
 
 import numpy as np
 
-from ngraph.impl import Type as NgraphType
-from ngraph.impl import Node, Shape
-from ngraph.impl.op import Constant
-
 from ngraph.exceptions import NgraphTypeError
-
+from ngraph.impl import Node, Shape
+from ngraph.impl import Type as NgraphType
+from ngraph.impl.op import Constant
 
 log = logging.getLogger(__name__)
 
@@ -67,7 +65,7 @@ ngraph_to_numpy_types_str_map = [
 ]
 
 
-def get_element_type(data_type):  # type: (NumericType) -> NgraphType
+def get_element_type(data_type: NumericType) -> NgraphType:
     """Return an ngraph element type for a Python type or numpy.dtype."""
     if data_type is int:
         log.warning("Converting int type of undefined bitwidth to 32-bit ngraph integer.")
@@ -86,7 +84,7 @@ def get_element_type(data_type):  # type: (NumericType) -> NgraphType
     raise NgraphTypeError("Unidentified data type %s", data_type)
 
 
-def get_element_type_str(data_type):  # type: (NumericType) -> str
+def get_element_type_str(data_type: NumericType) -> str:
     """Return an ngraph element type string representation for a Python type or numpy dtype."""
     if data_type is int:
         log.warning("Converting int type of undefined bitwidth to 32-bit ngraph integer.")
@@ -106,7 +104,7 @@ def get_element_type_str(data_type):  # type: (NumericType) -> str
     raise NgraphTypeError("Unidentified data type %s", data_type)
 
 
-def get_dtype(ngraph_type):  # type: (NgraphType) -> np.dtype
+def get_dtype(ngraph_type: NgraphType) -> np.dtype:
     """Return a numpy.dtype for an ngraph element type."""
     np_type = next(
         (np_type for (ng_type, np_type) in ngraph_to_numpy_types_map if ng_type == ngraph_type),
@@ -119,14 +117,14 @@ def get_dtype(ngraph_type):  # type: (NgraphType) -> np.dtype
     raise NgraphTypeError("Unidentified data type %s", ngraph_type)
 
 
-def get_ndarray(data):  # type: (NumericData) -> np.ndarray
+def get_ndarray(data: NumericData) -> np.ndarray:
     """Wrap data into a numpy ndarray."""
     if type(data) == np.ndarray:
         return data
     return np.array(data)
 
 
-def make_constant_node(value, dtype=None):  # type: (NumericData, NumericType) -> Constant
+def make_constant_node(value: NumericData, dtype: NumericType = None) -> Constant:
     """Return an ngraph Constant node with the specified value."""
     ndarray = get_ndarray(value)
     if dtype:
@@ -137,13 +135,13 @@ def make_constant_node(value, dtype=None):  # type: (NumericData, NumericType) -
     return Constant(element_type, Shape(ndarray.shape), ndarray.flatten().tolist())
 
 
-def as_node(input_value):  # type: (NodeInput) -> Node
+def as_node(input_value: NodeInput) -> Node:
     """Return input values as nodes. Scalars will be converted to Constant nodes."""
     if issubclass(type(input_value), Node):
         return input_value
     return make_constant_node(input_value)
 
 
-def as_nodes(*input_values):  # type: (*NodeInput) -> List[Node]
+def as_nodes(*input_values: NodeInput) -> List[Node]:
     """Return input values as nodes. Scalars will be converted to Constant nodes."""
     return [as_node(input_value) for input_value in input_values]

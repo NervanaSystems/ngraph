@@ -48,8 +48,6 @@ def binary_op(op_str, a, b):
         return a / b
     elif op_str == "Div":
         return ng.divide(a, b)
-    elif op_str == "Dot":
-        return Dot(a, b)
     elif op_str == "Equal":
         return ng.equal(a, b)
     elif op_str == "Greater":
@@ -469,7 +467,6 @@ def test_tanh():
     unary_op_exec(op_str, input_list)
 
 
-@pytest.mark.skip_on_gpu
 def test_reverse():
     input_list = [[-1, 0], [0.5, 1]]
     op_str = "Reverse"
@@ -550,7 +547,6 @@ def test_constant():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_concat():
 
     element_type = Type.f32
@@ -585,7 +581,6 @@ def test_concat():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_axisset():
 
     set_axisset = AxisSet({1, 2, 3})
@@ -602,7 +597,6 @@ def test_axisset():
     assert set(tuple_axisset) == set(set_axisset)
 
 
-@pytest.mark.skip_on_gpu
 def test_select():
 
     element_type = Type.f32
@@ -634,7 +628,6 @@ def test_select():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_max_pool():
     # test 1d
     element_type = Type.f32
@@ -741,7 +734,6 @@ def test_max_pool():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def convolution2d(
     image,
     filterit,
@@ -792,7 +784,6 @@ def convolution2d(
     return result
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_simple():
 
     element_type = Type.f32
@@ -836,7 +827,6 @@ def test_convolution_simple():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_strides():
 
     element_type = Type.f32
@@ -875,7 +865,6 @@ def test_convolution_with_strides():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_filter_dilation():
 
     element_type = Type.f32
@@ -915,7 +904,6 @@ def test_convolution_with_filter_dilation():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_padding():
 
     element_type = Type.f32
@@ -956,7 +944,6 @@ def test_convolution_with_padding():
     assert np.allclose(result_arr, result_arr_ref)
 
 
-@pytest.mark.skip_on_gpu
 def test_convolution_with_non_zero_padding():
     element_type = Type.f32
     image_shape = Shape([1, 1, 10, 10])

@@ -328,6 +328,8 @@ def test_squared_difference_operator():
     assert np.allclose(result, expected)
 
 
+@pytest.mark.skip_on_cpu
+@pytest.mark.skip_on_interpreter
 def test_shuffle_channels_operator():
     runtime = get_runtime()
 

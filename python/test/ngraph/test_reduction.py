@@ -37,7 +37,6 @@ from test.ngraph.util import run_op_node, get_runtime
         (ng.reduce_prod, np.prod, [0, 2]),
     ],
 )
-@pytest.mark.skip_on_gpu
 def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
     np.random.seed(133391)
@@ -70,7 +69,6 @@ def test_reduction_logical_ops(ng_api_helper, numpy_function, reduction_axes):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_topk():
     data_shape = [6, 12, 10, 24]
     data_parameter = ng.parameter(data_shape, name="Data", dtype=np.float32)
@@ -91,10 +89,8 @@ def test_topk():
         (ng.reduce_mean, np.mean, [0, 2]),
     ],
 )
-@pytest.mark.skip_on_gpu
 @pytest.mark.skip_on_cpu
 @pytest.mark.skip_on_interpreter
-@pytest.mark.skip_on_intelgpu
 def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
     shape = [2, 4, 3, 2]
     np.random.seed(133391)
@@ -105,7 +101,6 @@ def test_reduce_mean_op(ng_api_helper, numpy_function, reduction_axes):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.skip_on_gpu
 def test_non_max_suppression():
 
     boxes_shape = [1, 1000, 4]
@@ -121,7 +116,6 @@ def test_non_max_suppression():
     assert list(node.get_output_shape(0)) == expected_shape
 
 
-@pytest.mark.skip_on_gpu
 def test_non_zero():
 
     data_shape = [3, 10, 100, 200]
@@ -134,7 +128,6 @@ def test_non_zero():
     assert node.get_output_size() == 1
 
 
-@pytest.mark.skip_on_gpu
 def test_roi_align():
 
     data_shape = [7, 256, 200, 200]
@@ -169,7 +162,7 @@ def test_roi_align():
 
 @pytest.mark.parametrize(
     "input_shape, cumsum_axis, reverse",
-    [([5, 2], 0, False), ([5, 2], 1, False), ([5, 2, 6], 2, False), ([5, 2], 0, True),],
+    [([5, 2], 0, False), ([5, 2], 1, False), ([5, 2, 6], 2, False), ([5, 2], 0, True)],
 )
 def test_cum_sum(input_shape, cumsum_axis, reverse):
     input_data = np.arange(np.prod(input_shape)).reshape(input_shape)
