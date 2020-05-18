@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <ops.hpp>
 #include "ngraph/op/assign.hpp"
+#include <ops.hpp>
 #include "ngraph/op/read_value.hpp"
 
 using namespace std;
@@ -54,12 +54,16 @@ void op::v3::Assign::validate_and_infer_types()
     {
         auto node = value.get_node_shared_ptr();
         find_variable(node, m_variable);
-        NODE_VALIDATION_CHECK(this, m_variable != nullptr, "Can't find variable with id = ", m_variable_id);
+        NODE_VALIDATION_CHECK(
+            this, m_variable != nullptr, "Can't find variable with id = ", m_variable_id);
     }
 
-    NODE_VALIDATION_CHECK(this, m_variable_id == m_variable->get_id(), "Variables identifiers are inconsistent.");
-    NODE_VALIDATION_CHECK(this, arg_t == m_variable->get_type(), "Variables types are inconsistent.");
-    NODE_VALIDATION_CHECK(this, output_shape == m_variable->get_shape(), "Variables output shapes are inconsistent.");
+    NODE_VALIDATION_CHECK(
+        this, m_variable_id == m_variable->get_id(), "Variables identifiers are inconsistent.");
+    NODE_VALIDATION_CHECK(
+        this, arg_t == m_variable->get_type(), "Variables types are inconsistent.");
+    NODE_VALIDATION_CHECK(
+        this, output_shape == m_variable->get_shape(), "Variables output shapes are inconsistent.");
     m_variable->update(output_shape, arg_t, m_variable_id);
 
     set_output_type(0, arg_t, output_shape);

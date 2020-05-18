@@ -129,6 +129,7 @@ namespace ngraph
         using topological_sort_t = std::function<std::vector<std::shared_ptr<Node>>(
             const std::vector<std::shared_ptr<Node>>& root_nodes)>;
         void set_topological_sort(topological_sort_t);
+
     protected:
         size_t m_temporary_pool_size;
 

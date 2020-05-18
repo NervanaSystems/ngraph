@@ -20,26 +20,29 @@
 
 #include "ngraph/op/op.hpp"
 
-namespace ngraph {
-    class NGRAPH_API Variable {
+namespace ngraph
+{
+    class NGRAPH_API Variable
+    {
     public:
         Variable() = default;
 
-        Variable(const PartialShape &data_shape,
-                 const element::Type &data_type,
+        Variable(const PartialShape& data_shape,
+                 const element::Type& data_type,
                  const std::string& variable_id)
-                : m_data_shape(data_shape), m_data_type(data_type), m_variable_id(variable_id) {
+            : m_data_shape(data_shape)
+            , m_data_type(data_type)
+            , m_variable_id(variable_id)
+        {
         }
 
         PartialShape get_shape() { return m_data_shape; }
-
         element::Type get_type() { return m_data_type; }
-
         std::string get_id() { return m_variable_id; }
-
-        void update(const PartialShape &data_shape,
-                    const element::Type &data_type,
-                    const std::string& variable_id) {
+        void update(const PartialShape& data_shape,
+                    const element::Type& data_type,
+                    const std::string& variable_id)
+        {
             m_data_shape = data_shape;
             m_data_type = data_type;
             m_variable_id = variable_id;
@@ -51,4 +54,3 @@ namespace ngraph {
         std::string m_variable_id;
     };
 }
-

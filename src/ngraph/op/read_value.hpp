@@ -25,7 +25,8 @@ namespace ngraph
     {
         namespace v3
         {
-            /// \brief ReadValue operation creates the variable with `variable_id` and returns value of this variable.
+            /// \brief ReadValue operation creates the variable with `variable_id` and returns value
+            /// of this variable.
             class NGRAPH_API ReadValue : public Op
             {
             public:

@@ -134,6 +134,5 @@ std::shared_ptr<Function>
     {
         ngraph::pass::ConstantFolding().run_on_function(function);
     }
-
     return function;
 }
