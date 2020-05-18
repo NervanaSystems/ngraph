@@ -18,9 +18,9 @@
 from pkg_resources import get_distribution, DistributionNotFound
 
 try:
-    __version__ = get_distribution('ngraph-core').version
+    __version__ = get_distribution("ngraph-core").version
 except DistributionNotFound:
-    __version__ = '0.0.0-dev'
+    __version__ = "0.0.0-dev"
 
 
 from ngraph.ops import absolute

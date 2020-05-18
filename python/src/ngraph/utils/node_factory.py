@@ -4,7 +4,7 @@ from _pyngraph import NodeFactory as _NodeFactory
 
 from ngraph.impl import Node
 
-DEFAULT_OPSET = 'opset3'
+DEFAULT_OPSET = "opset3"
 
 
 class NodeFactory(object):
@@ -17,7 +17,9 @@ class NodeFactory(object):
         """
         self.factory = _NodeFactory(opset_version)
 
-    def create(self, op_type_name: str, arguments: List[Node], attributes: Optional[Dict[str, Any]] = None) -> Node:
+    def create(
+        self, op_type_name: str, arguments: List[Node], attributes: Optional[Dict[str, Any]] = None
+    ) -> Node:
         """Create node object from provided description.
 
         :param      op_type_name:  The operator type name.

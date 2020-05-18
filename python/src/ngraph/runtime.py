@@ -27,7 +27,7 @@ from ngraph.exceptions import UserInputError
 log = logging.getLogger(__name__)
 
 
-def runtime(backend_name: str = 'CPU') -> 'Runtime':
+def runtime(backend_name: str = "CPU") -> "Runtime":
     """Create a Runtime object (helper factory).
 
     Use signature to parameterize runtime as needed.
@@ -44,12 +44,12 @@ class Runtime:
 
     def set_config(self, config: Dict[str, str]) -> None:
         """Set the backend configuration."""
-        self.backend.set_config(config, '')
+        self.backend.set_config(config, "")
 
     def __repr__(self) -> str:
         return "<Runtime: Backend='{}'>".format(self.backend_name)
 
-    def computation(self, node_or_function: Union[Node, Function], *inputs: Node) -> 'Computation':
+    def computation(self, node_or_function: Union[Node, Function], *inputs: Node) -> "Computation":
         """Return a callable Computation object."""
         if isinstance(node_or_function, Node):
             ng_function = Function(node_or_function, inputs, node_or_function.name)
@@ -57,9 +57,12 @@ class Runtime:
         elif isinstance(node_or_function, Function):
             return Computation(self, node_or_function)
         else:
-            raise TypeError('Runtime.computation must be called with an nGraph Function object '
-                            'or an nGraph node object an optionally Parameter node objects. '
-                            'Called with: %s', node_or_function)
+            raise TypeError(
+                "Runtime.computation must be called with an nGraph Function object "
+                "or an nGraph node object an optionally Parameter node objects. "
+                "Called with: %s",
+                node_or_function,
+            )
 
 
 class Computation(object):
@@ -85,8 +88,8 @@ class Computation(object):
             self.result_views.append(runtime.backend.create_tensor(element_type, shape))
 
     def __repr__(self) -> str:
-        params_string = ', '.join([param.name for param in self.parameters])
-        return '<Computation: {}({})>'.format(self.function.get_name(), params_string)
+        params_string = ", ".join([param.name for param in self.parameters])
+        return "<Computation: {}({})>".format(self.function.get_name(), params_string)
 
     def __call__(self, *input_values: NumericData) -> List[NumericData]:
         """Run computation on input values and return result."""
@@ -121,17 +124,22 @@ class Computation(object):
     def _write_ndarray_to_tensor_view(value: np.ndarray, tensor_view: Tensor) -> None:
         tensor_view_dtype = get_dtype(tensor_view.element_type)
         if list(tensor_view.shape) != list(value.shape) and len(value.shape) > 0:
-            raise UserInputError("Provided tensor's shape: %s does not match the expected: %s.",
-                                 list(value.shape), list(tensor_view.shape))
+            raise UserInputError(
+                "Provided tensor's shape: %s does not match the expected: %s.",
+                list(value.shape),
+                list(tensor_view.shape),
+            )
         if value.dtype != tensor_view_dtype:
             log.warning(
-                'Attempting to write a %s value to a %s tensor. Will attempt type conversion.',
+                "Attempting to write a %s value to a %s tensor. Will attempt type conversion.",
                 value.dtype,
-                tensor_view.element_type)
+                tensor_view.element_type,
+            )
             value = value.astype(tensor_view_dtype)
 
         buffer_size = Computation._get_buffer_size(
-            tensor_view.element_type, tensor_view.element_count)
+            tensor_view.element_type, tensor_view.element_count
+        )
 
         nparray = np.ascontiguousarray(value)
         tensor_view.write(util.numpy_to_c(nparray), buffer_size)
@@ -139,5 +147,6 @@ class Computation(object):
     @staticmethod
     def _read_tensor_view_to_ndarray(tensor_view: Tensor, output: np.ndarray) -> None:
         buffer_size = Computation._get_buffer_size(
-            tensor_view.element_type, tensor_view.element_count)
+            tensor_view.element_type, tensor_view.element_count
+        )
         tensor_view.read(util.numpy_to_c(output), buffer_size)

@@ -51,67 +51,72 @@ ngraph_to_numpy_types_map = [
 ]
 
 ngraph_to_numpy_types_str_map = [
-    ('boolean', np.bool),
+    ("boolean", np.bool),
     # ('bf16', ???),
-    ('f16', np.float16),
-    ('f32', np.float32),
-    ('f64', np.float64),
-    ('i8', np.int8),
-    ('i16', np.int16),
-    ('i32', np.int32),
-    ('i64', np.int64),
-    ('u8', np.uint8),
-    ('u16', np.uint16),
-    ('u32', np.uint32),
-    ('u64', np.uint64),
+    ("f16", np.float16),
+    ("f32", np.float32),
+    ("f64", np.float64),
+    ("i8", np.int8),
+    ("i16", np.int16),
+    ("i32", np.int32),
+    ("i64", np.int64),
+    ("u8", np.uint8),
+    ("u16", np.uint16),
+    ("u32", np.uint32),
+    ("u64", np.uint64),
 ]
 
 
 def get_element_type(data_type: NumericType) -> NgraphType:
     """Return an ngraph element type for a Python type or numpy.dtype."""
     if data_type is int:
-        log.warning('Converting int type of undefined bitwidth to 32-bit ngraph integer.')
+        log.warning("Converting int type of undefined bitwidth to 32-bit ngraph integer.")
         return NgraphType.i32
 
     if data_type is float:
-        log.warning('Converting float type of undefined bitwidth to 32-bit ngraph float.')
+        log.warning("Converting float type of undefined bitwidth to 32-bit ngraph float.")
         return NgraphType.f32
 
-    ng_type = next((ng_type for (ng_type, np_type)
-                    in ngraph_to_numpy_types_map if np_type == data_type), None)
+    ng_type = next(
+        (ng_type for (ng_type, np_type) in ngraph_to_numpy_types_map if np_type == data_type), None
+    )
     if ng_type:
         return ng_type
 
-    raise NgraphTypeError('Unidentified data type %s', data_type)
+    raise NgraphTypeError("Unidentified data type %s", data_type)
 
 
 def get_element_type_str(data_type: NumericType) -> str:
     """Return an ngraph element type string representation for a Python type or numpy dtype."""
     if data_type is int:
-        log.warning('Converting int type of undefined bitwidth to 32-bit ngraph integer.')
-        return 'i32'
+        log.warning("Converting int type of undefined bitwidth to 32-bit ngraph integer.")
+        return "i32"
 
     if data_type is float:
-        log.warning('Converting float type of undefined bitwidth to 32-bit ngraph float.')
-        return 'f32'
+        log.warning("Converting float type of undefined bitwidth to 32-bit ngraph float.")
+        return "f32"
 
-    ng_type = next((ng_type for (ng_type, np_type)
-                    in ngraph_to_numpy_types_str_map if np_type == data_type), None)
+    ng_type = next(
+        (ng_type for (ng_type, np_type) in ngraph_to_numpy_types_str_map if np_type == data_type),
+        None,
+    )
     if ng_type:
         return ng_type
 
-    raise NgraphTypeError('Unidentified data type %s', data_type)
+    raise NgraphTypeError("Unidentified data type %s", data_type)
 
 
 def get_dtype(ngraph_type: NgraphType) -> np.dtype:
     """Return a numpy.dtype for an ngraph element type."""
-    np_type = next((np_type for (ng_type, np_type)
-                    in ngraph_to_numpy_types_map if ng_type == ngraph_type), None)
+    np_type = next(
+        (np_type for (ng_type, np_type) in ngraph_to_numpy_types_map if ng_type == ngraph_type),
+        None,
+    )
 
     if np_type:
         return np.dtype(np_type)
 
-    raise NgraphTypeError('Unidentified data type %s', ngraph_type)
+    raise NgraphTypeError("Unidentified data type %s", ngraph_type)
 
 
 def get_ndarray(data: NumericData) -> np.ndarray:
