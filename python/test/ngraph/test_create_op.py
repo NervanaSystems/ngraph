@@ -18,6 +18,7 @@ import pytest
 
 import ngraph as ng
 from ngraph.impl import Type
+from _pyngraph import PartialShape
 import test
 
 np_types = [np.float32, np.int32]
@@ -161,6 +162,306 @@ def test_gather_tree(dtype):
     assert list(node.get_output_shape(0)) == expected_shape
 
 
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_cell_operator(dtype):
+    batch_size = 1
+    input_size = 16
+    hidden_size = 128
+
+    X_shape = [batch_size, input_size]
+    H_t_shape = [batch_size, hidden_size]
+    C_t_shape = [batch_size, hidden_size]
+    W_shape = [4 * hidden_size, input_size]
+    R_shape = [4 * hidden_size, hidden_size]
+    B_shape = [4 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
+
+    expected_shape = [1, 128]
+
+    node_default = ng.lstm_cell(parameter_X,
+                                parameter_H_t,
+                                parameter_C_t,
+                                parameter_W,
+                                parameter_R,
+                                parameter_B,
+                                hidden_size)
+
+    assert node_default.get_type_name() == 'LSTMCell'
+    assert node_default.get_output_size() == 2
+    assert list(node_default.get_output_shape(0)) == expected_shape
+    assert list(node_default.get_output_shape(1)) == expected_shape
+
+    activations = ['tanh', 'Sigmoid', 'RELU']
+    activation_alpha = [1.0, 2.0, 3.0]
+    activation_beta = [3.0, 2.0, 1.0]
+    clip = 0.5
+
+    node_param = ng.lstm_cell(parameter_X,
+                              parameter_H_t,
+                              parameter_C_t,
+                              parameter_W,
+                              parameter_R,
+                              parameter_B,
+                              hidden_size,
+                              activations,
+                              activation_alpha,
+                              activation_beta,
+                              clip)
+
+    assert node_param.get_type_name() == 'LSTMCell'
+    assert node_param.get_output_size() == 2
+    assert list(node_param.get_output_shape(0)) == expected_shape
+    assert list(node_param.get_output_shape(1)) == expected_shape
+
+
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_sequence_operator_bidirectional(dtype):
+    batch_size = 1
+    input_size = 16
+    hidden_size = 128
+    num_directions = 2
+    seq_length = 2
+
+    X_shape = [seq_length, batch_size, input_size]
+    H_t_shape = [num_directions, batch_size, hidden_size]
+    C_t_shape = [num_directions, batch_size, hidden_size]
+    seq_len_shape = [batch_size]
+    W_shape = [num_directions, 4 * hidden_size, input_size]
+    R_shape = [num_directions, 4 * hidden_size, hidden_size]
+    B_shape = [num_directions, 4 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
+    parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
+
+    direction = 'BIDIRECTIONAL'
+    node = ng.lstm_sequence(parameter_X,
+                            parameter_H_t,
+                            parameter_C_t,
+                            parameter_seq_len,
+                            parameter_W,
+                            parameter_R,
+                            parameter_B,
+                            hidden_size,
+                            direction)
+
+    assert node.get_type_name() == 'LSTMSequence'
+    assert node.get_output_size() == 3
+
+    activations = ['RELU', 'tanh', 'Sigmoid']
+    activation_alpha = [1.0, 2.0, 3.0]
+    activation_beta = [3.0, 2.0, 1.0]
+    clip = 1.22
+
+    node_param = ng.lstm_sequence(parameter_X,
+                                  parameter_H_t,
+                                  parameter_C_t,
+                                  parameter_seq_len,
+                                  parameter_W,
+                                  parameter_R,
+                                  parameter_B,
+                                  hidden_size,
+                                  direction,
+                                  activations,
+                                  activation_alpha,
+                                  activation_beta,
+                                  clip)
+
+    assert node_param.get_type_name() == 'LSTMSequence'
+    assert node_param.get_output_size() == 3
+
+
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_sequence_operator_reverse(dtype):
+    batch_size = 2
+    input_size = 4
+    hidden_size = 3
+    num_directions = 1
+    seq_length = 2
+
+    X_shape = [seq_length, batch_size, input_size]
+    H_t_shape = [num_directions, batch_size, hidden_size]
+    C_t_shape = [num_directions, batch_size, hidden_size]
+    seq_len_shape = [batch_size]
+    W_shape = [num_directions, 4 * hidden_size, input_size]
+    R_shape = [num_directions, 4 * hidden_size, hidden_size]
+    B_shape = [num_directions, 4 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
+    parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
+
+    direction = 'REVERSE'
+
+    node_default = ng.lstm_sequence(parameter_X,
+                                    parameter_H_t,
+                                    parameter_C_t,
+                                    parameter_seq_len,
+                                    parameter_W,
+                                    parameter_R,
+                                    parameter_B,
+                                    hidden_size,
+                                    direction)
+
+    assert node_default.get_type_name() == 'LSTMSequence'
+    assert node_default.get_output_size() == 3
+
+    activations = ['RELU', 'tanh', 'Sigmoid']
+    activation_alpha = [1.0, 2.0, 3.0]
+    activation_beta = [3.0, 2.0, 1.0]
+    clip = 1.22
+
+    node_param = ng.lstm_sequence(parameter_X,
+                                  parameter_H_t,
+                                  parameter_C_t,
+                                  parameter_seq_len,
+                                  parameter_W,
+                                  parameter_R,
+                                  parameter_B,
+                                  hidden_size,
+                                  direction,
+                                  activations,
+                                  activation_alpha,
+                                  activation_beta,
+                                  clip)
+
+    assert node_param.get_type_name() == 'LSTMSequence'
+    assert node_param.get_output_size() == 3
+
+
+@pytest.mark.parametrize('dtype', [np.float32, np.float64])
+def test_lstm_sequence_operator_forward(dtype):
+    batch_size = 2
+    input_size = 4
+    hidden_size = 3
+    num_directions = 1
+    seq_length = 2
+
+    X_shape = [seq_length, batch_size, input_size]
+    H_t_shape = [num_directions, batch_size, hidden_size]
+    C_t_shape = [num_directions, batch_size, hidden_size]
+    seq_len_shape = [batch_size]
+    W_shape = [num_directions, 4 * hidden_size, input_size]
+    R_shape = [num_directions, 4 * hidden_size, hidden_size]
+    B_shape = [num_directions, 4 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=dtype)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=dtype)
+    parameter_C_t = ng.parameter(C_t_shape, name='C_t', dtype=dtype)
+    parameter_seq_len = ng.parameter(seq_len_shape, name='seq_len', dtype=np.int32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=dtype)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=dtype)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=dtype)
+
+    direction = 'forward'
+
+    node_default = ng.lstm_sequence(parameter_X,
+                                    parameter_H_t,
+                                    parameter_C_t,
+                                    parameter_seq_len,
+                                    parameter_W,
+                                    parameter_R,
+                                    parameter_B,
+                                    hidden_size,
+                                    direction)
+
+    assert node_default.get_type_name() == 'LSTMSequence'
+    assert node_default.get_output_size() == 3
+
+    activations = ['RELU', 'tanh', 'Sigmoid']
+    activation_alpha = [2.0]
+    activation_beta = [1.0]
+    clip = 0.5
+
+    node = ng.lstm_sequence(parameter_X,
+                            parameter_H_t,
+                            parameter_C_t,
+                            parameter_seq_len,
+                            parameter_W,
+                            parameter_R,
+                            parameter_B,
+                            hidden_size,
+                            direction,
+                            activations,
+                            activation_alpha,
+                            activation_beta,
+                            clip)
+
+    assert node.get_type_name() == 'LSTMSequence'
+    assert node.get_output_size() == 3
+
+
+def test_gru_cell_operator():
+    batch_size = 1
+    input_size = 16
+    hidden_size = 128
+
+    X_shape = [batch_size, input_size]
+    H_t_shape = [batch_size, hidden_size]
+    W_shape = [3 * hidden_size, input_size]
+    R_shape = [3 * hidden_size, hidden_size]
+    B_shape = [3 * hidden_size]
+
+    parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
+    parameter_H_t = ng.parameter(H_t_shape, name='H_t', dtype=np.float32)
+    parameter_W = ng.parameter(W_shape, name='W', dtype=np.float32)
+    parameter_R = ng.parameter(R_shape, name='R', dtype=np.float32)
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    expected_shape = [1, 128]
+
+    node_default = ng.gru_cell(parameter_X,
+                               parameter_H_t,
+                               parameter_W,
+                               parameter_R,
+                               parameter_B,
+                               hidden_size)
+
+    assert node_default.get_type_name() == 'GRUCell'
+    assert node_default.get_output_size() == 1
+    assert list(node_default.get_output_shape(0)) == expected_shape
+
+    activations = ['tanh', 'relu']
+    activations_alpha = [1.0, 2.0]
+    activations_beta = [1.0, 2.0]
+    clip = 0.5
+    linear_before_reset = True
+
+    # If *linear_before_reset* is set True, then B tensor shape must be [4 * hidden_size]
+    B_shape = [4 * hidden_size]
+    parameter_B = ng.parameter(B_shape, name='B', dtype=np.float32)
+
+    node_param = ng.gru_cell(parameter_X,
+                             parameter_H_t,
+                             parameter_W,
+                             parameter_R,
+                             parameter_B,
+                             hidden_size,
+                             activations,
+                             activations_alpha,
+                             activations_beta,
+                             clip,
+                             linear_before_reset)
+
+    assert node_param.get_type_name() == 'GRUCell'
+    assert node_param.get_output_size() == 1
+    assert list(node_param.get_output_shape(0)) == expected_shape
+
+
 def test_roi_pooling():
     inputs = ng.parameter([2, 3, 4, 5], dtype=np.float32)
     coords = ng.parameter([150, 5], dtype=np.float32)
@@ -228,3 +529,126 @@ def test_select():
 
     result = test.ngraph.util.run_op_node([cond, then_node, else_node], ng.ops.select)
     assert np.allclose(result, excepted)
+
+
+def test_result():
+    node = [[11, 10], [1, 8], [3, 4]]
+
+    result = test.ngraph.util.run_op_node([node], ng.ops.result)
+    assert np.allclose(result, node)
+
+
+def test_bucketize():
+    data = ng.parameter([4, 3, 2, 1], name='data', dtype=np.float32)
+    buckets = ng.parameter([5], name='buckets', dtype=np.int64)
+
+    node = ng.bucketize(data, buckets, 'i32')
+
+    assert node.get_type_name() == 'Bucketize'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [4, 3, 2, 1]
+    assert node.get_output_element_type(0) == Type.i32
+
+
+def test_range():
+    start = 5
+    stop = 35
+    step = 5
+
+    result = test.ngraph.util.run_op_node([start, stop, step], ng.ops.range)
+    assert np.allclose(result, [5, 10, 15, 20, 25, 30])
+
+
+def test_region_yolo():
+    data = ng.parameter([1, 125, 13, 13], name='input', dtype=np.float32)
+    num_coords = 4
+    num_classes = 80
+    num_regions = 1
+    mask = [6, 7, 8]
+    axis = 0
+    end_axis = 3
+    do_softmax = False
+
+    node = ng.region_yolo(data, num_coords, num_classes, num_regions,
+                          do_softmax, mask, axis, end_axis)
+
+    assert node.get_type_name() == 'RegionYolo'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [1, (80 + 4 + 1) * 3, 13, 13]
+    assert node.get_output_element_type(0) == Type.f32
+
+
+def test_reorg_yolo():
+    data = ng.parameter([2, 24, 34, 62], name='input', dtype=np.int32)
+    stride = [2]
+
+    node = ng.reorg_yolo(data, stride)
+
+    assert node.get_type_name() == 'ReorgYolo'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [2, 96, 17, 31]
+    assert node.get_output_element_type(0) == Type.i32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_bag_offsets_sum_1():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([4], name='indices', dtype=np.int64)
+    offsets = ng.parameter([3], name='offsets', dtype=np.int64)
+    default_index = ng.parameter([], name='default_index', dtype=np.int64)
+
+    node = ng.embedding_bag_offsets_sum(emb_table, indices, offsets, default_index)
+
+    assert node.get_type_name() == 'EmbeddingBagOffsetsSum'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [3, 2]
+    assert node.get_output_element_type(0) == Type.f32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_segments_sum_all_inputs():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([4], name='indices', dtype=np.int64)
+    segment_ids = ng.parameter([4], name='segment_ids', dtype=np.int64)
+    num_segments = ng.parameter([], name='num_segments', dtype=np.int64)
+    default_index = ng.parameter([], name='default_index', dtype=np.int64)
+    per_sample_weights = ng.parameter([4], name='per_sample_weights', dtype=np.float32)
+
+    node = ng.embedding_segments_sum(emb_table, indices, segment_ids, num_segments,
+                                     default_index, per_sample_weights)
+
+    assert node.get_type_name() == 'EmbeddingSegmentsSum'
+    assert node.get_output_size() == 1
+    assert node.get_output_partial_shape(0).same_scheme(PartialShape([-1, 2]))
+    assert node.get_output_element_type(0) == Type.f32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_segments_sum_with_some_opt_inputs():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([4], name='indices', dtype=np.int64)
+    segment_ids = ng.parameter([4], name='segment_ids', dtype=np.int64)
+    num_segments = ng.parameter([], name='num_segments', dtype=np.int64)
+
+    # only 1 out of 3 optional inputs
+    node = ng.embedding_segments_sum(emb_table, indices, segment_ids, num_segments)
+
+    assert node.get_type_name() == 'EmbeddingSegmentsSum'
+    assert node.get_output_size() == 1
+    assert node.get_output_partial_shape(0).same_scheme(PartialShape([-1, 2]))
+    assert node.get_output_element_type(0) == Type.f32
+
+
+@pytest.mark.skip_on_gpu
+def test_embedding_bag_packed_sum():
+    emb_table = ng.parameter([5, 2], name='emb_table', dtype=np.float32)
+    indices = ng.parameter([3, 3], name='indices', dtype=np.int64)
+    per_sample_weights = ng.parameter([3, 3], name='per_sample_weights', dtype=np.float32)
+
+    # only 1 out of 3 optional inputs
+    node = ng.embedding_bag_packed_sum(emb_table, indices, per_sample_weights)
+
+    assert node.get_type_name() == 'EmbeddingBagPackedSum'
+    assert node.get_output_size() == 1
+    assert list(node.get_output_shape(0)) == [3, 2]
+    assert node.get_output_element_type(0) == Type.f32

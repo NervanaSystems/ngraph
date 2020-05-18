@@ -176,43 +176,6 @@ def test_batch_to_space():
     assert np.allclose(result, expected)
 
 
-def test_gemm_operator():
-    runtime = get_runtime()
-
-    shape_a = [3, 2]
-    shape_b = [3, 2]
-    shape_c = [2, 1]
-
-    value_a = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
-    value_b = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
-    value_c = np.array([[13], [14]], dtype=np.float32)
-
-    parameter_a = ng.parameter(shape_a, name='A', dtype=np.float32)
-    parameter_b = ng.parameter(shape_b, name='B', dtype=np.float32)
-    parameter_c = ng.parameter(shape_c, name='C', dtype=np.float32)
-
-    alpha_value = np.float32(3)
-    beta_value = np.float32(3)
-
-    transA = True
-    transB = False
-
-    model = ng.gemm(parameter_a, parameter_b, parameter_c, alpha_value, beta_value, transA, transB)
-    computation = runtime.computation(model, parameter_a, parameter_b, parameter_c)
-
-    result = computation(value_a, value_b, value_c)
-
-    # expected = value_alpha * value_a' * value_b + value_beta * value_c
-
-    value_a = value_a.transpose()
-    a_mul_a = np.multiply(alpha_value, value_a)
-    aa_mul_b = np.dot(a_mul_a, value_b)
-    b_mul_c = np.dot(beta_value, value_c)
-    expected = np.add(aa_mul_b, b_mul_c)
-
-    assert np.allclose(result, expected)
-
-
 def test_gelu_operator_with_parameters():
     runtime = get_runtime()
 
@@ -442,7 +405,7 @@ def test_mvn_operator():
     runtime = get_runtime()
 
     data_shape = [3, 3, 3, 1]
-    axis = [0, 2, 3]
+    across_channels = True
     normalize_variance = True
     eps = np.float32(1e-9)
 
@@ -458,41 +421,31 @@ def test_mvn_operator():
 
     parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
 
-    model = ng.mvn(parameter_data, axis, normalize_variance, eps)
+    model = ng.mvn(parameter_data, across_channels, normalize_variance, eps)
     computation = runtime.computation(model, parameter_data)
 
     result = computation(data_value)
 
-    data_mean = np.mean(data_value, axis=(0, 2, 3), keepdims=1)
-    data_mean_squared = np.power(data_mean, 2)
-    data_squared = np.power(data_value, 2)
-    data_squared_mean = np.mean(data_squared, axis=(0, 2, 3), keepdims=1)
-    std = np.sqrt(data_squared_mean - data_mean_squared)
-    expected = (data_value - data_mean) / (std + 1e-9)
+    expected = np.array(
+        [
+            [
+                [[0.9951074], [0.14548765], [-1.410561]],
+                [[-1.4999886], [-1.1923014], [-0.03975919]],
+                [[0.8463296], [1.2926502], [1.3340596]],
+            ],
+            [
+                [[-1.0463363], [-0.1747985], [-0.7784088]],
+                [[0.47672555], [-1.5383], [0.32375798]],
+                [[1.2404392], [1.3878832], [-1.2228798]],
+            ],
+            [
+                [[-0.3228847], [1.2063044], [0.22751297]],
+                [[0.91956615], [0.81839436], [-1.2279599]],
+                [[0.5312334], [0.067952], [-1.3592235]],
+            ],
+        ],
+    )
 
-    assert np.allclose(result, expected)
-
-
-def test_scale_shift_operator():
-    runtime = get_runtime()
-
-    data_shape = [3, 6]
-    scale_shape = [3, 6]
-    shift_shape = [1]
-
-    data_value = np.arange(start=19.0, stop=1.0, step=-1.0, dtype=np.float32).reshape(data_shape)
-    scale_value = np.arange(start=19.0, stop=1.0, step=-1.0, dtype=np.float32).reshape(scale_shape)
-    shift_value = [2.0]
-
-    parameter_data = ng.parameter(data_shape, name='Data', dtype=np.float32)
-    parameter_scale = ng.parameter(scale_shape, name='Scale', dtype=np.float32)
-    parameter_shift = ng.parameter(shift_shape, name='Shift', dtype=np.float32)
-
-    model = ng.scale_shift(parameter_data, parameter_scale, parameter_shift)
-    computation = runtime.computation(model, parameter_data, parameter_scale, parameter_shift)
-
-    result = computation(data_value, scale_value, shift_value)
-    expected = np.add(np.multiply(data_value, scale_value), shift_value)
     assert np.allclose(result, expected)
 
 
@@ -517,6 +470,7 @@ def test_space_to_depth_operator():
     assert np.allclose(result, expected)
 
 
+@pytest.mark.skip_on_cpu
 def test_rnn_cell_operator():
     runtime = get_runtime()
 
@@ -525,9 +479,9 @@ def test_rnn_cell_operator():
     hidden_size = 3
 
     X_shape = [batch_size, input_size]
+    H_t_shape = [batch_size, hidden_size]
     W_shape = [hidden_size, input_size]
     R_shape = [hidden_size, hidden_size]
-    H_t_shape = [batch_size, hidden_size]
     B_shape = [hidden_size]
 
     parameter_X = ng.parameter(X_shape, name='X', dtype=np.float32)
