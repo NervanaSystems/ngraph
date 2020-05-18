@@ -600,9 +600,8 @@ def test_region_yolo():
     end_axis = 3
     do_softmax = False
 
-    node = ng.region_yolo(
-        data, num_coords, num_classes, num_regions, mask, axis, end_axis, do_softmax
-    )
+    node = ng.region_yolo(data, num_coords, num_classes, num_regions,
+                          do_softmax, mask, axis, end_axis)
 
     assert node.get_type_name() == "RegionYolo"
     assert node.get_output_size() == 1

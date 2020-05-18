@@ -2821,28 +2821,27 @@ def range(start: Node, stop: NodeInput, step: NodeInput, name: str = None) -> No
 
 
 @nameable_op
-def region_yolo(
-    input: Node,
-    coords: int,
-    classes: int,
-    num: int,
-    mask: List[int],
-    axis: int,
-    end_axis: int,
-    do_softmax: bool = True,
-    anchors: List[float] = None,
-    name: str = None,
-) -> Node:
+def region_yolo(input,  # type: Node
+                coords,  # type: int
+                classes,  # type: int
+                num,  # type: int
+                do_softmax,  # type: bool
+                mask,  # type: List[int]
+                axis,  # type: int
+                end_axis,  # type: int
+                anchors=None,  # type: List[float]
+                name=None,  # type: str
+                ):  # type: (...) -> Node
     """Return a node which produces the RegionYolo operation.
 
     :param input:       Input data
     :param coords:      Number of coordinates for each region
     :param classes:     Number of classes for each region
     :param num:         Number of regions
+    :param do_softmax:  Compute softmax
     :param mask:        Mask
     :param axis:        Axis to begin softmax on
     :param end_axis:    Axis to end softmax on
-    :param do_softmax:  Compute softmax
     :param anchors:     A flattened list of pairs `[width, height]` that describes prior box sizes
     :param name:        Optional name for output node.
     :return: RegionYolo node
@@ -2850,20 +2849,16 @@ def region_yolo(
     if anchors is None:
         anchors = []
 
-    return _get_node_factory().create(
-        "RegionYolo",
-        [input],
-        {
-            "coords": coords,
-            "classes": classes,
-            "num": num,
-            "mask": mask,
-            "axis": axis,
-            "end_axis": end_axis,
-            "do_softmax": do_softmax,
-            "anchors": anchors,
-        },
-    )
+    return _get_node_factory().create('RegionYolo', [input], {
+                                      'coords': coords,
+                                      'classes': classes,
+                                      'num': num,
+                                      'do_softmax': do_softmax,
+                                      'mask': mask,
+                                      'axis': axis,
+                                      'end_axis': end_axis,
+                                      'anchors': anchors,
+                                      })
 
 
 @nameable_op
