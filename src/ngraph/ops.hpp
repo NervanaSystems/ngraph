@@ -20,6 +20,7 @@
 
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
+#include "ngraph/op/acosh.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
@@ -28,9 +29,11 @@
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
 #include "ngraph/op/asin.hpp"
-#include "ngraph/op/assign.hpp"
+#include "ngraph/op/asinh.hpp"
+#include "ngraph/op/assign.hpp
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/atan2.hpp"
+#include "ngraph/op/atanh.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/binary_convolution.hpp"
@@ -72,6 +75,7 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/random_uniform.hpp"
+#include "ngraph/op/extractimagepatches.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/floor_mod.hpp"
 #include "ngraph/op/fused/batch_mat_mul_transpose.hpp"

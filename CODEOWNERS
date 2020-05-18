@@ -52,6 +52,7 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv
 /src/ngraph/runtime/dynamic/        @diyessi
 /src/runtime/gpu/                   @rkimballn1
+/src/ngraph/runtime/ie              @arogowie-intel @postrational
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/reference/      @diyessi
 /src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @diyessi

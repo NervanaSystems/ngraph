@@ -75,7 +75,6 @@ public:
 
         construct_constant_split();
         construct_constant_variadic_split();
-        construct_constant_broadcast();
         construct_constant_dyn_broadcast();
         construct_constant_pad();
         construct_constant_quantize();
@@ -98,7 +97,6 @@ public:
     }
 
 private:
-    void construct_constant_broadcast();
     void construct_constant_dyn_broadcast();
     void construct_constant_pad();
     void construct_constant_quantize();
