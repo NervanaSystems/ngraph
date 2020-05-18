@@ -23,7 +23,7 @@ try:
     from ngraph.impl.onnx_import import import_onnx_model_file
 
     def test_import_onnx_function():
-        model_path = os.path.join(os.path.dirname(__file__), 'models/add_abc.onnx')
+        model_path = os.path.join(os.path.dirname(__file__), "models/add_abc.onnx")
         ng_function = import_onnx_model_file(model_path)
 
         dtype = np.float32
@@ -35,6 +35,7 @@ try:
         computation = runtime.computation(ng_function)
         result = computation(value_a, value_b, value_c)
         assert np.allclose(result, np.array([6], dtype=dtype))
+
 
 except ImportError:
     # Do not test load_onnx_model_file if nGraph was build without ONNX support

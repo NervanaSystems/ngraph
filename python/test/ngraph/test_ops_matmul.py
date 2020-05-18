@@ -20,23 +20,22 @@ import ngraph as ng
 from test.ngraph.util import run_op_node
 
 
-@pytest.mark.parametrize('shape_a, shape_b, transpose_a, transpose_b', [
-    # matrix, vector
-    ([2, 4], [4], False, False),
-    ([4], [4, 2], False, False),
-
-    # matrix, matrix
-    ([2, 4], [4, 2], False, False),
-
-    # tensor, vector
-    ([2, 4, 5], [5], False, False),
-
-    # # tensor, matrix
-    ([2, 4, 5], [5, 4], False, False),
-
-    # # tensor, tensor
-    ([2, 2, 4], [2, 4, 2], False, False),
-])
+@pytest.mark.parametrize(
+    "shape_a, shape_b, transpose_a, transpose_b",
+    [
+        # matrix, vector
+        ([2, 4], [4], False, False),
+        ([4], [4, 2], False, False),
+        # matrix, matrix
+        ([2, 4], [4, 2], False, False),
+        # tensor, vector
+        ([2, 4, 5], [5], False, False),
+        # # tensor, matrix
+        ([2, 4, 5], [5, 4], False, False),
+        # # tensor, tensor
+        ([2, 2, 4], [2, 4, 2], False, False),
+    ],
+)
 @pytest.mark.skip_on_gpu
 def test_matmul(shape_a, shape_b, transpose_a, transpose_b):
     np.random.seed(133391)

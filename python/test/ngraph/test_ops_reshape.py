@@ -28,18 +28,15 @@ def test_concat():
     expected = np.concatenate((a, b), axis=0)
 
     runtime = get_runtime()
-    parameter_a = ng.parameter(list(a.shape), name='A', dtype=np.float32)
-    parameter_b = ng.parameter(list(b.shape), name='B', dtype=np.float32)
+    parameter_a = ng.parameter(list(a.shape), name="A", dtype=np.float32)
+    parameter_b = ng.parameter(list(b.shape), name="B", dtype=np.float32)
     node = ng.concat([parameter_a, parameter_b], axis)
     computation = runtime.computation(node, parameter_a, parameter_b)
     result = computation(a, b)
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize('val_type, value', [
-    (bool, False),
-    (bool, np.empty((2, 2), dtype=bool)),
-])
+@pytest.mark.parametrize("val_type, value", [(bool, False), (bool, np.empty((2, 2), dtype=bool)),])
 @pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_bool(val_type, value):
     expected = np.array(value, dtype=val_type)
@@ -47,18 +44,21 @@ def test_constant_from_bool(val_type, value):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize('val_type, value', [
-    (np.float32, np.float32(0.1234)),
-    (np.float64, np.float64(0.1234)),
-    (np.int8, np.int8(-63)),
-    (np.int16, np.int16(-12345)),
-    (np.int32, np.int32(-123456)),
-    (np.int64, np.int64(-1234567)),
-    (np.uint8, np.uint8(63)),
-    (np.uint16, np.uint16(12345)),
-    (np.uint32, np.uint32(123456)),
-    (np.uint64, np.uint64(1234567)),
-])
+@pytest.mark.parametrize(
+    "val_type, value",
+    [
+        (np.float32, np.float32(0.1234)),
+        (np.float64, np.float64(0.1234)),
+        (np.int8, np.int8(-63)),
+        (np.int16, np.int16(-12345)),
+        (np.int32, np.int32(-123456)),
+        (np.int64, np.int64(-1234567)),
+        (np.uint8, np.uint8(63)),
+        (np.uint16, np.uint16(12345)),
+        (np.uint32, np.uint32(123456)),
+        (np.uint64, np.uint64(1234567)),
+    ],
+)
 @pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_scalar(val_type, value):
     expected = np.array(value, dtype=val_type)
@@ -66,10 +66,7 @@ def test_constant_from_scalar(val_type, value):
     assert np.allclose(result, expected)
 
 
-@pytest.mark.parametrize('val_type', [
-    np.float32,
-    np.float64,
-])
+@pytest.mark.parametrize("val_type", [np.float32, np.float64,])
 @pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_float_array(val_type):
     np.random.seed(133391)
@@ -78,16 +75,19 @@ def test_constant_from_float_array(val_type):
     assert np.allclose(result, input_data)
 
 
-@pytest.mark.parametrize('val_type, range_start, range_end', [
-    (np.int8, -8, 8),
-    (np.int16, -64, 64),
-    (np.int32, -1024, 1024),
-    (np.int64, -16383, 16383),
-    (np.uint8, 0, 8),
-    (np.uint16, 0, 64),
-    (np.uint32, 0, 1024),
-    (np.uint64, 0, 16383),
-])
+@pytest.mark.parametrize(
+    "val_type, range_start, range_end",
+    [
+        (np.int8, -8, 8),
+        (np.int16, -64, 64),
+        (np.int32, -1024, 1024),
+        (np.int64, -16383, 16383),
+        (np.uint8, 0, 8),
+        (np.uint16, 0, 64),
+        (np.uint32, 0, 1024),
+        (np.uint64, 0, 16383),
+    ],
+)
 @pytest.mark.skip_on_gpu  # under investigation, runtime error is: function failed to compile
 def test_constant_from_integer_array(val_type, range_start, range_end):
     np.random.seed(133391)
@@ -101,12 +101,12 @@ def test_broadcast_numpy():
     data_shape = [16, 1, 1]
     target_shape_shape = [4]
 
-    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
-    target_shape_parameter = ng.parameter(target_shape_shape, name='Target_shape', dtype=np.int64)
+    data_parameter = ng.parameter(data_shape, name="Data", dtype=np.float32)
+    target_shape_parameter = ng.parameter(target_shape_shape, name="Target_shape", dtype=np.int64)
 
     node = ng.broadcast(data_parameter, target_shape_parameter)
 
-    assert node.get_type_name() == 'Broadcast'
+    assert node.get_type_name() == "Broadcast"
     assert node.get_output_size() == 1
 
 
@@ -115,12 +115,12 @@ def test_broadcast_bidirectional():
     data_shape = [16, 1, 1]
     target_shape_shape = [4]
 
-    data_parameter = ng.parameter(data_shape, name='Data', dtype=np.float32)
-    target_shape_parameter = ng.parameter(target_shape_shape, name='Target_shape', dtype=np.int64)
+    data_parameter = ng.parameter(data_shape, name="Data", dtype=np.float32)
+    target_shape_parameter = ng.parameter(target_shape_shape, name="Target_shape", dtype=np.int64)
 
-    node = ng.broadcast(data_parameter, target_shape_parameter, 'BIDIRECTIONAL')
+    node = ng.broadcast(data_parameter, target_shape_parameter, "BIDIRECTIONAL")
 
-    assert node.get_type_name() == 'Broadcast'
+    assert node.get_type_name() == "Broadcast"
     assert node.get_output_size() == 1
 
 
@@ -176,13 +176,15 @@ def test_strided_slice():
     shrink_axis_mask = np.array([1, 0, 0])
     ellipsis_mask = np.array([0, 0, 0])
 
-    result = run_op_node([input_tensor, begin, end, strides],
-                         ng.strided_slice,
-                         begin_mask,
-                         end_mask,
-                         new_axis_mask,
-                         shrink_axis_mask,
-                         ellipsis_mask)
+    result = run_op_node(
+        [input_tensor, begin, end, strides],
+        ng.strided_slice,
+        begin_mask,
+        end_mask,
+        new_axis_mask,
+        shrink_axis_mask,
+        ellipsis_mask,
+    )
 
     expected = np.array([12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]).reshape((1, 3, 4))
 
