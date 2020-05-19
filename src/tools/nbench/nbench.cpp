@@ -287,6 +287,7 @@ OPTIONS
         -i|--iterations           Iterations (default: 10)
         -s|--statistics           Display op statistics
         -v|--visualize            Visualize a model (WARNING: requires Graphviz installed)
+                                  Default pdf but takes optional arg to specify output extension
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
