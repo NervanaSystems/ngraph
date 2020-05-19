@@ -213,13 +213,13 @@ int main(int argc, char** argv)
         else if (arg == "-v" || arg == "--visualize")
         {
             visualize = true;
-            if (i < argc-1)
+            if (i < argc - 1)
             {
-                arg = argv[i+1];
+                arg = argv[i + 1];
                 if (arg[0] != '-')
                 {
                     // Option for -v arg
-                    visualize_output_format = (arg[0] == '.' ? arg : "."+arg);
+                    visualize_output_format = (arg[0] == '.' ? arg : "." + arg);
                     i++; // Skip to the next arg
                 }
             }

@@ -442,7 +442,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
             row_ss << "<tr>";
             row_ss << td_start << "I[" << index++ << "]" << td_end;
             row_compare_ss << td_start << input.get_element_type().get_type_name() << td_end;
-            row_compare_ss << td_start << "{" << join(input.get_shape()) << "}" << td_end;
+            row_compare_ss << td_start << pretty_partial_shape(input.get_shape()) << td_end;
             row_ss << row_compare_ss.str() << "</tr>";
             rows.push_back(row_ss.str());
             row_compare.push_back("I" + row_compare_ss.str());
@@ -455,7 +455,7 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
             row_ss << "<tr>";
             row_ss << td_start << "O[" << index++ << "]" << td_end;
             row_compare_ss << td_start << output.get_element_type().get_type_name() << td_end;
-            row_compare_ss << td_start << "{" << join(output.get_shape()) << "}" << td_end;
+            row_compare_ss << td_start << pretty_partial_shape(output.get_shape()) << td_end;
             row_ss << row_compare_ss.str() << "</tr>";
             rows.push_back(row_ss.str());
             row_compare.push_back("O" + row_compare_ss.str());
