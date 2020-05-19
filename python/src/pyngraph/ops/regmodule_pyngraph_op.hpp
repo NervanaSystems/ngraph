@@ -18,13 +18,6 @@
 
 #include <pybind11/pybind11.h>
 #include "pyngraph/ops/constant.hpp"
-#include "pyngraph/ops/fused/depth_to_space.hpp"
-#include "pyngraph/ops/fused/gelu.hpp"
-#include "pyngraph/ops/fused/grn.hpp"
-#include "pyngraph/ops/fused/hard_sigmoid.hpp"
-#include "pyngraph/ops/fused/mvn.hpp"
-#include "pyngraph/ops/fused/shuffle_channels.hpp"
-#include "pyngraph/ops/fused/space_to_depth.hpp"
 #include "pyngraph/ops/get_output_element.hpp"
 #include "pyngraph/ops/parameter.hpp"
 #include "pyngraph/ops/result.hpp"
