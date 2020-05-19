@@ -133,7 +133,10 @@ void codegen::Compiler::add_header_search_path(const std::string& path)
 
 std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& source)
 {
-    NGRAPH_INFO << "\n" << source;
+    if (getenv_bool("NGRAPH_CODEGEN_DUMP_SOURCE"))
+    {
+        cout << source << endl;
+    }
     // lock_guard<mutex> lock(m_mutex);
     CompilerInfo& compiler_info = s_compiler_info[m_precompiled_header_source];
     if (!compiler_info.compiler)

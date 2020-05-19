@@ -1356,6 +1356,7 @@ namespace ngraph
                 {
                     writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
                     writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            {" << join(lrn->get_reduction_axes()) << "},\n";
                     writer << "            " << out[0].get_name() << ",\n";
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
                     writer << "            " << lrn->get_alpha() << ",\n";
@@ -3482,6 +3483,7 @@ namespace ngraph
                     writer << "cpu::kernel::reduce_max_2d_1rd_float32(" << args[0].get_name()
                            << ", " << out[0].get_name() << ", "
                            << "{" << join(args[0].get_shape()) << "}, "
+                           << "{" << join(out[0].get_shape()) << "}, "
                            << "{" << join(max->get_reduction_axes()) << "}"
                            << ", 0);\n";
                 }
@@ -4434,26 +4436,26 @@ namespace ngraph
                 auto index = external_function->add_state(new UniformRNGState());
                 auto fixed_seed = ru->get_fixed_seed();
 
-                writer << "auto state = static_cast<ngraph::RandomUniformRNGState*>(ctx->states["
+                writer << "auto state = static_cast<ngraph::UniformRNGState*>(ctx->states["
                        << index << "]);\n";
                 writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
                        << "[0]);\n";
 
                 writer << "if (use_fixed_seed == false) \n";
                 writer << "{\n";
-                writer << "    reference::random_uniform<" << args[0].get_type() << ">(\n";
+                writer << "    reference::random_uniform<" << out[0].get_type() << ">(\n";
                 writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   " << args[0].get_name() << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   *" << args[0].get_name() << ",\n";
+                writer << "                   *" << args[1].get_name() << ",\n";
                 writer << "                   " << out[0].get_size() << ",\n";
                 writer << "                   state);\n";
                 writer << "}\n";
                 writer << "else {\n";
-                writer << "    reference::random_uniform_with_fixed_seed<" << args[0].get_type()
+                writer << "    reference::random_uniform_with_fixed_seed<" << out[0].get_type()
                        << ">(\n";
                 writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   " << args[0].get_name() << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   *" << args[0].get_name() << ",\n";
+                writer << "                   *" << args[1].get_name() << ",\n";
                 writer << "                   " << out[0].get_size() << ",\n";
                 writer << "                   " << fixed_seed << ");\n";
                 writer << "}\n";
