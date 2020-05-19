@@ -28,6 +28,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
+#include "ngraph/op/experimental/transpose.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -37,8 +38,10 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
+#include "ngraph/opsets/opset2.hpp"
 #include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/rt_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -315,6 +318,7 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
 {
     set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info,
                                      op::v0::Reshape::type_info,
+                                     op::v1::Broadcast::type_info,
                                      opset3::Broadcast::type_info,
                                      opset3::Reshape::type_info};
     ;
@@ -385,7 +389,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // gathering the whole input tensor, so we can optimize this
         // op has Nop
 
-        if (data.get_shape()[axis] == 1)
+        if (data.get_shape()[axis] == 1 && data.get_shape() == node->get_shape())
         {
             return replace_output_update_name(gather->output(0), gather->input_value(0));
         }
@@ -397,7 +401,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
 
         // check if the indices is constant
         auto constant_indices =
-            as_type_ptr<op::Constant>(gather->input_value(1).get_node_shared_ptr());
+            as_type_ptr<opset3::Constant>(gather->input_value(1).get_node_shared_ptr());
         if (!constant_indices)
         {
             return false;
@@ -408,7 +412,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
             // entire input tensor
             std::vector<int64_t> ref_indices(data.get_shape()[axis], 0);
             std::iota(ref_indices.begin(), ref_indices.end(), 0);
-            if (ref_indices == constant_indices->get_vector<int64_t>())
+            if (ref_indices == constant_indices->cast_vector<int64_t>())
             {
                 return replace_output_update_name(gather->output(0), gather->input_value(0));
             }
@@ -493,8 +497,7 @@ static bool simplify_log(shared_ptr<Node> n)
 // other cases into Concat of shapeof/gather(data) + shapeof(indices)
 static bool simplify_gather_shapeof(shared_ptr<Node> node)
 {
-    auto shapeof = as_type_ptr<opset3::ShapeOf>(node);
-    auto gather = as_type_ptr<opset3::Gather>(shapeof->input_value(0).get_node_shared_ptr());
+    auto gather = as_type_ptr<opset3::Gather>(node->input_value(0).get_node_shared_ptr());
     if (!gather)
     {
         return false;
@@ -509,16 +512,19 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         return false;
     }
 
-    auto zero_axis = op::Constant::create<int64_t>(element::i64, Shape{}, {0});
-    shared_ptr<Node> replace_node;
-    auto new_shapeof = make_shared<opset3::ShapeOf>(gather->input_value(0).get_node_shared_ptr());
+    auto zero_axis = opset3::Constant::create<int64_t>(element::i64, Shape{}, {0});
+    NodeVector new_ops;
+    auto new_shapeof = make_shared<opset3::ShapeOf>(gather->input_value(0));
+    new_ops.push_back(new_shapeof);
+    std::shared_ptr<Node> replace_op;
     if (indices_rank.get_length() == 0)
     {
         std::vector<int64_t> vi(gather_in_rank.get_length());
         std::iota(vi.begin(), vi.end(), 0);
         vi.erase(vi.begin() + axis);
-        auto new_indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
-        replace_node = make_shared<opset3::Gather>(new_shapeof, new_indices, zero_axis);
+        auto new_indices = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+        replace_op = make_shared<opset3::Gather>(new_shapeof, new_indices, zero_axis);
+        new_ops.push_back(replace_op);
     }
     else
     {
@@ -527,12 +533,13 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         {
             std::vector<int64_t> vi(axis);
             std::iota(vi.begin(), vi.end(), 0);
-            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto indices = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
             auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
+            new_ops.push_back(gather);
             concat_inputs.push_back(gather);
         }
-        auto shapeof_indices =
-            make_shared<opset3::ShapeOf>(gather->input_value(1).get_node_shared_ptr());
+        auto shapeof_indices = make_shared<opset3::ShapeOf>(gather->input_value(1));
+        new_ops.push_back(shapeof_indices);
 
         concat_inputs.push_back(shapeof_indices);
 
@@ -540,13 +547,18 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
         {
             std::vector<int64_t> vi(gather_in_rank.get_length() - (axis + 1));
             std::iota(vi.begin(), vi.end(), axis + 1);
-            auto indices = op::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
+            auto indices = opset3::Constant::create<int64_t>(element::i64, Shape{vi.size()}, vi);
             auto gather = make_shared<opset3::Gather>(new_shapeof, indices, zero_axis);
+            new_ops.push_back(gather);
             concat_inputs.push_back(gather);
         }
-        replace_node = make_shared<opset3::Concat>(concat_inputs, 0);
+        replace_op = make_shared<opset3::Concat>(concat_inputs, 0);
+        new_ops.push_back(replace_op);
     }
-    return replace_output_update_name(shapeof->output(0), replace_node->output(0));
+    replace_op->set_friendly_name(node->get_friendly_name());
+    copy_runtime_info(node, new_ops);
+    replace_node(node, replace_op);
+    return true;
 }
 
 static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
@@ -679,21 +691,122 @@ static bool simplify_reduction(shared_ptr<Node> n)
     return true;
 }
 
+static bool replace_transpose_with_reshape(shared_ptr<Node> transpose)
+{
+    auto data = transpose->input_value(0);
+    const auto input_shape = transpose->input(0).get_partial_shape();
+    if (input_shape.rank().is_dynamic())
+    {
+        return false;
+    }
+
+    const auto input_shape_rank = input_shape.rank().get_length();
+
+    auto order = as_type_ptr<opset3::Constant>(transpose->input_value(1).get_node_shared_ptr());
+    if (!order)
+    {
+        return false;
+    }
+
+    const auto order_value = order->cast_vector<int64_t>();
+
+    // Check that transpose order without 1 dims has an ascending order
+    int64_t last_dim(-1);
+    for (size_t i = 0; i < input_shape_rank; ++i)
+    {
+        if (input_shape[order_value[i]].is_dynamic() || input_shape[order_value[i]] != 1)
+        {
+            if (order_value[i] < last_dim)
+            {
+                return false;
+            }
+            last_dim = order_value[i];
+        }
+    }
+
+    // Transpose operation can be removed if original transpose order is sorted
+    // or dimension that changes their places equal to 1
+    using DimensionToPosition = struct
+    {
+        Dimension dim;
+        size_t pos;
+    };
+    std::vector<DimensionToPosition> dims;
+    for (size_t i = 0; i < input_shape_rank; ++i)
+    {
+        if (order_value[i] != i)
+        {
+            dims.push_back({input_shape[order_value[i]], i});
+        }
+    }
+
+    // If number of dimensions != 1 to move equal to 0 we can remove this Transpose
+    if (count_if(dims.begin(), dims.end(), [](const DimensionToPosition& item) {
+            return !(item.dim.is_static() && item.dim.get_length() == 1);
+        }) == 0)
+    {
+        return replace_output_update_name(transpose->output(0), transpose->input_value(0));
+    }
+
+    // Transpose can be replaced with Reshape in two ways:
+    // 1. Reshape with dims as Constant
+    // 2. Reshape with dims as input (ShapeOf->Gather)
+    //
+    // The first case is possible only if one or less dynamic dimensions changes their position
+    // For example: input_shape {?, 3, 1, ?} and order {0, 1, 3, 2} can be replaced with Reshape
+    // with Constant {0, 3, -1, 1} but if input_shape {?, 1, 1, ?} and order {1, 0, 3, 2} transpose
+    // cannot be replaced int the same way and in this case its only possible to use Gather(ShapeOf,
+    // order)
+
+    Output<Node> reshape_dim;
+    NodeVector new_ops;
+
+    if (count_if(dims.begin(), dims.end(), [](const DimensionToPosition& item) {
+            return item.dim.is_dynamic();
+        }) < 2)
+    {
+        vector<int64_t> reshape_value(input_shape_rank, 0);
+        for (const auto& item : dims)
+        {
+            reshape_value[item.pos] = item.dim.is_dynamic() ? -1 : item.dim.get_length();
+        }
+        reshape_dim =
+            opset3::Constant::create(element::i64, Shape{reshape_value.size()}, reshape_value);
+    }
+    else
+    {
+        auto shape_of = make_shared<opset3::ShapeOf>(data);
+        new_ops.push_back(shape_of);
+        reshape_dim = make_shared<opset3::Gather>(
+            shape_of, order, opset3::Constant::create(element::i64, Shape{1}, {0}));
+        new_ops.push_back(reshape_dim.get_node_shared_ptr());
+    }
+
+    auto reshape_op = make_shared<opset3::Reshape>(data, reshape_dim, true);
+    new_ops.push_back(reshape_op);
+
+    reshape_op->set_friendly_name(transpose->get_friendly_name());
+    copy_runtime_info(transpose, new_ops);
+    replace_node(transpose, reshape_op);
+
+    return true;
+}
+
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_ops_to_simplifiers()
 {
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
         {{op::v0::Add::type_info, simplify_add},
          {op::v0::Multiply::type_info, simplify_multiply},
          {opset3::Gather::type_info, simplify_gather},
-         {opset3::Add::type_info, simplify_add},
-         {opset3::Multiply::type_info, simplify_multiply},
          {op::v0::Concat::type_info, simplify_concat},
+         {opset2::ShapeOf::type_info, simplify_gather_shapeof},
          {opset3::ShapeOf::type_info, simplify_gather_shapeof},
          {op::v0::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Sum, get_sum_constant>}},
          {op::v0::Product::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Product, get_prod_constant>}},
-         {op::v0::Log::type_info, simplify_log}});
+         {op::v0::Log::type_info, simplify_log},
+         {opset3::Transpose::type_info, replace_transpose_with_reshape}});
 }
 
 static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> ops_to_simplifiers =

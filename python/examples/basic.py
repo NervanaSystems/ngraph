@@ -18,9 +18,9 @@
 import numpy as np
 import ngraph as ng
 
-A = ng.parameter(shape=[2, 2], name='A', dtype=np.float32)
-B = ng.parameter(shape=[2, 2], name='B')
-C = ng.parameter(shape=[2, 2], name='C')
+A = ng.parameter(shape=[2, 2], name="A", dtype=np.float32)
+B = ng.parameter(shape=[2, 2], name="B")
+C = ng.parameter(shape=[2, 2], name="C")
 # >>> print(A)
 # <Parameter: 'A' ([2, 2], float)>
 
@@ -28,7 +28,7 @@ model = (A + B) * C
 # >>> print(model)
 # <Multiply: 'Multiply_14' ([2, 2])>
 
-runtime = ng.runtime(backend_name='CPU')
+runtime = ng.runtime(backend_name="CPU")
 # >>> print(runtime)
 # <Runtime: Backend='CPU'>
 
@@ -45,4 +45,4 @@ result = computation(value_a, value_b, value_c)
 # [[ 54.  80.]
 #  [110. 144.]]
 
-print('Result = ', result)
+print("Result = ", result)

@@ -186,8 +186,9 @@ namespace ngraph
                            std::int64_t axis_range_max);
 
     /// \brief Try to compute the maximum value of value
-    /// \return (true, max_value) if can be determined, or (false, 0) if not.
-    NGRAPH_API std::pair<bool, int64_t> maximum_value(const Output<Node>& value);
+    /// \return (true, max_value) if can be determined, or (false, numeric_limits<uint64_t>::max())
+    /// if not.
+    NGRAPH_API std::pair<bool, uint64_t> maximum_value(const Output<Node>& value);
 
     /// \brief Evaluates outputs, treating values in value_map as already computed. value_map is
     /// updated.
@@ -195,8 +196,8 @@ namespace ngraph
     /// function.
     /// \param output_tensor_map Tensors to use for particular outputs
     /// \param outputs Root set of values to try to compute
-    NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, EvaluatorTensorPtr>& value_map,
-                                   std::map<RawNodeOutput, EvaluatorTensorPtr>& output_tensor_map,
+    NGRAPH_API void evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                                   std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
                                    const OutputVector& outputs);
 
     namespace opset1
