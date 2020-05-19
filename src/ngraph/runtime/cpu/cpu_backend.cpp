@@ -78,6 +78,11 @@ shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_fra
     return external_function->make_call_frame(pass_config, allocator);
 }
 
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor()
+{
+    throw runtime_error("CPU backend does not support dynamic tensors");
+}
+
 shared_ptr<runtime::Tensor>
     runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
 {

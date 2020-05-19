@@ -47,6 +47,8 @@ namespace ngraph
                                     ngraph::pass::PassConfig& pass_config,
                                     Allocator* allocator);
 
+                std::shared_ptr<ngraph::runtime::Tensor> create_tensor() override;
+
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
                                   const Shape& shape,

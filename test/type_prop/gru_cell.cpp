@@ -35,7 +35,7 @@ TEST(type_prop, gru_cell)
         make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-    const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
+    const auto gru_cell = make_shared<op::GRUCell>(X, H_t, W, R, hidden_size);
     EXPECT_EQ(gru_cell->get_output_element_type(0), element::f32);
     EXPECT_EQ(gru_cell->get_output_shape(0), (Shape{batch_size, hidden_size}));
 }
@@ -56,7 +56,7 @@ TEST(type_prop, gru_cell_invalid_input)
     auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
     try
     {
-        const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
+        const auto gru_cell = make_shared<op::GRUCell>(X, H_t, W, R, hidden_size);
         FAIL() << "GRUCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)
@@ -69,7 +69,7 @@ TEST(type_prop, gru_cell_invalid_input)
     R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, 1});
     try
     {
-        const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
+        const auto gru_cell = make_shared<op::GRUCell>(X, H_t, W, R, hidden_size);
         FAIL() << "GRUCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)
@@ -82,7 +82,7 @@ TEST(type_prop, gru_cell_invalid_input)
     H_t = make_shared<op::Parameter>(element::f32, Shape{4, hidden_size});
     try
     {
-        const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size);
+        const auto gru_cell = make_shared<op::GRUCell>(X, H_t, W, R, hidden_size);
         FAIL() << "GRUCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)
@@ -96,7 +96,7 @@ TEST(type_prop, gru_cell_invalid_input)
     auto B = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
     try
     {
-        const auto gru_cell = make_shared<op::GRUCell>(X, W, R, H_t, hidden_size, B);
+        const auto gru_cell = make_shared<op::GRUCell>(X, H_t, W, R, B, hidden_size);
         FAIL() << "GRUCell node was created with invalid data.";
     }
     catch (const NodeValidationFailure& error)

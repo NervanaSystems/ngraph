@@ -190,9 +190,9 @@ void op::v0::Range::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this, get_input_partial_shape(0).compatible(Shape{}), "'start' input is not a scalar");
     NODE_VALIDATION_CHECK(
-        this, get_input_partial_shape(0).compatible(Shape{}), "'stop' input is not a scalar");
+        this, get_input_partial_shape(1).compatible(Shape{}), "'stop' input is not a scalar");
     NODE_VALIDATION_CHECK(
-        this, get_input_partial_shape(0).compatible(Shape{}), "'step' input is not a scalar");
+        this, get_input_partial_shape(2).compatible(Shape{}), "'step' input is not a scalar");
 
     PartialShape result_shape;
 

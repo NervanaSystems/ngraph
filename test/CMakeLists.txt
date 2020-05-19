@@ -15,6 +15,10 @@
 # ******************************************************************************
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
+set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
+
+set(ONNX_LIBRARIES onnx onnx_proto)
+
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -73,6 +77,9 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_eval/matmul.cpp
+    op_eval/non_zero.cpp
+    op_eval/strided_slice.cpp
     op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
@@ -117,6 +124,7 @@ set(SRC
     type_prop/batch_to_space.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
+    type_prop/bucketize.cpp
     type_prop/clamp.cpp
     type_prop/compat.cpp
     type_prop/concat.cpp
@@ -136,7 +144,11 @@ set(SRC
     type_prop/dyn_slice.cpp
     type_prop/strided_slice.cpp
     type_prop/elu.cpp
+    type_prop/embeddingbag_offsetssum.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/extractimagepatches.cpp
+    type_prop/embeddingbag_packedsum.cpp
+    type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
     type_prop/gather_nd.cpp
@@ -179,6 +191,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_nd_update.cpp
     type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
@@ -248,17 +261,17 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_IE_ENABLE)
-    if (ENABLE_MKL_DNN)
-        message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
-    endif()
+# if (NGRAPH_IE_ENABLE)
+#     if (ENABLE_MKL_DNN)
+#         message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
+#     endif()
 
-    if (ENABLE_CLDNN)
-        message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
-    endif()
-endif()
+#     if (ENABLE_CLDNN)
+#         message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
+#     endif()
+# endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
@@ -303,6 +316,7 @@ set(MULTI_TEST_SRC
     backend/abc.in.cpp
     backend/abs.in.cpp
     backend/acos.in.cpp
+    backend/acosh.in.cpp
     backend/add.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
@@ -310,8 +324,10 @@ set(MULTI_TEST_SRC
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
+    backend/asinh.in.cpp
     backend/atan.in.cpp
     backend/atan2.in.cpp
+    backend/atanh.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -365,6 +381,7 @@ set(MULTI_TEST_SRC
     backend/negative.in.cpp
     backend/node_name.in.cpp
     backend/not.in.cpp
+    backend/non_zero.in.cpp
     backend/numeric.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp
@@ -378,6 +395,11 @@ set(MULTI_TEST_SRC
     backend/quantized_dot.in.cpp
     backend/random_uniform.in.cpp
     backend/range.in.cpp
+    backend/reduce_max.in.cpp
+    backend/reduce_mean.in.cpp
+    backend/reduce_min.in.cpp
+    backend/reduce_prod.in.cpp
+    backend/reduce_sum.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
@@ -421,6 +443,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import_const_folding.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
+            onnx/onnx_import_library.in.cpp
             onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
@@ -471,6 +494,12 @@ endif()
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_include_directories(unit-test
+        SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+    target_link_libraries(unit-test PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
+endif()
+
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
@@ -488,6 +517,10 @@ endif()
 # We should probably split up type_prop.cpp.
 if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
