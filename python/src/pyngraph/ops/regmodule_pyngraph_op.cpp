@@ -23,14 +23,7 @@ namespace py = pybind11;
 void regmodule_pyngraph_op(py::module m_op)
 {
     regclass_pyngraph_op_Constant(m_op);
-    regclass_pyngraph_op_DepthToSpace(m_op);
-    regclass_pyngraph_op_Gelu(m_op);
     regclass_pyngraph_op_GetOutputElement(m_op);
-    regclass_pyngraph_op_GRN(m_op);
-    regclass_pyngraph_op_HardSigmoid(m_op);
-    regclass_pyngraph_op_MVN(m_op);
     regclass_pyngraph_op_Parameter(m_op);
-    regclass_pyngraph_op_ShuffleChannels(m_op);
-    regclass_pyngraph_op_SpaceToDepth(m_op);
     regclass_pyngraph_op_Result(m_op);
 }

@@ -546,7 +546,6 @@ set (SRC
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
     pass/constant_folding_variadic_split.cpp
-    pass/constant_folding_strided_slice.cpp
     pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
     pass/constant_folding.cpp

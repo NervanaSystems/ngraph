@@ -55,6 +55,9 @@ namespace ngraph
 
                 double get_min() const { return m_min; }
                 double get_max() const { return m_max; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             private:
                 double m_min;
                 double m_max;
