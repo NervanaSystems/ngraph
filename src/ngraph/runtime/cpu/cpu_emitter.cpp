@@ -4436,8 +4436,8 @@ namespace ngraph
                 auto index = external_function->add_state(new UniformRNGState());
                 auto fixed_seed = ru->get_fixed_seed();
 
-                writer << "auto state = static_cast<ngraph::UniformRNGState*>(ctx->states["
-                       << index << "]);\n";
+                writer << "auto state = static_cast<ngraph::UniformRNGState*>(ctx->states[" << index
+                       << "]);\n";
                 writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
                        << "[0]);\n";
 
