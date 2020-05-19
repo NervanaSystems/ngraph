@@ -201,7 +201,6 @@ namespace ngraph
                 void reduce_max_2d_1rd_float32(float* input,
                                                float* output,
                                                const Shape& input_shape,
-                                               const Shape& output_shape,
                                                const AxisSet& reduction_axes,
                                                int arena);
 
