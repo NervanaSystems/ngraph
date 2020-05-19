@@ -181,7 +181,6 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
 NGRAPH_API
 shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
-    shared_ptr<op::Constant> out_pattern;
     if (value.get_partial_shape().same_scheme(shape))
     {
         return value.get_node_shared_ptr();
@@ -196,13 +195,12 @@ shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape
     }
     else
     {
-        out_pattern = op::Constant::create(
+        auto out_pattern = op::Constant::create(
             element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
-    }
 
-    const bool special_zero = false;
-    return make_shared<ngraph::opset1::Reshape>(value, out_pattern, special_zero)
-        ->add_provenance_group_members_above({value});
+        return make_shared<ngraph::opset1::Reshape>(value, out_pattern, false)
+            ->add_provenance_group_members_above({value});
+    }
 }
 
 shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
