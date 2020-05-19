@@ -396,8 +396,6 @@ Shape op::v0::TopK::compute_output_shape(const Shape input_shape,
 
 bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    NGRAPH_CHECK(outputs.size() == 2, "TopK expects 2 output tensors");
-
     Shape arg_shape = inputs[0]->get_shape();
 
     // 1. get axis, mode ( max/min), sort_type
@@ -661,8 +659,6 @@ Shape op::v1::TopK::compute_output_shape(const std::string& node_description,
 
 bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    NGRAPH_CHECK(outputs.size() == 2, "TopK expects 2 output tensors");
-
     Shape arg_shape = inputs[0]->get_shape();
     // 1. get axis, mode ( max/min), sort_type
     size_t axis = get_axis();
