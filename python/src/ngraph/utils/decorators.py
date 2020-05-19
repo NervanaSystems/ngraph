@@ -17,42 +17,48 @@ from functools import wraps
 from typing import Any, Callable
 
 from ngraph.impl import Node
-from ngraph.utils.types import as_node, as_nodes, NodeInput
+from ngraph.utils.types import NodeInput, as_node, as_nodes
 
 
-def _set_node_name(node, **kwargs):  # type: (Node, **Any) -> Node
-    if 'name' in kwargs:
-        node.name = kwargs['name']
+def _set_node_name(node: Node, **kwargs: Any) -> Node:
+    if "name" in kwargs:
+        node.name = kwargs["name"]
     return node
 
 
-def nameable_op(node_factory_function):  # type: (Callable) -> Callable
+def nameable_op(node_factory_function: Callable) -> Callable:
     """Set the name to the ngraph operator returned by the wrapped function."""
+
     @wraps(node_factory_function)
-    def wrapper(*args, **kwargs):  # type: (*Any, **Any) -> Node
+    def wrapper(*args: Any, **kwargs: Any) -> Node:
         node = node_factory_function(*args, **kwargs)
         node = _set_node_name(node, **kwargs)
         return node
+
     return wrapper
 
 
-def unary_op(node_factory_function):  # type: (Callable) -> Callable
-    """Convert the first input value to a Constant Node if a scalar value is detected."""
+def unary_op(node_factory_function: Callable) -> Callable:
+    """Convert the first input value to a Constant Node if a numeric value is detected."""
+
     @wraps(node_factory_function)
-    def wrapper(input_value, *args, **kwargs):  # type: (NodeInput, *Any, **Any) -> Node
+    def wrapper(input_value: NodeInput, *args: Any, **kwargs: Any) -> Node:
         input_node = as_node(input_value)
         node = node_factory_function(input_node, *args, **kwargs)
         node = _set_node_name(node, **kwargs)
         return node
+
     return wrapper
 
 
-def binary_op(node_factory_function):  # type: (Callable) -> Callable
-    """Convert the first two input values to Constant Nodes if scalar values are detected."""
+def binary_op(node_factory_function: Callable) -> Callable:
+    """Convert the first two input values to Constant Nodes if numeric values are detected."""
+
     @wraps(node_factory_function)
-    def wrapper(left, right, *args, **kwargs):  # type: (NodeInput, NodeInput, *Any, **Any) -> Node
+    def wrapper(left: NodeInput, right: NodeInput, *args: Any, **kwargs: Any) -> Node:
         left, right = as_nodes(left, right)
         node = node_factory_function(left, right, *args, **kwargs)
         node = _set_node_name(node, **kwargs)
         return node
+
     return wrapper

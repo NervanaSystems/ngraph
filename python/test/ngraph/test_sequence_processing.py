@@ -16,7 +16,7 @@
 import numpy as np
 
 import ngraph as ng
-from test.ngraph.util import get_runtime
+from test.ngraph.util import get_runtime, run_op_node
 
 
 def test_onehot():
@@ -29,3 +29,15 @@ def test_onehot():
     input_data = np.array([1, 0, 2], dtype=np.int32)
     result = computation(input_data)
     assert np.allclose(result, expected)
+
+
+def test_one_hot():
+    data = np.array([0, 1, 2], dtype=np.int32)
+    depth = 2
+    on_value = 5
+    off_value = 10
+    axis = -1
+    excepted = [[5, 10], [10, 5], [10, 10]]
+
+    result = run_op_node([data, depth, on_value, off_value], ng.one_hot, axis)
+    assert np.allclose(result, excepted)

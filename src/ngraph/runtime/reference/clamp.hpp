@@ -16,8 +16,34 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include <cmath>
+#include <cstddef>
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_SpaceToDepth(py::module m);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace reference
+        {
+            template <typename T>
+            void clamp(const T* arg, T* out, T min, T max, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    if (arg[i] < min)
+                    {
+                        out[i] = min;
+                    }
+                    else if (arg[i] > max)
+                    {
+                        out[i] = max;
+                    }
+                    else
+                    {
+                        out[i] = arg[i];
+                    }
+                }
+            }
+        }
+    }
+}
