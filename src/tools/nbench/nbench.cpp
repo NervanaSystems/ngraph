@@ -220,7 +220,6 @@ int main(int argc, char** argv)
                 {
                     // Option for -v arg
                     visualize_output_format = (arg[0] == '.' ? arg : "."+arg);
-                    NGRAPH_INFO << visualize_output_format;
                     i++; // Skip to the next arg
                 }
             }
