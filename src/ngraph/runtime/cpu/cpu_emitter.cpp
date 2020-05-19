@@ -3465,7 +3465,6 @@ namespace ngraph
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(product->get_reduction_axes())
                        << "});\n";
                 writer.block_end();
