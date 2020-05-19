@@ -34,6 +34,7 @@
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -168,6 +169,7 @@ int main(int argc, char** argv)
     bool dump_results = false;
     bool dot_file = false;
     bool double_buffer = false;
+    string visualize_output_format = ".pdf";
 
     for (int i = 1; i < argc; i++)
     {
@@ -211,6 +213,17 @@ int main(int argc, char** argv)
         else if (arg == "-v" || arg == "--visualize")
         {
             visualize = true;
+            if (i < argc-1)
+            {
+                arg = argv[i+1];
+                if (arg[0] != '-')
+                {
+                    // Option for -v arg
+                    visualize_output_format = (arg[0] == '.' ? arg : "."+arg);
+                    NGRAPH_INFO << visualize_output_format;
+                    i++; // Skip to the next arg
+                }
+            }
         }
         else if (arg == "--dot")
         {
@@ -316,11 +329,13 @@ OPTIONS
             if (visualize)
             {
                 shared_ptr<Function> f = deserialize(model);
-                auto model_file_name = ngraph::file_util::get_file_name(model) +
-                                       (dot_file ? ".dot" : ngraph::file_util::get_file_ext(model));
+                string file_name = ngraph::file_util::get_file_name(model);
+                string file_ext = ngraph::file_util::get_file_ext(model);
+                file_name = file_name.substr(0, file_name.size() - file_ext.size());
+                string model_file_name = file_name + (dot_file ? ".dot" : visualize_output_format);
 
                 pass::Manager pass_manager;
-                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
+                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, dot_file);
                 pass_manager.run_passes(f);
             }
 
