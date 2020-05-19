@@ -228,240 +228,6 @@ void op::v0::TopK::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("Forward-propagation-only operation");
 }
 
-bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
-{
-    return evaluate_topk(inputs[0],
-                         outputs[1],
-                         outputs[0],
-                         output_shape.get_shape(),
-                         axis,
-                         k,
-                         compute_max,
-                         sort_type,
-                         get_index_element_type());
-}
-
-// v1 version starts
-constexpr NodeTypeInfo op::v1::TopK::type_info;
-
-op::v1::TopK::TopK(const Output<Node>& data,
-                   const Output<Node>& k,
-                   const int64_t axis,
-                   const std::string& mode,
-                   const std::string& sort,
-                   const element::Type& index_element_type)
-    : Op{{data, k}}
-    , m_axis{axis}
-    , m_normalized_axis{0}
-    , m_mode{as_enum<Mode>(mode)}
-    , m_sort{as_enum<SortType>(sort)}
-    , m_index_element_type{index_element_type}
-{
-    constructor_validate_and_infer_types();
-}
-
-static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
-
-op::v1::TopK::TopK(const Output<Node>& data,
-                   const Output<Node>& k,
-                   const int64_t axis,
-                   const Mode mode,
-                   const SortType sort,
-                   const element::Type& index_element_type)
-    : Op{{data, k}}
-    , m_axis{axis}
-    , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
-    , m_mode{mode}
-    , m_sort{sort}
-    , m_index_element_type{index_element_type}
-{
-    constructor_validate_and_infer_types();
-}
-
-bool ngraph::op::v1::TopK::visit_attributes(AttributeVisitor& visitor)
-{
-    visitor.on_attribute("axis", m_axis);
-    visitor.on_attribute("mode", m_mode);
-    visitor.on_attribute("sort", m_sort);
-    return true;
-}
-
-void op::v1::TopK::validate_and_infer_types()
-{
-    const auto& input_partial_shape = get_input_partial_shape(0);
-    const auto input_rank = input_partial_shape.rank();
-
-    NODE_VALIDATION_CHECK(this,
-                          input_rank.is_dynamic() || input_rank.get_length() > 0,
-                          "Input rank must be greater than 0.");
-
-    const auto& k_partial_shape = get_input_partial_shape(1);
-    NODE_VALIDATION_CHECK(
-        this, k_partial_shape.rank().compatible(0), "The 'K' input must be a scalar.");
-
-    size_t k = 0;
-    if (input_value(1).get_node_shared_ptr()->is_constant())
-    {
-        k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
-                                      get_input_element_type(1));
-    }
-
-    PartialShape output_shape{input_partial_shape};
-
-    if (output_shape.rank().is_static())
-    {
-        m_normalized_axis = ngraph::normalize_axis(this, m_axis, output_shape.rank());
-        if (k != 0)
-        {
-            output_shape[m_normalized_axis] = k;
-        }
-        else
-        {
-            auto max_k = maximum_value(input_value(1));
-            if (max_k.first)
-            {
-                output_shape[m_normalized_axis] &= Dimension(0, max_k.second);
-            }
-            else
-            {
-                output_shape[m_normalized_axis] = -1;
-            }
-        }
-    }
-
-    set_output_size(2);
-    set_output_type(0, get_input_element_type(0), output_shape);
-    set_output_type(1, m_index_element_type, output_shape);
-}
-
-PartialShape op::v1::TopK::compute_output_shape(const std::string& node_description,
-                                                const PartialShape input_partial_shape,
-                                                const int64_t k)
-{
-    PartialShape output_shape{input_partial_shape};
-
-    m_normalized_axis = ngraph::normalize_axis(node_description, m_axis, output_shape.rank());
-    if (k != 0)
-    {
-        output_shape[m_normalized_axis] = k;
-    }
-    return output_shape;
-}
-
-void op::v1::TopK::set_axis(const int64_t axis)
-{
-    const auto input_rank = get_input_partial_shape(0).rank();
-    if (input_rank.is_static())
-    {
-        m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
-    }
-    else
-    {
-        m_normalized_axis = UNKNOWN_NORMALIZED_AXIS;
-    }
-    m_axis = axis;
-}
-
-uint64_t op::v1::TopK::get_axis() const
-{
-    NODE_VALIDATION_CHECK(
-        this, m_normalized_axis != UNKNOWN_NORMALIZED_AXIS, "Normalized axis of TopK is unknown");
-
-    return m_normalized_axis;
-}
-
-size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
-                                               const element::Type& k_element_type) const
-{
-    NODE_VALIDATION_CHECK(this,
-                          k_element_type == element::i8 || k_element_type == element::i32 ||
-                              k_element_type == element::i64,
-                          "K input element type must be i8, i32 or i64 (got ",
-                          k_element_type,
-                          ").");
-
-    const auto k_constant = as_type_ptr<op::Constant>(node);
-
-    size_t k = 0;
-
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wswitch-enum"
-#endif
-    switch (static_cast<element::Type_t>(k_element_type))
-    {
-    case element::Type_t::i8: k = validate_and_get_k<int8_t>(k_constant); break;
-    case element::Type_t::i32: k = validate_and_get_k<int32_t>(k_constant); break;
-    case element::Type_t::i64: k = validate_and_get_k<int64_t>(k_constant); break;
-    default: break;
-    }
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
-    return k;
-}
-
-template <typename T>
-size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_constant) const
-{
-    const auto k_const_contents = k_constant->get_vector<T>();
-
-    NODE_VALIDATION_CHECK(this,
-                          k_const_contents.size() == 1,
-                          "Only one value (scalar) should be provided as the 'K' input to TopK",
-                          " (got ",
-                          k_const_contents.size(),
-                          " elements).");
-
-    NODE_VALIDATION_CHECK(this,
-                          k_const_contents[0] > 0,
-                          "The value of 'K' must be a positive number.",
-                          " (got ",
-                          k_const_contents[0],
-                          ").");
-
-    return static_cast<size_t>(k_const_contents[0]);
-}
-
-void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/,
-                                     const OutputVector& /* deltas */)
-{
-    throw ngraph_error("Forward-propagation-only operation");
-}
-
-shared_ptr<Node> op::v1::TopK::clone_with_new_inputs(const OutputVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    auto new_v1_topk =
-        make_shared<v1::TopK>(new_args.at(0), new_args.at(1), m_axis, m_mode, m_sort);
-
-    new_v1_topk->set_index_element_type(m_index_element_type);
-
-    return std::move(new_v1_topk);
-}
-
-size_t op::v1::TopK::get_k() const
-{
-    size_t k = 0;
-    if (input_value(1).get_node_shared_ptr()->is_constant())
-    {
-        k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
-                                      get_input_element_type(1));
-    }
-
-    if (k == 0 && get_input_partial_shape(0).is_static())
-    {
-        k = get_input_partial_shape(0).to_shape()[m_normalized_axis];
-    }
-    return k;
-}
-
-void op::v1::TopK::set_k(size_t k)
-{
-    this->input(1).replace_source_output(
-        op::Constant::create(element::i64, Shape{}, {k})->output(0));
-}
-
 namespace
 {
     template <element::Type_t INPUT_ET, element::Type_t INDEX_ET>
@@ -481,7 +247,7 @@ namespace
         out_indices->set_element_type(INDEX_ET);
 
         out_values->set_shape(out_shape);
-        out_values->set_element_type(INPUT_ET);
+        out_values->set_element_type(arg0->get_element_type());
 
         runtime::reference::topk<T, U>(arg0->get_data_ptr<INPUT_ET>(),
                                        out_indices->get_data_ptr<INDEX_ET>(),
@@ -604,6 +370,291 @@ namespace
         }
         return k;
     }
+
+    size_t read_top_k_axis_from_host_tensor(const HostTensorPtr& arg)
+    {
+        NGRAPH_CHECK(arg->get_element_type() == element::i64,
+                     "TopK axis element type should be i64");
+        auto p = arg->get_data_ptr<int64_t>();
+        size_t axis = static_cast<size_t>(p[0]);
+        return axis;
+    }
+}
+
+Shape op::v0::TopK::compute_output_shape(const Shape input_shape,
+                                         const int64_t k,
+                                         const size_t axis)
+{
+    Shape output_shape{input_shape};
+    if (k != 0)
+    {
+        output_shape[axis] = k;
+    }
+    return output_shape;
+}
+
+bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    // check data types for arg, k and output element type
+    Shape arg_shape = inputs[0]->get_shape();
+
+    // 1. get axis, mode ( max/min), sort_type
+    size_t axis = 0;
+    Dimension axis_dim = get_top_k_axis_dynamic();
+    if (axis_dim.is_static())
+    {
+        axis = axis_dim.get_length();
+    }
+    else
+    {
+        axis = read_top_k_axis_from_host_tensor(inputs[2]);
+        NGRAPH_CHECK(axis <= arg_shape.size(), "TopK axis is out of bounds");
+    }
+
+    // 2. get value of k - from constant node or from HT
+    size_t k = get_k();
+    if (k == 0)
+    {
+        k = read_k_from_host_tensor(inputs[1]);
+    }
+    NGRAPH_CHECK(k <= arg_shape.at(axis), "K exceeds the dimension of the TopK axis");
+
+    bool compute_max = get_compute_max();
+    SortType sort_type = get_sort();
+
+    // 3. Compute output_shape
+    auto output_shape = compute_output_shape(inputs[0]->get_shape(), k, axis);
+
+    return evaluate_topk(inputs[0],
+                         outputs[0], // Note the order, in v0, outputs[0] is indices
+                         outputs[1],
+                         output_shape,
+                         axis,
+                         k,
+                         compute_max,
+                         sort_type,
+                         get_index_element_type());
+}
+
+// v1 version starts
+constexpr NodeTypeInfo op::v1::TopK::type_info;
+
+op::v1::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const std::string& mode,
+                   const std::string& sort,
+                   const element::Type& index_element_type)
+    : Op{{data, k}}
+    , m_axis{axis}
+    , m_normalized_axis{0}
+    , m_mode{as_enum<Mode>(mode)}
+    , m_sort{as_enum<SortType>(sort)}
+    , m_index_element_type{index_element_type}
+{
+    constructor_validate_and_infer_types();
+}
+
+static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
+
+op::v1::TopK::TopK(const Output<Node>& data,
+                   const Output<Node>& k,
+                   const int64_t axis,
+                   const Mode mode,
+                   const SortType sort,
+                   const element::Type& index_element_type)
+    : Op{{data, k}}
+    , m_axis{axis}
+    , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
+    , m_mode{mode}
+    , m_sort{sort}
+    , m_index_element_type{index_element_type}
+{
+    constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v1::TopK::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("axis", m_axis);
+    visitor.on_attribute("mode", m_mode);
+    visitor.on_attribute("sort", m_sort);
+    return true;
+}
+
+void op::v1::TopK::validate_and_infer_types()
+{
+    const auto& input_partial_shape = get_input_partial_shape(0);
+    const auto input_rank = input_partial_shape.rank();
+
+    NODE_VALIDATION_CHECK(this,
+                          input_rank.is_dynamic() || input_rank.get_length() > 0,
+                          "Input rank must be greater than 0.");
+
+    const auto& k_partial_shape = get_input_partial_shape(1);
+    NODE_VALIDATION_CHECK(
+        this, k_partial_shape.rank().compatible(0), "The 'K' input must be a scalar.");
+
+    size_t k = 0;
+    if (input_value(1).get_node_shared_ptr()->is_constant())
+    {
+        k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
+                                      get_input_element_type(1));
+    }
+
+    PartialShape output_shape{input_partial_shape};
+
+    if (output_shape.rank().is_static())
+    {
+        m_normalized_axis = ngraph::normalize_axis(this, m_axis, output_shape.rank());
+        if (k != 0)
+        {
+            output_shape[m_normalized_axis] = k;
+        }
+        else
+        {
+            auto max_k = maximum_value(input_value(1));
+            if (max_k.first)
+            {
+                output_shape[m_normalized_axis] &= Dimension(0, max_k.second);
+            }
+            else
+            {
+                output_shape[m_normalized_axis] = -1;
+            }
+        }
+    }
+
+    set_output_size(2);
+    set_output_type(0, get_input_element_type(0), output_shape);
+    set_output_type(1, m_index_element_type, output_shape);
+}
+
+void op::v1::TopK::set_axis(const int64_t axis)
+{
+    const auto input_rank = get_input_partial_shape(0).rank();
+    if (input_rank.is_static())
+    {
+        m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
+    }
+    else
+    {
+        m_normalized_axis = UNKNOWN_NORMALIZED_AXIS;
+    }
+    m_axis = axis;
+}
+
+uint64_t op::v1::TopK::get_axis() const
+{
+    NODE_VALIDATION_CHECK(
+        this, m_normalized_axis != UNKNOWN_NORMALIZED_AXIS, "Normalized axis of TopK is unknown");
+
+    return m_normalized_axis;
+}
+
+size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
+                                               const element::Type& k_element_type) const
+{
+    NODE_VALIDATION_CHECK(this,
+                          k_element_type == element::i8 || k_element_type == element::i32 ||
+                              k_element_type == element::i64,
+                          "K input element type must be i8, i32 or i64 (got ",
+                          k_element_type,
+                          ").");
+
+    const auto k_constant = as_type_ptr<op::Constant>(node);
+
+    size_t k = 0;
+
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wswitch-enum"
+#endif
+    switch (static_cast<element::Type_t>(k_element_type))
+    {
+    case element::Type_t::i8: k = validate_and_get_k<int8_t>(k_constant); break;
+    case element::Type_t::i32: k = validate_and_get_k<int32_t>(k_constant); break;
+    case element::Type_t::i64: k = validate_and_get_k<int64_t>(k_constant); break;
+    default: break;
+    }
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
+    return k;
+}
+
+template <typename T>
+size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_constant) const
+{
+    const auto k_const_contents = k_constant->get_vector<T>();
+
+    NODE_VALIDATION_CHECK(this,
+                          k_const_contents.size() == 1,
+                          "Only one value (scalar) should be provided as the 'K' input to TopK",
+                          " (got ",
+                          k_const_contents.size(),
+                          " elements).");
+
+    NODE_VALIDATION_CHECK(this,
+                          k_const_contents[0] > 0,
+                          "The value of 'K' must be a positive number.",
+                          " (got ",
+                          k_const_contents[0],
+                          ").");
+
+    return static_cast<size_t>(k_const_contents[0]);
+}
+
+void op::v1::TopK::generate_adjoints(autodiff::Adjoints& /*adjoints*/,
+                                     const OutputVector& /* deltas */)
+{
+    throw ngraph_error("Forward-propagation-only operation");
+}
+
+shared_ptr<Node> op::v1::TopK::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    auto new_v1_topk =
+        make_shared<v1::TopK>(new_args.at(0), new_args.at(1), m_axis, m_mode, m_sort);
+
+    new_v1_topk->set_index_element_type(m_index_element_type);
+
+    return std::move(new_v1_topk);
+}
+
+size_t op::v1::TopK::get_k() const
+{
+    size_t k = 0;
+    if (input_value(1).get_node_shared_ptr()->is_constant())
+    {
+        k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
+                                      get_input_element_type(1));
+    }
+
+    if (k == 0 && get_input_partial_shape(0).is_static())
+    {
+        k = get_input_partial_shape(0).to_shape()[m_normalized_axis];
+    }
+    return k;
+}
+
+void op::v1::TopK::set_k(size_t k)
+{
+    this->input(1).replace_source_output(
+        op::Constant::create(element::i64, Shape{}, {k})->output(0));
+}
+
+PartialShape op::v1::TopK::compute_output_shape(const std::string& node_description,
+                                                const PartialShape input_partial_shape,
+                                                const int64_t k)
+{
+    PartialShape output_shape{input_partial_shape};
+
+    m_normalized_axis = ngraph::normalize_axis(node_description, m_axis, output_shape.rank());
+    if (k != 0)
+    {
+        output_shape[m_normalized_axis] = k;
+    }
+    return output_shape;
 }
 
 bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
@@ -620,6 +671,8 @@ bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
     else
     {
         k = read_k_from_host_tensor(inputs[1]);
+        // TODO: validate k, NGRAPH_CHECK(static_cast<size_t>(k) <=
+        //                          input_shape[top_k_axis.get_length()].get_length(),
     }
 
     // 2. get axis, mode ( max/min), sort_type

@@ -111,6 +111,9 @@ namespace ngraph
                 SortType m_sort{SortType::NONE};
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
+                Shape compute_output_shape(const Shape input_shape,
+                                           const int64_t k,
+                                           const size_t axis);
             };
         } // namespace v0
 
