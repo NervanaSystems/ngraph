@@ -375,7 +375,6 @@ protected:
                                      node.get_output_shape(0));
             break;
         }
-
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -433,19 +432,6 @@ protected:
                                             apb->get_padding_below(),
                                             apb->get_padding_above(),
                                             apb->get_include_padding_in_avg_computation());
-            break;
-        }
-        case OP_TYPEID::Broadcast:
-        {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
-            Shape out_shape = node.get_output_shape(0);
-            AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    in_shape,
-                                    out_shape,
-                                    broadcast_axes);
             break;
         }
         case OP_TYPEID::BroadcastDistributed:
@@ -827,33 +813,6 @@ protected:
                               lrn->get_beta(),
                               lrn->get_bias(),
                               lrn->get_nsize());
-            break;
-        }
-        case OP_TYPEID::MatMul:
-        {
-            const op::MatMul* matmul = static_cast<const op::MatMul*>(&node);
-            reference::matmul<T>(args[0]->get_data_ptr<const T>(),
-                                 args[1]->get_data_ptr<const T>(),
-                                 out[0]->get_data_ptr<T>(),
-                                 node.get_input_shape(0),
-                                 node.get_input_shape(1),
-                                 node.get_output_shape(0),
-                                 matmul->get_transpose_a(),
-                                 matmul->get_transpose_b());
-            break;
-        }
-        case OP_TYPEID::MaxPool:
-        {
-            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
-
-            reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_output_shape(0),
-                                   max_pool->get_window_shape(),
-                                   max_pool->get_window_movement_strides(),
-                                   max_pool->get_padding_below(),
-                                   max_pool->get_padding_above());
             break;
         }
         case OP_TYPEID::MaxPoolBackprop:
@@ -1462,7 +1421,6 @@ protected:
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
@@ -1516,6 +1474,8 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
+        case OP_TYPEID::Broadcast:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
@@ -1528,8 +1488,10 @@ protected:
         case OP_TYPEID::LogicalAnd_v1:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::MatMul:
         case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::MaxPool:
         case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
         case OP_TYPEID::Multiply:

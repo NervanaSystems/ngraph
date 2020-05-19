@@ -10,6 +10,9 @@ max_3d_to_scalar_int32
 # Not implemented
 send_recv
 send_recv_ring
+atanh
+asinh
+acosh
 
 # ONNX TopK with dynamic K
 onnx_top_k_opset_10
@@ -45,6 +48,18 @@ cpu_fusion.fuse_dropout
 cpu_fusion.lstm_cell
 cpu_fusion.batchnorm_fprop_relu
 
+round_int64
+floor_int64
+ceiling_int64
+
 # Incorrect result from CPU, need check and fix 
 matmul_2x2x3_2x1x3_transpose_int64
 matmul_2x2x3_2x3x1_int64
+
+acosh
+asinh
+atanh
+
+# no support for f16, bf16
+fused_clamp_float16
+fused_clamp_bfloat16

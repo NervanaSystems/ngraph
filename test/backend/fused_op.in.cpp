@@ -1149,49 +1149,932 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_1_input_C)
     test_case.run();
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, fused_clamp)
+namespace
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{4, 4});
-    auto tested_op = make_shared<op::Clamp>(data, 10.0, 20.0);
-    auto function = make_shared<Function>(tested_op, ParameterVector{data});
+    template <typename T>
+    void clamp_test(const string& backend,
+                    const element::Type& type,
+                    const PartialShape& dynamic_shape,
+                    const Shape& static_shape,
+                    const std::vector<T>& input,
+                    double min,
+                    double max,
+                    const std::vector<T>& output)
+    {
+        auto data = make_shared<op::Parameter>(type, dynamic_shape);
+        auto clamp = make_shared<op::Clamp>(data, min, max);
+        auto function = make_shared<Function>(clamp, ParameterVector{data});
 
-    auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
-    test_case.add_input<float>({numeric_limits<float>::min(),
-                                numeric_limits<float>::max(),
-                                -numeric_limits<float>::infinity(),
-                                numeric_limits<float>::infinity(),
-                                -1.0,
-                                0.0,
-                                1.0,
-                                9.99999,
-                                10.0,
-                                10.000001,
-                                15.0,
-                                19.999999,
-                                20.0,
-                                20.000001,
-                                21.0,
-                                100.0});
+        auto mode = test::BackendMode::STATIC;
+        if (dynamic_shape.is_dynamic())
+        {
+            mode = test::BackendMode::DYNAMIC;
+        }
+        auto test_case = test::NgraphTestCase(function, backend, mode);
+        test_case.add_input<T>(static_shape, input);
+        test_case.add_expected_output<T>(static_shape, output);
+        test_case.run();
+    }
+}
 
-    test_case.add_expected_output<float>(Shape{4, 4},
-                                         {10.0,
-                                          20.0,
-                                          10.0,
-                                          20.0,
-                                          10.0,
-                                          10.0,
-                                          10.0,
-                                          10.0,
-                                          10.0,
-                                          10.000001,
-                                          15.0,
-                                          19.999999,
-                                          20.0,
-                                          20.0,
-                                          20.0,
-                                          20.0});
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_double)
+{
+    auto type = element::f64;
+    typedef double ctype;
 
-    test_case.run();
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_float)
+{
+    auto type = element::f32;
+    typedef float ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int8)
+{
+    auto type = element::i8;
+    typedef int8_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int16)
+{
+    auto type = element::i16;
+    typedef int16_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int32)
+{
+    auto type = element::i32;
+    typedef int32_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_int64)
+{
+    auto type = element::i64;
+    typedef int64_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8)
+{
+    auto type = element::u8;
+    typedef uint8_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16)
+{
+    auto type = element::u16;
+    typedef uint16_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32)
+{
+    auto type = element::u32;
+    typedef uint32_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64)
+{
+    auto type = element::u64;
+    typedef uint64_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
+    // auto max = numeric_limits<ctype>::max();
+    // auto pinf = numeric_limits<double>::infinity();
+    ctype max = (static_cast<ctype>(1) << (32 - 1)) - 1;
+    auto pinf = static_cast<double>(max);
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10, 20, 10, 10, 11, 19, 20, 20});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10, max, 10, 10, 11, 19, 20, 21});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20, 9, 10, 11, 19, 20, 20});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_float16)
+{
+    auto type = element::f16;
+    typedef float16 ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_bfloat16)
+{
+    auto type = element::bf16;
+    typedef bfloat16 ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // static shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      sshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+
+    // dynamic shape
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                      0.2,
+                      0.6,
+                      {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6});
+
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      20.0,
+                      {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      10.0,
+                      pinf,
+                      {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001});
+    clamp_test<ctype>("${BACKEND_NAME}",
+                      type,
+                      dshape,
+                      sshape,
+                      input,
+                      ninf,
+                      20.0,
+                      {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)

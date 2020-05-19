@@ -16,8 +16,5 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
-
-namespace py = pybind11;
-
-void regclass_pyngraph_op_SpaceToDepth(py::module m);
+#define COPY_TENSOR(a)                                                                             \
+    case element::Type_t::a: rc = copy_tensor<element::Type_t::a>

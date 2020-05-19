@@ -77,7 +77,9 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_eval/matmul.cpp
     op_eval/non_zero.cpp
+    op_eval/strided_slice.cpp
     op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
@@ -144,6 +146,7 @@ set(SRC
     type_prop/elu.cpp
     type_prop/embeddingbag_offsetssum.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/extractimagepatches.cpp
     type_prop/embeddingbag_packedsum.cpp
     type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
@@ -312,6 +315,7 @@ set(MULTI_TEST_SRC
     backend/abc.in.cpp
     backend/abs.in.cpp
     backend/acos.in.cpp
+    backend/acosh.in.cpp
     backend/add.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
@@ -319,8 +323,10 @@ set(MULTI_TEST_SRC
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
     backend/asin.in.cpp
+    backend/asinh.in.cpp
     backend/atan.in.cpp
     backend/atan2.in.cpp
+    backend/atanh.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp

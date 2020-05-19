@@ -14,20 +14,25 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/fused/shuffle_channels.hpp"
-#include "pyngraph/ops/fused/shuffle_channels.hpp"
+#include <cmath>
+#include <cstddef>
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_ShuffleChannels(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::ShuffleChannels,
-               std::shared_ptr<ngraph::op::ShuffleChannels>,
-               ngraph::op::Op>
-        shufflechannels(m, "ShuffleChannels");
-    shufflechannels.doc() = "ngraph.impl.op.ShuffleChannels wraps ngraph::op::ShuffleChannels";
-    shufflechannels.def(py::init<const std::shared_ptr<ngraph::Node>&, int&, int&>());
+    namespace runtime
+    {
+        namespace reference
+        {
+            template <typename T>
+            void acosh(const T* arg, T* out, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    out[i] = std::acosh(arg[i]);
+                }
+            }
+        }
+    }
 }

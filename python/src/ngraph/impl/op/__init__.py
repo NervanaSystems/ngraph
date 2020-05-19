@@ -20,20 +20,7 @@ Low level wrappers for the nGraph c++ api in ngraph::op.
 
 # flake8: noqa
 
-import sys
-import six
-
 import numpy as np
-
-# workaround to load the libngraph.so with RTLD_GLOBAL
-if sys.platform != 'win32':
-    if six.PY3:
-        import os
-        flags = os.RTLD_NOW | os.RTLD_GLOBAL
-    else:
-        import ctypes
-        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-    sys.setdlopenflags(flags)
 
 from _pyngraph.op import Constant
 
@@ -45,13 +32,6 @@ from _pyngraph.op import Constant
 """
 Constant.get_data = lambda self: np.array(self, copy=True)
 
-from _pyngraph.op import DepthToSpace
-from _pyngraph.op import Gelu
 from _pyngraph.op import GetOutputElement
-from _pyngraph.op import GRN
-from _pyngraph.op import HardSigmoid
-from _pyngraph.op import MVN
 from _pyngraph.op import Op
 from _pyngraph.op import Parameter
-from _pyngraph.op import ShuffleChannels
-from _pyngraph.op import SpaceToDepth
