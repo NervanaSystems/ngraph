@@ -14,13 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/ie/ie_executable.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opsets/opset.hpp"
+#include "ngraph/pass/algebraic_simplification.hpp"
+#include "ngraph/pass/get_output_element_elimination.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/manager.hpp"
+#include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/reshape_elimination.hpp"
+#include "ngraph/pass/reshape_sinking.hpp"
+#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
+#include "ngraph/runtime/ie/ie_executable.hpp"
 #include "ngraph/runtime/ie/ie_tensor.hpp"
+#include "ngraph/serializer.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
@@ -81,6 +90,14 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 {
     const auto& opset = get_opset1();
     pass::Manager passes;
+    passes.register_pass<pass::LikeReplacement>();
+    passes.register_pass<pass::NopElimination>();
+    passes.register_pass<pass::ZeroDimTensorElimination>();
+    passes.register_pass<pass::AlgebraicSimplification>();
+    passes.register_pass<pass::ReshapeSinking>();
+    passes.register_pass<pass::ReshapeElimination>();
+    passes.register_pass<pass::RecurrentReshapeElimination>();
+    passes.register_pass<pass::GetOutputElementElimination>();
     passes.register_pass<pass::Opset1Upgrade>();
     passes.run_passes(func);
 
@@ -112,6 +129,13 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 
     m_network = InferenceEngine::CNNNetwork(func);
     set_parameters_and_results(*func);
+
+    if (getenv_bool("NGRAPH_IE_DUMP_GRAPHS"))
+    {
+        auto& name = m_network.getName();
+        m_network.serialize(name + ".xml", name + ".bin");
+        serialize(name + ".json", func);
+    }
 
     InferenceEngine::Core ie;
     //  Load model to the plugin (BACKEND_NAME)
