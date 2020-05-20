@@ -949,7 +949,7 @@ using namespace ngraph::runtime;
         // Op Control
         if (!node->is_parameter() && !node->is_constant())
         {
-            writer << "if (ctx->first_iteration ";
+            writer << "if (ctx->first_iteration";
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
@@ -974,7 +974,7 @@ using namespace ngraph::runtime;
             {
                 writer << " || 1";
             }
-            writer << ") {\n";
+            writer << ")\n{\n";
             writer.indent++;
         }
 
@@ -1028,7 +1028,7 @@ using namespace ngraph::runtime;
                 writer << "t_en[" << tensor_index_map[output_name] << "] = true;\n";
             }
             writer.indent--;
-            writer << "} else {\n";
+            writer << "}\nelse\n{\n";
             writer.indent++;
             for (auto output_name : node_output_names)
             {
