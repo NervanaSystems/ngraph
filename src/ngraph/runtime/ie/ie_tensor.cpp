@@ -53,10 +53,10 @@ void runtime::ie::IETensor::write(const void* src, size_t bytes)
     {
         m_data = move(AlignedBuffer(bytes));
     }
-    NGRAPH_CHECK(m_data.size() <= bytes,
-                 "Buffer over-write. The buffer size: ",
+    NGRAPH_CHECK(m_data.size() >= bytes, // Bani
+                 "Buffer over-write in runtime::ie::IETensor::write(). The IETensor m_data buffer size: ",
                  m_data.size(),
-                 " is lower than the number of bytes to write: ",
+                 " cannot be smaller than the number of bytes to write: ",
                  bytes);
     copy(src_ptr, src_ptr + bytes, m_data.get_ptr<int8_t>());
 }

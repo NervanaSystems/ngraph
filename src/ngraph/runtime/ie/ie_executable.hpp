@@ -43,6 +43,8 @@ namespace ngraph
                 InferenceEngine::CNNNetwork m_network;
                 InferenceEngine::InferRequest m_infer_req;
                 std::string m_device;
+                std::map<std::string, std::string> m_nongraph_const_outputs; // (input-const, output-result)
+                std::map<std::string, std::string> m_map_result_to_ngnode; // (result, from) e.g. Result_353->Constant_673, Result_350->ngraph_output_1
             };
         }
     }
