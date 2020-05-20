@@ -1979,15 +1979,17 @@ namespace ngraph
 
                 writer.block_begin();
                 writer << "reference::topk<" << args[0].get_type() << ", "
-                       << out[0].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
+                       << out[0].get_element_type().c_type_string() << ">(\n";
+                writer << "                   " << args[0].get_name() << ",\n";
                 writer << "                   " << out[0].get_name() << ",\n";
                 writer << "                   " << out[1].get_name() << ",\n";
                 writer << "                   {" << join(args[0].get_shape()) << "},\n";
                 writer << "                   {" << join(out[0].get_shape()) << "},\n";
                 writer << "                   " << topk->get_top_k_axis() << ",\n";
                 writer << "                   " << topk->get_k() << ",\n";
-                writer << "                   " << topk->get_compute_max() << ");\n";
+                writer << "                   " << topk->get_compute_max() << ",\n";
+                writer << "                   ngraph::op::TopKSortType::" << topk->get_sort()
+                       << ");\n";
                 writer.block_end();
             }
 

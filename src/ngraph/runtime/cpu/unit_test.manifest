@@ -52,22 +52,7 @@ CPU_CODEGEN.round
 CPU_CODEGEN.round_2D
 CPU_CODEGEN.sum_stable_acc
 CPU_CODEGEN.sum_stable_acc_double
-CPU_CODEGEN.topk_1d_i32_max_all
-CPU_CODEGEN.topk_1d_max_all
-CPU_CODEGEN.topk_1d_max_partial
-CPU_CODEGEN.topk_1d_min_all
-CPU_CODEGEN.topk_1d_min_partial
-CPU_CODEGEN.topk_2d_max_all
-CPU_CODEGEN.topk_2d_max_partial
-CPU_CODEGEN.topk_2d_min_all
-CPU_CODEGEN.topk_2d_min_partial
-CPU_CODEGEN.topk_3d_large_input_max
-CPU_CODEGEN.topk_3d_large_input_min
-CPU_CODEGEN.topk_3d_max_all
-CPU_CODEGEN.topk_3d_min_all
-CPU_CODEGEN.topk_5d_max_partial
-CPU_CODEGEN.topk_int64
-CPU_CODEGEN.topk_max_sort_value
+CPU_CODEGEN.topk_v1_invalid_k
 
 onnx_dyn_shapes_flatten_axis
 onnx_dyn_shapes_flatten_neg_axis
