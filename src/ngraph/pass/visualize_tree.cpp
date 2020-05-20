@@ -348,66 +348,6 @@ static std::string pretty_partial_shape(const PartialShape& shape)
     return ss.str();
 }
 
-// string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
-// {
-//     vector<string> attributes;
-//     attributes.push_back("shape=box");
-
-//     if (node->is_output())
-//     {
-//         attributes.push_back("color=crimson");
-//         attributes.push_back("penwidth=1.5");
-//     }
-//     else
-//     {
-//         attributes.push_back("color=black");
-//     }
-
-//     // Construct the label attribute
-//     {
-//         stringstream label;
-//         label << "label=\"" << get_node_name(node);
-
-//         static const bool nvtos = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-//         if (nvtos)
-//         {
-//             // The shapes of the Outputs of a multi-output op
-//             // will be printed for its corresponding `GetOutputElement`s
-//             label << " " << (node->get_output_size() != 1
-//                                  ? string("[skipped]")
-//                                  : pretty_partial_shape(node->get_output_partial_shape(0)));
-//         }
-
-//         static const bool nvtot = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-//         if (nvtot)
-//         {
-//             // The types of the Outputs of a multi-output op
-//             // will be printed for its corresponding `GetOutputElement`s
-//             label << " "
-//                   << ((node->get_output_size() != 1) ? string("[skipped]")
-//                                                      : node->get_element_type().c_type_string());
-//         }
-
-//         auto eh = m_ops_to_details.find(node->get_type_info());
-//         if (eh != m_ops_to_details.end())
-//         {
-//             eh->second(*node, label);
-//         }
-//         label << "\"";
-//         attributes.push_back(label.str());
-//     }
-
-//     if (m_node_modifiers)
-//     {
-//         m_node_modifiers(*node, attributes);
-//     }
-
-//     stringstream ss;
-//     ss << "    " << node->get_name() << " [" << join(attributes, " ") << "]\n";
-
-//     return ss.str();
-// }
-
 string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
 {
     vector<string> attributes;
