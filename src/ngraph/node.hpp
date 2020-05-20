@@ -599,6 +599,7 @@ public:
         void update_inputs_after_copy_tmp () {
             for(auto& input: m_inputs){
                 input = descriptor::Input(this, input.get_index(), input.get_output());
+                input.get_output().add_input(&input);
             }
         }
 
