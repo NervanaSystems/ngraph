@@ -18,6 +18,7 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/opsets/opset3.hpp"
 #include "ngraph/pass/convert_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
@@ -64,14 +65,14 @@ TEST(nop_elimination, eliminate_convert)
     Shape shape{};
     auto type = element::f32;
     auto A = make_shared<op::Parameter>(type, shape);
-    auto c = make_shared<op::v0::Convert>(A, element::f32);
-    auto f = make_shared<Function>(make_shared<op::v0::Abs>(c), ParameterVector{A});
+    auto c = make_shared<opset3::Convert>(A, element::f32);
+    auto f = make_shared<Function>(make_shared<opset3::Abs>(c), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 0);
+    ASSERT_EQ(count_ops_of_type<opset3::Convert>(f), 0);
 }
 
 TEST(nop_elimination, convert_type_agnostic)
@@ -79,31 +80,31 @@ TEST(nop_elimination, convert_type_agnostic)
     Shape shape{};
     auto type = element::from<char>();
     auto A = make_shared<op::Parameter>(type, shape);
-    auto c1 = make_shared<op::v0::Convert>(A, element::from<uint8_t>());
-    auto c = make_shared<op::v0::Convert>(c1, element::f32);
-    auto z = make_shared<op::v3::NonZero>(c);
-    auto f = make_shared<Function>(make_shared<op::v0::Abs>(z), ParameterVector{A});
+    auto c1 = make_shared<opset3::Convert>(A, element::from<uint8_t>());
+    auto c = make_shared<opset3::Convert>(c1, element::f32);
+    auto z = make_shared<opset3::NonZero>(c);
+    auto f = make_shared<Function>(make_shared<opset3::Abs>(z), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::ConvertElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(f), 1);
+    ASSERT_EQ(count_ops_of_type<opset3::Convert>(f), 1);
 }
 
 TEST(nop_elimination, convert_type_ReduceMin)
 {
     auto param = make_shared<op::Parameter>(element::boolean, Shape{3, 2, 4});
-    auto shape_of = make_shared<op::v0::ShapeOf>(param);
-    auto concat = make_shared<op::v0::Concat>(NodeVector{shape_of}, 0);
-    auto convert_1 = make_shared<op::v0::Convert>(concat, element::i32);
+    auto shape_of = make_shared<opset3::ShapeOf>(param);
+    auto concat = make_shared<opset3::Concat>(NodeVector{shape_of}, 0);
+    auto convert_1 = make_shared<opset3::Convert>(concat, element::i32);
     Shape axes_shape{1};
     vector<int32_t> values_axes{0};
     auto constant_axes = op::Constant::create(element::i64, axes_shape, values_axes);
-    auto reduce_min = make_shared<op::v1::ReduceMin>(convert_1, constant_axes);
-    auto convert_2 = make_shared<op::v0::Convert>(reduce_min, element::i64);
-    auto func = make_shared<Function>(make_shared<op::v0::Abs>(convert_2), ParameterVector{param});
+    auto reduce_min = make_shared<opset3::ReduceMin>(convert_1, constant_axes);
+    auto convert_2 = make_shared<opset3::Convert>(reduce_min, element::i64);
+    auto func = make_shared<Function>(make_shared<opset3::Abs>(convert_2), ParameterVector{param});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
@@ -111,9 +112,9 @@ TEST(nop_elimination, convert_type_ReduceMin)
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(func);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
+    ASSERT_EQ(count_ops_of_type<opset3::Convert>(func), 0);
 
-    func = make_shared<Function>(make_shared<op::v3::NonZero>(convert_2), ParameterVector{param});
+    func = make_shared<Function>(make_shared<opset3::NonZero>(convert_2), ParameterVector{param});
 
     pass::Manager pass_manager_2;
     pass_manager_2.register_pass<pass::Validate>();
@@ -121,40 +122,40 @@ TEST(nop_elimination, convert_type_ReduceMin)
     pass_manager_2.register_pass<pass::NopElimination>();
     pass_manager_2.run_passes(func);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 0);
+    ASSERT_EQ(count_ops_of_type<opset3::Convert>(func), 0);
 }
 
 TEST(nop_elimination, convert_type_ReduceMin_negative)
 {
     auto param = make_shared<op::Parameter>(element::boolean, Shape{3, 2, 4});
-    auto shape_of = make_shared<op::v0::ShapeOf>(param);
-    auto concat = make_shared<op::v0::Concat>(NodeVector{shape_of}, 0);
-    auto convert_1 = make_shared<op::v0::Convert>(concat, element::f32);
+    auto shape_of = make_shared<opset3::ShapeOf>(param);
+    auto concat = make_shared<opset3::Concat>(NodeVector{shape_of}, 0);
+    auto convert_1 = make_shared<opset3::Convert>(concat, element::f32);
     Shape axes_shape{1};
     vector<int32_t> values_axes{0};
     auto constant_axes = op::Constant::create(element::i64, axes_shape, values_axes);
-    auto reduce_min = make_shared<op::v1::ReduceMin>(convert_1, constant_axes);
-    auto convert_2 = make_shared<op::v0::Convert>(reduce_min, element::i32);
+    auto reduce_min = make_shared<opset3::ReduceMin>(convert_1, constant_axes);
+    auto convert_2 = make_shared<opset3::Convert>(reduce_min, element::i32);
     auto func =
-        make_shared<Function>(make_shared<op::v3::NonZero>(convert_2), ParameterVector{param});
+        make_shared<Function>(make_shared<opset3::NonZero>(convert_2), ParameterVector{param});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
     pass_manager.register_pass<pass::ConvertElimination>();
     pass_manager.run_passes(func);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 1);
+    ASSERT_EQ(count_ops_of_type<opset3::Convert>(func), 1);
 
-    auto convert_2nd_output = make_shared<op::v1::ReduceMin>(convert_1, constant_axes);
+    auto convert_2nd_output = make_shared<opset3::ReduceMin>(convert_1, constant_axes);
     func =
-        make_shared<Function>(NodeVector{make_shared<op::v0::Abs>(convert_2), convert_2nd_output},
+        make_shared<Function>(NodeVector{make_shared<opset3::Abs>(convert_2), convert_2nd_output},
                               ParameterVector{param});
     pass::Manager pass_manager_2;
     pass_manager_2.register_pass<pass::Validate>();
     pass_manager_2.register_pass<pass::NopElimination>();
     pass_manager_2.run_passes(func);
 
-    ASSERT_EQ(count_ops_of_type<op::v0::Convert>(func), 2);
+    ASSERT_EQ(count_ops_of_type<opset3::Convert>(func), 2);
 }
 
 TEST(nop_elimination, eliminate_slice)

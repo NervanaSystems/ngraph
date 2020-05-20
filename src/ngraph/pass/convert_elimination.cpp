@@ -48,39 +48,43 @@ bool pass::ConvertElimination::eliminate_convert(const std::shared_ptr<Node>& no
     // case 1
     if (is_type<opset3::ReduceMin>(input_op.get_node()))
     {
-      auto convert_2 = input_op.get_node()->input_value(0).get_node();
-      if (is_type<opset3::Convert>(convert_2) && convert_2->get_users().size() == 1 &&
-	  destination_type == convert_2->get_input_element_type(0))
+        auto convert_2 = input_op.get_node()->input_value(0).get_node();
+        if (is_type<opset3::Convert>(convert_2) && convert_2->get_users().size() == 1 &&
+            destination_type == convert_2->get_input_element_type(0))
         {
-	  if (destination_type == element::i64 && convert_2->get_element_type() == element::i32)
+            if (destination_type == element::i64 && convert_2->get_element_type() == element::i32)
             {
-	      // replace ReplaceMin as convert's output
-              copy_runtime_info(convert->output(0).get_node_shared_ptr(),
-				input_op.get_node_shared_ptr());;
-              replace_node(convert->output(0).get_node_shared_ptr(),
-			   input_op.get_node_shared_ptr());;
-      
-	      input_op = convert_2->input_value(0);
-	      // replace input to convert_2 as convert_2's output
-	      copy_runtime_info(convert_2->output(0).get_node_shared_ptr(),
-				input_op.get_node_shared_ptr());;
-	      replace_node(convert_2->output(0).get_node_shared_ptr(),
-			   input_op.get_node_shared_ptr());;
-	      return true;
-	    }
-	}
+                // replace ReplaceMin as convert's output
+                copy_runtime_info(convert->output(0).get_node_shared_ptr(),
+                                  input_op.get_node_shared_ptr());
+                ;
+                replace_node(convert->output(0).get_node_shared_ptr(),
+                             input_op.get_node_shared_ptr());
+                ;
+
+                input_op = convert_2->input_value(0);
+                // replace input to convert_2 as convert_2's output
+                copy_runtime_info(convert_2->output(0).get_node_shared_ptr(),
+                                  input_op.get_node_shared_ptr());
+                ;
+                replace_node(convert_2->output(0).get_node_shared_ptr(),
+                             input_op.get_node_shared_ptr());
+                ;
+                return true;
+            }
+        }
     }
     // case 2
-    else if (convert->get_users().size() == 1)
+    if (convert->get_users().size() == 1)
     {
         static const std::set<NodeTypeInfo> type_agnostic{opset3::NonZero::type_info};
         if (type_agnostic.count(convert->get_users()[0]->get_type_info()) == 1)
         {
-	  copy_runtime_info(convert->output(0).get_node_shared_ptr(),
-			    input_op.get_node_shared_ptr());;
-	  replace_node(convert->output(0).get_node_shared_ptr(),
-		       input_op.get_node_shared_ptr());
-	  return true;
+            copy_runtime_info(convert->output(0).get_node_shared_ptr(),
+                              input_op.get_node_shared_ptr());
+            ;
+            replace_node(convert->output(0).get_node_shared_ptr(), input_op.get_node_shared_ptr());
+            return true;
         }
     }
     return false;
