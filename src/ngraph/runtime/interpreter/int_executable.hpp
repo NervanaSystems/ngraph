@@ -1385,39 +1385,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::TopK:
-        {
-            const op::TopK* topk = static_cast<const op::TopK*>(&node);
-            if (node.get_output_element_type(0) == element::i64)
-            {
-                reference::topk<T, int64_t>(args[0]->get_data_ptr<const T>(),
-                                            out[0]->get_data_ptr<int64_t>(),
-                                            out[1]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
-                                            node.get_output_shape(0),
-                                            topk->get_top_k_axis(),
-                                            topk->get_k(),
-                                            topk->get_compute_max(),
-                                            topk->get_sort());
-            }
-            else if (node.get_output_element_type(0) == element::i32)
-            {
-                reference::topk<T, int32_t>(args[0]->get_data_ptr<const T>(),
-                                            out[0]->get_data_ptr<int32_t>(),
-                                            out[1]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
-                                            node.get_output_shape(0),
-                                            topk->get_top_k_axis(),
-                                            topk->get_k(),
-                                            topk->get_compute_max(),
-                                            topk->get_sort());
-            }
-            else
-            {
-                throw ngraph_error("Unexpected type");
-            }
-            break;
-        }
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
@@ -1509,6 +1476,7 @@ protected:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Sum:
         case OP_TYPEID::Subtract:
+        case OP_TYPEID::TopK:
         case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Xor:
             // These ops are handled by op evaluators so nothing to do

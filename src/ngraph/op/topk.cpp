@@ -419,9 +419,13 @@ bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
     if (k == 0)
     {
         k = read_k_from_host_tensor(inputs[1]);
+        if (k == 0)
+        {
+            // the kernel can't handle k = 0, but output_shape[axis] = arg_shape[axis]
+            k = arg_shape[axis];
+        }
     }
     NGRAPH_CHECK(k <= arg_shape.at(axis), "K exceeds the dimension of the TopK axis");
-    NGRAPH_CHECK(k > 0, "The value of 'K' must be a positive number");
 
     // 3. Compute output_shape
     auto output_shape = compute_output_shape(inputs[0]->get_shape(), k, axis);
@@ -673,12 +677,16 @@ bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
     {
         k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
                                       get_input_element_type(1));
-        NGRAPH_CHECK(k > 0, "The value of 'K' must be a positive number");
         NGRAPH_CHECK(k <= arg_shape[axis], "'K' exceeds the dimension of top_k_axis");
     }
     else
     {
         k = read_k_from_host_tensor(inputs[1]);
+    }
+    if (k == 0)
+    {
+        // the kernel can't handle k = 0, but output_shape[axis] = arg_shape[axis]
+        k = arg_shape[axis];
     }
 
     // 3. Compute output_shape
