@@ -95,14 +95,14 @@ struct CPURuntimeContextCG
 
     void set_memory_ptr(size_t index,
                         void* ptr)
-	{
-		auto memory = mkldnn_memories[index];
-		memory->set_data_handle(ptr);
-	}
+    {
+        auto memory = mkldnn_memories[index];
+        memory->set_data_handle(ptr);
+    }
 
     void mkldnn_invoke_primitive(size_t primitive_index, std::vector<size_t>& deps,
                                         OpType type, size_t scratchpad_size)
-	{
+    {
         std::unordered_map<int, mkldnn::memory> exec_args;
         size_t nargs;
         switch (type)
@@ -242,7 +242,7 @@ struct CPURuntimeContextCG
             exec_args = {{MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[1]]},
                          {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[3]]},
                          {MKLDNN_ARG_DIFF_SRC, *mkldnn_memories[deps[2]]}};
-		    break;
+            break;
         case OpType::MAXPOOLWITHINDICESBACKPROP:
             exec_args = {{MKLDNN_ARG_DIFF_DST, *mkldnn_memories[deps[0]]},
                          {MKLDNN_ARG_WORKSPACE, *mkldnn_memories[deps[2]]},
@@ -311,22 +311,22 @@ private:
 
     void init_mkldnn_primitives();
 
-	inline void cleanup_mkldnn_primitives()
-	{
-		for (auto p : mkldnn_primitives)
-		{
-			delete p;
-		}
-	    for (auto m : mkldnn_memories)
-		{
-			delete m;
-		}
+    inline void cleanup_mkldnn_primitives()
+    {
+        for (auto p : mkldnn_primitives)
+        {
+            delete p;
+        }
+        for (auto m : mkldnn_memories)
+        {
+            delete m;
+        }
         for (auto s : mkldnn_scratchpad_mds)
         {
             delete s;
         }
         delete scratchpad_buffer;
-		
+        
 #ifndef _WIN32
         //To avoid memory leak in mkldnn, release any buffers that are not free'd yet.
         //https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
@@ -357,7 +357,7 @@ extern "C" void destroy_cg_ctx(CPURuntimeContextCG* cg_ctx)
 }
 
 static void
-	deserialize_memory_descs_and_build_memory(std::ifstream& desc_file,
+    deserialize_memory_descs_and_build_memory(std::ifstream& desc_file,
                                               CPURuntimeContextCG* cg_ctx,
                                               size_t descs_count)
 {
@@ -375,6 +375,6 @@ static void
 
         cg_ctx->mkldnn_descriptors[i] = desc;
         cg_ctx->mkldnn_memories[index] = new mkldnn::memory(*cg_ctx->mkldnn_descriptors[i], cg_ctx->global_cpu_engine, nullptr);
-	}
+    }
 };
 )"

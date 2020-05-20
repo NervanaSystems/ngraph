@@ -530,6 +530,16 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     }
 #endif
 
+// Any #ifdef in cpu_runtime_context.hpp MUST be included in here or the CPURuntimeContext
+// structure in the codegen code will be different from the cpu backend compiled version and
+// mayhem will ensue
+#if defined(NGRAPH_TBB_ENABLE)
+    writer += "#define NGRAPH_TBB_ENABLE\n";
+#endif
+#if defined(NGRAPH_MLIR_ENABLE)
+    writer += "#define NGRAPH_MLIR_ENABLE\n";
+#endif
+
     writer +=
         R"(
 #include <cmath>

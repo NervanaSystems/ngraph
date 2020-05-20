@@ -4461,31 +4461,30 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
             {
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
-                writer.block_begin();
                 auto index = external_function->add_state(
                     new ngraph::BernoulliRNGState(gm->get_seed(), gm->get_probability()));
                 writer << "auto state = static_cast<ngraph::BernoulliRNGState*>(ctx->states["
                        << index << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
                 writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
-
                 writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name()
                        << "[0]);\n";
                 writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
                        << "[0]);\n";
-                writer << "if (use_seed == false) \n";
-                writer << "{\n";
-                writer << "    reference::generate_mask(\n";
-                writer << "                " << out[0].get_name() << ",\n";
-                writer << "                " << out[0].get_size() << ",\n";
-                writer << "                state, training);\n";
-                writer << "}\n";
-                writer << "else {\n";
-                writer << "       reference::generate_mask_no_state(\n";
-                writer << "           " << out[0].get_name() << ",\n";
-                writer << "           " << out[0].get_size() << ",\n";
-                writer << "           training, seed, keep_prob);\n";
-                writer << "}\n";
+                writer << "if (use_seed == false)\n";
+                writer.block_begin();
+                writer << "reference::generate_mask(\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state,\n";
+                writer << "            training);\n";
+                writer.block_end();
+                writer << "else\n";
+                writer.block_begin();
+                writer << "reference::generate_mask_no_state(\n";
+                writer << "    " << out[0].get_name() << ",\n";
+                writer << "    " << out[0].get_size() << ",\n";
+                writer << "    training, seed, keep_prob);\n";
                 writer.block_end();
             }
 

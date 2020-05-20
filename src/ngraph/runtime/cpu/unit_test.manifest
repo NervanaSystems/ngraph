@@ -58,18 +58,18 @@ CPU.fused_clamp_bfloat16
 # CODEGEN
 ################################################################################
 
-CPU_CODEGEN.generate_mask
-CPU_CODEGEN.random_uniform_all_static_range_dynamic
-CPU_CODEGEN.random_uniform_all_static_seed_unused
-CPU_CODEGEN.random_uniform_all_static_seed_used
-CPU_CODEGEN.random_uniform_dynamic_shapes
-CPU_CODEGEN.random_uniform_seed_use_dynamic
-CPU_CODEGEN.reduce_sum_keep_stable_acc
-CPU_CODEGEN.reduce_sum_keep_stable_acc_double
-CPU_CODEGEN.reduce_sum_stable_acc
-CPU_CODEGEN.reduce_sum_stable_acc_double
-CPU_CODEGEN.sum_stable_acc
-CPU_CODEGEN.sum_stable_acc_double
+#CPU_CODEGEN.generate_mask
+#CPU_CODEGEN.random_uniform_all_static_range_dynamic
+#CPU_CODEGEN.random_uniform_all_static_seed_unused
+#CPU_CODEGEN.random_uniform_all_static_seed_used
+#CPU_CODEGEN.random_uniform_dynamic_shapes
+#CPU_CODEGEN.random_uniform_seed_use_dynamic
+#CPU_CODEGEN.reduce_sum_keep_stable_acc
+#CPU_CODEGEN.reduce_sum_keep_stable_acc_double
+#CPU_CODEGEN.reduce_sum_stable_acc
+#CPU_CODEGEN.reduce_sum_stable_acc_double
+#CPU_CODEGEN.sum_stable_acc
+#CPU_CODEGEN.sum_stable_acc_double
 CPU_CODEGEN.topk_v1_invalid_k
 
 CPU_CODEGEN.non_zero
