@@ -371,6 +371,7 @@ namespace
         return k;
     }
 
+    // used in only v0, where type is set as int64_t
     size_t read_top_k_axis_from_host_tensor(const HostTensorPtr& arg)
     {
         NGRAPH_CHECK(arg->get_element_type() == element::i64,
@@ -410,6 +411,8 @@ bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
         axis = read_top_k_axis_from_host_tensor(inputs[2]);
         NGRAPH_CHECK(axis <= arg_shape.size(), "TopK axis is out of bounds");
     }
+    bool compute_max = get_compute_max();
+    SortType sort_type = get_sort();
 
     // 2. get value of k - from constant node or from HT
     size_t k = get_k();
@@ -418,9 +421,7 @@ bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
         k = read_k_from_host_tensor(inputs[1]);
     }
     NGRAPH_CHECK(k <= arg_shape.at(axis), "K exceeds the dimension of the TopK axis");
-
-    bool compute_max = get_compute_max();
-    SortType sort_type = get_sort();
+    NGRAPH_CHECK(k > 0, "The value of 'K' must be a positive number");
 
     // 3. Compute output_shape
     auto output_shape = compute_output_shape(inputs[0]->get_shape(), k, axis);
@@ -529,9 +530,9 @@ void op::v1::TopK::validate_and_infer_types()
     set_output_type(1, m_index_element_type, output_shape);
 }
 
-PartialShape op::v1::TopK::compute_output_shape(const std::string& node_description,
-                                                const PartialShape input_partial_shape,
-                                                const int64_t k)
+Shape op::v1::TopK::compute_output_shape(const std::string& node_description,
+                                         const PartialShape input_partial_shape,
+                                         const int64_t k)
 {
     PartialShape output_shape{input_partial_shape};
 
@@ -540,7 +541,7 @@ PartialShape op::v1::TopK::compute_output_shape(const std::string& node_descript
     {
         output_shape[m_normalized_axis] = k;
     }
-    return output_shape;
+    return output_shape.get_shape();
 }
 
 void op::v1::TopK::set_axis(const int64_t axis)
@@ -660,25 +661,25 @@ void op::v1::TopK::set_k(size_t k)
 
 bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    // check data types for arg, k and output element type
+    Shape arg_shape = inputs[0]->get_shape();
+    // 1. get axis, mode ( max/min), sort_type
+    size_t axis = get_axis();
+    bool compute_max = get_mode() == TopKMode::MAX ? true : false;
+    SortType sort_type = get_sort_type();
 
-    // 1. get value of k - from constant node or from HT
+    // 2. get value of k - from constant node or from HT
     size_t k = 0;
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
         k = read_k_from_constant_node(input_value(1).get_node_shared_ptr(),
                                       get_input_element_type(1));
+        NGRAPH_CHECK(k > 0, "The value of 'K' must be a positive number");
+        NGRAPH_CHECK(k <= arg_shape[axis], "'K' exceeds the dimension of top_k_axis");
     }
     else
     {
         k = read_k_from_host_tensor(inputs[1]);
     }
-
-    // 2. get axis, mode ( max/min), sort_type
-    size_t axis = get_axis();
-
-    bool compute_max = get_mode() == TopKMode::MAX ? true : false;
-    SortType sort_type = get_sort_type();
 
     // 3. Compute output_shape
     auto output_shape = compute_output_shape(this->description(), inputs[0]->get_shape(), k);
@@ -686,7 +687,7 @@ bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
     return evaluate_topk(inputs[0],
                          outputs[1],
                          outputs[0],
-                         output_shape.get_shape(),
+                         output_shape,
                          axis,
                          k,
                          compute_max,
