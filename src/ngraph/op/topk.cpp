@@ -237,10 +237,36 @@ op::v1::TopK::TopK(const Output<Node>& data,
     : Op{{data, k}}
     , m_axis{axis}
     , m_normalized_axis{0}
-    , m_mode{as_enum<Mode>(mode)}
-    , m_sort{as_enum<SortType>(sort)}
     , m_index_element_type{index_element_type}
 {
+    if (mode == "min")
+    {
+        m_mode = Mode::MIN;
+    }
+    else if (mode == "max")
+    {
+        m_mode = Mode::MAX;
+    }
+    else
+    {
+        NGRAPH_CHECK(false, "TopK mode '" + mode + "' unknown");
+    }
+    if (sort == "none")
+    {
+        m_sort = SortType::NONE;
+    }
+    else if (sort == "index")
+    {
+        m_sort = SortType::SORT_INDICES;
+    }
+    else if (sort == "value")
+    {
+        m_sort = SortType::SORT_VALUES;
+    }
+    else
+    {
+        NGRAPH_CHECK(false, "TopK sort '" + sort + "' unknown");
+    }
     constructor_validate_and_infer_types();
 }
 

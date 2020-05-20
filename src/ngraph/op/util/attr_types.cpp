@@ -141,7 +141,7 @@ namespace ngraph
     NGRAPH_API EnumNames<op::TopKMode>& EnumNames<op::TopKMode>::get()
     {
         static auto enum_names = EnumNames<op::TopKMode>(
-            "op::TopKMode", {{"min", op::TopKMode::MIN}, {"max", op::TopKMode::MAX}});
+            "op::TopKMode", {{"MIN", op::TopKMode::MIN}, {"MAX", op::TopKMode::MAX}});
         return enum_names;
     }
 
