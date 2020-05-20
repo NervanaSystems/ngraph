@@ -19,6 +19,7 @@
 #include <cstddef>
 
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/runtime/reference/autobroadcast_binop.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph

@@ -420,4 +420,22 @@ bool PartialShape::all_non_negative() const
     return true;
 }
 
+const Dimension& PartialShape::operator[](size_t i) const
+{
+    if (i >= m_dimensions.size())
+    {
+        throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+    }
+    return m_dimensions[i];
+}
+
+Dimension& PartialShape::operator[](size_t i)
+{
+    if (i >= m_dimensions.size())
+    {
+        throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+    }
+    return m_dimensions[i];
+}
+
 NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;

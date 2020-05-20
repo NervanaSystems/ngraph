@@ -92,24 +92,7 @@ namespace ngraph
             return result;
         };
 
-        ///
-        /// \brief      Calculate the output shape of numpy-style broadcast operation for all input
-        ///             shapes.
-        ///
-        ///             This function finds the maximum tensor shape that will be the result of
-        ///             element-wise operation that will be applied to the input shapes vector.
-        ///             The function also prepares the shape of each input for the element-wise
-        ///             operation by left-padding those shapes so that their rank is equal to the
-        ///             left_shape's rank.
-        ///
-        /// \param      input_shapes  A vector of input shapes for which a common shape should be
-        ///                           found
-        ///
-        /// \return     A pair that contains the target shape as its first object and a vector of
-        ///             padded input shapes ready to be broadcasted as the second object
-        ///
-        static pair<Shape, vector<Shape>>
-            get_numpy_broadcast_shapes(const vector<Shape>& input_shapes)
+        pair<Shape, vector<Shape>> get_numpy_broadcast_shapes(const vector<Shape>& input_shapes)
         {
             Shape target_shape = accumulate(
                 begin(input_shapes), end(input_shapes), Shape{}, calculate_broadcast_shape);

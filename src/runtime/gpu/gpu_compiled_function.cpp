@@ -38,6 +38,7 @@
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 
 #include "gpu_backend.hpp"
 #include "gpu_compiled_function.hpp"
@@ -149,6 +150,7 @@ void runtime::gpu::GPUCompiledFunction::compile()
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
     pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();

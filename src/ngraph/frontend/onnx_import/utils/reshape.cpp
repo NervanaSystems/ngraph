@@ -113,7 +113,7 @@ namespace ngraph
                 const auto axis =
                     default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
 
-                return std::make_shared<ngraph::opset1::Squeeze>(node, axis);
+                return std::make_shared<default_opset::Squeeze>(node, axis);
             }
 
         } // namespace  reshape

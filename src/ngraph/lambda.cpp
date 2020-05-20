@@ -76,16 +76,15 @@ int64_t Lambda::get_result_index(const Output<Node>& value) const
     return -1;
 }
 
-bool Lambda::evaluate(const EvaluatorTensorVector& output_tensors,
-                      const EvaluatorTensorVector& input_tensors)
+bool Lambda::evaluate(const HostTensorVector& output_tensors, const HostTensorVector& input_tensors)
 {
-    std::map<RawNodeOutput, EvaluatorTensorPtr> value_map;
+    std::map<RawNodeOutput, HostTensorPtr> value_map;
     for (size_t i = 0; i < m_parameters.size(); ++i)
     {
         value_map[m_parameters.at(i)->output(0)] = input_tensors.at(i);
     }
     OutputVector outputs;
-    std::map<RawNodeOutput, EvaluatorTensorPtr> output_tensor_map;
+    std::map<RawNodeOutput, HostTensorPtr> output_tensor_map;
     for (size_t i = 0; i < m_results.size(); ++i)
     {
         auto result = m_results.at(i)->output(0);
