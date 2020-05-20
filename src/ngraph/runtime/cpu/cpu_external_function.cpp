@@ -368,6 +368,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
     {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
+    {TI(ngraph::op::Asinh), &runtime::cpu::CPU_Emitter::emit<op::Asinh>},
+    {TI(ngraph::op::Acosh), &runtime::cpu::CPU_Emitter::emit<op::Acosh>},
+    {TI(ngraph::op::Atanh), &runtime::cpu::CPU_Emitter::emit<op::Atanh>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -590,6 +593,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
 using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
+using namespace ngraph;
 
 )";
 

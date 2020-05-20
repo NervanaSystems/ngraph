@@ -58,10 +58,6 @@ CPU.fused_clamp_bfloat16
 # CODEGEN
 ################################################################################
 
-CPU_CODEGEN.atan2
-CPU_CODEGEN.backwards_atan2
-CPU_CODEGEN.convert_bf16_float32
-CPU_CODEGEN.convert_float32_bf16
 CPU_CODEGEN.generate_mask
 CPU_CODEGEN.random_uniform_all_static_range_dynamic
 CPU_CODEGEN.random_uniform_all_static_seed_unused
