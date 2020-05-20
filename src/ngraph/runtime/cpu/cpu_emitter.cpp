@@ -2314,7 +2314,14 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -2329,7 +2336,15 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = floor(" << args[0].get_name()
+                           << "[i]);\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -2339,14 +2354,21 @@ namespace ngraph
             {
                 (void)external_function;
                 (void)node;
-                writer.block_begin();
                 size_t element_count = out[0].get_size();
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-                writer.block_begin();
-                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
-                writer.block_end();
-                writer.block_end();
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << "reference::copy(";
+                    writer << args[0].get_name() << ",\n";
+                    writer << "                " << out[0].get_name() << ",\n";
+                    writer << "                " << element_count << ");\n";
+                }
+                else
+                {
+                    writer << "reference::round(";
+                    writer << args[0].get_name() << ",\n";
+                    writer << "                 " << out[0].get_name() << ",\n";
+                    writer << "                 " << element_count << ");\n";
+                }
             }
 
             template <>

@@ -10,9 +10,9 @@ CPU.max_3d_to_scalar_int32
 # Not implemented
 CPU.send_recv
 CPU.send_recv_ring
-atanh
-asinh
-acosh
+CPU.atanh
+CPU.asinh
+CPU.acosh
 
 # ONNX TopK with dynamic K
 CPU.onnx_top_k_opset_10
@@ -34,6 +34,30 @@ CPU.rnn_fusion_2rnn_layer_3lstm_cell
 CPU.onnx_dyn_shapes_flatten_axis
 CPU.onnx_dyn_shapes_flatten_neg_axis
 
+CPU.onnx_dyn_shapes_flatten_axis
+CPU.onnx_dyn_shapes_flatten_neg_axis
+
+# Need use evaluate, only applicable to INTERPRETER
+CPU.non_zero
+CPU.non_zero_all_1s
+CPU.non_zero_all_0s
+
+CPU.round_int64
+CPU.floor_int64
+CPU.ceiling_int64
+
+# Incorrect result from CPU, need check and fix 
+CPU.matmul_2x2x3_2x1x3_transpose_int64
+CPU.matmul_2x2x3_2x3x1_int64
+
+# no support for f16, bf16
+CPU.fused_clamp_float16
+CPU.fused_clamp_bfloat16
+
+################################################################################
+# CODEGEN
+################################################################################
+
 CPU_CODEGEN.atan2
 CPU_CODEGEN.backwards_atan2
 CPU_CODEGEN.convert_bf16_float32
@@ -48,32 +72,12 @@ CPU_CODEGEN.reduce_sum_keep_stable_acc
 CPU_CODEGEN.reduce_sum_keep_stable_acc_double
 CPU_CODEGEN.reduce_sum_stable_acc
 CPU_CODEGEN.reduce_sum_stable_acc_double
-CPU_CODEGEN.round
-CPU_CODEGEN.round_2D
 CPU_CODEGEN.sum_stable_acc
 CPU_CODEGEN.sum_stable_acc_double
 CPU_CODEGEN.topk_v1_invalid_k
 
-onnx_dyn_shapes_flatten_axis
-onnx_dyn_shapes_flatten_neg_axis
-
-# Need use evaluate, only applicable to INTERPRETER
-non_zero
-non_zero_all_1s
-non_zero_all_0s
-
-round_int64
-floor_int64
-ceiling_int64
-
-# Incorrect result from CPU, need check and fix 
-matmul_2x2x3_2x1x3_transpose_int64
-matmul_2x2x3_2x3x1_int64
-
-acosh
-asinh
-atanh
-
-# no support for f16, bf16
-fused_clamp_float16
-fused_clamp_bfloat16
+CPU_CODEGEN.non_zero
+CPU_CODEGEN.non_zero_all_0s
+CPU_CODEGEN.non_zero_all_1s
+CPU_CODEGEN.fused_clamp_float16
+CPU_CODEGEN.fused_clamp_bfloat16
