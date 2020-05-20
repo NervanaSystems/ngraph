@@ -53,7 +53,6 @@ public:
         SCATTER,
         SLICE,
         DYN_SLICE,
-        STRIDED_SLICE,
         DYN_RESHAPE,
         TRANSPOSE,
         RANGE,
@@ -75,7 +74,6 @@ public:
 
         construct_constant_split();
         construct_constant_variadic_split();
-        construct_constant_broadcast();
         construct_constant_dyn_broadcast();
         construct_constant_pad();
         construct_constant_quantize();
@@ -88,7 +86,6 @@ public:
         construct_constant_scatter_elements_update();
         construct_constant_slice();
         construct_constant_dyn_slice();
-        construct_constant_strided_slice();
         construct_constant_dyn_reshape();
         construct_constant_transpose();
         construct_constant_select();
@@ -98,7 +95,6 @@ public:
     }
 
 private:
-    void construct_constant_broadcast();
     void construct_constant_dyn_broadcast();
     void construct_constant_pad();
     void construct_constant_quantize();
@@ -111,7 +107,6 @@ private:
     void construct_constant_scatter_elements_update();
     void construct_constant_slice();
     void construct_constant_dyn_slice();
-    void construct_constant_strided_slice();
     void construct_constant_dyn_reshape();
     void construct_constant_transpose();
     void construct_constant_select();

@@ -172,7 +172,7 @@ TEST(type_prop, scatter_nd_add_fail_updates_shape)
         EXPECT_HAS_SUBSTRING(
             error.what(),
             std::string(
-                "Updates shape must be indices_shape[:-1] + inputs_shape[indices.shape[-1]:]"));
+                "updates_shape[indices_rank-1:] shape must be input_shape[indices_shape[-1]:]"));
     }
     catch (...)
     {
