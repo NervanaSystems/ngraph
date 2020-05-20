@@ -596,6 +596,12 @@ public:
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
+        void update_inputs_after_copy_tmp () {
+            for(auto& input: m_inputs){
+                input = descriptor::Input(this, input.get_index(), input.get_output());
+            }
+        }
+
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
