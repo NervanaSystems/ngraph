@@ -50,3 +50,7 @@ matmul_2x2x3_2x3x1_int64
 acosh
 asinh
 atanh
+
+# no support for f16, bf16
+fused_clamp_float16
+fused_clamp_bfloat16
