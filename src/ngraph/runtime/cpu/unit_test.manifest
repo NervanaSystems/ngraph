@@ -30,10 +30,6 @@ fuse_1_layer_rnn
 rnn_fusion_1rnn_layer_3lstm_cell
 rnn_fusion_2rnn_layer_3lstm_cell
 
-#ONNX Flatten with dynamic reshape
-onnx_dyn_shapes_flatten_axis
-onnx_dyn_shapes_flatten_neg_axis
-
 # Need use evaluate, only applicable to INTERPRETER
 non_zero
 non_zero_all_1s
@@ -50,3 +46,7 @@ matmul_2x2x3_2x3x1_int64
 acosh
 asinh
 atanh
+
+# no support for f16, bf16
+fused_clamp_float16
+fused_clamp_bfloat16

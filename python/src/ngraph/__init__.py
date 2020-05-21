@@ -53,6 +53,7 @@ from ngraph.ops import cum_sum as cumsum
 from ngraph.ops import deformable_convolution
 from ngraph.ops import deformable_psroi_pooling
 from ngraph.ops import depth_to_space
+from ngraph.ops import detection_output
 from ngraph.ops import divide
 from ngraph.ops import elu
 from ngraph.ops import embedding_bag_offsets_sum
@@ -75,6 +76,7 @@ from ngraph.ops import group_convolution
 from ngraph.ops import group_convolution_backprop_data
 from ngraph.ops import gru_cell
 from ngraph.ops import hard_sigmoid
+from ngraph.ops import interpolate
 from ngraph.ops import less
 from ngraph.ops import less_equal
 from ngraph.ops import log
@@ -102,7 +104,10 @@ from ngraph.ops import pad
 from ngraph.ops import parameter
 from ngraph.ops import power
 from ngraph.ops import prelu
+from ngraph.ops import prior_box
+from ngraph.ops import prior_box_clustered
 from ngraph.ops import psroi_pooling
+from ngraph.ops import proposal
 from ngraph.ops import reduce_logical_and
 from ngraph.ops import reduce_logical_or
 from ngraph.ops import reduce_max
