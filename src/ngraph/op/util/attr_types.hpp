@@ -264,11 +264,11 @@ namespace ngraph
         enum class TopKSortType
         {
             // Returned values are not sorted
-            NONE,
+            none,
             // Sort result based on element indices
-            SORT_INDICES,
+            index,
             // Sort result based on element values
-            SORT_VALUES,
+            value,
         };
 
         NGRAPH_API
@@ -293,8 +293,8 @@ namespace ngraph
     {
         enum class TopKMode
         {
-            MAX,
-            MIN,
+            max,
+            min,
         };
 
         NGRAPH_API

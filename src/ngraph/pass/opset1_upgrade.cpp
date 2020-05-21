@@ -641,9 +641,9 @@ namespace
         std::string sort;
         switch (node->get_sort())
         {
-        case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
-        case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
-        case op::TopK::SortType::NONE: sort = "none"; break;
+        case op::TopK::SortType::index: sort = "index"; break;
+        case op::TopK::SortType::value: sort = "value"; break;
+        case op::TopK::SortType::none: sort = "none"; break;
         }
 
         std::string mode;
