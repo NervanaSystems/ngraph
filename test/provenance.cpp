@@ -579,7 +579,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
     const int32_t k = 10;
     const auto k_node = op::Constant::create(element::i64, Shape{}, {k});
     const size_t axis = 2;
-    const auto mode = op::v1::TopK::Mode::MAX;
+    const auto mode = op::v1::TopK::Mode::max;
     const auto sort = op::v1::TopK::SortType::index;
     const auto elem_type = element::i64;
 

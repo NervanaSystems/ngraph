@@ -129,7 +129,7 @@ TEST(replace_node, replace_nodes_output_order)
     auto topk_v1 = make_shared<op::v1::TopK>(data,
                                              op::Constant::create(element::i32, Shape{}, {2}),
                                              0,
-                                             op::v1::TopK::Mode::MAX,
+                                             op::v1::TopK::Mode::max,
                                              op::v1::TopK::SortType::value,
                                              element::i32);
 
@@ -154,7 +154,7 @@ TEST(replace_node, replace_nodes_output_order_incorrect_size)
     auto topk_v1 = make_shared<op::v1::TopK>(data,
                                              op::Constant::create(element::i32, Shape{}, {2}),
                                              0,
-                                             op::v1::TopK::Mode::MAX,
+                                             op::v1::TopK::Mode::max,
                                              op::v1::TopK::SortType::value,
                                              element::i32);
 

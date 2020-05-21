@@ -82,7 +82,7 @@ namespace ngraph
                         std::make_shared<default_opset::TopK>(data,
                                                               k_node,
                                                               axis,
-                                                              default_opset::TopK::Mode::MAX,
+                                                              default_opset::TopK::Mode::max,
                                                               default_opset::TopK::SortType::value,
                                                               element::i64);
 
@@ -102,7 +102,7 @@ namespace ngraph
                         std::make_shared<default_opset::TopK>(data,
                                                               k,
                                                               axis,
-                                                              default_opset::TopK::Mode::MAX,
+                                                              default_opset::TopK::Mode::max,
                                                               default_opset::TopK::SortType::value,
                                                               element::i64);
 
@@ -128,8 +128,8 @@ namespace ngraph
                                                   : default_opset::TopK::SortType::none;
 
                     const auto compute_max = static_cast<bool>(largest);
-                    const auto mode = compute_max ? default_opset::TopK::Mode::MAX
-                                                  : default_opset::TopK::Mode::MIN;
+                    const auto mode = compute_max ? default_opset::TopK::Mode::max
+                                                  : default_opset::TopK::Mode::min;
 
                     std::shared_ptr<ngraph::Node> top_k = std::make_shared<default_opset::TopK>(
                         data, k, axis, mode, sort_type, element::i64);

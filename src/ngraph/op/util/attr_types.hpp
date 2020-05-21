@@ -293,8 +293,8 @@ namespace ngraph
     {
         enum class TopKMode
         {
-            MAX,
-            MIN,
+            max,
+            min,
         };
 
         NGRAPH_API

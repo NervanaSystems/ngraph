@@ -35,12 +35,12 @@ namespace ngraph
 
             std::shared_ptr<ngraph::Node> ArgMinMaxFactory::make_arg_max() const
             {
-                return make_topk_subgraph(default_opset::TopK::Mode::MAX);
+                return make_topk_subgraph(default_opset::TopK::Mode::max);
             }
 
             std::shared_ptr<ngraph::Node> ArgMinMaxFactory::make_arg_min() const
             {
-                return make_topk_subgraph(default_opset::TopK::Mode::MIN);
+                return make_topk_subgraph(default_opset::TopK::Mode::min);
             }
 
             std::shared_ptr<ngraph::Node>

@@ -43,7 +43,7 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
     const auto topk_v1 = as_type_ptr<op::v1::TopK>(pass_replacement_node);
     ASSERT_TRUE(topk_v1);
     EXPECT_EQ(topk_v1->get_axis(), axis);
-    EXPECT_EQ(topk_v1->get_mode(), op::v1::TopK::Mode::MAX);
+    EXPECT_EQ(topk_v1->get_mode(), op::v1::TopK::Mode::max);
     EXPECT_EQ(topk_v1->get_sort_type(), op::v1::TopK::SortType::value);
 
     const auto values_out_element_type = topk_v1->get_output_element_type(0);
@@ -56,7 +56,7 @@ TEST(opset_transform, opset1_topk_downgrade_pass)
     const int32_t k = 10;
     const auto k_node = op::Constant::create(element::i64, Shape{}, {k});
     const size_t axis = 2;
-    const auto mode = op::v1::TopK::Mode::MAX;
+    const auto mode = op::v1::TopK::Mode::max;
     const auto sort = op::v1::TopK::SortType::index;
     const auto elem_type = element::i64;
 
