@@ -3589,7 +3589,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         const auto tmp = static_cast<const op::ShuffleChannels*>(&n);
         node["axis"] = tmp->get_axis();
-        node["groups"] = tmp->get_groups();
+        node["group"] = tmp->get_group();
         break;
     }
     case OP_TYPEID::Sigmoid: { break;

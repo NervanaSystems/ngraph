@@ -59,7 +59,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 int get_axis() const { return m_axis; }
-                size_t get_groups() const { return m_groups; }
+                size_t get_group() const { return m_group; }
             private:
                 /// \brief Generates a shape required to permute the data
                 ///
@@ -68,7 +68,7 @@ namespace ngraph
                 Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
                 int m_axis;
-                size_t m_groups;
+                size_t m_group;
             };
         }
         using v0::ShuffleChannels;
