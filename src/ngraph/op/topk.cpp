@@ -444,6 +444,8 @@ bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
 // v1 version starts
 constexpr NodeTypeInfo op::v1::TopK::type_info;
 
+static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
+
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
                    const int64_t axis,
@@ -452,15 +454,13 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const element::Type& index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
-    , m_normalized_axis{0}
+    , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
     , m_mode{as_enum<Mode>(mode)}
     , m_sort{as_enum<SortType>(sort)}
     , m_index_element_type{index_element_type}
 {
     constructor_validate_and_infer_types();
 }
-
-static const std::uint64_t UNKNOWN_NORMALIZED_AXIS = std::numeric_limits<uint64_t>::max();
 
 op::v1::TopK::TopK(const Output<Node>& data,
                    const Output<Node>& k,
@@ -545,12 +545,30 @@ Shape op::v1::TopK::compute_output_shape(const std::string& node_description,
     {
         output_shape[m_normalized_axis] = k;
     }
+    else
+    {
+        output_shape[m_normalized_axis] = input_partial_shape[m_normalized_axis];
+    }
+
     return output_shape.get_shape();
 }
 
 void op::v1::TopK::set_axis(const int64_t axis)
 {
     const auto input_rank = get_input_partial_shape(0).rank();
+    if (input_rank.is_static())
+    {
+        m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
+    }
+    else
+    {
+        m_normalized_axis = UNKNOWN_NORMALIZED_AXIS;
+    }
+    m_axis = axis;
+}
+
+void op::v1::TopK::set_axis(const Rank input_rank, const int64_t axis)
+{
     if (input_rank.is_static())
     {
         m_normalized_axis = ngraph::normalize_axis(this, axis, input_rank);
@@ -667,6 +685,7 @@ bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
 {
     Shape arg_shape = inputs[0]->get_shape();
     // 1. get axis, mode ( max/min), sort_type
+    set_axis(arg_shape.size(), m_axis);
     size_t axis = get_axis();
     bool compute_max = get_mode() == TopKMode::MAX ? true : false;
     SortType sort_type = get_sort_type();
@@ -683,14 +702,16 @@ bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
     {
         k = read_k_from_host_tensor(inputs[1]);
     }
+
+    // 3. Compute output_shape
+    auto output_shape = compute_output_shape(this->description(), inputs[0]->get_shape(), k);
+
+    // do this after compute_output_shape
     if (k == 0)
     {
         // the kernel can't handle k = 0, but output_shape[axis] = arg_shape[axis]
         k = arg_shape[axis];
     }
-
-    // 3. Compute output_shape
-    auto output_shape = compute_output_shape(this->description(), inputs[0]->get_shape(), k);
 
     return evaluate_topk(inputs[0],
                          outputs[1],
