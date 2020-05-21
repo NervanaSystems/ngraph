@@ -1152,12 +1152,11 @@ AttributeAdapter<std::shared_ptr<Node>>::AttributeAdapter(std::shared_ptr<Node>&
 {
 }
 
-bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor,
-                                                               const std::string& name)
+bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor)
 {
     auto original_id = visitor.get_registered_node_id(m_ref);
     auto id = original_id;
-    visitor.on_attribute(name, id);
+    visitor.on_attribute("ID", id);
     if (id != original_id)
     {
         m_ref = visitor.get_registered_node(id);
@@ -1172,10 +1171,8 @@ AttributeAdapter<NodeVector>::AttributeAdapter(NodeVector& ref)
 {
 }
 
-bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor,
-                                                    const std::string& name)
+bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.start_structure(name);
     int64_t size = m_ref.size();
     visitor.on_attribute("size", size);
     if (size != m_ref.size())
@@ -1198,6 +1195,5 @@ bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor,
             m_ref[i] = visitor.get_registered_node(id);
         }
     }
-    visitor.finish_structure();
     return true;
 }

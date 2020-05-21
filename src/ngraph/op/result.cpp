@@ -83,10 +83,8 @@ AttributeAdapter<ResultVector>::AttributeAdapter(ResultVector& ref)
 {
 }
 
-bool AttributeAdapter<ResultVector>::visit_attributes(AttributeVisitor& visitor,
-                                                      const std::string& name)
+bool AttributeAdapter<ResultVector>::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.start_structure(name);
     int64_t size = m_ref.size();
     visitor.on_attribute("size", size);
     if (size != m_ref.size())
@@ -109,6 +107,5 @@ bool AttributeAdapter<ResultVector>::visit_attributes(AttributeVisitor& visitor,
             m_ref[i] = as_type_ptr<op::v0::Result>(visitor.get_registered_node(id));
         }
     }
-    visitor.finish_structure();
     return true;
 }

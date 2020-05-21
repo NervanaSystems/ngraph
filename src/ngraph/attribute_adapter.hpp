@@ -101,7 +101,7 @@ namespace ngraph
         {
             if (!m_buffer_valid)
             {
-                m_buffer = m_ref;
+                m_buffer = static_cast<VAT>(m_ref);
                 m_buffer_valid = true;
             }
             return m_buffer;
@@ -109,7 +109,7 @@ namespace ngraph
 
         void set(const VAT& value) override
         {
-            m_ref = value;
+            m_ref = static_cast<AT>(value);
             m_buffer_valid = false;
         }
 
@@ -156,6 +156,7 @@ namespace ngraph
             m_buffer_valid = false;
         }
 
+        operator AT&() { return m_ref; }
     protected:
         AT& m_ref;
         VAT m_buffer;
@@ -182,6 +183,7 @@ namespace ngraph
 
         const std::string& get() override { return as_string(m_ref); }
         void set(const std::string& value) override { m_ref = as_enum<AT>(value); }
+        operator AT&() { return m_ref; }
     protected:
         AT& m_ref;
     };
@@ -190,7 +192,7 @@ namespace ngraph
     class VisitorAdapter : public ValueAccessor<void>
     {
     public:
-        virtual bool visit_attributes(AttributeVisitor& visitor, const std::string& name) = 0;
+        virtual bool visit_attributes(AttributeVisitor& visitor) = 0;
     };
 
     template <>

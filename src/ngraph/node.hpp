@@ -644,7 +644,7 @@ namespace ngraph
     public:
         AttributeAdapter(std::shared_ptr<Node>& value);
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     protected:
@@ -657,7 +657,7 @@ namespace ngraph
     public:
         AttributeAdapter(NodeVector& ref);
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }

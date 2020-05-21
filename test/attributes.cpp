@@ -95,13 +95,11 @@ namespace ngraph
             : m_ref(value)
         {
         }
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        bool visit_attributes(AttributeVisitor& visitor) override
         {
-            visitor.start_structure(name);
             visitor.on_attribute("x", m_ref.x);
             visitor.on_attribute("y", m_ref.y);
             visitor.on_attribute("z", m_ref.z);
-            visitor.finish_structure();
             return true;
         }
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Position>", 0};
@@ -1162,7 +1160,7 @@ TEST(attributes, shuffle_channels_op)
     auto g_shuffle_channels = as_type_ptr<opset1::ShuffleChannels>(builder.create());
 
     EXPECT_EQ(g_shuffle_channels->get_axis(), shuffle_channels->get_axis());
-    EXPECT_EQ(g_shuffle_channels->get_groups(), shuffle_channels->get_groups());
+    EXPECT_EQ(g_shuffle_channels->get_group(), shuffle_channels->get_group());
 }
 
 TEST(attributes, softmax_op)

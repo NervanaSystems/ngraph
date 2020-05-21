@@ -122,16 +122,18 @@ namespace ngraph
         void on_attribute(const std::string& name, AT& value)
         {
             AttributeAdapter<AT> adapter(value);
-            on_adapter(get_name_with_context(name), adapter);
+            start_structure(name);
+            on_adapter(get_name_with_context(), adapter);
+            finish_structure();
         }
         /// \returns The nested context of visits
         const std::vector<std::string>& get_context() const { return m_context; }
         /// \returns context prepended to names
-        virtual std::string get_name_with_context(const std::string& name);
+        virtual std::string get_name_with_context();
         /// \brief Start visiting a nested structure
         virtual void start_structure(const std::string& name);
         /// \brief Finish visiting a nested structure
-        virtual void finish_structure();
+        virtual std::string finish_structure();
         using node_id_t = std::string;
         static const node_id_t invalid_node_id;
         /// \brief Associate a node with an id.

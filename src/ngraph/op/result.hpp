@@ -71,7 +71,7 @@ namespace ngraph
     public:
         AttributeAdapter(ResultVector& ref);
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<ResultVector>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }

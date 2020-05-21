@@ -74,15 +74,19 @@ namespace ngraph
                 NGRAPH_CHECK(false, "Invalid type access");
             }
             virtual operator HostTensorPtr&() { NGRAPH_CHECK(false, "Invalid type access"); }
+            uint64_t get_index() { return m_index; }
+        protected:
+            uint64_t m_index{0};
         };
 
         template <typename T>
         class ValueHolderImp : public ValueHolder
         {
         public:
-            ValueHolderImp(const T& value)
+            ValueHolderImp(const T& value, uint64_t index)
                 : m_value(value)
             {
+                m_index = index;
             }
             operator T&() override { return m_value; }
         protected:
@@ -94,21 +98,57 @@ namespace ngraph
             using map_type = std::unordered_map<std::string, std::shared_ptr<ValueHolder>>;
 
         public:
+            /// \brief Set to print serialization information
+            void set_print(bool value) { m_print = value; }
             template <typename T>
             void insert(const std::string& name, const T& value)
             {
-                std::pair<map_type::iterator, bool> result = m_values.insert(
-                    map_type::value_type(name, std::make_shared<ValueHolderImp<T>>(value)));
+                std::pair<map_type::iterator, bool> result = m_values.insert(map_type::value_type(
+                    name, std::make_shared<ValueHolderImp<T>>(value, m_write_count++)));
                 NGRAPH_CHECK(result.second, name, " is already in use");
+            }
+            template <typename T>
+            void insert_scalar(const std::string& name, const T& value)
+            {
+                std::pair<map_type::iterator, bool> result = m_values.insert(map_type::value_type(
+                    name, std::make_shared<ValueHolderImp<T>>(value, m_write_count++)));
+                NGRAPH_CHECK(result.second, name, " is already in use");
+                if (m_print)
+                {
+                    std::cerr << "SER: " << name << " = " << value << std::endl;
+                }
+            }
+            template <typename T>
+            void insert_vector(const std::string& name, const T& value)
+            {
+                std::pair<map_type::iterator, bool> result = m_values.insert(map_type::value_type(
+                    name, std::make_shared<ValueHolderImp<T>>(value, m_write_count++)));
+                NGRAPH_CHECK(result.second, name, " is already in use");
+                if (m_print)
+                {
+                    std::cerr << "SER: " << name << " = [";
+                    std::string comma = "";
+                    for (auto val : value)
+                    {
+                        std::cerr << comma << val;
+                        comma = ", ";
+                    }
+                    std::cerr << "]" << std::endl;
+                }
             }
             template <typename T>
             T& get(const std::string& name)
             {
+                auto& value_holder = *m_values.at(name);
+                NGRAPH_CHECK(m_read_count++ == value_holder.get_index());
                 return static_cast<T&>(*m_values.at(name));
             }
 
         protected:
             map_type m_values;
+            uint64_t m_write_count{0};
+            uint64_t m_read_count{0};
+            bool m_print{false};
         };
 
         class DeserializeAttributeVisitor : public AttributeVisitor
@@ -220,75 +260,75 @@ namespace ngraph
             // The remaining adapter methods fall back on the void adapter if not implemented
             void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_scalar(name, adapter.get());
             };
             void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_scalar(name, adapter.get());
             };
 
             void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_scalar(name, adapter.get());
             }
             void on_adapter(const std::string& name, ValueAccessor<double>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_scalar(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<std::string>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<float>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<double>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<int8_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<int16_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<int32_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<int64_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<uint8_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<uint16_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<uint32_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name,
                             ValueAccessor<std::vector<uint64_t>>& adapter) override
             {
-                m_values.insert(name, adapter.get());
+                m_values.insert_vector(name, adapter.get());
             }
             void on_adapter(const std::string& name, ValueAccessor<void*>& adapter) override
             {

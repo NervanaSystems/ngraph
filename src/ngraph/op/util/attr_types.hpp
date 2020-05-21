@@ -362,7 +362,7 @@ namespace ngraph
             : m_ref(value)
         {
         }
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
@@ -413,7 +413,7 @@ namespace ngraph
             : m_ref(value)
         {
         }
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::BroadcastModeSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }

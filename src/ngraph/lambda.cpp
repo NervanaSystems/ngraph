@@ -131,6 +131,12 @@ public:
         }
         return true;
     }
+    void visit(AttributeVisitor& visitor, const std::string& id)
+    {
+        visitor.start_structure(id);
+        visitor.on_adapter(id, *this);
+        visitor.finish_structure();
+    }
     static constexpr DiscreteTypeInfo type_info{"Lambda.NodeAttributeAdapter", 0};
     const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     string m_id;
@@ -139,11 +145,8 @@ public:
 
 constexpr DiscreteTypeInfo NodeAttributeAdapter::type_info;
 
-bool AttributeAdapter<shared_ptr<Lambda>>::visit_attributes(AttributeVisitor& visitor,
-                                                            const std::string& name)
+bool AttributeAdapter<shared_ptr<Lambda>>::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.start_structure(name);
-
     if (m_ref->get_results().size() > 0)
     {
         NodeVector serialized_nodes;
@@ -168,7 +171,7 @@ bool AttributeAdapter<shared_ptr<Lambda>>::visit_attributes(AttributeVisitor& vi
                         index << i++;
                         string id = index.str();
                         NodeAttributeAdapter adapter(node);
-                        visitor.on_adapter(id, adapter);
+                        adapter.visit(visitor, id);
                         serialized_nodes.push_back(node);
                     }
                 });
@@ -179,7 +182,7 @@ bool AttributeAdapter<shared_ptr<Lambda>>::visit_attributes(AttributeVisitor& vi
                 string id = index.str();
                 shared_ptr<Node> null_node;
                 NodeAttributeAdapter adapter(null_node);
-                visitor.on_adapter(id, adapter);
+                adapter.visit(visitor, id);
             }
             visitor.finish_structure();
         }
@@ -269,7 +272,7 @@ bool AttributeAdapter<shared_ptr<Lambda>>::visit_attributes(AttributeVisitor& vi
                 string id = index.str();
                 shared_ptr<Node> node;
                 NodeAttributeAdapter adapter(node);
-                visitor.on_adapter(id, adapter);
+                adapter.visit(visitor, id);
                 if (node)
                 {
                     visitor.register_node(node);
@@ -362,6 +365,5 @@ bool AttributeAdapter<shared_ptr<Lambda>>::visit_attributes(AttributeVisitor& vi
         m_ref->visit_attributes(visitor);
         visitor.finish_structure();
     }
-    visitor.finish_structure();
     return true;
 }

@@ -238,9 +238,8 @@ namespace ngraph
     }
 
     bool AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>>::
-        visit_attributes(AttributeVisitor& visitor, const std::string& name)
+        visit_attributes(AttributeVisitor& visitor)
     {
-        visitor.start_structure(name);
         int64_t size = m_ref.size();
         visitor.on_attribute("size", size);
         if (size != m_ref.size())
@@ -254,7 +253,6 @@ namespace ngraph
             index << i;
             visitor.on_attribute(index.str(), m_ref[i]);
         }
-        visitor.finish_structure();
         return true;
     }
 
@@ -290,9 +288,8 @@ namespace ngraph
     }
 
     bool AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>>::
-        visit_attributes(AttributeVisitor& visitor, const std::string& name)
+        visit_attributes(AttributeVisitor& visitor)
     {
-        visitor.start_structure(name);
         int64_t size = m_ref.size();
         visitor.on_attribute("size", size);
         if (size != m_ref.size())
@@ -306,7 +303,6 @@ namespace ngraph
             index << i;
             visitor.on_attribute(index.str(), m_ref[i]);
         }
-        visitor.finish_structure();
         return true;
     }
 }

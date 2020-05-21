@@ -35,9 +35,8 @@ namespace ngraph
         virtual bool on_start(AttributeVisitor& /* visitor */) { return true; }
         /// \brief Hook for extra processing after other attributes
         virtual bool on_finish(AttributeVisitor& /* visitor */) { return true; }
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override
+        bool visit_attributes(AttributeVisitor& visitor) override
         {
-            visitor.start_structure(name);
             if (on_start(visitor))
             {
                 std::string type_info_name;
@@ -63,7 +62,6 @@ namespace ngraph
                 }
                 on_finish(visitor);
             }
-            visitor.finish_structure();
             return true;
         }
 

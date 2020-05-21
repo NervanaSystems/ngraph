@@ -501,6 +501,8 @@ TEST(serialize, tensor_iterator_raw)
     shared_ptr<Function> g = deserialize(s);
 
     ngraph::test::NodeBuilder builder;
+    // Uncomment to see serialization
+    // builder.set_print(true);
     builder.save_node(tensor_iterator);
     auto g_tensor_iterator = as_type_ptr<op::v0::TensorIterator>(builder.create());
     ASSERT_TRUE(g_tensor_iterator);

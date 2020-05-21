@@ -356,7 +356,7 @@ namespace ngraph
     public:
         AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& ref);
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
         static constexpr DiscreteTypeInfo type_info{
             "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>"
             ">>",
@@ -389,7 +389,7 @@ namespace ngraph
     public:
         AttributeAdapter(std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& ref);
 
-        bool visit_attributes(AttributeVisitor& visitor, const std::string& name) override;
+        bool visit_attributes(AttributeVisitor& visitor) override;
         static constexpr DiscreteTypeInfo type_info{
             "AttributeAdapter<std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>"
             ">>",

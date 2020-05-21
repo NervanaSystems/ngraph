@@ -26,12 +26,14 @@ void AttributeVisitor::start_structure(const string& name)
     m_context.push_back(name);
 }
 
-void AttributeVisitor::finish_structure()
+string AttributeVisitor::finish_structure()
 {
+    string result = m_context.back();
     m_context.pop_back();
+    return result;
 }
 
-string AttributeVisitor::get_name_with_context(const std::string& name)
+string AttributeVisitor::get_name_with_context()
 {
     ostringstream result;
     string sep = "";
@@ -40,13 +42,12 @@ string AttributeVisitor::get_name_with_context(const std::string& name)
         result << sep << c;
         sep = ".";
     }
-    result << sep << name;
     return result.str();
 }
 
 void AttributeVisitor::on_adapter(const std::string& name, VisitorAdapter& adapter)
 {
-    adapter.visit_attributes(*this, name);
+    adapter.visit_attributes(*this);
 }
 
 void AttributeVisitor::on_adapter(const std::string& name, ValueAccessor<void*>& adapter)

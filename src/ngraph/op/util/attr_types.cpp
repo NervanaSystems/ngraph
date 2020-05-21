@@ -172,25 +172,27 @@ namespace ngraph
         return allowed_values.at(type);
     }
 
-    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor,
-                                                                   const std::string& name)
+    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor)
     {
+        // Maintain back-compatibility
+        std::string name = visitor.finish_structure();
         visitor.on_attribute(name, m_ref.m_type);
+        visitor.start_structure(name);
         if (m_ref.m_type == op::AutoBroadcastType::PDPD)
         {
-            visitor.start_structure(name);
             visitor.on_attribute("auto_broadcast_axis", m_ref.m_axis);
-            visitor.finish_structure();
         }
         return true;
     }
 
     constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
 
-    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor,
-                                                                   const std::string& name)
+    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor)
     {
+        // Maintain back-compatibility
+        std::string name = visitor.finish_structure();
         visitor.on_attribute(name, m_ref.m_type);
+        visitor.start_structure(name);
         if (m_ref.m_type == op::BroadcastType::PDPD)
         {
             visitor.start_structure(name);
