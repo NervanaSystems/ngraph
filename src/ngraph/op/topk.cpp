@@ -253,15 +253,15 @@ op::v1::TopK::TopK(const Output<Node>& data,
     }
     if (sort == "none")
     {
-        m_sort = SortType::NONE;
+        m_sort = SortType::none;
     }
     else if (sort == "index")
     {
-        m_sort = SortType::SORT_INDICES;
+        m_sort = SortType::index;
     }
     else if (sort == "value")
     {
-        m_sort = SortType::SORT_VALUES;
+        m_sort = SortType::value;
     }
     else
     {

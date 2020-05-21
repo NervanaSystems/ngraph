@@ -49,7 +49,7 @@ namespace ngraph
                 const auto k_node =
                     default_opset::Constant::create(ngraph::element::i64, Shape{}, {1});
                 const auto topk = std::make_shared<default_opset::TopK>(
-                    m_input_node, k_node, m_axis, mode, default_opset::TopK::SortType::NONE);
+                    m_input_node, k_node, m_axis, mode, default_opset::TopK::SortType::none);
 
                 const auto indices = std::make_shared<ngraph::opset0::GetOutputElement>(topk, 1);
 

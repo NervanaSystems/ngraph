@@ -130,7 +130,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_none)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::NONE);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::none);
     auto out_value = make_shared<op::GetOutputElement>(B, 1);
     auto out_index = make_shared<op::GetOutputElement>(B, 0);
     auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
@@ -181,7 +181,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_none)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::NONE);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::none);
     auto out_value = make_shared<op::GetOutputElement>(B, 1);
     auto out_index = make_shared<op::GetOutputElement>(B, 0);
     auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
@@ -232,7 +232,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_value)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::SORT_VALUES);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::value);
     auto out_value = make_shared<op::GetOutputElement>(B, 1);
     auto out_index = make_shared<op::GetOutputElement>(B, 0);
     auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
@@ -279,7 +279,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_value)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::SORT_VALUES);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::value);
     auto out_value = make_shared<op::GetOutputElement>(B, 1);
     auto out_index = make_shared<op::GetOutputElement>(B, 0);
     auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
@@ -330,7 +330,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_index)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::SORT_INDICES);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::index);
     auto out_value = make_shared<op::GetOutputElement>(B, 1);
     auto out_index = make_shared<op::GetOutputElement>(B, 0);
     auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
@@ -381,7 +381,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_index)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::SORT_INDICES);
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::index);
     auto out_value = make_shared<op::GetOutputElement>(B, 1);
     auto out_index = make_shared<op::GetOutputElement>(B, 0);
     auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});

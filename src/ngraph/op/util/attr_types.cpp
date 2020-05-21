@@ -130,18 +130,17 @@ namespace ngraph
     template <>
     NGRAPH_API EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
     {
-        static auto enum_names =
-            EnumNames<op::TopKSortType>("op::TopKSortType",
-                                        {{"NONE", op::TopKSortType::NONE},
-                                         {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
-                                         {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
+        static auto enum_names = EnumNames<op::TopKSortType>("op::TopKSortType",
+                                                             {{"none", op::TopKSortType::none},
+                                                              {"index", op::TopKSortType::index},
+                                                              {"value", op::TopKSortType::value}});
         return enum_names;
     }
     template <>
     NGRAPH_API EnumNames<op::TopKMode>& EnumNames<op::TopKMode>::get()
     {
         static auto enum_names = EnumNames<op::TopKMode>(
-            "op::TopKMode", {{"MIN", op::TopKMode::MIN}, {"MAX", op::TopKMode::MAX}});
+            "op::TopKMode", {{"min", op::TopKMode::MIN}, {"max", op::TopKMode::MAX}});
         return enum_names;
     }
 
