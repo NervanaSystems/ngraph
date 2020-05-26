@@ -623,7 +623,7 @@ bool op::v0::Constant::visit_attributes(AttributeVisitor& visitor)
         // Filling in a fresh constant
         allocate_buffer();
     }
-    visitor.on_attribute("value", get_data_ptr_nc(), shape_size(m_shape) * m_element_type.size());
+    visitor.on_attribute("value", m_data);
     return true;
 }
 
