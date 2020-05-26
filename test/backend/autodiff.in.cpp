@@ -1688,9 +1688,9 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training_4d)
         auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);
         auto BN = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
-        auto normed_input = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 0));
-        auto mean = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 1));
-        auto variance = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 2));
+        auto normed_input = make_shared<op::Result>(BN->output(0));
+        auto mean = make_shared<op::Result>(BN->output(1));
+        auto variance = make_shared<op::Result>(BN->output(2));
         goes.push_back(mean);
         goes.push_back(variance);
         // TODO autodiff testing with more than one result
@@ -1726,9 +1726,9 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training_3d)
         auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);
         auto BN = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
-        auto normed_input = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 0));
-        auto mean = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 1));
-        auto variance = make_shared<op::Result>(make_shared<op::GetOutputElement>(BN, 2));
+        auto normed_input = make_shared<op::Result>(BN->output(0));
+        auto mean = make_shared<op::Result>(BN->output(1));
+        auto variance = make_shared<op::Result>(BN->output(2));
         goes.push_back(mean);
         goes.push_back(variance);
         // TODO autodiff testing with more than one result
