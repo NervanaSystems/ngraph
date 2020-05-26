@@ -27,7 +27,7 @@ TEST(type_prop, topk_invalid_rank)
 
     try
     {
-        auto topk = make_shared<op::TopK>(a, 0, element::i32, 1, true);
+        auto topk = make_shared<op::v0::TopK>(a, 0, element::i32, 1, true);
         FAIL() << "TopK c-tor should throw for scalar shapes";
     }
     catch (const NodeValidationFailure& error)
@@ -46,7 +46,7 @@ TEST(type_prop, topk_invalid_top_k)
 
     try
     {
-        auto topk = make_shared<op::TopK>(a, 2, element::i32, 1, true);
+        auto topk = make_shared<op::v0::TopK>(a, 2, element::i32, 1, true);
         FAIL() << "TopK c-tor should throw for invalid top k axis";
     }
     catch (const NodeValidationFailure& error)
@@ -65,7 +65,7 @@ TEST(type_prop, topk_invalid_index_type)
 
     try
     {
-        auto topk = make_shared<op::TopK>(a, 0, element::f32, 1, true);
+        auto topk = make_shared<op::v0::TopK>(a, 0, element::f32, 1, true);
         FAIL() << "TopK c-tor should throw for invalid index element type";
     }
     catch (const NodeValidationFailure& error)
@@ -84,7 +84,7 @@ TEST(type_prop, topk_invalid_k)
 
     try
     {
-        auto topk = make_shared<op::TopK>(a, 0, element::i32, 3, true);
+        auto topk = make_shared<op::v0::TopK>(a, 0, element::i32, 3, true);
         FAIL() << "TopK c-tor should throw for invalid K";
     }
     catch (const NodeValidationFailure& error)
@@ -109,13 +109,13 @@ TEST(type_prop, topk_rank_dynamic_ok)
 
     auto param = make_shared<op::Parameter>(arg_et, arg_shape);
 
-    auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+    auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
 
     ASSERT_TRUE(topk->get_output_element_type(0) == element::i32);
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
     ASSERT_TRUE(topk->get_output_partial_shape(0).rank().is_dynamic());
     ASSERT_TRUE(topk->get_output_partial_shape(1).rank().is_dynamic());
-    ASSERT_TRUE(topk->get_sort() == op::TopK::SortType::SORT_VALUES);
+    ASSERT_TRUE(topk->get_sort() == op::v0::TopK::SortType::SORT_VALUES);
     try
     {
         auto badout = Output<Node>(topk);
@@ -139,7 +139,7 @@ TEST(type_prop, topk_rank_dynamic_result_et_dynamic)
 
     try
     {
-        auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+        auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
         FAIL() << "Dynamic result element type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -165,7 +165,7 @@ TEST(type_prop, topk_rank_dynamic_result_et_invalid)
 
     try
     {
-        auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+        auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
         FAIL() << "Invalid result element type not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -189,7 +189,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_topk_dim_dynamic_ok)
 
     auto param = make_shared<op::Parameter>(arg_et, arg_shape);
 
-    auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+    auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
 
     ASSERT_TRUE(topk->get_output_element_type(0) == element::i32);
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
@@ -210,7 +210,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_unknown_topk_dim_dynamic_ok)
 
     auto param = make_shared<op::Parameter>(arg_et, arg_shape);
 
-    auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+    auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
 
     ASSERT_TRUE(topk->get_output_element_type(0) == element::i32);
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
@@ -233,7 +233,7 @@ TEST(type_prop, topk_rank_static_dynamic_axis_oob)
 
     try
     {
-        auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+        auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
         FAIL() << "TopK axis out-of-bounds not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -259,7 +259,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_unknown_axis_oob)
 
     try
     {
-        auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+        auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
         FAIL() << "TopK axis out-of-bounds not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -285,7 +285,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_too_big)
 
     try
     {
-        auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+        auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
         FAIL() << "Oversize K not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -309,7 +309,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_unknown_ok)
 
     auto param = make_shared<op::Parameter>(arg_et, arg_shape);
 
-    auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+    auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
 
     ASSERT_TRUE(topk->get_output_element_type(0) == element::i32);
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
@@ -330,7 +330,7 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_ok)
 
     auto param = make_shared<op::Parameter>(arg_et, arg_shape);
 
-    auto topk = make_shared<op::TopK>(param, top_k_axis, result_et, k, compute_max);
+    auto topk = make_shared<op::v0::TopK>(param, top_k_axis, result_et, k, compute_max);
 
     ASSERT_TRUE(topk->get_output_element_type(0) == element::i32);
     ASSERT_TRUE(topk->get_output_element_type(1) == element::f32);
@@ -340,26 +340,33 @@ TEST(type_prop, topk_rank_static_dynamic_k_known_ok)
         PartialShape{Dimension::dynamic(), 2, Dimension::dynamic()}));
 }
 
-TEST(type_prop, topk_v1_negative_axis_support)
+// Since v3::TopK is backward compatible with v1::TopK all of these tests should pass
+template <typename T>
+class topk_type_prop : public ::testing::Test
+{
+};
+TYPED_TEST_CASE_P(topk_type_prop);
+
+TYPED_TEST_P(topk_type_prop, topk_negative_axis_support)
 {
     const auto data_shape = Shape{1, 2, 3, 4};
     const auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto k = op::Constant::create(element::i64, Shape{}, {2});
     const int64_t axis = -2;
 
-    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+    const auto topk = make_shared<TypeParam>(data, k, axis, "max", "value");
 
     ASSERT_EQ(topk->get_provided_axis(), axis);
     ASSERT_EQ(topk->get_axis(), data_shape.at(1));
 }
 
-TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
+TYPED_TEST_P(topk_type_prop, topk_negative_axis_dynamic_rank)
 {
     const auto data_shape = PartialShape::dynamic();
     const auto data = make_shared<op::Parameter>(element::f32, data_shape);
     const auto k = op::Constant::create(element::i64, Shape{}, {2});
     const int64_t axis = -2;
-    const auto topk = make_shared<op::v1::TopK>(data, k, axis, "max", "value");
+    const auto topk = make_shared<TypeParam>(data, k, axis, "max", "value");
 
     try
     {
@@ -374,3 +381,27 @@ TEST(type_prop, topk_v1_negative_axis_dynamic_rank)
         FAIL() << "Deduced type check failed for unexpected reason";
     }
 }
+
+TYPED_TEST_P(topk_type_prop, topk_v1_partial_ouptut)
+{
+    auto data_shape = PartialShape{2, 10};
+    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    {
+        auto k = make_shared<op::Parameter>(element::i32, PartialShape({}));
+        auto topk = make_shared<TypeParam>(data, k, 1, "max", "value");
+        EXPECT_EQ(topk->get_output_partial_shape(0), PartialShape({2, -1}));
+    }
+    {
+        auto k = make_shared<op::Constant>(element::i32, Shape{}, 3);
+        auto topk = make_shared<TypeParam>(data, k, 1, "max", "value");
+        EXPECT_EQ(topk->get_output_partial_shape(0), PartialShape({2, 3}));
+    }
+}
+
+REGISTER_TYPED_TEST_CASE_P(topk_type_prop,
+                           topk_negative_axis_support,
+                           topk_negative_axis_dynamic_rank,
+                           topk_v1_partial_ouptut);
+
+typedef ::testing::Types<op::v1::TopK, op::v3::TopK> TopKTypes;
+INSTANTIATE_TYPED_TEST_CASE_P(type_prop, topk_type_prop, TopKTypes, );

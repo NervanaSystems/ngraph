@@ -95,6 +95,20 @@ Shape ngraph::PartialShape::get_min_shape() const
     }
 }
 
+Shape ngraph::PartialShape::get_shape() const
+{
+    NGRAPH_CHECK(rank().is_static(), "get_shape() must be called on a static shape");
+    Shape shape;
+    for (auto dimension : m_dimensions)
+    {
+        auto min_val = dimension.get_interval().get_min_val();
+        auto max_val = dimension.get_interval().get_max_val();
+        NGRAPH_CHECK(min_val == max_val, "get_shape() must be called on a static shape");
+        shape.push_back(min_val);
+    }
+    return shape;
+}
+
 PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
 {
     if (s1.rank().is_dynamic() || s2.rank().is_dynamic())
@@ -404,6 +418,24 @@ bool PartialShape::all_non_negative() const
     }
 
     return true;
+}
+
+const Dimension& PartialShape::operator[](size_t i) const
+{
+    if (i >= m_dimensions.size())
+    {
+        throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+    }
+    return m_dimensions[i];
+}
+
+Dimension& PartialShape::operator[](size_t i)
+{
+    if (i >= m_dimensions.size())
+    {
+        throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+    }
+    return m_dimensions[i];
 }
 
 NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;

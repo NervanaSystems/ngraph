@@ -164,7 +164,10 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             m_timer_map[op].start();
         }
-        generate_calls(type, *op, op_outputs, op_inputs);
+        if (!op->evaluate(op_outputs, op_inputs))
+        {
+            generate_calls(type, *op, op_outputs, op_inputs);
+        }
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();

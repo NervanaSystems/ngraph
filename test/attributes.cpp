@@ -17,7 +17,9 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opsets/opset3.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -52,7 +54,7 @@ namespace ngraph
     };
 
     constexpr DiscreteTypeInfo AttributeAdapter<TuringModel>::type_info;
-}
+} // namespace ngraph
 
 // Given a Turing machine program and data, return scalar 1 if the program would
 // complete, 1 if it would not.
@@ -62,6 +64,8 @@ public:
     Oracle(const Output<Node>& program,
            const Output<Node>& data,
            TuringModel turing_model,
+           const element::Type element_type,
+           element::Type_t element_type_t,
            const string& val_string,
            bool val_bool,
            float val_float,
@@ -87,6 +91,8 @@ public:
            const std::vector<int64_t>& vec_int64_t)
         : Op({program, data})
         , m_turing_model(turing_model)
+        , m_element_type(element_type)
+        , m_element_type_t(element_type_t)
         , m_val_string(val_string)
         , m_val_bool(val_bool)
         , m_val_float(val_float)
@@ -118,6 +124,8 @@ public:
     Oracle() = default;
 
     TuringModel get_turing_model() const { return m_turing_model; }
+    const element::Type get_element_type() const { return m_element_type; }
+    const element::Type_t get_element_type_t() const { return m_element_type_t; }
     const string& get_val_string() const { return m_val_string; }
     bool get_val_bool() const { return m_val_bool; }
     bool get_val_float() const { return m_val_float; }
@@ -146,6 +154,8 @@ public:
         return make_shared<Oracle>(args[0],
                                    args[1],
                                    m_turing_model,
+                                   m_element_type,
+                                   m_element_type_t,
                                    m_val_string,
                                    m_val_bool,
                                    m_val_float,
@@ -175,6 +185,8 @@ public:
     bool visit_attributes(AttributeVisitor& visitor) override
     {
         visitor.on_attribute("turing_model", m_turing_model);
+        visitor.on_attribute("element_type", m_element_type);
+        visitor.on_attribute("element_type_t", m_element_type_t);
         visitor.on_attribute("val_string", m_val_string);
         visitor.on_attribute("val_bool", m_val_bool);
         visitor.on_attribute("val_float", m_val_float);
@@ -203,6 +215,8 @@ public:
 
 protected:
     TuringModel m_turing_model;
+    element::Type m_element_type;
+    element::Type_t m_element_type_t;
     string m_val_string;
     bool m_val_bool;
     float m_val_float;
@@ -266,6 +280,7 @@ public:
     }
 
     vector<string>& get_string_vector(const string& name) { return m_string_vectors.at(name); }
+    HostTensorPtr get_host_tensor(const string& name) { return m_host_tensors.at(name); }
     void set_string(const string& name, const string& value) { m_strings[name] = value; }
     void set_bool(const string& name, bool value) { m_bools[name] = value; }
     void set_double(const string& name, double value) { m_doubles[name] = value; }
@@ -313,6 +328,10 @@ public:
     void set_string_vector(const string& name, const vector<string>& value)
     {
         m_string_vectors[name] = value;
+    }
+    void set_host_tensor(const string& name, const HostTensorPtr& value)
+    {
+        m_host_tensors[name] = value;
     }
 
     void on_attribute(const string& name, string& value) override { set_string(name, value); };
@@ -379,6 +398,12 @@ public:
     {
         set_uint64_t_vector(name, adapter.get());
     }
+    void on_attribute(const std::string& name, void* constant_data, size_t size) override
+    {
+        HostTensorPtr data = make_shared<HostTensor>(element::u8, Shape{size});
+        data->write(constant_data, size);
+        set_host_tensor(name, data);
+    }
 
 protected:
     NodeTypeInfo m_node_type_info;
@@ -398,6 +423,7 @@ protected:
     map<string, vector<float>> m_float_vectors;
     map<string, vector<double>> m_double_vectors;
     map<string, vector<std::string>> m_string_vectors;
+    map<string, HostTensorPtr> m_host_tensors;
 };
 
 class NodeBuilder : public AttributeVisitor
@@ -408,6 +434,7 @@ public:
     {
     }
 
+    // Does not validate, since inputs aren't set
     shared_ptr<Node> create()
     {
         shared_ptr<Node> node(FactoryRegistry<Node>::get().create(m_values.get_node_type_info()));
@@ -482,6 +509,11 @@ public:
     {
         adapter.set(m_values.get_double_vector(name));
     }
+    void on_attribute(const std::string& name, void* constant_data, size_t size) override
+    {
+        HostTensorPtr data = m_values.get_host_tensor(name);
+        data->read(constant_data, size);
+    }
 
 protected:
     NodeSaver m_values;
@@ -495,6 +527,8 @@ TEST(attributes, user_op)
     auto oracle = make_shared<Oracle>(program,
                                       data,
                                       TuringModel::XL1200,
+                                      element::f32,
+                                      element::Type_t::i64,
                                       "12AU7",
                                       true,
                                       1.0f,
@@ -522,6 +556,8 @@ TEST(attributes, user_op)
     auto g_oracle = as_type_ptr<Oracle>(builder.create());
 
     EXPECT_EQ(g_oracle->get_turing_model(), oracle->get_turing_model());
+    EXPECT_EQ(g_oracle->get_element_type(), oracle->get_element_type());
+    EXPECT_EQ(g_oracle->get_element_type_t(), oracle->get_element_type_t());
     EXPECT_EQ(g_oracle->get_val_bool(), oracle->get_val_bool());
     EXPECT_EQ(g_oracle->get_val_string(), oracle->get_val_string());
     EXPECT_EQ(g_oracle->get_val_float(), oracle->get_val_float());
@@ -634,6 +670,41 @@ TEST(attributes, non_max_suppression_op_default_attributes)
 
     EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
     EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+}
+
+TEST(attributes, non_max_suppression_v3_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
+
+    auto box_encoding = opset3::NonMaxSuppression::BoxEncodingType::CENTER;
+    bool sort_result_descending = false;
+    element::Type output_type = element::i32;
+
+    auto nms = make_shared<opset3::NonMaxSuppression>(
+        boxes, scores, box_encoding, sort_result_descending, output_type);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset3::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+    EXPECT_EQ(g_nms->get_output_type(), nms->get_output_type());
+}
+
+TEST(attributes, non_max_suppression_v3_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::NonMaxSuppression>();
+    auto boxes = make_shared<op::Parameter>(element::f32, Shape{1, 1, 4});
+    auto scores = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1});
+
+    auto nms = make_shared<opset3::NonMaxSuppression>(boxes, scores);
+    NodeBuilder builder(nms);
+    auto g_nms = as_type_ptr<opset3::NonMaxSuppression>(builder.create());
+
+    EXPECT_EQ(g_nms->get_box_encoding(), nms->get_box_encoding());
+    EXPECT_EQ(g_nms->get_sort_result_descending(), nms->get_sort_result_descending());
+    EXPECT_EQ(g_nms->get_output_type(), nms->get_output_type());
 }
 
 TEST(attributes, normalize_l2_op)
@@ -1000,6 +1071,20 @@ TEST(attributes, fake_quantize_op)
     EXPECT_EQ(g_fake_quantize->get_auto_broadcast(), fake_quantize->get_auto_broadcast());
 }
 
+TEST(attributes, broadcast_v3)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Broadcast>();
+    const auto arg = make_shared<op::Parameter>(element::i64, Shape{1, 3, 1});
+    const auto shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
+
+    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    NodeBuilder builder(broadcast_v3);
+    auto g_broadcast_v3 = as_type_ptr<opset3::Broadcast>(builder.create());
+
+    EXPECT_EQ(g_broadcast_v3->get_broadcast_spec(), broadcast_spec);
+}
+
 TEST(attributes, grn_op)
 {
     FactoryRegistry<Node>::get().register_factory<opset1::GRN>();
@@ -1310,4 +1395,349 @@ TEST(attributes, logical_xor_op)
     auto g_logical_xor = as_type_ptr<opset1::LogicalXor>(builder.create());
 
     EXPECT_EQ(g_logical_xor->get_autob(), logical_xor->get_autob());
+}
+
+TEST(attributes, extractimagepatches_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ExtractImagePatches>();
+    auto data = make_shared<op::Parameter>(element::i32, Shape{64, 3, 10, 10});
+
+    auto sizes = Shape{3, 3};
+    auto strides = Strides{5, 5};
+    auto rates = Shape{1, 1};
+    auto padtype_padding = ngraph::op::PadType::VALID;
+
+    auto extractimagepatches =
+        make_shared<opset3::ExtractImagePatches>(data, sizes, strides, rates, padtype_padding);
+    NodeBuilder builder(extractimagepatches);
+    auto g_extractimagepatches = as_type_ptr<opset3::ExtractImagePatches>(builder.create());
+
+    EXPECT_EQ(g_extractimagepatches->get_sizes(), sizes);
+    EXPECT_EQ(g_extractimagepatches->get_strides(), strides);
+    EXPECT_EQ(g_extractimagepatches->get_rates(), rates);
+    EXPECT_EQ(g_extractimagepatches->get_auto_pad(), padtype_padding);
+}
+
+TEST(attributes, mvn_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::MVN>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto axes = AxisSet{0, 1};
+
+    const auto op = make_shared<opset3::MVN>(data, true, false, 0.1);
+    op->set_reduction_axes(axes);
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::MVN>(builder.create());
+
+    EXPECT_EQ(g_op->get_reduction_axes(), op->get_reduction_axes());
+    EXPECT_EQ(g_op->get_across_channels(), op->get_across_channels());
+    EXPECT_EQ(g_op->get_normalize_variance(), op->get_normalize_variance());
+    EXPECT_EQ(g_op->get_eps(), op->get_eps());
+}
+
+TEST(attributes, reorg_yolo_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ReorgYolo>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+
+    const auto op = make_shared<opset3::ReorgYolo>(data, Strides{2});
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ReorgYolo>(builder.create());
+
+    EXPECT_EQ(g_op->get_strides(), op->get_strides());
+}
+
+TEST(attributes, roi_pooling_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::ROIPooling>();
+    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 3, 4, 5});
+    const auto coords = make_shared<op::Parameter>(element::i32, Shape{2, 3});
+
+    const auto op = make_shared<opset3::ROIPooling>(data, coords, Shape{5, 5}, 0.123, "Bilinear");
+    NodeBuilder builder(op);
+    const auto g_op = as_type_ptr<opset3::ROIPooling>(builder.create());
+
+    EXPECT_EQ(g_op->get_output_size(), op->get_output_size());
+    EXPECT_EQ(g_op->get_spatial_scale(), op->get_spatial_scale());
+    EXPECT_EQ(g_op->get_method(), op->get_method());
+}
+
+TEST(attributes, constant_op)
+{
+    vector<float> data{5.0f, 4.0f, 3.0f, 2.0f, 1.0f, 0.0f};
+    auto k = make_shared<op::v0::Constant>(element::f32, Shape{2, 3}, data);
+    NodeBuilder builder(k);
+    auto g_k = as_type_ptr<op::v0::Constant>(builder.create());
+    g_k->validate_and_infer_types();
+    ASSERT_TRUE(g_k);
+    EXPECT_EQ(k->get_element_type(), g_k->get_element_type());
+    EXPECT_EQ(k->get_shape(), g_k->get_shape());
+    vector<float> g_data = g_k->get_vector<float>();
+    EXPECT_EQ(data, g_data);
+}
+
+TEST(attributes, bucketize_v3_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Bucketize>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto bucketize = make_shared<opset3::Bucketize>(data, buckets);
+    NodeBuilder builder(bucketize);
+
+    auto g_bucketize = as_type_ptr<opset3::Bucketize>(builder.create());
+
+    EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
+    EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
+}
+
+TEST(attributes, bucketize_v3_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::Bucketize>();
+    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto buckets = make_shared<op::Parameter>(element::f32, Shape{5});
+    element::Type output_type = element::i32;
+    bool with_right_bound = false;
+
+    auto bucketize = make_shared<opset3::Bucketize>(data, buckets, output_type, with_right_bound);
+    NodeBuilder builder(bucketize);
+
+    auto g_bucketize = as_type_ptr<opset3::Bucketize>(builder.create());
+
+    EXPECT_EQ(g_bucketize->get_output_type(), bucketize->get_output_type());
+    EXPECT_EQ(g_bucketize->get_with_right_bound(), bucketize->get_with_right_bound());
+}
+
+TEST(attributes, cum_sum_op_default_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    auto cs = make_shared<op::CumSum>(A, axis);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
+}
+
+TEST(attributes, cum_sum_op_custom_attributes)
+{
+    FactoryRegistry<Node>::get().register_factory<opset3::CumSum>();
+
+    Shape shape{1, 4};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto axis = make_shared<op::Parameter>(element::i32, Shape{1});
+    bool exclusive = true;
+    bool reverse = true;
+    auto cs = make_shared<op::CumSum>(A, axis, exclusive, reverse);
+
+    NodeBuilder builder(cs);
+    auto g_cs = as_type_ptr<opset3::CumSum>(builder.create());
+
+    EXPECT_EQ(g_cs->is_exclusive(), cs->is_exclusive());
+    EXPECT_EQ(g_cs->is_reverse(), cs->is_reverse());
+}
+
+TEST(attributes, interpolate_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Interpolate>();
+    auto img = make_shared<op::Parameter>(element::f32, Shape{1, 3, 32, 32});
+    auto out_shape = make_shared<op::Parameter>(element::i32, Shape{2});
+
+    op::InterpolateAttrs interp_atrs;
+    interp_atrs.axes = AxisSet{1, 2};
+    interp_atrs.mode = "cubic";
+    interp_atrs.align_corners = true;
+    interp_atrs.antialias = true;
+    interp_atrs.pads_begin = vector<size_t>{0, 0};
+    interp_atrs.pads_end = vector<size_t>{0, 0};
+
+    auto interpolate = make_shared<opset1::Interpolate>(img, out_shape, interp_atrs);
+    NodeBuilder builder(interpolate);
+    auto g_interpolate = as_type_ptr<opset1::Interpolate>(builder.create());
+
+    const auto i_attrs = interpolate->get_attrs();
+    const auto g_i_attrs = g_interpolate->get_attrs();
+
+    EXPECT_EQ(g_i_attrs.axes, i_attrs.axes);
+    EXPECT_EQ(g_i_attrs.mode, i_attrs.mode);
+    EXPECT_EQ(g_i_attrs.align_corners, i_attrs.align_corners);
+    EXPECT_EQ(g_i_attrs.antialias, i_attrs.antialias);
+    EXPECT_EQ(g_i_attrs.pads_begin, i_attrs.pads_begin);
+    EXPECT_EQ(g_i_attrs.pads_end, i_attrs.pads_end);
+}
+
+TEST(attributes, detection_output_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::DetectionOutput>();
+    const auto box_logits = make_shared<op::Parameter>(element::f32, Shape{1, 3, 32, 32});
+    const auto class_preds = make_shared<op::Parameter>(element::f32, Shape{32});
+    const auto proposals = make_shared<op::Parameter>(element::f32, Shape{128, 2});
+    const auto aux_class_preds = make_shared<op::Parameter>(element::f32, Shape{16});
+    const auto aux_box_pred = make_shared<op::Parameter>(element::f32, Shape{32, 2});
+
+    op::DetectionOutputAttrs attrs;
+    attrs.num_classes = 32;
+    attrs.background_label_id = 0;
+    attrs.top_k = 1;
+    attrs.variance_encoded_in_target = false;
+    attrs.keep_top_k = {1};
+    attrs.code_type = string{"caffe.PriorBoxParameter.CORNER"};
+    attrs.share_location = true;
+    attrs.nms_threshold = 0.64f;
+    attrs.confidence_threshold = 1e-4f;
+    attrs.clip_after_nms = true;
+    attrs.clip_before_nms = false;
+    attrs.decrease_label_id = false;
+    attrs.normalized = true;
+    attrs.input_height = 32;
+    attrs.input_width = 32;
+    attrs.objectness_score = 0.73f;
+
+    auto detection_output = make_shared<opset1::DetectionOutput>(
+        box_logits, class_preds, proposals, aux_class_preds, aux_box_pred, attrs);
+    NodeBuilder builder(detection_output);
+    auto g_detection_output = as_type_ptr<opset1::DetectionOutput>(builder.create());
+
+    const auto do_attrs = detection_output->get_attrs();
+    const auto g_do_attrs = g_detection_output->get_attrs();
+
+    EXPECT_EQ(g_do_attrs.num_classes, do_attrs.num_classes);
+    EXPECT_EQ(g_do_attrs.background_label_id, do_attrs.background_label_id);
+    EXPECT_EQ(g_do_attrs.top_k, do_attrs.top_k);
+    EXPECT_EQ(g_do_attrs.variance_encoded_in_target, do_attrs.variance_encoded_in_target);
+    EXPECT_EQ(g_do_attrs.keep_top_k, do_attrs.keep_top_k);
+    EXPECT_EQ(g_do_attrs.code_type, do_attrs.code_type);
+    EXPECT_EQ(g_do_attrs.share_location, do_attrs.share_location);
+    EXPECT_EQ(g_do_attrs.nms_threshold, do_attrs.nms_threshold);
+    EXPECT_EQ(g_do_attrs.confidence_threshold, do_attrs.confidence_threshold);
+    EXPECT_EQ(g_do_attrs.clip_after_nms, do_attrs.clip_after_nms);
+    EXPECT_EQ(g_do_attrs.clip_before_nms, do_attrs.clip_before_nms);
+    EXPECT_EQ(g_do_attrs.decrease_label_id, do_attrs.decrease_label_id);
+    EXPECT_EQ(g_do_attrs.normalized, do_attrs.normalized);
+    EXPECT_EQ(g_do_attrs.input_height, do_attrs.input_height);
+    EXPECT_EQ(g_do_attrs.input_width, do_attrs.input_width);
+    EXPECT_EQ(g_do_attrs.objectness_score, do_attrs.objectness_score);
+}
+
+TEST(attributes, prior_box_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::PriorBox>();
+    const auto layer_shape = make_shared<op::Parameter>(element::i64, Shape{128, 128});
+    const auto image_shape = make_shared<op::Parameter>(element::i64, Shape{32, 32});
+
+    op::PriorBoxAttrs attrs;
+    attrs.min_size = vector<float>{16.f, 32.f};
+    attrs.max_size = vector<float>{256.f, 512.f};
+    attrs.aspect_ratio = vector<float>{0.66f, 1.56f};
+    attrs.density = vector<float>{0.55f};
+    attrs.fixed_ratio = vector<float>{0.88f};
+    attrs.fixed_size = vector<float>{1.25f};
+    attrs.clip = true;
+    attrs.flip = false;
+    attrs.step = 1.0f;
+    attrs.offset = 0.0f;
+    attrs.variance = vector<float>{2.22f, 3.14f};
+    attrs.scale_all_sizes = true;
+
+    auto prior_box = make_shared<opset1::PriorBox>(layer_shape, image_shape, attrs);
+    NodeBuilder builder(prior_box);
+    auto g_prior_box = as_type_ptr<opset1::PriorBox>(builder.create());
+
+    const auto prior_box_attrs = prior_box->get_attrs();
+    const auto g_prior_box_attrs = g_prior_box->get_attrs();
+
+    EXPECT_EQ(g_prior_box_attrs.min_size, prior_box_attrs.min_size);
+    EXPECT_EQ(g_prior_box_attrs.max_size, prior_box_attrs.max_size);
+    EXPECT_EQ(g_prior_box_attrs.aspect_ratio, prior_box_attrs.aspect_ratio);
+    EXPECT_EQ(g_prior_box_attrs.density, prior_box_attrs.density);
+    EXPECT_EQ(g_prior_box_attrs.fixed_ratio, prior_box_attrs.fixed_ratio);
+    EXPECT_EQ(g_prior_box_attrs.fixed_size, prior_box_attrs.fixed_size);
+    EXPECT_EQ(g_prior_box_attrs.clip, prior_box_attrs.clip);
+    EXPECT_EQ(g_prior_box_attrs.flip, prior_box_attrs.flip);
+    EXPECT_EQ(g_prior_box_attrs.step, prior_box_attrs.step);
+    EXPECT_EQ(g_prior_box_attrs.offset, prior_box_attrs.offset);
+    EXPECT_EQ(g_prior_box_attrs.variance, prior_box_attrs.variance);
+    EXPECT_EQ(g_prior_box_attrs.scale_all_sizes, prior_box_attrs.scale_all_sizes);
+}
+
+TEST(attributes, prior_box_clustered_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::PriorBoxClustered>();
+    const auto layer_shape = make_shared<op::Parameter>(element::i64, Shape{128, 128});
+    const auto image_shape = make_shared<op::Parameter>(element::i64, Shape{32, 32});
+
+    op::PriorBoxClusteredAttrs attrs;
+    attrs.widths = vector<float>{128.f, 512.f, 4096.f};
+    attrs.heights = vector<float>{128.f, 512.f, 4096.f};
+    attrs.clip = true;
+    attrs.step_widths = 0.33f;
+    attrs.step_heights = 1.55f;
+    attrs.offset = 0.77f;
+    attrs.variances = vector<float>{0.33f, 1.44f};
+
+    auto prior_box_clust = make_shared<opset1::PriorBoxClustered>(layer_shape, image_shape, attrs);
+    NodeBuilder builder(prior_box_clust);
+    auto g_prior_box_clust = as_type_ptr<opset1::PriorBoxClustered>(builder.create());
+
+    const auto prior_box_clust_attrs = prior_box_clust->get_attrs();
+    const auto g_prior_box_clust_attrs = g_prior_box_clust->get_attrs();
+
+    EXPECT_EQ(g_prior_box_clust_attrs.widths, prior_box_clust_attrs.widths);
+    EXPECT_EQ(g_prior_box_clust_attrs.heights, prior_box_clust_attrs.heights);
+    EXPECT_EQ(g_prior_box_clust_attrs.clip, prior_box_clust_attrs.clip);
+    EXPECT_EQ(g_prior_box_clust_attrs.step_widths, prior_box_clust_attrs.step_widths);
+    EXPECT_EQ(g_prior_box_clust_attrs.step_heights, prior_box_clust_attrs.step_heights);
+    EXPECT_EQ(g_prior_box_clust_attrs.offset, prior_box_clust_attrs.offset);
+    EXPECT_EQ(g_prior_box_clust_attrs.variances, prior_box_clust_attrs.variances);
+}
+
+TEST(attributes, proposal_op)
+{
+    FactoryRegistry<Node>::get().register_factory<opset1::Proposal>();
+    const auto class_probs = make_shared<op::Parameter>(element::i64, Shape{1024, 3, 128, 128});
+    const auto class_logits = make_shared<op::Parameter>(element::i64, Shape{1024, 3, 128, 128});
+    const auto image_shape = make_shared<op::Parameter>(element::i64, Shape{4});
+
+    op::ProposalAttrs attrs;
+    attrs.base_size = 224;
+    attrs.pre_nms_topn = 100;
+    attrs.post_nms_topn = 110;
+    attrs.nms_thresh = 0.12f;
+    attrs.feat_stride = 2;
+    attrs.min_size = 10;
+    attrs.ratio = vector<float>{1.44f, 0.66f};
+    attrs.scale = vector<float>{2.25f, 1.83f};
+    attrs.clip_before_nms = true;
+    attrs.clip_after_nms = true;
+    attrs.normalize = false;
+    attrs.box_size_scale = 2.f;
+    attrs.box_coordinate_scale = 4.55f;
+    attrs.framework = string{"nGraph"};
+
+    auto proposal = make_shared<opset1::Proposal>(class_probs, class_logits, image_shape, attrs);
+    NodeBuilder builder(proposal);
+    auto g_proposal = as_type_ptr<opset1::Proposal>(builder.create());
+
+    const auto proposal_attrs = proposal->get_attrs();
+    const auto g_proposal_attrs = g_proposal->get_attrs();
+
+    EXPECT_EQ(g_proposal_attrs.base_size, proposal_attrs.base_size);
+    EXPECT_EQ(g_proposal_attrs.pre_nms_topn, proposal_attrs.pre_nms_topn);
+    EXPECT_EQ(g_proposal_attrs.post_nms_topn, proposal_attrs.post_nms_topn);
+    EXPECT_EQ(g_proposal_attrs.nms_thresh, proposal_attrs.nms_thresh);
+    EXPECT_EQ(g_proposal_attrs.feat_stride, proposal_attrs.feat_stride);
+    EXPECT_EQ(g_proposal_attrs.min_size, proposal_attrs.min_size);
+    EXPECT_EQ(g_proposal_attrs.ratio, proposal_attrs.ratio);
+    EXPECT_EQ(g_proposal_attrs.scale, proposal_attrs.scale);
+    EXPECT_EQ(g_proposal_attrs.clip_before_nms, proposal_attrs.clip_before_nms);
+    EXPECT_EQ(g_proposal_attrs.clip_after_nms, proposal_attrs.clip_after_nms);
+    EXPECT_EQ(g_proposal_attrs.normalize, proposal_attrs.normalize);
+    EXPECT_EQ(g_proposal_attrs.box_size_scale, proposal_attrs.box_size_scale);
+    EXPECT_EQ(g_proposal_attrs.box_coordinate_scale, proposal_attrs.box_coordinate_scale);
+    EXPECT_EQ(g_proposal_attrs.framework, proposal_attrs.framework);
 }

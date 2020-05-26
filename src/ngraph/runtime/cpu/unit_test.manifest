@@ -10,6 +10,9 @@ max_3d_to_scalar_int32
 # Not implemented
 send_recv
 send_recv_ring
+atanh
+asinh
+acosh
 
 # ONNX TopK with dynamic K
 onnx_top_k_opset_10
@@ -27,6 +30,23 @@ fuse_1_layer_rnn
 rnn_fusion_1rnn_layer_3lstm_cell
 rnn_fusion_2rnn_layer_3lstm_cell
 
-#ONNX Flatten with dynamic reshape
-onnx_dyn_shapes_flatten_axis
-onnx_dyn_shapes_flatten_neg_axis
+# Need use evaluate, only applicable to INTERPRETER
+non_zero
+non_zero_all_1s
+non_zero_all_0s
+
+round_int64
+floor_int64
+ceiling_int64
+
+# Incorrect result from CPU, need check and fix 
+matmul_2x2x3_2x1x3_transpose_int64
+matmul_2x2x3_2x3x1_int64
+
+acosh
+asinh
+atanh
+
+# no support for f16, bf16
+fused_clamp_float16
+fused_clamp_bfloat16

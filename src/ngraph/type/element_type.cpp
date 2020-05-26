@@ -326,3 +326,41 @@ size_t ngraph::compiler_byte_size(element::Type_t et)
     case element::Type_t::dynamic: return 0;
     }
 }
+
+namespace ngraph
+{
+    template <>
+    NGRAPH_API EnumNames<element::Type_t>& EnumNames<element::Type_t>::get()
+    {
+        static auto enum_names =
+            EnumNames<element::Type_t>("element::Type_t",
+                                       {{"undefined", element::Type_t::undefined},
+                                        {"dynamic", element::Type_t::dynamic},
+                                        {"boolean", element::Type_t::boolean},
+                                        {"bf16", element::Type_t::bf16},
+                                        {"f16", element::Type_t::f16},
+                                        {"f32", element::Type_t::f32},
+                                        {"f64", element::Type_t::f64},
+                                        {"i8", element::Type_t::i8},
+                                        {"i16", element::Type_t::i16},
+                                        {"i32", element::Type_t::i32},
+                                        {"i64", element::Type_t::i64},
+                                        {"u8", element::Type_t::u8},
+                                        {"u16", element::Type_t::u16},
+                                        {"u32", element::Type_t::u32},
+                                        {"u64", element::Type_t::u64}});
+        return enum_names;
+    }
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<element::Type_t>::type_info;
+
+const std::string& AttributeAdapter<element::Type>::get()
+{
+    return as_string(static_cast<element::Type_t>(ValueReference<element::Type>::m_value));
+}
+
+void AttributeAdapter<element::Type>::set(const std::string& value)
+{
+    ValueReference<element::Type>::m_value = as_enum<element::Type_t>(value);
+}
