@@ -63,7 +63,7 @@ TEST(type_prop, shuffle_channels_invalid_input_shape)
     }
 }
 
-TEST(type_prop, shuffle_channels_invalid_groups_value)
+TEST(type_prop, shuffle_channels_invalid_group_value)
 {
     try
     {

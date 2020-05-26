@@ -14,19 +14,36 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
+#pragma once
 
-#include "ngraph/op/fused/depth_to_space.hpp"
-#include "pyngraph/ops/fused/depth_to_space.hpp"
+#include <cmath>
+#include <cstddef>
 
-namespace py = pybind11;
-
-void regclass_pyngraph_op_DepthToSpace(py::module m)
+namespace ngraph
 {
-    py::class_<ngraph::op::DepthToSpace, std::shared_ptr<ngraph::op::DepthToSpace>, ngraph::op::Op>
-        depthtospace(m, "DepthToSpace");
-    depthtospace.doc() = "ngraph.impl.op.DepthToSpace wraps ngraph::op::DepthToSpace";
-    depthtospace.def(
-        py::init<const std::shared_ptr<ngraph::Node>&, const std::string&, std::size_t&>());
+    namespace runtime
+    {
+        namespace reference
+        {
+            template <typename T>
+            void clamp(const T* arg, T* out, T min, T max, size_t count)
+            {
+                for (size_t i = 0; i < count; i++)
+                {
+                    if (arg[i] < min)
+                    {
+                        out[i] = min;
+                    }
+                    else if (arg[i] > max)
+                    {
+                        out[i] = max;
+                    }
+                    else
+                    {
+                        out[i] = arg[i];
+                    }
+                }
+            }
+        }
+    }
 }
