@@ -489,22 +489,22 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                             conv_bprop->get_padding_below_forward(),
                             conv_bprop->get_padding_above_forward(),
                             conv_bprop->get_data_dilation_strides_forward());
-                    auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(conv_bias_bprop, 0);
-                    auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(conv_bias_bprop, 1);
+                    auto out0 = conv_bias_bprop->output(0);
+                    auto out1 = conv_bias_bprop->output(1);
                     NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
                                  << "with ConvolutionBiasBackpropFiltersBias";
-                    ngraph::replace_node(m.get_match_root(), goe1);
+                    ngraph::replace_node(m.get_match_root(), {out0});
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
                                     "ConvolutionBiasBackpropFiltersBias";
                     if (flag)
                     {
-                        auto goe2_reshape = std::make_shared<ngraph::op::Reshape>(
-                            goe2, AxisVector{0}, delta_user->get_shape());
-                        ngraph::replace_node(delta_user, goe2_reshape);
+                        auto out1_reshape = std::make_shared<ngraph::op::Reshape>(
+                            out1, AxisVector{0}, delta_user->get_shape());
+                        ngraph::replace_node(delta_user, out1_reshape);
                     }
                     else
                     {
-                        ngraph::replace_node(delta_user, goe2);
+                        ngraph::replace_node(delta_user, {out1});
                     }
                     return true;
                 }
