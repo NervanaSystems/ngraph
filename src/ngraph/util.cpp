@@ -494,6 +494,19 @@ bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank r
 {
     std::vector<bool> axis_occurs(permutation.size(), false);
 
+    // Check bounds if rank is static
+    if (rank.is_static())
+    {
+        auto bound = rank.get_length();
+        for (auto axis : permutation)
+        {
+            if (static_cast<decltype(bound)>(axis) >= bound)
+            {
+                return false;
+            }
+        }
+    }
+
     for (auto& axis : permutation)
     {
         axis_occurs[axis] = true;
@@ -656,7 +669,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), size);
+    if (size > 0)
+    {
+        tv->read(rc.data(), size);
+    }
     return rc;
 }
 

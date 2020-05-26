@@ -36,13 +36,13 @@ namespace ngraph
 
                     out_dims[0] = in_dims[0] = count;
 
-                    Eigen::TensorMap<Eigen::Tensor<char, 1, Eigen::RowMajor>> out(
-                        static_cast<char*>(output), out_dims);
+                    Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> out(
+                        static_cast<ElementType*>(output), out_dims);
                     Eigen::TensorMap<Eigen::Tensor<ElementType, 1, Eigen::RowMajor>> in0(
                         static_cast<ElementType*>(input0), in_dims);
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
-                        (in0 == ElementType(0)).template cast<char>();
+                        (in0 == ElementType(0)).template cast<ElementType>();
                 }
             }
         }

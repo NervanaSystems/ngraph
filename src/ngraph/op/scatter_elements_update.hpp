@@ -16,7 +16,11 @@
 
 #pragma once
 
+#include "ngraph/axis_vector.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 
 namespace ngraph
 {
@@ -46,6 +50,8 @@ namespace ngraph
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& inputs) const override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
         }
         using v3::ScatterElementsUpdate;
