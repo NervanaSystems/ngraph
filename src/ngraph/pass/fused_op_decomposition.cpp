@@ -71,25 +71,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                     end(node->get_output_descriptor(i).get_inputs())};
                 for (auto fop_user : fop_users)
                 {
-                    if (auto goe = as_type<op::GetOutputElement>(fop_user->get_raw_pointer_node()))
-                    {
-                        Output<Node> goe_output = goe->get_as_output();
-                        if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
-                        {
-                            // Replace GOE users
-                            set<descriptor::Input*> goe_users{
-                                begin(goe->get_output_descriptor(0).get_inputs()),
-                                end(goe->get_output_descriptor(0).get_inputs())};
-                            for (auto goe_user : goe_users)
-                            {
-                                goe_user->replace_output(output_node->get_output_descriptor(j));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fop_user->replace_output(output_node->get_output_descriptor(j));
-                    }
+                    fop_user->replace_output(output_node->get_output_descriptor(j));
                 }
             }
         }
