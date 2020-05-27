@@ -46,7 +46,6 @@ project/governance.rst              @adstraw
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi
 /test/mlir/                         @silee2
 
 # Putting this last so it's not overridden by directory rules
