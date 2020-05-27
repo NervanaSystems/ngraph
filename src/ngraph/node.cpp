@@ -22,7 +22,6 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
-#include "ngraph/evaluator_tensor.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
@@ -312,13 +311,9 @@ bool Node::is_constant() const
 
 const std::string& Node::description() const
 {
-    if (m_node_type.size() == 0)
-    {
-        // Terrible transitional kludge to keep description working while we change
-        // type_name to const_char and virtual description() to virtual get_type_name()
-        const_cast<Node*>(this)->m_node_type = get_type_name();
-    }
-
+    // Terrible transitional kludge to keep description working while we change
+    // type_name to const_char and virtual description() to virtual get_type_name()
+    const_cast<Node*>(this)->m_node_type = get_type_name();
     return m_node_type;
 }
 
@@ -1110,8 +1105,7 @@ vector<Output<const Node>> Node::outputs() const
     return result;
 }
 
-bool Node::evaluate(const EvaluatorTensorVector& output_values,
-                    const EvaluatorTensorVector& input_values)
+bool Node::evaluate(const HostTensorVector& output_values, const HostTensorVector& input_values)
 {
     return false;
 }
@@ -1119,35 +1113,87 @@ bool Node::evaluate(const EvaluatorTensorVector& output_values,
 bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
 {
     // If all the inputs are constants, try to evaluate the outputs
-    EvaluatorTensorVector input_tensors;
+    HostTensorVector input_tensors;
     for (auto input : input_values)
     {
         if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
         {
-            input_tensors.push_back(op::v0::Constant::create_evaluator_tensor(constant));
+            auto host_tensor = make_shared<runtime::HostTensor>(constant);
+            input_tensors.push_back(host_tensor);
         }
         else
         {
             return false;
         }
     }
-    vector<op::Constant::ConstantEvaluatorTensorPtr> output_constant_tensors;
-    EvaluatorTensorVector output_tensors;
+    HostTensorVector output_tensors;
     OutputVector output_constants;
     for (auto output : outputs())
     {
-        auto tensor = op::v0::Constant::create_evaluator_tensor(output.get_element_type(),
-                                                                output.get_partial_shape());
-        output_constant_tensors.push_back(tensor);
+        auto tensor =
+            make_shared<HostTensor>(output.get_element_type(), output.get_partial_shape());
         output_tensors.push_back(tensor);
     }
     if (evaluate(output_tensors, input_tensors))
     {
-        for (size_t i = 0; i < output_constant_tensors.size(); ++i)
+        for (size_t i = 0; i < output_tensors.size(); ++i)
         {
-            output_values[i] = output_constant_tensors[i]->get_constant();
+            output_values[i] = make_shared<op::Constant>(output_tensors[i]);
         }
         return true;
     }
     return false;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
+
+AttributeAdapter<std::shared_ptr<Node>>::AttributeAdapter(std::shared_ptr<Node>& value)
+    : m_ref(value)
+{
+}
+
+bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor)
+{
+    auto original_id = visitor.get_registered_node_id(m_ref);
+    auto id = original_id;
+    visitor.on_attribute("ID", id);
+    if (id != original_id)
+    {
+        m_ref = visitor.get_registered_node(id);
+    }
+    return true;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<NodeVector>::type_info;
+
+AttributeAdapter<NodeVector>::AttributeAdapter(NodeVector& ref)
+    : m_ref(ref)
+{
+}
+
+bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor)
+{
+    int64_t size = m_ref.size();
+    visitor.on_attribute("size", size);
+    if (size != m_ref.size())
+    {
+        m_ref.resize(size);
+    }
+    ostringstream index;
+    for (int64_t i = 0; i < size; i++)
+    {
+        index.str("");
+        index << i;
+        string id;
+        if (m_ref[i])
+        {
+            id = visitor.get_registered_node_id(m_ref[i]);
+        }
+        visitor.on_attribute(index.str(), id);
+        if (!m_ref[i])
+        {
+            m_ref[i] = visitor.get_registered_node(id);
+        }
+    }
+    return true;
 }

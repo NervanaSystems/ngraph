@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include <map>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/enum_names.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -75,18 +76,39 @@ namespace ngraph
     {
         return s << as_string(type);
     }
+
     template <>
     NGRAPH_API EnumNames<op::AutoBroadcastType>& EnumNames<op::AutoBroadcastType>::get()
     {
         static auto enum_names =
             EnumNames<op::AutoBroadcastType>("op::AutoBroadcastType",
                                              {{"NONE", op::AutoBroadcastType::NONE},
+                                              {"EXPLICIT", op::AutoBroadcastType::EXPLICIT},
                                               {"NUMPY", op::AutoBroadcastType::NUMPY},
                                               {"PDPD", op::AutoBroadcastType::PDPD}});
         return enum_names;
     }
-
     constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastType>::type_info;
+
+    template <>
+    NGRAPH_API EnumNames<op::BroadcastType>& EnumNames<op::BroadcastType>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::BroadcastType>("op::BroadcastType",
+                                         {{"NONE", op::BroadcastType::NONE},
+                                          {"NUMPY", op::BroadcastType::NUMPY},
+                                          {"EXPLICIT", op::BroadcastType::EXPLICIT},
+                                          {"PDPD", op::BroadcastType::PDPD},
+                                          {"BIDIRECTIONAL", op::BroadcastType::BIDIRECTIONAL}});
+        return enum_names;
+    }
+
+    std::ostream& op::operator<<(std::ostream& s, const op::BroadcastType& type)
+    {
+        return s << as_string(type);
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastType>::type_info;
 
     std::ostream& op::operator<<(std::ostream& s, const op::AutoBroadcastType& type)
     {
@@ -109,20 +131,33 @@ namespace ngraph
     template <>
     NGRAPH_API EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
     {
-        static auto enum_names =
-            EnumNames<op::TopKSortType>("op::TopKSortType",
-                                        {{"NONE", op::TopKSortType::NONE},
-                                         {"SORT_INDICES", op::TopKSortType::SORT_INDICES},
-                                         {"SORT_VALUES", op::TopKSortType::SORT_VALUES}});
+        static auto enum_names = EnumNames<op::TopKSortType>("op::TopKSortType",
+                                                             {{"none", op::TopKSortType::none},
+                                                              {"index", op::TopKSortType::index},
+                                                              {"value", op::TopKSortType::value}});
+        return enum_names;
+    }
+    template <>
+    NGRAPH_API EnumNames<op::TopKMode>& EnumNames<op::TopKMode>::get()
+    {
+        static auto enum_names = EnumNames<op::TopKMode>(
+            "op::TopKMode", {{"min", op::TopKMode::min}, {"max", op::TopKMode::max}});
         return enum_names;
     }
 
     constexpr DiscreteTypeInfo AttributeAdapter<op::TopKSortType>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::TopKMode>::type_info;
 
     std::ostream& op::operator<<(std::ostream& s, const op::TopKSortType& type)
     {
         return s << as_string(type);
     }
+
+    std::ostream& op::operator<<(std::ostream& s, const op::TopKMode& type)
+    {
+        return s << as_string(type);
+    }
+
     op::AutoBroadcastType op::AutoBroadcastSpec::type_from_string(const std::string& type) const
     {
         static const std::map<std::string, AutoBroadcastType> allowed_values = {
@@ -136,5 +171,35 @@ namespace ngraph
         return allowed_values.at(type);
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor)
+    {
+        // Maintain back-compatibility
+        std::string name = visitor.finish_structure();
+        visitor.on_attribute(name, m_ref.m_type);
+        visitor.start_structure(name);
+        if (m_ref.m_type == op::AutoBroadcastType::PDPD)
+        {
+            visitor.on_attribute("auto_broadcast_axis", m_ref.m_axis);
+        }
+        return true;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+
+    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor)
+    {
+        // Maintain back-compatibility
+        std::string name = visitor.finish_structure();
+        visitor.on_attribute(name, m_ref.m_type);
+        visitor.start_structure(name);
+        if (m_ref.m_type == op::BroadcastType::PDPD)
+        {
+            visitor.start_structure(name);
+            visitor.on_attribute("axis", m_ref.m_axis);
+            visitor.finish_structure();
+        }
+        return true;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastModeSpec>::type_info;
 }

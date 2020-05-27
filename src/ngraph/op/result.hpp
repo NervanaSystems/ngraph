@@ -47,8 +47,8 @@ namespace ngraph
                 virtual bool is_output() const override { return true; }
                 void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
                 bool needs_default_layout() const { return m_needs_default_layout; }
-                bool evaluate(const EvaluatorTensorVector& outputs,
-                              const EvaluatorTensorVector& inputs) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
                 bool constant_fold(OutputVector& output_values,
                                    const OutputVector& inputs_values) override;
 
@@ -64,4 +64,18 @@ namespace ngraph
         using v0::Result;
     }
     using ResultVector = std::vector<std::shared_ptr<op::Result>>;
+
+    template <>
+    class NGRAPH_API AttributeAdapter<ResultVector> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(ResultVector& ref);
+
+        bool visit_attributes(AttributeVisitor& visitor) override;
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<ResultVector>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        ResultVector& m_ref;
+    };
 }

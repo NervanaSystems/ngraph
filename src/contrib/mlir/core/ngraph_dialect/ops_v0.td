@@ -640,7 +640,7 @@ def NGTopKOp :
         axis            The axis along which to compute top k indices
         indexType       Indices type. Currently, only int64 or int32 are supported
         computeMax      Compute top k max or top k min?
-        sortType        SortType for sorting results, default - SORT_VALUES
+        sortType        SortType for sorting results, default - value
     }];
 
     let parser = [{ NGRAPH_CHECK(false, "No parser support"); return mlir::failure(); }];

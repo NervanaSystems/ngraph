@@ -772,12 +772,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Softmax> node)
     {
-        auto axis = node->get_axis();
-        auto data = node->input(0);
-        auto data_shape = data.get_shape();
+        const auto axis = node->get_axis();
+        const auto data = node->input(0);
+        const auto data_shape = data.get_shape();
         std::vector<size_t> axes(data_shape.size() - axis);
         std::iota(std::begin(axes), std::end(axes), axis);
-        auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
+        const auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -807,8 +807,8 @@ namespace
         bool compute_max;
         switch (node->get_mode())
         {
-        case op::v1::TopK::Mode::MAX: compute_max = true; break;
-        case op::v1::TopK::Mode::MIN: compute_max = false; break;
+        case op::v1::TopK::Mode::max: compute_max = true; break;
+        case op::v1::TopK::Mode::min: compute_max = false; break;
         default: break;
         }
 

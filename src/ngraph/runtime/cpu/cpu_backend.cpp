@@ -42,7 +42,7 @@ using namespace std;
 
 extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 {
-    runtime::BackendManager::register_backend("CPU", [](const std::string& /* config */) {
+    runtime::BackendManager::register_backend("CPU", [](const std::string& config) {
         static bool is_initialized = false;
         if (!is_initialized)
         {
@@ -55,20 +55,32 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
             ngraph::runtime::cpu::register_builders();
             is_initialized = true;
         }
-        return make_shared<runtime::cpu::CPU_Backend>();
+        return make_shared<runtime::cpu::CPU_Backend>(config);
     });
+}
+
+runtime::cpu::CPU_Backend::CPU_Backend(const string& config)
+    : m_allocator{nullptr}
+    , m_codegen_enable{config == "CODEGEN"}
+{
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()
 {
     m_exec_map.clear();
 }
+
 shared_ptr<runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Backend::make_call_frame(
     const shared_ptr<runtime::cpu::CPU_ExternalFunction>& external_function,
     ngraph::pass::PassConfig& pass_config,
     Allocator* allocator)
 {
     return external_function->make_call_frame(pass_config, allocator);
+}
+
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor()
+{
+    throw runtime_error("CPU backend does not support dynamic tensors");
 }
 
 shared_ptr<runtime::Tensor>
@@ -118,8 +130,11 @@ shared_ptr<runtime::Executable>
             return rc;
         }
     }
-    rc = make_shared<CPU_Executable>(
-        func, pass_config, get_host_memory_allocator(), performance_counters_enabled);
+    rc = make_shared<CPU_Executable>(func,
+                                     pass_config,
+                                     get_host_memory_allocator(),
+                                     performance_counters_enabled,
+                                     m_codegen_enable);
     {
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);
         m_exec_map.insert({func, rc});

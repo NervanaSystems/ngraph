@@ -63,7 +63,7 @@ TEST(type_prop, shuffle_channels_invalid_input_shape)
     }
 }
 
-TEST(type_prop, shuffle_channels_invalid_groups_value)
+TEST(type_prop, shuffle_channels_invalid_group_value)
 {
     try
     {
@@ -76,6 +76,6 @@ TEST(type_prop, shuffle_channels_invalid_groups_value)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            "The channel dimension size has to be a multiple of the groups parameter value.");
+            "The channel dimension size has to be a multiple of the group parameter value.");
     }
 }
