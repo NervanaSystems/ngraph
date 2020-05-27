@@ -95,6 +95,20 @@ Shape ngraph::PartialShape::get_min_shape() const
     }
 }
 
+Shape ngraph::PartialShape::get_shape() const
+{
+    NGRAPH_CHECK(rank().is_static(), "get_shape() must be called on a static shape");
+    Shape shape;
+    for (auto dimension : m_dimensions)
+    {
+        auto min_val = dimension.get_interval().get_min_val();
+        auto max_val = dimension.get_interval().get_max_val();
+        NGRAPH_CHECK(min_val == max_val, "get_shape() must be called on a static shape");
+        shape.push_back(min_val);
+    }
+    return shape;
+}
+
 PartialShape ngraph::operator+(const PartialShape& s1, const PartialShape& s2)
 {
     if (s1.rank().is_dynamic() || s2.rank().is_dynamic())
@@ -404,6 +418,65 @@ bool PartialShape::all_non_negative() const
     }
 
     return true;
+}
+
+const Dimension& PartialShape::operator[](size_t i) const
+{
+    if (i >= m_dimensions.size())
+    {
+        throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+    }
+    return m_dimensions[i];
+}
+
+Dimension& PartialShape::operator[](size_t i)
+{
+    if (i >= m_dimensions.size())
+    {
+        throw std::out_of_range("Accessing out-of-range dimension in Dimension[]");
+    }
+    return m_dimensions[i];
+}
+
+const std::vector<int64_t>& ngraph::AttributeAdapter<ngraph::PartialShape>::get()
+{
+    if (!m_buffer_valid)
+    {
+        m_buffer.clear();
+        if (m_ref.rank().is_dynamic())
+        {
+            m_buffer.push_back(-2);
+        }
+        else
+        {
+            for (size_t i = 0; i < m_ref.rank().get_length(); ++i)
+            {
+                auto& elt = m_ref[i];
+                m_buffer.push_back(elt.is_dynamic() ? -1 : elt.get_length());
+            }
+        }
+        m_buffer_valid = true;
+    }
+    return m_buffer;
+}
+
+void ngraph::AttributeAdapter<ngraph::PartialShape>::set(const std::vector<int64_t>& value)
+{
+    m_ref = PartialShape();
+    if (value.size() == 1 && value[0] == -2)
+    {
+        m_ref = PartialShape::dynamic();
+    }
+    else
+    {
+        std::vector<Dimension> dims;
+        for (auto elt : value)
+        {
+            dims.push_back(elt == -1 ? Dimension::dynamic() : elt);
+        }
+        m_ref = PartialShape(dims);
+    }
+    m_buffer_valid = false;
 }
 
 NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<PartialShape>::type_info;

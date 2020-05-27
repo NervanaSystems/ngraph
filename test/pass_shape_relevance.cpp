@@ -80,11 +80,11 @@ TEST(shape_relevance, param_indirect)
     ASSERT_TRUE(param2->is_relevant_to_shapes());
 }
 
-TEST(shape_relevance, param_shape_of_direct)
+TEST(shape_relevance, param_shape_of_direct_v0)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
 
-    auto x = make_shared<op::v1::Reshape>(param0, make_shared<op::ShapeOf>(param0), true);
+    auto x = make_shared<op::v1::Reshape>(param0, make_shared<op::v0::ShapeOf>(param0), true);
 
     auto f = make_shared<Function>(x, ParameterVector{param0});
 
@@ -95,11 +95,76 @@ TEST(shape_relevance, param_shape_of_direct)
     ASSERT_FALSE(param0->is_relevant_to_shapes());
 }
 
-TEST(shape_relevance, param_shape_of_indirect)
+TEST(shape_relevance, param_shape_of_direct_v3)
 {
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
 
-    auto s = make_shared<op::ShapeOf>(param0);
+    auto x = make_shared<op::v1::Reshape>(param0, make_shared<op::v3::ShapeOf>(param0), true);
+
+    auto f = make_shared<Function>(x, ParameterVector{param0});
+
+    pass::Manager manager;
+    manager.register_pass<pass::ShapeRelevance>();
+    manager.run_passes(f);
+
+    ASSERT_FALSE(param0->is_relevant_to_shapes());
+}
+
+TEST(shape_relevance, param_shape_of_direct_i32_v3)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
+
+    auto x = make_shared<op::v1::Reshape>(
+        param0, make_shared<op::v3::ShapeOf>(param0, element::i32), true);
+
+    auto f = make_shared<Function>(x, ParameterVector{param0});
+
+    pass::Manager manager;
+    manager.register_pass<pass::ShapeRelevance>();
+    manager.run_passes(f);
+
+    ASSERT_FALSE(param0->is_relevant_to_shapes());
+}
+
+TEST(shape_relevance, param_shape_of_indirect_v0)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
+
+    auto s = make_shared<op::v0::ShapeOf>(param0);
+    auto r = make_shared<op::Reverse>(s, AxisSet{0});
+    auto x = make_shared<op::v1::Reshape>(param0, r, true);
+
+    auto f = make_shared<Function>(x, ParameterVector{param0});
+
+    pass::Manager manager;
+    manager.register_pass<pass::ShapeRelevance>();
+    manager.run_passes(f);
+
+    ASSERT_FALSE(param0->is_relevant_to_shapes());
+}
+
+TEST(shape_relevance, param_shape_of_indirect_v3)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
+
+    auto s = make_shared<op::v3::ShapeOf>(param0);
+    auto r = make_shared<op::Reverse>(s, AxisSet{0});
+    auto x = make_shared<op::v1::Reshape>(param0, r, true);
+
+    auto f = make_shared<Function>(x, ParameterVector{param0});
+
+    pass::Manager manager;
+    manager.register_pass<pass::ShapeRelevance>();
+    manager.run_passes(f);
+
+    ASSERT_FALSE(param0->is_relevant_to_shapes());
+}
+
+TEST(shape_relevance, param_shape_of_indirect_i32_v3)
+{
+    auto param0 = make_shared<op::Parameter>(element::f32, Shape{4, 6});
+
+    auto s = make_shared<op::v3::ShapeOf>(param0, element::i32);
     auto r = make_shared<op::Reverse>(s, AxisSet{0});
     auto x = make_shared<op::v1::Reshape>(param0, r, true);
 

@@ -176,11 +176,11 @@ namespace ngraph
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
-        const Dimension& operator[](size_t i) const { return m_dimensions[i]; }
+        const Dimension& operator[](size_t i) const;
         /// \brief Index operator for PartialShape.
         /// \param i The index of the dimension being selected.
         /// \return A reference to the `i`th Dimension of this shape.
-        Dimension& operator[](size_t i) { return m_dimensions[i]; }
+        Dimension& operator[](size_t i);
         /// \brief Returns a vector of the dimensions. This has no meaning if dynamic.
         explicit operator std::vector<Dimension>() const { return m_dimensions; }
         friend NGRAPH_API std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
@@ -191,6 +191,8 @@ namespace ngraph
         Shape get_max_shape() const;
         /// Get the min bounding shape
         Shape get_min_shape() const;
+        /// Get the unique shape
+        Shape get_shape() const;
 
         /// \brief Try to merge one shape into another.
         /// \param[in,out] dst The shape that `src` will be merged into.
@@ -291,16 +293,21 @@ namespace ngraph
     std::ostream& operator<<(std::ostream& str, const PartialShape& shape);
 
     template <>
-    class NGRAPH_API AttributeAdapter<PartialShape> : public ValueReference<PartialShape>,
-                                                      public ValueAccessor<void>
+    class NGRAPH_API AttributeAdapter<PartialShape> : public ValueAccessor<std::vector<int64_t>>
     {
     public:
         AttributeAdapter(PartialShape& value)
-            : ValueReference<PartialShape>(value)
+            : m_ref(value)
         {
         }
 
+        const std::vector<int64_t>& get() override;
+        void set(const std::vector<int64_t>& value) override;
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<PartialShape>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        PartialShape& m_ref;
+        std::vector<int64_t> m_buffer;
+        bool m_buffer_valid{false};
     };
 }
