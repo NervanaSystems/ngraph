@@ -79,7 +79,8 @@ namespace ngraph
                             std::make_shared<default_opset::Reshape>(slice, reshape_pattern, false);
                     }
 
-                    return {std::make_shared<default_opset::Concat>(slices, channel_axis)};
+                    return ngraph::as_node_vector(
+                        {std::make_shared<default_opset::Concat>(slices, channel_axis)});
                 }
 
             } // namespace set_1
