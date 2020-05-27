@@ -53,12 +53,9 @@ namespace ngraph
             }
 
             template <typename T>
-            void sum(const T* arg,
-                     T* out,
-                     const Shape& in_shape,
-                     const Shape& out_shape,
-                     const AxisSet& reduction_axes)
+            void sum(const T* arg, T* out, const Shape& in_shape, const AxisSet& reduction_axes)
             {
+                auto out_shape = reduce(in_shape, reduction_axes);
                 CoordinateTransform output_transform(out_shape);
                 std::vector<T> cs(shape_size(out_shape));
 

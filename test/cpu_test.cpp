@@ -967,21 +967,8 @@ TEST(cpu_test, rotated_pooling)
 constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
 constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
 
-bool static is_codegen_mode()
-{
-    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
-    return codegen_mode;
-}
-
 TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
 
     Shape shape_a{2, 1, 3, 5};
@@ -1351,7 +1338,7 @@ TEST(cpu_test, constant_unary_binary)
         get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
     ASSERT_EQ(get_result_constant<int>(func, 23), add_autob_numpy_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
+    ASSERT_NO_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(cpu_test, conv_test_winograd)
@@ -1488,8 +1475,8 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     Shape shape_r{2, 2, 4, 3};
-    auto data = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 0));
-    auto indices = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 1));
+    auto data = make_shared<op::Result>(max_pool->output(0));
+    auto indices = make_shared<op::Result>(max_pool->output(1));
     auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
@@ -1560,7 +1547,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto indices = make_shared<op::GetOutputElement>(max_pool, 1);
+    auto indices = max_pool->output(1);
     Shape shape_i{2, 2, 4, 3};
     auto delta = make_shared<op::Parameter>(element::f32, shape_i);
 

@@ -243,7 +243,7 @@ bool ngraph::op::v1::GroupConvolutionBackpropData::visit_attributes(AttributeVis
 bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
 {
     bool is_dynamic = Node::is_dynamic();
-    if (get_inputs().size() == 3 && !is_dynamic)
+    if (get_input_descriptors().size() == 3 && !is_dynamic)
     {
         return !is_type<op::Constant>(input_value(2).get_node());
     }
@@ -263,7 +263,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_
     {
         shape = PartialShape{vector<Dimension>(m_strides.size())};
     }
-    bool is_output_shape_present = get_inputs().size() == 3;
+    bool is_output_shape_present = get_input_descriptors().size() == 3;
     if (is_output_shape_present)
     {
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
@@ -339,9 +339,9 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
         if (filters_pshape[0].is_static() && filters_pshape[1].is_static() &&
             data_pshape[1].is_static())
         {
-            size_t groups{filters_pshape[0]};
-            size_t input_channels{filters_pshape[1]};
-            size_t n_data_channels{data_pshape[1]};
+            auto groups = filters_pshape[0].get_length();
+            auto input_channels = filters_pshape[1].get_length();
+            auto n_data_channels = data_pshape[1].get_length();
 
             NODE_VALIDATION_CHECK(this,
                                   n_data_channels % groups == 0,
@@ -389,7 +389,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
                               "spatial features.");
     }
 
-    bool is_output_shape_present = get_inputs().size() == 3;
+    bool is_output_shape_present = get_input_descriptors().size() == 3;
     PartialShape output_pshape;
 
     // If output shape is provided, ignore current values for padding begin/end

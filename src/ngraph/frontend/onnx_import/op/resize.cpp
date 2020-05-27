@@ -70,7 +70,7 @@ namespace ngraph
                         axes.insert(ax);
                     }
 
-                    auto attrs = ngraph::op::InterpolateAttrs();
+                    auto attrs = ngraph::op::v0::InterpolateAttrs();
                     attrs.axes = axes;
                     attrs.mode = mode;
                     attrs.align_corners = false;

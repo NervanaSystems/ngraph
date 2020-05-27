@@ -315,17 +315,19 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_inputs() const
+        std::deque<descriptor::Input>& get_input_descriptors()
             NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_outputs() const
+        const std::deque<descriptor::Input>& get_input_descriptors() const
+            NGRAPH_DEPRECATED("use inputs() instead")
+        {
+            return m_inputs;
+        }
+        std::deque<descriptor::Output>& get_output_descriptors()
+            NGRAPH_DEPRECATED("use outputs() instead");
+        const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
@@ -635,6 +637,34 @@ namespace ngraph
         }
         bool operator<=(const RawNodeOutput& other) const { return !(*this > other); }
         bool operator>=(const RawNodeOutput& other) const { return !(*this < other); }
+    };
+
+    /// \brief Visits a reference to a node that has been registered with the visitor.
+    template <>
+    class NGRAPH_API AttributeAdapter<std::shared_ptr<Node>> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(std::shared_ptr<Node>& value);
+
+        bool visit_attributes(AttributeVisitor& visitor) override;
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        std::shared_ptr<Node>& m_ref;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<NodeVector> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(NodeVector& ref);
+
+        bool visit_attributes(AttributeVisitor& visitor) override;
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        NodeVector& m_ref;
     };
 
     using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;

@@ -20,6 +20,8 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "ngraph/attribute_adapter.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph

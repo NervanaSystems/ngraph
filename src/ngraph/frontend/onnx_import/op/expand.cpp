@@ -35,11 +35,8 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     const std::shared_ptr<ngraph::Node> shape{node.get_ng_inputs().at(1)};
 
-                    const auto const_filled_with_ones = std::make_shared<default_opset::Broadcast>(
-                        default_opset::Constant::create(data->get_element_type(), {}, {1}), shape);
-
-                    return {
-                        std::make_shared<default_opset::Multiply>(data, const_filled_with_ones)};
+                    return {std::make_shared<default_opset::Broadcast>(
+                        data, shape, ngraph::op::BroadcastType::BIDIRECTIONAL)};
                 }
 
             } // namespace set_1
