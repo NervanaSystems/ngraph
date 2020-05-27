@@ -631,9 +631,9 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
     return outputs;
 }
 
-OutputVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
+NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
 {
-    OutputVector subgraph;
+    NodeVector subgraph;
     traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, args);
     return subgraph;
 }

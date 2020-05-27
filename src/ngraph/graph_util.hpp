@@ -452,7 +452,7 @@ namespace ngraph
     // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
     // node or a node that belongs to args
     NGRAPH_API
-    OutputVector extract_subgraph(const NodeVector& results, const NodeVector& args);
+    NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
     NGRAPH_API
     bool is_one(const Output<Node>& reduce_constant);

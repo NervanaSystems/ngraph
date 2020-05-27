@@ -39,26 +39,25 @@ void op::util::FusedOp::validate_and_infer_types()
         return;
     }
 
-    // auto subgraph_outputs = decompose_op();
-    // NodeVector tmp;
-    // for (auto output : subgraph_outputs)
-    // {
-    //     tmp.push_back(output.get_node_shared_ptr());
-    // }
-    // auto subgraph = extract_subgraph(tmp, get_arguments());
-    // validate_nodes_and_infer_types(subgraph);
+    auto subgraph_outputs = decompose_op();
+    NodeVector tmp;
+    for (auto output : subgraph_outputs)
+    {
+        tmp.push_back(output.get_node_shared_ptr());
+    }
+    auto subgraph = extract_subgraph(tmp, get_arguments());
+    validate_nodes_and_infer_types(subgraph);
 
-    // size_t i = 0;
-    // for (auto output : subgraph_outputs)
-    // {
-    //     if (i >= get_output_size())
-    //     {
-    //         set_output_size(i + 1);
-    //     }
-    //     set_output_type(
-    //         i, output.get_element_type(), output.get_shape());
-    //     i++;
-    // }
+    size_t i = 0;
+    for (auto output : subgraph_outputs)
+    {
+        if (i >= get_output_size())
+        {
+            set_output_size(i + 1);
+        }
+        set_output_type(i, output.get_element_type(), output.get_shape());
+        i++;
+    }
 
     post_validate_and_infer_types();
 }

@@ -37,7 +37,12 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             // Op supported by backend. Do not decompose
             return modified;
         }
-        auto subgraph_outputs = node->decompose_op();
+        OutputVector output_vector = node->decompose_op();
+        NodeVector subgraph_outputs;
+        for (auto output : output_vector)
+        {
+            subgraph_outputs.push_back(output.get_node_shared_ptr());
+        }
 
         if (ngraph::get_provenance_enabled())
         {
@@ -50,7 +55,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             // Transfer the new provenance tags to the newly created ops
             for (auto output_node : subgraph_outputs)
             {
-                output_node.get_node()->add_provenance_tags_above(base_input_values, provenance_tags);
+                output_node->add_provenance_tags_above(base_input_values, provenance_tags);
             }
         }
 
