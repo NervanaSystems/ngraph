@@ -1,0 +1,65 @@
+diff --git a/Eigen/src/Core/util/Macros.h b/Eigen/src/Core/util/Macros.h
+index 8927bd404..f2e3c1152 100644
+--- a/Eigen/src/Core/util/Macros.h
++++ b/Eigen/src/Core/util/Macros.h
+@@ -523,9 +523,13 @@
+ #if EIGEN_COMP_MSVC || EIGEN_COMP_ICC
+ #define EIGEN_STRONG_INLINE __forceinline
+ #else
++#if EIGEN_COMP_CLANG
++#define EIGEN_STRONG_INLINE inline __attribute__((always_inline))
++#else
+ #define EIGEN_STRONG_INLINE inline
+ #endif
+ #endif
++#endif
+ 
+ // EIGEN_ALWAYS_INLINE is the stronget, it has the effect of making the function inline and adding every possible
+ // attribute to maximize inlining. This should only be used when really necessary: in particular,
+diff --git a/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h b/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h
+index bb63baee2..1c3155b74 100644
+--- a/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h
++++ b/unsupported/Eigen/CXX11/src/Tensor/TensorCostModel.h
+@@ -164,9 +164,9 @@ class TensorCostModel {
+   static const int kDeviceCyclesPerComputeCycle = 1;
+ 
+  // Costs in device cycles.
+-  static const int kStartupCycles = 100000;
+-  static const int kPerThreadCycles = 100000;
+-  static const int kTaskSize = 40000;
++  static const int kStartupCycles = 5000;
++  static const int kPerThreadCycles = 5000;
++  static const int kTaskSize = 5000;
+ 
+   // Returns the number of threads in [1:max_threads] to use for
+   // evaluating an expression with the given output size and cost per
+diff --git a/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h b/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h
+index ca9ba402e..5e3fe21ad 100644
+--- a/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h
++++ b/unsupported/Eigen/CXX11/src/Tensor/TensorDeviceThreadPool.h
+@@ -234,6 +234,7 @@ struct ThreadPoolDevice {
+       }
+     }
+ 
++#if !defined(EIGEN_OPENMP)
+     // Recursively divide size into halves until we reach block_size.
+     // Division code rounds mid to block_size, so we are guaranteed to get
+     // block_count leaves that do actual computations.
+@@ -253,6 +254,17 @@ struct ThreadPoolDevice {
+     };
+     handleRange(0, n);
+     barrier.Wait();
++#else
++    auto blocks = static_cast<unsigned int>(divup(n, block_size));
++    #pragma omp parallel for
++    for (unsigned int i = 0; i < blocks; i++) {
++        auto first = (block_size * i);
++        auto last  = first + block_size;
++        if (n <= last)
++            last = n;
++        f(first, last);
++    }
++#endif
+   }
+ 
+   // Convenience wrapper for parallelFor that does not align blocks.
