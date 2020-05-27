@@ -26,6 +26,7 @@ set (SRC
     test_control.cpp
     test_case.cpp
     provenance_enabler.hpp
+    visitor.hpp
 )
 
 add_library(ngraph_test_util STATIC ${SRC})
