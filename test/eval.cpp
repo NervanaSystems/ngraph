@@ -1720,7 +1720,7 @@ TEST(eval, topk_v0_dyn)
     bool compute_max = true;
 
     auto B = make_shared<op::v0::TopK>(
-        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::SORT_VALUES);
+        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::value);
 
     auto fun = make_shared<Function>(OutputVector{B->output(0), B->output(1)},
                                      ParameterVector{A, k, axis});
@@ -1758,7 +1758,7 @@ TEST(eval, topk_v0_dyn_k0)
     bool compute_max = true;
 
     auto B = make_shared<op::v0::TopK>(
-        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::SORT_VALUES);
+        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::value);
 
     auto fun = make_shared<Function>(OutputVector{B->output(0), B->output(1)},
                                      ParameterVector{A, k, axis});
@@ -1850,7 +1850,7 @@ TEST(eval, topk_v0_param_dyn_k2)
     bool compute_max = true;
 
     auto B = make_shared<op::v0::TopK>(
-        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::SORT_VALUES);
+        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::value);
 
     auto fun = make_shared<Function>(OutputVector{B->output(0), B->output(1)},
                                      ParameterVector{A, k, axis});
@@ -1886,7 +1886,7 @@ TEST(eval, topk_v0_param_dyn_k0)
     bool compute_max = true;
 
     auto B = make_shared<op::v0::TopK>(
-        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::SORT_VALUES);
+        A, k, axis, result_et, compute_max, op::v0::TopK::SortType::value);
 
     auto fun = make_shared<Function>(OutputVector{B->output(0), B->output(1)},
                                      ParameterVector{A, k, axis});
