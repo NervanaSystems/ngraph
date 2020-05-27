@@ -2516,7 +2516,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));
             op::TopKSortType sort =
-                get_or_default<op::TopKSortType>(node_js, "sort", op::TopKSortType::SORT_VALUES);
+                get_or_default<op::TopKSortType>(node_js, "sort", op::TopKSortType::value);
             if (has_key(node_js, "top_k_axis"))
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();

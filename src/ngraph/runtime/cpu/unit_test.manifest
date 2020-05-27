@@ -1,61 +1,77 @@
-shape_of_scalar
-shape_of_vector
-shape_of_matrix
-shape_of_5d
-sum_stable_acc_double
+CPU.shape_of_scalar
+CPU.shape_of_vector
+CPU.shape_of_matrix
+CPU.shape_of_5d
+CPU.sum_stable_acc_double
 
 # failing in CI build but passing on local machine
-max_3d_to_scalar_int32
+CPU.max_3d_to_scalar_int32
 
 # Not implemented
-send_recv
-send_recv_ring
-atanh
-asinh
-acosh
+CPU.send_recv
+CPU.send_recv_ring
+CPU.atanh
+CPU.asinh
+CPU.acosh
 
 # ONNX TopK with dynamic K
-onnx_top_k_opset_10
+CPU.onnx_top_k_opset_10
 
 # ONNX GatherND with int32
-onnx_model_gatherND_int32
+CPU.onnx_model_gatherND_int32
 
 # RNN pattern fails after removing GOE
-fuse_rnn_across_layer_2layer_3timestep
-fuse_bi_directional_rnn
-bi_rnn_interpreter_vs_cpu
-fuse_lstm_cells
-fuse_2_layer_rnn
-fuse_1_layer_rnn
-rnn_fusion_1rnn_layer_3lstm_cell
-rnn_fusion_2rnn_layer_3lstm_cell
+CPU.fuse_rnn_across_layer_2layer_3timestep
+CPU.fuse_bi_directional_rnn
+CPU.bi_rnn_interpreter_vs_cpu
+CPU.fuse_lstm_cells
+CPU.fuse_2_layer_rnn
+CPU.fuse_1_layer_rnn
+CPU.rnn_fusion_1rnn_layer_3lstm_cell
+CPU.rnn_fusion_2rnn_layer_3lstm_cell
+
+#ONNX Flatten with dynamic reshape
+CPU.onnx_dyn_shapes_flatten_axis
+CPU.onnx_dyn_shapes_flatten_neg_axis
+
+CPU.onnx_dyn_shapes_flatten_axis
+CPU.onnx_dyn_shapes_flatten_neg_axis
 
 # Need use evaluate, only applicable to INTERPRETER
-non_zero
-non_zero_all_1s
-non_zero_all_0s
+CPU.non_zero
+CPU.non_zero_all_1s
+CPU.non_zero_all_0s
 
-# The following tests fail because GetOutputElement
+CPU.round_int64
+CPU.floor_int64
+CPU.ceiling_int64
+
+# Incorrect result from CPU, need check and fix 
+CPU.matmul_2x2x3_2x1x3_transpose_int64
+CPU.matmul_2x2x3_2x3x1_int64
+
+# no support for f16, bf16
+CPU.fused_clamp_float16
+CPU.fused_clamp_bfloat16
+
 CPU.lstm_cell_no_bias_no_peepholes
 CPU.lstm_cell_zero_bias_peepholes_constant
 CPU.lstm_cell_fixed_no_bias_no_peepholes
-cpu_fusion.fuse_deconv
-cpu_fusion.fuse_dropout
-cpu_fusion.lstm_cell
-cpu_fusion.batchnorm_fprop_relu
 
-round_int64
-floor_int64
-ceiling_int64
+################################################################################
+# CODEGEN
+################################################################################
 
-# Incorrect result from CPU, need check and fix 
-matmul_2x2x3_2x1x3_transpose_int64
-matmul_2x2x3_2x3x1_int64
+CPU_CODEGEN.reduce_sum_keep_stable_acc
+CPU_CODEGEN.reduce_sum_keep_stable_acc_double
+CPU_CODEGEN.reduce_sum_stable_acc
+CPU_CODEGEN.reduce_sum_stable_acc_double
+CPU_CODEGEN.sum_stable_acc
+CPU_CODEGEN.sum_stable_acc_double
+CPU_CODEGEN.topk_v1_invalid_k
 
-acosh
-asinh
-atanh
-
-# no support for f16, bf16
-fused_clamp_float16
-fused_clamp_bfloat16
+CPU_CODEGEN.non_zero
+CPU_CODEGEN.non_zero_all_0s
+CPU_CODEGEN.non_zero_all_1s
+CPU_CODEGEN.fused_clamp_float16
+CPU_CODEGEN.fused_clamp_bfloat16
