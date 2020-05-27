@@ -324,7 +324,8 @@ namespace ngraph
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_output_descriptors() NGRAPH_DEPRECATED("use outputs() instead");
+        std::deque<descriptor::Output>& get_output_descriptors()
+            NGRAPH_DEPRECATED("use outputs() instead");
         const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 

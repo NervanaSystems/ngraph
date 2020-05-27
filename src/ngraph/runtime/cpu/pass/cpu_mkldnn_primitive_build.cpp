@@ -145,7 +145,7 @@ namespace ngraph
                     size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
-                    const auto& out = node->get_outputs();
+                    const auto& out = node->get_output_descriptors();
                     const auto& args = node->get_inputs();
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
@@ -775,7 +775,7 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Slice)
                 {
-                    const auto& out = node->get_outputs();
+                    const auto& out = node->get_output_descriptors();
                     const Slice* slice = static_cast<const Slice*>(node);
                     auto result_shape = out[0].get_shape();
                     auto lower_bounds = slice->get_lower_bounds();
