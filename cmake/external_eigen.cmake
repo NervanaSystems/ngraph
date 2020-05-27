@@ -18,7 +18,7 @@
 include(ExternalProject)
 
 set(EIGEN_GIT_TAG ded1e7b4960f0074fa147a8ed1c9926174958092)
-set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen)
+set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen.git)
 
 #------------------------------------------------------------------------------
 # Download Eigen
