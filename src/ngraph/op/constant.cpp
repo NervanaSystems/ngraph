@@ -19,6 +19,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -480,7 +481,7 @@ Shape op::Constant::get_shape_val() const
 Strides op::Constant::get_strides_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_strides = get_vector<int64_t>();
+    std::vector<int64_t> out_strides = cast_vector<int64_t>();
     Strides output_strides(shape_size(m_shape));
     std::transform(out_strides.begin(),
                    out_strides.end(),
@@ -492,7 +493,7 @@ Strides op::Constant::get_strides_val() const
 Coordinate op::Constant::get_coordinate_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_coordinate = get_vector<int64_t>();
+    std::vector<int64_t> out_coordinate = cast_vector<int64_t>();
     Coordinate output_coordinate(shape_size(m_shape));
     std::transform(out_coordinate.begin(),
                    out_coordinate.end(),
@@ -504,7 +505,7 @@ Coordinate op::Constant::get_coordinate_val() const
 CoordinateDiff op::Constant::get_coordinate_diff_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_coordinate_diff = get_vector<int64_t>();
+    std::vector<int64_t> out_coordinate_diff = cast_vector<int64_t>();
     CoordinateDiff output_coordinate_diff(shape_size(m_shape));
     std::transform(out_coordinate_diff.begin(),
                    out_coordinate_diff.end(),
@@ -611,6 +612,26 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic pop
 #endif
     return rc;
+}
+
+bool op::v0::Constant::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("element_type", m_element_type);
+    visitor.on_attribute("shape", m_shape);
+    if (m_data == nullptr)
+    {
+        // Filling in a fresh constant
+        allocate_buffer();
+    }
+    visitor.on_attribute("value", m_data);
+    return true;
+}
+
+bool op::v0::Constant::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    auto output = outputs[0];
+    output->write(get_data_ptr(), output->get_size_in_bytes());
+    return true;
 }
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
