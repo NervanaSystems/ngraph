@@ -64,7 +64,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         size_t i = 0;
         for (auto output_node : subgraph_outputs)
         {
-            for (size_t j = 0; j < output_node->get_output_count(); j++, i++)
+            for (size_t j = 0; j < output_node->get_output_count(); j++)
             {
                 set<descriptor::Input*> fop_users{
                     begin(node->get_output_descriptor(i).get_inputs()),
@@ -73,6 +73,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                 {
                     fop_user->replace_output(output_node->get_output_descriptor(j));
                 }
+                i++;
             }
         }
         if (i != node->get_output_size())
