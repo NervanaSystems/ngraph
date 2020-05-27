@@ -177,7 +177,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
 {
     auto x = make_shared<op::Parameter>(element::f32, input_pshape);
 
-    shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
+    shared_ptr<Node> x_new_shape = make_shared<op::v0::ShapeOf>(x);
     x_new_shape = make_shared<op::Product>(x_new_shape, AxisSet{0});
     x_new_shape = make_shared<op::Reshape>(x_new_shape, AxisVector{}, Shape{1});
 
@@ -237,7 +237,7 @@ static void reverse_shape_test(const PartialShape& input_pshape,
 {
     auto x = make_shared<op::Parameter>(element::f32, input_pshape);
 
-    shared_ptr<Node> x_new_shape = make_shared<op::ShapeOf>(x);
+    shared_ptr<Node> x_new_shape = make_shared<op::v0::ShapeOf>(x);
     x_new_shape = make_shared<op::Reverse>(x_new_shape, AxisSet{0});
 
     auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);

@@ -112,22 +112,13 @@ public:
         : m_json(j)
     {
     }
-
-    void on_attribute(const std::string& name, std::string& value) override
-    {
-        m_json[name] = value;
-    }
-    void on_attribute(const std::string& name, bool& value) override { m_json[name] = value; }
     void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
     {
-        if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
-        {
-            m_json[name] = write_element_type(static_cast<element::Type&>(*a));
-        }
-        else if (auto a = as_type<AttributeAdapter<PartialShape>>(&adapter))
-        {
-            m_json[name] = write_partial_shape(static_cast<PartialShape&>(*a));
-        }
+        NGRAPH_CHECK(false, "Adapter ", adapter.get_type_info().name, " is not handled");
+    }
+    void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
+    {
+        m_json[name] = adapter.get();
     }
     void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
     {
@@ -142,6 +133,10 @@ public:
         m_json[name] = adapter.get();
     }
     void on_adapter(const std::string& name, ValueAccessor<std::vector<int64_t>>& adapter) override
+    {
+        m_json[name] = adapter.get();
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<uint64_t>>& adapter) override
     {
         m_json[name] = adapter.get();
     }
@@ -198,34 +193,9 @@ public:
         : m_json(j)
     {
     }
-    void on_attribute(const std::string& name, std::string& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<std::string>();
-        }
-    }
-    void on_attribute(const std::string& name, bool& value) override
-    {
-        if (has_key(m_json, name))
-        {
-            value = m_json.at(name).get<bool>();
-        }
-    }
     void on_adapter(const std::string& name, ValueAccessor<void>& adapter) override
     {
-        if (has_key(m_json, name))
-        {
-            if (auto a = as_type<AttributeAdapter<element::Type>>(&adapter))
-            {
-                static_cast<element::Type&>(*a) =
-                    read_element_type(m_json.at(name).get<std::string>());
-            }
-            else if (auto a = as_type<AttributeAdapter<PartialShape>>(&adapter))
-            {
-                static_cast<PartialShape&>(*a) = read_partial_shape(m_json.at(name));
-            }
-        }
+        NGRAPH_CHECK(false, "Adapter ", adapter.get_type_info().name, " is not handled");
     }
     void on_adapter(const std::string& name, ValueAccessor<std::string>& adapter) override
     {
@@ -234,6 +204,14 @@ public:
             adapter.set(m_json.at(name).get<std::string>());
         }
     }
+    void on_adapter(const std::string& name, ValueAccessor<bool>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<bool>());
+        }
+    }
+
     void on_adapter(const std::string& name, ValueAccessor<int64_t>& adapter) override
     {
         if (has_key(m_json, name))
@@ -254,6 +232,13 @@ public:
         if (has_key(m_json, name))
         {
             adapter.set(m_json.at(name).get<std::vector<int64_t>>());
+        }
+    }
+    void on_adapter(const std::string& name, ValueAccessor<std::vector<uint64_t>>& adapter) override
+    {
+        if (has_key(m_json, name))
+        {
+            adapter.set(m_json.at(name).get<std::vector<uint64_t>>());
         }
     }
     void on_adapter(const std::string& name, ValueAccessor<std::vector<float>>& adapter) override
@@ -1649,51 +1634,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                                                                     groups);
             break;
         }
-        case OP_TYPEID::GRUCell:
-        {
-            auto hidden_size = node_js.at("hidden_size").get<size_t>();
-            auto clip = node_js.at("clip").get<float>();
-            auto activations = node_js.at("activations").get<vector<string>>();
-            auto activation_alpha = node_js.at("activations_alpha").get<vector<float>>();
-            auto activation_beta = node_js.at("activations_beta").get<vector<float>>();
-            auto linear_before_reset = node_js.at("linear_before_reset").get<bool>();
-            switch (args.size())
-            {
-            case 4:
-                node = make_shared<op::GRUCell>(args[0],
-                                                args[1],
-                                                args[2],
-                                                args[3],
-                                                hidden_size,
-                                                activations,
-                                                activation_alpha,
-                                                activation_beta,
-                                                clip,
-                                                linear_before_reset);
-                break;
-            case 5:
-                node = make_shared<op::GRUCell>(args[0],
-                                                args[1],
-                                                args[2],
-                                                args[3],
-                                                hidden_size,
-                                                args[4],
-                                                activations,
-                                                activation_alpha,
-                                                activation_beta,
-                                                clip,
-                                                linear_before_reset);
-                break;
-            default: throw runtime_error("GRUCell constructor not supported in serializer");
-            }
-            break;
-        }
         case OP_TYPEID::HardSigmoid:
         {
             node = make_shared<op::HardSigmoid>(args[0], args[1], args[2]);
             break;
-        }
-        case OP_TYPEID::Interpolate: { break;
         }
         case OP_TYPEID::LayerNorm:
         {
@@ -1998,6 +1942,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Negative:
         {
             node = make_shared<op::Negative>(args[0]);
+            break;
+        }
+        case OP_TYPEID::NonZero_v3:
+        {
+            auto target_type = read_element_type(node_js.at("index_element_type"));
+            node = make_shared<op::v3::NonZero>(args[0], target_type);
             break;
         }
         case OP_TYPEID::NormalizeL2:
@@ -2319,7 +2269,12 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::RegionYolo: { break;
         }
-        case OP_TYPEID::ReorgYolo: { break;
+        case OP_TYPEID::ReorgYolo:
+        {
+            break;
+            const auto strides = node_js.at("strides").get<vector<size_t>>();
+            node = make_shared<op::ReorgYolo>(args[0], strides);
+            break;
         }
         case OP_TYPEID::Round:
         {
@@ -2382,8 +2337,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::ShuffleChannels:
         {
             const auto axis = node_js.at("axis").get<size_t>();
-            const auto groups = node_js.at("groups").get<size_t>();
-            node = make_shared<op::ShuffleChannels>(args[0], axis, groups);
+            const auto group = node_js.at("group").get<size_t>();
+            node = make_shared<op::ShuffleChannels>(args[0], axis, group);
             break;
         }
         case OP_TYPEID::Sigmoid:
@@ -2561,7 +2516,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             auto compute_max = node_js.at("compute_max").get<bool>();
             auto target_type = read_element_type(node_js.at("index_element_type"));
             op::TopKSortType sort =
-                get_or_default<op::TopKSortType>(node_js, "sort", op::TopKSortType::SORT_VALUES);
+                get_or_default<op::TopKSortType>(node_js, "sort", op::TopKSortType::value);
             if (has_key(node_js, "top_k_axis"))
             {
                 auto top_k_axis = node_js.at("top_k_axis").get<size_t>();
@@ -3041,7 +2996,11 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::RegionYolo: { break;
     }
-    case OP_TYPEID::ReorgYolo: { break;
+    case OP_TYPEID::ReorgYolo:
+    {
+        auto tmp = static_cast<const op::ReorgYolo*>(&n);
+        node["strides"] = tmp->get_strides();
+        break;
     }
     case OP_TYPEID::Round: { break;
     }
@@ -3195,17 +3154,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["bias"] = tmp->get_bias();
         break;
     }
-    case OP_TYPEID::GRUCell:
-    {
-        auto tmp = static_cast<const op::GRUCell*>(&n);
-        node["hidden_size"] = tmp->get_hidden_size();
-        node["clip"] = tmp->get_clip();
-        node["activations"] = tmp->get_activations();
-        node["activations_alpha"] = tmp->get_activations_alpha();
-        node["activations_beta"] = tmp->get_activations_beta();
-        node["linear_before_reset"] = tmp->get_linear_before_reset();
-        break;
-    }
     case OP_TYPEID::GroupConvolution:
     {
         auto tmp = static_cast<const op::GroupConvolution*>(&n);
@@ -3242,8 +3190,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::HardSigmoid: { break;
-    }
-    case OP_TYPEID::Interpolate: { break;
     }
     case OP_TYPEID::LayerNorm:
     {
@@ -3643,7 +3589,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         const auto tmp = static_cast<const op::ShuffleChannels*>(&n);
         node["axis"] = tmp->get_axis();
-        node["groups"] = tmp->get_groups();
+        node["group"] = tmp->get_group();
         break;
     }
     case OP_TYPEID::Sigmoid: { break;

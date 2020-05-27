@@ -18,12 +18,12 @@ include(ExternalProject)
 
 # Includes blas 3.8.0 in mkldnn
 set(NGRAPH_MKLDNN_SHORT_VERSION 1)
-set(NGRAPH_MKLDNN_FULL_VERSION 1.2.0.0)
+set(NGRAPH_MKLDNN_FULL_VERSION 1.4.0.0)
 set(NGRAPH_MKLDNN_MKLML_ASSET_VERSION "v0.21")
-set(NGRAPH_MKLDNN_VERSION "v1.2")
+set(NGRAPH_MKLDNN_VERSION "v1.4")
 set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
 set(NGRAPH_MKLDNN_MKLML_WIN32_VERSION "2020.0.20190813")
-set(NGRAPH_MKLDNN_GIT_TAG "v1.2")
+set(NGRAPH_MKLDNN_GIT_TAG "v1.4")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
@@ -90,7 +90,7 @@ endif()
 
 # This section sets up MKL as an external project to be used later by MKLDNN
 
-set(MKLURLROOT "https://github.com/intel/mkl-dnn/releases/download/${NGRAPH_MKLDNN_MKLML_ASSET_VERSION}/")
+set(MKLURLROOT "https://github.com/oneapi-src/oneDNN/releases/download/${NGRAPH_MKLDNN_MKLML_ASSET_VERSION}/")
 set(MKLVERSION ${NGRAPH_MKLDNN_MKLML_VERSION})
 set(MKLWIN32VERSION ${NGRAPH_MKLDNN_MKLML_WIN32_VERSION})
 if (LINUX)
@@ -186,7 +186,7 @@ else()
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
 endif()
 
-set(MKLDNN_GIT_REPO_URL https://github.com/intel/mkl-dnn)
+set(MKLDNN_GIT_REPO_URL https://github.com/oneapi-src/oneDNN)
 set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
 set(MKLDNN_PATCH_FILE mkldnn_v1.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
@@ -210,13 +210,10 @@ if (WIN32)
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
-            -DMKLDNN_BUILD_TESTS=FALSE
-            -DMKLDNN_BUILD_EXAMPLES=FALSE
+            -DDNNL_BUILD_TESTS=FALSE
+            -DDNNL_BUILD_EXAMPLES=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-            -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
-            -DMKLROOT=${MKL_ROOT}
+            -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
@@ -245,16 +242,13 @@ else()
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
         CMAKE_ARGS
             ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DWITH_TEST=FALSE
-            -DWITH_EXAMPLE=FALSE
-            -DMKLDNN_BUILD_TESTS=FALSE
-            -DMKLDNN_BUILD_EXAMPLES=FALSE
+            -DDNNL_BUILD_TESTS=FALSE
+            -DDNNL_BUILD_EXAMPLES=FALSE
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
             ${MKLDNN_RPATH}
-            -DMKLDNN_ENABLE_CONCURRENT_EXEC=ON
-            -DMKLROOT=${MKL_ROOT}
+            -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DMKLDNN_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
-            "-DARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${MKLDNN_FLAG}"
+            "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${MKLDNN_FLAG}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"

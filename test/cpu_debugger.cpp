@@ -39,23 +39,9 @@
 using namespace ngraph;
 using namespace std;
 
-bool static is_codegen_mode()
-{
-    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
-    ;
-    return codegen_mode;
-}
-
 // These tests are for DEX mode only.
 TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -93,13 +79,6 @@ TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
 
 TEST(debugger, MLIR_DISABLE_TEST(stepping))
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -138,13 +117,6 @@ TEST(debugger, MLIR_DISABLE_TEST(stepping))
 
 TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -186,13 +158,6 @@ TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
 
 TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
@@ -232,13 +197,6 @@ TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 
 TEST(debugger, MLIR_DISABLE_TEST(resume))
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);

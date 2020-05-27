@@ -28,13 +28,13 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar_v0)
 {
     Shape input_shape{};
     Shape output_shape{0};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::v0::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -48,13 +48,39 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar)
     EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_scalar_v3)
+{
+    Shape input_shape{};
+    Shape output_shape{0};
+
+    auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
+    auto f =
+        std::make_shared<Function>(OutputVector{std::make_shared<op::v3::ShapeOf>(A),
+                                                std::make_shared<op::v3::ShapeOf>(A, element::i32)},
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, input_shape);
+    copy_data(a, vector<float>{0});
+    auto result64 = backend->create_tensor(element::i64, output_shape);
+    auto result32 = backend->create_tensor(element::i32, output_shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result64, result32}, {a});
+    vector<int64_t> expected64{};
+    vector<int32_t> expected32{};
+    EXPECT_EQ(expected64, read_vector<int64_t>(result64));
+    EXPECT_EQ(expected32, read_vector<int32_t>(result32));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector_v0)
 {
     Shape input_shape{2};
     Shape output_shape{1};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::v0::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -68,13 +94,39 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector)
     EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_vector_v3)
+{
+    Shape input_shape{2};
+    Shape output_shape{1};
+
+    auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
+    auto f =
+        std::make_shared<Function>(OutputVector{std::make_shared<op::v3::ShapeOf>(A),
+                                                std::make_shared<op::v3::ShapeOf>(A, element::i32)},
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, input_shape);
+    copy_data(a, vector<float>{2, 0});
+    auto result64 = backend->create_tensor(element::i64, output_shape);
+    auto result32 = backend->create_tensor(element::i32, output_shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result64, result32}, {a});
+    vector<int64_t> expected64{2};
+    vector<int32_t> expected32{2};
+    EXPECT_EQ(expected64, read_vector<int64_t>(result64));
+    EXPECT_EQ(expected32, read_vector<int32_t>(result32));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix_v0)
 {
     Shape input_shape{2, 4};
     Shape output_shape{2};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::v0::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -88,13 +140,39 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix)
     EXPECT_EQ(expected, read_vector<int64_t>(result));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_matrix_v3)
+{
+    Shape input_shape{2, 4};
+    Shape output_shape{2};
+
+    auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
+    auto f =
+        std::make_shared<Function>(OutputVector{std::make_shared<op::v3::ShapeOf>(A),
+                                                std::make_shared<op::v3::ShapeOf>(A, element::i32)},
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, input_shape);
+    copy_data(a, vector<float>(2 * 4, 0));
+    auto result64 = backend->create_tensor(element::i64, output_shape);
+    auto result32 = backend->create_tensor(element::i32, output_shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result64, result32}, {a});
+    vector<int64_t> expected64{2, 4};
+    vector<int32_t> expected32{2, 4};
+    EXPECT_EQ(expected64, read_vector<int64_t>(result64));
+    EXPECT_EQ(expected32, read_vector<int32_t>(result32));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d_v0)
 {
     Shape input_shape{2, 4, 8, 16, 32};
     Shape output_shape{5};
 
     auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
-    auto f = std::make_shared<Function>(std::make_shared<op::ShapeOf>(A), ParameterVector{A});
+    auto f = std::make_shared<Function>(std::make_shared<op::v0::ShapeOf>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -106,4 +184,30 @@ NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d)
     handle->call_with_validate({result}, {a});
     vector<int64_t> expected{2, 4, 8, 16, 32};
     EXPECT_EQ(expected, read_vector<int64_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, shape_of_5d_v3)
+{
+    Shape input_shape{2, 4, 8, 16, 32};
+    Shape output_shape{5};
+
+    auto A = std::make_shared<op::Parameter>(element::f32, input_shape);
+    auto f =
+        std::make_shared<Function>(OutputVector{std::make_shared<op::v3::ShapeOf>(A),
+                                                std::make_shared<op::v3::ShapeOf>(A, element::i32)},
+                                   ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::f32, input_shape);
+    copy_data(a, vector<float>(2 * 4 * 8 * 16 * 32, 0));
+    auto result64 = backend->create_tensor(element::i64, output_shape);
+    auto result32 = backend->create_tensor(element::i32, output_shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result64, result32}, {a});
+    vector<int64_t> expected64{2, 4, 8, 16, 32};
+    vector<int32_t> expected32{2, 4, 8, 16, 32};
+    EXPECT_EQ(expected64, read_vector<int64_t>(result64));
+    EXPECT_EQ(expected32, read_vector<int32_t>(result32));
 }

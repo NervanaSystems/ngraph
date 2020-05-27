@@ -21,10 +21,6 @@ if (NGRAPH_CPU_ENABLE)
     add_subdirectory(cpu)
 endif()
 
-if (NGRAPH_GPU_ENABLE)
-    add_subdirectory(gpu)
-endif()
-
 if (NGRAPH_GENERIC_CPU_ENABLE)
     add_subdirectory(gcpu)
 endif()

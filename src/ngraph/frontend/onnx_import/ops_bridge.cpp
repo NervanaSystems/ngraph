@@ -358,6 +358,7 @@ namespace ngraph
             REGISTER_OPERATOR("Sinh", 1, sinh);
             REGISTER_OPERATOR("Size", 1, size);
             REGISTER_OPERATOR("Slice", 1, slice);
+            REGISTER_OPERATOR("Slice", 10, slice);
             REGISTER_OPERATOR("Softmax", 1, softmax);
             REGISTER_OPERATOR("Softplus", 1, softplus);
             REGISTER_OPERATOR("Softsign", 1, softsign);

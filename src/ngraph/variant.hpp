@@ -37,8 +37,7 @@ namespace ngraph
             return nullptr;
         }
 
-        virtual std::shared_ptr<ngraph::Variant>
-            merge(const std::vector<std::shared_ptr<const ngraph::Node>>& nodes)
+        virtual std::shared_ptr<ngraph::Variant> merge(const ngraph::NodeVector& nodes)
         {
             return nullptr;
         }
@@ -67,10 +66,9 @@ namespace ngraph
     };
 
     template <>
-    class VariantWrapper<std::string> : public VariantImpl<std::string>
+    class NGRAPH_API VariantWrapper<std::string> : public VariantImpl<std::string>
     {
     public:
-        NGRAPH_API
         static constexpr VariantTypeInfo type_info{"Variant::std::string", 0};
         const VariantTypeInfo& get_type_info() const override { return type_info; }
         VariantWrapper(const value_type& value)
@@ -80,10 +78,9 @@ namespace ngraph
     };
 
     template <>
-    class VariantWrapper<int64_t> : public VariantImpl<int64_t>
+    class NGRAPH_API VariantWrapper<int64_t> : public VariantImpl<int64_t>
     {
     public:
-        NGRAPH_API
         static constexpr VariantTypeInfo type_info{"Variant::int64_t", 0};
         const VariantTypeInfo& get_type_info() const override { return type_info; }
         VariantWrapper(const value_type& value)

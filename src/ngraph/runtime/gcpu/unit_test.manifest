@@ -7,6 +7,7 @@ convert_bf16_float32
 GCPU.onnx_model_quant_conv_linear
 GCPU.onnx_top_k_opset_10
 
-#ONNX Flatten with dynamic reshape
-flatten_axis
-flatten_neg_axis
+# Need use evaluate, only applicable to INTERPRETER
+non_zero
+non_zero_all_1s
+non_zero_all_0s

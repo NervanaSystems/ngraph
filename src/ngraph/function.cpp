@@ -72,7 +72,7 @@ Function::Function(const NodeVector& results,
 Function::Function(const std::shared_ptr<Node>& result,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : Function(NodeVector{result}, parameters, name)
+    : Function(result->outputs(), parameters, name)
 {
 }
 

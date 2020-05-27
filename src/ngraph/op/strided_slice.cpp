@@ -16,7 +16,16 @@
 
 #include "ngraph/op/strided_slice.hpp"
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/experimental/shape_of.hpp"
+#include "ngraph/op/gather.hpp"
+#include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/strided_slice.hpp"
+#include "ngraph/slice_plan.hpp"
+#include "ngraph/type/element_type_traits.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <algorithm>
@@ -45,6 +54,37 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    shared_ptr<Node> calculate_default_strides(const Output<Node>& begin, const Output<Node>& end)
+    {
+        const auto begin_pshape = begin.get_partial_shape();
+        const auto end_pshape = end.get_partial_shape();
+
+        size_t strides_length = 0;
+        if (begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1 &&
+            begin_pshape[0].is_static())
+        {
+            strides_length = begin_pshape[0].get_length();
+        }
+        else if (end_pshape.rank().is_static() && end_pshape.rank().get_length() == 1 &&
+                 end_pshape[0].is_static())
+        {
+            strides_length = end_pshape[0].get_length();
+        }
+        else // dynamic case
+        {
+            NGRAPH_CHECK(begin_pshape.rank().is_static() && begin_pshape.rank().get_length() == 1,
+                         "Begin input must be 1D");
+            return std::make_shared<op::v1::Broadcast>(op::Constant::create(element::i64, {}, {1}),
+                                                       std::make_shared<op::ShapeOf>(begin));
+        }
+
+        return op::Constant::create(
+            element::i64, Shape{strides_length}, vector<int64_t>(strides_length, 1));
+    }
+}
+
 op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
                                    const Output<Node>& begin,
                                    const Output<Node>& end,
@@ -56,9 +96,7 @@ op::v1::StridedSlice::StridedSlice(const Output<Node>& data,
     : StridedSlice(data,
                    begin,
                    end,
-                   op::Constant::create(element::i64,
-                                        Shape{begin_mask.size()},
-                                        vector<int64_t>(begin_mask.size(), 1)),
+                   calculate_default_strides(begin, end),
                    begin_mask,
                    end_mask,
                    new_axis_mask,
@@ -193,4 +231,87 @@ void op::v1::StridedSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                              const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for StridedSlice");
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool evaluate(const HostTensorPtr& in, const SlicePlan& sp, const HostTensorPtr& out)
+
+    {
+        auto in_shape = in->get_shape();
+        out->set_shape(sp.reshape_out_shape);
+        runtime::reference::strided_slice(
+            in->get_data_ptr<ET>(), out->get_data_ptr<ET>(), in_shape, sp);
+        return true;
+    }
+
+    bool evaluate_strided_slice(const HostTensorPtr& in,
+                                const HostTensorPtr& begin,
+                                const HostTensorPtr& end,
+                                const HostTensorPtr& stride,
+                                const AxisSet& begin_mask,
+                                const AxisSet& end_mask,
+                                const AxisSet& new_axis_mask,
+                                const AxisSet& shrink_axis_mask,
+                                const AxisSet& ellipsis_mask,
+                                const HostTensorPtr& out)
+    {
+        bool rc = true;
+
+        std::vector<int64_t> begin_const = read_vector<int64_t>(begin);
+        std::vector<int64_t> end_const = read_vector<int64_t>(end);
+        std::vector<int64_t> stride_const = read_vector<int64_t>(stride);
+        SlicePlan slice_plan = make_slice_plan(in->get_shape(),
+                                               begin_const,
+                                               end_const,
+                                               stride_const,
+                                               begin_mask,
+                                               end_mask,
+                                               new_axis_mask,
+                                               shrink_axis_mask,
+                                               ellipsis_mask);
+        switch (in->get_element_type())
+        {
+            TYPE_CASE(i8)(in, slice_plan, out);
+            break;
+            TYPE_CASE(i16)(in, slice_plan, out);
+            break;
+            TYPE_CASE(i32)(in, slice_plan, out);
+            break;
+            TYPE_CASE(i64)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u8)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u16)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u32)(in, slice_plan, out);
+            break;
+            TYPE_CASE(u64)(in, slice_plan, out);
+            break;
+            TYPE_CASE(bf16)(in, slice_plan, out);
+            break;
+            TYPE_CASE(f32)(in, slice_plan, out);
+            break;
+            TYPE_CASE(f64)(in, slice_plan, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v1::StridedSlice::evaluate(const HostTensorVector& output_values,
+                                    const HostTensorVector& input_values)
+{
+    return evaluate_strided_slice(input_values[0],
+                                  input_values[1],
+                                  input_values[2],
+                                  input_values[3],
+                                  convert_mask_to_axis_set(get_begin_mask()),
+                                  convert_mask_to_axis_set(get_end_mask()),
+                                  convert_mask_to_axis_set(get_new_axis_mask()),
+                                  convert_mask_to_axis_set(get_shrink_axis_mask()),
+                                  convert_mask_to_axis_set(get_ellipsis_mask()),
+                                  output_values[0]);
 }

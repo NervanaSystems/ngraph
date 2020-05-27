@@ -1356,6 +1356,7 @@ namespace ngraph
                 {
                     writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
                     writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            {" << join(lrn->get_reduction_axes()) << "},\n";
                     writer << "            " << out[0].get_name() << ",\n";
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
                     writer << "            " << lrn->get_alpha() << ",\n";
@@ -1770,7 +1771,7 @@ namespace ngraph
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
                 auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
                 auto type_name = embed->get_element_type().c_type_string();
-                auto element_count = shape_size(embed->get_argument(0)->get_shape());
+                auto element_count = shape_size(embed->get_input_shape(0));
 
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
@@ -1920,8 +1921,50 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << ", "
+                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << "[i], "
                        << args[1].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Asinh)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = asinh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Acosh)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = acosh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Atanh)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = atanh(" << args[0].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }
@@ -1978,15 +2021,17 @@ namespace ngraph
 
                 writer.block_begin();
                 writer << "reference::topk<" << args[0].get_type() << ", "
-                       << out[0].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
+                       << out[0].get_element_type().c_type_string() << ">(\n";
+                writer << "                   " << args[0].get_name() << ",\n";
                 writer << "                   " << out[0].get_name() << ",\n";
                 writer << "                   " << out[1].get_name() << ",\n";
                 writer << "                   {" << join(args[0].get_shape()) << "},\n";
                 writer << "                   {" << join(out[0].get_shape()) << "},\n";
                 writer << "                   " << topk->get_top_k_axis() << ",\n";
                 writer << "                   " << topk->get_k() << ",\n";
-                writer << "                   " << topk->get_compute_max() << ");\n";
+                writer << "                   " << topk->get_compute_max() << ",\n";
+                writer << "                   ngraph::op::TopKSortType::" << topk->get_sort()
+                       << ");\n";
                 writer.block_end();
             }
 
@@ -2311,7 +2356,14 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -2326,7 +2378,15 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = floor(" << args[0].get_name()
+                           << "[i]);\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -2336,14 +2396,21 @@ namespace ngraph
             {
                 (void)external_function;
                 (void)node;
-                writer.block_begin();
                 size_t element_count = out[0].get_size();
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-                writer.block_begin();
-                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
-                writer.block_end();
-                writer.block_end();
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << "reference::copy(";
+                    writer << args[0].get_name() << ",\n";
+                    writer << "                " << out[0].get_name() << ",\n";
+                    writer << "                " << element_count << ");\n";
+                }
+                else
+                {
+                    writer << "reference::round(";
+                    writer << args[0].get_name() << ",\n";
+                    writer << "                 " << out[0].get_name() << ",\n";
+                    writer << "                 " << element_count << ");\n";
+                }
             }
 
             template <>
@@ -3465,7 +3532,6 @@ namespace ngraph
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(product->get_reduction_axes())
                        << "});\n";
                 writer.block_end();
@@ -3493,7 +3559,6 @@ namespace ngraph
                            << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
                     writer << "                         {" << join(max->get_reduction_axes())
                            << "});\n";
                 }
@@ -3535,7 +3600,6 @@ namespace ngraph
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(min->get_reduction_axes())
                        << "});\n";
                 writer.block_end();
@@ -4397,31 +4461,30 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
             {
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
-                writer.block_begin();
                 auto index = external_function->add_state(
                     new ngraph::BernoulliRNGState(gm->get_seed(), gm->get_probability()));
                 writer << "auto state = static_cast<ngraph::BernoulliRNGState*>(ctx->states["
                        << index << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
                 writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
-
                 writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name()
                        << "[0]);\n";
                 writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
                        << "[0]);\n";
-                writer << "if (use_seed == false) \n";
-                writer << "{\n";
-                writer << "    reference::generate_mask(\n";
-                writer << "                " << out[0].get_name() << ",\n";
-                writer << "                " << out[0].get_size() << ",\n";
-                writer << "                state, training);\n";
-                writer << "}\n";
-                writer << "else {\n";
-                writer << "       reference::generate_mask_no_state(\n";
-                writer << "           " << out[0].get_name() << ",\n";
-                writer << "           " << out[0].get_size() << ",\n";
-                writer << "           training, seed, keep_prob);\n";
-                writer << "}\n";
+                writer << "if (use_seed == false)\n";
+                writer.block_begin();
+                writer << "reference::generate_mask(\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state,\n";
+                writer << "            training);\n";
+                writer.block_end();
+                writer << "else\n";
+                writer.block_begin();
+                writer << "reference::generate_mask_no_state(\n";
+                writer << "    " << out[0].get_name() << ",\n";
+                writer << "    " << out[0].get_size() << ",\n";
+                writer << "    training, seed, keep_prob);\n";
                 writer.block_end();
             }
 
@@ -4438,26 +4501,26 @@ namespace ngraph
                 auto index = external_function->add_state(new UniformRNGState());
                 auto fixed_seed = ru->get_fixed_seed();
 
-                writer << "auto state = static_cast<ngraph::RandomUniformRNGState*>(ctx->states["
-                       << index << "]);\n";
+                writer << "auto state = static_cast<ngraph::UniformRNGState*>(ctx->states[" << index
+                       << "]);\n";
                 writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
                        << "[0]);\n";
 
                 writer << "if (use_fixed_seed == false) \n";
                 writer << "{\n";
-                writer << "    reference::random_uniform<" << args[0].get_type() << ">(\n";
+                writer << "    reference::random_uniform<" << out[0].get_type() << ">(\n";
                 writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   " << args[0].get_name() << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   *" << args[0].get_name() << ",\n";
+                writer << "                   *" << args[1].get_name() << ",\n";
                 writer << "                   " << out[0].get_size() << ",\n";
                 writer << "                   state);\n";
                 writer << "}\n";
                 writer << "else {\n";
-                writer << "    reference::random_uniform_with_fixed_seed<" << args[0].get_type()
+                writer << "    reference::random_uniform_with_fixed_seed<" << out[0].get_type()
                        << ">(\n";
                 writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   " << args[0].get_name() << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   *" << args[0].get_name() << ",\n";
+                writer << "                   *" << args[1].get_name() << ",\n";
                 writer << "                   " << out[0].get_size() << ",\n";
                 writer << "                   " << fixed_seed << ");\n";
                 writer << "}\n";

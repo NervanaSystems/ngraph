@@ -624,7 +624,7 @@ namespace ngraph
 
                     if ((node->get_input_element_type(0) != element::f32 &&
                          convolution_algo != mkldnn::algorithm::convolution_direct) ||
-                        convolution->get_argument(0)->get_shape()[1] <= 8)
+                        convolution->get_input_shape(0)[1] <= 8)
                     {
                         convolution_algo = mkldnn::algorithm::convolution_direct;
                     }
