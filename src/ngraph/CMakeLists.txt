@@ -19,6 +19,7 @@ set (SRC
     assertion.hpp
     attribute_adapter.cpp
     attribute_adapter.hpp
+    attribute_visitor.cpp
     attribute_visitor.hpp
     autodiff/adjoints.cpp
     autodiff/adjoints.hpp
@@ -91,6 +92,7 @@ set (SRC
     except.hpp
     factory.cpp
     factory.hpp
+    factory_adapter.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -594,6 +596,8 @@ set (SRC
     pass/propagate_cacheability.hpp
     pass/reshape_elimination.cpp
     pass/reshape_elimination.hpp
+    pass/reshape_elimination_v1.cpp
+    pass/reshape_elimination_v1.hpp
     pass/reshape_sinking.cpp
     pass/reshape_sinking.hpp
     pass/serialize.cpp

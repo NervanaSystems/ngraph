@@ -39,6 +39,7 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
+                CPU_Backend(const std::string& config);
                 ~CPU_Backend() override;
 
                 std::shared_ptr<CPU_CallFrame>
@@ -81,6 +82,7 @@ namespace ngraph
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
                 Allocator* m_allocator;
+                bool m_codegen_enable;
             };
         }
     }
