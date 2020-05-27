@@ -199,7 +199,7 @@ void Node::set_arguments(const OutputVector& arguments)
     for (auto& output : arguments)
     {
         auto output_node = output.get_node();
-        auto& output_descriptor = output_node->get_outputs().at(output.get_index());
+        auto& output_descriptor = output_node->get_output_descriptors().at(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
     }
 }
@@ -289,12 +289,12 @@ void Node::set_output_type(size_t i, const element::Type& element_type, const Pa
     get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
-std::deque<descriptor::Output>& Node::get_outputs()
+std::deque<descriptor::Output>& Node::get_output_descriptors()
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_outputs() const
+const std::deque<descriptor::Output>& Node::get_output_descriptors() const
 {
     return m_outputs;
 }
