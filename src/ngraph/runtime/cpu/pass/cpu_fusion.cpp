@@ -609,28 +609,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         {
             return false;
         }
-        NodeVector mgoes(get_output_elements(m_bn));
-        if (mgoes[0]->get_users().size() > 1)
+        if (m_bn->output(0).get_target_inputs().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
             return false;
         }
 
-        mgoes[0] = m.get_match_root(); // replace relu instead of its GetOutputElement
-
         auto bn_relu = std::make_shared<ngraph::op::BatchNormTrainingRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 
-        auto bn_relu_output = std::make_shared<ngraph::op::GetOutputElement>(bn_relu, 0);
-        auto bn_relu_mean = std::make_shared<ngraph::op::GetOutputElement>(bn_relu, 1);
-        auto bn_relu_var = std::make_shared<ngraph::op::GetOutputElement>(bn_relu, 2);
+        m_bn->output(0).replace(bn_relu->output(0));
+        m_bn->output(1).replace(bn_relu->output(1));
+        m_bn->output(2).replace(bn_relu->output(2));
 
-        std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
-
-        for (size_t i = 0; i < mgoes.size(); i++)
-        {
-            ngraph::replace_node(mgoes.at(i), new_nodes[i]);
-        }
         return true;
     };
 
