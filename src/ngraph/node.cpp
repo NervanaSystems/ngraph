@@ -199,7 +199,7 @@ void Node::set_arguments(const OutputVector& arguments)
     for (auto& output : arguments)
     {
         auto output_node = output.get_node();
-        auto& output_descriptor = output_node->get_output_descriptors().at(output.get_index());
+        auto& output_descriptor = output_node->get_output_descriptor(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
     }
 }
@@ -297,6 +297,16 @@ std::deque<descriptor::Output>& Node::get_output_descriptors()
 const std::deque<descriptor::Output>& Node::get_output_descriptors() const
 {
     return m_outputs;
+}
+
+size_t Node::get_input_count() const
+{
+    return m_inputs.size();
+}
+
+size_t Node::get_output_count() const
+{
+    return m_outputs.size();
 }
 
 bool Node::is_output() const

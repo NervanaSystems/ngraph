@@ -330,6 +330,9 @@ namespace ngraph
         const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 
+        size_t get_input_count() const;
+        size_t get_output_count() const;
+
         /// Get control dependencies registered on the node
         const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
@@ -575,10 +578,10 @@ namespace ngraph
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
-    private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
 
+    private:
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;

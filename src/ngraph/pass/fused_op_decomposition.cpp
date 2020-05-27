@@ -67,8 +67,8 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             for (size_t j = 0; j < output_node->get_output_descriptors().size(); j++, i++)
             {
                 set<descriptor::Input*> fop_users{
-                    begin(node->get_output_descriptors().at(i).get_inputs()),
-                    end(node->get_output_descriptors().at(i).get_inputs())};
+                    begin(node->get_output_descriptor(i).get_inputs()),
+                    end(node->get_output_descriptor(i).get_inputs())};
                 for (auto fop_user : fop_users)
                 {
                     if (auto goe = as_type<op::GetOutputElement>(fop_user->get_raw_pointer_node()))
@@ -78,18 +78,18 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                         {
                             // Replace GOE users
                             set<descriptor::Input*> goe_users{
-                                begin(goe->get_output_descriptors().at(0).get_inputs()),
-                                end(goe->get_output_descriptors().at(0).get_inputs())};
+                                begin(goe->get_output_descriptor(0).get_inputs()),
+                                end(goe->get_output_descriptor(0).get_inputs())};
                             for (auto goe_user : goe_users)
                             {
                                 goe_user->replace_output(
-                                    output_node->get_output_descriptors().at(j));
+                                    output_node->get_output_descriptor(j));
                             }
                         }
                     }
                     else
                     {
-                        fop_user->replace_output(output_node->get_output_descriptors().at(j));
+                        fop_user->replace_output(output_node->get_output_descriptor(j));
                     }
                 }
             }
