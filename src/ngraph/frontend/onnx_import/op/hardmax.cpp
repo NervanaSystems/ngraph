@@ -62,8 +62,8 @@ namespace ngraph
                             coerced_tensor,
                             default_opset::Constant::create(ngraph::element::i64, Shape{}, {1}),
                             indices_axis,
-                            default_opset::TopK::Mode::MAX,
-                            default_opset::TopK::SortType::NONE),
+                            default_opset::TopK::Mode::max,
+                            default_opset::TopK::SortType::none),
                         1);
 
                     const auto on_value =
