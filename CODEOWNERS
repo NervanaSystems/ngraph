@@ -29,7 +29,7 @@ project/governance.rst              @adstraw
 /src/ngraph/builder/                @silee2
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
-/src/ngraph/frontend/ATen/          @silee2
+/src/ngraph/frontend/               @silee2
 /src/ngraph/op/                     @diyessi
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
 /src/ngraph/pass/                   @diyessi
