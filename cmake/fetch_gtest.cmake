@@ -14,27 +14,24 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(NOT NGRAPH_TEST_UTIL_ENABLE)
-    return()
+if(NOT TARGET gtest)
+    include(FetchContent)
+
+    FetchContent_Declare(
+      googletest
+      GIT_REPOSITORY https://github.com/google/googletest.git
+      GIT_TAG        release-1.8.1
+      GIT_SHALLOW    1
+    )
+
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+    FetchContent_GetProperties(googletest)
+    if(NOT googletest_POPULATED)
+      FetchContent_Populate(googletest)
+      add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR})
+    endif()
 endif()
 
-set (SRC
-    autodiff/backprop_function.cpp
-    all_close_f.cpp
-    float_util.cpp
-    test_tools.cpp
-    test_control.cpp
-    test_case.cpp
-    provenance_enabler.hpp
-    visitor.hpp
-)
-
-add_library(ngraph_test_util STATIC ${SRC})
-if(NGRAPH_LIB_VERSIONING_ENABLE)
-    set_target_properties(ngraph_test_util PROPERTIES
-        VERSION ${NGRAPH_VERSION})
-endif()
-target_include_directories(ngraph_test_util PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/..)
-target_link_libraries(ngraph_test_util PRIVATE ngraph libgtest)
-
-install(TARGETS ngraph_test_util DESTINATION ${NGRAPH_INSTALL_LIB})
+add_library(libgtest INTERFACE)
+target_link_libraries(libgtest INTERFACE gtest gmock)
