@@ -684,10 +684,10 @@ void op::v1::TopK::set_k(size_t k)
 bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
     Shape arg_shape = inputs[0]->get_shape();
-    // 1. get axis, mode ( max/min), sort_type
+    // 1. get axis, mode (max/min), sort_type
     set_axis(arg_shape.size(), m_axis);
     size_t axis = get_axis();
-    bool compute_max = get_mode() == TopKMode::MAX ? true : false;
+    bool compute_max = get_mode() == TopKMode::max ? true : false;
     SortType sort_type = get_sort_type();
 
     // 2. get value of k - from constant node or from HT
