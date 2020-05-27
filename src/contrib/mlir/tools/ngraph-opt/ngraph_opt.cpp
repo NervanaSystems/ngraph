@@ -84,5 +84,6 @@ int main(int argc, char** argv)
                                     passPipeline,
                                     split_input_file,
                                     verify_diagnostics,
-                                    verify_passes));
+                                    verify_passes,
+                                    /*allowUnregisteredDialects = */ false));
 }
