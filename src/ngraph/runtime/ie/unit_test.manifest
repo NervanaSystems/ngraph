@@ -761,8 +761,8 @@ dyn_convolution_backprop_filter
 # Cannot cast ngraph node PartialSlice to CNNLayer!
 partial_slice_static
 partial_slice_partial_shape
-partial_slice_unkown_rank
-partial_slice_bprop_unkown_rank
+partial_slice_unknown_rank
+partial_slice_bprop_unknown_rank
 
 # Pad Pad_524448 with not constant pad_value is not allowed
 pad_exterior_1d

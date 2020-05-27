@@ -44,12 +44,13 @@ using namespace std;
 runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              ngraph::pass::PassConfig& pass_config,
                                              Allocator* allocator,
-                                             bool performance_counters_enabled)
+                                             bool performance_counters_enabled,
+                                             bool codegen_enable)
 {
     FunctionInstance& instance = m_function_instance;
     if (instance.m_external_function == nullptr)
     {
-        instance.m_external_function = make_shared<CPU_ExternalFunction>(func);
+        instance.m_external_function = make_shared<CPU_ExternalFunction>(func, codegen_enable);
         instance.m_external_function->m_emit_timing = performance_counters_enabled;
         auto cf = instance.m_external_function->make_call_frame(pass_config, allocator);
         instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
