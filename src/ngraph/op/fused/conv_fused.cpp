@@ -197,7 +197,7 @@ shared_ptr<Node> op::ConvolutionBias::clone_with_new_inputs(const OutputVector& 
                                         m_with_relu);
 }
 
-NodeVector op::ConvolutionBias::decompose_op() const
+OutputVector op::ConvolutionBias::decompose_op() const
 {
     auto conv = make_shared<op::Convolution>(input_value(0),
                                              input_value(1),
@@ -338,7 +338,7 @@ shared_ptr<Node> op::ConvolutionBiasBackpropFiltersBias::clone_with_new_inputs(
                                                            m_data_dilation_strides_forward);
 }
 
-NodeVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
+OutputVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
 {
     auto conv_bprop = make_shared<op::ConvolutionBackpropFilters>(input_value(0),
                                                                   m_filters_shape,
@@ -457,7 +457,7 @@ std::shared_ptr<Node>
                                            m_with_relu);
 }
 
-NodeVector op::ConvolutionBiasAdd::decompose_op() const
+OutputVector op::ConvolutionBiasAdd::decompose_op() const
 {
     auto conv = make_shared<op::Convolution>(input_value(0),
                                              input_value(1),
