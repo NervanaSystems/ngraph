@@ -241,16 +241,15 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+    const shared_ptr<ngraph::Function>& function, bool codegen_enable)
     : m_function(function)
-    , m_release_function(release_function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
     , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!getenv_bool("NGRAPH_CODEGEN"))
+    , m_direct_execution(!codegen_enable)
 #else
     , m_direct_execution(true)
 #endif
@@ -274,9 +273,9 @@ public:
     StaticInitializers(string directory) { ngraph::file_util::remove_directory(directory); }
 };
 
-#if !defined(NGRAPH_DEX_ONLY)
+static const string s_debug_dir = "cpu_codegen";
 
-static const string s_output_dir = "cpu_codegen";
+#if !defined(NGRAPH_DEX_ONLY)
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -309,8 +308,6 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     ss << line.str();
     return ss.str();
 }
-
-static StaticInitializers s_static_initializers(s_output_dir);
 
 #define TI(x) type_index(typeid(x))
 
@@ -371,6 +368,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
     {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
+    {TI(ngraph::op::Asinh), &runtime::cpu::CPU_Emitter::emit<op::Asinh>},
+    {TI(ngraph::op::Acosh), &runtime::cpu::CPU_Emitter::emit<op::Acosh>},
+    {TI(ngraph::op::Atanh), &runtime::cpu::CPU_Emitter::emit<op::Atanh>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -455,6 +455,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
+    {TI(ngraph::op::RandomUniform), &runtime::cpu::CPU_Emitter::emit<op::RandomUniform>},
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
     {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
@@ -529,6 +530,16 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     }
 #endif
 
+// Any #ifdef in cpu_runtime_context.hpp MUST be included in here or the CPURuntimeContext
+// structure in the codegen code will be different from the cpu backend compiled version and
+// mayhem will ensue
+#if defined(NGRAPH_TBB_ENABLE)
+    writer += "#define NGRAPH_TBB_ENABLE\n";
+#endif
+#if defined(NGRAPH_MLIR_ENABLE)
+    writer += "#define NGRAPH_MLIR_ENABLE\n";
+#endif
+
     writer +=
         R"(
 #include <cmath>
@@ -553,6 +564,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
@@ -570,12 +582,14 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/random_uniform.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/slice.hpp"
@@ -589,6 +603,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
 using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
+using namespace ngraph;
 
 )";
 
@@ -948,7 +963,7 @@ using namespace ngraph::runtime;
         // Op Control
         if (!node->is_parameter() && !node->is_constant())
         {
-            writer << "if (ctx->first_iteration ";
+            writer << "if (ctx->first_iteration";
             for (const descriptor::Input& input : node->get_inputs())
             {
                 const descriptor::Output& output = input.get_output();
@@ -973,7 +988,7 @@ using namespace ngraph::runtime;
             {
                 writer << " || 1";
             }
-            writer << ") {\n";
+            writer << ")\n{\n";
             writer.indent++;
         }
 
@@ -1027,7 +1042,7 @@ using namespace ngraph::runtime;
                 writer << "t_en[" << tensor_index_map[output_name] << "] = true;\n";
             }
             writer.indent--;
-            writer << "} else {\n";
+            writer << "}\nelse\n{\n";
             writer.indent++;
             for (auto output_name : node_output_names)
             {
@@ -1096,9 +1111,9 @@ using namespace ngraph::runtime;
     writer += "}\n\n";
 
     // TODO: Cleanup and make this a utility function
-    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    string filename = file_util::path_join(s_debug_dir, m_function_name + "_codegen.cpp");
     string code = writer.get_code();
-    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
+    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_debug_dir, filename);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
@@ -1173,7 +1188,7 @@ using namespace ngraph::runtime;
     }
 
     m_is_compiled = true;
-    if (m_release_function && !m_emit_timing)
+    if (!m_emit_timing)
     {
         release_function();
     }
@@ -1448,7 +1463,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 #endif
 
     // stream writer to dump the debug manifest for the DEX
-    static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
@@ -1897,10 +1911,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         }
                     });
 
-                if (m_release_function)
-                {
-                    release_function();
-                }
+                release_function();
             }
             // Execute the flow graph
             (static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>(&(*(ctx->G->begin()))))
@@ -2024,9 +2035,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     m_is_built = true;
 
 #if defined(NGRAPH_TBB_ENABLE)
-    if (m_release_function && !m_use_tbb)
-#else
-    if (m_release_function)
+    if (!m_use_tbb)
 #endif
     {
         release_function();
@@ -2143,10 +2152,7 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
                 }
             }
         }
-        if (m_release_function)
-        {
-            release_function();
-        }
+        release_function();
     }
 #endif
     return m_perf_counters;

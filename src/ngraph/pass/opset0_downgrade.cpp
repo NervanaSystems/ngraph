@@ -807,8 +807,8 @@ namespace
         bool compute_max;
         switch (node->get_mode())
         {
-        case op::v1::TopK::Mode::MAX: compute_max = true; break;
-        case op::v1::TopK::Mode::MIN: compute_max = false; break;
+        case op::v1::TopK::Mode::max: compute_max = true; break;
+        case op::v1::TopK::Mode::min: compute_max = false; break;
         default: break;
         }
 
