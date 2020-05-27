@@ -324,8 +324,8 @@ namespace ngraph
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_outputs() const
+        std::deque<descriptor::Output>& get_output_descriptors() NGRAPH_DEPRECATED("use outputs() instead");
+        const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
