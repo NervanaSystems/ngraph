@@ -50,7 +50,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             // Transfer the new provenance tags to the newly created ops
             for (auto output_node : subgraph_outputs)
             {
-                output_node->add_provenance_tags_above(base_input_values, provenance_tags);
+                output_node.get_node()->add_provenance_tags_above(base_input_values, provenance_tags);
             }
         }
 

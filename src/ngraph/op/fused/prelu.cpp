@@ -40,7 +40,7 @@ bool ngraph::op::v0::PRelu::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-NodeVector op::PRelu::decompose_op() const
+OutputVector op::PRelu::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape();

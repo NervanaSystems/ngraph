@@ -450,10 +450,9 @@ namespace ngraph
                                     bool ignore_output_duplicates = true);
 
     // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
-    // node
-    // or a node that belongs to args
+    // node or a node that belongs to args
     NGRAPH_API
-    NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
+    OutputVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
     NGRAPH_API
     bool is_one(const Output<Node>& reduce_constant);
