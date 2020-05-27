@@ -44,11 +44,12 @@ using namespace ngraph::runtime::ngmlir;
 
 namespace
 {
-    /// NgDialectConversionPass is an MLIR ModulePass Given an nGraph sub-graph, represented as
+    /// NgDialectConversionPass is an MLIR Pass Given an nGraph sub-graph, represented as
     /// CompiledKernel node, it
     /// translates the graph down to nGraph dialect
 
-    class NgDialectConversionPass : public mlir::ModulePass<NgDialectConversionPass>
+    class NgDialectConversionPass
+        : public mlir::PassWrapper<NgDialectConversionPass, mlir::OperationPass<mlir::ModuleOp>>
     {
     public:
         using TensorList = std::vector<descriptor::Tensor*>;
@@ -75,7 +76,7 @@ namespace
         // Converts an nGraph sub-graph to MLIR nGraph dialect.
         void buildNgDialectModule();
         void buildNgDialect(mlir::FuncOp function);
-        void runOnModule() override;
+        void runOnOperation() override;
 
         mlir::Type getMlirType(const descriptor::Tensor* tensor);
         mlir::Type getMlirType(const element::Type& type);
@@ -145,11 +146,11 @@ NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& 
 {
 }
 
-void NgDialectConversionPass::runOnModule()
+void NgDialectConversionPass::runOnOperation()
 {
     TypeList argsTypeList, resultTypeList;
 
-    mlir::ModuleOp module = getModule();
+    mlir::ModuleOp module = getOperation();
     // Retrieve input and output tensors.
     const auto& kernelInputs = m_compiledKernel->get_arguments();
     const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
@@ -230,6 +231,9 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
 
+    auto sign = mlir::NGIntegerType::SignednessSemantics::Signed;
+    auto unsign = mlir::NGIntegerType::SignednessSemantics::Unsigned;
+
     switch (type)
     {
     case ngraph::element::Type_t::undefined:
@@ -240,15 +244,15 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(m_context);
     case ngraph::element::Type_t::f32: return mlir::NGFloatType::getF32(m_context);
     case ngraph::element::Type_t::f64: return mlir::NGFloatType::getF64(m_context);
-    case ngraph::element::Type_t::i8: return mlir::NGIntegerType::getInt8(m_context);
+    case ngraph::element::Type_t::i8: return mlir::NGIntegerType::get(8, sign, m_context);
     case ngraph::element::Type_t::u8:
-    case ngraph::element::Type_t::boolean: return mlir::NGIntegerType::getUInt8(m_context);
-    case ngraph::element::Type_t::i16: return mlir::NGIntegerType::getInt16(m_context);
-    case ngraph::element::Type_t::u16: return mlir::NGIntegerType::getInt16(m_context);
-    case ngraph::element::Type_t::i32: return mlir::NGIntegerType::getInt32(m_context);
-    case ngraph::element::Type_t::u32: return mlir::NGIntegerType::getUInt32(m_context);
-    case ngraph::element::Type_t::i64: return mlir::NGIntegerType::getInt64(m_context);
-    case ngraph::element::Type_t::u64: return mlir::NGIntegerType::getUInt64(m_context);
+    case ngraph::element::Type_t::boolean: return mlir::NGIntegerType::get(8, unsign, m_context);
+    case ngraph::element::Type_t::i16: return mlir::NGIntegerType::get(16, sign, m_context);
+    case ngraph::element::Type_t::u16: return mlir::NGIntegerType::get(16, unsign, m_context);
+    case ngraph::element::Type_t::i32: return mlir::NGIntegerType::get(32, sign, m_context);
+    case ngraph::element::Type_t::u32: return mlir::NGIntegerType::get(32, unsign, m_context);
+    case ngraph::element::Type_t::i64: return mlir::NGIntegerType::get(64, sign, m_context);
+    case ngraph::element::Type_t::u64: return mlir::NGIntegerType::get(64, unsign, m_context);
     }
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
