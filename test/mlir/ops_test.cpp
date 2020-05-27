@@ -39,6 +39,7 @@ OpBuilder createBuilder(MLIRContext* context)
     return builder;
 }
 
+/*
 TEST(MLIR, op_version_interface)
 {
     MLIRContext context;
@@ -136,3 +137,4 @@ TEST(MLIR, ops_attributes)
     auto ceilMode = avgPool.ceilMode();
     EXPECT_TRUE(ceilMode == false);
 }
+*/
