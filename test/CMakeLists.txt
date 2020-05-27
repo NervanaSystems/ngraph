@@ -287,6 +287,7 @@ if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
     if (NOT NGRAPH_DEX_ONLY)
         list(APPEND SRC cpu_codegen.cpp)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "CPU:CODEGEN")
     endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
@@ -375,6 +376,7 @@ set(MULTI_TEST_SRC
     backend/maximum.in.cpp
     backend/min.in.cpp
     backend/minimum.in.cpp
+    backend/mod.in.cpp
     backend/multiple_backends.in.cpp
     backend/multiple_result.in.cpp
     backend/multiply.in.cpp

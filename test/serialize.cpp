@@ -117,11 +117,7 @@ TEST(serialize, friendly_name)
     product->set_friendly_name("Product");
 
     string js = serialize(f, 4);
-    ofstream out("serialize_function.js");
-    out << js;
-
-    istringstream in(js);
-    shared_ptr<Function> sfunc = deserialize(in);
+    shared_ptr<Function> sfunc = deserialize(js);
     auto backend = runtime::Backend::create("INTERPRETER");
     auto handle = backend->compile(sfunc);
 
