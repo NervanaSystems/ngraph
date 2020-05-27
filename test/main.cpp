@@ -69,8 +69,8 @@ int main(int argc, char** argv)
     py::exec(R"(
 import numpy as np
 )",
-            py::globals(),
-            py::dict());
+             py::globals(),
+             py::dict());
 #endif
 
     int rc = RUN_ALL_TESTS();
