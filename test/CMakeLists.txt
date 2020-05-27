@@ -14,10 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    include(ExternalProject)
 
-include(ExternalProject)
-
-ExternalProject_Add(
+    ExternalProject_Add(
         ext_pybind11
         PREFIX ut_pybind11
         GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
@@ -26,22 +26,23 @@ ExternalProject_Add(
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
-)
+    )
 
-ExternalProject_Get_Property(ext_pybind11 SOURCE_DIR)
-add_library(libpybind11 INTERFACE)
-if(CMAKE_VERSION VERSION_LESS 3.12)
-    find_package(PythonLibs REQUIRED)
-    target_include_directories(libpybind11 SYSTEM INTERFACE ${PYTHON_INCLUDE_DIRS} ${SOURCE_DIR}/include)
-    target_link_libraries(libpybind11 INTERFACE ${PYTHON_LIBRARIES})
-else()
-    find_package(Python REQUIRED COMPONENTS Development)
-    #message(STATUS "A:${Python_INCLUDE_DIRS} B:${Python_LIBRARY_DIRS} C:${Python_LIBRARIES}")
-    target_include_directories(libpybind11 SYSTEM INTERFACE ${Python_INCLUDE_DIRS} ${SOURCE_DIR}/include)
-    target_link_libraries(libpybind11 INTERFACE ${Python_LIBRARIES})
+    ExternalProject_Get_Property(ext_pybind11 SOURCE_DIR)
+    add_library(libpybind11 INTERFACE)
+    if(CMAKE_VERSION VERSION_LESS 3.12)
+        find_package(PythonLibs REQUIRED)
+        target_include_directories(libpybind11 SYSTEM INTERFACE ${PYTHON_INCLUDE_DIRS} ${SOURCE_DIR}/include)
+        target_link_libraries(libpybind11 INTERFACE ${PYTHON_LIBRARIES})
+    else()
+        find_package(Python REQUIRED COMPONENTS Development)
+        #message(STATUS "A:${Python_INCLUDE_DIRS} B:${Python_LIBRARY_DIRS} C:${Python_LIBRARIES}")
+        target_include_directories(libpybind11 SYSTEM INTERFACE ${Python_INCLUDE_DIRS} ${SOURCE_DIR}/include)
+        target_link_libraries(libpybind11 INTERFACE ${Python_LIBRARIES})
+    endif()
+
+    add_dependencies(libpybind11 ext_pybind11)
 endif()
-
-add_dependencies(libpybind11 ext_pybind11)
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
@@ -413,7 +414,6 @@ set(MULTI_TEST_SRC
     backend/not.in.cpp
     backend/non_zero.in.cpp
     backend/numeric.in.cpp
-    backend/numpy.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp
     backend/parameter_as_output.in.cpp
@@ -462,6 +462,10 @@ set(MULTI_TEST_SRC
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
     list(APPEND SRC mlir/ops_test.cpp)
+endif()
+
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend/numpy.in.cpp)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -524,7 +528,10 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
-target_link_libraries(unit-test PRIVATE ngraph libpybind11)
+
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    target_link_libraries(unit-test PRIVATE ngraph libpybind11)
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_include_directories(unit-test
