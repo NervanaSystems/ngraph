@@ -382,7 +382,5 @@ namespace ngraph
         {
             return m_pimpl->template get_attribute_value<std::vector<Graph>>(name);
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

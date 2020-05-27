@@ -51,9 +51,6 @@ namespace ngraph
             {
                 NodeVector topk(const Node& node);
             }
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        }
+    }
+}

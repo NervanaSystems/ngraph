@@ -123,7 +123,7 @@ namespace ngraph
                         padding_above,
                         data_dilation_strides);
                 }
-            } // namespace kernel
-        }     // namespace cpu
-    }         // namespace runtime
-} // namespace ngraph
+            }
+        }
+    } // namespace runtime
+}

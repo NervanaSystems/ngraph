@@ -48,9 +48,8 @@ namespace ngraph
                     {
                     }
                 };
-
-            } // namespace error
-        }     // namespace detail
+            }
+        }
 
         std::shared_ptr<Function> import_onnx_model(std::istream& stream)
         {
@@ -110,7 +109,5 @@ namespace ngraph
             return OperatorsBridge::is_operator_registered(
                 op_name, version, domain == "ai.onnx" ? "" : domain);
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

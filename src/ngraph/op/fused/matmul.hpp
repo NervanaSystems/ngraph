@@ -63,5 +63,5 @@ namespace ngraph
             };
         }
         using v0::MatMul;
-    } // namespace op
-} // namespace ngraph
+    }
+}

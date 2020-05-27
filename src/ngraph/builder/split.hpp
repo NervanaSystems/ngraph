@@ -90,5 +90,5 @@ namespace ngraph
             NGRAPH_API
             NodeVector split(const Output<Node>& value, size_t num_splits, int64_t axis = 0);
         }
-    } // namespace builder
-} // namespace ngraph
+    }
+}

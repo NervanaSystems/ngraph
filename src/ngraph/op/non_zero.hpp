@@ -78,5 +78,5 @@ namespace ngraph
             };
         }
         using v3::NonZero;
-    } // namespace op
-} // namespace ngraph
+    }
+}

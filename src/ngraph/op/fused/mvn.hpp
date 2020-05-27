@@ -85,5 +85,5 @@ namespace ngraph
             };
         }
         using v0::MVN;
-    } // namespace op
-} // namespace ngraph
+    }
+}

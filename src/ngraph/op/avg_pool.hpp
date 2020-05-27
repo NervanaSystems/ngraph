@@ -214,7 +214,7 @@ namespace ngraph
                 Shape m_padding_above;
                 bool m_include_padding_in_avg_computation{false};
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -360,9 +360,9 @@ namespace ngraph
                 Shape m_pads_end;
                 bool m_exclude_pad{false};
             };
-        } // namespace v1
+        }
 
         using v0::AvgPool;
         using v0::AvgPoolBackprop;
-    } // namespace op
-} // namespace ngraph
+    }
+}

@@ -64,7 +64,7 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -109,7 +109,7 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
             };
-        } // namespace v1
+        }
 
         using v0::Equal;
     }

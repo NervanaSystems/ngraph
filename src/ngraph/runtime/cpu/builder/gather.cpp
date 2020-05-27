@@ -239,6 +239,6 @@ namespace ngraph
             }
 
             void register_builders_gather_cpp() { REGISTER_OP_BUILDER(Gather); }
-        } // namespace cpu
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

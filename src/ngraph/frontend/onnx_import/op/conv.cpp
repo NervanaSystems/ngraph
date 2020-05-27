@@ -146,11 +146,7 @@ namespace ngraph
                         return {add_bias(conv_node, bias)};
                     }
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

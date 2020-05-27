@@ -243,10 +243,7 @@ namespace ngraph
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 1),
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 2)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

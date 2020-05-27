@@ -66,5 +66,5 @@ namespace ngraph
             };
         }
         using v0::Stack;
-    } // namespace op
-} // namespace ngraph
+    }
+}

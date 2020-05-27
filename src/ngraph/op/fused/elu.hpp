@@ -54,5 +54,5 @@ namespace ngraph
             };
         }
         using v0::Elu;
-    } // namespace op
-} // namespace ngraph
+    }
+}

@@ -49,11 +49,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Log>(log_args)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

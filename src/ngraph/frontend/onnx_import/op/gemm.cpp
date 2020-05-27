@@ -88,8 +88,7 @@ namespace ngraph
                     return NodeVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_6
             {
@@ -136,11 +135,7 @@ namespace ngraph
                     return NodeVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
-
-            } // namespace set_6
-
-        } // namespace op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+            }
+        }
+    }
+}

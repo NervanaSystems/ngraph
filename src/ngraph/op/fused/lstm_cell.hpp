@@ -273,7 +273,7 @@ namespace ngraph
             };
         }
         using v0::LSTMCell;
-    } // namespace op
+    }
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type);
@@ -291,4 +291,4 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::LSTMWeightsFormat>", 1};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-} // namespace ngraph
+}

@@ -32,11 +32,7 @@ namespace ngraph
                     const auto data = node.get_ng_inputs().at(0);
                     return {std::make_shared<default_opset::NonZero>(data, element::i64)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

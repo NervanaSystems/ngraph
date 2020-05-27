@@ -137,9 +137,6 @@ namespace ngraph
                     return get_outputs(top_k);
                 }
             }
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+        }
+    }
+}
