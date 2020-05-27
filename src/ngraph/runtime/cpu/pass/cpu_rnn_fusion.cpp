@@ -700,7 +700,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         {
                             if (goe1_user->get_argument(i) == goe_1)
                             {
-                                goe1_user->get_input_descriptors().at(i).replace_output(
+                                goe1_user->get_input_descriptor(i).replace_output(
                                     ht_slice_per_timestep[index]->get_output_descriptor(0));
                             }
                         }

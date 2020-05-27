@@ -82,8 +82,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                                 end(goe->get_output_descriptor(0).get_inputs())};
                             for (auto goe_user : goe_users)
                             {
-                                goe_user->replace_output(
-                                    output_node->get_output_descriptor(j));
+                                goe_user->replace_output(output_node->get_output_descriptor(j));
                             }
                         }
                     }

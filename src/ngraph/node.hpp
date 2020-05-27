@@ -580,6 +580,8 @@ namespace ngraph
 
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
+        const descriptor::Input& get_input_descriptor(size_t position) const;
+        const descriptor::Output& get_output_descriptor(size_t position) const;
 
     private:
         std::vector<Node*> m_control_dependents;
