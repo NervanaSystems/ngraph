@@ -26,11 +26,15 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 
+#ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
 #include <pybind11/embed.h>
+#endif
 
 using namespace std;
 
+#ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
 namespace py = pybind11;
+#endif
 
 int main(int argc, char** argv)
 {
@@ -59,6 +63,7 @@ int main(int argc, char** argv)
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
+#ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
     // Setup embedded python interpreter and import numpy
     py::scoped_interpreter guard{};
     py::exec(R"(
@@ -66,6 +71,7 @@ import numpy as np
 )",
             py::globals(),
             py::dict());
+#endif
 
     int rc = RUN_ALL_TESTS();
 

@@ -532,6 +532,7 @@ target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
 if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
     target_link_libraries(unit-test PRIVATE ngraph libpybind11)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_UNIT_TEST_NUMPY_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
