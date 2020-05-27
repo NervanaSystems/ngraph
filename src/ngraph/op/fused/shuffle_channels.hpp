@@ -41,12 +41,12 @@ namespace ngraph
                 ///               that the index should be calculated from the back of the input
                 ///               data
                 ///               shape.
-                /// \param groups - number of groups the channel dimension specified by axis should
+                /// \param group - number of groups the channel dimension specified by axis should
                 /// be
                 ///                 split into
                 ShuffleChannels(const Output<Node>& data,
                                 const int axis = 1,
-                                const size_t groups = 1UL);
+                                const size_t group = 1UL);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_zero_based_axis() const;

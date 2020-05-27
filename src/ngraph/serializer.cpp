@@ -2337,8 +2337,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::ShuffleChannels:
         {
             const auto axis = node_js.at("axis").get<size_t>();
-            const auto groups = node_js.at("groups").get<size_t>();
-            node = make_shared<op::ShuffleChannels>(args[0], axis, groups);
+            const auto group = node_js.at("group").get<size_t>();
+            node = make_shared<op::ShuffleChannels>(args[0], axis, group);
             break;
         }
         case OP_TYPEID::Sigmoid:
