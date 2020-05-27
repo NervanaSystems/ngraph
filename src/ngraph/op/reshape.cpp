@@ -183,6 +183,13 @@ shared_ptr<Node> op::Reshape::clone_with_new_inputs(const OutputVector& new_args
     return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
 }
 
+bool op::Reshape::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("input_order", m_input_order);
+    visitor.on_attribute("output_shape", m_output_shape);
+    return true;
+}
+
 void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
@@ -276,6 +283,10 @@ void op::v1::Reshape::validate_and_infer_types()
         if (!(zero_dims && m_special_zero) && !negative_dims)
         {
             auto output_shape = const_shape->get_shape_val();
+            if (output_shape == Shape{0})
+            {
+                output_shape = Shape{};
+            }
             if (get_input_partial_shape(0).is_static())
             {
                 NODE_VALIDATION_CHECK(this,

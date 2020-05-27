@@ -16,8 +16,26 @@
 
 #pragma once
 
-#include <pybind11/pybind11.h>
+#include "ngraph/pass/graph_rewrite.hpp"
+#include "ngraph/pass/pass_util.hpp"
 
-namespace py = pybind11;
+namespace ngraph
+{
+    namespace pass
+    {
+        class ReshapeEliminationV1;
+    }
+}
 
-void regclass_pyngraph_op_SpaceToDepth(py::module m);
+class NGRAPH_API ngraph::pass::ReshapeEliminationV1 : public ngraph::pass::GraphRewrite
+{
+public:
+    ReshapeEliminationV1()
+        : GraphRewrite()
+    {
+        construct_identity_reshape_pattern();
+    }
+
+private:
+    void construct_identity_reshape_pattern();
+};
