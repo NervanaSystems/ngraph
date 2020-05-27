@@ -7,7 +7,6 @@
 /cmake/                             @silee2
 
 /.ci/                               @raramer01
-/.ci/onnx/                          @postrational
 /contrib/docker/                    @raramer01
 
 /.clang-format                      @rkimballn1
@@ -15,21 +14,14 @@
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
 
-/doc/                               @indie
-/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
+/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik
 /doc/*/*/inspection/                @diyessi
-/doc/examples/onnx/                 @arogowie-intel @tsocha
-/README.md                          @indie
 project/introduction.rst            @adstraw
 project/governance.rst              @adstraw
-/changes.md                         @indie @diyessi
-project/doc-contributor-README.rst  @indie
 
 /licenses/                          @diyessi @raramer01
 /LICENSE                            @diyessi @raramer01
-
-/python/                            @postrational
 
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
@@ -38,10 +30,8 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/ATen/          @silee2
-/src/ngraph/frontend/onnx_import/   @postrational
 /src/ngraph/op/                     @diyessi
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
-/src/ngraph/op/experimental/layers  @ilyachur
 /src/ngraph/pass/                   @diyessi
 /src/ngraph/pattern/                @diyessi
 /src/ngraph/runtime/                @rkimballn1
@@ -50,7 +40,6 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv
 /src/ngraph/runtime/dynamic/        @diyessi
 /src/runtime/gpu/                   @rkimballn1
-/src/ngraph/runtime/ie              @arogowie-intel @postrational
 /src/ngraph/runtime/interpreter/    @rkimballn1
 /src/ngraph/runtime/reference/      @diyessi
 /src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @diyessi
