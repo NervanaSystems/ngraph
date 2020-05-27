@@ -7,10 +7,8 @@
 /cmake/                             @silee2
 
 /.ci/                               @raramer01
-/.ci/travis/                        @postrational
 /.ci/onnx/                          @postrational
 /contrib/docker/                    @raramer01
-/.travis.yml                        @postrational
 
 /.clang-format                      @rkimballn1
 /.gitattributes                     @rkimballn1
@@ -41,7 +39,7 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/ATen/          @silee2
 /src/ngraph/frontend/onnx_import/   @postrational
-/src/ngraph/op/                     @diyessi @postrational
+/src/ngraph/op/                     @diyessi
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
 /src/ngraph/op/experimental/layers  @ilyachur
 /src/ngraph/pass/                   @diyessi
