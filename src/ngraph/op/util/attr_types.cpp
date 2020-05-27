@@ -15,6 +15,7 @@
 //*****************************************************************************
 #include <map>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/check.hpp"
 #include "ngraph/enum_names.hpp"
 #include "ngraph/op/util/attr_types.hpp"
@@ -130,18 +131,17 @@ namespace ngraph
     template <>
     NGRAPH_API EnumNames<op::TopKSortType>& EnumNames<op::TopKSortType>::get()
     {
-        static auto enum_names =
-            EnumNames<op::TopKSortType>("op::TopKSortType",
-                                        {{"none", op::TopKSortType::NONE},
-                                         {"index", op::TopKSortType::SORT_INDICES},
-                                         {"value", op::TopKSortType::SORT_VALUES}});
+        static auto enum_names = EnumNames<op::TopKSortType>("op::TopKSortType",
+                                                             {{"none", op::TopKSortType::none},
+                                                              {"index", op::TopKSortType::index},
+                                                              {"value", op::TopKSortType::value}});
         return enum_names;
     }
     template <>
     NGRAPH_API EnumNames<op::TopKMode>& EnumNames<op::TopKMode>::get()
     {
         static auto enum_names = EnumNames<op::TopKMode>(
-            "op::TopKMode", {{"min", op::TopKMode::MIN}, {"max", op::TopKMode::MAX}});
+            "op::TopKMode", {{"min", op::TopKMode::min}, {"max", op::TopKMode::max}});
         return enum_names;
     }
 
@@ -171,5 +171,35 @@ namespace ngraph
         return allowed_values.at(type);
     }
 
-    NGRAPH_API constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+    bool AttributeAdapter<op::AutoBroadcastSpec>::visit_attributes(AttributeVisitor& visitor)
+    {
+        // Maintain back-compatibility
+        std::string name = visitor.finish_structure();
+        visitor.on_attribute(name, m_ref.m_type);
+        visitor.start_structure(name);
+        if (m_ref.m_type == op::AutoBroadcastType::PDPD)
+        {
+            visitor.on_attribute("auto_broadcast_axis", m_ref.m_axis);
+        }
+        return true;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::AutoBroadcastSpec>::type_info;
+
+    bool AttributeAdapter<op::BroadcastModeSpec>::visit_attributes(AttributeVisitor& visitor)
+    {
+        // Maintain back-compatibility
+        std::string name = visitor.finish_structure();
+        visitor.on_attribute(name, m_ref.m_type);
+        visitor.start_structure(name);
+        if (m_ref.m_type == op::BroadcastType::PDPD)
+        {
+            visitor.start_structure(name);
+            visitor.on_attribute("axis", m_ref.m_axis);
+            visitor.finish_structure();
+        }
+        return true;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::BroadcastModeSpec>::type_info;
 }

@@ -2,7 +2,6 @@
 
 | Name | Default | Description |
 | ------------------------------------|:---:| --- |
-| NGRAPH_CODEGEN | |
 | NGRAPH_COMPILER_DEBUGINFO_ENABLE | |
 | NGRAPH_COMPILER_DIAG_ENABLE | |
 | NGRAPH_COMPILER_REPORT_ENABLE | |

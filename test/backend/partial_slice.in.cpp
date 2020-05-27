@@ -100,7 +100,7 @@ NGRAPH_TEST(${BACKEND_NAME}, partial_slice_partial_shape)
     EXPECT_TRUE(test::all_close_f(v_r, read_vector<float>(t_r)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, partial_slice_unkown_rank)
+NGRAPH_TEST(${BACKEND_NAME}, partial_slice_unknown_rank)
 {
     auto pshape_x = PartialShape::dynamic();
     auto x = make_shared<op::Parameter>(element::f32, pshape_x);
@@ -128,7 +128,7 @@ NGRAPH_TEST(${BACKEND_NAME}, partial_slice_unkown_rank)
     EXPECT_TRUE(test::all_close_f(v_r, read_vector<float>(t_r)));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, partial_slice_bprop_unkown_rank)
+NGRAPH_TEST(${BACKEND_NAME}, partial_slice_bprop_unknown_rank)
 {
     auto pshape_x = PartialShape::dynamic();
     auto pshape_dout = PartialShape::dynamic();
