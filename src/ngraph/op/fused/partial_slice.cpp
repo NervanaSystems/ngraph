@@ -45,7 +45,7 @@ op::PartialSlice::PartialSlice(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::PartialSlice::decompose_op() const
+OutputVector op::PartialSlice::decompose_op() const
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     if (data_pshape.is_dynamic())
@@ -165,7 +165,7 @@ op::PartialSliceBackprop::PartialSliceBackprop(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::PartialSliceBackprop::decompose_op() const
+OutputVector op::PartialSliceBackprop::decompose_op() const
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     if (data_pshape.is_dynamic())

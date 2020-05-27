@@ -158,7 +158,7 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
 
         auto op_name = op->get_name();
         std::vector<size_t> poutputs;
-        for (size_t i = 0; i < op->get_outputs().size(); i++)
+        for (size_t i = 0; i < op->get_output_descriptors().size(); i++)
         {
             poutputs.push_back(external_function->get_buffer_index(op_name + "_" + to_string(i)));
         }

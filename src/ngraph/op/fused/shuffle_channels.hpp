@@ -41,25 +41,25 @@ namespace ngraph
                 ///               that the index should be calculated from the back of the input
                 ///               data
                 ///               shape.
-                /// \param groups - number of groups the channel dimension specified by axis should
+                /// \param group - number of groups the channel dimension specified by axis should
                 /// be
                 ///                 split into
                 ShuffleChannels(const Output<Node>& data,
                                 const int axis = 1,
-                                const size_t groups = 1UL);
+                                const size_t group = 1UL);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 size_t get_zero_based_axis() const;
 
                 virtual void pre_validate_and_infer_types() override;
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 int get_axis() const { return m_axis; }
-                size_t get_groups() const { return m_groups; }
+                size_t get_group() const { return m_group; }
             private:
                 /// \brief Generates a shape required to permute the data
                 ///
@@ -68,7 +68,7 @@ namespace ngraph
                 Shape get_pre_shuffle_shape(const Shape& data_shape) const;
 
                 int m_axis;
-                size_t m_groups;
+                size_t m_group;
             };
         }
         using v0::ShuffleChannels;

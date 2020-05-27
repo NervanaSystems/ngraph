@@ -94,7 +94,7 @@ TEST(algebraic_simplification, add_types_shapes)
     }
 }
 
-TEST(algebraic_simplification, DISABLED_add_v1_types_shapes)
+TEST(algebraic_simplification, add_v1_types_shapes)
 {
     Shape shapes[] = {Shape{}, Shape{2, 2}, Shape{3, 3, 3}};
     element::Type types[] = {element::i32, element::f32, element::f64};
@@ -166,7 +166,7 @@ TEST(algebraic_simplification, add_broadcast)
     }
 }
 
-TEST(algebraic_simplification, DISABLED_add_v1_broadcast_v1)
+TEST(algebraic_simplification, add_v1_broadcast_v1)
 {
     Shape shape{2, 2};
     pass::Manager pass_manager;
@@ -233,7 +233,7 @@ TEST(algebraic_simplification, multiply_broadcast_0)
     }
 }
 
-TEST(algebraic_simplification, DISABLED_multiply_v1_broadcast_v1_0)
+TEST(algebraic_simplification, multiply_v1_broadcast_v1_0)
 {
     Shape shape{2, 2};
     pass::Manager pass_manager;
@@ -297,7 +297,7 @@ TEST(algebraic_simplification, multiply_broadcast_1)
     }
 }
 
-TEST(algebraic_simplification, DISABLED_multiply_v1_broadcast_v1_1)
+TEST(algebraic_simplification, multiply_v1_broadcast_v1_1)
 {
     Shape shape{2, 2};
     pass::Manager pass_manager;
@@ -352,7 +352,7 @@ TEST(algebraic_simplification, zero_plus_zero_commutativity)
     ASSERT_EQ(f->get_results().at(4)->get_argument(0)->get_argument(0), b);
 }
 
-TEST(algebraic_simplification, DISABLED_zero_plus_zero_commutativity_v1)
+TEST(algebraic_simplification, zero_plus_zero_commutativity_v1)
 {
     Shape shape{};
     auto type = element::f32;
@@ -399,7 +399,7 @@ TEST(algebraic_simplification, zero_multiply_zero_one)
     ASSERT_TRUE(ngraph::is_zero(f->get_results().at(4)->get_argument(0)->get_argument(0)));
 }
 
-TEST(algebraic_simplification, DISABLED_zero_multiply_zero_one_v1)
+TEST(algebraic_simplification, zero_multiply_zero_one_v1)
 {
     Shape shape{};
     auto type = element::f32;
@@ -451,7 +451,7 @@ TEST(algebraic_simplification, add_negative_tests)
     }
 }
 
-TEST(algebraic_simplification, DISABLED_add_negative_tests_v1)
+TEST(algebraic_simplification, add_negative_tests_v1)
 {
     Shape shape{};
     auto type = element::f32;
@@ -480,7 +480,7 @@ TEST(algebraic_simplification, DISABLED_add_negative_tests_v1)
     }
 }
 
-TEST(algebraic_simplification, DISABLED_multiply_negative_tests_v1)
+TEST(algebraic_simplification, multiply_negative_tests_v1)
 {
     Shape shape{};
     auto type = element::f32;
