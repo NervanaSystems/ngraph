@@ -315,11 +315,12 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
+        std::deque<descriptor::Input>& get_input_descriptors()
+            NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        const std::deque<descriptor::Input>& get_inputs() const
+        const std::deque<descriptor::Input>& get_input_descriptors() const
             NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;

@@ -146,7 +146,7 @@ namespace ngraph
                     std::ofstream& desc_file)
                 {
                     const auto& out = node->get_output_descriptors();
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
                         static_cast<unsigned long>(rnn_node->get_src_sequence_length());
@@ -366,7 +366,7 @@ namespace ngraph
                     const bool append_relu,
                     const bool training)
                 {
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
@@ -563,7 +563,7 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     BatchNormTrainingBackprop)
                 {
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
                     const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
                     auto eps = batchnorm->get_eps_value();
 
@@ -657,7 +657,7 @@ namespace ngraph
                 {
                     auto concat = static_cast<OP*>(node);
                     size_t concat_dim = concat->get_concatenation_axis();
-                    size_t nargs = node->get_inputs().size();
+                    size_t nargs = node->get_input_descriptors().size();
 
                     // query scratchpad size
                     auto concat_pd = mkldnn_emitter.get_concat_desc<OP>(node, nargs);
@@ -1942,7 +1942,7 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 

@@ -4367,7 +4367,7 @@ namespace ngraph
                 auto it = output;
                 while (auto goe = as_type_ptr<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_inputs().at(0).get_output();
+                    it = &goe->get_input_descriptors().at(0).get_output();
                 }
                 return it;
             }
@@ -4389,7 +4389,8 @@ namespace ngraph
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(&ck->get_inputs().at(i).get_output(), sname);
+                    auto entry =
+                        std::make_pair(&ck->get_input_descriptors().at(i).get_output(), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4434,7 +4435,7 @@ namespace ngraph
 
                     // prepare arguments
                     std::vector<std::string> sargs;
-                    for (auto& input : op_node->get_inputs())
+                    for (auto& input : op_node->get_input_descriptors())
                     {
                         // args are expected to be in a map already
                         sargs.push_back(

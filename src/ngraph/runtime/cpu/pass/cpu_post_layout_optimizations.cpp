@@ -111,11 +111,13 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         auto m_cvt_lt_bprop = m_conv_bprop->get_argument(0);
         auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
 
-        NGRAPH_DEBUG << "Replacing input "
-                     << m_cvt_lt_bprop->get_inputs().at(0).get_output().get_node()->get_name()
-                     << " to " << m_cvt_lt_bprop->get_name() << " with "
-                     << m_cvt_lt->get_output_descriptors().at(0).get_node()->get_name();
-        m_cvt_lt_bprop->get_inputs().at(0).replace_output(m_cvt_lt->get_output_descriptors().at(0));
+        NGRAPH_DEBUG
+            << "Replacing input "
+            << m_cvt_lt_bprop->get_input_descriptors().at(0).get_output().get_node()->get_name()
+            << " to " << m_cvt_lt_bprop->get_name() << " with "
+            << m_cvt_lt->get_output_descriptors().at(0).get_node()->get_name();
+        m_cvt_lt_bprop->get_input_descriptors().at(0).replace_output(
+            m_cvt_lt->get_output_descriptors().at(0));
 
         return true;
     };
