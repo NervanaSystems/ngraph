@@ -1450,7 +1450,6 @@ namespace
         // Construct outer loop for params dims. Exclude the axis dim.
         SmallVector<Value, 4> paramsLbs, paramsUbs;
         SmallVector<int64_t, 4> paramsSteps;
-        SmallVector<Value*, 4> paramsIVPtrs;
         for (auto i = 0; i < vParams.rank(); i++)
         {
             // skip gather axis
@@ -1501,8 +1500,7 @@ namespace
 
         AffineLoopNestBuilder(indicesIVs, indicesLbs, indicesUbs, indicesSteps)([&] {
             // Load axis value from indices array and cast it to Index Type
-            Value axisIdx =
-                ValueBuilder<IndexCastOp>((Value)iIndices(indicesIVs), rewriter.getIndexType());
+            auto axisIdx = Value(iIndices(indicesIVs));
 
             AffineLoopNestBuilder(paramsIVs, paramsLbs, paramsUbs, paramsSteps)([&] {
                 // construct indices for param
@@ -2668,7 +2666,7 @@ namespace
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
             AffineLoopNestBuilder(ivs, resLbs, resUbs, steps)(
-                [&] { iRes(ivs) = ValueBuilder<IndexCastOp>(initVal, resTy); });
+                [&] { iRes(ivs) = Value(initVal); });
         }
 
         // Generate loop nest that computes the actual index reduction.
@@ -2694,8 +2692,7 @@ namespace
                 }
 
                 // Load current min index with integer data type and convert it to index data type.
-                Value currRedIdx = ValueBuilder<IndexCastOp>((Value)iRes(nonRedIVs),
-                                                             IndexType::get(resTy.getContext()));
+                auto currRedIdx = Value(iRes(nonRedIVs));
 
                 // Build list of IVs including current min index.
                 for (auto i = 0; i < vArg.rank(); i++)
@@ -2716,7 +2713,7 @@ namespace
                         ? std_select(affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
                         : std_select(stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
 
-                iRes(nonRedIVs) = ValueBuilder<IndexCastOp>(newRedIdx, resTy);
+                iRes(nonRedIVs) = Value(newRedIdx);
             });
         }
 
