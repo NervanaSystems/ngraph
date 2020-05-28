@@ -44,7 +44,8 @@ bool runtime::gpu::pass::TensorMemoryReservation::run_on_function(shared_ptr<Fun
     {
         if (auto constant = std::dynamic_pointer_cast<ngraph::op::Constant>(node))
         {
-            std::shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+            std::shared_ptr<descriptor::Tensor> tv =
+                node->get_output_descriptors()[0].get_tensor_ptr();
             size_t idx = m_allocator.reserve_argspace(constant->get_data_ptr(), tv->size());
             m_memory_buffers.insert({node->get_name(), idx});
             reservation = true;

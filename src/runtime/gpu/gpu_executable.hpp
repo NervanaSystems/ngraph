@@ -50,7 +50,6 @@ namespace ngraph
 
             private:
                 std::shared_ptr<GPUCompiledFunction> m_compiled_function;
-                bool m_performance_counters_enabled = false;
                 EntryPoint m_runtime;
                 std::vector<void*> m_inputs;
                 std::vector<void*> m_outputs;

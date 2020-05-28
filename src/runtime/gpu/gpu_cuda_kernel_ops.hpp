@@ -16,54 +16,48 @@
 
 #pragma once
 
+#include "ngraph/op/abs.hpp"
+#include "ngraph/op/acos.hpp"
+#include "ngraph/op/add.hpp"
+#include "ngraph/op/and.hpp"
+#include "ngraph/op/asin.hpp"
+#include "ngraph/op/atan.hpp"
+#include "ngraph/op/ceiling.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/cos.hpp"
+#include "ngraph/op/cosh.hpp"
+#include "ngraph/op/divide.hpp"
+#include "ngraph/op/equal.hpp"
+#include "ngraph/op/exp.hpp"
+#include "ngraph/op/floor.hpp"
+#include "ngraph/op/greater.hpp"
+#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/less.hpp"
+#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/log.hpp"
+#include "ngraph/op/max.hpp"
+#include "ngraph/op/maximum.hpp"
+#include "ngraph/op/min.hpp"
+#include "ngraph/op/minimum.hpp"
+#include "ngraph/op/multiply.hpp"
+#include "ngraph/op/negative.hpp"
+#include "ngraph/op/not.hpp"
+#include "ngraph/op/not_equal.hpp"
+#include "ngraph/op/or.hpp"
+#include "ngraph/op/power.hpp"
+#include "ngraph/op/relu.hpp"
+#include "ngraph/op/select.hpp"
+#include "ngraph/op/sigmoid.hpp"
+#include "ngraph/op/sign.hpp"
+#include "ngraph/op/sin.hpp"
+#include "ngraph/op/sinh.hpp"
+#include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/subtract.hpp"
+#include "ngraph/op/tan.hpp"
+#include "ngraph/op/tanh.hpp"
+
 namespace ngraph
 {
-    namespace op
-    {
-        class Abs;
-        class Acos;
-        class Add;
-        class Asin;
-        class Atan;
-        class Ceiling;
-        class Cos;
-        class Cosh;
-        class Exp;
-        class Floor;
-        class Log;
-        class Sin;
-        class Sinh;
-        class Tan;
-        class Tanh;
-        class Power;
-        class Subtract;
-        class Divide;
-        class Sign;
-        class Maximum;
-        class Minimum;
-        class Multiply;
-        class Convert;
-        class Equal;
-        class NotEqual;
-        class Greater;
-        class GreaterEq;
-        class Less;
-        class LessEq;
-        class Not;
-        class Relu;
-        class ReluBackprop;
-        class Max;
-        class Min;
-        class Negative;
-        class Not;
-        class Sqrt;
-        class Select;
-        class And;
-        class Or;
-        class Nop;
-        class Sigmoid;
-        class SigmoidBackprop;
-    }
     namespace runtime
     {
         namespace gpu
@@ -358,13 +352,13 @@ namespace ngraph
                 static constexpr const char* atomic = "atomicMax";
             };
 
-            template <>
-            struct CudaOpMap<ngraph::op::Nop>
-            {
-                static constexpr const char* op = "";
-                static constexpr const char* math_kernel = "";
-                static constexpr const char* atomic = "";
-            };
+            // template <>
+            // struct CudaOpMap<ngraph::op::Nop>
+            // {
+            //     static constexpr const char* op = "";
+            //     static constexpr const char* math_kernel = "";
+            //     static constexpr const char* atomic = "";
+            // };
 
             template <>
             struct CudaOpMap<ngraph::op::Sigmoid>
