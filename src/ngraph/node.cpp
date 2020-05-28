@@ -309,16 +309,6 @@ const std::deque<descriptor::Output>& Node::get_output_descriptors() const
     return m_outputs;
 }
 
-size_t Node::get_input_count() const
-{
-    return m_inputs.size();
-}
-
-size_t Node::get_output_count() const
-{
-    return m_outputs.size();
-}
-
 bool Node::is_output() const
 {
     return false;

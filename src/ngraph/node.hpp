@@ -330,9 +330,6 @@ namespace ngraph
         const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 
-        size_t get_input_count() const;
-        size_t get_output_count() const;
-
         /// Get control dependencies registered on the node
         const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
