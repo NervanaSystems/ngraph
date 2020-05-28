@@ -1298,7 +1298,6 @@ namespace
         Value lhs = operands[0];
         Value rhs = operands[1];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in DotOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto lhsTy = lhs.getType().dyn_cast<MemRefType>();
@@ -1365,7 +1364,6 @@ namespace
 
         // Create Value for result, and extract type info.
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
         // Create view to write into result.
         MemRefBoundsCapture vRes(result);
@@ -1378,8 +1376,6 @@ namespace
 
         for (auto& operand : operands)
         {
-            // NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
-
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:
             //
@@ -1440,7 +1436,6 @@ namespace
 
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(result, "Unexpected null result in GatherOp");
 
         Value params = operands[0];
         Value indices = operands[1];
@@ -1554,7 +1549,6 @@ namespace
 
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
         Value images = operands[0];
         Value filters = operands[1];
         auto strides = convolOp.strides();
@@ -1581,7 +1575,6 @@ namespace
         ScopedContext scope(rewriter, gConvOp.getLoc());
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
         Value images = operands[0];
         Value filters = operands[1];
         auto strides = gConvOp.strides();
@@ -1713,7 +1706,6 @@ namespace
         ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
 
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(src && delta && result, "Unexpected null values in MaxPoolBackprop Op");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
@@ -1792,7 +1784,6 @@ namespace
         Value lhs = operands[0];
         Value rhs = operands[1];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(lhs && rhs && result, "Unexpected null values in MatMulOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
@@ -1869,7 +1860,6 @@ namespace
         Value rhs = operands[1];
         Value bias = operands[2];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(lhs && rhs && bias && result, "Unexpected null values in GemmOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto lhsTy = lhs.getType().dyn_cast<MemRefType>();
@@ -1988,7 +1978,6 @@ namespace
         ScopedContext scope(rewriter, loc);
         Value lhs = operands[0];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(lhs && result, "Unexpected null values in SoftmaxOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
@@ -2040,7 +2029,6 @@ namespace
 
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(result, "Unexpected null result in ConvBias Op");
         Value images = operands[0];
         Value filters = operands[1];
         Value bias = operands[2];
@@ -2754,7 +2742,6 @@ namespace
         ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
 
         Value result = pass.buildOutputDefs(op, rewriter)[0];
-        // NGRAPH_CHECK(lhs && result, "Unexpected null values in Pooling Op");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
