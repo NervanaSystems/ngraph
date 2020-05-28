@@ -39,7 +39,6 @@ OpBuilder createBuilder(MLIRContext* context)
     return builder;
 }
 
-/*
 TEST(MLIR, op_version_interface)
 {
     MLIRContext context;
@@ -55,8 +54,7 @@ TEST(MLIR, op_version_interface)
                                        llvm::None,
                                        llvm::None,
                                        llvm::None,
-                                       0,
-                                       false);
+                                       0);
 
     EXPECT_TRUE(llvm::dyn_cast<OpVersion0>(operation) != nullptr);
     EXPECT_TRUE(llvm::dyn_cast<OpVersion1>(operation) == nullptr);
@@ -78,8 +76,7 @@ TEST(MLIR, fused_ops_interface)
                                        llvm::None,
                                        llvm::None,
                                        llvm::None,
-                                       0,
-                                       false);
+                                       0);
 
     EXPECT_TRUE(llvm::dyn_cast<FusedOp>(operation) != nullptr);
     if (auto fusedOp = llvm::dyn_cast<FusedOp>(operation))
@@ -137,4 +134,3 @@ TEST(MLIR, ops_attributes)
     auto ceilMode = avgPool.ceilMode();
     EXPECT_TRUE(ceilMode == false);
 }
-*/
