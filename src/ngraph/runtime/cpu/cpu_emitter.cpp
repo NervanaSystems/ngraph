@@ -4717,74 +4717,73 @@ namespace ngraph
                 writer << "            " << cumsum->is_reverse() << ");\n";
                 writer.block_end();
             }
-
-#undef TI }
+#undef TI
         }
-    } // namespace ngraph
-
-    //------------------------------------------------------------------------------------------------
-    // Utility methods
-    //------------------------------------------------------------------------------------------------
-
-    static string format_name(const string& name)
-    {
-        string rc;
-        if (!name.empty())
-        {
-            rc = " " + name;
-        }
-        return rc;
     }
+}
 
-    std::string runtime::cpu::CPU_Emitter::emit_indices(const std::vector<std::string> indices)
+//------------------------------------------------------------------------------------------------
+// Utility methods
+//------------------------------------------------------------------------------------------------
+
+static string format_name(const string& name)
+{
+    string rc;
+    if (!name.empty())
     {
-        stringstream ss;
-        for (auto i : indices)
-        {
-            ss << "[" << i << "]";
-        }
-        return ss.str();
+        rc = " " + name;
     }
+    return rc;
+}
 
-    std::string
-        runtime::cpu::CPU_Emitter::emit_for_lt(const std::string& prefix, size_t index, size_t to)
+std::string runtime::cpu::CPU_Emitter::emit_indices(const std::vector<std::string> indices)
+{
+    stringstream ss;
+    for (auto i : indices)
     {
-        stringstream ss;
-        auto iv = prefix + std::to_string(index);
-        ss << "for (size_t " << iv << " = 0 ; " << iv << " < " << to << "; " << iv << "++)\n";
-        return ss.str();
+        ss << "[" << i << "]";
     }
+    return ss.str();
+}
 
-    std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorWrapper& tvi,
-                                                       const string& name)
-    {
-        stringstream ss;
+std::string
+    runtime::cpu::CPU_Emitter::emit_for_lt(const std::string& prefix, size_t index, size_t to)
+{
+    stringstream ss;
+    auto iv = prefix + std::to_string(index);
+    ss << "for (size_t " << iv << " = 0 ; " << iv << " < " << to << "; " << iv << "++)\n";
+    return ss.str();
+}
 
-        const element::Type& et = tvi.get_element_type();
-        ss << "EigenVector<" << et.c_type_string() << ">" << format_name(name) << "("
-           << tvi.get_name() << ", " << eigen_vector_format(tvi) << ")";
-        return ss.str();
-    }
-
-    string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorWrapper& tvi,
+std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorWrapper& tvi,
                                                    const string& name)
-    {
-        stringstream ss;
+{
+    stringstream ss;
 
-        const element::Type& et = tvi.get_element_type();
-        ss << "EigenArray1d<" << et.c_type_string() << ">" << format_name(name) << "("
-           << tvi.get_name() << ", " << eigen_vector_format(tvi) << ")";
-        return ss.str();
-    }
+    const element::Type& et = tvi.get_element_type();
+    ss << "EigenVector<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
+       << ", " << eigen_vector_format(tvi) << ")";
+    return ss.str();
+}
 
-    string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorWrapper& tvi,
-                                                  const string& name)
-    {
-        stringstream ss;
+string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorWrapper& tvi,
+                                               const string& name)
+{
+    stringstream ss;
 
-        const element::Type& et = tvi.get_element_type();
-        ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "("
-           << tvi.get_name() << ", " << eigen_matrix_format(tvi.get_shape(), tvi.get_strides())
-           << ")";
-        return ss.str();
-    }
+    const element::Type& et = tvi.get_element_type();
+    ss << "EigenArray1d<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
+       << ", " << eigen_vector_format(tvi) << ")";
+    return ss.str();
+}
+
+string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorWrapper& tvi,
+                                              const string& name)
+{
+    stringstream ss;
+
+    const element::Type& et = tvi.get_element_type();
+    ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
+       << ", " << eigen_matrix_format(tvi.get_shape(), tvi.get_strides()) << ")";
+    return ss.str();
+}
