@@ -252,7 +252,7 @@ namespace ngraph
                 PadType m_auto_pad;
                 CoordinateDiff m_output_padding;
             };
-        } // namespace v1
+        }
 
         namespace v0
         {
@@ -411,5 +411,5 @@ namespace ngraph
         using v0::GroupConvolution;
         using v0::GroupConvolutionBackpropData;
         using v0::GroupConvolutionBackpropFilters;
-    } // namespace op
-} // namespace ngraph
+    }
+}

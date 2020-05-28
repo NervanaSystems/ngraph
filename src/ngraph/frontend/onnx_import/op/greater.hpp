@@ -36,11 +36,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Greater>(node.get_ng_inputs().at(0),
                                                                      node.get_ng_inputs().at(1))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

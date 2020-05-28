@@ -223,7 +223,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::StridedSlice>(
                         data, starts, ends, steps, begin_end_mask, begin_end_mask)};
                 }
-            } // namespace set_10
+            }
 
             namespace set_1
             {
@@ -276,11 +276,7 @@ namespace ngraph
                         std::vector<int64_t>(data_rank, 0),
                         std::vector<int64_t>(data_rank, 0))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

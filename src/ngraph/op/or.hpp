@@ -56,7 +56,7 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
             };
-        } // namespace v1
+        }
         namespace v0
         {
             /// \brief Elementwise logical-or operation.
@@ -88,8 +88,8 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
             };
-        } // namespace v0
+        }
 
         using v0::Or;
-    } // namespace op
-} // namespace ngraph
+    }
+}

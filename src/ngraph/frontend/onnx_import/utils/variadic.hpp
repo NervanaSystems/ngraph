@@ -62,9 +62,6 @@ namespace ngraph
 
                 return {result};
             }
-
-        } // namespace variadic
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+        }
+    }
+}

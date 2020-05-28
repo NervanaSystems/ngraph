@@ -60,12 +60,9 @@ namespace ngraph
                 {
                 }
             };
-
-        } // namespace  error
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+        }
+    }
+}
 
 #define ASSERT_IS_SUPPORTED(node_, cond_)                                                          \
     NGRAPH_ASSERT_STREAM_DO_NOT_USE_IN_NEW_CODE(ngraph::onnx_import::error::NotSupported, cond_)   \

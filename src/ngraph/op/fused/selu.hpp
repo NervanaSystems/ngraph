@@ -50,5 +50,5 @@ namespace ngraph
             };
         }
         using v0::Selu;
-    } // namespace op
-} // namespace ngraph
+    }
+}

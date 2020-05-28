@@ -50,8 +50,7 @@ namespace ngraph
                         {
                         }
                     };
-
-                } // namespace detail
+                }
 
                 struct InvalidData : detail::Attribute
                 {
@@ -68,10 +67,8 @@ namespace ngraph
                     {
                     }
                 };
-
-            } // namespace attribute
-
-        } // namespace error
+            }
+        }
 
         namespace detail
         {
@@ -234,10 +231,8 @@ namespace ngraph
                     default: throw error::attribute::InvalidData{attribute.type()};
                     }
                 }
-
-            } // namespace attribute
-
-        } // namespace detail
+            }
+        }
 
         class Attribute
         {
@@ -326,7 +321,5 @@ namespace ngraph
         private:
             const ONNX_NAMESPACE::AttributeProto* m_attribute_proto;
         };
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

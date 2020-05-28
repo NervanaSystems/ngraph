@@ -28,11 +28,7 @@ namespace ngraph
             namespace set_1
             {
                 NodeVector quantize_linear(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

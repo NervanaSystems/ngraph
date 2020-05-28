@@ -41,8 +41,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::opset0::MVN>(
                         data, across_channels, normalize_variance)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_9
             {
@@ -55,11 +54,7 @@ namespace ngraph
 
                     return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(normalized_axes))};
                 }
-
-            } // namespace set_9
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

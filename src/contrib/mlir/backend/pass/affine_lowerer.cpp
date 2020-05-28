@@ -2905,7 +2905,7 @@ namespace
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }
-} // namespace
+}
 
 namespace mlir
 {
@@ -2913,7 +2913,7 @@ namespace mlir
     {
         return std::make_unique<DialectLoweringPass>();
     }
-} // namespace mlir
+}
 
 static PassRegistration<DialectLoweringPass> pass(PASS_NAME,
                                                   "Convert nGraph dialect to affine dialect");

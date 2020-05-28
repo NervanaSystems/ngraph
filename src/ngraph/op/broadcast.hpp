@@ -83,7 +83,7 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
             };
-        } // namespace v3
+        }
 
         namespace v1
         {
@@ -144,7 +144,7 @@ namespace ngraph
             protected:
                 AutoBroadcastSpec m_broadcast_spec;
             };
-        } // namespace v1
+        }
 
         namespace v0
         {
@@ -234,7 +234,7 @@ namespace ngraph
             protected:
                 AxisSet m_initial_broadcast_axes;
             };
-        } // namespace v0
+        }
 
         using v0::Broadcast;
         using v0::BroadcastLike;

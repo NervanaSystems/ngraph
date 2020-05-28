@@ -83,7 +83,7 @@ namespace ngraph
         {
             class Result;
         }
-    } // namespace op
+    }
 
     namespace pattern
     {
@@ -697,5 +697,4 @@ namespace ngraph
                               " but got ",
                               new_args.size());
     }
-
-} // namespace ngraph
+}

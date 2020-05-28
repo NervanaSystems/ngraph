@@ -183,6 +183,5 @@ namespace ngraph
             }
             return result->add_provenance_group_members_above({value});
         }
-
-    } // namespace builder
-} // namespace ngraph
+    }
+}

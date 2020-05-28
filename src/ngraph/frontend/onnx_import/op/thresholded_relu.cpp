@@ -42,11 +42,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Multiply>(data, data_map)};
                 }
-
-            } // namespace set_1default_opset
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

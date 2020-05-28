@@ -42,11 +42,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Mod>(dividend, divisor)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
