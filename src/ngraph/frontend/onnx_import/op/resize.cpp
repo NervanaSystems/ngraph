@@ -105,11 +105,7 @@ namespace ngraph
                     return {
                         std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -100,5 +100,5 @@ namespace ngraph
                                           std::size_t p_norm = 2,
                                           float bias = 0.f);
         }
-    } // namespace builder
-} // namespace ngraph
+    }
+}

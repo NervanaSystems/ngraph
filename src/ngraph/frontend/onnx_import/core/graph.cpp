@@ -92,7 +92,7 @@ namespace ngraph
                 return std::string{"<ONNX " + onnx_node.op_type() + " (" + node_name + "-> " +
                                    output_names + ")>"};
             }
-        } // namespace detail
+        }
 
         Graph::Graph(const ONNX_NAMESPACE::GraphProto& graph_proto, Model& model)
             : m_graph_proto{&graph_proto}
@@ -268,6 +268,5 @@ namespace ngraph
                 [&tag](std::shared_ptr<ngraph::Node> ng_node) { ng_node->add_provenance_tag(tag); },
                 ng_inputs);
         }
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

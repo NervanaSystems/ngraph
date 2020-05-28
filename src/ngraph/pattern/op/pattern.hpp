@@ -27,6 +27,7 @@ namespace ngraph
         namespace op
         {
             class Label;
+            class Pattern;
         }
 
         class Matcher;
@@ -56,39 +57,39 @@ namespace ngraph
 
             NGRAPH_API
             ValuePredicate as_value_predicate(NodePredicate pred);
-
-            class NGRAPH_API Pattern : public Node
-            {
-            public:
-                /// \brief \p a base class for \sa Skip and \sa Label
-                ///
-                Pattern(const OutputVector& patterns, ValuePredicate pred)
-                    : Node(patterns)
-                    , m_predicate(pred)
-                {
-                    if (!m_predicate)
-                    {
-                        m_predicate = [](const Output<Node>&) { return true; };
-                    }
-                }
-
-                Pattern(const OutputVector& patterns)
-                    : Pattern(patterns, nullptr)
-                {
-                }
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& /* new_args */) const override
-                {
-                    throw ngraph_error("Uncopyable");
-                }
-
-                ValuePredicate get_predicate() const;
-
-                bool is_pattern() const override { return true; }
-            protected:
-                ValuePredicate m_predicate;
-            };
         }
     }
 }
+
+class NGRAPH_API ngraph::pattern::op::Pattern : public Node
+{
+public:
+    /// \brief \p a base class for \sa Skip and \sa Label
+    ///
+    Pattern(const OutputVector& patterns, ValuePredicate pred)
+        : Node(patterns)
+        , m_predicate(pred)
+    {
+        if (!m_predicate)
+        {
+            m_predicate = [](const Output<Node>&) { return true; };
+        }
+    }
+
+    Pattern(const OutputVector& patterns)
+        : Pattern(patterns, nullptr)
+    {
+    }
+
+    virtual std::shared_ptr<Node>
+        copy_with_new_args(const NodeVector& /* new_args */) const override
+    {
+        throw ngraph_error("Uncopyable");
+    }
+
+    ValuePredicate get_predicate() const;
+
+    bool is_pattern() const override { return true; }
+protected:
+    ValuePredicate m_predicate;
+};

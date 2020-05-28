@@ -36,7 +36,5 @@ namespace ngraph
         {
             return Graph{m_attribute_proto->g(), model};
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

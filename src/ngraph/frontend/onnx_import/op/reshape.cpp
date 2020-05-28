@@ -56,11 +56,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Reshape>(data, pattern, true)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

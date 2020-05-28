@@ -4717,11 +4717,10 @@ namespace ngraph
                 writer << "            " << cumsum->is_reverse() << ");\n";
                 writer.block_end();
             }
-
 #undef TI
-        } // namespace cpu
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
 
 //------------------------------------------------------------------------------------------------
 // Utility methods

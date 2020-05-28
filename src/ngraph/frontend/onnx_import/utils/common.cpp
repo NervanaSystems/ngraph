@@ -66,7 +66,6 @@ namespace ngraph
                     std::make_shared<default_opset::ShapeOf>(value_shape),
                     default_opset::Constant::create(element::i64, {}, {step}));
             }
-
-        } // namespace  common
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

@@ -72,7 +72,5 @@ namespace ngraph
         {
             return (outs << "<Graph: " << graph.get_name() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

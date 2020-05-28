@@ -111,11 +111,9 @@ namespace ngraph
             /// \return     The activation function object.
             ///
             ActivationFunction get_activation_func_by_name(const std::string& func_name);
-        } // namespace util
-
-    } // namespace op
-
-} // namespace ngraph
+        }
+    }
+}
 
 #ifdef _WIN32
 #pragma warning(pop)

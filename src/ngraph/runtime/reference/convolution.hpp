@@ -392,6 +392,6 @@ namespace ngraph
                     0,
                     1);
             }
-        } // namespace reference
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

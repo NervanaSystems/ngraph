@@ -48,11 +48,7 @@ namespace ngraph
                     }
                     return {ngraph::builder::opset1::flatten(data, axis)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+            }
+        }
+    }
+}

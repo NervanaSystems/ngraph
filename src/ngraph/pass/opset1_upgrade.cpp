@@ -702,7 +702,7 @@ namespace
         };
         return dispatch_map;
     }
-} // namespace
+}
 
 bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {

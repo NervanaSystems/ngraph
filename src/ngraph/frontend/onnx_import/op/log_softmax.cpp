@@ -42,11 +42,7 @@ namespace ngraph
                         std::make_shared<default_opset::Softmax>(data, normalized_axis);
                     return {std::make_shared<default_opset::Log>(softmax)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

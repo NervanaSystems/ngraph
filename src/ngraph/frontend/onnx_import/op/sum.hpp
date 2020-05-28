@@ -34,8 +34,7 @@ namespace ngraph
                     return variadic::make_ng_variadic_op<default_opset::Add>(
                         node, ngraph::op::AutoBroadcastSpec::NONE);
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_8
             {
@@ -43,11 +42,7 @@ namespace ngraph
                 {
                     return variadic::make_ng_variadic_op<default_opset::Add>(node);
                 }
-
-            } // namespace set_8
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

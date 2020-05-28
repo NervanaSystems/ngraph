@@ -63,7 +63,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 std::size_t get_block_size() const { return m_blocksize; }
                 SpaceToDepthMode get_mode() const { return m_mode; }
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
@@ -74,7 +74,7 @@ namespace ngraph
             };
         }
         using v0::SpaceToDepth;
-    } // namespace op
+    }
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v0::SpaceToDepth::SpaceToDepthMode& type);
@@ -93,4 +93,4 @@ namespace ngraph
             "AttributeAdapter<op::v0::SpaceToDepth::SpaceToDepthMode>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-} // namespace ngraph
+}

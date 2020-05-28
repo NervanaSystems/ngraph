@@ -150,11 +150,7 @@ namespace ngraph
                                          const std::shared_ptr<ngraph::Node>&,
                                          bool>)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
