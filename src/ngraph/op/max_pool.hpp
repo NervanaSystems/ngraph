@@ -208,7 +208,7 @@ namespace ngraph
                 Shape m_padding_below;
                 Shape m_padding_above;
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -348,9 +348,9 @@ namespace ngraph
                 Shape m_pads_begin;
                 Shape m_pads_end;
             };
-        } // namespace v1
+        }
 
         using v0::MaxPool;
         using v0::MaxPoolBackprop;
-    } // namespace op
-} // namespace ngraph
+    }
+}

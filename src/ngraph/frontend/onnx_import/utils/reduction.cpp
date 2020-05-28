@@ -53,7 +53,7 @@ namespace ngraph
                     }
                     return AxisSet{normalized_axes};
                 }
-            } // namespace  detail
+            }
 
             std::shared_ptr<ngraph::Node>
                 make_ng_reduction_op(const Node& node,
@@ -114,7 +114,6 @@ namespace ngraph
 
                 return op_node;
             }
-
-        } // namespace  reduction
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

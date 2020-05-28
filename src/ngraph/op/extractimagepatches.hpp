@@ -65,7 +65,7 @@ namespace ngraph
                 Shape m_patch_selection_rates;
                 PadType m_padding;
             };
-        } // namespace v3
+        }
         using v3::ExtractImagePatches;
-    } // namespace op
-} // namespace ngraph
+    }
+}

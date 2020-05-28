@@ -421,7 +421,7 @@ namespace ngraph
 
         return static_cast<T>(x);
     }
-} // end namespace ngraph
+}
 
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);

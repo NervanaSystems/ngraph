@@ -151,5 +151,5 @@ namespace ngraph
             };
         }
         using v0::RNNCell;
-    } // namespace op
-} // namespace ngraph
+    }
+}

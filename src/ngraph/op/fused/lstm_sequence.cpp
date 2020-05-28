@@ -282,4 +282,4 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-} // namespace ngraph
+}

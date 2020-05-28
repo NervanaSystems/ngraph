@@ -136,8 +136,8 @@ namespace
         TensorToInfoMap m_tensorToValueMap;
         static const MLIRCompOpMap& getOpDispatcher();
     };
+}
 
-} // end of namespace
 NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& obj)
     : m_compiledKernel(obj.m_compiledKernel)
     , m_context(obj.m_context)

@@ -38,11 +38,7 @@ namespace ngraph
                         element::i64, Shape{axes.size()}, axes);
                     return {std::make_shared<default_opset::Unsqueeze>(data, axes_node)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

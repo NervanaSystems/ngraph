@@ -43,7 +43,5 @@ namespace ngraph
                                std::int64_t version,
                                const std::string& domain,
                                Operator fn);
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

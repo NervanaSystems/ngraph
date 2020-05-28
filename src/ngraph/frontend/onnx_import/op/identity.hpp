@@ -36,10 +36,7 @@ namespace ngraph
                     auto zero = default_opset::Constant::create(input->get_element_type(), {}, {0});
                     return {std::make_shared<default_opset::Add>(input, zero)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

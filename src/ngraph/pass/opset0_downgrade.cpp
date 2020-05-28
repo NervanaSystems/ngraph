@@ -911,7 +911,7 @@ namespace
         };
         return dispatch_map;
     }
-} // namespace
+}
 
 bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {

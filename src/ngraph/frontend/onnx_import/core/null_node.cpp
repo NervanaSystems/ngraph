@@ -29,5 +29,5 @@ namespace ngraph
         {
             return std::make_shared<NullNode>();
         }
-    } // namespace onnx_import
-} // namespace ngraph
+    }
+}

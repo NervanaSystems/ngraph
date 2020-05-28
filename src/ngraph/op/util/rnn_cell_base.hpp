@@ -128,6 +128,6 @@ namespace ngraph
                 std::vector<float> m_activations_alpha;
                 std::vector<float> m_activations_beta;
             };
-        } // namespace util
-    }     // namespace op
-} // namespace ngraph
+        }
+    }
+}

@@ -2102,7 +2102,7 @@ void runtime::gpu::CudaKernelBuilder::get_convolution_forward(
                 writer.block_end();
             }
             writer.block_end();
-        } // end if (lookup_size_local > 0)
+        }
         writer.block_end();
 
         // store result block to global memory

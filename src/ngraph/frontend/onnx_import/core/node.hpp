@@ -44,10 +44,8 @@ namespace ngraph
                     {
                     }
                 };
-
-            } // namespace node
-
-        } // namespace error
+            }
+        }
 
         // forward declaration
         class Graph;
@@ -100,7 +98,5 @@ namespace ngraph
         {
             return (outs << "<Node(" << node.op_type() << "): " << node.get_description() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

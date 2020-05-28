@@ -98,5 +98,5 @@ namespace ngraph
         }
         using v0::SoftmaxCrossEntropy;
         using v0::SoftmaxCrossEntropyBackprop;
-    } // namespace op
-} // namespace ngraph
+    }
+}

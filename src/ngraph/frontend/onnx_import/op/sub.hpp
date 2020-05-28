@@ -42,8 +42,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Subtract>(
                         lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_7
             {
@@ -52,11 +51,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Subtract>(node.get_ng_inputs().at(0),
                                                                       node.get_ng_inputs().at(1))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

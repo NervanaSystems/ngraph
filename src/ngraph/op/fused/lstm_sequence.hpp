@@ -186,7 +186,7 @@ namespace ngraph
             };
         }
         using v0::LSTMSequence;
-    } // namespace op
+    }
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v0::LSTMSequence::direction& type);
@@ -205,4 +205,4 @@ namespace ngraph
             "AttributeAdapter<op::v0::LSTMSequence::direction>", 1};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-} // namespace ngraph
+}

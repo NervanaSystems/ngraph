@@ -44,10 +44,7 @@ namespace ngraph
                     }
                     return as_node_vector(factory.make_matmul_op());
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -39,11 +39,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Tile>(input, repeats)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
