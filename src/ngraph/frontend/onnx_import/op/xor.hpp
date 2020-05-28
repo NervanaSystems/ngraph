@@ -35,11 +35,7 @@ namespace ngraph
                         node.get_ng_inputs().at(1),
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

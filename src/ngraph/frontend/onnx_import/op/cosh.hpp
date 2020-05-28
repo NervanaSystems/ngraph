@@ -30,6 +30,5 @@ namespace ngraph
                 NodeVector cosh(const Node& node);
             }
         }
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

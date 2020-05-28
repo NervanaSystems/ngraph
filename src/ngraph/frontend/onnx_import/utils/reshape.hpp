@@ -61,7 +61,6 @@ namespace ngraph
             ///
             std::shared_ptr<ngraph::Node>
                 interpret_as_scalar(const std::shared_ptr<ngraph::Node>& node);
-
-        } // namespace  reshape
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

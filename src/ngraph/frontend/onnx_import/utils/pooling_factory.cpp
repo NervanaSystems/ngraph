@@ -93,6 +93,6 @@ namespace ngraph
                 // Set shape to all but {N,C} axes.
                 m_kernel_shape = kernel_shape;
             }
-        } // namespace pooling
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

@@ -157,11 +157,7 @@ namespace ngraph
                 {
                     return {make_constant(node.get_attribute_value<Tensor>("value"))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

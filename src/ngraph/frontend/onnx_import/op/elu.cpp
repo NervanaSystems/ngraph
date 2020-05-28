@@ -35,11 +35,7 @@ namespace ngraph
 
                     return NodeVector{std::make_shared<default_opset::Elu>(data, alpha)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -225,5 +225,5 @@ namespace ngraph
                                               const CoordinateDiff& output_padding,
                                               CoordinateDiff& pads_begin,
                                               CoordinateDiff& pads_end);
-    } // namespace opset1
-} // namespace ngraph
+    }
+}

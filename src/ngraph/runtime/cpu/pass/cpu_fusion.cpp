@@ -489,22 +489,22 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                             conv_bprop->get_padding_below_forward(),
                             conv_bprop->get_padding_above_forward(),
                             conv_bprop->get_data_dilation_strides_forward());
-                    auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(conv_bias_bprop, 0);
-                    auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(conv_bias_bprop, 1);
+                    auto out0 = conv_bias_bprop->output(0);
+                    auto out1 = conv_bias_bprop->output(1);
                     NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
                                  << "with ConvolutionBiasBackpropFiltersBias";
-                    ngraph::replace_node(m.get_match_root(), goe1);
+                    ngraph::replace_node(m.get_match_root(), {out0});
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
                                     "ConvolutionBiasBackpropFiltersBias";
                     if (flag)
                     {
-                        auto goe2_reshape = std::make_shared<ngraph::op::Reshape>(
-                            goe2, AxisVector{0}, delta_user->get_shape());
-                        ngraph::replace_node(delta_user, goe2_reshape);
+                        auto out1_reshape = std::make_shared<ngraph::op::Reshape>(
+                            out1, AxisVector{0}, delta_user->get_shape());
+                        ngraph::replace_node(delta_user, out1_reshape);
                     }
                     else
                     {
-                        ngraph::replace_node(delta_user, goe2);
+                        ngraph::replace_node(delta_user, {out1});
                     }
                     return true;
                 }
@@ -609,28 +609,19 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         {
             return false;
         }
-        NodeVector mgoes(get_output_elements(m_bn));
-        if (mgoes[0]->get_users().size() > 1)
+        if (m_bn->output(0).get_target_inputs().size() > 1)
         {
             NGRAPH_DEBUG << "Relu isn't the only user of BatchNorm's output";
             return false;
         }
 
-        mgoes[0] = m.get_match_root(); // replace relu instead of its GetOutputElement
-
         auto bn_relu = std::make_shared<ngraph::op::BatchNormTrainingRelu>(
             m_bn->get_eps_value(), pattern_map[gamma], pattern_map[beta], pattern_map[input]);
 
-        auto bn_relu_output = std::make_shared<ngraph::op::GetOutputElement>(bn_relu, 0);
-        auto bn_relu_mean = std::make_shared<ngraph::op::GetOutputElement>(bn_relu, 1);
-        auto bn_relu_var = std::make_shared<ngraph::op::GetOutputElement>(bn_relu, 2);
+        m_bn->output(0).replace(bn_relu->output(0));
+        m_bn->output(1).replace(bn_relu->output(1));
+        m_bn->output(2).replace(bn_relu->output(2));
 
-        std::shared_ptr<Node> new_nodes[] = {bn_relu_output, bn_relu_mean, bn_relu_var};
-
-        for (size_t i = 0; i < mgoes.size(); i++)
-        {
-            ngraph::replace_node(mgoes.at(i), new_nodes[i]);
-        }
         return true;
     };
 

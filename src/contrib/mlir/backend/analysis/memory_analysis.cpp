@@ -596,4 +596,4 @@ namespace mlir
         NGRAPH_CHECK(moduleOp != nullptr, "Expecting FuncOp for anaylsis");
         memoryAssignment.run(&moduleOp);
     }
-} // namespace mlir
+}

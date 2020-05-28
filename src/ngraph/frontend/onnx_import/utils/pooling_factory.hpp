@@ -97,7 +97,6 @@ namespace ngraph
                 explicit GlobalPoolingFactory(const Node& node);
                 virtual ~GlobalPoolingFactory() = default;
             };
-
-        } // namespace pooling
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

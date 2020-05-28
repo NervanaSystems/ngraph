@@ -91,7 +91,5 @@ namespace ngraph
                 m_opset.emplace(domain, opset);
             }
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

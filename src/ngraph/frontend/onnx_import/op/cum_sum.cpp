@@ -47,11 +47,7 @@ namespace ngraph
                     return NodeVector{
                         std::make_shared<default_opset::CumSum>(data, axis, exclusive, reverse)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

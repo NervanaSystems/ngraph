@@ -34,11 +34,7 @@ namespace ngraph
                     const auto& slope = ng_inputs.at(1);
                     return {std::make_shared<default_opset::PRelu>(data, slope)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -41,8 +41,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Clamp>(data, min_value, max_value)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_11
             {
@@ -84,11 +83,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Minimum>(max, max_of_min_and_data)};
                 }
-
-            } // namespace set_11
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

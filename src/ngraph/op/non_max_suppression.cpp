@@ -222,7 +222,7 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-} // namespace ngraph
+}
 
 // ------------------------------ V3 ------------------------------
 
@@ -432,4 +432,4 @@ namespace ngraph
     {
         return s << as_string(type);
     }
-} // namespace ngraph
+}

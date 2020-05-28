@@ -38,19 +38,16 @@ namespace ngraph
                     {
                         const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        return ngraph::builder::opset1::split(input, splits, axis);
+                        return as_node_vector(ngraph::builder::opset1::split(input, splits, axis));
                     }
                     else
                     {
                         const auto outputs_number = node.get_output_names().size();
-                        return ngraph::builder::opset1::split(input, outputs_number, axis);
+                        return as_node_vector(
+                            ngraph::builder::opset1::split(input, outputs_number, axis));
                     }
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

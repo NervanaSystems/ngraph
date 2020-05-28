@@ -78,7 +78,7 @@ namespace ngraph
                 uint64_t m_seed{0};
                 double m_probability{0.0};
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -134,8 +134,8 @@ namespace ngraph
                 uint64_t m_seed{0};
                 double m_probability{0.0};
             };
-        } // namespace v1
+        }
 
         using v0::GenerateMask;
-    } // op
-} // ngraph
+    }
+}
