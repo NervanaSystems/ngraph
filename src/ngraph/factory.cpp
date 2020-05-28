@@ -24,12 +24,6 @@ using namespace std;
 
 namespace ngraph
 {
-    mutex& get_registry_mutex()
-    {
-        static mutex registry_mutex;
-        return registry_mutex;
-    }
-
     template class NGRAPH_API FactoryRegistry<Node>;
 
     template <>

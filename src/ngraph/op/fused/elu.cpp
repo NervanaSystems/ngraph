@@ -44,7 +44,7 @@ bool ngraph::op::v0::Elu::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-NodeVector op::Elu::decompose_op() const
+OutputVector op::Elu::decompose_op() const
 {
     auto data = input_value(0);
     shared_ptr<Node> alpha_node =
