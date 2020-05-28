@@ -2665,8 +2665,7 @@ namespace
             SmallVector<Value, 4> ivs(vRes.rank());
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
-            AffineLoopNestBuilder(ivs, resLbs, resUbs, steps)(
-                [&] { iRes(ivs) = Value(initVal); });
+            AffineLoopNestBuilder(ivs, resLbs, resUbs, steps)([&] { iRes(ivs) = Value(initVal); });
         }
 
         // Generate loop nest that computes the actual index reduction.

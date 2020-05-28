@@ -68,9 +68,9 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using modules in: ${LLVM_DIR}")
 message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
 
-set(MLIR_CMAKE_PATH "${MLIR_LLVM_BUILD_DIR}/lib/cmake/mlir"
+set(MLIR_DIR "${MLIR_LLVM_BUILD_DIR}/lib/cmake/mlir"
     CACHE PATH "Path to MLIR cmake modules")
-list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_PATH}")
+list(APPEND CMAKE_MODULE_PATH "${MLIR_DIR}")
 find_package(MLIR REQUIRED CONFIG)
 
 set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
