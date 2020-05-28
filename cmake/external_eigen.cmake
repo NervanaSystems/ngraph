@@ -17,7 +17,7 @@
 # Enable ExternalProject CMake module
 include(ExternalProject)
 
-set(EIGEN_GIT_TAG 3.3.7)
+set(EIGEN_GIT_TAG c1128efb6c8aa75c9df7ed72ded07433482ca400)
 set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen.git)
 
 #------------------------------------------------------------------------------
