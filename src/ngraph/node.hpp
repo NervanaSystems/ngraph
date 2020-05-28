@@ -221,7 +221,7 @@ namespace ngraph
         ///
         /// \return A vector of nodes comprising the sub-graph. The order of output
         ///         tensors must match the match output tensors of the FusedOp
-        virtual NodeVector decompose_op() const { return NodeVector(); }
+        virtual OutputVector decompose_op() const { return OutputVector(); }
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
@@ -315,17 +315,19 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_inputs() const
+        std::deque<descriptor::Input>& get_input_descriptors()
             NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_outputs() const
+        const std::deque<descriptor::Input>& get_input_descriptors() const
+            NGRAPH_DEPRECATED("use inputs() instead")
+        {
+            return m_inputs;
+        }
+        std::deque<descriptor::Output>& get_output_descriptors()
+            NGRAPH_DEPRECATED("use outputs() instead");
+        const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node

@@ -43,7 +43,7 @@ namespace ngraph
                 Elu(const Output<Node>& data, const double alpha);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
