@@ -45,5 +45,5 @@ namespace ngraph
                 }
             }
         }
-    } // namespace onnx_import
+    }
 }

@@ -100,7 +100,7 @@ namespace ngraph
 
                         return {std::make_shared<default_opset::Add>(ng_conv, reshaped_bias)};
                     }
-                } // namespace
+                }
 
                 NodeVector conv(const Node& node)
                 {

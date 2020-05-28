@@ -137,5 +137,5 @@ namespace ngraph
         }
 
         using v0::GenerateMask;
-    } // op
-} // ngraph
+    }
+}

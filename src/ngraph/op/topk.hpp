@@ -264,5 +264,5 @@ namespace ngraph
         }
 
         using v0::TopK;
-    } // op
-} // ngraph
+    }
+}

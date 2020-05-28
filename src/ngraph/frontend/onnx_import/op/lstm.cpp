@@ -212,8 +212,7 @@ namespace ngraph
                     std::vector<float> m_activation_beta;
                     bool m_input_forget;
                 };
-
-            } // anonymous namespace
+            }
 
             namespace set_1
             {

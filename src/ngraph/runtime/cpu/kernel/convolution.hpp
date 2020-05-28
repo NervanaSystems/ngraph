@@ -125,5 +125,5 @@ namespace ngraph
                 }
             }
         }
-    } // namespace runtime
+    }
 }

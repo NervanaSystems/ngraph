@@ -173,7 +173,7 @@ namespace ngraph
                         }
                     }
                 }
-            } // namespace
+            }
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Gather)

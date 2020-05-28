@@ -182,8 +182,7 @@ namespace ngraph
                             }
                         }
                     }
-
-                } // namespace
+                }
 
                 NodeVector quant_conv(const Node& node)
                 {
