@@ -37,7 +37,7 @@ namespace ngraph
 /// value. Otherwise, the label is associated with the graph value and the match
 /// succeeds if the pattern input matches the graph value.
 ///
-/// DEPRECATED: If no inputs are given to Label, a True node is serves as the input. If
+/// DEPRECATED: If no inputs are given to Label, a True node serves as the input. If
 /// more than one inputs are given, an Or pattern of the inputs serves as the input.
 class NGRAPH_API ngraph::pattern::op::Label : public Pattern
 {
