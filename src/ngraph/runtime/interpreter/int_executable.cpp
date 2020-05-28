@@ -77,6 +77,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         {
         case OP_TYPEID::Clamp:
         case OP_TYPEID::MatMul:
+        case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Unsqueeze: retval = true; break;
         default: break;

@@ -69,6 +69,7 @@
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/runtime/reference/mod.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
@@ -829,6 +830,18 @@ protected:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
+            break;
+        }
+        case OP_TYPEID::Mod_v1:
+        {
+            const op::v1::Mod* mod = static_cast<const op::v1::Mod*>(&node);
+            reference::mod<T>(args[0]->get_data_ptr<const T>(),
+                              args[1]->get_data_ptr<const T>(),
+                              out[0]->get_data_ptr<T>(),
+                              node.get_input_shape(0),
+                              node.get_input_shape(1),
+                              mod->get_auto_broadcast());
+
             break;
         }
         case OP_TYPEID::Negative:
