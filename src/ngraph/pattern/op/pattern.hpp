@@ -81,15 +81,14 @@ public:
     {
     }
 
-    virtual std::shared_ptr<Node>
-        copy_with_new_args(const NodeVector& /* new_args */) const override
-    {
-        throw ngraph_error("Uncopyable");
-    }
-
     ValuePredicate get_predicate() const;
 
     bool is_pattern() const override { return true; }
+    std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& new_args) const override
+    {
+        throw std::runtime_error("Patterns do not support cloning");
+    }
+
 protected:
     ValuePredicate m_predicate;
 };
