@@ -84,5 +84,5 @@ namespace ngraph
         protected:
             Output<Node> make_dot(const Output<Node>& left, const Output<Node>& right) override;
         };
-    } // namespace builder
-} // namespace ngraph
+    }
+}

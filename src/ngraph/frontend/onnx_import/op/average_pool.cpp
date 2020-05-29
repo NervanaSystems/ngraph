@@ -30,11 +30,7 @@ namespace ngraph
                 {
                     return pooling::LocalPoolingFactory(node).make_avg_pool();
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

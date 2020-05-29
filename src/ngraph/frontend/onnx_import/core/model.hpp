@@ -81,7 +81,5 @@ namespace ngraph
         {
             return (outs << "<Model: " << model.get_producer_name() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

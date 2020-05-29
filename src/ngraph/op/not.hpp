@@ -71,5 +71,5 @@ namespace ngraph
         }
 
         using v0::Not;
-    } // namespace op
-} // namespace ngraph
+    }
+}

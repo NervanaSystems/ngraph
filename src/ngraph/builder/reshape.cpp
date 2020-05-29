@@ -268,9 +268,9 @@ namespace ngraph
                     // node_rank-1]
                     return make_shared<ngraph::opset1::Add>(node_rank, axis_node);
                 }
-            } // opset1
-        }     // builder
-    }         // ngraph
+            }
+        }
+    }
 }
 
 shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)

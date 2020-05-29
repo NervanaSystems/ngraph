@@ -72,11 +72,7 @@ namespace ngraph
                             saved_mean,
                             saved_var};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

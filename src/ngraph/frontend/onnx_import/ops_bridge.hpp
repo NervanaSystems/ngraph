@@ -57,8 +57,7 @@ namespace ngraph
                 {
                 }
             };
-
-        } // namespace error
+        }
 
         class OperatorsBridge
         {
@@ -128,7 +127,5 @@ namespace ngraph
                                          std::int64_t version,
                                          const std::string& domain);
         };
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

@@ -199,6 +199,5 @@ namespace ngraph
                                            const AxisSet& reduction_axes,
                                            const bool bessel_correction = false);
         }
-
-    } // namespace builder
-} // namespace ngraph
+    }
+}

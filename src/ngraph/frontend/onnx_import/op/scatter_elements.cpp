@@ -41,10 +41,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::opset3::ScatterElementsUpdate>(
                         data, indices, updates, axis_node)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

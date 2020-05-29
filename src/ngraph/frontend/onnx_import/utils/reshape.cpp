@@ -112,7 +112,6 @@ namespace ngraph
 
                 return builder::opset1::reshape(node, Shape{});
             }
-
-        } // namespace  reshape
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

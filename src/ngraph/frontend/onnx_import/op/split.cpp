@@ -47,11 +47,7 @@ namespace ngraph
                             ngraph::builder::opset1::split(input, outputs_number, axis));
                     }
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

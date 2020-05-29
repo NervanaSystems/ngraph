@@ -62,5 +62,5 @@ namespace ngraph
             };
         }
         using v0::SquaredDifference;
-    } // namespace op
-} // namespace ngraph
+    }
+}

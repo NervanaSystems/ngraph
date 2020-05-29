@@ -153,7 +153,5 @@ namespace ngraph
                 return detail::opset1::lp_norm(value, p_norm, reduction_axes, bias);
             }
         }
-
-    } // namespace builder
-
-} // namespace ngraph
+    }
+}

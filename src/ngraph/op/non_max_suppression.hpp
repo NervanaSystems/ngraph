@@ -94,7 +94,7 @@ namespace ngraph
             private:
                 int64_t max_boxes_output_from_input() const;
             };
-        } // namespace v1
+        }
 
         namespace v3
         {
@@ -181,8 +181,8 @@ namespace ngraph
             private:
                 int64_t max_boxes_output_from_input() const;
             };
-        } // namespace v3
-    }     // namespace op
+        }
+    }
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
@@ -221,4 +221,4 @@ namespace ngraph
             "AttributeAdapter<op::v3::NonMaxSuppression::BoxEncodingType>", 1};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-} // namespace ngraph
+}

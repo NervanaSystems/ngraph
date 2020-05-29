@@ -33,10 +33,7 @@ namespace ngraph
                     return NodeVector{
                         std::make_shared<default_opset::SpaceToDepth>(data, mode, block_size)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
