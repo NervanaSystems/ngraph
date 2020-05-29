@@ -17,6 +17,8 @@
 #include <memory>
 
 #include "fake_quantize.hpp"
+#include "ngraph/attribute_visitor.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
@@ -30,7 +32,6 @@
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/select.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -80,7 +81,14 @@ void op::FakeQuantize::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-NodeVector op::FakeQuantize::decompose_op() const
+bool ngraph::op::v0::FakeQuantize::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("levels", m_levels);
+    visitor.on_attribute("auto_broadcast", m_auto_broadcast);
+    return true;
+}
+
+OutputVector op::FakeQuantize::decompose_op() const
 {
     Output<Node> data{input_value(0)};
     Output<Node> input_low{input_value(1)};
@@ -90,7 +98,7 @@ NodeVector op::FakeQuantize::decompose_op() const
 
     if (m_auto_broadcast.m_type == AutoBroadcastType::NUMPY)
     {
-        OutputVector broadcasted_nodes = numpy_style_broadcast_values(
+        OutputVector broadcasted_nodes = builder::numpy_broadcast_outputs(
             OutputVector{data, input_low, input_high, output_low, output_high});
 
         data = broadcasted_nodes.at(0);
@@ -101,9 +109,9 @@ NodeVector op::FakeQuantize::decompose_op() const
     }
     else if (m_auto_broadcast.m_type == AutoBroadcastType::PDPD)
     {
-        OutputVector broadcasted_nodes =
-            pdpd_style_broadcast(OutputVector{data, input_low, input_high, output_low, output_high},
-                                 m_auto_broadcast.m_axis);
+        OutputVector broadcasted_nodes = builder::pdpd_broadcast(
+            OutputVector{data, input_low, input_high, output_low, output_high},
+            m_auto_broadcast.m_axis);
 
         data = broadcasted_nodes.at(0);
         input_low = broadcasted_nodes.at(1);
@@ -152,7 +160,7 @@ NodeVector op::FakeQuantize::decompose_op() const
     return {dequantized_data + output_low};
 }
 
-shared_ptr<Node> op::FakeQuantize::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::FakeQuantize::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<FakeQuantize>(new_args.at(0), // X
@@ -160,5 +168,6 @@ shared_ptr<Node> op::FakeQuantize::copy_with_new_args(const NodeVector& new_args
                                      new_args.at(2), // input_high
                                      new_args.at(3), // output_low
                                      new_args.at(4), // output_high
-                                     m_levels);
+                                     m_levels,
+                                     m_auto_broadcast);
 }

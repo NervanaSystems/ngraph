@@ -39,7 +39,7 @@ op::Stack::Stack(const NodeVector& args, int64_t axis)
 {
 }
 
-shared_ptr<Node> op::Stack::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Stack::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return make_shared<Stack>(new_args, m_axis);
 }
@@ -68,7 +68,7 @@ void op::Stack::pre_validate_and_infer_types()
     }
 }
 
-NodeVector op::Stack::decompose_op() const
+OutputVector op::Stack::decompose_op() const
 {
     auto axis = get_axis();
     std::vector<std::shared_ptr<ngraph::Node>> args;

@@ -45,7 +45,7 @@ op::PartialSlice::PartialSlice(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::PartialSlice::decompose_op() const
+OutputVector op::PartialSlice::decompose_op() const
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     if (data_pshape.is_dynamic())
@@ -119,7 +119,7 @@ NodeVector op::PartialSlice::decompose_op() const
     return {out};
 }
 
-shared_ptr<Node> op::PartialSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PartialSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -165,7 +165,7 @@ op::PartialSliceBackprop::PartialSliceBackprop(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::PartialSliceBackprop::decompose_op() const
+OutputVector op::PartialSliceBackprop::decompose_op() const
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     if (data_pshape.is_dynamic())
@@ -214,7 +214,7 @@ NodeVector op::PartialSliceBackprop::decompose_op() const
     return {din};
 }
 
-shared_ptr<Node> op::PartialSliceBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PartialSliceBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

@@ -40,7 +40,7 @@
 namespace ngraph
 {
     /// Base class for ngraph assertion failure exceptions.
-    class AssertionFailure : public ngraph_error
+    class NGRAPH_API AssertionFailure : public ngraph_error
     {
     public:
         AssertionFailure(const std::string& what_arg)
@@ -55,7 +55,8 @@ namespace ngraph
         {
         }
 
-        const char* what() const noexcept override { return m_what.c_str(); }
+        const char* what() const noexcept override;
+
     private:
         std::string m_what;
     };

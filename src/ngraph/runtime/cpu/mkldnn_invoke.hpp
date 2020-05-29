@@ -75,6 +75,7 @@ namespace ngraph
                     RELU,
                     RELUBACKPROP,
                     RNN,
+                    VANILLA_RNN,
                     SIGMOID,
                     SIGMOIDBACKPROP,
                     SLICE,

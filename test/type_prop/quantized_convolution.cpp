@@ -161,9 +161,7 @@ TEST(type_prop, quantized_conv_non_quantized_input_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Input element type (element::Type{32, 1, 1, 0, \"float\"}) "
-                             "must be a quantized type");
+        EXPECT_HAS_SUBSTRING(error.what(), "Input element type (f32) must be a quantized type");
     }
     catch (...)
     {
@@ -218,9 +216,7 @@ TEST(type_prop, quantized_conv_non_quantized_filter_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(),
-                             "Filter element type (element::Type{32, 1, 1, 0, \"float\"}) "
-                             "must be a quantized type");
+        EXPECT_HAS_SUBSTRING(error.what(), "Filter element type (f32) must be a quantized type");
     }
     catch (...)
     {
@@ -387,9 +383,7 @@ TEST(type_prop, quantized_conv_input_zero_point_type_mismatch_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Input Zero point element type (element::Type{8, 0, 1, 1, \"int8_t\"}) must "
-            "match input element type (element::Type{8, 0, 0, 1, \"uint8_t\"})");
+            error.what(), "Input Zero point element type (i8) must match input element type (u8)");
     }
     catch (...)
     {
@@ -447,8 +441,7 @@ TEST(type_prop, quantized_conv_filter_zero_point_type_mismatch_fails)
     {
         EXPECT_HAS_SUBSTRING(
             error.what(),
-            "Filter Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-            "match filter element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+            "Filter Zero point element type (u8) must match filter element type (i8)");
     }
     catch (...)
     {

@@ -16,7 +16,7 @@
 
 set(LIBS
     mlir_backend
-    MLIROptMain
+    MLIROptLib
     MLIRPass
     MLIRParser
     LLVMSupport

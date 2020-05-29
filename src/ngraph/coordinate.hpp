@@ -54,20 +54,19 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<Coordinate> : public ValueReference<Coordinate>,
-                                                    public ValueAccessor<std::vector<uint64_t>>
+    class NGRAPH_API AttributeAdapter<Coordinate>
+        : public IndirectVectorValueAccessor<Coordinate, std::vector<int64_t>>
     {
     public:
         AttributeAdapter(Coordinate& value)
-            : ValueReference<Coordinate>(value)
+            : IndirectVectorValueAccessor<Coordinate, std::vector<int64_t>>(value)
         {
         }
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Coordinate>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
-        const std::vector<uint64_t>& get() override;
-        void set(const std::vector<uint64_t>& value) override;
     };
 
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
 }

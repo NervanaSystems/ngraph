@@ -34,18 +34,21 @@ namespace ngraph
                     NodeVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);
                     auto axis = node.get_attribute_value<std::int64_t>("axis", 1);
-                    auto data_rank = data->get_shape().size();
-                    // Accepted range is [-r, r] where r = rank(input).
-                    const auto normalized_axis = ngraph::normalize_axis(
-                        node.get_description(), axis, data_rank, -data_rank, data_rank);
+                    const auto data_rank = data->get_output_partial_shape(0).rank();
 
-                    return {ngraph::builder::opset1::flatten(data, normalized_axis)};
+                    if (data_rank.is_static())
+                    {
+                        const std::int64_t data_rank_value = data_rank.get_length();
+                        // Accepted range is [-r, r] where r = rank(input).
+                        axis = ngraph::normalize_axis(node.get_description(),
+                                                      axis,
+                                                      data_rank_value,
+                                                      -data_rank_value,
+                                                      data_rank_value);
+                    }
+                    return {ngraph::builder::opset1::flatten(data, axis)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+            }
+        }
+    }
+}

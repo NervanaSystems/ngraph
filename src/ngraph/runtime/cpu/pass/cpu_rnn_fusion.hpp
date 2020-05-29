@@ -28,6 +28,7 @@ namespace ngraph
         {
             namespace pass
             {
+                class VanillaRNNFusion;
                 class LSTMFusion;
                 class RNNFusion;
                 class BiDirectionalRnn;
@@ -36,6 +37,19 @@ namespace ngraph
         }
     }
 }
+class CPU_BACKEND_API ngraph::runtime::cpu::pass::VanillaRNNFusion
+    : public ngraph::pass::GraphRewrite
+{
+public:
+    VanillaRNNFusion()
+        : GraphRewrite()
+    {
+        construct_vanilla_rnn();
+    }
+
+private:
+    void construct_vanilla_rnn();
+};
 
 class CPU_BACKEND_API ngraph::runtime::cpu::pass::LSTMFusion : public ngraph::pass::GraphRewrite
 {

@@ -1,9 +1,13 @@
 ![nGraph Compiler stack](doc/sphinx/source/graphics/ngraph_header.png)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/NervanaSystems/ngraph/blob/master/LICENSE) [![Build Status][build-status-badge]][build-status] 
 
 <div align="left">
   <h4>
-    <a href="./ABOUT.md">Architecture &amp; features</a> | <a href="./ecosystem-overview.md" >Ecosystem</a> | <a href="https://www.ngraph.ai/documentation/project/release-notes">Release notes</a><span> | </span> <a href="https://www.ngraph.ai/documentation">Documentation</a><span> | </span> <a href="#How-to-contribute" >Contribution guide</a>
+    <a href="./ABOUT.md">Architecture &amp; features</a><span> | </span>  
+    <a href="./ecosystem-overview.md" >Ecosystem</a><span> | </span> 
+	<a href="https://www.ngraph.ai/documentation/project/release-notes">Release notes</a><span> | </span> 
+    <a href="https://www.ngraph.ai/documentation">Documentation</a><span> | </span> 
+    <a href="#How-to-contribute" >Contribution guide</a><span> | </span>
+    <a href="https://github.com/NervanaSystems/ngraph/blob/master/LICENSE">License: Apache 2.0</a>
  </h4>
 </div>
 
@@ -29,8 +33,7 @@ The Python wheels for nGraph have been tested and are supported on the following
 
 To install via pip, run: 
 
-```python
-
+```
 pip install --upgrade pip==19.3.1
 pip install ngraph-core
 ```

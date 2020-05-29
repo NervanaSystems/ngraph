@@ -73,12 +73,12 @@ void op::util::LogicalReduction::validate_and_infer_types()
     {
         AxisSet reduction_axes;
         auto reduction_axes_val =
-            as_type<op::Constant>(input_value(1).get_node())->get_vector<int64_t>();
+            as_type<op::Constant>(input_value(1).get_node())->cast_vector<int64_t>();
         for (auto axis : reduction_axes_val)
         {
             try
             {
-                axis = normalize_axis(this, axis, size_t(input_rank));
+                axis = normalize_axis(this, axis, input_rank);
             }
             catch (const ngraph_error&)
             {
@@ -97,7 +97,7 @@ void op::util::LogicalReduction::validate_and_infer_types()
         }
 
         std::vector<Dimension> dims;
-        for (size_t i = 0; i < size_t(input_rank); i++)
+        for (size_t i = 0; i < input_rank.get_length(); i++)
         {
             if (reduction_axes.count(i) == 0)
             {

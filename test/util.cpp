@@ -192,7 +192,7 @@ public:
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
-    std::list<std::shared_ptr<ngraph::Node>> nodes;
+    std::vector<std::shared_ptr<ngraph::Node>> nodes;
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C}, "f");
 
@@ -205,8 +205,8 @@ public:
         nodes.push_back(C);
     }
 
-    bool CompareNodeVector(const std::list<std::shared_ptr<ngraph::Node>>& orig,
-                           const std::list<std::shared_ptr<ngraph::Node>>& clone,
+    bool CompareNodeVector(const std::vector<std::shared_ptr<ngraph::Node>>& orig,
+                           const std::vector<std::shared_ptr<ngraph::Node>>& clone,
                            const NodeMap& nm)
     {
         if (orig.size() != clone.size())
@@ -373,7 +373,7 @@ TEST(graph_util, test_subgraph_topological_sort)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
-    std::list<std::shared_ptr<Node>> expected{A, add, mul};
+    std::vector<std::shared_ptr<Node>> expected{A, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -390,8 +390,8 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     add->add_control_dependency(E);
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
-    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D}, true);
-    std::list<std::shared_ptr<Node>> expected{A, D, add, mul};
+    auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D});
+    std::vector<std::shared_ptr<Node>> expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -545,13 +545,13 @@ TEST(graph, huge)
     {
         auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
         std::shared_ptr<Node> n = param;
+        weak_nodes.push_back(n);
         for (size_t i = 0; i < 1000000; i++)
         {
             n = make_shared<op::Negative>(n);
+            weak_nodes.push_back(n);
         }
         auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
-        f->map_unordered_ops(
-            [&weak_nodes](Node* node) { weak_nodes.push_back(node->shared_from_this()); });
     }
 
     for (auto& weak_node : weak_nodes)
@@ -690,4 +690,78 @@ TEST(util, clone_function_op_annotations)
     }
     EXPECT_TRUE(found_A);
     EXPECT_TRUE(found_B);
+}
+
+TEST(util, topological_sort_replace)
+{
+    Shape shape{2, 2};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
+    bool custom_sorter_used = false;
+
+    f->set_topological_sort(
+        [&custom_sorter_used](const std::vector<std::shared_ptr<Node>>& root_nodes) {
+            custom_sorter_used = true;
+            return topological_sort(root_nodes);
+        });
+
+    // Need to now call topological sort but don't care about the results
+    f->get_ordered_ops();
+
+    EXPECT_TRUE(custom_sorter_used);
+}
+
+TEST(util, double_to_int_limits)
+{
+    auto round_func = [](double x) { return std::round(x); };
+
+    double x = -std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::min() == double_to_int<int8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::min() == double_to_int<int16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::min() == double_to_int<int32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::min() == double_to_int<int64_t>(x, round_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::min() == double_to_int<uint8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::min() == double_to_int<uint16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::min() == double_to_int<uint32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::min() == double_to_int<uint64_t>(x, round_func));
+
+    x = std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::max() == double_to_int<int8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::max() == double_to_int<int16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::max() == double_to_int<int32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::max() == double_to_int<int64_t>(x, round_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::max() == double_to_int<uint8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::max() == double_to_int<uint16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::max() == double_to_int<uint32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::max() == double_to_int<uint64_t>(x, round_func));
+}
+
+TEST(util, double_to_int_assert)
+{
+    auto round_func = [](double x) { return std::round(x); };
+    ASSERT_THROW(double_to_int<float>(123.123, round_func), std::runtime_error);
+    ASSERT_THROW(double_to_int<double>(123.123, round_func), std::runtime_error);
+}
+
+TEST(util, double_to_int)
+{
+    auto ceil_func = [](double x) { return std::ceil(x); };
+    auto floor_func = [](double x) { return std::floor(x); };
+    auto round_func = [](double x) { return std::round(x); };
+
+    double x = -1.5;
+    EXPECT_TRUE(double_to_int<int32_t>(x, ceil_func) == -1);
+    EXPECT_TRUE(double_to_int<int32_t>(x, floor_func) == -2);
+    EXPECT_TRUE(double_to_int<int32_t>(x, round_func) == -2);
+
+    x = 1.5;
+    EXPECT_TRUE(double_to_int<int32_t>(x, ceil_func) == 2);
+    EXPECT_TRUE(double_to_int<int32_t>(x, floor_func) == 1);
+    EXPECT_TRUE(double_to_int<int32_t>(x, round_func) == 2);
 }

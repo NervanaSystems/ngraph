@@ -22,6 +22,7 @@
 
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
@@ -63,7 +64,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         }
     }
 
-    bool using_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
+    bool using_ref_kernels = getenv_bool("NGRAPH_CPU_USE_REF_KERNELS");
 
     vector<std::string> backend_names{"INTERPRETER", "CPU"};
     vector<int> n_runs{200, 200, using_ref_kernels ? 200 : 200000}; // one for each backend

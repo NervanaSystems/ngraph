@@ -23,7 +23,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::MatmulBias::type_info;
 
-shared_ptr<Node> op::MatmulBias::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MatmulBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2 && new_args.size() != 3)
     {
@@ -32,7 +32,7 @@ shared_ptr<Node> op::MatmulBias::copy_with_new_args(const NodeVector& new_args) 
 
     return make_shared<MatmulBias>(new_args.at(0),
                                    new_args.at(1),
-                                   new_args.size() == 3 ? new_args.at(2) : nullptr,
+                                   new_args.size() == 3 ? new_args.at(2) : Output<Node>(),
                                    m_shape_w,
                                    m_shape_x,
                                    m_transpose_w,
@@ -48,7 +48,7 @@ op::MatmulBias::MatmulBias(const Output<Node>& W,
                            bool transpose_w,
                            bool transpose_x,
                            AxisSet axes)
-    : Op(b.get_node_shared_ptr() == nullptr ? OutputVector{W, x} : OutputVector{W, x, b})
+    : Op(b == Output<Node>() ? OutputVector{W, x} : OutputVector{W, x, b})
     , m_shape_w(shape_w)
     , m_shape_x(shape_x)
     , m_transpose_w(transpose_w)

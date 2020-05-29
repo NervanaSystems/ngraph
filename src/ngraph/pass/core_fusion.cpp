@@ -487,15 +487,15 @@ void pass::CoreFusion::construct_conv_affine_folding()
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
 
-            if (bcast->get_argument(0)->get_shape().size() == 1 &&
+            if (bcast->get_input_shape(0).size() == 1 &&
                 bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
                 return true;
             }
 
-            if (bcast->get_argument(0)->get_shape().size() == 2)
+            if (bcast->get_input_shape(0).size() == 2)
             {
-                auto input_shape = bcast->get_argument(0)->get_shape();
+                auto input_shape = bcast->get_input_shape(0);
                 if (input_shape[0] == 1 && bcast->get_broadcast_axes() == AxisSet{2, 3})
                     return true;
             }
@@ -508,13 +508,13 @@ void pass::CoreFusion::construct_conv_affine_folding()
         }
 
         auto get_bcast_input = [](const shared_ptr<op::Broadcast>& bcast) {
-            if (bcast->get_argument(0)->get_shape().size() == 1)
+            if (bcast->get_input_shape(0).size() == 1)
             {
                 return bcast->get_argument(0);
             }
-            if (bcast->get_argument(0)->get_shape().size() == 2)
+            if (bcast->get_input_shape(0).size() == 2)
             {
-                Shape bshape{bcast->get_argument(0)->get_shape()[1]};
+                Shape bshape{bcast->get_input_shape(0)[1]};
                 return static_pointer_cast<Node>(
                     make_shared<op::Reshape>(bcast->get_argument(0), AxisVector{0, 1}, bshape));
             }
@@ -621,16 +621,16 @@ void pass::CoreFusion::construct_reshape_broadcast()
         auto pattern_map = m.get_pattern_map();
         auto broadcast_m = static_pointer_cast<op::Broadcast>(m.get_match_root());
         auto reshape1_m = static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
-        auto input_m = m.get_pattern_map()[input];
+        auto input_m = m.get_pattern_value_map()[input];
 
         // it doesn't seem to make sense to support shapes : [0] or [1]
-        if (input_m->get_shape().size() != 1 || input_m->get_shape().at(0) < 2)
+        if (input_m.get_shape().size() != 1 || input_m.get_shape().at(0) < 2)
         {
             NGRAPH_DEBUG << "input_m isn't a scalar or contains zero dimension";
             return false;
         }
 
-        size_t dim = input_m->get_shape().at(0);
+        size_t dim = input_m.get_shape().at(0);
 
         // We are going to support the most common case where broadcast doesn't add 1-dimensions
         // since it's also very simple to implement
@@ -785,7 +785,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                 return false;
             }
             if (!are_img_dims_equal(sconv->get_shape(), supported_shapes[sparse_shape_index]) ||
-                !are_img_dims_equal(sconv->get_argument(1)->get_shape(), shape_1) ||
+                !are_img_dims_equal(sconv->get_input_shape(1), shape_1) ||
                 sconv->get_window_movement_strides() != stride_2 || !is_trivial_convolution(sconv))
             {
                 NGRAPH_DEBUG << sconv->get_name() << " and its weights are of the wrong shape (not "
@@ -801,7 +801,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         auto m_conv_stride1 = static_pointer_cast<op::Convolution>(pattern_map[conv_stride1_label]);
 
         if (!are_img_dims_equal(m_conv_stride1->get_shape(), supported_shapes[full_shape_index]) ||
-            !are_img_dims_equal(m_conv_stride1->get_argument(1)->get_shape(), win_size_1) ||
+            !are_img_dims_equal(m_conv_stride1->get_input_shape(1), win_size_1) ||
             m_conv_stride1->get_window_movement_strides() != stride_1 ||
             !is_trivial_convolution(m_conv_stride1))
         {
@@ -815,7 +815,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         auto m_conv_stride3 = static_pointer_cast<op::Convolution>(pattern_map[conv_stride3_label]);
 
         if (!are_img_dims_equal(m_conv_stride3->get_shape(), supported_shapes[full_shape_index]) ||
-            !are_img_dims_equal(m_conv_stride3->get_argument(1)->get_shape(), shape_3) ||
+            !are_img_dims_equal(m_conv_stride3->get_input_shape(1), shape_3) ||
             m_conv_stride3->get_window_movement_strides() != stride_1 ||
             !is_trivial_convolution(m_conv_stride3, true))
         {

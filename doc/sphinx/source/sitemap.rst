@@ -41,7 +41,6 @@
      :maxdepth: 1
 
      Basic Concepts <backends/index.rst>
-     backends/plaidml-ng-api/index.rst
      Integrating Other Backends <backends/cpp-api.rst>
 
 

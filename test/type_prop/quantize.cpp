@@ -241,8 +241,7 @@ TEST(type_prop, quantize_i8_to_u8_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale / input element type (element::Type{8, 0, 1, 1, \"int8_t\"}) "
-                             "must be a floating point number");
+                             "Scale / input element type (i8) must be a floating point number");
     }
     catch (...)
     {
@@ -275,9 +274,7 @@ TEST(type_prop, quantize_f32_to_f32_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Output element type (element::Type{32, 1, 1, 0, \"float\"}) must be a quantized type");
+        EXPECT_HAS_SUBSTRING(error.what(), "Output element type (f32) must be a quantized type");
     }
     catch (...)
     {
@@ -311,8 +308,7 @@ TEST(type_prop, quantize_batch_scale_type_mismatch_fails)
     catch (const NodeValidationFailure& error)
     {
         EXPECT_HAS_SUBSTRING(error.what(),
-                             "Scale element type (element::Type{64, 1, 1, 0, \"double\"}) must "
-                             "match input element type (element::Type{32, 1, 1, 0, \"float\"})");
+                             "Scale element type (f64) must match input element type (f32)");
     }
     catch (...)
     {
@@ -345,10 +341,8 @@ TEST(type_prop, quantize_zero_point_type_mismatch_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(
-            error.what(),
-            "Zero point element type (element::Type{8, 0, 0, 1, \"uint8_t\"}) must "
-            "match output element type (element::Type{8, 0, 1, 1, \"int8_t\"})");
+        EXPECT_HAS_SUBSTRING(error.what(),
+                             "Zero point element type (u8) must match output element type (i8)");
     }
     catch (...)
     {

@@ -46,8 +46,8 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         const auto variadic_split = static_pointer_cast<op::v1::VariadicSplit>(m.get_match_root());
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
-        const auto norm_axis_val =
-            ngraph::normalize_axis(variadic_split.get(), axis_val, data_node->get_shape().size());
+        const auto norm_axis_val = ngraph::normalize_axis(
+            variadic_split.get(), axis_val, data_node->get_output_partial_shape(0).rank());
         auto split_lengths = lengths_node->cast_vector<int64_t>();
 
         // Adjust split lengths in case of negatives
@@ -78,7 +78,7 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         {
             for (auto& input : variadic_split->output(i).get_target_inputs())
             {
-                input.replace_source_output((slices[i]->output(0)));
+                input.replace_source_output(slices[i]);
             }
         }
         variadic_split->outputs().clear();

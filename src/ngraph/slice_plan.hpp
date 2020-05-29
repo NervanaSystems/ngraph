@@ -40,7 +40,7 @@ namespace ngraph
     //
     // A SlicePlan is used to collect parameters for these ops.
     //
-    struct SlicePlan
+    struct NGRAPH_API SlicePlan
     {
         // Parameters for the Slice
         std::vector<int64_t> begins;
@@ -53,15 +53,18 @@ namespace ngraph
 
         // Parameters for the Reverse
         AxisSet reverse_axes;
+
+        bool operator==(const SlicePlan& other) const;
+        bool operator!=(const SlicePlan& other) const;
     };
 
-    SlicePlan make_slice_plan(const Shape& input_shape,
-                              const std::vector<int64_t>& begins,
-                              const std::vector<int64_t>& ends,
-                              const std::vector<int64_t>& strides,
-                              const AxisSet& lower_bounds_mask,
-                              const AxisSet& upper_bounds_mask,
-                              const AxisSet& new_axis_mask,
-                              const AxisSet& shrink_axis_mask,
-                              const AxisSet& ellipsis_mask);
+    SlicePlan NGRAPH_API make_slice_plan(const Shape& input_shape,
+                                         const std::vector<int64_t>& begins,
+                                         const std::vector<int64_t>& ends,
+                                         const std::vector<int64_t>& strides,
+                                         const AxisSet& lower_bounds_mask,
+                                         const AxisSet& upper_bounds_mask,
+                                         const AxisSet& new_axis_mask,
+                                         const AxisSet& shrink_axis_mask,
+                                         const AxisSet& ellipsis_mask);
 }

@@ -16,6 +16,7 @@
 
 #include <fstream>
 
+#include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
@@ -158,7 +159,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
                               int64_t jump_distance)
 {
     std::stringstream ss;
-    if (getenv("NGRAPH_VISUALIZE_EDGE_LABELS") != nullptr)
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
         if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
@@ -170,7 +171,7 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         ss << label_edge.str();
     }
 
-    else if (getenv("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE") != nullptr)
+    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
@@ -201,10 +202,10 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         }
 
         auto nodes = topological_sort(f->get_ops());
-        nodes.reverse();
 
-        for (auto& node : nodes)
+        for (auto it = nodes.rbegin(); it != nodes.rend(); ++it)
         {
+            auto& node = *it;
             for (auto& output : node->outputs())
             {
                 for (auto& input : output.get_target_inputs())
@@ -325,7 +326,7 @@ static std::string pretty_partial_shape(const PartialShape& shape)
         bool first = true;
 
         ss << "[";
-        for (size_t i = 0; i < size_t(shape.rank()); i++)
+        for (size_t i = 0; i < shape.rank().get_length(); i++)
         {
             if (!first)
             {
@@ -337,7 +338,7 @@ static std::string pretty_partial_shape(const PartialShape& shape)
             }
             else
             {
-                ss << size_t(shape[i]);
+                ss << shape[i].get_length();
             }
             first = false;
         }
@@ -365,34 +366,100 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     // Construct the label attribute
     {
         stringstream label;
-        label << "label=\"" << get_node_name(node);
+        label << "label=<<table border=\"0\" cellborder=\"0\" cellpadding=\"0\" "
+                 "style=\"\"><tr><td align=\"center\" colspan=\"5\">"
+              << node->get_name() << "</td></tr>";
 
-        static const char* nvtos = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-        if (nvtos != nullptr)
+        size_t index = 0;
+        const string td_start = "<td><font point-size=\"10\" face=\"courier\">";
+        const string td_end = "</font></td>";
+        vector<string> rows;
+        vector<string> row_compare;
+        for (auto input : node->inputs())
         {
-            // The shapes of the Outputs of a multi-output op
-            // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_output_size() != 1
-                                 ? string("[skipped]")
-                                 : pretty_partial_shape(node->get_output_partial_shape(0)));
+            stringstream row_ss;
+            stringstream row_compare_ss;
+            row_ss << "<tr>";
+            row_ss << td_start << "I[" << index++ << "]" << td_end;
+            row_compare_ss << td_start << input.get_element_type().get_type_name() << td_end;
+            row_compare_ss << td_start << pretty_partial_shape(input.get_shape()) << td_end;
+            row_ss << row_compare_ss.str() << "</tr>";
+            rows.push_back(row_ss.str());
+            row_compare.push_back("I" + row_compare_ss.str());
+        }
+        index = 0;
+        for (auto output : node->outputs())
+        {
+            stringstream row_ss;
+            stringstream row_compare_ss;
+            row_ss << "<tr>";
+            row_ss << td_start << "O[" << index++ << "]" << td_end;
+            row_compare_ss << td_start << output.get_element_type().get_type_name() << td_end;
+            row_compare_ss << td_start << pretty_partial_shape(output.get_shape()) << td_end;
+            row_ss << row_compare_ss.str() << "</tr>";
+            rows.push_back(row_ss.str());
+            row_compare.push_back("O" + row_compare_ss.str());
         }
 
-        static const char* nvtot = getenv("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-        if (nvtot != nullptr)
+        // Collapse duplicate rows
+        vector<int64_t> remove_list;
+        for (size_t i = 1; i < row_compare.size() - 1; i++)
         {
-            // The types of the Outputs of a multi-output op
-            // will be printed for its corresponding `GetOutputElement`s
-            label << " "
-                  << ((node->get_output_size() != 1) ? string("[skipped]")
-                                                     : node->get_element_type().c_type_string());
+            string s1 = row_compare[i - 1];
+            string s2 = row_compare[i];
+            string s3 = row_compare[i + 1];
+            if (s1 == s2 && s2 == s3)
+            {
+                remove_list.push_back(i);
+            }
+        }
+        if (remove_list.size() > 3)
+        {
+            // Go backwards through the list to make removal easier
+            int64_t start = remove_list[remove_list.size() - 1];
+            int64_t end = start;
+            int64_t count = 0;
+            for (int64_t i = remove_list.size() - 2; i >= 0; --i)
+            {
+                int64_t row = remove_list[i];
+                if (row == start - 1)
+                {
+                    // continue
+                    start = row;
+                    count++;
+                }
+                else
+                {
+                    rows.erase(rows.begin() + start, rows.begin() + end + 1);
+                    string str = "<tr><td align=\"center\" colspan=\"5\">...</td></tr>";
+                    rows.insert(rows.begin() + start, str);
+                    end = row;
+                    start = row;
+                }
+            }
+            if (start != end)
+            {
+                rows.erase(rows.begin() + start, rows.begin() + end + 1);
+                string str = "<tr><td align=\"center\" colspan=\"5\">...</td></tr>";
+                rows.insert(rows.begin() + start, str);
+            }
         }
 
-        auto eh = m_ops_to_details.find(node->get_type_info());
-        if (eh != m_ops_to_details.end())
+        // if (get_provenance_enabled())
+        // {
+        //     for (auto tag : node->get_provenance_tags())
+        //     {
+        //         string str = "<tr><td align=\"left\" colspan=\"5\">tag=" + tag + "</td></tr>";
+        //         rows.push_back(str);
+        //     }
+        // }
+
+        for (const string& s : rows)
         {
-            eh->second(*node, label);
+            label << s;
         }
-        label << "\"";
+
+        label << "</table>>";
         attributes.push_back(label.str());
     }
 

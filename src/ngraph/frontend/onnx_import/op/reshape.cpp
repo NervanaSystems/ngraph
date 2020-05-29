@@ -43,9 +43,6 @@ namespace ngraph
                     // Since opset 5 the target shape is provided as input
                     if (ng_inputs.size() == 2)
                     {
-                        NGRAPH_CHECK(ng_inputs.at(1)->is_constant(),
-                                     "The target shape input has to be a Constant.");
-
                         pattern = ng_inputs.at(1);
                     }
                     else
@@ -59,11 +56,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Reshape>(data, pattern, true)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

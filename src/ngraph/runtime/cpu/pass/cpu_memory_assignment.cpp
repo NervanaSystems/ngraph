@@ -56,7 +56,7 @@ size_t runtime::cpu::pass::CPUMemoryAssignment::get_bufferID(descriptor::Tensor*
 }
 
 void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
-    std::list<std::shared_ptr<Node>> nodes)
+    std::vector<std::shared_ptr<Node>> nodes)
 {
     for (shared_ptr<Node> node : nodes)
     {
@@ -88,7 +88,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                     // start from the last concat
                     if (found_last_concat)
                     {
-                        auto output_tensor = &concat->output(0).get_tensor();
+                        auto output_tensor = &concat->get_output_tensor(0);
                         auto output_bufferID = get_bufferID(output_tensor);
 
                         auto offset = output_tensor->get_pool_offset();
@@ -136,7 +136,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Ou
     auto op = output.get_node_shared_ptr();
     if (is_type<op::Concat>(op))
     {
-        auto output_tensor = &op->output(0).get_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto output_bufferID = get_bufferID(output_tensor);
 
         auto offset = output_tensor->get_pool_offset();
@@ -215,7 +215,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Ou
 
 // slice
 void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
-    std::list<std::shared_ptr<Node>> nodes)
+    std::vector<std::shared_ptr<Node>> nodes)
 {
     for (shared_ptr<Node>& node : nodes)
     {
@@ -230,7 +230,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                     auto arg = input.get_node_shared_ptr();
                     auto input_tensor = &input.get_tensor();
                     auto input_bufferID = get_bufferID(input_tensor);
-                    auto output_tensor = &slice->output(0).get_tensor();
+                    auto output_tensor = &slice->get_output_tensor(0);
                     auto output_bufferID = get_bufferID(output_tensor);
 
                     // same set, in place slice allowed
@@ -296,7 +296,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(const Inp
             {
                 if (oi_pair.input == in.get_index())
                 {
-                    auto input_tensor = &node->input(oi_pair.input).get_tensor();
+                    auto input_tensor = &node->get_input_tensor(oi_pair.input);
                     auto input_bufferID = get_bufferID(input_tensor);
                     size_t output_index = oi_pair.output;
                     auto output_tensor = &node->output(output_index).get_tensor();
@@ -328,7 +328,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(const Inp
 // new set is created. bufferID_to_tensorSets maps bufferID to the pair of TensorRole and buffer
 // set. TensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE, which tells from where the memory
 // buffer comes. tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
-void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared_ptr<Node>>& ops)
+void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shared_ptr<Node>>& ops)
 {
     unordered_set<descriptor::Tensor*> in_place_slice_chain;
     size_t count = 0;
@@ -337,7 +337,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         const shared_ptr<Node>& node = *it;
         if (node->is_parameter())
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                 TensorRole::INPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -346,7 +346,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         }
         else if (is_type<op::Constant>(node))
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                 TensorRole::CONSTANT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -355,8 +355,8 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
         }
         else if (node->is_output())
         {
-            auto output_tensor = &node->output(0).get_tensor();
-            auto input_tensor = &node->input(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
+            auto input_tensor = &node->get_input_tensor(0);
             auto bufferID = get_bufferID(input_tensor);
             NGRAPH_CHECK(bufferID <= count);
 
@@ -397,7 +397,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
                     // in place concat
                     if (is_type<op::Concat>(node))
                     {
-                        auto output_tensor = &node->output(0).get_tensor();
+                        auto output_tensor = &node->get_output_tensor(0);
                         auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                             TensorRole::INTERMEDIATE,
                             unordered_set<descriptor::Tensor*>({output_tensor}));
@@ -545,7 +545,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(list<shared
 }
 
 void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
-    std::list<std::shared_ptr<Node>>& ops)
+    std::vector<std::shared_ptr<Node>>& ops)
 {
     auto find_role = [](TensorRole tensor_role) -> string {
         switch (tensor_role)
@@ -620,7 +620,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
 
 bool runtime::cpu::pass::CPUMemoryAssignment::run_on_function(shared_ptr<ngraph::Function> function)
 {
-    list<shared_ptr<Node>> ops = function->get_ordered_ops();
+    auto ops = function->get_ordered_ops();
 
     build_buffer_sets_maps(ops);
     liveness_analysis(ops);

@@ -108,7 +108,7 @@ namespace ngraph
 namespace std
 {
     template <>
-    struct hash<ngraph::DiscreteTypeInfo>
+    struct NGRAPH_API hash<ngraph::DiscreteTypeInfo>
     {
         size_t operator()(const ngraph::DiscreteTypeInfo& k) const;
     };

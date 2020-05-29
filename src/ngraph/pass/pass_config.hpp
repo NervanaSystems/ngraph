@@ -19,6 +19,8 @@
 #include <map>
 #include <string>
 
+#include <ngraph/ngraph_visibility.hpp>
+
 namespace ngraph
 {
     namespace pass
@@ -27,7 +29,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::PassConfig
+class NGRAPH_API ngraph::pass::PassConfig
 {
 public:
     PassConfig();

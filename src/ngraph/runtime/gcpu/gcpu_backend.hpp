@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
@@ -45,6 +46,8 @@ public:
     GCPUBackend(const GCPUBackend&) = delete;
     GCPUBackend(GCPUBackend&&) = delete;
     GCPUBackend& operator=(const GCPUBackend&) = delete;
+
+    std::shared_ptr<Tensor> create_tensor() override;
 
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;

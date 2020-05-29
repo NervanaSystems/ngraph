@@ -16,6 +16,7 @@
 
 #include "matmul_integer.hpp"
 #include "ngraph/builder/matmul_factory.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -41,12 +42,9 @@ namespace ngraph
                                "accepts them. Consider use of element-wise multiplication instead "
                                "to conform with ONNX standard.";
                     }
-                    return factory.make_matmul_op();
+                    return as_node_vector(factory.make_matmul_op());
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

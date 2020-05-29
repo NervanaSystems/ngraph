@@ -54,12 +54,12 @@ namespace ngraph
                           int64_t begin_norm_axis = 1,
                           double epsilon = 1e-5);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_keep_stats() const { return m_keep_stats; }
                 bool get_use_affine() const { return m_use_affine; }
@@ -119,12 +119,12 @@ namespace ngraph
                                   int64_t begin_norm_axis = 1,
                                   double epsilon = 1e-5);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_use_stats() const { return m_use_stats; }
                 bool get_use_affine() const { return m_use_affine; }

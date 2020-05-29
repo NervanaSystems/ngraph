@@ -18,11 +18,11 @@
 #include "mvn.hpp"
 #include "ngraph/builder/reduce_ops.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -55,13 +55,12 @@ void op::MVN::validate_and_infer_types()
 {
     // if m_across_channels is true we should calculate mean and variance per batch
     // else we calculate these per channel
-    if (m_reduction_axes.empty())
+    if (m_reduction_axes.empty() && input_value(0).get_partial_shape().rank().is_static())
     {
-        auto data = input_value(0);
         AxisSet reduction_axes;
         reduction_axes.insert(0);
         size_t start_axis = m_across_channels ? 1 : 2;
-        for (size_t i = start_axis; i < data.get_shape().size(); ++i)
+        for (size_t i = start_axis; i < input_value(0).get_partial_shape().rank().get_length(); ++i)
         {
             reduction_axes.insert(i);
         }
@@ -71,7 +70,7 @@ void op::MVN::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-NodeVector op::MVN::decompose_op() const
+OutputVector op::MVN::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape(); // assume that data has n and c channels.
@@ -96,15 +95,24 @@ NodeVector op::MVN::decompose_op() const
         variance = variance + eps_node;
         variance = std::make_shared<op::Broadcast>(variance, data_shape, m_reduction_axes);
 
-        return as_node_vector({mean_normalization / variance});
+        return OutputVector{mean_normalization / variance};
     }
 }
 
-shared_ptr<Node> op::MVN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::MVN::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 1,
                           "Expected 1 element in new_args for the MVN op but got ",
                           new_args.size());
     return make_shared<MVN>(new_args.at(0), m_reduction_axes, m_normalize_variance, m_eps);
+}
+
+bool op::MVN::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("eps", m_eps);
+    visitor.on_attribute("across_channels", m_across_channels);
+    visitor.on_attribute("normalize_variance", m_normalize_variance);
+    visitor.on_attribute("reduction_axes", m_reduction_axes);
+    return true;
 }

@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/softmax.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"

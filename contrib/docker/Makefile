@@ -83,6 +83,7 @@ endif
 # Configuration for GPU backend in Dockerfiles with "_gpu" suffix
 # The nvidia-docker command must be used for any targets that actually utilize GPU devices
 ifneq ("$(shell echo ${NVIDIA_SMI} | grep nvidia-smi)","")
+    CMAKE_OPTIONS_EXTRA+=-DNGRAPH_GPU_ENABLE=TRUE
     DOCKERFILE=${CPU_DOCKERFILE}_gpu
     DOCKER_CMD=nvidia-docker
     DOCKER_CMD_MESG=GPU appears to be supported on this platform.  Building for GPU and CPU backend support.

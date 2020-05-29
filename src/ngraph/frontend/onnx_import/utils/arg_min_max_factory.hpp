@@ -49,9 +49,8 @@ namespace ngraph
 
                 const std::int64_t m_keep_dims;
                 std::shared_ptr<ngraph::Node> m_input_node;
-                std::int64_t m_normalized_axis;
+                std::int64_t m_axis;
             };
-
-        } // namespace arg
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

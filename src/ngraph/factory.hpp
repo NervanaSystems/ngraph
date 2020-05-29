@@ -20,12 +20,12 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "ngraph/attribute_adapter.hpp"
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/ngraph_visibility.hpp"
 
 namespace ngraph
 {
-    NGRAPH_API std::mutex& get_registry_mutex();
-
     /// \brief Registry of factories that can construct objects derived from BASE_TYPE
     template <typename BASE_TYPE>
     class FactoryRegistry
@@ -77,7 +77,7 @@ namespace ngraph
         }
 
         /// \brief Create an instance for type_info
-        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info)
+        BASE_TYPE* create(const typename BASE_TYPE::type_info_t& type_info) const
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
             auto it = m_factory_map.find(type_info);
@@ -86,7 +86,7 @@ namespace ngraph
 
         /// \brief Create an instance using factory for DERIVED_TYPE
         template <typename DERIVED_TYPE>
-        BASE_TYPE* create()
+        BASE_TYPE* create() const
         {
             return create(DERIVED_TYPE::type_info);
         }
@@ -95,6 +95,12 @@ namespace ngraph
         static FactoryRegistry<BASE_TYPE>& get();
 
     protected:
+        static std::mutex& get_registry_mutex()
+        {
+            static std::mutex registry_mutex;
+            return registry_mutex;
+        }
+
         FactoryMap m_factory_map;
     };
 }

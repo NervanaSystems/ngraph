@@ -32,21 +32,19 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 #include "ngraph/provenance.hpp"
+#include "ngraph/rt_info.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 void ngraph::traverse_nodes(const std::shared_ptr<const Function> p,
-                            std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps)
+                            std::function<void(std::shared_ptr<Node>)> f)
 {
-    traverse_nodes(p.get(), f, include_control_deps);
+    traverse_nodes(p.get(), f);
 }
 
-void ngraph::traverse_nodes(const Function* p,
-                            std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps)
+void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_ptr<Node>)> f)
 {
     NodeVector nodes;
 
@@ -60,12 +58,11 @@ void ngraph::traverse_nodes(const Function* p,
         nodes.push_back(param);
     }
 
-    traverse_nodes(nodes, f, include_control_deps);
+    traverse_nodes(nodes, f);
 }
 
 void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
-                            bool include_control_deps,
                             const NodeVector& subgraph_params)
 {
     std::unordered_set<Node*> instances_seen;
@@ -91,15 +88,20 @@ void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                 stack.push(n->get_input_node_ptr(i));
             }
 
-            if (include_control_deps)
+            for (auto& cdep : n->get_control_dependencies())
             {
-                for (auto& cdep : n->get_control_dependencies())
-                {
-                    stack.push(cdep.get());
-                }
+                stack.push(cdep.get());
             }
         }
     }
+}
+
+void ngraph::traverse_nodes(const NodeVector& subgraph_results,
+                            std::function<void(std::shared_ptr<Node>)> f,
+                            bool,
+                            const NodeVector& subgraph_params)
+{
+    traverse_nodes(subgraph_results, f, subgraph_params);
 }
 
 NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr<Node> node2)
@@ -110,7 +112,7 @@ NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr
         node1_args.insert(node);
     };
 
-    traverse_nodes({node1}, compute_node1_args, false, NodeVector{});
+    traverse_nodes({node1}, compute_node1_args, NodeVector{});
 
     std::unordered_set<std::shared_ptr<Node>> node2_args;
 
@@ -118,7 +120,7 @@ NodeVector ngraph::find_common_args(std::shared_ptr<Node> node1, std::shared_ptr
         node2_args.insert(node);
     };
 
-    traverse_nodes({node2}, compute_node2_args, false, NodeVector{});
+    traverse_nodes({node2}, compute_node2_args, NodeVector{});
 
     NodeVector common_args;
     for (auto e : node1_args)
@@ -147,13 +149,6 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
                  " must be equal output_order size: ",
                  output_order.size());
 
-    NGRAPH_CHECK(!target->get_users().empty(),
-                 "Attempted to replace unreachable node '",
-                 *target,
-                 "'. Replacement: '",
-                 *replacement,
-                 "'");
-
     // Fix input/output descriptors
     NGRAPH_CHECK(target->get_output_size() == replacement->get_output_size());
 
@@ -170,14 +165,14 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
             }
         };
 
-        traverse_nodes({target}, set_replacement_prov, false, common_args);
+        traverse_nodes({target}, set_replacement_prov, common_args);
         replacement->add_provenance_tags(removed_subgraph_tags);
 
         auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
             node->add_provenance_tags(removed_subgraph_tags);
         };
 
-        traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+        traverse_nodes({replacement}, set_prov_new_nodes, common_args);
     }
 
     // For each of target's output O with replacement output O_rep:
@@ -192,6 +187,35 @@ void ngraph::replace_node(std::shared_ptr<Node> target,
     }
 
     replacement->add_node_control_dependents(target);
+    target->clear_control_dependents();
+}
+
+void ngraph::replace_node(const std::shared_ptr<Node>& target,
+                          const OutputVector& replacement_values)
+{
+    if (target->is_output())
+    {
+        throw ngraph_error("Result nodes cannot be replaced.");
+    }
+
+    NGRAPH_CHECK(target->get_output_size() == replacement_values.size());
+
+    unordered_set<shared_ptr<Node>> replacement_nodes;
+    // For each of target's output O with replacement output O_rep:
+    //     For each O's connected downstream input I:
+    //         Change I's connected upstream output to O_rep
+    for (size_t i = 0; i < target->get_output_size(); i++)
+    {
+        auto& replacement_value = replacement_values.at(i);
+        auto replacement_node = replacement_value.get_node_shared_ptr();
+        if (replacement_nodes.find(replacement_node) == replacement_nodes.end())
+        {
+            replacement_node->add_node_control_dependents(target);
+            target->transfer_provenance_tags(replacement_node);
+            replacement_nodes.insert(replacement_node);
+        }
+        target->output(i).replace(replacement_values.at(i));
+    }
     target->clear_control_dependents();
 }
 
@@ -261,11 +285,11 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
     return true;
 }
 
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::list<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
+std::vector<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
 {
     // for each node in topological order
-    auto sorted_nodes = topological_sort(nodes, true);
+    auto sorted_nodes = topological_sort(nodes);
     for (auto node : sorted_nodes)
     {
         if (node_map.count(node.get()) == 0)
@@ -304,12 +328,76 @@ std::list<std::shared_ptr<ngraph::Node>>
         }
     }
 
-    // create and return list of cloned nodes
-    // order matches input list (not necessarily topological)
-    std::list<std::shared_ptr<ngraph::Node>> cloned_nodes;
+    // create and return vector of cloned nodes
+    // order matches input vector (not necessarily topological)
+    std::vector<std::shared_ptr<ngraph::Node>> cloned_nodes;
     for (auto node : nodes)
     {
         cloned_nodes.push_back(node_map.at(node.get()));
+    }
+    return cloned_nodes;
+}
+
+std::list<std::shared_ptr<ngraph::Node>>
+    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
+                        RawNodeOutputMap& output_map)
+{
+    // for each node in topological order
+    auto sorted_nodes = topological_sort(nodes);
+    std::list<shared_ptr<Node>> cloned_nodes;
+    for (auto node : sorted_nodes)
+    {
+        auto node_outputs = node->outputs();
+        for (auto value : node_outputs)
+        {
+            if (output_map.count(value) == 0)
+            {
+                // We need this node cloned
+                // get (already) cloned arguments and clone the node
+                OutputVector cloned_args;
+                for (auto value : node->input_values())
+                {
+                    cloned_args.push_back(output_map.at(value));
+                }
+                NodeVector cloned_dependencies;
+                for (auto& dependency : node->get_control_dependencies())
+                {
+                    for (auto dependency_value : dependency->outputs())
+                    {
+                        shared_ptr<Node> dependent =
+                            output_map.at(dependency_value).get_node_shared_ptr();
+                        if (find(cloned_dependencies.begin(),
+                                 cloned_dependencies.end(),
+                                 dependent) == cloned_dependencies.end())
+                        {
+                            cloned_dependencies.push_back(dependent);
+                        }
+                    }
+                }
+                auto cloned_node = node->copy_with_new_inputs(cloned_args, cloned_dependencies);
+                cloned_nodes.push_back(cloned_node);
+                if (node->get_friendly_name() != node->get_name())
+                {
+                    // There is a friendly name for this node so copy it
+                    cloned_node->set_friendly_name(node->get_friendly_name());
+                }
+
+                for (auto tag : node->get_provenance_tags())
+                {
+                    cloned_node->add_provenance_tag(tag);
+                }
+                cloned_node->set_op_annotations(node->get_op_annotations());
+                for (auto cloned_value : cloned_node->outputs())
+                {
+                    auto original_value = node_outputs.at(cloned_value.get_index());
+                    if (output_map.count(original_value) == 0)
+                    {
+                        output_map[original_value] = cloned_value;
+                    }
+                }
+                break;
+            }
+        }
     }
     return cloned_nodes;
 }
@@ -324,7 +412,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
                                                          NodeMap& node_map)
 {
     // clone function operations
-    clone_nodes(func.get_ops(true), node_map);
+    clone_nodes(func.get_ops(), node_map);
 
     // get cloned function results and parameters
     ResultVector cloned_results;
@@ -505,7 +593,7 @@ bool ngraph::is_zero(const Output<Node>& reduce_constant)
     return result_bool;
 }
 
-bool ngraph::is_one(std::shared_ptr<Node> reduce_constant)
+bool ngraph::is_one(const Output<Node>& reduce_constant)
 {
     auto result_bool = is_equal_to_const_value("1", reduce_constant);
     return result_bool;
@@ -546,7 +634,7 @@ NodeVector ngraph::get_subgraph_outputs(const NodeVector& nodes,
 NodeVector ngraph::extract_subgraph(const NodeVector& results, const NodeVector& args)
 {
     NodeVector subgraph;
-    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, true, args);
+    traverse_nodes(results, [&](std::shared_ptr<Node> n) { subgraph.push_back(n); }, args);
     return subgraph;
 }
 
@@ -793,4 +881,51 @@ void ngraph::traverse_functions(std::shared_ptr<Function> p,
                                 std::function<void(std::shared_ptr<Function>)> f)
 {
     f(p);
+}
+
+bool ngraph::replace_output_update_name(Output<Node> output, const Output<Node>& replacement)
+{
+    bool has_result_output = false;
+    for (auto& target_input : output.get_target_inputs())
+    {
+        if (is_type<op::Result>(target_input.get_node()))
+        {
+            // ignore trivial elimination
+            has_result_output = true;
+            if (is_type<ngraph::op::Parameter>(replacement.get_node()))
+            {
+                return false;
+            }
+            break;
+        }
+    }
+    if (!has_result_output || replacement.get_node()->get_users().size() == 1)
+    {
+        if (has_result_output && !is_type<ngraph::op::Parameter>(replacement.get_node()))
+        {
+            replacement.get_node()->set_friendly_name(output.get_node()->get_friendly_name());
+            copy_runtime_info({replacement.get_node_shared_ptr(), output.get_node_shared_ptr()},
+                              replacement.get_node_shared_ptr());
+        }
+        output.replace(replacement);
+        return true;
+    }
+    return false;
+}
+
+bool ngraph::replace_node_update_name(std::shared_ptr<Node> target,
+                                      std::shared_ptr<Node> replacement)
+{
+    for (auto& output : target->output(0).get_target_inputs())
+    {
+        if (as_type<ngraph::op::Parameter>(replacement->input_value(0).get_node()) &&
+            as_type<op::Result>(output.get_node()))
+        {
+            return false;
+        }
+    }
+    replace_node(target, replacement);
+    replacement->set_friendly_name(target->get_friendly_name());
+    copy_runtime_info(target, replacement);
+    return true;
 }

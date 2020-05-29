@@ -76,10 +76,12 @@ namespace ngraph
                                        float trans_std = 1,
                                        int64_t part_size = 1);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 int64_t get_output_dim() const { return m_output_dim; }
                 int64_t get_group_size() const { return m_group_size; }

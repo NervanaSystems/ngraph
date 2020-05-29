@@ -337,8 +337,8 @@ TEST(specialize_function, share_constants)
     auto f_specialized =
         specialize_function(f, {element::f32}, {PartialShape{2, 3, 64, 64}}, {nullptr}, true, true);
 
-    ASSERT_EQ(mul_const->output(0).get_target_inputs().size(), 2);
-    ASSERT_EQ(add_const->output(0).get_target_inputs().size(), 2);
+    ASSERT_EQ(mul_const->get_output_target_inputs(0).size(), 2);
+    ASSERT_EQ(add_const->get_output_target_inputs(0).size(), 2);
 }
 
 // Test checks that constant sharing works when constant folding replaces constants
@@ -358,7 +358,7 @@ TEST(specialize_function, share_constants_with_cf)
     auto f_specialized =
         specialize_function(f, {element::f32}, {PartialShape{2, 3, 64, 64}}, {nullptr}, true, true);
 
-    ASSERT_EQ(mul_const->output(0).get_target_inputs().size(), 2);
-    ASSERT_EQ(add_const_1->output(0).get_target_inputs().size(), 1);
-    ASSERT_EQ(add_const_2->output(0).get_target_inputs().size(), 1);
+    ASSERT_EQ(mul_const->get_output_target_inputs(0).size(), 2);
+    ASSERT_EQ(add_const_1->get_output_target_inputs(0).size(), 1);
+    ASSERT_EQ(add_const_2->get_output_target_inputs(0).size(), 1);
 }

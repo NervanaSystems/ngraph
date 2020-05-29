@@ -17,6 +17,7 @@
 #include <cmath>
 #include <functional>
 
+#include "ngraph/attribute_visitor.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/add.hpp"
@@ -31,6 +32,16 @@ using namespace std;
 using namespace ngraph;
 
 constexpr NodeTypeInfo op::LSTMCell::type_info;
+
+op::LSTMCell::LSTMCell()
+    : m_input_forget(false)
+    , m_weights_format(LSTMWeightsFormat::IFCO)
+{
+    m_activations = {"sigmoid", "tanh", "tanh"};
+    m_activation_f = get_activation_function(0);
+    m_activation_g = get_activation_function(1);
+    m_activation_h = get_activation_function(2);
+}
 
 op::LSTMCell::LSTMCell(const Output<Node>& X,
                        const Output<Node>& initial_hidden_state,
@@ -105,6 +116,19 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     , m_weights_format{weights_format}
 {
     constructor_validate_and_infer_types();
+}
+
+bool ngraph::op::v0::LSTMCell::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("hidden_size", m_hidden_size);
+    visitor.on_attribute("activations", m_activations);
+    visitor.on_attribute("activations_alpha", m_activations_alpha);
+    visitor.on_attribute("activations_beta", m_activations_beta);
+    visitor.on_attribute("clip", m_clip);
+
+    visitor.on_attribute("input_forget", m_input_forget);
+    visitor.on_attribute("weights_format", m_weights_format);
+    return true;
 }
 
 void op::LSTMCell::pre_validate_and_infer_types()
@@ -200,7 +224,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
 }
 
-NodeVector op::LSTMCell::decompose_op() const
+OutputVector op::LSTMCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -246,7 +270,7 @@ NodeVector op::LSTMCell::decompose_op() const
     Output<Node> W = input_value(3);
     Output<Node> R = input_value(4);
     Output<Node> bias = input_value(5);
-    NodeVector p_iof = builder::split(input_value(6), s_peepholes_count);
+    OutputVector p_iof = builder::split(input_value(6), s_peepholes_count);
 
     // Converting to IFCO format since it's DNNL default.
     if (m_weights_format != op::LSTMWeightsFormat::IFCO)
@@ -267,7 +291,7 @@ NodeVector op::LSTMCell::decompose_op() const
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
     auto gates = add(Xt_W, add(Ht_R, bias));
 
-    NodeVector split_gates = builder::split(gates, 4, -1);
+    OutputVector split_gates = builder::split(gates, 4, -1);
     auto i_t = split_gates.at(0);
     auto f_t = split_gates.at(1);
     auto c_t = split_gates.at(2);
@@ -278,9 +302,9 @@ NodeVector op::LSTMCell::decompose_op() const
     if (m_input_forget)
     {
         // Couple input with forget gate: 1 - i_t
-        f_t = sub(op::Constant::create(i_t->get_element_type(),
-                                       i_t->get_shape(),
-                                       vector<float>(shape_size(i_t->get_shape()), 1.f)),
+        f_t = sub(op::Constant::create(i_t.get_element_type(),
+                                       i_t.get_shape(),
+                                       vector<float>(shape_size(i_t.get_shape()), 1.f)),
                   i_t);
     }
     else
@@ -301,12 +325,12 @@ NodeVector op::LSTMCell::decompose_op() const
 Output<Node> op::LSTMCell::get_default_bias_input() const
 {
     return Output<Node>{op::Constant::create(
-        input(0).get_element_type(), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
+        get_input_element_type(0), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
 }
 
 Output<Node> op::LSTMCell::get_default_peepholes_input() const
 {
-    return Output<Node>{op::Constant::create(input(0).get_element_type(),
+    return Output<Node>{op::Constant::create(get_input_element_type(0),
                                              Shape{s_peepholes_count * get_hidden_size()},
                                              vector<float>{0.f})};
 }
@@ -320,8 +344,8 @@ shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) con
         {op::LSTMWeightsFormat::IOFC, {0, 2, 3, 1}},
     };
 
-    NodeVector splitted_node = builder::split(node, s_gates_count);
-    NodeVector nodes_in_new_format;
+    OutputVector splitted_node = builder::split(node, s_gates_count);
+    OutputVector nodes_in_new_format;
     nodes_in_new_format.reserve(s_gates_count);
     for (const auto& axis : gate_order_conversion_map.at(m_weights_format))
     {
@@ -330,7 +354,7 @@ shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) con
     return make_shared<op::Concat>(nodes_in_new_format, 0);
 }
 
-shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::LSTMCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 5)
@@ -384,5 +408,28 @@ shared_ptr<Node> op::LSTMCell::copy_with_new_args(const NodeVector& new_args) co
     else
     {
         throw ngraph_error("Incorrect number of new arguments");
+    }
+}
+
+namespace ngraph
+{
+    template <>
+    EnumNames<op::LSTMWeightsFormat>& EnumNames<op::LSTMWeightsFormat>::get()
+    {
+        static auto enum_names =
+            EnumNames<op::LSTMWeightsFormat>("op::LSTMWeightsFormat",
+                                             {{"fico", op::LSTMWeightsFormat::FICO},
+                                              {"icof", op::LSTMWeightsFormat::ICOF},
+                                              {"ifco", op::LSTMWeightsFormat::IFCO},
+                                              {"ifoc", op::LSTMWeightsFormat::IFOC},
+                                              {"iofc", op::LSTMWeightsFormat::IOFC}});
+        return enum_names;
+    }
+
+    constexpr DiscreteTypeInfo AttributeAdapter<op::LSTMWeightsFormat>::type_info;
+
+    std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type)
+    {
+        return s << as_string(type);
     }
 }

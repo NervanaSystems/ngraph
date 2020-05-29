@@ -206,30 +206,33 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     FpropCache fprop_cache;
 
     // Traverse bprop to find all of the nodes in the bprop graph
-    std::unordered_set<std::shared_ptr<Node>> in_bprop;
-    ngraph::traverse_nodes(bprop,
-                           [&in_bprop](std::shared_ptr<Node> node) {
-                               if (node->get_output_size() == 1)
-                               {
-                                   if (in_bprop.count(node) == 0)
-                                   {
-                                       in_bprop.insert(node);
-                                   }
-                               }
-                           },
-                           false /* no control dependencies */);
+    std::set<Output<Node>> in_bprop;
+    ngraph::traverse_nodes(bprop, [&in_bprop](std::shared_ptr<Node> node) {
+        for (auto value : node->outputs())
+        {
+            in_bprop.insert(value);
+        }
+    });
 
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
     // and aren't inputs to bprop
-    auto bprop_inputs = bprop->get_parameters();
+    vector<Output<Node>> bprop_inputs;
+    for (auto param : bprop->get_parameters())
+    {
+        bprop_inputs.push_back(param);
+    }
     ngraph::traverse_nodes(
         fprop, [&fprop_cache, &in_bprop, &bprop_inputs](std::shared_ptr<Node> node) {
-            if (in_bprop.count(node) != 0 &&
-                std::find(bprop_inputs.begin(), bprop_inputs.end(), node) == bprop_inputs.end())
+            for (auto value : node->outputs())
             {
-                fprop_cache.node_param_map[node.get()] =
-                    std::make_shared<op::Parameter>(node->get_element_type(), node->get_shape());
+                if (in_bprop.count(value) != 0 &&
+                    std::find(bprop_inputs.begin(), bprop_inputs.end(), value) ==
+                        bprop_inputs.end())
+                {
+                    fprop_cache.node_param_map[value] = std::make_shared<op::Parameter>(
+                        value.get_element_type(), value.get_shape());
+                }
             }
         });
 
@@ -240,10 +243,10 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     ngraph::clone_nodes(bprop->get_ops(), fprop_cache.node_param_map);
 
     // invert the fprop_cache cloned node map for easy back and for acces.
-    std::unordered_map<Node*, Node*> inverted_node_map;
+    std::map<Output<Node>, RawNodeOutput> inverted_node_map;
     for (auto kv : fprop_cache.node_param_map)
     {
-        inverted_node_map[kv.second.get()] = kv.first;
+        inverted_node_map[kv.second] = kv.first;
     }
 
     // get cloned bprop results
@@ -251,7 +254,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     NodeVector result_nodes;
     for (auto node : bprop->get_results())
     {
-        auto result = as_type_ptr<op::Result>(fprop_cache.node_param_map.at(node.get()));
+        auto result = as_type_ptr<op::Result>(
+            fprop_cache.node_param_map.at(Output<Node>(node)).get_node_shared_ptr());
         if (!result)
         {
             throw ngraph_error("Expected op::Result values for op::Result keys in node_param_map");
@@ -266,15 +270,15 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         ParameterVector bprop_input_params;
         for (auto param : bprop_inputs)
         {
-            bprop_input_params.push_back(
-                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(param.get())));
+            bprop_input_params.push_back(as_type_ptr<op::Parameter>(
+                fprop_cache.node_param_map.at(Output<Node>(param)).get_node_shared_ptr()));
         }
 
         // add the cached fprop nodes as inputs to bprop
         for (auto x : fprop_cache.fprop_output_nodes)
         {
             bprop_input_params.push_back(
-                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(x)));
+                as_type_ptr<op::Parameter>(fprop_cache.node_param_map.at(x).get_node_shared_ptr()));
         }
         return bprop_input_params;
     };
@@ -287,26 +291,24 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
             auto pnode = as_type_ptr<op::Parameter>(node);
-            if (pnode != nullptr &&
+            if (pnode &&
                 std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
                     cloned_bprop_inputs.end())
             {
-                fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(node.get()));
+                fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(Output<Node>(node)));
             }
-        },
-        false /* no control dependencies */);
+        });
 
     // create the new outputs for fprop and the new fprop function
     ResultVector fprop_outputs = fprop->get_results();
 
     for (auto fpirn : fprop_cache.fprop_output_nodes)
     {
-        auto fpir = fpirn->shared_from_this();
-        if (as_type_ptr<op::Result>(fpir))
+        if (as_type_ptr<op::Result>(fpirn.node->shared_from_this()))
         {
-            throw ngraph_error("Expected op::Result in fprop->get_results()");
+            throw ngraph_error("Unexpected op::Result in fprop->get_results()");
         }
-        fprop_outputs.push_back(std::make_shared<op::Result>(fpir));
+        fprop_outputs.push_back(std::make_shared<op::Result>(fpirn));
     }
 
     fprop_cache.fprop = std::make_shared<Function>(fprop_outputs, fprop->get_parameters());
@@ -492,6 +494,19 @@ bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank r
 {
     std::vector<bool> axis_occurs(permutation.size(), false);
 
+    // Check bounds if rank is static
+    if (rank.is_static())
+    {
+        auto bound = rank.get_length();
+        for (auto axis : permutation)
+        {
+            if (static_cast<decltype(bound)>(axis) >= bound)
+            {
+                return false;
+            }
+        }
+    }
+
     for (auto& axis : permutation)
     {
         axis_occurs[axis] = true;
@@ -505,7 +520,7 @@ bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank r
         }
     }
 
-    return (rank.is_dynamic() || permutation.size() == static_cast<size_t>(rank));
+    return (rank.is_dynamic() || permutation.size() == rank.get_length());
 }
 
 template <typename T>
@@ -654,7 +669,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), size);
+    if (size > 0)
+    {
+        tv->read(rc.data(), size);
+    }
     return rc;
 }
 
@@ -772,4 +790,120 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
     }
 
     return float_vec;
+}
+
+vector<int64_t> read_index_vector(shared_ptr<runtime::Tensor> tv)
+{
+    vector<int64_t> index_vec;
+    element::Type element_type = tv->get_tensor_layout()->get_element_type();
+
+    if (element_type == element::boolean)
+    {
+        vector<char> vec = read_vector<char>(tv);
+        // Changed from vector ctor to explicit for loop to add static_cast
+        // This silences MSVC warnings
+        for (char value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::bf16)
+    {
+        vector<bfloat16> vec = read_vector<bfloat16>(tv);
+        vector<float> float_vec = bfloat16::to_float_vector(vec);
+        for (float value : float_vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::f16)
+    {
+        vector<float16> vec = read_vector<float16>(tv);
+        for (float16 value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(static_cast<float>(value)));
+        }
+    }
+    else if (element_type == element::f32)
+    {
+        vector<float> vec = read_vector<float>(tv);
+        for (float value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::f64)
+    {
+        vector<double> vec = read_vector<double>(tv);
+        for (double value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i8)
+    {
+        vector<int8_t> vec = read_vector<int8_t>(tv);
+        for (int8_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i16)
+    {
+        vector<int16_t> vec = read_vector<int16_t>(tv);
+        for (int16_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i32)
+    {
+        vector<int32_t> vec = read_vector<int32_t>(tv);
+        for (int32_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i64)
+    {
+        index_vec = read_vector<int64_t>(tv);
+    }
+    else if (element_type == element::u8)
+    {
+        vector<uint8_t> vec = read_vector<uint8_t>(tv);
+        for (uint8_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u16)
+    {
+        vector<uint16_t> vec = read_vector<uint16_t>(tv);
+        for (uint16_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u32)
+    {
+        vector<uint32_t> vec = read_vector<uint32_t>(tv);
+        for (uint32_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u64)
+    {
+        vector<uint64_t> vec = read_vector<uint64_t>(tv);
+        for (uint64_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else
+    {
+        throw ngraph_error("Unsupported nGraph element type.");
+    }
+
+    return index_vec;
 }

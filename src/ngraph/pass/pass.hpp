@@ -115,4 +115,5 @@ class NGRAPH_API ngraph::pass::CallGraphPass : public PassBase
 public:
     virtual ~CallGraphPass();
     virtual bool run_on_call_graph(const std::list<std::shared_ptr<ngraph::Node>>&) = 0;
+    virtual bool run_on_call_graph(const std::vector<std::shared_ptr<ngraph::Node>>&);
 };
