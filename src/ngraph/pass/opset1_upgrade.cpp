@@ -222,8 +222,19 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Reshape> node)
     {
-        shared_ptr<Node> replacement_node =
-            builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
+        shared_ptr<Node> replacement_node;
+        if (node->get_is_transpose())
+        {
+            const auto input_order = node->get_input_order();
+            auto input_order_node =
+                make_shared<op::Constant>(element::i64, Shape{input_order.size()}, input_order);
+            replacement_node = make_shared<op::v1::Transpose>(node->input_value(0), input_order_node);
+        }
+        else
+        {
+            replacement_node = builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
+        }
+
         replace_node(node, replacement_node);
         return replacement_node;
     }
