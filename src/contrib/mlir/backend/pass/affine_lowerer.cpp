@@ -1298,6 +1298,9 @@ namespace
         Value lhs = operands[0];
         Value rhs = operands[1];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs, "Unexpected null lhs value in DotOp");
+        NGRAPH_CHECK(rhs, "Unexpected null rhs value in DotOp");
+        NGRAPH_CHECK(result, "Unexpected null result value in DotOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto lhsTy = lhs.getType().dyn_cast<MemRefType>();
@@ -1364,6 +1367,7 @@ namespace
 
         // Create Value for result, and extract type info.
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in ConcatOp");
 
         // Create view to write into result.
         MemRefBoundsCapture vRes(result);
@@ -1376,6 +1380,8 @@ namespace
 
         for (auto& operand : operands)
         {
+            NGRAPH_CHECK(operand, "Unexpected null operand in ConcatOp");
+
             // Assuming rank = r, and the concatenation axis is A where A<r, we'll be creating
             // loops of this form:
             //
@@ -1436,6 +1442,7 @@ namespace
 
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in GatherOp");
 
         Value params = operands[0];
         Value indices = operands[1];
@@ -1500,7 +1507,8 @@ namespace
 
         AffineLoopNestBuilder(indicesIVs, indicesLbs, indicesUbs, indicesSteps)([&] {
             // Load axis value from indices array and cast it to Index Type
-            auto axisIdx = Value(iIndices(indicesIVs));
+            auto axisIdx =
+                ValueBuilder<IndexCastOp>(Value(iIndices(indicesIVs)), rewriter.getIndexType());
 
             AffineLoopNestBuilder(paramsIVs, paramsLbs, paramsUbs, paramsSteps)([&] {
                 // construct indices for param
@@ -1547,6 +1555,7 @@ namespace
 
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
         Value images = operands[0];
         Value filters = operands[1];
         auto strides = convolOp.strides();
@@ -1573,6 +1582,7 @@ namespace
         ScopedContext scope(rewriter, gConvOp.getLoc());
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in Convolution Op");
         Value images = operands[0];
         Value filters = operands[1];
         auto strides = gConvOp.strides();
@@ -1704,6 +1714,9 @@ namespace
         ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
 
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(src, "Unexpected null src value in MaxPoolBackprop Op");
+        NGRAPH_CHECK(delta, "Unexpected null delta value in MaxPoolBackprop Op");
+        NGRAPH_CHECK(result, "Unexpected null result value in MaxPoolBackprop Op");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
@@ -1782,6 +1795,9 @@ namespace
         Value lhs = operands[0];
         Value rhs = operands[1];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs, "Unexpected null lhs value in MatMulOp");
+        NGRAPH_CHECK(rhs, "Unexpected null rhs value in MatMulOp");
+        NGRAPH_CHECK(result, "Unexpected null result value in MatMulOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
@@ -1976,6 +1992,8 @@ namespace
         ScopedContext scope(rewriter, loc);
         Value lhs = operands[0];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs, "Unexpected null lhs value in SoftmaxOp");
+        NGRAPH_CHECK(result, "Unexpected null result value in SoftmaxOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
@@ -2027,6 +2045,7 @@ namespace
 
         // Get operands
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(result, "Unexpected null result in ConvBias Op");
         Value images = operands[0];
         Value filters = operands[1];
         Value bias = operands[2];
@@ -2665,7 +2684,8 @@ namespace
             SmallVector<Value, 4> ivs(vRes.rank());
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
-            AffineLoopNestBuilder(ivs, resLbs, resUbs, steps)([&] { iRes(ivs) = Value(initVal); });
+            AffineLoopNestBuilder(ivs, resLbs, resUbs, steps)(
+                [&] { iRes(ivs) = ValueBuilder<IndexCastOp>(initVal, resTy); });
         }
 
         // Generate loop nest that computes the actual index reduction.
@@ -2691,7 +2711,8 @@ namespace
                 }
 
                 // Load current min index with integer data type and convert it to index data type.
-                auto currRedIdx = Value(iRes(nonRedIVs));
+                auto currRedIdx = ValueBuilder<IndexCastOp>(Value(iRes(nonRedIVs)),
+                                                            IndexType::get(resTy.getContext()));
 
                 // Build list of IVs including current min index.
                 for (auto i = 0; i < vArg.rank(); i++)
@@ -2712,7 +2733,8 @@ namespace
                         ? std_select(affineArg(allIVs) < stdArg(tempIVs), allIVs[axis], currRedIdx)
                         : std_select(stdArg(tempIVs) < affineArg(allIVs), allIVs[axis], currRedIdx);
 
-                iRes(nonRedIVs) = Value(newRedIdx);
+                iRes(nonRedIVs) = ValueBuilder<IndexCastOp>(newRedIdx, resTy);
+                ;
             });
         }
 
@@ -2738,6 +2760,8 @@ namespace
         ArrayRef<Attribute> padAbove = pooling.padAbove().getValue();
 
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs, "Unexpected null lhs value in Pooling Op");
+        NGRAPH_CHECK(result, "Unexpected null result value in Pooling Op");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto resultShape = resultTy.getShape();
