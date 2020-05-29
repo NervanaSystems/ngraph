@@ -166,8 +166,8 @@ namespace ngraph
                                 {
                                     auto new_reshape = make_shared<ngraph::op::Reshape>(
                                         parent, axis_vector, out_shape);
-                                    node->get_inputs().at(i).replace_output(
-                                        new_reshape->get_outputs().at(0));
+                                    node->get_input_descriptors().at(i).replace_output(
+                                        new_reshape->get_output_descriptors().at(0));
                                     reshapes.push_back(new_reshape);
                                 }
                             }

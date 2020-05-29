@@ -236,11 +236,11 @@ void runtime::gpu::kernel::emit_cudnnReduceTensor(CodeWriter& writer,
 std::string runtime::gpu::kernel::emit_type_string(const Node* node)
 {
     std::stringstream ss;
-    for (auto const& input : node->get_inputs())
+    for (auto const& input : node->get_input_descriptors())
     {
         ss << input.get_element_type().c_type_string() << "_";
     }
-    for (auto const& output : node->get_outputs())
+    for (auto const& output : node->get_output_descriptors())
     {
         ss << output.get_element_type().c_type_string() << "_";
     }

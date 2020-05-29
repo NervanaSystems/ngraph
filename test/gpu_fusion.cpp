@@ -92,7 +92,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     auto rnn_ht_output = rnn_node->output(0);
     auto rnn_ct_output = rnn_node->output(1);
 
-    auto func = make_shared<Function>(NodeVector{rnn_ht_output, rnn_ct_output},
+    auto func = make_shared<Function>(OutputVector{rnn_ht_output, rnn_ct_output},
                                       ParameterVector{src_layer, src_iter, params, state_iter});
     auto backend = runtime::Backend::create("GPU");
 
