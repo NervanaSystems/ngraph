@@ -29,8 +29,6 @@ ngraph::Node* ngraph::OpSet::create(const std::string& name) const
     auto type_info_it = m_name_type_info_map.find(name);
     if (type_info_it == m_name_type_info_map.end())
     {
-        NGRAPH_WARN << "Couldn't create operator of type: " << name
-                    << " . Operation not registered in opset.";
         return nullptr;
     }
     return m_factory_registry.create(type_info_it->second);

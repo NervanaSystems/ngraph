@@ -34,14 +34,6 @@ namespace ngraph
                     std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
                     std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
 
-                    if (left_rank == 0 || right_rank == 0)
-                    {
-                        NGRAPH_WARN
-                            << (node) << " "
-                            << "ONNX standard doesn't allow scalar operands, however nGraph "
-                               "accepts them. Consider use of element-wise multiplication instead "
-                               "to conform with ONNX standard.";
-                    }
                     return as_node_vector(factory.make_matmul_op());
                 }
             }

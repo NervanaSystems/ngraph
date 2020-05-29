@@ -177,9 +177,6 @@ namespace ngraph
             else
             {
                 it->second = std::move(fn);
-                NGRAPH_WARN << "Overwriting existing operator: "
-                            << (domain.empty() ? "ai.onnx" : domain)
-                            << "." + name + ":" + std::to_string(version);
             }
         }
 
@@ -191,14 +188,7 @@ namespace ngraph
             auto dm = m_map.find(domain);
             if (dm == std::end(m_map))
             {
-                NGRAPH_WARN << "Domain '" << domain << "' not recognized by nGraph";
                 return OperatorSet{};
-            }
-            if (domain == "" && version > OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION)
-            {
-                NGRAPH_WARN << "Currently ONNX operator set version: " << version
-                            << " is unsupported. Falling back to: "
-                            << OperatorsBridge::LATEST_SUPPORTED_ONNX_OPSET_VERSION;
             }
             for (const auto& op : dm->second)
             {
