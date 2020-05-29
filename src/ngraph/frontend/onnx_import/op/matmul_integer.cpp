@@ -31,8 +31,6 @@ namespace ngraph
                     auto ng_inputs = node.get_ng_inputs();
                     auto factory = builder::MatmulIntegerFactory(
                         OutputVector(std::begin(ng_inputs), std::end(ng_inputs)));
-                    std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
-                    std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
 
                     return as_node_vector(factory.make_matmul_op());
                 }
