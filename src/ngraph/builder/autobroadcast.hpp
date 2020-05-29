@@ -348,7 +348,6 @@ namespace ngraph
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
                                         std::size_t start_match_axis);
-
-        } // namespace opset1
-    }     // namespace builder
-} // namespace ngraph
+        }
+    }
+}

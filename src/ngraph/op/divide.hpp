@@ -68,7 +68,7 @@ namespace ngraph
             protected:
                 bool m_pythondiv{true};
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -120,11 +120,11 @@ namespace ngraph
             protected:
                 bool m_pythondiv{true};
             };
-        } // namespace v1
+        }
 
         using v0::Divide;
-    } // namespace op
+    }
 
     NGRAPH_API
     std::shared_ptr<Node> operator/(const Output<Node>& arg0, const Output<Node>& arg1);
-} // namespace ngraph
+}

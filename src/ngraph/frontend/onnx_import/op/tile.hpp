@@ -32,11 +32,7 @@ namespace ngraph
                 /// \param node The ONNX node object representing this operation.
                 /// \return The vector containing nGraph a node producing the output of the Tile op.
                 NodeVector tile(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

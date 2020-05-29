@@ -156,4 +156,4 @@ namespace ngraph
             }
         }
     };
-} // namespace ngraph
+}

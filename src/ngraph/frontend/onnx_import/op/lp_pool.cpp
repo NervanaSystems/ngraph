@@ -56,7 +56,7 @@ namespace ngraph
                     ASSERT_VALID_ARGUMENT(node, p_norm >= 0)
                         << "Only positive (including zero) values are supported for 'p' attribute.";
 
-                    NodeVector slices =
+                    OutputVector slices =
                         ngraph::builder::opset1::split(data, channels_count, channel_axis);
 
                     for (auto& slice : slices)
@@ -81,11 +81,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Concat>(slices, channel_axis)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

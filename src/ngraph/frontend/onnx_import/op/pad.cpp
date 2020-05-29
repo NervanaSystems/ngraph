@@ -91,8 +91,7 @@ namespace ngraph
                             data->get_element_type(), ngraph::Shape{}, std::vector<double>{value}),
                         pad_mode)};
                 }
-
-            } // namespace set_1
+            }
             namespace set_11
             {
                 NodeVector pad(const Node& node)
@@ -134,7 +133,7 @@ namespace ngraph
                     {
                         auto axis =
                             default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
-                        NodeVector padding = builder::opset1::split(pads, 2, 0);
+                        OutputVector padding = builder::opset1::split(pads, 2, 0);
 
                         padding_begin =
                             std::make_shared<default_opset::Convert>(padding.at(0), element::i64);
@@ -149,11 +148,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Pad>(
                         data, padding_begin, padding_end, values, pad_mode)};
                 }
-
-            } // namespace set_11
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

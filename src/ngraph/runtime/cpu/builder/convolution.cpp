@@ -979,6 +979,6 @@ namespace ngraph
                 REGISTER_OP_BUILDER(GroupConvolutionBias);
                 REGISTER_OP_BUILDER(DeconvolutionBias);
             }
-        } // namespace cpu
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

@@ -515,7 +515,6 @@ namespace ngraph
                     op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
                     get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
             }
-
-        } // namespace opset1
-    }     // namespace builder
-} // namespace ngraph
+        }
+    }
+}

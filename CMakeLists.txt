@@ -65,6 +65,11 @@ endif()
 
 project (ngraph)
 
+# Tells if ngraph source tree is embedded in some other project
+# TRUE if embedded in source tree
+# FALSE if used standalone or as an external project
+set(NGRAPH_IS_EMBEDDED (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR))
+
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
@@ -642,7 +647,11 @@ endif()
 add_subdirectory(src)
 
 if (NGRAPH_TEST_UTIL_ENABLE)
-    include(cmake/external_gtest.cmake)
+    if (NGRAPH_IS_EMBEDDED)
+        include(cmake/external_gtest.cmake)
+    else()
+        include(cmake/fetch_gtest.cmake)
+    endif()
 endif()
 
 if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)

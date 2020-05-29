@@ -215,7 +215,7 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual void pre_validate_and_infer_types() override;
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
@@ -273,7 +273,7 @@ namespace ngraph
             };
         }
         using v0::LSTMCell;
-    } // namespace op
+    }
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::LSTMWeightsFormat& type);
@@ -291,4 +291,4 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::LSTMWeightsFormat>", 1};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-} // namespace ngraph
+}

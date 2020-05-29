@@ -501,8 +501,8 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto input_shape = args[0].get_shape();
     auto filter_shape = args[1].get_shape();
     auto output_shape = out[0].get_shape();
@@ -610,8 +610,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto input_shape = args[0].get_shape();
     auto filter_shape = args[1].get_shape();
     auto output_shape = out[0].get_shape();
@@ -739,8 +739,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto input_shape_0 = args[0].get_shape();
     auto input_shape_1 = args[1].get_shape();
     auto filter_shape = out[0].get_shape();
@@ -848,8 +848,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto& input_shape = args[0].get_shape();
     auto& result_shape = out[0].get_shape();
     auto padding_below = node->get_padding_below();
@@ -941,8 +941,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto& input_shape = args[0].get_shape();
     auto& output_shape = out[0].get_shape();
     auto input_size = shape_size(input_shape);
@@ -1004,8 +1004,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto& input_shape = args[0].get_shape();
     auto& output_shape = out[0].get_shape();
     auto input_size = shape_size(input_shape);
@@ -1068,8 +1068,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
 #if CUDNN_VERSION >= 7200
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto dtype = out[0].get_element_type().c_type_string();
 
     std::stringstream ss;

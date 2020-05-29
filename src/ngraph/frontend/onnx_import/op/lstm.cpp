@@ -212,8 +212,7 @@ namespace ngraph
                     std::vector<float> m_activation_beta;
                     bool m_input_forget;
                 };
-
-            } // anonymous namespace
+            }
 
             namespace set_1
             {
@@ -243,10 +242,7 @@ namespace ngraph
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 1),
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 2)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

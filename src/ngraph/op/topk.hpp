@@ -115,7 +115,7 @@ namespace ngraph
                                            const int64_t k,
                                            const size_t axis);
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -210,7 +210,7 @@ namespace ngraph
                                            const int64_t k);
                 void set_axis(const Rank input_rank, const int64_t axis);
             };
-        } // namespace v1
+        }
 
         namespace v3
         {
@@ -261,8 +261,8 @@ namespace ngraph
                     read_k_from_constant_node(const std::shared_ptr<Node>& node,
                                               const element::Type& k_element_type) const override;
             };
-        } // namespace v3
+        }
 
         using v0::TopK;
-    } // op
-} // ngraph
+    }
+}

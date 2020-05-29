@@ -46,7 +46,7 @@ op::SoftmaxCrossEntropy::SoftmaxCrossEntropy(const Output<Node>& arg1,
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::SoftmaxCrossEntropy::decompose_op() const
+OutputVector op::SoftmaxCrossEntropy::decompose_op() const
 {
     auto input_to_normalize = input_value(0);
     auto labels = input_value(1);
@@ -198,7 +198,7 @@ shared_ptr<Node>
         new_args.at(0), new_args.at(1), new_args.at(2), m_soft_label, m_ignore_index);
 }
 
-NodeVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
+OutputVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
 {
     auto delta = input_value(0);
     auto softmax = input_value(1);

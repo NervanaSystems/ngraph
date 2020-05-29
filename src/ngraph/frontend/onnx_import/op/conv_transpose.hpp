@@ -34,11 +34,7 @@ namespace ngraph
                 /// \return The vector containing Ngraph nodes producing output of ONNX convolution
                 ///         operation.
                 NodeVector conv_transpose(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

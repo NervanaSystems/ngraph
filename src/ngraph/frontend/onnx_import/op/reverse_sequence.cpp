@@ -63,11 +63,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::ReverseSequence>(
                         data, sequence_lengths_i32, normalized_batch_axis, normalized_time_axis)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

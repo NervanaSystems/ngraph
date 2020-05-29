@@ -67,14 +67,14 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                         target->get_input_source_output(2));
 
                     // replace all users of old batchnorm with cudnn batchnorm
-                    for (size_t i = 0; i < target->get_outputs().size(); i++)
+                    for (size_t i = 0; i < target->get_output_size(); i++)
                     {
-                        auto& target_output = target->get_outputs().at(i);
+                        auto& target_output = target->get_output_descriptors().at(i);
                         std::set<ngraph::descriptor::Input*> copy_inputs{
                             begin(target_output.get_inputs()), end(target_output.get_inputs())};
                         for (auto input : copy_inputs)
                         {
-                            input->replace_output(replacement->get_outputs().at(i));
+                            input->replace_output(replacement->get_output_descriptors().at(i));
                         }
                     }
 

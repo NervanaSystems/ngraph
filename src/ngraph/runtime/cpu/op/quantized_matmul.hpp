@@ -46,5 +46,5 @@ namespace ngraph
         protected:
             ngraph::element::Type m_output_type;
         };
-    } // namespace op
-} // namespace ngraph
+    }
+}

@@ -17,8 +17,7 @@
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
 
-set(ONNX_LIBRARIES onnx onnx_proto)
-
+set(ONNX_LIBRARIES onnx)
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -508,7 +507,7 @@ endif()
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_include_directories(unit-test
         SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-    target_link_libraries(unit-test PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
+    target_link_libraries(unit-test PRIVATE ${ONNX_LIBRARIES})
 endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")

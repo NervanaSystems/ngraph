@@ -124,9 +124,9 @@ namespace ngraph
 #undef NGRAPH_OP
                 UnknownOp
             };
-        } // namespace interpreter
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
 
 class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {

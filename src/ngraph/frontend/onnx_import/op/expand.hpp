@@ -30,11 +30,7 @@ namespace ngraph
             // Currently, Expand is assigned to version 1 due to temporary reason.
             {
                 NodeVector expand(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

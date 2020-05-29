@@ -36,10 +36,7 @@ namespace ngraph
                     // the second one is just a placeholder for optional trailing output.
                     return {node.get_ng_inputs().at(0), std::make_shared<NullNode>()};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
