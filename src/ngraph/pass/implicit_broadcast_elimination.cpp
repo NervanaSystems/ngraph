@@ -31,10 +31,10 @@ bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<Nod
     {
         if (node->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
-            auto new_args = pass::explicit_broadcast(node);
+            auto new_args = explicit_broadcast(node);
             for (size_t i = 0; i < new_args.size(); i++)
             {
-                node->input(i).replace_source_output(new_args[i]->output(0));
+                node->input(i).replace_source_output(new_args[i]);
             }
             return true;
         }
@@ -42,23 +42,23 @@ bool ngraph::pass::ImplicitBroadcastElimination::run_on_node(std::shared_ptr<Nod
     return false;
 }
 
-NodeVector ngraph::pass::explicit_broadcast(std::shared_ptr<Node>& node)
+OutputVector pass::ImplicitBroadcastElimination::explicit_broadcast(std::shared_ptr<Node>& node)
 {
-    NodeVector rc;
+    OutputVector rc;
     if (node->supports_auto_broadcast())
     {
         auto autob = node->get_autob();
         if (autob.m_type == op::AutoBroadcastType::NONE)
         {
-            rc = node->get_arguments();
+            rc = node->input_values();
         }
         else if (autob.m_type == op::AutoBroadcastType::NUMPY)
         {
-            rc = as_node_vector(builder::numpy_broadcast_outputs(node->input_values()));
+            rc = builder::numpy_broadcast_outputs(node->input_values());
         }
         else if (autob.m_type == op::AutoBroadcastType::PDPD)
         {
-            rc = as_node_vector(builder::pdpd_broadcast(node->input_values(), autob.m_axis));
+            rc = builder::pdpd_broadcast(node->input_values(), autob.m_axis);
         }
         else
         {

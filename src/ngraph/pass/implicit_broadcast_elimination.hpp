@@ -23,7 +23,6 @@ namespace ngraph
 {
     namespace pass
     {
-        NodeVector explicit_broadcast(std::shared_ptr<Node>& node);
         class ImplicitBroadcastElimination;
     }
 }
@@ -32,4 +31,7 @@ class NGRAPH_API ngraph::pass::ImplicitBroadcastElimination : public ngraph::pas
 {
 public:
     bool run_on_node(std::shared_ptr<ngraph::Node> node) override;
+
+private:
+    static OutputVector explicit_broadcast(std::shared_ptr<Node>& node);
 };
