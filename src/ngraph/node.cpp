@@ -483,7 +483,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return input_value(index).as_single_output_node();
+    return input_value(index).get_node_shared_ptr();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const
