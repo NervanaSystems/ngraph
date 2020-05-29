@@ -1874,6 +1874,10 @@ namespace
         Value rhs = operands[1];
         Value bias = operands[2];
         Value result = pass.buildOutputDefs(op, rewriter)[0];
+        NGRAPH_CHECK(lhs, "Unexpected null lhs value in GemmOp");
+        NGRAPH_CHECK(rhs, "Unexpected null rhs value in GemmOp");
+        NGRAPH_CHECK(bias, "Unexpected null bias value in GemmOp");
+        NGRAPH_CHECK(result, "Unexpected null result value in GemmOp");
 
         auto resultTy = result.getType().dyn_cast<MemRefType>();
         auto lhsTy = lhs.getType().dyn_cast<MemRefType>();
