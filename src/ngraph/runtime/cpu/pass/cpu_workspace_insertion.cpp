@@ -134,7 +134,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
         for (auto i : copy)
         {
-            i->replace_output(max_pool_with_indices_output->get_output_descriptors().at(0));
+            i->replace_output(max_pool_with_indices_output->get_output_descriptor(0));
         }
     }
 

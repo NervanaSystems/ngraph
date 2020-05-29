@@ -828,7 +828,7 @@ using namespace ngraph;
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_output_descriptors().at(i).get_tensor();
+            auto output_tensor = &param->get_output_descriptor(i).get_tensor();
             param_index_map[output_tensor->get_name()] = arg_index;
             auto tensor_set = get_tensor_set(output_tensor);
 
@@ -1569,7 +1569,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_output_descriptors().at(i).get_tensor();
+            auto output_tensor = &param->get_output_descriptor(i).get_tensor();
             auto tensor_set = get_tensor_set(output_tensor);
 
             auto& stale = tensor_stale[output_tensor->get_name()];
