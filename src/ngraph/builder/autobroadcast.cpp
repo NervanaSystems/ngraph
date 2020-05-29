@@ -237,7 +237,7 @@ namespace ngraph
             return move(value_bcast);
         }
 
-        pair<shared_ptr<Node>, shared_ptr<Node>>
+        pair<Output<Node>, Output<Node>>
             numpy_broadcast(const pair<Output<Node>, Output<Node>>& args)
         {
             NGRAPH_CHECK(args.first.get_node());
@@ -253,8 +253,7 @@ namespace ngraph
                                  args.second.as_single_output_node());
             }
 
-            NodeVector bcasted_outputs =
-                as_node_vector(numpy_broadcast_outputs({args.first, args.second}));
+            OutputVector bcasted_outputs = numpy_broadcast_outputs({args.first, args.second});
 
             return make_pair(bcasted_outputs.at(0), bcasted_outputs.at(1));
         }

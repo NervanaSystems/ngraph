@@ -26,9 +26,9 @@ shared_ptr<op::Parameter> getParamFromShape(const Shape& shape)
     return make_shared<op::Parameter>(element::f32, shape);
 }
 
-inline const Shape& getShapeFromParam(const shared_ptr<Node>& node)
+inline const Shape& getShapeFromParam(const Output<Node>& node)
 {
-    return node->get_shape();
+    return node.get_shape();
 }
 
 // input shapes are equal so AutoBroadcast does nothing
@@ -39,8 +39,8 @@ TEST(autobroadcast, no_broadcast_equal)
     auto rhs = getParamFromShape(s2345);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
     EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
@@ -72,8 +72,8 @@ TEST(autobroadcast, normal_broadcast_2d)
     auto rhs = getParamFromShape(s23);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_NE(ab_lhs, lhs);
     EXPECT_EQ(getShapeFromParam(ab_lhs), s23);
@@ -93,8 +93,8 @@ TEST(autobroadcast, normal_broadcast_3d)
     auto rhs = getParamFromShape(s234);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_NE(ab_lhs, lhs);
     EXPECT_EQ(getShapeFromParam(ab_lhs), s234);
@@ -114,8 +114,8 @@ TEST(autobroadcast, normal_broadcast_4d)
     auto rhs = getParamFromShape(s2345);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_NE(ab_lhs, lhs);
     EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
@@ -135,8 +135,8 @@ TEST(autobroadcast, reshape_1x_broadcast)
     auto rhs = getParamFromShape(s2341);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
     EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
@@ -156,8 +156,8 @@ TEST(autobroadcast, reshape_2x_broadcast)
     auto rhs = getParamFromShape(s2341);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     Shape s2345{2, 3, 4, 5};
 
@@ -180,8 +180,8 @@ TEST(autobroadcast, broadcast_with_dim1)
     auto rhs = getParamFromShape(s315);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
     EXPECT_EQ(getShapeFromParam(ab_lhs), s2315);
@@ -200,8 +200,8 @@ TEST(autobroadcast, broadcast_with_leading_dim1)
     auto rhs = getParamFromShape(s345);
 
     auto shaped = builder::numpy_broadcast({lhs, rhs});
-    const shared_ptr<Node>& ab_lhs = shaped.first;
-    const shared_ptr<Node>& ab_rhs = shaped.second;
+    const Output<Node> ab_lhs = shaped.first;
+    const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
     EXPECT_EQ(getShapeFromParam(ab_lhs), s1345);
