@@ -215,7 +215,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                                                             R_reshape,
                                                             bias_ifco,
                                                             rnn_type);
-        if (lstm_node->get_output_descriptors().size() != 3)
+        if (lstm_node->get_output_size() != 3)
         {
             throw ngraph_error("Lstm node doesnt have three outputs");
         }
@@ -274,8 +274,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
             return false;
         }
 
-        if (m.get_match_root()->get_output_descriptors().size() !=
-            pattern_map[input]->get_output_descriptors().size())
+        if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
@@ -700,8 +699,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         {
                             if (goe1_user->get_argument(i) == goe_1)
                             {
-                                goe1_user->get_input_descriptors().at(i).replace_output(
-                                    ht_slice_per_timestep[index]->get_output_descriptors().at(0));
+                                goe1_user->get_input_descriptor(i).replace_output(
+                                    ht_slice_per_timestep[index]->get_output_descriptor(0));
                             }
                         }
                         NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()

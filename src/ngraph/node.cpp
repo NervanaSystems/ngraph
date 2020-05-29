@@ -199,7 +199,7 @@ void Node::set_arguments(const OutputVector& arguments)
     for (auto& output : arguments)
     {
         auto output_node = output.get_node();
-        auto& output_descriptor = output_node->get_output_descriptors().at(output.get_index());
+        auto& output_descriptor = output_node->get_output_descriptor(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
     }
 }
@@ -213,6 +213,11 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
+const descriptor::Input& Node::get_input_descriptor(size_t position) const
+{
+    return m_inputs.at(position);
+}
+
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -222,6 +227,11 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
             make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
+    return m_outputs.at(position);
+}
+
+const descriptor::Output& Node::get_output_descriptor(size_t position) const
+{
     return m_outputs.at(position);
 }
 
