@@ -23,10 +23,7 @@
 
 namespace ngraph
 {
-    namespace codegen
-    {
-        class CodeWriter;
-    }
+    class CodeWriter;
     namespace runtime
     {
         namespace gpu

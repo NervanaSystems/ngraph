@@ -136,22 +136,23 @@ namespace ngraph
                                         with_init_value);
                 }
 
-                template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE = ngraph::op::Nop>
-                size_t build_elementwise_collective(const std::vector<std::string>& dtypes,
-                                                    NVShape tensor_shape,
-                                                    const std::set<size_t>& reduced_tensors = {},
-                                                    const std::set<size_t>& axes = {},
-                                                    bool save_elementwise = false)
-                {
-                    return build_fused_ew_to_collective(dtypes,
-                                                        tensor_shape,
-                                                        reduced_tensors,
-                                                        axes,
-                                                        CudaOpMap<ELEMENTWISE_OP_TYPE>::op,
-                                                        CudaOpMap<ELEMENTWISE_OP_TYPE>::math_kernel,
-                                                        CudaOpMap<REDUCE_OP_TYPE>::atomic,
-                                                        save_elementwise);
-                }
+                // template <typename ELEMENTWISE_OP_TYPE, typename REDUCE_OP_TYPE =
+                // ngraph::op::Nop>
+                // size_t build_elementwise_collective(const std::vector<std::string>& dtypes,
+                //                                     NVShape tensor_shape,
+                //                                     const std::set<size_t>& reduced_tensors = {},
+                //                                     const std::set<size_t>& axes = {},
+                //                                     bool save_elementwise = false)
+                // {
+                //     return build_fused_ew_to_collective(dtypes,
+                //                                         tensor_shape,
+                //                                         reduced_tensors,
+                //                                         axes,
+                //                                         CudaOpMap<ELEMENTWISE_OP_TYPE>::op,
+                //                                         CudaOpMap<ELEMENTWISE_OP_TYPE>::math_kernel,
+                //                                         CudaOpMap<REDUCE_OP_TYPE>::atomic,
+                //                                         save_elementwise);
+                // }
 
                 size_t build_broadcast(const std::array<std::string, 2>& dtypes,
                                        NVShape result_shape,
