@@ -126,31 +126,6 @@ std::shared_ptr<Node>
     return clone;
 }
 
-std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
-{
-    NODE_VALIDATION_CHECK(
-        this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
-}
-
-std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
-{
-    NodeVector args;
-    for (const Output<Node>& input : inputs)
-    {
-        args.push_back(get_output_element(input));
-    }
-    std::shared_ptr<Node> clone = copy_with_new_args(args);
-    // Remove the inserted GOEs
-    for (size_t i = 0; i < inputs.size(); ++i)
-    {
-        if (clone->input_value(i) != inputs.at(i))
-        {
-            clone->set_argument(i, inputs.at(i));
-        }
-    }
-    return clone;
-}
-
 void Node::safe_delete(NodeVector& nodes, bool recurse)
 {
     for (auto& input : m_inputs)
@@ -199,7 +174,7 @@ void Node::set_arguments(const OutputVector& arguments)
     for (auto& output : arguments)
     {
         auto output_node = output.get_node();
-        auto& output_descriptor = output_node->get_output_descriptors().at(output.get_index());
+        auto& output_descriptor = output_node->get_output_descriptor(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
     }
 }
@@ -213,6 +188,11 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
+const descriptor::Input& Node::get_input_descriptor(size_t position) const
+{
+    return m_inputs.at(position);
+}
+
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -222,6 +202,11 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
             make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
+    return m_outputs.at(position);
+}
+
+const descriptor::Output& Node::get_output_descriptor(size_t position) const
+{
     return m_outputs.at(position);
 }
 

@@ -283,15 +283,16 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             // keep assigning different outputs to a result descriptor
             // op::Result emitter will check if in and out descriptors are the same
             // and skip a copy
-            auto input_node = res->get_inputs().at(0).get_output().get_node();
+            auto input_node = res->get_input_descriptors().at(0).get_output().get_node();
             if (!input_node->is_constant() && !input_node->is_parameter())
             {
                 shared_ptr<descriptor::Tensor> itv =
-                    res->get_inputs().at(0).get_output().get_tensor_ptr();
+                    res->get_input_descriptors().at(0).get_output().get_tensor_ptr();
                 auto output_name = ss.str();
                 m_variable_name_map[itv->get_name()] =
                     std::make_tuple(TensorRole::OUTPUT, i, ss.str());
-                // propagate_in_place_output(&(res->get_inputs().at(0).get_output()), output_name);
+                // propagate_in_place_output(&(res->get_input_descriptors().at(0).get_output()),
+                // output_name);
             }
         }
 
@@ -324,7 +325,8 @@ void runtime::gpu::GPUInternalFunction::build_functions()
         {
             if (auto c = std::dynamic_pointer_cast<op::Constant>(node))
             {
-                shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv =
+                    node->get_output_descriptors()[0].get_tensor_ptr();
                 m_variable_name_map[tv->get_name()] =
                     std::make_tuple(TensorRole::CONSTANT, 0, node->get_name());
             }
@@ -335,7 +337,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             vector<string> node_input_names;
             vector<string> node_output_names;
             vector<GPUTensorWrapper> in;
-            for (const descriptor::Input& input : node->get_inputs())
+            for (const descriptor::Input& input : node->get_input_descriptors())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -345,7 +347,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 node_input_names.emplace_back(tv->get_name());
             }
             vector<GPUTensorWrapper> out;
-            for (const descriptor::Output& output : node->get_outputs())
+            for (const descriptor::Output& output : node->get_output_descriptors())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];

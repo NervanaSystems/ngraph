@@ -1576,7 +1576,7 @@ std::string runtime::gpu::GPU_Emitter::emit_v0_ConvolutionBiasBackpropFiltersBia
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_v0_GRUCell(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_v3_GRUCell(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
@@ -2017,6 +2017,61 @@ std::string runtime::gpu::GPU_Emitter::emit_v3_ScatterAdd(EMIT_ARGS)
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_v3_ScatterUpdate(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_Acosh(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_NonMaxSuppression(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_EmbeddingBagOffsetsSum(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_EmbeddingBagPackedSum(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_EmbeddingSegmentsSum(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_ExtractImagePatches(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_Interpolate(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_Atanh(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_Bucketize(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_Asinh(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_Broadcast(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
