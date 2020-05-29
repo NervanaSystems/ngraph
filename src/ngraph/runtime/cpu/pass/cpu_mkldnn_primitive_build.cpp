@@ -657,7 +657,7 @@ namespace ngraph
                 {
                     auto concat = static_cast<OP*>(node);
                     size_t concat_dim = concat->get_concatenation_axis();
-                    size_t nargs = node->get_input_descriptors().size();
+                    size_t nargs = node->get_input_size();
 
                     // query scratchpad size
                     auto concat_pd = mkldnn_emitter.get_concat_desc<OP>(node, nargs);

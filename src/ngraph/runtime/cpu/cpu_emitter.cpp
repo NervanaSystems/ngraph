@@ -4367,7 +4367,7 @@ namespace ngraph
                 auto it = output;
                 while (auto goe = as_type_ptr<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_input_descriptors().at(0).get_output();
+                    it = &goe->get_input_descriptor(0).get_output();
                 }
                 return it;
             }
@@ -4389,8 +4389,7 @@ namespace ngraph
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry =
-                        std::make_pair(&ck->get_input_descriptors().at(i).get_output(), sname);
+                    auto entry = std::make_pair(&ck->get_input_descriptor(i).get_output(), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4402,7 +4401,7 @@ namespace ngraph
                     auto output = outputs[i];
                     auto output_node = output.get_node();
                     auto entry = std::make_pair(
-                        &output_node->get_output_descriptors().at(output.get_index()), sname);
+                        &output_node->get_output_descriptor(output.get_index()), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4415,7 +4414,7 @@ namespace ngraph
                 for (size_t i = 0; i < node_list.size(); i++)
                 {
                     auto op_node = node_list[i];
-                    auto op = &op_node->get_output_descriptors().at(0);
+                    auto op = &op_node->get_output_descriptor(0);
                     std::string tmp;
                     if (loop_symbol_table.count(op) == 0)
                     {
