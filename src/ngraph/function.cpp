@@ -69,10 +69,10 @@ Function::Function(const NodeVector& results,
     init();
 }
 
-Function::Function(const std::shared_ptr<Node>& result,
+Function::Function(Output<Node> result,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : Function(result->outputs(), parameters, name)
+    : Function(OutputVector{result}, parameters, name)
 {
 }
 
