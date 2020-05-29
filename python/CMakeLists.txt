@@ -20,23 +20,12 @@ project (pyngraph)
 
 include(ExternalProject)
 
-ExternalProject_Add(
-        pybind11
-        GIT_REPOSITORY "https://github.com/pybind/pybind11.git"
-        GIT_TAG "v2.5.0"
-        SOURCE_DIR "${CMAKE_CURRENT_BINARY_DIR}/pybind11"
-        CONFIGURE_COMMAND ""
-        BUILD_COMMAND ""
-        INSTALL_COMMAND ""
-)
-
 if (WIN32)
         set(BUILD_PY_IN "${CMAKE_CURRENT_SOURCE_DIR}/build_wheel.py.in")
         set(BUILD_PY    "${CMAKE_CURRENT_BINARY_DIR}/build_wheel.py")
         configure_file(${BUILD_PY_IN} ${BUILD_PY} @ONLY)
 
         add_custom_command(
-                DEPENDS pybind11
                 OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/
                 POST_BUILD
                 WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
@@ -48,7 +37,6 @@ else()
         configure_file(${BUILD_SH_IN} ${BUILD_SH} @ONLY)
 
         add_custom_command(
-                DEPENDS pybind11
                 OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/
                 POST_BUILD
                 WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}

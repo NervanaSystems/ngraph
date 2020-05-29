@@ -52,8 +52,6 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, numpy_abc)
 {
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
-
     int a = 3, b = 4;
 
     auto locals = py::dict("a"_a = a, "b"_a = b);

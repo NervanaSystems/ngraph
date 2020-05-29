@@ -645,6 +645,10 @@ if (NGRAPH_TEST_UTIL_ENABLE)
     include(cmake/external_gtest.cmake)
 endif()
 
+if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
+    include(cmake/external_pybind11.cmake)
+endif()
+
 add_subdirectory(test)
 
 if (NGRAPH_DOC_BUILD_ENABLE)
