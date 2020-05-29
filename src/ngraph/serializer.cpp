@@ -843,47 +843,6 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
     return rc;
 }
 
-// This helps with conversions to old-style shared-ptr<Node> and new-style Output&
-// arguments to node constructors. Uses of OutputHelper should be replaced with Output
-// when all op constructors use the new style arguments.
-struct OutputHelper
-{
-    OutputHelper(const Output<Node>& output)
-        : m_output(output)
-    {
-    }
-
-    operator shared_ptr<Node>() const { return get_output_element(m_output); }
-    operator const Output<Node>&() const { return m_output; }
-    Output<Node> m_output;
-};
-
-// This helps with conversions to old-style shared-ptr<Node> and new-style Output&
-// arguments to node constructors. Uses of OutputVectorHelper should be replaced with OutputVector
-// when all op constructors use the new style arguments.
-struct OutputVectorHelper
-{
-    OutputVectorHelper(const OutputVector& output_vector)
-        : m_vector(output_vector)
-    {
-    }
-    OutputVectorHelper() = default;
-    OutputHelper operator[](size_t i) const { return OutputHelper(m_vector[i]); }
-    void push_back(const Output<Node>& output) { m_vector.push_back(output); }
-    size_t size() const { return m_vector.size(); }
-    operator vector<shared_ptr<Node>>() const
-    {
-        vector<shared_ptr<Node>> result;
-        for (auto& o : m_vector)
-        {
-            result.push_back(OutputHelper(o));
-        }
-        return result;
-    }
-    operator const OutputVector&() const { return m_vector; }
-    OutputVector m_vector;
-};
-
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     auto& factory_registry = FactoryRegistry<Node>::get();
@@ -897,7 +856,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         string friendly_name = get_value<string>(node_js, "friendly_name");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
-        OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
+        OutputVector args(deserialize_output_vector(node_js["inputs"]));
         if (has_key(node_js, "attribute_visitor"))
         {
             if (factory_registry.has_factory(type_info))
