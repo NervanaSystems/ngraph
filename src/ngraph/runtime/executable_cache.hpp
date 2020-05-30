@@ -32,15 +32,15 @@ namespace ngraph
 {
     namespace runtime
     {
-        class LRUCache : public std::enable_shared_from_this<LRUCache>
+        class ExecutableCache : public std::enable_shared_from_this<ExecutableCache>
         {
         public:
             using GraphCache = std::unordered_map<std::string, std::shared_ptr<Executable>>;
             using ClonedFunctionMap = std::unordered_map<std::string, std::shared_ptr<Function>>;
 
-            LRUCache();
+            ExecutableCache();
 
-            virtual ~LRUCache();
+            virtual ~ExecutableCache();
 
             void add_entry(const std::vector<int>& shape,
                            std::shared_ptr<Executable> exec,
