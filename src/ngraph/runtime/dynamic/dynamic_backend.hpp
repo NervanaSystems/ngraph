@@ -103,7 +103,7 @@ public:
 private:
     std::shared_ptr<ngraph::Function> m_wrapped_function;
     std::shared_ptr<ngraph::runtime::Backend> m_wrapped_backend;
-    std::shared_ptr<ngraph::runtime::ExecutableCache> m_lru =
+    std::shared_ptr<ngraph::runtime::ExecutableCache> m_cache =
         std::make_shared<ngraph::runtime::ExecutableCache>();
     bool m_enable_performance_collection;
 };
