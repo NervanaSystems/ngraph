@@ -631,11 +631,7 @@ if(NGRAPH_CODEGEN_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    if (WIN32 OR APPLE)
-        include(cmake/external_tbb_prebuilt.cmake)
-    else()
-        include(cmake/external_tbb.cmake)
-    endif()
+    include(cmake/external_tbb.cmake)
 endif()
 
 add_subdirectory(src)
