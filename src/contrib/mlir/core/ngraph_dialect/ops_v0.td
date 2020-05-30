@@ -213,7 +213,7 @@ def NGAvgPoolOp :
     let verifier = [{ return verifyOp(*this); }];
     let builders = [
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
+      "OpBuilder &builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding, IntegerAttr padType", [{
         tblgen_state.addOperands(arg);
@@ -227,7 +227,7 @@ def NGAvgPoolOp :
       }]>,
 
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
+      "OpBuilder &builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove, BoolAttr includPadding", [{
         tblgen_state.addOperands(arg);
@@ -419,7 +419,7 @@ def NGMaxPoolOp :
     let verifier = [{ return verifyOp(*this); }];
     let builders = [
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value arg," 
+      "OpBuilder &builder, OperationState &tblgen_state, Type res, Value arg," 
        "ArrayAttr windowShape, ArrayAttr windowMovementStrides,"
        "ArrayAttr padBelow, ArrayAttr padAbove", [{
         tblgen_state.addOperands(arg);
@@ -501,7 +501,7 @@ def NGPadOp :
     let builders = [
       // Builder without padMode
       OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, " 
+      "OpBuilder &builder, OperationState &tblgen_state, Type res, " 
        "Value arg, Value padValue, "
        "ArrayAttr padBelow, ArrayAttr padAbove", [{
         tblgen_state.addOperands(arg);
