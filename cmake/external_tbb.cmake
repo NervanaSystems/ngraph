@@ -40,7 +40,7 @@ if(WIN32 OR APPLE)
     FetchContent_Declare(
         ngraphtbb
         URL            ${TBB_FILE}
-        URL_HASH       ${TBB_SHA1_HASH}
+        URL_HASH       SHA1=${TBB_SHA1_HASH}
     )
 else()
     FetchContent_Declare(
@@ -56,9 +56,10 @@ if(NOT ngraphtbb_POPULATED)
     FetchContent_Populate(ngraphtbb)
 endif()
 
-set(TBB_ROOT ${ngraphtbb_SOURCE_DIR})
-
-if(NOT (WIN32 OR APPLE))
+if(WIN32 OR APPLE)
+    set(TBB_DIR  ${ngraphtbb_SOURCE_DIR}/${NGRAPH_TBB_SUB_VERSION}/cmake)
+else()
+    set(TBB_ROOT ${ngraphtbb_SOURCE_DIR})
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
     tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${PROJECT_BINARY_DIR}/tbb_build
         tbb_build_prefix=tbb stdver=c++${NGRAPH_CXX_STANDARD} CONFIG_DIR TBB_DIR)
