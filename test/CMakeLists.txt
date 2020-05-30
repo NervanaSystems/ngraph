@@ -434,6 +434,10 @@ if (NGRAPH_MLIR_ENABLE)
     list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend/numpy.in.cpp)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
 endif()
@@ -494,6 +498,11 @@ endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    target_link_libraries(unit-test PRIVATE ngraph pybind11::embed)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_include_directories(unit-test

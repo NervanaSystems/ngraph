@@ -42,18 +42,6 @@ static element::Type read_element_type(json j);
 static json write_partial_shape(const PartialShape& s);
 static PartialShape read_partial_shape(json j);
 
-static bool s_serialize_output_shapes_enabled = getenv_bool("NGRAPH_SERIALIZER_OUTPUT_SHAPES");
-
-void ngraph::set_serialize_output_shapes(bool enable)
-{
-    s_serialize_output_shapes_enabled = enable;
-}
-
-bool ngraph::get_serialize_output_shapes()
-{
-    return s_serialize_output_shapes_enabled;
-}
-
 namespace
 {
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
@@ -463,7 +451,6 @@ static string serialize(shared_ptr<Function> func, size_t indent, bool binary_co
     JSONSerializer serializer;
     serializer.set_binary_constant_data(binary_constant_data);
     serializer.set_indent(indent);
-    serializer.set_serialize_output_shapes(s_serialize_output_shapes_enabled);
 
     json j;
     j.push_back(serializer.serialize_function(*func));
@@ -2644,15 +2631,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["outputs"] = outputs;
     }
 
-    if (s_serialize_output_shapes_enabled)
-    {
-        json output_shapes = json::array();
-        for (size_t i = 0; i < n.get_output_size(); ++i)
-        {
-            output_shapes.push_back(n.get_output_shape(i));
-        }
-        node["output_shapes"] = output_shapes;
-    }
     if (ngraph::get_provenance_enabled())
     {
         json provenance_tags = json::array();
