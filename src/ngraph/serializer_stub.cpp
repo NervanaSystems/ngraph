@@ -42,8 +42,3 @@ std::shared_ptr<ngraph::Function> ngraph::deserialize(const std::string& str)
 {
     throw std::runtime_error("serializer disabled in build");
 }
-
-void ngraph::set_serialize_output_shapes(bool enable)
-{
-    throw std::runtime_error("serializer disabled in build");
-}
