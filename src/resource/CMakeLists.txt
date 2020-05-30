@@ -44,8 +44,8 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    add_dependencies(resource_generator TBB:tbb)
-    get_target_property(TBB_INCLUDE_DIR TBB:tbb INTERFACE_INCLUDE_DIRECTORIES)
+    add_dependencies(resource_generator TBB::tbb)
+    get_target_property(TBB_INCLUDE_DIR TBB::tbb INTERFACE_INCLUDE_DIRECTORIES)
     list(APPEND HEADER_SEARCH_DEFINES TBB_HEADERS_PATH="${TBB_INCLUDE_DIR}")
 endif()
 
