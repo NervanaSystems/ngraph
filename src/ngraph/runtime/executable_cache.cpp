@@ -14,12 +14,11 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iterator>
 #include <exception>
+#include <iterator>
 
-#include "ngraph/runtime/executable_cache.hpp"
 #include "ngraph/env_util.hpp"
-#include "ngraph/log.hpp"
+#include "ngraph/runtime/executable_cache.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
@@ -47,28 +46,22 @@ runtime::ExecutableCache::~ExecutableCache()
 
 void runtime::ExecutableCache::convert_shape_to_string(const vector<int>& shape, ostringstream& key)
 {
-    NGRAPH_INFO << "shape size: " << shape.size();
     if (!shape.empty())
     {
         std::copy(shape.begin(), shape.end(), std::ostream_iterator<int>(key, ", "));
     }
-    NGRAPH_INFO << join(shape) << " -- " << key.str();
 }
 
 void runtime::ExecutableCache::add_entry(const vector<int>& shape,
                                          shared_ptr<runtime::Executable> exec,
                                          shared_ptr<Function> func)
 {
-    NGRAPH_INFO << "shape size: " << shape.size();
     std::lock_guard<std::mutex> guard(m_mutex);
     ostringstream key;
     // check if the cache is full
-    NGRAPH_INFO << m_list.size();
-    NGRAPH_INFO << m_cache_size;
     if (m_list.size() == m_cache_size)
     {
         // The cache is full
-        NGRAPH_INFO;
         ostringstream key;
         convert_shape_to_string(m_list.back(), key);
         m_list.pop_back();
