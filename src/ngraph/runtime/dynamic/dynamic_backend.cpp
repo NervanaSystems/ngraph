@@ -134,8 +134,6 @@ bool runtime::dynamic::DynamicExecutable::call(
         if (m_wrapped_function->get_parameters()[loop_count]->is_relevant_to_shapes())
         {
             // Caching on values of Shape relevant inputs
-            NGRAPH_CHECK(input->get_element_type() == element::i64,
-                         "Parameter that is relevant to shapes is not i64 type");
             int size = input->get_size_in_bytes() / (input->get_element_type().bitwidth() / 8);
             std::vector<int64_t> data(size);
             input->read(data.data(), input->get_size_in_bytes());
