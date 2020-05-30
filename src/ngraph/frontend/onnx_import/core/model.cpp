@@ -83,6 +83,9 @@ namespace ngraph
                 OperatorSet opset{OperatorsBridge::get_operator_set(domain)};
                 if (opset.empty())
                 {
+                    NGRAPH_WARN << "Couldn't enable domain: " << domain
+                                << " since it hasn't any registered operators.";
+
                     return;
                 }
                 m_opset.emplace(domain, opset);
