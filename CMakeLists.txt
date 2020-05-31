@@ -497,10 +497,25 @@ endif()
 
 # Since UNIX support Bash we can use a Bash script to do the clang-format functions
 # This is much faster than the cmake method
+set(FORMAT_DIRS
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/test
+    ${PROJECT_SOURCE_DIR}/doc/examples
+    ${PROJECT_SOURCE_DIR}/python/src/pyngraph
+)
 if (UNIX)
-    add_custom_target(style-check COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh)
-    add_custom_target(style-apply COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
-    add_custom_target(style COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style-check
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh ${FORMAT_DIRS}
+    )
+    add_custom_target(style-apply
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh ${FORMAT_DIRS}
+    )
+    add_custom_target(style
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh ${FORMAT_DIRS}
+    )
 else()
     add_custom_target(style-check
         COMMAND ${CMAKE_COMMAND}
