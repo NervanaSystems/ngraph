@@ -575,7 +575,6 @@ endif()
 if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
     target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
-    )
 endif()
 
 if (NOT NGRAPH_IE_ENABLE)
