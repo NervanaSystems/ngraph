@@ -14,20 +14,23 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required(VERSION 3.1)
+if(TARGET pybind11::pybind11)
+    return()
+endif()
 
-include(ExternalProject)
+include(FetchContent)
 
-project(tbb-fetch NONE)
+set(PYBIND11_GIT_TAG v2.5.0)
+set(PYBIND11_GIT_URL https://github.com/pybind/pybind11.git)
 
-ExternalProject_Add(
-    ext_tbb
-    PREFIX tbb
-    GIT_REPOSITORY ${TBB_GIT_REPO_URL}
-    GIT_TAG "${NGRAPH_TBB_VERSION}"
-    SOURCE_DIR "${TBB_ROOT}"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    UPDATE_COMMAND ""
-    INSTALL_COMMAND ""
+FetchContent_Declare(
+    ext_pybind11
+    GIT_REPOSITORY ${PYBIND11_GIT_URL}
+    GIT_TAG        ${PYBIND11_GIT_TAG}
 )
+
+FetchContent_GetProperties(ext_pybind11)
+if(NOT ext_pybind11_POPULATED)
+    FetchContent_Populate(ext_pybind11)
+    add_subdirectory(${ext_pybind11_SOURCE_DIR} ${ext_pybind11_BINARY_DIR})
+endif()

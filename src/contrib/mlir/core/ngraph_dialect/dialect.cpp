@@ -100,9 +100,11 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
         auto signedness = isSigned ? NGIntegerType::SignednessSemantics::Signed
                                    : NGIntegerType::SignednessSemantics::Unsigned;
 
-        if (width != 8 || width != 16 || width != 32 || width != 64)
+        if (!(width == 8 || width == 16 || width == 32 || width == 64))
         {
-            parser.emitError(loc, "Unexpected width for nGraph integer type: " + origTypeStr);
+            parser.emitError(loc,
+                             "Unexpected width = " + std::to_string(width) +
+                                 " for nGraph integer type: " + origTypeStr);
         }
 
         return NGIntegerType::get(width, signedness, context);
