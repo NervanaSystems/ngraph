@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NOT NGRAPH_MLIR_ENABLE)
+    return()
+endif()
+
 include_directories(
     ${NGRAPH_INCLUDE_PATH}
     ${MLIR_LLVM_INCLUDE_PATH}
