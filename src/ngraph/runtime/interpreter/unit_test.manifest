@@ -59,7 +59,7 @@ fused_clamp_uint64
 fused_clamp_float16
 fused_clamp_bfloat16
 create_dynamic_tensor
-dynamic_abc
+#dynamic_abc
 dynamic_axpy
 dynamic_to_vector
 dynamic_reverse_shape
