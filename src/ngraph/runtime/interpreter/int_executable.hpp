@@ -832,18 +832,6 @@ protected:
                                             max_pool_backprop->get_padding_above());
             break;
         }
-        case OP_TYPEID::Mod_v1:
-        {
-            const op::v1::Mod* mod = static_cast<const op::v1::Mod*>(&node);
-            reference::mod<T>(args[0]->get_data_ptr<const T>(),
-                              args[1]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_input_shape(1),
-                              mod->get_auto_broadcast());
-
-            break;
-        }
         case OP_TYPEID::Negative:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1474,6 +1462,7 @@ protected:
         case OP_TYPEID::MaxPool:
         case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
+        case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:

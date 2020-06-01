@@ -78,6 +78,7 @@ set(SRC
     nop_elimination.cpp
     op.cpp
     op_eval/matmul.cpp
+    op_eval/mod.cpp
     op_eval/non_zero.cpp
     op_eval/strided_slice.cpp
     op_is.cpp

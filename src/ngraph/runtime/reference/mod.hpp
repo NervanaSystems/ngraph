@@ -17,12 +17,8 @@
 #pragma once
 
 #include <cmath>
-#include <utility>
-#include <vector>
 
-#include "ngraph/axis_vector.hpp"
-#include "ngraph/builder/autobroadcast.hpp"
-#include "ngraph/shape_util.hpp"
+#include "ngraph/runtime/reference/autobroadcast_binop.hpp"
 
 using namespace std;
 
