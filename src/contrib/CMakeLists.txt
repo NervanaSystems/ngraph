@@ -14,22 +14,4 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_definitions(-DIN_NGRAPH_LIBRARY)
-
-include_directories(ngraph)
-
-add_subdirectory(resource)
-
-# This must be added before any backend that uses MLIR
-add_subdirectory(contrib)
-
-add_subdirectory(ngraph)
-
-add_subdirectory(runtime)
-
-if (NGRAPH_TOOLS_ENABLE)
-    add_subdirectory(tools)
-    message(STATUS "tools enabled")
-else()
-    message(STATUS "tools disabled")
-endif()
+add_subdirectory(mlir)
