@@ -405,9 +405,9 @@ else()
     set(CMAKE_VISIBILITY_INLINES_HIDDEN OFF)
     endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$" AND NOT NGRAPH_BUILD_DIR)
     message( STATUS "Setting clang flags...")
-    include( cmake/clang_4_0_flags.cmake )
+    include( cmake/clang_flags.cmake )
 endif()
 
 if (NOT WIN32 AND ${NGRAPH_WARNINGS_AS_ERRORS})

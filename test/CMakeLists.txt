@@ -523,7 +523,7 @@ if(NOT WIN32)
 endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
