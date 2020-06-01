@@ -402,9 +402,9 @@ else()
     set(CMAKE_VISIBILITY_INLINES_HIDDEN OFF)
     endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$" AND NOT NGRAPH_BUILD_DIR)
     message( STATUS "Setting clang flags...")
-    include( cmake/clang_4_0_flags.cmake )
+    include( cmake/clang_flags.cmake )
 endif()
 
 if (NOT WIN32 AND ${NGRAPH_WARNINGS_AS_ERRORS})
@@ -450,7 +450,6 @@ if (NGRAPH_IE_ENABLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
     set(NGRAPH_MLIR_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/contrib/mlir)
 endif()
 
@@ -497,10 +496,25 @@ endif()
 
 # Since UNIX support Bash we can use a Bash script to do the clang-format functions
 # This is much faster than the cmake method
+set(FORMAT_DIRS
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/test
+    ${PROJECT_SOURCE_DIR}/doc/examples
+    ${PROJECT_SOURCE_DIR}/python/src/pyngraph
+)
 if (UNIX)
-    add_custom_target(style-check COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh)
-    add_custom_target(style-apply COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
-    add_custom_target(style COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style-check
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh ${FORMAT_DIRS}
+    )
+    add_custom_target(style-apply
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh ${FORMAT_DIRS}
+    )
+    add_custom_target(style
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh ${FORMAT_DIRS}
+    )
 else()
     add_custom_target(style-check
         COMMAND ${CMAKE_COMMAND}
