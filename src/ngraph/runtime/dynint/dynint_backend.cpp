@@ -14,14 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+#include "ngraph/runtime/dynint/dynint_backend_visibility.hpp"
 
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
-#include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/runtime/dynint/dynint_backend.hpp"
+#include "ngraph/runtime/dynint/dynint_executable.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/log.hpp"
@@ -29,41 +29,41 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
+extern "C" DYNINT_BACKEND_API void ngraph_register_dynint_backend()
 {
-    runtime::BackendManager::register_backend("INTERPRETER", [](const std::string& /* config */) {
-        return std::make_shared<runtime::interpreter::INTBackend>();
+    runtime::BackendManager::register_backend("DYNINT", [](const std::string&) {
+        return std::make_shared<runtime::dynint::DynIntBackend>();
     });
 }
 
-runtime::interpreter::INTBackend::INTBackend()
+runtime::dynint::DynIntBackend::DynIntBackend()
 {
 }
 
-runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
+runtime::dynint::DynIntBackend::DynIntBackend(const vector<string>& unsupported_op_name_list)
     : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
 {
 }
 
-shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
+shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor()
 {
     return make_shared<runtime::HostTensor>();
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
+    runtime::dynint::DynIntBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
+shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTBackend::create_dynamic_tensor(const element::Type& type,
+    runtime::dynint::DynIntBackend::create_dynamic_tensor(const element::Type& type,
                                                             const PartialShape& shape)
 {
     NGRAPH_INFO << type;
@@ -72,18 +72,18 @@ shared_ptr<runtime::Tensor>
 }
 
 shared_ptr<runtime::Executable>
-    runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
+    runtime::dynint::DynIntBackend::compile(shared_ptr<Function> function,
                                               bool enable_performance_collection)
 {
-    return make_shared<INTExecutable>(function, enable_performance_collection);
+    return make_shared<DynIntExecutable>(function, enable_performance_collection);
 }
 
-bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
+bool runtime::dynint::DynIntBackend::is_supported(const Node& node) const
 {
     return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
 }
 
-std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istream& in)
+std::shared_ptr<runtime::Executable> runtime::dynint::DynIntBackend::load(istream& in)
 {
     shared_ptr<Executable> exec;
     cpio::Reader reader(in);
@@ -106,7 +106,7 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
             {
                 vector<char> buffer = reader.read(info);
                 string model_string = string(buffer.data(), buffer.size());
-                exec = shared_ptr<INTExecutable>(new INTExecutable(model_string));
+                exec = shared_ptr<DynIntExecutable>(new DynIntExecutable(model_string));
                 break;
             }
         }
@@ -114,7 +114,7 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
     return exec;
 }
 
-bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
+bool runtime::dynint::DynIntBackend::set_config(const map<string, string>& config, string& error)
 {
     bool rc = false;
     auto it = config.find("test_echo");

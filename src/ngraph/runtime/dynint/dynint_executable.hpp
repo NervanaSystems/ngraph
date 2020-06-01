@@ -30,7 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+#include "ngraph/runtime/dynint/dynint_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/all.hpp"
@@ -107,10 +107,10 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace interpreter
+        namespace dynint
         {
-            class INTBackend;
-            class INTExecutable;
+            class DynIntBackend;
+            class DynIntExecutable;
 
             // This expands the op list in op_tbl.hpp into a list of enumerations that look like
             // this:
@@ -120,7 +120,7 @@ namespace ngraph
             enum class OP_TYPEID
             {
 #define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
-#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#include "ngraph/runtime/dynint/opset_int_tbl.hpp"
 #undef NGRAPH_OP
                 UnknownOp
             };
@@ -128,12 +128,12 @@ namespace ngraph
     }
 }
 
-class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
+class DYNINT_BACKEND_API ngraph::runtime::dynint::DynIntExecutable : public Executable
 {
-    friend class INTBackend;
+    friend class DynIntBackend;
 
 public:
-    INTExecutable(const std::shared_ptr<Function>& function,
+    DynIntExecutable(const std::shared_ptr<Function>& function,
                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
@@ -156,7 +156,7 @@ public:
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
 protected:
-    INTExecutable(const std::string& model_string);
+    DynIntExecutable(const std::string& model_string);
 
     std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
     std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
@@ -1386,7 +1386,7 @@ protected:
             break;
         }
 
-        // Fused Ops are not supported in interpreter. They need to be decomposed before execution
+        // Fused Ops are not supported in dynint. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:

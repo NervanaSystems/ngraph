@@ -22,7 +22,7 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
+#include "ngraph/runtime/dynint/dynint_backend_visibility.hpp"
 
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -31,23 +31,23 @@ namespace ngraph
 {
     namespace runtime
     {
-        namespace interpreter
+        namespace dynint
         {
-            class INTBackend;
-            class INTExecutable;
-            class INTBackendConstructor;
+            class DynIntBackend;
+            class DynIntExecutable;
+            class DynIntBackendConstructor;
         }
     }
 }
 
-class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTBackend : public Backend
+class DYNINT_BACKEND_API ngraph::runtime::dynint::DynIntBackend : public Backend
 {
 public:
-    INTBackend();
-    INTBackend(const std::vector<std::string>& unsupported_op_name_list);
-    INTBackend(const INTBackend&) = delete;
-    INTBackend(INTBackend&&) = delete;
-    INTBackend& operator=(const INTBackend&) = delete;
+    DynIntBackend();
+    DynIntBackend(const std::vector<std::string>& unsupported_op_name_list);
+    DynIntBackend(const DynIntBackend&) = delete;
+    DynIntBackend(DynIntBackend&&) = delete;
+    DynIntBackend& operator=(const DynIntBackend&) = delete;
 
     std::shared_ptr<Tensor> create_tensor() override;
 

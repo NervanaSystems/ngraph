@@ -16,14 +16,14 @@
 
 #include "ngraph/visibility.hpp"
 
-// Now we use the generic helper definitions above to define INTERPRETER_API
-// INTERPRETER_API is used for the public API symbols. It either DLL imports or DLL exports
+// Now we use the generic helper definitions above to define DYNINT_API
+// DYNINT_API is used for the public API symbols. It either DLL imports or DLL exports
 //    (or does nothing for static build)
 
-#ifdef INTERPRETER_BACKEND_EXPORTS // defined if we are building the INTERPRETER DLL (instead of
+#ifdef DYNINT_BACKEND_EXPORTS // defined if we are building the DYNINT DLL (instead of
 // using
 // it)
-#define INTERPRETER_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
+#define DYNINT_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
 #else
-#define INTERPRETER_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
-#endif // INTERPRETER_DLL_EXPORTS
+#define DYNINT_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
+#endif // DYNINT_DLL_EXPORTS

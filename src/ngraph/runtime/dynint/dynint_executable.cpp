@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/interpreter/int_executable.hpp"
+#include "ngraph/runtime/dynint/dynint_executable.hpp"
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
@@ -38,7 +38,7 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(const Node& node)
+runtime::dynint::OP_TYPEID runtime::dynint::DynIntExecutable::get_typeid(const Node& node)
 {
     const NodeTypeInfo& type_info = node.get_type_info();
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
@@ -47,7 +47,7 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
-#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#include "ngraph/runtime/dynint/opset_int_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -60,7 +60,7 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
     return rc;
 }
 
-runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
+runtime::dynint::DynIntExecutable::DynIntExecutable(const shared_ptr<Function>& function,
                                                    bool enable_performance_collection)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
@@ -74,7 +74,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
 #endif
     auto is_supported = [](const Node& node) {
         bool retval = false;
-        switch (INTExecutable::get_typeid(node))
+        switch (DynIntExecutable::get_typeid(node))
         {
         case OP_TYPEID::Clamp:
         case OP_TYPEID::MatMul:
@@ -99,7 +99,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     set_parameters_and_results(*m_function);
 }
 
-runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_string)
+runtime::dynint::DynIntExecutable::DynIntExecutable(const std::string& model_string)
     : m_is_compiled{true}
     , m_performance_counters_enabled{false}
 {
@@ -111,7 +111,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
     set_parameters_and_results(*m_function);
 }
 
-bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     event::Duration d1("call", "Interpreter");
@@ -244,7 +244,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     return true;
 }
 
-void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
+void runtime::dynint::DynIntExecutable::generate_calls(const element::Type& type,
                                                          const Node& op,
                                                          const vector<shared_ptr<HostTensor>>& out,
                                                          const vector<shared_ptr<HostTensor>>& in)
@@ -273,13 +273,13 @@ void runtime::interpreter::INTExecutable::generate_calls(const element::Type& ty
     }
 }
 
-void runtime::interpreter::INTExecutable::set_nan_check(bool enable)
+void runtime::dynint::DynIntExecutable::set_nan_check(bool enable)
 {
     m_nan_check_enabled = enable;
 }
 
 vector<runtime::PerformanceCounter>
-    runtime::interpreter::INTExecutable::get_performance_data() const
+    runtime::dynint::DynIntExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
@@ -289,7 +289,7 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::interpreter::INTExecutable::perform_nan_check(
+void runtime::dynint::DynIntExecutable::perform_nan_check(
     const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
 {
     size_t arg_number = 1;
@@ -338,7 +338,7 @@ void runtime::interpreter::INTExecutable::perform_nan_check(
     }
 }
 
-void runtime::interpreter::INTExecutable::save(ostream& out)
+void runtime::dynint::DynIntExecutable::save(ostream& out)
 {
     cpio::Writer writer(out);
     string si = "INTERPRETER Save File 1.0";
@@ -348,35 +348,35 @@ void runtime::interpreter::INTExecutable::save(ostream& out)
 }
 
 shared_ptr<ngraph::op::Parameter>
-    runtime::interpreter::INTExecutable::get_parameter(size_t index) const
+    runtime::dynint::DynIntExecutable::get_parameter(size_t index) const
 {
     const ParameterVector& parameters = get_parameters();
     NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
     return parameters[index];
 }
 
-shared_ptr<ngraph::op::Result> runtime::interpreter::INTExecutable::get_result(size_t index) const
+shared_ptr<ngraph::op::Result> runtime::dynint::DynIntExecutable::get_result(size_t index) const
 {
     const ResultVector& results = get_results();
     NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
     return results[index];
 }
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
+    runtime::dynint::DynIntExecutable::create_input_tensor(size_t input_index)
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
+    runtime::dynint::DynIntExecutable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
 }
 
 vector<shared_ptr<runtime::Tensor>>
-    runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index,
+    runtime::dynint::DynIntExecutable::create_input_tensor(size_t input_index,
                                                              size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
@@ -398,7 +398,7 @@ vector<shared_ptr<runtime::Tensor>>
 }
 
 vector<shared_ptr<runtime::Tensor>>
-    runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index,
+    runtime::dynint::DynIntExecutable::create_output_tensor(size_t output_index,
                                                               size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
