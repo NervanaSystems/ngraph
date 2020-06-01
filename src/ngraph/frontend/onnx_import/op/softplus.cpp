@@ -62,11 +62,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Select>(
                         condition_node, positive_val_node, negative_val_node)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

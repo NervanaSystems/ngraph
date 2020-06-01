@@ -17,8 +17,7 @@
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
 set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
 
-set(ONNX_LIBRARIES onnx onnx_proto)
-
+set(ONNX_LIBRARIES onnx)
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -436,6 +435,10 @@ if (NGRAPH_MLIR_ENABLE)
     list(APPEND SRC mlir/ops_test.cpp)
 endif()
 
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend/numpy.in.cpp)
+endif()
+
 if (NGRAPH_CPU_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
 endif()
@@ -497,10 +500,15 @@ endif()
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    target_link_libraries(unit-test PRIVATE ngraph pybind11::embed)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+endif()
+
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     target_include_directories(unit-test
         SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
-    target_link_libraries(unit-test PRIVATE ${Protobuf_LIBRARIES} ${ONNX_LIBRARIES})
+    target_link_libraries(unit-test PRIVATE ${ONNX_LIBRARIES})
 endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
@@ -512,7 +520,7 @@ if(NOT WIN32)
 endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
@@ -567,6 +575,7 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
 endif()
 
 if (NOT NGRAPH_IE_ENABLE)

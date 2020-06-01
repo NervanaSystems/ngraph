@@ -165,11 +165,7 @@ namespace ngraph
                 /// \return     The nGraph node equivalent of the ONNX operation.
                 ///
                 NodeVector reduce_sum_square(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

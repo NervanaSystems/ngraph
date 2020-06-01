@@ -14,20 +14,4 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required(VERSION 3.1)
-
-include(ExternalProject)
-
-project(tbb-fetch NONE)
-
-ExternalProject_Add(
-    ext_tbb
-    PREFIX tbb
-    GIT_REPOSITORY ${TBB_GIT_REPO_URL}
-    GIT_TAG "${NGRAPH_TBB_VERSION}"
-    SOURCE_DIR "${TBB_ROOT}"
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    UPDATE_COMMAND ""
-    INSTALL_COMMAND ""
-)
+add_subdirectory(mlir)

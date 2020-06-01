@@ -31,11 +31,7 @@ namespace ngraph
                 {
                     return pooling::GlobalPoolingFactory(node).make_max_pool();
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

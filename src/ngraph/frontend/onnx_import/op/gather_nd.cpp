@@ -33,11 +33,7 @@ namespace ngraph
 
                     return {std::make_shared<ngraph::opset0::GatherND>(data, indices)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

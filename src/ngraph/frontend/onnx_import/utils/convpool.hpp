@@ -104,9 +104,6 @@ namespace ngraph
             /// \return     The nGraph PadType object representing 'auto_pad' attribute value.
             ///
             ngraph::op::PadType get_auto_pad(const Node& node);
-
-        } // namespace convpool
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+        }
+    }
+}

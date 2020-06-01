@@ -38,11 +38,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Broadcast>(
                         data, shape, ngraph::op::BroadcastType::BIDIRECTIONAL)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

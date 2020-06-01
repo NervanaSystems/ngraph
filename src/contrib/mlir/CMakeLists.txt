@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NOT NGRAPH_MLIR_ENABLE)
+    return()
+endif()
+
 include_directories(
     ${NGRAPH_INCLUDE_PATH}
     ${MLIR_LLVM_INCLUDE_PATH}
@@ -48,7 +52,9 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link MLIR libs
 target_link_libraries(
-    mlir_backend PRIVATE 
+    mlir_backend PRIVATE
+    MLIRAffineOps
+    MLIRAffineEDSC
     MLIRAffineToStandard
     MLIRAnalysis
     MLIREDSC
@@ -84,7 +90,7 @@ function(whole_archive_link target)
 endfunction(whole_archive_link)
 
 set(LIBS
-    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffine.a
+    ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
 )
 whole_archive_link(mlir_backend ${LIBS})

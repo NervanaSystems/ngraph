@@ -40,8 +40,8 @@ namespace ngraph
                     {
                     }
                 };
-            } // namespace value_info
-        }     // namespace error
+            }
+        }
 
         class ValueInfo
         {
@@ -140,7 +140,5 @@ namespace ngraph
         {
             return (outs << "<ValueInfo: " << info.get_name() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

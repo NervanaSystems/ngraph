@@ -30,7 +30,5 @@ namespace ngraph
                 NodeVector cos(const Node& node);
             }
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

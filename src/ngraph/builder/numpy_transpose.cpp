@@ -77,6 +77,5 @@ namespace ngraph
             return std::make_shared<ngraph::op::Reshape>(value, order, out_shape)
                 ->add_provenance_group_members_above({value});
         }
-
-    } // namespace builder
-} // namespace ngraph
+    }
+}

@@ -88,7 +88,7 @@ namespace ngraph
                         return get_attr_default_value(node, attr_name);
                     }
                 }
-            } // namespace detail
+            }
 
             Strides get_strides(const Node& node, const std::size_t kernel_rank)
             {
@@ -187,7 +187,6 @@ namespace ngraph
                                                padding_below);
                 }
             }
-
-        } // namespace convpool
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

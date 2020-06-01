@@ -60,30 +60,4 @@ namespace ngraph
     /// \param str The json formatted string to deseriailze.
     NGRAPH_API
     std::shared_ptr<ngraph::Function> deserialize(const std::string& str);
-
-    /// \brief If enabled adds output shapes to the serialized graph
-    /// \param enable Set to true to enable or false otherwise
-    ///
-    /// Option may be enabled by setting the environment variable NGRAPH_SERIALIZER_OUTPUT_SHAPES
-    NGRAPH_API
-    void set_serialize_output_shapes(bool enable);
-    NGRAPH_API
-    bool get_serialize_output_shapes();
-
-    class WithSerializeOutputShapesEnabled
-    {
-    public:
-        WithSerializeOutputShapesEnabled(bool enabled = true)
-        {
-            m_serialize_output_shapes_enabled = get_serialize_output_shapes();
-            set_serialize_output_shapes(enabled);
-        }
-        ~WithSerializeOutputShapesEnabled()
-        {
-            set_serialize_output_shapes(m_serialize_output_shapes_enabled);
-        }
-
-    private:
-        bool m_serialize_output_shapes_enabled;
-    };
 }

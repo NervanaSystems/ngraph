@@ -570,7 +570,7 @@ namespace
         }
         return rc;
     }
-} // namespace
+}
 
 bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {

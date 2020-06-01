@@ -30,11 +30,7 @@ namespace ngraph
                     const utils::ArgMinMaxFactory arg_factory(node);
                     return {arg_factory.make_arg_max()};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

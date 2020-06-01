@@ -37,10 +37,7 @@ namespace ngraph
                 /// \return     NodeVector containing Tensor with shape:
                 ///             [N, C/(blocksize * blocksize), H * blocksize, W * blocksize]
                 NodeVector depth_to_space(const Node& node);
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
