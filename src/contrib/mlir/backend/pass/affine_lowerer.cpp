@@ -1271,10 +1271,22 @@ namespace
         NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
         Type elemTy = lhs.getType().dyn_cast<MemRefType>().getElementType();
 
+        auto builder = ScopedContext::getBuilderRef();
+        auto origOperand = op->getOperands()[0];
+        auto origIntType =
+            origOperand.getType().cast<NGTensorType>().getElementType().dyn_cast<IntegerType>();
+
         AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
             Value val = iLHS(ivs);
             Value zero = createZeroConstant(elemTy);
-            iRes(ivs) = std_select(val > zero, val, zero);
+            auto cmp = val > zero;
+            if (origIntType && origIntType.isUnsigned())
+            {
+                cmp =
+                    builder.create<CmpIOp>(builder.getUnknownLoc(), CmpIPredicate::ugt, val, zero);
+            }
+
+            iRes(ivs) = std_select(cmp, val, zero);
         });
 
         rewriter.replaceOp(op, {result});
@@ -2567,6 +2579,12 @@ namespace
         auto steps = vLHS.getSteps();
         // element type of the operand
         Type elemTy = result.getType().cast<MemRefType>().getElementType();
+
+        auto builder = ScopedContext::getBuilderRef();
+        auto origOperand = op->getOperands()[0];
+        auto origIntType =
+            origOperand.getType().cast<NGTensorType>().getElementType().dyn_cast<IntegerType>();
+
         AffineLoopNestBuilder(ivs, lbs, ubs, steps)(
             // single stmt body
             [&] {
@@ -2593,27 +2611,59 @@ namespace
                 // made available in the edsc::intrinsics namescope in MLIR repo.
                 else if (isa<NGGreaterOp>(op))
                 {
-                    iRes(ivs) = std_select(Value(iLHS(ivs)) > Value(iRHS(ivs)),
-                                           createOneConstant(elemTy),
-                                           createZeroConstant(elemTy));
+                    auto l = Value(iLHS(ivs));
+                    auto r = Value(iRHS(ivs));
+                    auto cmp = (l > r);
+                    if (origIntType && origIntType.isUnsigned())
+                    {
+                        cmp = builder.create<CmpIOp>(
+                            builder.getUnknownLoc(), CmpIPredicate::ugt, l, r);
+                    }
+
+                    iRes(ivs) =
+                        std_select(cmp, createOneConstant(elemTy), createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessOp>(op))
                 {
-                    iRes(ivs) = std_select(Value(iLHS(ivs)) < Value(iRHS(ivs)),
-                                           createOneConstant(elemTy),
-                                           createZeroConstant(elemTy));
+                    auto l = Value(iLHS(ivs));
+                    auto r = Value(iRHS(ivs));
+                    auto cmp = (l < r);
+                    if (origIntType && origIntType.isUnsigned())
+                    {
+                        cmp = builder.create<CmpIOp>(
+                            builder.getUnknownLoc(), CmpIPredicate::ult, l, r);
+                    }
+
+                    iRes(ivs) =
+                        std_select(cmp, createOneConstant(elemTy), createZeroConstant(elemTy));
                 }
                 else if (isa<NGGreaterEqOp>(op))
                 {
-                    iRes(ivs) = std_select(Value(iLHS(ivs)) >= Value(iRHS(ivs)),
-                                           createOneConstant(elemTy),
-                                           createZeroConstant(elemTy));
+                    auto l = Value(iLHS(ivs));
+                    auto r = Value(iRHS(ivs));
+                    auto cmp = (l >= r);
+                    if (origIntType && origIntType.isUnsigned())
+                    {
+                        cmp = builder.create<CmpIOp>(
+                            builder.getUnknownLoc(), CmpIPredicate::uge, l, r);
+                    }
+
+                    iRes(ivs) =
+                        std_select(cmp, createOneConstant(elemTy), createZeroConstant(elemTy));
                 }
                 else if (isa<NGLessEqOp>(op))
                 {
-                    iRes(ivs) = std_select(Value(iLHS(ivs)) <= Value(iRHS(ivs)),
-                                           createOneConstant(elemTy),
-                                           createZeroConstant(elemTy));
+                    auto l = Value(iLHS(ivs));
+                    auto r = Value(iRHS(ivs));
+                    auto cmp = (l <= r);
+                    if (origIntType && origIntType.isUnsigned())
+                    {
+                        cmp = builder.create<CmpIOp>(
+                            builder.getUnknownLoc(), CmpIPredicate::ule, l, r);
+                    }
+
+                    iRes(ivs) =
+                        std_select(cmp, createOneConstant(elemTy), createZeroConstant(elemTy));
                 }
                 else if (isa<NGEqOp>(op))
                 {
@@ -2629,13 +2679,29 @@ namespace
                 }
                 else if (isa<NGMaxOp>(op))
                 {
-                    iRes(ivs) = std_select(
-                        Value(iLHS(ivs)) > Value(iRHS(ivs)), Value(iLHS(ivs)), Value(iRHS(ivs)));
+                    auto l = Value(iLHS(ivs));
+                    auto r = Value(iRHS(ivs));
+                    auto cmp = (l > r);
+                    if (origIntType && origIntType.isUnsigned())
+                    {
+                        cmp = builder.create<CmpIOp>(
+                            builder.getUnknownLoc(), CmpIPredicate::ugt, l, r);
+                    }
+
+                    iRes(ivs) = std_select(cmp, l, r);
                 }
                 else if (isa<NGMinOp>(op))
                 {
-                    iRes(ivs) = std_select(
-                        Value(iLHS(ivs)) < Value(iRHS(ivs)), Value(iLHS(ivs)), Value(iRHS(ivs)));
+                    auto l = Value(iLHS(ivs));
+                    auto r = Value(iRHS(ivs));
+                    auto cmp = (l < r);
+                    if (origIntType && origIntType.isUnsigned())
+                    {
+                        cmp = builder.create<CmpIOp>(
+                            builder.getUnknownLoc(), CmpIPredicate::ult, l, r);
+                    }
+
+                    iRes(ivs) = std_select(cmp, l, r);
                 }
                 else
                 {
