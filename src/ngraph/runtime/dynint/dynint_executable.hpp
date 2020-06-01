@@ -134,7 +134,7 @@ class DYNINT_BACKEND_API ngraph::runtime::dynint::DynIntExecutable : public Exec
 
 public:
     DynIntExecutable(const std::shared_ptr<Function>& function,
-                  bool enable_performance_collection = false);
+                     bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& inputs) override;

@@ -18,13 +18,13 @@
 
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/dynint/dynint_backend.hpp"
 #include "ngraph/runtime/dynint/dynint_executable.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,11 +38,7 @@ extern "C" DYNINT_BACKEND_API void ngraph_register_dynint_backend()
 
 runtime::dynint::DynIntBackend::DynIntBackend()
 {
-}
-
-runtime::dynint::DynIntBackend::DynIntBackend(const vector<string>& unsupported_op_name_list)
-    : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
-{
+    NGRAPH_INFO << "ctor";
 }
 
 shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor()
@@ -50,21 +46,22 @@ shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor()
     return make_shared<runtime::HostTensor>();
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::dynint::DynIntBackend::create_tensor(const element::Type& type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor(const element::Type& type,
+                                                                          const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor(
-    const element::Type& type, const Shape& shape, void* memory_pointer)
+shared_ptr<runtime::Tensor> runtime::dynint::DynIntBackend::create_tensor(const element::Type& type,
+                                                                          const Shape& shape,
+                                                                          void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Tensor>
     runtime::dynint::DynIntBackend::create_dynamic_tensor(const element::Type& type,
-                                                            const PartialShape& shape)
+                                                          const PartialShape& shape)
 {
     NGRAPH_INFO << type;
     NGRAPH_INFO << shape;
@@ -73,14 +70,14 @@ shared_ptr<runtime::Tensor>
 
 shared_ptr<runtime::Executable>
     runtime::dynint::DynIntBackend::compile(shared_ptr<Function> function,
-                                              bool enable_performance_collection)
+                                            bool enable_performance_collection)
 {
     return make_shared<DynIntExecutable>(function, enable_performance_collection);
 }
 
 bool runtime::dynint::DynIntBackend::is_supported(const Node& node) const
 {
-    return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
+    return true;
 }
 
 std::shared_ptr<runtime::Executable> runtime::dynint::DynIntBackend::load(istream& in)

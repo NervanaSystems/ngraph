@@ -44,7 +44,6 @@ class DYNINT_BACKEND_API ngraph::runtime::dynint::DynIntBackend : public Backend
 {
 public:
     DynIntBackend();
-    DynIntBackend(const std::vector<std::string>& unsupported_op_name_list);
     DynIntBackend(const DynIntBackend&) = delete;
     DynIntBackend(DynIntBackend&&) = delete;
     DynIntBackend& operator=(const DynIntBackend&) = delete;
@@ -68,6 +67,4 @@ public:
     bool set_config(const std::map<std::string, std::string>& config, std::string& error) override;
 
     bool supports_dynamic_tensors() override { return true; }
-private:
-    std::set<std::string> m_unsupported_op_name_list;
 };

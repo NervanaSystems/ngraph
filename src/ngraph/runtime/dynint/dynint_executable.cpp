@@ -19,6 +19,7 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -31,7 +32,6 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -61,7 +61,7 @@ runtime::dynint::OP_TYPEID runtime::dynint::DynIntExecutable::get_typeid(const N
 }
 
 runtime::dynint::DynIntExecutable::DynIntExecutable(const shared_ptr<Function>& function,
-                                                   bool enable_performance_collection)
+                                                    bool enable_performance_collection)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
@@ -112,7 +112,7 @@ runtime::dynint::DynIntExecutable::DynIntExecutable(const std::string& model_str
 }
 
 bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                             const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     event::Duration d1("call", "Interpreter");
 
@@ -245,9 +245,9 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
 }
 
 void runtime::dynint::DynIntExecutable::generate_calls(const element::Type& type,
-                                                         const Node& op,
-                                                         const vector<shared_ptr<HostTensor>>& out,
-                                                         const vector<shared_ptr<HostTensor>>& in)
+                                                       const Node& op,
+                                                       const vector<shared_ptr<HostTensor>>& out,
+                                                       const vector<shared_ptr<HostTensor>>& in)
 {
     stringstream ss;
     switch (type)
@@ -278,8 +278,7 @@ void runtime::dynint::DynIntExecutable::set_nan_check(bool enable)
     m_nan_check_enabled = enable;
 }
 
-vector<runtime::PerformanceCounter>
-    runtime::dynint::DynIntExecutable::get_performance_data() const
+vector<runtime::PerformanceCounter> runtime::dynint::DynIntExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
@@ -377,7 +376,7 @@ shared_ptr<runtime::Tensor>
 
 vector<shared_ptr<runtime::Tensor>>
     runtime::dynint::DynIntExecutable::create_input_tensor(size_t input_index,
-                                                             size_t pipeline_depth)
+                                                           size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
@@ -399,7 +398,7 @@ vector<shared_ptr<runtime::Tensor>>
 
 vector<shared_ptr<runtime::Tensor>>
     runtime::dynint::DynIntExecutable::create_output_tensor(size_t output_index,
-                                                              size_t pipeline_depth)
+                                                            size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
     shared_ptr<op::Result> result = get_result(output_index);
