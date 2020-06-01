@@ -14,22 +14,23 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_definitions(-DIN_NGRAPH_LIBRARY)
+if(TARGET pybind11::pybind11)
+    return()
+endif()
 
-include_directories(ngraph)
+include(FetchContent)
 
-add_subdirectory(resource)
+set(PYBIND11_GIT_TAG v2.5.0)
+set(PYBIND11_GIT_URL https://github.com/pybind/pybind11.git)
 
-# This must be added before any backend that uses MLIR
-add_subdirectory(contrib)
+FetchContent_Declare(
+    ext_pybind11
+    GIT_REPOSITORY ${PYBIND11_GIT_URL}
+    GIT_TAG        ${PYBIND11_GIT_TAG}
+)
 
-add_subdirectory(ngraph)
-
-add_subdirectory(runtime)
-
-if (NGRAPH_TOOLS_ENABLE)
-    add_subdirectory(tools)
-    message(STATUS "tools enabled")
-else()
-    message(STATUS "tools disabled")
+FetchContent_GetProperties(ext_pybind11)
+if(NOT ext_pybind11_POPULATED)
+    FetchContent_Populate(ext_pybind11)
+    add_subdirectory(${ext_pybind11_SOURCE_DIR} ${ext_pybind11_BINARY_DIR})
 endif()

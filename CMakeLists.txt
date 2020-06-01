@@ -19,10 +19,6 @@ cmake_minimum_required (VERSION 3.11)
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
-    message(FATAL_ERROR "In-source builds are not allowed.")
-endif()
-
 if (CMAKE_BUILD_TYPE)
     set(RELEASE_TYPES Debug Release RelWithDebInfo MinSizeRel)
     list(FIND RELEASE_TYPES ${CMAKE_BUILD_TYPE} INDEX_FOUND)
@@ -52,30 +48,16 @@ message(STATUS "NGRAPH_VERSION_SHORT ${NGRAPH_VERSION_SHORT}")
 message(STATUS "NGRAPH_WHEEL_VERSION ${NGRAPH_WHEEL_VERSION}")
 message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 
-set(NGRAPH_INCLUDE_PATH
-    ${CMAKE_CURRENT_SOURCE_DIR}/src
-)
+if (UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
 
 if (APPLE)
     # Enable MACOS_RPATH by default.
     cmake_policy(SET CMP0042 NEW)
     # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
     cmake_policy(SET CMP0025 NEW)
-endif()
-
-project (ngraph)
-
-# Tells if ngraph source tree is embedded in some other project
-# TRUE if embedded in source tree
-# FALSE if used standalone or as an external project
-set(NGRAPH_IS_EMBEDDED (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR))
-
-if (UNIX AND NOT APPLE)
-    set(LINUX TRUE)
-endif()
-
-# APPLE: Set CMAKE_OSX_SYSROOT if not set already.
-if (APPLE)
+    # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
     execute_process(COMMAND sw_vers -productVersion
         OUTPUT_VARIABLE OSX_FULL_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -115,10 +97,26 @@ if (APPLE)
     endif()
 endif()
 
+project (ngraph)
+
+# Tells if ngraph source tree is embedded in some other project
+# TRUE if embedded in source tree
+# FALSE if used standalone or as an external project
+set(NGRAPH_IS_EMBEDDED (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR))
+
+set(NGRAPH_INCLUDE_PATH
+    ${PROJECT_SOURCE_DIR}/src
+)
+
+if(PROJECT_SOURCE_DIR STREQUAL PROJECT_BINARY_DIR)
+    message(FATAL_ERROR "In-source builds are not allowed.")
+endif()
+
 ngraph_var(NGRAPH_USE_PREBUILT_MLIR DEFAULT "FALSE")
 ngraph_var(NGRAPH_USE_PREBUILT_LLVM DEFAULT "FALSE")
 
 option(NGRAPH_UNIT_TEST_ENABLE "Control the building of unit tests" TRUE)
+option(NGRAPH_UNIT_TEST_NUMPY_ENABLE "Enable numpy unit tests" FALSE)
 option(NGRAPH_TEST_UTIL_ENABLE "Control the building of test utility" TRUE)
 option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
@@ -195,6 +193,7 @@ macro (NORMALIZE_BOOL VAL)
 endmacro()
 
 NORMALIZE_BOOL(NGRAPH_UNIT_TEST_ENABLE)
+NORMALIZE_BOOL(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TEST_UTIL_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DOC_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
@@ -266,6 +265,7 @@ message(STATUS "NGRAPH_THREAD_SANITIZER_ENABLE:       ${NGRAPH_THREAD_SANITIZER_
 message(STATUS "NGRAPH_TOOLS_ENABLE:                  ${NGRAPH_TOOLS_ENABLE}")
 message(STATUS "NGRAPH_UB_SANITIZER_ENABLE:           ${NGRAPH_UB_SANITIZER_ENABLE}")
 message(STATUS "NGRAPH_UNIT_TEST_ENABLE:              ${NGRAPH_UNIT_TEST_ENABLE}")
+message(STATUS "NGRAPH_UNIT_TEST_NUMPY_ENABLE:        ${NGRAPH_UNIT_TEST_NUMPY_ENABLE}")
 message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM}")
 message(STATUS "NGRAPH_USE_PREBUILT_MLIR:             ${NGRAPH_USE_PREBUILT_MLIR}")
 message(STATUS "NGRAPH_WARNINGS_AS_ERRORS:            ${NGRAPH_WARNINGS_AS_ERRORS}")
@@ -450,8 +450,7 @@ if (NGRAPH_IE_ENABLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
-    set(NGRAPH_MLIR_SOURCE_DIR ${CMAKE_SOURCE_DIR}/src/contrib/mlir)
+    set(NGRAPH_MLIR_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/contrib/mlir)
 endif()
 
 if (NGRAPH_STATIC_LIB_ENABLE)
@@ -498,33 +497,33 @@ endif()
 # Since UNIX support Bash we can use a Bash script to do the clang-format functions
 # This is much faster than the cmake method
 if (UNIX)
-    add_custom_target(style-check COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/check-code-format.sh)
-    add_custom_target(style-apply COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
-    add_custom_target(style COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style-check COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh)
+    add_custom_target(style-apply COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
 else()
     add_custom_target(style-check
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_check.cmake
+        -DNGRAPH_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+        -P ${PROJECT_SOURCE_DIR}/cmake/Modules/style_check.cmake
     )
 
     add_custom_target(style-apply
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
+        -DNGRAPH_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+        -P ${PROJECT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
     )
 
     add_custom_target(style
         COMMAND ${CMAKE_COMMAND}
-        -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-        -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
+        -DNGRAPH_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+        -P ${PROJECT_SOURCE_DIR}/cmake/Modules/style_apply.cmake
     )
 endif()
 
 add_custom_target(fix-mode
     COMMAND ${CMAKE_COMMAND}
-    -DNGRAPH_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-    -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/fix_mode.cmake
+    -DNGRAPH_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    -P ${PROJECT_SOURCE_DIR}/cmake/Modules/fix_mode.cmake
 )
 
 if (NGRAPH_USE_PREBUILT_MLIR)
@@ -547,7 +546,7 @@ if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
 endif()
 
-add_definitions(-DPROJECT_ROOT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+add_definitions(-DPROJECT_ROOT_DIR="${PROJECT_SOURCE_DIR}")
 
 #-----------------------------------------------------------------------------------------------
 # Print Global Options
@@ -562,7 +561,7 @@ message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
 #-----------------------------------------------------------------------------------------------
 
 if (NOT NGRAPH_BUILD_DIR)
-    set(NGRAPH_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/src/ngraph)
+    set(NGRAPH_BUILD_DIR ${PROJECT_BINARY_DIR}/src/ngraph)
     set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
     if(WIN32)
         set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
@@ -579,12 +578,12 @@ if (NOT NGRAPH_BUILD_DIR)
 endif()
 
 # Build destination directory for nGraph binaries and tools.
-set(NGRAPH_BUILD_BIN ${CMAKE_CURRENT_BINARY_DIR}/bin)
+set(NGRAPH_BUILD_BIN ${PROJECT_BINARY_DIR}/bin)
 
-set(EXTERNAL_INSTALL_DIR ${CMAKE_BINARY_DIR}/external)
+set(EXTERNAL_INSTALL_DIR ${PROJECT_BINARY_DIR}/external)
 
 if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
-    set(EXTERNAL_PROJECTS_ROOT ${CMAKE_CURRENT_BINARY_DIR})
+    set(EXTERNAL_PROJECTS_ROOT ${PROJECT_BINARY_DIR})
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -634,11 +633,7 @@ if(NGRAPH_CODEGEN_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    if (WIN32 OR APPLE)
-        include(cmake/external_tbb_prebuilt.cmake)
-    else()
-        include(cmake/external_tbb.cmake)
-    endif()
+    include(cmake/external_tbb.cmake)
 endif()
 
 add_subdirectory(src)
@@ -649,6 +644,10 @@ if (NGRAPH_TEST_UTIL_ENABLE)
     else()
         include(cmake/fetch_gtest.cmake)
     endif()
+endif()
+
+if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
+    include(cmake/external_pybind11.cmake)
 endif()
 
 add_subdirectory(test)
@@ -666,7 +665,7 @@ endif()
 if (NGRAPH_EXPORT_TARGETS_ENABLE)
     include(CMakePackageConfigHelpers)
 
-    export(TARGETS ngraph NAMESPACE ngraph:: FILE "${CMAKE_CURRENT_BINARY_DIR}/ngraphTargets.cmake")
+    export(TARGETS ngraph NAMESPACE ngraph:: FILE "${PROJECT_BINARY_DIR}/ngraphTargets.cmake")
 
     install(EXPORT ngraphTargets
         FILE ngraphTargets.cmake
@@ -674,25 +673,25 @@ if (NGRAPH_EXPORT_TARGETS_ENABLE)
         DESTINATION ${NGRAPH_COMPONENT_PREFIX}cmake
         COMPONENT ngraph)
 
-    configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
-        ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
+    configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/share/ngraphConfig.cmake.in
+        ${PROJECT_BINARY_DIR}/ngraphConfig.cmake
         INSTALL_DESTINATION cmake)
 
-    write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+    write_basic_package_version_file(${PROJECT_BINARY_DIR}/ngraphConfigVersion.cmake
         VERSION ${NGRAPH_VERSION}
         COMPATIBILITY SameMajorVersion)
 
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/ngraphConfigVersion.cmake
+    install(FILES ${PROJECT_BINARY_DIR}/ngraphConfig.cmake
+        ${PROJECT_BINARY_DIR}/ngraphConfigVersion.cmake
         DESTINATION ${NGRAPH_COMPONENT_PREFIX}cmake
         COMPONENT ngraph)
 endif()
 
 install(DIRECTORY
-    ${CMAKE_CURRENT_SOURCE_DIR}/licenses
+    ${PROJECT_SOURCE_DIR}/licenses
     DESTINATION "${NGRAPH_COMPONENT_PREFIX}."
     COMPONENT ngraph
 )
 
-install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE DESTINATION "${NGRAPH_COMPONENT_PREFIX}." COMPONENT ngraph)
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/VERSION DESTINATION "${NGRAPH_COMPONENT_PREFIX}." COMPONENT ngraph)
+install(FILES ${PROJECT_SOURCE_DIR}/LICENSE DESTINATION "${NGRAPH_COMPONENT_PREFIX}." COMPONENT ngraph)
+install(FILES ${PROJECT_BINARY_DIR}/VERSION DESTINATION "${NGRAPH_COMPONENT_PREFIX}." COMPONENT ngraph)
