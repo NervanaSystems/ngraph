@@ -22,7 +22,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -124,10 +123,8 @@ runtime::HostTensor::~HostTensor()
 
 void* runtime::HostTensor::get_data_ptr()
 {
-    NGRAPH_INFO;
     if (!m_aligned_buffer_pool)
     {
-    NGRAPH_INFO;
         allocate_buffer();
     }
     return m_aligned_buffer_pool;
