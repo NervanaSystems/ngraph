@@ -163,7 +163,6 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        NGRAPH_INFO << *op;
         event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
@@ -172,12 +171,23 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
 
         // get op inputs from map
         vector<shared_ptr<HostTensor>> op_inputs;
+        vector<shared_ptr<Tensor>> op_check_inputs;
         for (auto input : op->inputs())
         {
             descriptor::Tensor* tensor = &input.get_tensor();
             NGRAPH_INFO << "op input " << tensor_map[tensor]->get_shape();
             op_inputs.push_back(tensor_map[tensor]);
+            op_check_inputs.push_back(tensor_map[tensor]);
         }
+
+        NGRAPH_INFO << *op;
+        vector<Node::OutputInfo> output_info = op->get_output_info(op_check_inputs);
+        NGRAPH_INFO << output_info.size();
+        for (const Node::OutputInfo& info : output_info)
+        {
+            NGRAPH_INFO << info.type << ":" << info.shape;
+        }
+
 
         // get op outputs from map or create
         vector<shared_ptr<HostTensor>> op_outputs;

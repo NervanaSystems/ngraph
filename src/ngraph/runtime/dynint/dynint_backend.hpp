@@ -65,7 +65,5 @@ public:
 
     bool is_supported(const Node& node) const override;
 
-    bool set_config(const std::map<std::string, std::string>& config, std::string& error) override;
-
     bool supports_dynamic_tensors() override { return true; }
 };

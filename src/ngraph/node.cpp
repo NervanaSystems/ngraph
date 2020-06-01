@@ -1130,6 +1130,13 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
     return false;
 }
 
+std::vector<Node::OutputInfo>
+    Node::get_output_info(const std::vector<shared_ptr<runtime::Tensor>>& inputs) const
+{
+    vector<OutputInfo> rc;
+    return rc;
+}
+
 constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
 
 AttributeAdapter<std::shared_ptr<Node>>::AttributeAdapter(std::shared_ptr<Node>& value)

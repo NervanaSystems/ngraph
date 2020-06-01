@@ -110,16 +110,3 @@ std::shared_ptr<runtime::Executable> runtime::dynint::DynIntBackend::load(istrea
     }
     return exec;
 }
-
-bool runtime::dynint::DynIntBackend::set_config(const map<string, string>& config, string& error)
-{
-    bool rc = false;
-    auto it = config.find("test_echo");
-    error = "";
-    if (it != config.end())
-    {
-        error = it->second;
-        rc = true;
-    }
-    return rc;
-}

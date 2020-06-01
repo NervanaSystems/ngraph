@@ -43,6 +43,7 @@
 #include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/output_vector.hpp"
 #include "ngraph/placement.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
 
@@ -167,6 +168,16 @@ namespace ngraph
         void constructor_validate_and_infer_types();
 
         using type_info_t = DiscreteTypeInfo;
+
+        class OutputInfo
+        {
+        public:
+            element::Type type;
+            Shape shape;
+        };
+
+        virtual std::vector<OutputInfo>
+            get_output_info(const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const;
 
     protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(

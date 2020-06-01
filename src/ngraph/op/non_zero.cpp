@@ -170,3 +170,17 @@ bool op::v3::NonZero::evaluate(const HostTensorVector& outputs, const HostTensor
 {
     return evaluate_nonzero(inputs[0], outputs[0]);
 }
+
+vector<Node::OutputInfo>
+    op::v3::NonZero::get_output_info(const vector<shared_ptr<runtime::Tensor>>& inputs) const
+{
+    vector<Node::OutputInfo> rc;
+
+    Shape input_shape = inputs[0]->get_shape();
+    size_t input_rank = input_shape.size();
+    Shape output_shape{input_rank, shape_size(input_shape)};
+
+    rc.emplace_back(OutputInfo{m_output_type, output_shape});
+
+    return rc;
+}
