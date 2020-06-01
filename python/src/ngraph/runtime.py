@@ -53,10 +53,6 @@ class Runtime:
         else:
             self.backend = Backend.create(backend_name)
 
-    def set_config(self, config: Dict[str, str]) -> None:
-        """Set the backend configuration."""
-        self.backend.set_config(config, "")
-
     def __repr__(self) -> str:
         return "<Runtime: Backend='{}'>".format(self.backend_name)
 

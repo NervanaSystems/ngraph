@@ -155,12 +155,6 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
     return s_backend_shared_library_search_directory;
 }
 
-bool runtime::Backend::set_config(const map<string, string>& /* config */, string& error)
-{
-    error = "set_config not supported";
-    return false;
-}
-
 bool runtime::Backend::executable_can_create_tensors()
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape());

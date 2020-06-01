@@ -60,5 +60,4 @@ void regclass_pyngraph_runtime_Backend(py::module m)
                     const ngraph::element::Type&, const ngraph::PartialShape&)) &
                     ngraph::runtime::Backend::create_dynamic_tensor);
     backend.def("compile", &compile);
-    backend.def("set_config", &ngraph::runtime::Backend::set_config);
 }
