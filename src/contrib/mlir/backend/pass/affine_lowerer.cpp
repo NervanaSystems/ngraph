@@ -1271,7 +1271,6 @@ namespace
         NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
         Type elemTy = lhs.getType().dyn_cast<MemRefType>().getElementType();
 
-        auto builder = ScopedContext::getBuilderRef();
         auto origOperand = op->getOperands()[0];
         auto origIntType =
             origOperand.getType().cast<NGTensorType>().getElementType().dyn_cast<IntegerType>();
@@ -1280,6 +1279,7 @@ namespace
             Value val = iLHS(ivs);
             Value zero = createZeroConstant(elemTy);
             auto cmp = val > zero;
+            auto builder = ScopedContext::getBuilderRef();
             if (origIntType && origIntType.isUnsigned())
             {
                 cmp =
@@ -2580,7 +2580,6 @@ namespace
         // element type of the operand
         Type elemTy = result.getType().cast<MemRefType>().getElementType();
 
-        auto builder = ScopedContext::getBuilderRef();
         auto origOperand = op->getOperands()[0];
         auto origIntType =
             origOperand.getType().cast<NGTensorType>().getElementType().dyn_cast<IntegerType>();
@@ -2614,6 +2613,7 @@ namespace
                     auto l = Value(iLHS(ivs));
                     auto r = Value(iRHS(ivs));
                     auto cmp = (l > r);
+                    auto builder = ScopedContext::getBuilderRef();
                     if (origIntType && origIntType.isUnsigned())
                     {
                         cmp = builder.create<CmpIOp>(
@@ -2628,6 +2628,7 @@ namespace
                     auto l = Value(iLHS(ivs));
                     auto r = Value(iRHS(ivs));
                     auto cmp = (l < r);
+                    auto builder = ScopedContext::getBuilderRef();
                     if (origIntType && origIntType.isUnsigned())
                     {
                         cmp = builder.create<CmpIOp>(
@@ -2642,6 +2643,7 @@ namespace
                     auto l = Value(iLHS(ivs));
                     auto r = Value(iRHS(ivs));
                     auto cmp = (l >= r);
+                    auto builder = ScopedContext::getBuilderRef();
                     if (origIntType && origIntType.isUnsigned())
                     {
                         cmp = builder.create<CmpIOp>(
@@ -2656,6 +2658,7 @@ namespace
                     auto l = Value(iLHS(ivs));
                     auto r = Value(iRHS(ivs));
                     auto cmp = (l <= r);
+                    auto builder = ScopedContext::getBuilderRef();
                     if (origIntType && origIntType.isUnsigned())
                     {
                         cmp = builder.create<CmpIOp>(
@@ -2682,6 +2685,7 @@ namespace
                     auto l = Value(iLHS(ivs));
                     auto r = Value(iRHS(ivs));
                     auto cmp = (l > r);
+                    auto builder = ScopedContext::getBuilderRef();
                     if (origIntType && origIntType.isUnsigned())
                     {
                         cmp = builder.create<CmpIOp>(
@@ -2695,6 +2699,7 @@ namespace
                     auto l = Value(iLHS(ivs));
                     auto r = Value(iRHS(ivs));
                     auto cmp = (l < r);
+                    auto builder = ScopedContext::getBuilderRef();
                     if (origIntType && origIntType.isUnsigned())
                     {
                         cmp = builder.create<CmpIOp>(
