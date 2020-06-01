@@ -35,15 +35,38 @@ op::util::BinaryElementwise::BinaryElementwise(const Output<Node>& arg0,
 
 void op::util::BinaryElementwise::validate_and_infer_elementwise_args()
 {
-    auto args_et_pshape = validate_and_infer_elementwise_args(autob);
-    element::Type& args_et = std::get<0>(args_et_pshape);
-    PartialShape& args_pshape = std::get<1>(args_et_pshape);
+    element::Type element_type = get_input_element_type(0);
+    PartialShape pshape = get_input_partial_shape(0);
 
-    NODE_VALIDATION_CHECK(this,
-                          args_et.is_dynamic() || args_et != element::boolean,
-                          "Arguments cannot have boolean element type (argument element type: ",
-                          args_et,
-                          ").");
+    if (get_input_size() > 1)
+    {
+        for (size_t i = 1; i < get_input_size(); ++i)
+        {
+            NODE_VALIDATION_CHECK(
+                this,
+                element::Type::merge(element_type, element_type, get_input_element_type(i)),
+                "Argument element types are inconsistent.");
 
-    set_output_type(0, args_et, args_pshape);
+            if (autob.m_type == op::AutoBroadcastType::NONE)
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      PartialShape::merge_into(pshape, get_input_partial_shape(i)),
+                                      "Argument shapes are inconsistent.");
+            }
+            else if (autob.m_type == op::AutoBroadcastType::NUMPY ||
+                     autob.m_type == op::AutoBroadcastType::PDPD)
+            {
+                NODE_VALIDATION_CHECK(
+                    this,
+                    PartialShape::broadcast_merge_into(pshape, get_input_partial_shape(i), autob),
+                    "Argument shapes are inconsistent.");
+            }
+            else
+            {
+                NODE_VALIDATION_CHECK(this, false, "Unsupported auto broadcast specification");
+            }
+        }
+    }
+
+    return std::make_tuple(element_type, pshape);
 }

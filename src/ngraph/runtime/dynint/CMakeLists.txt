@@ -14,25 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+if (NGRAPH_DYNINT_STATIC_LIB_ENABLE)
     set(LIBRARY_TYPE STATIC)
 else()
     set(LIBRARY_TYPE SHARED)
 endif()
 
-if (NGRAPH_INTERPRETER_ENABLE)
-    add_library(interpreter_backend ${LIBRARY_TYPE} int_backend.cpp int_executable.cpp)
-    target_compile_definitions(interpreter_backend PRIVATE INTERPRETER_BACKEND_EXPORTS)
+if (NGRAPH_DYNINT_ENABLE)
+    add_library(dynint_backend ${LIBRARY_TYPE} dynint_backend.cpp dynint_executable.cpp)
+    target_compile_definitions(dynint_backend PRIVATE DYNINT_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
-        set_target_properties(interpreter_backend PROPERTIES
+        set_target_properties(dynint_backend PROPERTIES
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(interpreter_backend PUBLIC ngraph)
-    if(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
-        target_compile_definitions(interpreter_backend PUBLIC NGRAPH_INTERPRETER_STATIC_LIB_ENABLE)
+    target_link_libraries(dynint_backend PUBLIC ngraph)
+    if(NGRAPH_DYNINT_STATIC_LIB_ENABLE)
+        target_compile_definitions(dynint_backend PUBLIC NGRAPH_DYNINT_STATIC_LIB_ENABLE)
     endif()
-    install(TARGETS interpreter_backend
+    install(TARGETS dynint_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
         RUNTIME DESTINATION "${NGRAPH_INSTALL_LIB}"
