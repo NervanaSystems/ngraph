@@ -24,7 +24,6 @@
 #include "ngraph/runtime/interpreter/int_executable.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -60,15 +59,6 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
     const element::Type& type, const Shape& shape, void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
-}
-
-shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTBackend::create_dynamic_tensor(const element::Type& type,
-                                                            const PartialShape& shape)
-{
-    NGRAPH_INFO << type;
-    NGRAPH_INFO << shape;
-    return make_shared<runtime::HostTensor>(type, shape);
 }
 
 shared_ptr<runtime::Executable>

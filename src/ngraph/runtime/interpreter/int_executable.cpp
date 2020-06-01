@@ -31,7 +31,6 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -163,7 +162,6 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        NGRAPH_INFO << *op;
         event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
@@ -175,8 +173,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         for (auto input : op->inputs())
         {
             descriptor::Tensor* tensor = &input.get_tensor();
-            NGRAPH_INFO << "op input " << tensor_map[tensor]->get_shape();
-            op_inputs.push_back(tensor_map[tensor]);
+            op_inputs.push_back(tensor_map.at(tensor));
         }
 
         // get op outputs from map or create
@@ -195,7 +192,6 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             {
                 host_tensor = it->second;
             }
-            NGRAPH_INFO << "op output " << tensor_map[tensor]->get_shape();
             op_outputs.push_back(host_tensor);
         }
 
