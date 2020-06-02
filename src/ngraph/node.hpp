@@ -179,6 +179,8 @@ namespace ngraph
         virtual std::vector<OutputInfo>
             get_output_info(const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const;
 
+        std::vector<int64_t> tensor_to_shape(const runtime::Tensor* tensor) const;
+
     protected:
         std::tuple<element::Type, PartialShape> validate_and_infer_elementwise_args(
             const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec());

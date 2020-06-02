@@ -73,7 +73,7 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
 
-                virtual std::vector<OutputInfo> get_output_info(
+                std::vector<OutputInfo> get_output_info(
                     const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const override;
 
             protected:

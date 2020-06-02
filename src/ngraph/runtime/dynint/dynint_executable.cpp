@@ -182,12 +182,14 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
 
         NGRAPH_INFO << *op;
         vector<Node::OutputInfo> output_info = op->get_output_info(op_check_inputs);
-        NGRAPH_INFO << output_info.size();
+        if (output_info.size() == 0)
+        {
+            throw runtime_error("No output info for op " + op->get_name());
+        }
         for (const Node::OutputInfo& info : output_info)
         {
             NGRAPH_INFO << info.type << ":" << info.shape;
         }
-
 
         // get op outputs from map or create
         vector<shared_ptr<HostTensor>> op_outputs;
@@ -195,6 +197,8 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
         {
             descriptor::Tensor* tensor = &op->output(i).get_tensor();
             shared_ptr<HostTensor> host_tensor;
+            const Shape& shape = output_info[i].shape;
+            NGRAPH_INFO << "op output " << shape;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
@@ -205,7 +209,6 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
             {
                 host_tensor = it->second;
             }
-            NGRAPH_INFO << "op output " << tensor_map[tensor]->get_shape();
             op_outputs.push_back(host_tensor);
         }
 

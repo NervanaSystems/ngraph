@@ -23,6 +23,7 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -1135,6 +1136,41 @@ std::vector<Node::OutputInfo>
 {
     vector<OutputInfo> rc;
     return rc;
+}
+
+vector<int64_t> Node::tensor_to_shape(const runtime::Tensor* tensor) const
+{
+    vector<int64_t> dims;
+    if (tensor->get_shape().size() != 1)
+    {
+        throw runtime_error("invalid tensor shape for tensor_to_shape");
+    }
+    switch (tensor->get_element_type())
+    {
+    case element::Type_t::i32:
+    {
+        vector<int32_t> data(tensor->get_shape()[0]);
+        tensor->read(data.data(), data.size() * sizeof(int32_t));
+        for (int32_t x : data)
+        {
+            dims.push_back(x);
+        }
+    }
+    break;
+    case element::Type_t::i64:
+    {
+        NGRAPH_INFO << tensor->get_shape()[0];
+        vector<int64_t> data(tensor->get_shape()[0]);
+        tensor->read(data.data(), data.size() * sizeof(int64_t));
+        for (int64_t x : data)
+        {
+            dims.push_back(x);
+        }
+    }
+    break;
+    default: throw runtime_error("tensor_to_shape called with non-integer tensor");
+    }
+    return dims;
 }
 
 constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;

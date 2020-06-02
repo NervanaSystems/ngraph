@@ -65,14 +65,14 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
 
+                std::vector<OutputInfo> get_output_info(
+                    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
 
             private:
-                /// Helper method to compute output shape
-                Shape compute_output_shape() const;
-
                 AxisSet m_lower_bounds_mask;
                 AxisSet m_upper_bounds_mask;
                 AxisSet m_new_axis;

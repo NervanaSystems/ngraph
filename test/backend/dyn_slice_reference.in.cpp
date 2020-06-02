@@ -142,6 +142,7 @@ namespace
         copy_data(input_lb, lb_values);
         copy_data(input_ub, ub_values);
         copy_data(input_strides, strides_values);
+        NGRAPH_INFO << join(strides_values);
 
         auto output = backend->create_dynamic_tensor(input_element_type, PartialShape::dynamic());
 
