@@ -43,10 +43,25 @@ set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
 # we will fetch and build it from the source if cmake is not configured to use
 # the prebuilt mlir
 if (NOT NGRAPH_USE_PREBUILT_MLIR)
-    configure_file(${CMAKE_SOURCE_DIR}/cmake/mlir_fetch.cmake.in ${MLIR_PROJECT_ROOT}/CMakeLists.txt @ONLY)
+    FetchContent_Declare(
+        ext_mlir
+        GIT_REPOSITORY ${MLIR_LLVM_REPO_URL}
+        GIT_TAG        ${MLIR_LLVM_COMMIT_ID}
+    )
+    FetchContent_GetProperties(ext_mlir)
+    if(NOT ext_mlir_POPULATED)
+        FetchContent_Populate(ext_mlir)
+        #add_subdirectory(${ext_mlir_SOURCE_DIR} ${ext_mlir_BINARY_DIR})
+    endif()
+    set(MLIR_LLVM_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
+                   -DLLVM_ENABLE_RTTI=ON
+                   -DLLVM_ENABLE_PROJECTS:STRING=mlir
+                   -DLLVM_BUILD_EXAMPLES=ON
+                   -DLLVM_TARGETS_TO_BUILD=host)
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
                     -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+                    ${MLIR_LLVM_CMAKE_ARGS}
                     -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
