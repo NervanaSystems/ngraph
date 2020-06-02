@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/dynamic/dynamic_backend.hpp"
+#include <iterator>
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/broadcast.hpp"
@@ -160,12 +161,12 @@ bool runtime::dynamic::DynamicExecutable::call(
               merged_input_shapes.end(),
               std::ostream_iterator<int>(key, ", "));
 
-    if (m_lru->is_cached(merged_input_shapes))
+    if (m_cache->is_cached(merged_input_shapes))
     {
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_inputs;
         std::vector<std::shared_ptr<runtime::Tensor>> wrapped_outputs;
 
-        std::shared_ptr<Function> clone = m_lru->get_cloned_function(merged_input_shapes);
+        std::shared_ptr<Function> clone = m_cache->get_cloned_function(merged_input_shapes);
         const ResultVector& results = clone->get_results();
         for (auto& result : results)
         {
@@ -190,7 +191,7 @@ bool runtime::dynamic::DynamicExecutable::call(
             }
         }
 
-        return m_lru->get_cached_entry(merged_input_shapes)->call(wrapped_outputs, inputs);
+        return m_cache->get_cached_entry(merged_input_shapes)->call(wrapped_outputs, inputs);
     }
     else
     {
@@ -321,7 +322,7 @@ bool runtime::dynamic::DynamicExecutable::call(
         auto compiled_executable =
             m_wrapped_backend->compile(clone, m_enable_performance_collection);
         // Put compiled executable in the cache.
-        m_lru->add_entry(merged_input_shapes, compiled_executable, clone);
+        m_cache->add_entry(merged_input_shapes, compiled_executable, clone);
         auto result = compiled_executable->call(wrapped_outputs, wrapped_inputs);
 
         return result;
