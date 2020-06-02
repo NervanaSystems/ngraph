@@ -25,6 +25,7 @@
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/serializer.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
@@ -99,6 +100,31 @@ NGRAPH_TEST(${BACKEND_NAME}, greater)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 1, 0, 1, 0, 1, 1, 0}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, greater0)
+{
+    Shape shape{1};
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    auto B = make_shared<op::Parameter>(element::f32, shape);
+
+    auto squeezes =
+        make_shared<op::v0::Squeeze>(A, make_shared<op::v0::Constant>(element::i32, Shape{1}, 0));
+
+    auto f = make_shared<Function>(make_shared<op::Greater>(squeezes, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape);
+    copy_data(a, vector<float>{0});
+    auto b = backend->create_tensor(element::f32, shape);
+    copy_data(b, vector<float>{1});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, greater_int64)

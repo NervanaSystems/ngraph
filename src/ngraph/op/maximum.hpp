@@ -32,7 +32,7 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a maximum operation.
                 Maximum()
-                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
+                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NUMPY)
                 {
                 }
                 /// \brief Constructs a maximum operation.

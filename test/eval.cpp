@@ -42,6 +42,7 @@
 #include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
+#include "ngraph/op/greater.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
@@ -169,6 +170,44 @@ TEST(eval, evaluate_shape_of)
     auto result_shape = read_vector<int64_t>(result);
     vector<int64_t> arg_shape{2, 3};
     ASSERT_EQ(result_shape, arg_shape);
+}
+
+TEST(eval, evaluate_greater2)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto squeezes =
+        make_shared<op::v0::Squeeze>(p1, make_shared<op::v0::Constant>(element::i32, Shape{1}, 0));
+
+    auto p2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto greater = make_shared<op::v0::Greater>(squeezes, p2);
+    auto fun = make_shared<Function>(OutputVector{greater}, ParameterVector{p1, p2});
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result},
+                              {make_host_tensor<element::Type_t::f32>(Shape{1}, {1}),
+                               make_host_tensor<element::Type_t::f32>(Shape{1}, {1.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::boolean);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1}));
+    // auto res_vec = read_vector<char>(result);
+    // vector<uint8_t> expec{1};
+    // ASSERT_EQ(res_vec, {1});
+}
+
+TEST(eval, evaluate_greater)
+{
+    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto p2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto greater = make_shared<op::v0::Greater>(p1, p2);
+    auto fun = make_shared<Function>(OutputVector{greater}, ParameterVector{p1, p2});
+    auto result = make_shared<HostTensor>();
+    ASSERT_TRUE(fun->evaluate({result},
+                              {make_host_tensor<element::Type_t::f32>(Shape{1}, {0.0f}),
+                               make_host_tensor<element::Type_t::f32>(Shape{1}, {1.0f})}));
+    EXPECT_EQ(result->get_element_type(), element::boolean);
+    EXPECT_EQ(result->get_partial_shape(), (PartialShape{1}));
+    // auto res_vec = read_vector<char>(result);
+    // vector<uint8_t> expec{1};
+    // ASSERT_EQ(res_vec, {1});
 }
 
 TEST(eval, evaluate_dynamic_range_sum)
