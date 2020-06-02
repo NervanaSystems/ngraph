@@ -52,6 +52,9 @@ namespace ngraph
                 bool constant_fold(OutputVector& output_values,
                                    const OutputVector& inputs_values) override;
 
+                std::vector<OutputInfo> get_output_info(
+                    const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) const override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

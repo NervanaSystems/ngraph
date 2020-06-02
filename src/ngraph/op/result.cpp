@@ -76,6 +76,16 @@ bool op::Result::constant_fold(OutputVector& output_values, const OutputVector& 
     return false;
 }
 
+vector<Node::OutputInfo>
+    op::Result::get_output_info(const vector<shared_ptr<runtime::Tensor>>& inputs) const
+{
+    vector<OutputInfo> rc;
+
+    rc.emplace_back(OutputInfo{inputs[0]->get_element_type(), inputs[0]->get_shape()});
+
+    return rc;
+}
+
 constexpr DiscreteTypeInfo AttributeAdapter<ResultVector>::type_info;
 
 AttributeAdapter<ResultVector>::AttributeAdapter(ResultVector& ref)

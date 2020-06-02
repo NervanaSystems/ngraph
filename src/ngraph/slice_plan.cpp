@@ -17,7 +17,9 @@
 #include <algorithm>
 
 #include "ngraph/check.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/slice_plan.hpp"
+#include "ngraph/util.hpp"
 
 using namespace ngraph;
 
@@ -31,6 +33,16 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
                                   const AxisSet& shrink_axis_mask,
                                   const AxisSet& ellipsis_mask)
 {
+    NGRAPH_INFO << input_shape;
+    NGRAPH_INFO << join(begins);
+    NGRAPH_INFO << join(ends);
+    NGRAPH_INFO << join(strides);
+    NGRAPH_INFO << lower_bounds_mask;
+    NGRAPH_INFO << upper_bounds_mask;
+    NGRAPH_INFO << new_axis_mask;
+    NGRAPH_INFO << shrink_axis_mask;
+    NGRAPH_INFO << ellipsis_mask;
+
     NGRAPH_CHECK(begins.size() == ends.size());
     NGRAPH_CHECK(ends.size() == strides.size());
     size_t num_slice_indices = begins.size();
@@ -233,6 +245,15 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
     {
         expand_ellipsis();
     }
+
+    NGRAPH_INFO << join(p.begins);
+    NGRAPH_INFO << join(p.ends);
+    NGRAPH_INFO << join(p.strides);
+    NGRAPH_INFO << join(p.begins);
+    NGRAPH_INFO << p.reshape_in_shape;
+    NGRAPH_INFO << p.reshape_out_shape;
+    NGRAPH_INFO << p.reverse_axes;
+
     return p;
 }
 

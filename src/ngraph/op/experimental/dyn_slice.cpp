@@ -18,6 +18,7 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/slice_plan.hpp"
 #include "ngraph/validation_util.hpp"
 
 #include <memory>
@@ -141,18 +142,34 @@ vector<Node::OutputInfo>
     vector<int64_t> upper_bounds = tensor_to_shape(inputs[2].get());
     vector<int64_t> strides = tensor_to_shape(inputs[3].get());
 
-    auto partial_shape = infer_slice_shape(this,
-                                           inputs[0]->get_shape(),
-                                           lower_bounds,
-                                           upper_bounds,
-                                           strides,
-                                           m_lower_bounds_mask,
-                                           m_upper_bounds_mask,
-                                           m_new_axis,
-                                           m_shrink_axis,
-                                           m_ellipsis_mask);
+    // auto partial_shape = infer_slice_shape(this,
+    //                                        inputs[0]->get_shape(),
+    //                                        lower_bounds,
+    //                                        upper_bounds,
+    //                                        strides,
+    //                                        m_lower_bounds_mask,
+    //                                        m_upper_bounds_mask,
+    //                                        m_new_axis,
+    //                                        m_shrink_axis,
+    //                                        m_ellipsis_mask);
 
-    rc.emplace_back(OutputInfo{inputs[0]->get_element_type(), partial_shape.get_shape()});
+    // NGRAPH_INFO << partial_shape;
+    // NGRAPH_INFO << partial_shape.get_shape();
+
+    SlicePlan p = make_slice_plan(inputs[0]->get_shape(),
+                                  lower_bounds,
+                                  upper_bounds,
+                                  strides,
+                                  m_lower_bounds_mask,
+                                  m_upper_bounds_mask,
+                                  m_new_axis,
+                                  m_shrink_axis,
+                                  m_ellipsis_mask);
+    NGRAPH_INFO << p.reshape_in_shape;
+    NGRAPH_INFO << p.reshape_out_shape;
+
+    // rc.emplace_back(OutputInfo{inputs[0]->get_element_type(), partial_shape.get_shape()});
+    rc.emplace_back(OutputInfo{inputs[0]->get_element_type(), p.reshape_in_shape});
 
     return rc;
 }

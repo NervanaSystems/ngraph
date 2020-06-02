@@ -20,6 +20,7 @@
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -114,6 +115,7 @@ runtime::dynint::DynIntExecutable::DynIntExecutable(const std::string& model_str
 bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                              const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO;
     event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
@@ -163,6 +165,7 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
+        NGRAPH_INFO << *op;
         event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
@@ -193,21 +196,34 @@ bool runtime::dynint::DynIntExecutable::call(const vector<shared_ptr<runtime::Te
 
         // get op outputs from map or create
         vector<shared_ptr<HostTensor>> op_outputs;
+        NGRAPH_INFO << op->get_output_size();
         for (size_t i = 0; i < op->get_output_size(); ++i)
         {
             descriptor::Tensor* tensor = &op->output(i).get_tensor();
+            NGRAPH_INFO;
+            if (!tensor)
+            {
+            NGRAPH_INFO << "null tensor";
+            }
             shared_ptr<HostTensor> host_tensor;
             const Shape& shape = output_info[i].shape;
+            element::Type type = output_info[i].type;
             NGRAPH_INFO << "op output " << shape;
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                host_tensor = make_shared<HostTensor>(op->output(i));
+                host_tensor = make_shared<HostTensor>(type, shape);
                 tensor_map.insert({tensor, host_tensor});
             }
             else
             {
                 host_tensor = it->second;
+                if (host_tensor->get_element_type() != type || host_tensor->get_shape() != shape)
+                {
+                    NGRAPH_INFO << "Reallocate output tensor";
+                    host_tensor = make_shared<HostTensor>(type, shape);
+                    tensor_map[tensor] = host_tensor;
+                }
             }
             op_outputs.push_back(host_tensor);
         }
@@ -262,6 +278,7 @@ void runtime::dynint::DynIntExecutable::generate_calls(const element::Type& type
                                                        const vector<shared_ptr<HostTensor>>& out,
                                                        const vector<shared_ptr<HostTensor>>& in)
 {
+    NGRAPH_INFO;
     stringstream ss;
     switch (type)
     {

@@ -30,6 +30,7 @@
 #ifdef INTERPRETER_USE_HYBRID
 #include "ngraph/runtime/hybrid/op/function_call.hpp"
 #endif
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/dynint/dynint_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
@@ -100,6 +101,7 @@
 #include "ngraph/runtime/reference/tanh.hpp"
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/tensor.hpp"
+#include "ngraph/slice_plan.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
 
@@ -185,6 +187,7 @@ protected:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
+        NGRAPH_INFO;
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -676,6 +679,40 @@ protected:
                            node.get_input_shape(1),
                            node.get_output_shape(0),
                            dot->get_reduction_axes_count());
+            break;
+        }
+        case OP_TYPEID::DynSlice:
+        {
+            NGRAPH_INFO;
+            const op::DynSlice* dyn_slice = static_cast<const op::DynSlice*>(&node);
+            NGRAPH_INFO;
+
+            vector<int64_t> lower_bounds = node.tensor_to_shape(args[1].get());
+            NGRAPH_INFO << join(lower_bounds);
+            vector<int64_t> upper_bounds = node.tensor_to_shape(args[2].get());
+            NGRAPH_INFO << join(upper_bounds);
+            vector<int64_t> strides = node.tensor_to_shape(args[3].get());
+            NGRAPH_INFO << join(strides);
+
+            SlicePlan plan = make_slice_plan(args[0]->get_shape(),
+                                             lower_bounds,
+                                             upper_bounds,
+                                             strides,
+                                             dyn_slice->get_lower_bounds_mask(),
+                                             dyn_slice->get_upper_bounds_mask(),
+                                             dyn_slice->get_new_axis(),
+                                             dyn_slice->get_shrink_axis(),
+                                             dyn_slice->get_ellipsis_mask());
+            NGRAPH_INFO;
+
+            reference::slice<T>(args[0]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                node.get_input_shape(0),
+                                Coordinate(plan.begins.begin(), plan.begins.end()),
+                                Coordinate(plan.ends.begin(), plan.ends.end()),
+                                Strides(plan.strides.begin(), plan.strides.end()),
+                                out[0]->get_shape());
+            NGRAPH_INFO;
             break;
         }
         case OP_TYPEID::EmbeddingLookup:
@@ -1398,7 +1435,6 @@ protected:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:
         case OP_TYPEID::DynReplaceSlice:
-        case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
         case OP_TYPEID::Gather:

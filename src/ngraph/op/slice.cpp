@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/op/slice.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -65,6 +66,7 @@ void op::Slice::validate_and_infer_types()
                           ") do not match.");
 
     size_t output_rank = m_upper_bounds.size();
+    NGRAPH_INFO << output_rank;
 
     for (size_t i = 0; i < output_rank; i++)
     {
