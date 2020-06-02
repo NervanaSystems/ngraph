@@ -59,11 +59,11 @@ func @simple_notequal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) ->
 // CHECK-LABEL: func @simple_greater
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpf "ogt", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "ogt", %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_greater(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -75,11 +75,11 @@ func @simple_greater(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> 
 // CHECK-LABEL: func @simple_greater_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "sgt", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "sgt", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_greater_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -91,11 +91,11 @@ func @simple_greater_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>)
 // CHECK-LABEL: func @simple_greater_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "ugt", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "ugt", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_greater_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -109,11 +109,11 @@ func @simple_greater_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui3
 // CHECK-LABEL: func @simple_greatereq
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpf "oge", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "oge", %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_greatereq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -125,11 +125,11 @@ func @simple_greatereq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -
 // CHECK-LABEL: func @simple_greatereq_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "sge", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "sge", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_greatereq_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -137,15 +137,15 @@ func @simple_greatereq_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32
    "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
 }
 
-// Greater Op (unsigned int)
+// GreaterEq Op (unsigned int)
 // CHECK-LABEL: func @simple_greatereq_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "uge", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "uge", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_greatereq_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -159,11 +159,11 @@ func @simple_greatereq_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xu
 // CHECK-LABEL: func @simple_less
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpf "olt", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "olt", %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_less(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -175,11 +175,11 @@ func @simple_less(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng
 // CHECK-LABEL: func @simple_less_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "slt", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "slt", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_less_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -191,11 +191,11 @@ func @simple_less_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) ->
 // CHECK-LABEL: func @simple_less_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "ult", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "ult", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_less_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -209,11 +209,11 @@ func @simple_less_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>)
 // CHECK-LABEL: func @simple_lesseq
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpf "ole", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "ole", %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_lesseq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -225,11 +225,11 @@ func @simple_lesseq(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !
 // CHECK-LABEL: func @simple_lesseq_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "sle", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "sle", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_lesseq_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -241,11 +241,11 @@ func @simple_lesseq_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) 
 // CHECK-LABEL: func @simple_lesseq_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT: 	  %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "ule", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "ule", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_lesseq_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) -> !ng.tensor<2x2x!ng.u8>{
@@ -259,9 +259,9 @@ func @simple_lesseq_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32
 // CHECK-LABEL: func @simple_max
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpf "ogt", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "ogt", %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_max(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2xf32> {
@@ -273,9 +273,9 @@ func @simple_max(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.
 // CHECK-LABEL: func @simple_max_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "sgt", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "sgt", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_max_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2xi32> {
@@ -287,9 +287,9 @@ func @simple_max_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> 
 // CHECK-LABEL: func @simple_max_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "ugt", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "ugt", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_max_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) -> !ng.tensor<2x2xui32> {
@@ -303,9 +303,9 @@ func @simple_max_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) 
 // CHECK-LABEL: func @simple_min
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpf "olt", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "olt", %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[LHS]], %[[RHS]] : f32
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_min(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2xf32> {
@@ -317,9 +317,9 @@ func @simple_min(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.
 // CHECK-LABEL: func @simple_min_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "slt", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "slt", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_min_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2xi32> {
@@ -331,9 +331,9 @@ func @simple_min_int(%arg0: !ng.tensor<2x2xi32>, %arg1: !ng.tensor<2x2xi32>) -> 
 // CHECK-LABEL: func @simple_min_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
-// CHECK-NEXT:	     %[[CMP:.*]] = cmpi "ult", %[[LHS]], %[[RHS]] : i32
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[CMP:.*]] = cmpi "ult", %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[LHS]], %[[RHS]] : i32
 // CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_min_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) -> !ng.tensor<2x2xui32> {
@@ -347,7 +347,7 @@ func @simple_min_uint(%arg0: !ng.tensor<2x2xui32>, %arg1: !ng.tensor<2x2xui32>) 
 // CHECK-LABEL: func @simple_relu
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[DATA:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[DATA:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0.{{0*}}e+00 : f32
 // CHECK-NEXT:      %[[CMP:.*]] = cmpf "ogt", %[[DATA]], %[[ZERO]] : f32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[DATA]], %[[ZERO]] : f32
@@ -361,7 +361,7 @@ func @simple_relu(%arg0: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2xf32> {
 // CHECK-LABEL: func @simple_relu_int
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[DATA:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[DATA:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i32
 // CHECK-NEXT:      %[[CMP:.*]] = cmpi "sgt", %[[DATA]], %[[ZERO]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[DATA]], %[[ZERO]] : i32
@@ -375,7 +375,7 @@ func @simple_relu_int(%arg0: !ng.tensor<2x2xi32>) -> !ng.tensor<2x2xi32> {
 // CHECK-LABEL: func @simple_relu_uint
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:	     %[[DATA:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
+// CHECK-NEXT:      %[[DATA:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xi32>
 // CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i32
 // CHECK-NEXT:      %[[CMP:.*]] = cmpi "ugt", %[[DATA]], %[[ZERO]] : i32
 // CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[DATA]], %[[ZERO]] : i32
