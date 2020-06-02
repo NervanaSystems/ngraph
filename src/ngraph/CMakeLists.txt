@@ -697,7 +697,11 @@ set (SRC
 set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
     runtime/dynamic/dynamic_backend.hpp
-    )
+    runtime/dynamic/dynamic_executable.cpp
+    runtime/dynamic/dynamic_executable.hpp
+    runtime/dynamic/dynamic_tensor.cpp
+    runtime/dynamic/dynamic_tensor.hpp
+)
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp)
