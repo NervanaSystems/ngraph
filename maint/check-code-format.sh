@@ -18,14 +18,22 @@ set -u
 # limitations under the License.
 # ******************************************************************************
 
+if [[ $# -lt 1 ]]
+then
+    echo "Minimal arguments: check-code-format.sh [path] ..."
+    echo "e.g. check-code-format.sh src test doc/examples"
+    echo "     This will check format to directories src, tests, and doc/examples"
+    exit 1
+fi
+
 # NOTE: The results of `clang-format` depend _both_ of the following factors:
 # - The `.clang-format` file, and
 # - The particular version of the `clang-format` program being used.
 #
 # For this reason, this script specifies the exact version of clang-format to be used.
 
-declare CLANG_FORMAT_BASENAME="clang-format-3.9"
 declare REQUIRED_CLANG_FORMAT_VERSION=3.9
+declare CLANG_FORMAT_BASENAME="clang-format-"${REQUIRED_CLANG_FORMAT_VERSION}
 
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -43,21 +51,18 @@ echo "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CLANG_FORMAT_
 declare -a FAILED_FILES=()
 declare NUM_FILES_CHECKED=0
 
-pushd "${THIS_SCRIPT_DIR}/.."
-
-declare PYBIND_WRAPPER="python/pyngraph"
-
-declare ROOT_SUBDIR
-for ROOT_SUBDIR in src test doc/examples python/src/pyngraph; do
-    if ! [[ -d "${ROOT_SUBDIR}" ]]; then
-        echo "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
+declare DIR
+for DIR in "$@"; do
+    if ! [[ -d "${DIR}" ]]; then
+        echo "No subdirectory named '${DIR}' was found."
+        exit 1
     else
-        echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+        echo "Checking C/C++ code format in directory tree '${DIR}'"
         declare SRC_FILE
         # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
         # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
         # mechanism, and this confuses clang-format.
-        for SRC_FILE in $(find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) ); do
+        for SRC_FILE in $(find "${DIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) ); do
             if "${CLANG_FORMAT_PROG}" -style=file -output-replacements-xml "${SRC_FILE}" | grep -c "<replacement " >/dev/null; then
                 FAILED_FILES+=( "${SRC_FILE}" )
             fi
@@ -65,8 +70,6 @@ for ROOT_SUBDIR in src test doc/examples python/src/pyngraph; do
         done
     fi
 done
-
-popd
 
 if [[ ${#FAILED_FILES[@]} -eq 0 ]]; then
     echo "All ${NUM_FILES_CHECKED}  C/C++ files pass the code-format check."

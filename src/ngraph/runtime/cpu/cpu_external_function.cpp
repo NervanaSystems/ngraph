@@ -2074,8 +2074,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
 #if defined(NGRAPH_DEX_ONLY)
     if (is_codegen(pass_config))
     {
-        NGRAPH_WARN << "CPU Backend: Requested unsupported compilation mode (CODEGEN). Falling "
-                       "back to DEX instead";
+        throw runtime_error("CPU Backend: Requested unsupported compilation mode (CODEGEN)");
     }
 #else
     // Override DEX if pass_config requests CODEGEN
