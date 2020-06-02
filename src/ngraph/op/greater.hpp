@@ -40,7 +40,7 @@ namespace ngraph
                 Greater(const Output<Node>& arg0,
                         const Output<Node>& arg1,
                         const AutoBroadcastSpec& auto_broadcast =
-                            AutoBroadcastSpec(op::AutoBroadcastType::NUMPY));
+                            AutoBroadcastSpec(op::AutoBroadcastType::NONE));
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;

@@ -111,7 +111,8 @@ NGRAPH_TEST(${BACKEND_NAME}, greater0)
     auto squeezes =
         make_shared<op::v0::Squeeze>(A, make_shared<op::v0::Constant>(element::i32, Shape{1}, 0));
 
-    auto f = make_shared<Function>(make_shared<op::Greater>(squeezes, B), ParameterVector{A, B});
+    auto f =
+        make_shared<Function>(make_shared<op::v1::Greater>(squeezes, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -180,7 +180,7 @@ TEST(eval, evaluate_greater2)
         make_shared<op::v0::Squeeze>(p1, make_shared<op::v0::Constant>(element::i32, Shape{1}, 0));
 
     auto p2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto greater = make_shared<op::v0::Greater>(squeezes, p2);
+    auto greater = make_shared<op::v1::Greater>(squeezes, p2);
     auto fun = make_shared<Function>(OutputVector{greater}, ParameterVector{p1, p2});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -197,7 +197,7 @@ TEST(eval, evaluate_greater)
 {
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto p2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto greater = make_shared<op::v0::Greater>(p1, p2);
+    auto greater = make_shared<op::v1::Greater>(p1, p2);
     auto fun = make_shared<Function>(OutputVector{greater}, ParameterVector{p1, p2});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},

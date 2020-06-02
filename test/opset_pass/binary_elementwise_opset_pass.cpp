@@ -63,7 +63,7 @@ void test_type_prop_opset1_upgrade_pass(const element::Type& output_type,
 {
     auto A = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});
     auto B = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});
-    const op::AutoBroadcastSpec none_auto_b = op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY);
+    const op::AutoBroadcastSpec none_auto_b = op::AutoBroadcastSpec(op::AutoBroadcastType::NONE);
 
     auto v0_node = make_shared<OpV0>(A, B);
     auto result = make_shared<op::Result>(v0_node);
