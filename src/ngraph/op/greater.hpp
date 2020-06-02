@@ -39,8 +39,7 @@ namespace ngraph
                 /// \param auto_broadcast Auto broadcast specification
                 Greater(const Output<Node>& arg0,
                         const Output<Node>& arg1,
-                        const AutoBroadcastSpec& auto_broadcast =
-                            AutoBroadcastSpec(op::AutoBroadcastType::NONE));
+                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
