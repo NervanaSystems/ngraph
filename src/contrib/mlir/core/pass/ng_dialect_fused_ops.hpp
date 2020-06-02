@@ -15,16 +15,15 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #pragma once
 
 #include <mlir/Pass/Pass.h>
 
-namespace ngraph
-{
-    namespace pass
-    {
-        std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
-    }
+namespace ngraph {
+namespace pass {
+std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
+}
 }

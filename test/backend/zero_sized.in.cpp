@@ -28,120 +28,48 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-template <typename OP>
-void make_unary_empty_test(const string& backend_name)
+namespace
 {
-    Shape shape{0};
-
-    ParameterVector params;
-    NodeVector result_list;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
+    template <typename OP>
+    void make_unary_empty_test(const string& backend_name)
     {
-        shared_ptr<op::Parameter> p = make_shared<op::Parameter>(s_known_element_types[i], shape);
-        params.push_back(p);
-        result_list.push_back(make_shared<OP>(p));
-    }
+        Shape shape{0};
 
-    auto f = make_shared<Function>(result_list, params);
-    auto backend = runtime::Backend::create(backend_name);
-
-    vector<shared_ptr<runtime::Tensor>> inputs;
-    vector<shared_ptr<runtime::Tensor>> outputs;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
-    {
-        inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
-        outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
-    }
-
-    auto handle = backend->compile(f);
-    handle->call_with_validate(outputs, inputs);
-
-    EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
-    EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
-    EXPECT_EQ(read_vector<int8_t>(inputs[2]).size(), 0);
-    EXPECT_EQ(read_vector<int16_t>(inputs[3]).size(), 0);
-    EXPECT_EQ(read_vector<int32_t>(inputs[4]).size(), 0);
-    EXPECT_EQ(read_vector<int64_t>(inputs[5]).size(), 0);
-    EXPECT_EQ(read_vector<uint8_t>(inputs[6]).size(), 0);
-    EXPECT_EQ(read_vector<uint16_t>(inputs[7]).size(), 0);
-    EXPECT_EQ(read_vector<uint32_t>(inputs[8]).size(), 0);
-    EXPECT_EQ(read_vector<uint64_t>(inputs[9]).size(), 0);
-
-    EXPECT_EQ(read_vector<float>(outputs[0]).size(), 0);
-    EXPECT_EQ(read_vector<double>(outputs[1]).size(), 0);
-    EXPECT_EQ(read_vector<int8_t>(outputs[2]).size(), 0);
-    EXPECT_EQ(read_vector<int16_t>(outputs[3]).size(), 0);
-    EXPECT_EQ(read_vector<int32_t>(outputs[4]).size(), 0);
-    EXPECT_EQ(read_vector<int64_t>(outputs[5]).size(), 0);
-    EXPECT_EQ(read_vector<uint8_t>(outputs[6]).size(), 0);
-    EXPECT_EQ(read_vector<uint16_t>(outputs[7]).size(), 0);
-    EXPECT_EQ(read_vector<uint32_t>(outputs[8]).size(), 0);
-    EXPECT_EQ(read_vector<uint64_t>(outputs[9]).size(), 0);
-}
-
-template <typename OP>
-void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
-{
-    Shape shape{0};
-    ParameterVector A;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
-    {
-        A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
-    }
-
-    NodeVector result_list;
-    for (shared_ptr<op::Parameter> p : A)
-    {
-        result_list.push_back(make_shared<OP>(p, p));
-    }
-
-    auto f = make_shared<Function>(result_list, A);
-    auto backend = runtime::Backend::create(backend_name);
-
-    vector<shared_ptr<runtime::Tensor>> inputs;
-    vector<shared_ptr<runtime::Tensor>> outputs;
-    for (size_t i = 0; i < s_known_element_types.size(); i++)
-    {
-        inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
-        if (is_comparison)
+        ParameterVector params;
+        NodeVector result_list;
+        for (size_t i = 0; i < s_known_element_types.size(); i++)
         {
-            outputs.push_back(backend->create_tensor(element::from<char>(), shape));
+            shared_ptr<op::Parameter> p =
+                make_shared<op::Parameter>(s_known_element_types[i], shape);
+            params.push_back(p);
+            result_list.push_back(make_shared<OP>(p));
         }
-        else
+
+        auto f = make_shared<Function>(result_list, params);
+        auto backend = runtime::Backend::create(backend_name);
+
+        vector<shared_ptr<runtime::Tensor>> inputs;
+        vector<shared_ptr<runtime::Tensor>> outputs;
+        for (size_t i = 0; i < s_known_element_types.size(); i++)
         {
+            inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
             outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
         }
-    }
 
-    auto handle = backend->compile(f);
-    handle->call_with_validate(outputs, inputs);
+        auto handle = backend->compile(f);
+        handle->call_with_validate(outputs, inputs);
 
-    EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
-    EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
-    EXPECT_EQ(read_vector<int8_t>(inputs[2]).size(), 0);
-    EXPECT_EQ(read_vector<int16_t>(inputs[3]).size(), 0);
-    EXPECT_EQ(read_vector<int32_t>(inputs[4]).size(), 0);
-    EXPECT_EQ(read_vector<int64_t>(inputs[5]).size(), 0);
-    EXPECT_EQ(read_vector<uint8_t>(inputs[6]).size(), 0);
-    EXPECT_EQ(read_vector<uint16_t>(inputs[7]).size(), 0);
-    EXPECT_EQ(read_vector<uint32_t>(inputs[8]).size(), 0);
-    EXPECT_EQ(read_vector<uint64_t>(inputs[9]).size(), 0);
+        EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
+        EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
+        EXPECT_EQ(read_vector<int8_t>(inputs[2]).size(), 0);
+        EXPECT_EQ(read_vector<int16_t>(inputs[3]).size(), 0);
+        EXPECT_EQ(read_vector<int32_t>(inputs[4]).size(), 0);
+        EXPECT_EQ(read_vector<int64_t>(inputs[5]).size(), 0);
+        EXPECT_EQ(read_vector<uint8_t>(inputs[6]).size(), 0);
+        EXPECT_EQ(read_vector<uint16_t>(inputs[7]).size(), 0);
+        EXPECT_EQ(read_vector<uint32_t>(inputs[8]).size(), 0);
+        EXPECT_EQ(read_vector<uint64_t>(inputs[9]).size(), 0);
 
-    if (is_comparison)
-    {
-        EXPECT_EQ(read_vector<char>(outputs[0]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[1]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[2]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[3]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[4]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[5]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[6]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[7]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[8]).size(), 0);
-        EXPECT_EQ(read_vector<char>(outputs[9]).size(), 0);
-    }
-    else
-    {
         EXPECT_EQ(read_vector<float>(outputs[0]).size(), 0);
         EXPECT_EQ(read_vector<double>(outputs[1]).size(), 0);
         EXPECT_EQ(read_vector<int8_t>(outputs[2]).size(), 0);
@@ -152,6 +80,82 @@ void make_binary_empty_test(const string& backend_name, bool is_comparison = fal
         EXPECT_EQ(read_vector<uint16_t>(outputs[7]).size(), 0);
         EXPECT_EQ(read_vector<uint32_t>(outputs[8]).size(), 0);
         EXPECT_EQ(read_vector<uint64_t>(outputs[9]).size(), 0);
+    }
+
+    template <typename OP>
+    void make_binary_empty_test(const string& backend_name, bool is_comparison = false)
+    {
+        Shape shape{0};
+        ParameterVector A;
+        for (size_t i = 0; i < s_known_element_types.size(); i++)
+        {
+            A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
+        }
+
+        NodeVector result_list;
+        for (shared_ptr<op::Parameter> p : A)
+        {
+            result_list.push_back(make_shared<OP>(p, p));
+        }
+
+        auto f = make_shared<Function>(result_list, A);
+        auto backend = runtime::Backend::create(backend_name);
+
+        vector<shared_ptr<runtime::Tensor>> inputs;
+        vector<shared_ptr<runtime::Tensor>> outputs;
+        for (size_t i = 0; i < s_known_element_types.size(); i++)
+        {
+            inputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
+            if (is_comparison)
+            {
+                outputs.push_back(backend->create_tensor(element::from<char>(), shape));
+            }
+            else
+            {
+                outputs.push_back(backend->create_tensor(s_known_element_types[i], shape));
+            }
+        }
+
+        auto handle = backend->compile(f);
+        handle->call_with_validate(outputs, inputs);
+
+        EXPECT_EQ(read_vector<float>(inputs[0]).size(), 0);
+        EXPECT_EQ(read_vector<double>(inputs[1]).size(), 0);
+        EXPECT_EQ(read_vector<int8_t>(inputs[2]).size(), 0);
+        EXPECT_EQ(read_vector<int16_t>(inputs[3]).size(), 0);
+        EXPECT_EQ(read_vector<int32_t>(inputs[4]).size(), 0);
+        EXPECT_EQ(read_vector<int64_t>(inputs[5]).size(), 0);
+        EXPECT_EQ(read_vector<uint8_t>(inputs[6]).size(), 0);
+        EXPECT_EQ(read_vector<uint16_t>(inputs[7]).size(), 0);
+        EXPECT_EQ(read_vector<uint32_t>(inputs[8]).size(), 0);
+        EXPECT_EQ(read_vector<uint64_t>(inputs[9]).size(), 0);
+
+        if (is_comparison)
+        {
+            EXPECT_EQ(read_vector<char>(outputs[0]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[1]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[2]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[3]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[4]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[5]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[6]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[7]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[8]).size(), 0);
+            EXPECT_EQ(read_vector<char>(outputs[9]).size(), 0);
+        }
+        else
+        {
+            EXPECT_EQ(read_vector<float>(outputs[0]).size(), 0);
+            EXPECT_EQ(read_vector<double>(outputs[1]).size(), 0);
+            EXPECT_EQ(read_vector<int8_t>(outputs[2]).size(), 0);
+            EXPECT_EQ(read_vector<int16_t>(outputs[3]).size(), 0);
+            EXPECT_EQ(read_vector<int32_t>(outputs[4]).size(), 0);
+            EXPECT_EQ(read_vector<int64_t>(outputs[5]).size(), 0);
+            EXPECT_EQ(read_vector<uint8_t>(outputs[6]).size(), 0);
+            EXPECT_EQ(read_vector<uint16_t>(outputs[7]).size(), 0);
+            EXPECT_EQ(read_vector<uint32_t>(outputs[8]).size(), 0);
+            EXPECT_EQ(read_vector<uint64_t>(outputs[9]).size(), 0);
+        }
     }
 }
 

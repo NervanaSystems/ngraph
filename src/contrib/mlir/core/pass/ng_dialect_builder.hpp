@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #pragma once
 
@@ -30,12 +31,10 @@
 // TODO: this seems bad to do in an HPP
 using namespace ngraph::runtime::ngmlir;
 
-namespace ngraph
-{
-    namespace pass
-    {
-        std::unique_ptr<mlir::Pass>
-            createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
-                                          mlir::MLIRContext* context);
-    }
+namespace ngraph {
+namespace pass {
+std::unique_ptr<mlir::Pass>
+createNgDialectConversionPass(const ngraph::op::CompiledKernel *compiledKernel,
+                              mlir::MLIRContext *context);
+}
 }

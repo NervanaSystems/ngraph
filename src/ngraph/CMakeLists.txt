@@ -655,8 +655,8 @@ set (SRC
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
-    runtime/cache.cpp
-    runtime/cache.hpp
+    runtime/executable_cache.cpp
+    runtime/executable_cache.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp
