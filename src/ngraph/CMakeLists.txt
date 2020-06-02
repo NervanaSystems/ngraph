@@ -655,8 +655,8 @@ set (SRC
     runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
-    runtime/cache.cpp
-    runtime/cache.hpp
+    runtime/executable_cache.cpp
+    runtime/executable_cache.hpp
     runtime/executable.cpp
     runtime/executable.hpp
     runtime/host_tensor.cpp
@@ -697,7 +697,11 @@ set (SRC
 set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp
     runtime/dynamic/dynamic_backend.hpp
-    )
+    runtime/dynamic/dynamic_executable.cpp
+    runtime/dynamic/dynamic_executable.hpp
+    runtime/dynamic/dynamic_tensor.cpp
+    runtime/dynamic/dynamic_tensor.hpp
+)
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp)

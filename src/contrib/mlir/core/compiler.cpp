@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #include "compiler.hpp"
 
@@ -61,9 +62,9 @@
 #define DEBUG_TYPE "mlir-compiler"
 
 static llvm::cl::opt<bool> clEnableNgKernelLibFusion(
-    "ngraph-kernel-lib-fusion",
-    llvm::cl::init(false),
-    llvm::cl::desc("Enable the ngraph pass that fuses ops to use kernel library"));
+    "ngraph-kernel-lib-fusion", llvm::cl::init(false),
+    llvm::cl::desc(
+        "Enable the ngraph pass that fuses ops to use kernel library"));
 
 using llvm::SmallVector;
 using llvm::StringRef;
@@ -74,79 +75,70 @@ using namespace ngraph::runtime::ngmlir;
 
 bool MLIRCompiler::initialized = false;
 
-void MLIRCompiler::init()
-{
-    // Mutex to safely initialize MLIR.
-    static std::mutex mlirInitMutex;
+void MLIRCompiler::init() {
+  // Mutex to safely initialize MLIR.
+  static std::mutex mlirInitMutex;
 
-    std::unique_lock<std::mutex> lock(mlirInitMutex);
+  std::unique_lock<std::mutex> lock(mlirInitMutex);
 
-    if (!initialized)
-    {
-        // TODO: Remove this as it is not part of compiler init
-        initializeNGraphMLIR();
+  if (!initialized) {
+    // TODO: Remove this as it is not part of compiler init
+    initializeNGraphMLIR();
 
-        // Register MLIR command line options in the pool of supported flags and and process flags
-        // from environment variable to be used by nGraph, MLIR and LLVM.
-        mlir::registerPassManagerCLOptions();
-        llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
+    // Register MLIR command line options in the pool of supported flags and and
+    // process flags
+    // from environment variable to be used by nGraph, MLIR and LLVM.
+    mlir::registerPassManagerCLOptions();
+    llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
 
-        initialized = true;
-    }
+    initialized = true;
+  }
 }
 
-void MLIRCompiler::compile()
-{
-    buildNgDialectModule();
+void MLIRCompiler::compile() { buildNgDialectModule(); }
+
+// Creates an MLIR module and function with nGraph dialect ops from the input
+// CompiledKernel.
+void MLIRCompiler::buildNgDialectModule() {
+  // initialize an empty module
+  m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
+
+  mlir::PassManager pm(&m_context);
+  pm.addPass(ngraph::pass::createNgDialectConversionPass(m_compiledKernel,
+                                                         &m_context));
+
+  // Apply any generic pass manager command line options.
+  mlir::applyPassManagerCLOptions(pm);
+
+  if (failed(pm.run(m_module.get()))) {
+    NGRAPH_CHECK(false, "MLIR pass manager failed");
+  }
+
+  if (failed(m_module->verify())) {
+    NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
+  }
+
+  dumpMlirModule("nGraph Dialect Construction", m_module.get());
+
+  optimizeNgDialect();
 }
 
-// Creates an MLIR module and function with nGraph dialect ops from the input CompiledKernel.
-void MLIRCompiler::buildNgDialectModule()
-{
-    // initialize an empty module
-    m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
+void MLIRCompiler::optimizeNgDialect() {
+  mlir::PassManager pm(&m_context);
+  if (clEnableNgKernelLibFusion) {
+    pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
+  }
 
-    mlir::PassManager pm(&m_context);
-    pm.addPass(ngraph::pass::createNgDialectConversionPass(m_compiledKernel, &m_context));
+  // Apply any generic pass manager command line options.
+  mlir::applyPassManagerCLOptions(pm);
 
-    // Apply any generic pass manager command line options.
-    mlir::applyPassManagerCLOptions(pm);
+  if (failed(pm.run(m_module.get()))) {
+    NGRAPH_CHECK(false, "MLIR pass manager failed");
+  }
 
-    if (failed(pm.run(m_module.get())))
-    {
-        NGRAPH_CHECK(false, "MLIR pass manager failed");
-    }
+  if (failed(m_module->verify())) {
+    NGRAPH_CHECK(false, "Invalid module after NG dialect optimization");
+  }
 
-    if (failed(m_module->verify()))
-    {
-        NGRAPH_CHECK(false, "Invalid module after lowering to NG dialect");
-    }
-
-    dumpMlirModule("nGraph Dialect Construction", m_module.get());
-
-    optimizeNgDialect();
-}
-
-void MLIRCompiler::optimizeNgDialect()
-{
-    mlir::PassManager pm(&m_context);
-    if (clEnableNgKernelLibFusion)
-    {
-        pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
-    }
-
-    // Apply any generic pass manager command line options.
-    mlir::applyPassManagerCLOptions(pm);
-
-    if (failed(pm.run(m_module.get())))
-    {
-        NGRAPH_CHECK(false, "MLIR pass manager failed");
-    }
-
-    if (failed(m_module->verify()))
-    {
-        NGRAPH_CHECK(false, "Invalid module after NG dialect optimization");
-    }
-
-    dumpMlirModule("nGraph Dialect optimization", m_module.get());
+  dumpMlirModule("nGraph Dialect optimization", m_module.get());
 }
