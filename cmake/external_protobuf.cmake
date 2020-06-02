@@ -64,21 +64,39 @@ if(NOT ext_protobuf_POPULATED)
     FetchContent_Populate(ext_protobuf)
 endif()
 
+include(ProcessorCount)
+ProcessorCount(N)
+if(N EQUAL 0)
+    set(N 8)
+endif()
+
 # Two ways for building protobuf
 # 1. CMake ( WIN32 or cross compiling )
 # 2. autogen.sh -> configure -> make
 if(WIN32 OR (NOT WIN32 AND NOT APPLE AND (PROTOC_VERSION VERSION_GREATER "3.0") AND CMAKE_CROSSCOMPILING))
-    set(protobuf_MSVC_STATIC_RUNTIME OFF)
-    set(protobuf_WITH_ZLIB OFF)
-    set(protobuf_BUILD_TESTS OFF)
-    add_subdirectory(${ext_protobuf_SOURCE_DIR}/cmake ${ext_protobuf_BINARY_DIR})
-else()
-    if ("${CMAKE_GENERATOR}" STREQUAL "Ninja")
-        set(MAKE_UTIL make)
+    set(PROTOBUF_CMAKE_ARGS
+        ${NGRAPH_FORWARD_CMAKE_ARGS}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
+        -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+        -Dprotobuf_WITH_ZLIB=OFF
+        -Dprotobuf_BUILD_TESTS=OFF
+        -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/protobuf)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+        -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+        -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+        -DCMAKE_ARGS ${PROTOBUF_CMAKE_ARGS}
+        "${ext_protobuf_SOURCE_DIR}/cmake"
+        WORKING_DIRECTORY "${ext_protobuf_BINARY_DIR}")
+    if("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles")
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
+            WORKING_DIRECTORY "${ext_protobuf_BINARY_DIR}")
     else()
-        set(MAKE_UTIL $(MAKE))
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${ext_protobuf_BINARY_DIR}")
     endif()
-
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${EXTERNAL_PROJECTS_ROOT}/protobuf)
+else()
     if ((NOT APPLE) AND DEFINED NGRAPH_USE_CXX_ABI)
         set(BUILD_FLAGS "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
     else()
@@ -86,17 +104,10 @@ else()
     endif()
     execute_process(COMMAND ./autogen.sh WORKING_DIRECTORY ${ext_protobuf_SOURCE_DIR})
     execute_process(COMMAND ${ext_protobuf_SOURCE_DIR}/configure ${PROTOBUF_SYSTEM_PROTOC} ${PROTOBUF_SYSTEM_PROCESSOR} CXX=${CMAKE_CXX_COMPILER} --prefix=${ext_protobuf_BINARY_DIR} --disable-shared WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
-    if ("${CMAKE_GENERATOR}" STREQUAL "Ninja")
-        include(ProcessorCount)
-        ProcessorCount(N)
-        execute_process(COMMAND ${MAKE_UTIL} -j${N} "${BUILD_FLAGS}" install WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
-    else()
-        execute_process(COMMAND ${MAKE_UTIL} "${BUILD_FLAGS}" install WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
-    endif()
+    execute_process(COMMAND make -j${N} "${BUILD_FLAGS}" install WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${ext_protobuf_BINARY_DIR})
-    find_package(Protobuf ${PROTOC_VERSION} REQUIRED)
-    if (NOT Protobuf_FOUND)
-        message(FATAL_ERROR "Protobuf is needed but was not found")
-    endif()
 endif()
-
+find_package(Protobuf ${PROTOC_VERSION} REQUIRED)
+if (NOT Protobuf_FOUND)
+    message(FATAL_ERROR "Protobuf is needed but was not found")
+endif()
