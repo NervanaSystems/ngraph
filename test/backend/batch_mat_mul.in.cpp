@@ -33,6 +33,7 @@
 #include "ngraph/check.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/pass/batch_fusion.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
@@ -40,6 +41,7 @@
 #include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 
 using namespace std;
 using namespace ngraph;

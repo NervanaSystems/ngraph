@@ -220,4 +220,3 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd)
 
     test_case.run();
 }
-
