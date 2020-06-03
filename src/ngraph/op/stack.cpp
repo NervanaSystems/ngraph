@@ -19,7 +19,7 @@
 #include "matmul.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/fused/stack.hpp"
+#include "ngraph/op/stack.hpp"
 #include "ngraph/op/reshape.hpp"
 
 using namespace std;

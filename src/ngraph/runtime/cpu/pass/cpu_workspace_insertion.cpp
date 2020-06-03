@@ -31,7 +31,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/multiply.hpp"

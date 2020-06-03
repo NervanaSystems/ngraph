@@ -20,7 +20,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/space_to_batch.hpp"
+#include "ngraph/op/space_to_batch.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/shape.hpp"
 

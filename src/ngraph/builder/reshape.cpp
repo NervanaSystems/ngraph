@@ -24,7 +24,7 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/squeeze.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reshape.hpp"

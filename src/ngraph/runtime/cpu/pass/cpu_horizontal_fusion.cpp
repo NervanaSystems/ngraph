@@ -20,7 +20,7 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"

@@ -38,6 +38,10 @@ set (SRC
     builder/norm.hpp
     builder/numpy_transpose.cpp
     builder/numpy_transpose.hpp
+    builder/quantization_utils.cpp
+    builder/quantization_utils.hpp
+    builder/quantization/quantized_linear_convolution.cpp
+    builder/quantization/quantized_linear_convolution.hpp
     builder/quantize_builder.cpp
     builder/quantize_builder.hpp
     builder/quantized_concat_builder.cpp
@@ -46,10 +50,6 @@ set (SRC
     builder/quantized_conv_builder.hpp
     builder/quantized_dot_builder.cpp
     builder/quantized_dot_builder.hpp
-    builder/quantization/quantized_linear_convolution.cpp
-    builder/quantization/quantized_linear_convolution.hpp
-    builder/quantization_utils.hpp
-    builder/quantization_utils.cpp
     builder/reduce_ops.cpp
     builder/reduce_ops.hpp
     builder/reshape.cpp
@@ -61,11 +61,11 @@ set (SRC
     chrome_trace.cpp
     chrome_trace.hpp
     code_writer.hpp
-    coordinate.cpp
-    coordinate.hpp
     coordinate_diff.cpp
     coordinate_diff.hpp
     coordinate_transform.cpp
+    coordinate.cpp
+    coordinate.hpp
     cpio.cpp
     cpio.hpp
     deprecated.hpp
@@ -81,18 +81,18 @@ set (SRC
     descriptor/tensor.hpp
     dimension.cpp
     dimension.hpp
-    distributed/null.cpp
-    distributed/null.hpp
     distributed.cpp
     distributed.hpp
+    distributed/null.cpp
+    distributed/null.hpp
     enum_names.hpp
     env_util.cpp
     env_util.hpp
     evaluator.hpp
     except.hpp
+    factory_adapter.hpp
     factory.cpp
     factory.hpp
-    factory_adapter.hpp
     file_util.cpp
     file_util.hpp
     function.cpp
@@ -104,9 +104,9 @@ set (SRC
     lambda.hpp
     log.cpp
     log.hpp
+    ngraph_visibility.hpp
     ngraph.cpp
     ngraph.hpp
-    ngraph_visibility.hpp
     node_input.cpp
     node_input.hpp
     node_output.cpp
@@ -139,46 +139,58 @@ set (SRC
     op/asinh.hpp
     op/atan.cpp
     op/atan.hpp
-    op/atanh.cpp
-    op/atanh.hpp
     op/atan2.cpp
     op/atan2.hpp
+    op/atanh.cpp
+    op/atanh.hpp
     op/avg_pool.cpp
     op/avg_pool.hpp
+    op/batch_mat_mul_transpose.cpp
+    op/batch_mat_mul_transpose.hpp
     op/batch_norm.cpp
     op/batch_norm.hpp
+    op/batch_to_space.cpp
+    op/batch_to_space.hpp
     op/binary_convolution.cpp
     op/binary_convolution.hpp
-    op/broadcast.cpp
     op/broadcast_distributed.cpp
+    op/broadcast.cpp
     op/bucketize.cpp
     op/bucketize.hpp
     op/ceiling.cpp
     op/ceiling.hpp
+    op/clamp.cpp
+    op/clamp.hpp
     op/concat.cpp
     op/concat.hpp
     op/constant.cpp
     op/constant.hpp
-    op/convert.cpp
-    op/convert.hpp
+    op/conv_fused.cpp
+    op/conv_fused.hpp
     op/convert_like.cpp
     op/convert_like.hpp
+    op/convert.cpp
+    op/convert.hpp
     op/convolution.cpp
     op/convolution.hpp
     op/cos.cpp
     op/cos.hpp
     op/cosh.cpp
     op/cosh.hpp
+    op/crop_and_resize.cpp
+    op/crop_and_resize.hpp
+    op/crossentropy.cpp
+    op/crossentropy.hpp
     op/ctc_greedy_decoder.cpp
     op/ctc_greedy_decoder.hpp
     op/cum_sum.cpp
     op/cum_sum.hpp
-    op/crop_and_resize.cpp
-    op/crop_and_resize.hpp
     op/deformable_convolution.cpp
     op/deformable_convolution.hpp
     op/deformable_psroi_pooling.cpp
     op/deformable_psroi_pooling.hpp
+    op/depth_to_space.cpp
+    op/depth_to_space.hpp
     op/dequantize.cpp
     op/dequantize.hpp
     op/detection_output.cpp
@@ -187,14 +199,16 @@ set (SRC
     op/divide.hpp
     op/dot.cpp
     op/dot.hpp
-    op/embeddingbag_offsets_sum.cpp
-    op/embeddingbag_offsets_sum.hpp
+    op/elu.cpp
+    op/elu.hpp
     op/embedding_lookup.cpp
     op/embedding_lookup.hpp
-    op/embeddingbag_packedsum.cpp
-    op/embeddingbag_packedsum.hpp
     op/embedding_segments_sum.cpp
     op/embedding_segments_sum.hpp
+    op/embeddingbag_offsets_sum.cpp
+    op/embeddingbag_offsets_sum.hpp
+    op/embeddingbag_packedsum.cpp
+    op/embeddingbag_packedsum.hpp
     op/equal.cpp
     op/equal.hpp
     op/erf.cpp
@@ -203,6 +217,8 @@ set (SRC
     op/exp.hpp
     op/experimental/batch_mat_mul.cpp
     op/experimental/batch_mat_mul.hpp
+    op/experimental/compiled_kernel.cpp
+    op/experimental/compiled_kernel.hpp
     op/experimental/dyn_broadcast.cpp
     op/experimental/dyn_broadcast.hpp
     op/experimental/dyn_pad.cpp
@@ -213,83 +229,107 @@ set (SRC
     op/experimental/dyn_slice.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
-    op/experimental/quantized_conv_bias.cpp
-    op/experimental/quantized_conv_bias.hpp
-    op/experimental/quantized_conv_relu.cpp
-    op/experimental/quantized_conv_relu.hpp
-    op/experimental/range.hpp
-    op/experimental/shape_of.hpp
-    op/experimental/tile.hpp
-    op/experimental/quantized_dot_bias.cpp
-    op/experimental/quantized_dot_bias.hpp
-    op/experimental/compiled_kernel.cpp
-    op/experimental/compiled_kernel.hpp
     op/experimental/layers/ctc_greedy_decoder.hpp
     op/experimental/layers/detection_output.hpp
     op/experimental/layers/interpolate.hpp
-    op/experimental/layers/prior_box.hpp
     op/experimental/layers/prior_box_clustered.hpp
+    op/experimental/layers/prior_box.hpp
     op/experimental/layers/proposal.hpp
     op/experimental/layers/psroi_pooling.hpp
     op/experimental/layers/region_yolo.hpp
     op/experimental/layers/reorg_yolo.hpp
     op/experimental/layers/roi_pooling.hpp
-    op/experimental/random_uniform.hpp
+    op/experimental/quantized_conv_bias.cpp
+    op/experimental/quantized_conv_bias.hpp
+    op/experimental/quantized_conv_relu.cpp
+    op/experimental/quantized_conv_relu.hpp
+    op/experimental/quantized_dot_bias.cpp
+    op/experimental/quantized_dot_bias.hpp
     op/experimental/random_uniform.cpp
+    op/experimental/random_uniform.hpp
+    op/experimental/range.hpp
+    op/experimental/shape_of.hpp
+    op/experimental/tile.hpp
     op/experimental/transpose.hpp
     op/extractimagepatches.cpp
     op/extractimagepatches.hpp
-    op/strided_slice.hpp
-    op/floor.cpp
-    op/floor.hpp
+    op/fake_quantize.cpp
+    op/fake_quantize.hpp
     op/floor_mod.cpp
     op/floor_mod.hpp
-    op/gather.cpp
-    op/gather.hpp
+    op/floor.cpp
+    op/floor.hpp
     op/gather_nd.cpp
     op/gather_nd.hpp
     op/gather_tree.cpp
     op/gather_tree.hpp
+    op/gather.cpp
+    op/gather.hpp
+    op/gelu.cpp
+    op/gelu.hpp
+    op/gemm.cpp
+    op/gemm.hpp
     op/get_output_element.cpp
     op/get_output_element.hpp
-    op/greater.cpp
-    op/greater.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
-    op/group_conv.hpp
+    op/greater.cpp
+    op/greater.hpp
+    op/grn.cpp
+    op/grn.hpp
     op/group_conv.cpp
+    op/group_conv.hpp
+    op/group_conv.hpp
+    op/gru_cell.cpp
+    op/gru_cell.hpp
+    op/hard_sigmoid.cpp
+    op/hard_sigmoid.hpp
     op/interpolate.cpp
     op/interpolate.hpp
-    op/less.cpp
-    op/less.hpp
+    op/layer_norm.cpp
+    op/layer_norm.hpp
     op/less_eq.cpp
     op/less_eq.hpp
+    op/less.cpp
+    op/less.hpp
     op/log.cpp
     op/log.hpp
     op/lrn.cpp
     op/lrn.hpp
-    op/max.cpp
-    op/max.hpp
+    op/lstm_cell.cpp
+    op/lstm_cell.hpp
+    op/lstm_sequence.cpp
+    op/lstm_sequence.hpp
+    op/matmul.cpp
+    op/matmul.hpp
     op/max_pool.cpp
     op/max_pool.hpp
+    op/max.cpp
+    op/max.hpp
     op/maximum.cpp
     op/maximum.hpp
     op/min.cpp
     op/min.hpp
     op/minimum.cpp
     op/minimum.hpp
+    op/mod.cpp
+    op/mod.hpp
     op/multiply.cpp
     op/multiply.hpp
+    op/mvn.cpp
+    op/mvn.hpp
     op/negative.cpp
     op/negative.hpp
     op/non_max_suppression.cpp
     op/non_max_suppression.hpp
     op/non_zero.cpp
     op/non_zero.hpp
-    op/not.cpp
-    op/not.hpp
+    op/normalize_l2.cpp
+    op/normalize_l2.hpp
     op/not_equal.cpp
     op/not_equal.hpp
+    op/not.cpp
+    op/not.hpp
     op/one_hot.cpp
     op/one_hot.hpp
     op/op.cpp
@@ -300,40 +340,24 @@ set (SRC
     op/pad.hpp
     op/parameter.cpp
     op/parameter.hpp
+    op/partial_slice.cpp
+    op/partial_slice.hpp
     op/passthrough.cpp
     op/passthrough.hpp
     op/power.cpp
     op/power.hpp
-    op/prior_box.cpp
-    op/prior_box.hpp
+    op/prelu.cpp
+    op/prelu.hpp
     op/prior_box_clustered.cpp
     op/prior_box_clustered.hpp
+    op/prior_box.cpp
+    op/prior_box.hpp
     op/product.cpp
     op/product.hpp
-    op/proposal.hpp
     op/proposal.cpp
-    op/psroi_pooling.hpp
+    op/proposal.hpp
     op/psroi_pooling.cpp
-    op/reduce_logical_and.cpp
-    op/reduce_logical_and.hpp
-    op/reduce_logical_or.cpp
-    op/reduce_logical_or.hpp
-    op/reduce_prod.cpp
-    op/reduce_prod.hpp
-    op/reduce_mean.cpp
-    op/reduce_mean.hpp
-    op/reduce_sum.cpp
-    op/reduce_sum.hpp
-    op/region_yolo.hpp
-    op/region_yolo.cpp
-    op/reorg_yolo.hpp
-    op/reorg_yolo.cpp
-    op/roi_align.hpp
-    op/roi_align.cpp
-    op/roi_pooling.hpp
-    op/roi_pooling.cpp
-    op/round.cpp
-    op/round.hpp
+    op/psroi_pooling.hpp
     op/quantize.cpp
     op/quantize.hpp
     op/quantized_convolution.cpp
@@ -344,18 +368,42 @@ set (SRC
     op/range.hpp
     op/recv.cpp
     op/recv.hpp
+    op/reduce_logical_and.cpp
+    op/reduce_logical_and.hpp
+    op/reduce_logical_or.cpp
+    op/reduce_logical_or.hpp
+    op/reduce_mean.cpp
+    op/reduce_mean.hpp
+    op/reduce_prod.cpp
+    op/reduce_prod.hpp
+    op/reduce_sum.cpp
+    op/reduce_sum.hpp
+    op/region_yolo.cpp
+    op/region_yolo.hpp
     op/relu.cpp
     op/relu.hpp
+    op/reorg_yolo.cpp
+    op/reorg_yolo.hpp
     op/replace_slice.cpp
     op/replace_slice.hpp
     op/reshape.cpp
     op/reshape.hpp
     op/result.cpp
     op/result.hpp
-    op/reverse.cpp
-    op/reverse.hpp
     op/reverse_sequence.cpp
     op/reverse_sequence.hpp
+    op/reverse.cpp
+    op/reverse.hpp
+    op/rnn_cell.cpp
+    op/rnn_cell.hpp
+    op/roi_align.cpp
+    op/roi_align.hpp
+    op/roi_pooling.cpp
+    op/roi_pooling.hpp
+    op/round.cpp
+    op/round.hpp
+    op/scale_shift.cpp
+    op/scale_shift.hpp
     op/scatter_add.cpp
     op/scatter_add.hpp
     op/scatter_elements_update.cpp
@@ -364,14 +412,20 @@ set (SRC
     op/scatter_nd_add.hpp
     op/scatter_nd_update.cpp
     op/scatter_nd_update.hpp
+    op/scatter_nd.cpp
+    op/scatter_nd.hpp
     op/scatter_update.cpp
     op/scatter_update.hpp
     op/select.cpp
     op/select.hpp
+    op/selu.cpp
+    op/selu.hpp
     op/send.cpp
     op/send.hpp
     op/shape_of.cpp
     op/shape_of.hpp
+    op/shuffle_channels.cpp
+    op/shuffle_channels.hpp
     op/sigmoid.cpp
     op/sigmoid.hpp
     op/sign.cpp
@@ -382,22 +436,34 @@ set (SRC
     op/sinh.hpp
     op/slice.cpp
     op/slice.hpp
+    op/softmax_crossentropy.cpp
+    op/softmax_crossentropy.hpp
     op/softmax.cpp
     op/softmax.hpp
+    op/space_to_batch.cpp
+    op/space_to_batch.hpp
+    op/space_to_depth.cpp
+    op/space_to_depth.hpp
     op/split.cpp
     op/split.hpp
-    op/strided_slice.cpp
-    op/strided_slice.hpp
+    op/split.hpp
     op/sqrt.cpp
     op/sqrt.hpp
+    op/squared_difference.cpp
+    op/squared_difference.hpp
+    op/squeeze.cpp
+    op/squeeze.hpp
+    op/stack.cpp
+    op/stack.hpp
     op/stop_gradient.cpp
     op/stop_gradient.hpp
+    op/strided_slice.cpp
+    op/strided_slice.hpp
+    op/strided_slice.hpp
     op/subtract.cpp
     op/subtract.hpp
     op/sum.cpp
     op/sum.hpp
-    op/variadic_split.cpp
-    op/variadic_split.hpp
     op/tan.cpp
     op/tan.hpp
     op/tanh.cpp
@@ -410,86 +476,16 @@ set (SRC
     op/topk.hpp
     op/transpose.cpp
     op/transpose.hpp
-    op/xor.cpp
-    op/xor.hpp
-    op/fused/batch_mat_mul_transpose.cpp
-    op/fused/batch_mat_mul_transpose.hpp
-    op/fused/batch_to_space.cpp
-    op/fused/batch_to_space.hpp
-    op/fused/clamp.cpp
-    op/fused/clamp.hpp
-    op/fused/conv_fused.cpp
-    op/fused/conv_fused.hpp
-    op/fused/crossentropy.cpp
-    op/fused/crossentropy.hpp
-    op/fused/hard_sigmoid.cpp
-    op/fused/hard_sigmoid.hpp
-    op/fused/depth_to_space.cpp
-    op/fused/depth_to_space.hpp
-    op/fused/elu.cpp
-    op/fused/elu.hpp
-    op/fused/fake_quantize.cpp
-    op/fused/fake_quantize.hpp
-    op/fused/gelu.cpp
-    op/fused/gelu.hpp
-    op/fused/gemm.cpp
-    op/fused/gemm.hpp
-    op/fused/grn.cpp
-    op/fused/grn.hpp
-    op/fused/group_conv.hpp
-    op/fused/gru_cell.cpp
-    op/fused/gru_cell.hpp
-    op/fused/layer_norm.cpp
-    op/fused/layer_norm.hpp
-    op/fused/lstm_cell.cpp
-    op/fused/lstm_cell.hpp
-    op/fused/lstm_sequence.cpp
-    op/fused/lstm_sequence.hpp
-    op/fused/matmul.cpp
-    op/fused/matmul.hpp
-    op/fused/mod.cpp
-    op/fused/mod.hpp
-    op/fused/mvn.cpp
-    op/fused/mvn.hpp
-    op/fused/normalize_l2.cpp
-    op/fused/normalize_l2.hpp
-    op/fused/partial_slice.cpp
-    op/fused/partial_slice.hpp
-    op/fused/prelu.cpp
-    op/fused/prelu.hpp
-    op/fused/rnn_cell.cpp
-    op/fused/rnn_cell.hpp
-    op/fused/scale_shift.cpp
-    op/fused/scale_shift.hpp
-    op/fused/scatter_nd.cpp
-    op/fused/scatter_nd.hpp
-    op/fused/stack.cpp
-    op/fused/stack.hpp
-    op/fused/selu.cpp
-    op/fused/selu.hpp
-    op/fused/shuffle_channels.cpp
-    op/fused/shuffle_channels.hpp
-    op/fused/softmax_crossentropy.cpp
-    op/fused/softmax_crossentropy.hpp
-    op/fused/space_to_batch.cpp
-    op/fused/space_to_batch.hpp
-    op/fused/space_to_depth.cpp
-    op/fused/space_to_depth.hpp
-    op/fused/split.hpp
-    op/fused/squared_difference.cpp
-    op/fused/squared_difference.hpp
-    op/fused/squeeze.cpp
-    op/fused/squeeze.hpp
-    op/fused/unsqueeze.cpp
-    op/fused/unsqueeze.hpp
-    op/util/attr_types.cpp
-    op/util/attr_types.hpp
+    op/unsqueeze.cpp
+    op/unsqueeze.hpp
     op/util/activation_functions.cpp
     op/util/activation_functions.hpp
     op/util/arithmetic_reduction.cpp
     op/util/arithmetic_reduction.hpp
-    op/util/arithmetic_reductions_keep_dims.hpp
     op/util/arithmetic_reductions_keep_dims.cpp
+    op/util/arithmetic_reductions_keep_dims.hpp
+    op/util/attr_types.cpp
+    op/util/attr_types.hpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp
@@ -498,26 +494,30 @@ set (SRC
     op/util/binary_elementwise_logical.hpp
     op/util/broadcast_base.cpp
     op/util/broadcast_base.hpp
-    op/util/embeddingbag_packed_base.cpp
-    op/util/embeddingbag_packed_base.hpp
     op/util/embeddingbag_offsets_base.cpp
     op/util/embeddingbag_offsets_base.hpp
+    op/util/embeddingbag_packed_base.cpp
+    op/util/embeddingbag_packed_base.hpp
     op/util/fused_op.cpp
     op/util/fused_op.hpp
     op/util/index_reduction.cpp
     op/util/index_reduction.hpp
-    op/util/logical_reduction_keep_dims.hpp
     op/util/logical_reduction_keep_dims.cpp
+    op/util/logical_reduction_keep_dims.hpp
     op/util/logical_reduction.cpp
     op/util/logical_reduction.hpp
     op/util/rnn_cell_base.cpp
     op/util/rnn_cell_base.hpp
-    op/util/scatter_nd_base.cpp
-    op/util/scatter_nd_base.hpp
     op/util/scatter_base.cpp
     op/util/scatter_base.hpp
+    op/util/scatter_nd_base.cpp
+    op/util/scatter_nd_base.hpp
     op/util/unary_elementwise_arithmetic.cpp
     op/util/unary_elementwise_arithmetic.hpp
+    op/variadic_split.cpp
+    op/variadic_split.hpp
+    op/xor.cpp
+    op/xor.hpp
     ops.hpp
     opsets/opset.cpp
     partial_shape.cpp
@@ -525,12 +525,12 @@ set (SRC
     pass/algebraic_simplification.cpp
     pass/algebraic_simplification.hpp
     pass/assign_layout.hpp
-    pass/implicit_broadcast_elimination.hpp
-    pass/implicit_broadcast_elimination.cpp
-    pass/batch_fusion.hpp
     pass/batch_fusion.cpp
+    pass/batch_fusion.hpp
     pass/common_function_collection.cpp
     pass/common_function_collection.hpp
+    pass/concat_fusion.cpp
+    pass/concat_fusion.hpp
     pass/constant_folding_arithmetic_reduction.cpp
     pass/constant_folding_convert.cpp
     pass/constant_folding_dequantize.cpp
@@ -538,23 +538,23 @@ set (SRC
     pass/constant_folding_dyn_reshape.cpp
     pass/constant_folding_dyn_slice.cpp
     pass/constant_folding_gather.cpp
-    pass/constant_folding_scatter.cpp
     pass/constant_folding_logical_reduction.cpp
     pass/constant_folding_one_hot.cpp
     pass/constant_folding_pad.cpp
     pass/constant_folding_quantize.cpp
     pass/constant_folding_reverse.cpp
+    pass/constant_folding_scatter.cpp
     pass/constant_folding_select.cpp
     pass/constant_folding_slice.cpp
     pass/constant_folding_split.cpp
-    pass/constant_folding_variadic_split.cpp
     pass/constant_folding_tile.cpp
     pass/constant_folding_transpose.cpp
+    pass/constant_folding_variadic_split.cpp
     pass/constant_folding.cpp
     pass/constant_folding.hpp
     pass/constant_to_broadcast.cpp
-    pass/convert_fp32_to_fp16.hpp
     pass/convert_fp32_to_fp16.cpp
+    pass/convert_fp32_to_fp16.hpp
     pass/core_fusion.cpp
     pass/core_fusion.hpp
     pass/cse.cpp
@@ -569,21 +569,21 @@ set (SRC
     pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
     pass/graph_rewrite.hpp
+    pass/implicit_broadcast_elimination.cpp
+    pass/implicit_broadcast_elimination.hpp
     pass/like_replacement.cpp
     pass/like_replacement.hpp
     pass/liveness.cpp
     pass/liveness.hpp
+    pass/manager_state.hpp
     pass/manager.cpp
     pass/manager.hpp
-    pass/manager_state.hpp
     pass/memory_layout.cpp
     pass/memory_layout.hpp
     pass/memory_visualize.cpp
     pass/memory_visualize.hpp
     pass/nop_elimination.cpp
     pass/nop_elimination.hpp
-    pass/pass.cpp
-    pass/pass.hpp
     pass/opset0_downgrade.cpp
     pass/opset0_downgrade.hpp
     pass/opset1_downgrade.cpp
@@ -592,12 +592,16 @@ set (SRC
     pass/opset1_upgrade.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
+    pass/pass_util.cpp
+    pass/pass_util.hpp
+    pass/pass.cpp
+    pass/pass.hpp
     pass/propagate_cacheability.cpp
     pass/propagate_cacheability.hpp
-    pass/reshape_elimination.cpp
-    pass/reshape_elimination.hpp
     pass/reshape_elimination_v1.cpp
     pass/reshape_elimination_v1.hpp
+    pass/reshape_elimination.cpp
+    pass/reshape_elimination.hpp
     pass/reshape_sinking.cpp
     pass/reshape_sinking.hpp
     pass/serialize.cpp
@@ -614,18 +618,14 @@ set (SRC
     pass/zero_dim_tensor_elimination.cpp
     pass/zero_dim_tensor_elimination.hpp
     pass/zero_dim_tensor_elimination.hpp
-    pass/concat_fusion.hpp
-    pass/concat_fusion.cpp
-    pass/pass_util.hpp
-    pass/pass_util.cpp
     pattern/matcher.cpp
     pattern/matcher.hpp
-    pattern/op/any.cpp
-    pattern/op/any.hpp
-    pattern/op/any_output.cpp
-    pattern/op/any_output.hpp
     pattern/op/any_of.cpp
     pattern/op/any_of.hpp
+    pattern/op/any_output.cpp
+    pattern/op/any_output.hpp
+    pattern/op/any.cpp
+    pattern/op/any.hpp
     pattern/op/branch.cpp
     pattern/op/branch.hpp
     pattern/op/capture.cpp
@@ -651,10 +651,10 @@ set (SRC
     runtime/aligned_buffer.hpp
     runtime/allocator.cpp
     runtime/allocator.hpp
-    runtime/backend.cpp
-    runtime/backend.hpp
     runtime/backend_manager.cpp
     runtime/backend_manager.hpp
+    runtime/backend.cpp
+    runtime/backend.hpp
     runtime/executable_cache.cpp
     runtime/executable_cache.hpp
     runtime/executable.cpp
@@ -664,10 +664,10 @@ set (SRC
     runtime/performance_counter.hpp
     runtime/tensor.cpp
     runtime/tensor.hpp
-    shape.cpp
-    shape.hpp
     shape_util.cpp
     shape_util.hpp
+    shape.cpp
+    shape.hpp
     slice_plan.cpp
     slice_plan.hpp
     specialize_function.cpp
@@ -678,21 +678,21 @@ set (SRC
     state/uniform_rng_state.hpp
     strides.cpp
     strides.hpp
-    type/bfloat16.cpp
-    type/bfloat16.hpp
-    type/float16.cpp
-    type/float16.hpp
-    type/element_type.cpp
-    type/element_type_traits.hpp
     type.cpp
     type.hpp
+    type/bfloat16.cpp
+    type/bfloat16.hpp
+    type/element_type_traits.hpp
+    type/element_type.cpp
+    type/float16.cpp
+    type/float16.hpp
     util.cpp
     util.hpp
     validation_util.cpp
     validation_util.hpp
     variant.cpp
     variant.hpp
-    )
+)
 
 set(SRC ${SRC}
     runtime/dynamic/dynamic_backend.cpp

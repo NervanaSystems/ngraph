@@ -25,7 +25,7 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"

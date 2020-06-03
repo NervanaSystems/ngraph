@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/fused/squared_difference.hpp"
+#include "ngraph/op/squared_difference.hpp"
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/multiply.hpp"
