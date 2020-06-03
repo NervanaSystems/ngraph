@@ -1135,10 +1135,23 @@ REWRITER(NGReluOp) {
   NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
   Type elemTy = lhs.getType().dyn_cast<MemRefType>().getElementType();
 
+  auto origOperand = op->getOperands()[0];
+  auto origIntType = origOperand.getType()
+                         .cast<NGTensorType>()
+                         .getElementType()
+                         .dyn_cast<IntegerType>();
+
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
     Value val = iLHS(ivs);
     Value zero = createZeroConstant(elemTy);
-    iRes(ivs) = std_select(val > zero, val, zero);
+    if (origIntType && origIntType.isUnsigned()) {
+      iRes(ivs) =
+          std_select(rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                             CmpIPredicate::ugt, val, zero),
+                     val, zero);
+    } else {
+      iRes(ivs) = std_select(val > zero, val, zero);
+    }
   });
 
   rewriter.replaceOp(op, {result});
@@ -2341,6 +2354,13 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
   auto steps = vLHS.getSteps();
   // element type of the operand
   Type elemTy = result.getType().cast<MemRefType>().getElementType();
+
+  auto origOperand = op->getOperands()[0];
+  auto origIntType = origOperand.getType()
+                         .cast<NGTensorType>()
+                         .getElementType()
+                         .dyn_cast<IntegerType>();
+
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)(
       // single stmt body
       [&] {
@@ -2359,21 +2379,61 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
         // instead of std_select once `zero_extendi` is
         // made available in the edsc::intrinsics namescope in MLIR repo.
         else if (isa<NGGreaterOp>(op)) {
-          iRes(ivs) =
-              std_select(Value(iLHS(ivs)) > Value(iRHS(ivs)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto left = Value(iLHS(ivs));
+          auto right = Value(iRHS(ivs));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+
+          if (origIntType && origIntType.isUnsigned()) {
+            iRes(ivs) = std_select(
+                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                        CmpIPredicate::ugt, left, right),
+                ones, zeros);
+          } else {
+            iRes(ivs) = std_select(left > right, ones, zeros);
+          }
         } else if (isa<NGLessOp>(op)) {
-          iRes(ivs) =
-              std_select(Value(iLHS(ivs)) < Value(iRHS(ivs)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto left = Value(iLHS(ivs));
+          auto right = Value(iRHS(ivs));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+
+          if (origIntType && origIntType.isUnsigned()) {
+            iRes(ivs) = std_select(
+                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                        CmpIPredicate::ult, left, right),
+                ones, zeros);
+          } else {
+            iRes(ivs) = std_select(left < right, ones, zeros);
+          }
         } else if (isa<NGGreaterEqOp>(op)) {
-          iRes(ivs) =
-              std_select(Value(iLHS(ivs)) >= Value(iRHS(ivs)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto left = Value(iLHS(ivs));
+          auto right = Value(iRHS(ivs));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+
+          if (origIntType && origIntType.isUnsigned()) {
+            iRes(ivs) = std_select(
+                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                        CmpIPredicate::uge, left, right),
+                ones, zeros);
+          } else {
+            iRes(ivs) = std_select(left >= right, ones, zeros);
+          }
         } else if (isa<NGLessEqOp>(op)) {
-          iRes(ivs) =
-              std_select(Value(iLHS(ivs)) <= Value(iRHS(ivs)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto left = Value(iLHS(ivs));
+          auto right = Value(iRHS(ivs));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+
+          if (origIntType && origIntType.isUnsigned()) {
+            iRes(ivs) = std_select(
+                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                        CmpIPredicate::ule, left, right),
+                ones, zeros);
+          } else {
+            iRes(ivs) = std_select(left <= right, ones, zeros);
+          }
         } else if (isa<NGEqOp>(op)) {
           iRes(ivs) =
               std_select(eq(Value(iLHS(ivs)), Value(iRHS(ivs))),
@@ -2383,11 +2443,27 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
               std_select(ne(Value(iLHS(ivs)), Value(iRHS(ivs))),
                          createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGMaxOp>(op)) {
-          iRes(ivs) = std_select(Value(iLHS(ivs)) > Value(iRHS(ivs)),
-                                 Value(iLHS(ivs)), Value(iRHS(ivs)));
+          auto left = Value(iLHS(ivs));
+          auto right = Value(iRHS(ivs));
+          if (origIntType && origIntType.isUnsigned()) {
+            iRes(ivs) = std_select(
+                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                        CmpIPredicate::ugt, left, right),
+                left, right);
+          } else {
+            iRes(ivs) = std_select(left > right, left, right);
+          }
         } else if (isa<NGMinOp>(op)) {
-          iRes(ivs) = std_select(Value(iLHS(ivs)) < Value(iRHS(ivs)),
-                                 Value(iLHS(ivs)), Value(iRHS(ivs)));
+          auto left = Value(iLHS(ivs));
+          auto right = Value(iRHS(ivs));
+          if (origIntType && origIntType.isUnsigned()) {
+            iRes(ivs) = std_select(
+                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
+                                        CmpIPredicate::ult, left, right),
+                left, right);
+          } else {
+            iRes(ivs) = std_select(left < right, left, right);
+          }
         } else {
           NGRAPH_CHECK(false, "Unsupported op");
         }

@@ -1642,11 +1642,8 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint8)
     auto dshape = PartialShape::dynamic();
 
     auto min = numeric_limits<ctype>::min();
-    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
-    // auto max = numeric_limits<ctype>::max();
-    // auto pinf = numeric_limits<double>::infinity();
-    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
-    auto pinf = static_cast<double>(max);
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
     auto ninf = -numeric_limits<double>::infinity();
 
     vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
@@ -1713,11 +1710,8 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint16)
     auto dshape = PartialShape::dynamic();
 
     auto min = numeric_limits<ctype>::min();
-    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
-    // auto max = numeric_limits<ctype>::max();
-    // auto pinf = numeric_limits<double>::infinity();
-    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
-    auto pinf = static_cast<double>(max);
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
     auto ninf = -numeric_limits<double>::infinity();
 
     vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
@@ -1784,11 +1778,8 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint32)
     auto dshape = PartialShape::dynamic();
 
     auto min = numeric_limits<ctype>::min();
-    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
-    // auto max = numeric_limits<ctype>::max();
-    // auto pinf = numeric_limits<double>::infinity();
-    ctype max = (static_cast<ctype>(1) << (numeric_limits<ctype>::digits - 1)) - 1;
-    auto pinf = static_cast<double>(max);
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
     auto ninf = -numeric_limits<double>::infinity();
 
     vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
@@ -1855,11 +1846,8 @@ NGRAPH_TEST(${BACKEND_NAME}, fused_clamp_uint64)
     auto dshape = PartialShape::dynamic();
 
     auto min = numeric_limits<ctype>::min();
-    // TODO: Fix CPU DEX / MLIR correctness bug: using signed comparison for unsigned ints
-    // auto max = numeric_limits<ctype>::max();
-    // auto pinf = numeric_limits<double>::infinity();
-    ctype max = (static_cast<ctype>(1) << (32 - 1)) - 1;
-    auto pinf = static_cast<double>(max);
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
     auto ninf = -numeric_limits<double>::infinity();
 
     vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
