@@ -230,3 +230,129 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
     handle->call_with_validate({result}, {a, b});
     EXPECT_EQ((vector<char>{0, 0, 0, 0, 0, 0, 0, 0}), read_vector<char>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, less_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::Less>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{10});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, lesseq_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::Less>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{10});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, greater_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::Greater>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{10});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{1}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, greatereq_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::GreaterEq>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{10});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{1}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, equal_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::Equal>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{1}), read_vector<char>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, notequal_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::NotEqual>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto result = backend->create_tensor(element::boolean, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<char>{0}), read_vector<char>(result));
+}
