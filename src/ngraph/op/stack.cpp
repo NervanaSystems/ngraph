@@ -19,8 +19,8 @@
 #include "matmul.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/stack.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/op/stack.hpp"
 
 using namespace std;
 using namespace ngraph;
