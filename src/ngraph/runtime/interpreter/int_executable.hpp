@@ -69,6 +69,7 @@
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/runtime/reference/mod.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
@@ -1461,6 +1462,7 @@ protected:
         case OP_TYPEID::MaxPool:
         case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
+        case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:
