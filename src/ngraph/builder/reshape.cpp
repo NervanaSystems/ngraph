@@ -31,7 +31,7 @@
 #include "ngraph/op/shape_of.hpp"
 #include "ngraph/op/transpose.hpp"
 #include "ngraph/op/variadic_split.hpp"
-#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opset/opset1.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 

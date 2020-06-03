@@ -30,7 +30,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 

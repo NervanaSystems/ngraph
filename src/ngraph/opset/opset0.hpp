@@ -20,10 +20,10 @@
 
 namespace ngraph
 {
-    namespace opset1
+    namespace opset0
     {
 #define NGRAPH_OP(a, b) using b::a;
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opset/opset0_tbl.hpp"
 #undef NGRAPH_OP
     }
 }

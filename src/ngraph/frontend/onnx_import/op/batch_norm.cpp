@@ -21,7 +21,7 @@
 #include "core/null_node.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 
 namespace ngraph
 {
