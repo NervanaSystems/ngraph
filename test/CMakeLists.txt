@@ -316,19 +316,19 @@ add_subdirectory(util)
 set(MULTI_TEST_SRC
     backend/abc.in.cpp
     backend/abs.in.cpp
-    backend/acos.in.cpp
     backend/acosh.in.cpp
+    backend/acos.in.cpp
     backend/add.in.cpp
     backend/aliased_output.in.cpp
     backend/all.in.cpp
     backend/any.in.cpp
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
-    backend/asin.in.cpp
     backend/asinh.in.cpp
-    backend/atan.in.cpp
+    backend/asin.in.cpp
     backend/atan2.in.cpp
     backend/atanh.in.cpp
+    backend/atan.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -337,53 +337,66 @@ set(MULTI_TEST_SRC
     backend/builder_flatten.in.cpp
     backend/builder_reduce_ops_opset1.in.cpp
     backend/ceiling.in.cpp
+    backend/clamp.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
     backend/concat.in.cpp
     backend/constant.in.cpp
+    backend/conv_bias.in.cpp
     backend/convert.in.cpp
-    backend/convolution_reference.in.cpp
     backend/convolution.in.cpp
-    backend/cos.in.cpp
+    backend/convolution_reference.in.cpp
     backend/cosh.in.cpp
+    backend/cos.in.cpp
+    backend/cross_entropy.in.cpp
     backend/cum_sum.in.cpp
     backend/divide.in.cpp
     backend/dot.in.cpp
+    backend/dynamic.in.cpp
     backend/dyn_broadcast.in.cpp
     backend/dyn_replace_slice_reference.in.cpp
     backend/dyn_reshape.in.cpp
     backend/dyn_slice_reference.in.cpp
-    backend/strided_slice.in.cpp
-    backend/dynamic.in.cpp
+    backend/elu.in.cpp
     backend/embedding_lookup.in.cpp
     backend/erf.in.cpp
     backend/exp.in.cpp
+    backend/fake_quantize.in.cpp
     backend/floor.in.cpp
     backend/function_name.in.cpp
-    backend/fused_op.in.cpp
     backend/gather.in.cpp
     backend/gelu.in.cpp
+    backend/gemm.in.cpp
     backend/generate_mask.in.cpp
+    backend/graph_comparison.in.cpp
+    backend/grn.in.cpp
+    backend/group_conv.in.cpp
     backend/group_convolution.in.cpp
+    backend/gru_cell.in.cpp
+    backend/hard_sigmoid.in.cpp
     backend/layer_norm.in.cpp
-    backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
     backend/logical_xor.in.cpp
+    backend/log.in.cpp
     backend/lrn.in.cpp
+    backend/lstm_cell.in.cpp
     backend/matmul.in.cpp
-    backend/max.in.cpp
     backend/maximum.in.cpp
-    backend/min.in.cpp
+    backend/max.in.cpp
     backend/minimum.in.cpp
+    backend/min.in.cpp
+    backend/mlir.in.cpp
     backend/mod.in.cpp
     backend/multiple_backends.in.cpp
     backend/multiple_result.in.cpp
     backend/multiply.in.cpp
+    backend/mvn.in.cpp
     backend/negative.in.cpp
     backend/node_name.in.cpp
-    backend/not.in.cpp
     backend/non_zero.in.cpp
+    backend/normalize.in.cpp
+    backend/not.in.cpp
     backend/numeric.in.cpp
     backend/one_hot.in.cpp
     backend/pad.in.cpp
@@ -391,10 +404,11 @@ set(MULTI_TEST_SRC
     backend/partial_slice.in.cpp
     backend/pool.in.cpp
     backend/power.in.cpp
+    backend/prelu.in.cpp
     backend/product.in.cpp
-    backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
     backend/quantized_dot.in.cpp
+    backend/quantize_dequantize.in.cpp
     backend/random_uniform.in.cpp
     backend/range.in.cpp
     backend/reduce_max.in.cpp
@@ -405,27 +419,36 @@ set(MULTI_TEST_SRC
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
-    backend/reverse_sequence.in.cpp
     backend/reverse.in.cpp
+    backend/reverse_sequence.in.cpp
+    backend/rnn_cell.in.cpp
     backend/round.in.cpp
+    backend/scale.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp
+    backend/shuffle_channels.in.cpp
     backend/sigmoid.in.cpp
     backend/sign.in.cpp
-    backend/sin.in.cpp
     backend/sinh.in.cpp
+    backend/sin.in.cpp
     backend/slice.in.cpp
     backend/softmax.in.cpp
+    backend/split.in.cpp
     backend/sqrt.in.cpp
+    backend/squared_difference.in.cpp
+    backend/squeeze.in.cpp
+    backend/stack.in.cpp
+    backend/strided_slice.in.cpp
     backend/subtract.in.cpp
     backend/sum.in.cpp
-    backend/tan.in.cpp
     backend/tanh.in.cpp
+    backend/tan.in.cpp
     backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
+    backend/unsqueeze.cpp
     backend/validate_call.in.cpp
     backend/zero_sized.in.cpp
 )
