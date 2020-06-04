@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/clamp.hpp"
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/maximum.hpp"

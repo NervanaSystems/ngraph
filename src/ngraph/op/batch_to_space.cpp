@@ -21,7 +21,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/fused/batch_to_space.hpp"
+#include "ngraph/op/batch_to_space.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/shape.hpp"
 
