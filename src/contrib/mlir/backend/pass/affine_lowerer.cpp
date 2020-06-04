@@ -1107,6 +1107,19 @@ REWRITER(NGArgMinRedOp) {
   return success();
 }
 
+bool is_signed(Operation *op) {
+  auto intType = op->getOperands()[0]
+                     .getType()
+                     .cast<NGTensorType>()
+                     .getElementType()
+                     .dyn_cast<NGIntegerType>();
+  if (intType && intType.isUnsigned()) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
 // Relu
 REWRITER(NGReluOp) {
   auto loc = cast<NGReluOp>(op).getLoc();
@@ -1135,23 +1148,10 @@ REWRITER(NGReluOp) {
   NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
   Type elemTy = lhs.getType().dyn_cast<MemRefType>().getElementType();
 
-  auto origOperand = op->getOperands()[0];
-  auto origIntType = origOperand.getType()
-                         .cast<NGTensorType>()
-                         .getElementType()
-                         .dyn_cast<IntegerType>();
-
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
     Value val = iLHS(ivs);
     Value zero = createZeroConstant(elemTy);
-    if (origIntType && origIntType.isUnsigned()) {
-      iRes(ivs) =
-          std_select(rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                             CmpIPredicate::ugt, val, zero),
-                     val, zero);
-    } else {
-      iRes(ivs) = std_select(val > zero, val, zero);
-    }
+    iRes(ivs) = std_select(gt(val, zero, is_signed(op)), val, zero);
   });
 
   rewriter.replaceOp(op, {result});
@@ -2355,12 +2355,6 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
   // element type of the operand
   Type elemTy = result.getType().cast<MemRefType>().getElementType();
 
-  auto origOperand = op->getOperands()[0];
-  auto origIntType = origOperand.getType()
-                         .cast<NGTensorType>()
-                         .getElementType()
-                         .dyn_cast<IntegerType>();
-
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)(
       // single stmt body
       [&] {
@@ -2379,61 +2373,21 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
         // instead of std_select once `zero_extendi` is
         // made available in the edsc::intrinsics namescope in MLIR repo.
         else if (isa<NGGreaterOp>(op)) {
-          auto left = Value(iLHS(ivs));
-          auto right = Value(iRHS(ivs));
-          auto ones = createOneConstant(elemTy);
-          auto zeros = createZeroConstant(elemTy);
-
-          if (origIntType && origIntType.isUnsigned()) {
-            iRes(ivs) = std_select(
-                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                        CmpIPredicate::ugt, left, right),
-                ones, zeros);
-          } else {
-            iRes(ivs) = std_select(left > right, ones, zeros);
-          }
+          iRes(ivs) =
+              std_select(gt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
+                         createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGLessOp>(op)) {
-          auto left = Value(iLHS(ivs));
-          auto right = Value(iRHS(ivs));
-          auto ones = createOneConstant(elemTy);
-          auto zeros = createZeroConstant(elemTy);
-
-          if (origIntType && origIntType.isUnsigned()) {
-            iRes(ivs) = std_select(
-                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                        CmpIPredicate::ult, left, right),
-                ones, zeros);
-          } else {
-            iRes(ivs) = std_select(left < right, ones, zeros);
-          }
+          iRes(ivs) =
+              std_select(lt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
+                         createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGGreaterEqOp>(op)) {
-          auto left = Value(iLHS(ivs));
-          auto right = Value(iRHS(ivs));
-          auto ones = createOneConstant(elemTy);
-          auto zeros = createZeroConstant(elemTy);
-
-          if (origIntType && origIntType.isUnsigned()) {
-            iRes(ivs) = std_select(
-                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                        CmpIPredicate::uge, left, right),
-                ones, zeros);
-          } else {
-            iRes(ivs) = std_select(left >= right, ones, zeros);
-          }
+          iRes(ivs) =
+              std_select(ge(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
+                         createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGLessEqOp>(op)) {
-          auto left = Value(iLHS(ivs));
-          auto right = Value(iRHS(ivs));
-          auto ones = createOneConstant(elemTy);
-          auto zeros = createZeroConstant(elemTy);
-
-          if (origIntType && origIntType.isUnsigned()) {
-            iRes(ivs) = std_select(
-                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                        CmpIPredicate::ule, left, right),
-                ones, zeros);
-          } else {
-            iRes(ivs) = std_select(left <= right, ones, zeros);
-          }
+          iRes(ivs) =
+              std_select(le(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
+                         createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGEqOp>(op)) {
           iRes(ivs) =
               std_select(eq(Value(iLHS(ivs)), Value(iRHS(ivs))),
@@ -2445,25 +2399,11 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
         } else if (isa<NGMaxOp>(op)) {
           auto left = Value(iLHS(ivs));
           auto right = Value(iRHS(ivs));
-          if (origIntType && origIntType.isUnsigned()) {
-            iRes(ivs) = std_select(
-                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                        CmpIPredicate::ugt, left, right),
-                left, right);
-          } else {
-            iRes(ivs) = std_select(left > right, left, right);
-          }
+          iRes(ivs) = std_select(gt(left, right, is_signed(op)), left, right);
         } else if (isa<NGMinOp>(op)) {
           auto left = Value(iLHS(ivs));
           auto right = Value(iRHS(ivs));
-          if (origIntType && origIntType.isUnsigned()) {
-            iRes(ivs) = std_select(
-                rewriter.create<CmpIOp>(rewriter.getUnknownLoc(),
-                                        CmpIPredicate::ult, left, right),
-                left, right);
-          } else {
-            iRes(ivs) = std_select(left < right, left, right);
-          }
+          iRes(ivs) = std_select(lt(left, right, is_signed(op)), left, right);
         } else {
           NGRAPH_CHECK(false, "Unsupported op");
         }
@@ -2551,17 +2491,15 @@ void lowerIndexReduction(Operation *op, ArrayRef<Value> operands,
           tempIVs.push_back(currRedIdx);
         }
       }
-
-      // Select the min/max value and cast it back to integer type before
-      // storing it.
       Value newRedIdx = std::is_same<RedOp, NGArgMinRedOp>()
-                            ? std_select(affineArg(allIVs) < stdArg(tempIVs),
+                            ? std_select(lt(affineArg(allIVs), stdArg(tempIVs),
+                                            is_signed(op)),
                                          allIVs[axis], currRedIdx)
-                            : std_select(stdArg(tempIVs) < affineArg(allIVs),
+                            : std_select(lt(stdArg(tempIVs), affineArg(allIVs),
+                                            is_signed(op)),
                                          allIVs[axis], currRedIdx);
 
       iRes(nonRedIVs) = ValueBuilder<IndexCastOp>(newRedIdx, resTy);
-      ;
     });
   }
 
