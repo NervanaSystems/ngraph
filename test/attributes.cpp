@@ -18,8 +18,8 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset1.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset1.hpp"
+#include "ngraph/opset/opset3.hpp"
 
 #include "util/visitor.hpp"
 

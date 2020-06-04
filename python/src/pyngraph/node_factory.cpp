@@ -32,7 +32,7 @@
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/opsets/opset.hpp"
+#include "ngraph/opset/opset.hpp"
 #include "ngraph/util.hpp"
 #include "node_factory.hpp"
 
