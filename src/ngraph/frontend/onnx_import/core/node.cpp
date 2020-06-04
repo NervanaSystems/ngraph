@@ -21,6 +21,7 @@
 #include "node.hpp"
 #include "null_node.hpp"
 #include "tensor.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -41,7 +42,7 @@ namespace ngraph
 
             const std::vector<Attribute>& attributes() const;
             OutputVector get_ng_nodes(const Node& node) const;
-            NodeVector get_ng_inputs() const;
+            OutputVector get_ng_inputs() const;
 
             const std::string& domain() const;
             const std::string& op_type() const;
@@ -131,18 +132,19 @@ namespace ngraph
             return as_output_vector(m_graph->make_ng_nodes(node));
         }
 
-        NodeVector Node::Impl::get_ng_inputs() const
+        OutputVector Node::Impl::get_ng_inputs() const
         {
-            NodeVector result;
+            OutputVector result;
             for (const auto& name : m_node_proto->input())
             {
                 if (!name.empty())
                 {
-                    result.push_back(m_graph->get_ng_node_from_cache(name).get_node_shared_ptr());
+                    result.push_back(m_graph->get_ng_node_from_cache(name));
                 }
                 else
                 {
-                    result.push_back(std::make_shared<NullNode>());
+                    NGRAPH_INFO;
+                    result.push_back(Output<ngraph::Node>());
                 }
             }
             return result;
@@ -183,7 +185,7 @@ namespace ngraph
         {
         }
 
-        NodeVector Node::get_ng_inputs() const { return m_pimpl->get_ng_inputs(); }
+        OutputVector Node::get_ng_inputs() const { return m_pimpl->get_ng_inputs(); }
         OutputVector Node::get_ng_nodes() const { return m_pimpl->get_ng_nodes(*this); }
         const std::string& Node::domain() const { return m_pimpl->domain(); }
         const std::string& Node::op_type() const { return m_pimpl->op_type(); }

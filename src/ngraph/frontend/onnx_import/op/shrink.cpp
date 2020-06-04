@@ -38,7 +38,7 @@ namespace ngraph
                         << " The provided 'lambd' value:" << lambd << " must not be negative.";
 
                     std::shared_ptr<default_opset::Constant> negative_lambd;
-                    const auto input_element_type = input->get_element_type();
+                    const auto input_element_type = input.get_element_type();
                     if (input_element_type.is_signed())
                     {
                         negative_lambd =

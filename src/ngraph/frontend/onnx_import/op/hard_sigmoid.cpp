@@ -32,12 +32,12 @@ namespace ngraph
                     const auto data = node.get_ng_inputs().at(0);
 
                     const auto alpha = default_opset::Constant::create<double>(
-                        data->get_element_type(),
+                        data.get_element_type(),
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("alpha", 0.2)});
 
                     const auto beta = default_opset::Constant::create<double>(
-                        data->get_element_type(),
+                        data.get_element_type(),
                         Shape{},
                         std::vector<double>{node.get_attribute_value<double>("beta", 0.5)});
 

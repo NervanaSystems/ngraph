@@ -29,7 +29,7 @@ namespace ngraph
             {
                 NodeVector prelu(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    OutputVector ng_inputs{node.get_ng_inputs()};
                     const auto& data = ng_inputs.at(0);
                     const auto& slope = ng_inputs.at(1);
                     return {std::make_shared<default_opset::PRelu>(data, slope)};

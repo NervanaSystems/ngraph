@@ -34,11 +34,11 @@ namespace ngraph
                     const double alpha = node.get_attribute_value<double>("alpha", 1.0);
 
                     const auto alpha_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {alpha});
+                        default_opset::Constant::create(data.get_element_type(), Shape{}, {alpha});
 
                     const auto data_map = std::make_shared<default_opset::Convert>(
                         std::make_shared<default_opset::Greater>(data, alpha_node),
-                        data->get_element_type());
+                        data.get_element_type());
 
                     return {std::make_shared<default_opset::Multiply>(data, data_map)};
                 }
