@@ -51,7 +51,7 @@ namespace ngraph
                 const auto topk = std::make_shared<default_opset::TopK>(
                     m_input_node, k_node, m_axis, mode, default_opset::TopK::SortType::none);
 
-                const auto indices = std::make_shared<ngraph::opset0::GetOutputElement>(topk, 1);
+                const auto indices = topk->output(1);
 
                 if (m_keep_dims == 0)
                 {

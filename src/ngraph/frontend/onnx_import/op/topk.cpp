@@ -50,17 +50,6 @@ namespace
 
         return ngraph::onnx_import::reshape::interpret_as_scalar(k_node);
     }
-
-    /// \return Return the outputs of the TopK node.
-    ngraph::OutputVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
-    {
-        std::shared_ptr<ngraph::Node> values =
-            std::make_shared<ngraph::opset0::GetOutputElement>(node, 0);
-        std::shared_ptr<ngraph::Node> indices =
-            std::make_shared<ngraph::opset0::GetOutputElement>(node, 1);
-
-        return {values, indices};
-    }
 }
 
 namespace ngraph
@@ -86,7 +75,7 @@ namespace ngraph
                                                               default_opset::TopK::SortType::value,
                                                               element::i64);
 
-                    return get_outputs(top_k);
+                    return {top_k->output(0), top_k->output(1)};
                 }
             }
 
@@ -106,7 +95,7 @@ namespace ngraph
                                                               default_opset::TopK::SortType::value,
                                                               element::i64);
 
-                    return get_outputs(top_k);
+                    return {top_k->output(0), top_k->output(1)};
                 }
             }
 
@@ -134,7 +123,7 @@ namespace ngraph
                     std::shared_ptr<ngraph::Node> top_k = std::make_shared<default_opset::TopK>(
                         data, k, axis, mode, sort_type, element::i64);
 
-                    return get_outputs(top_k);
+                    return {top_k->output(0), top_k->output(1)};
                 }
             }
         }

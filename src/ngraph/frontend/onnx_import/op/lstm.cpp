@@ -235,9 +235,8 @@ namespace ngraph
                         attributes.m_activations,
                         attributes.m_clip_threshold,
                         attributes.m_input_forget);
-                    return {std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 0),
-                            std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 1),
-                            std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 2)};
+                    return {
+                        lstmSequence->output(0), lstmSequence->output(1), lstmSequence->output(2)};
                 }
             }
         }
