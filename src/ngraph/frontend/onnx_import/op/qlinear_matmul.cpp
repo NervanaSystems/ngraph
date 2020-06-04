@@ -26,7 +26,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector qlinear_matmul(const Node& node)
+                OutputVector qlinear_matmul(const Node& node)
                 {
                     auto ng_inputs = node.get_ng_inputs();
                     auto factory = builder::QLinearMatmulFactory(
@@ -42,7 +42,7 @@ namespace ngraph
                                "accepts them. Consider use of element-wise multiplication instead "
                                "to conform with ONNX standard.";
                     }
-                    return as_node_vector(factory.make_matmul_op());
+                    return factory.make_matmul_op();
                 }
             }
         }

@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector mean_variance_normalization(const Node& node)
+                OutputVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     bool across_channels =
@@ -45,7 +45,7 @@ namespace ngraph
 
             namespace set_9
             {
-                NodeVector mean_variance_normalization(const Node& node)
+                OutputVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {0, 2, 3});

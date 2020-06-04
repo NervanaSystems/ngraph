@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector transpose(const Node& node)
+                OutputVector transpose(const Node& node)
                 {
                     Output<ngraph::Node> data = node.get_ng_inputs().at(0);
 

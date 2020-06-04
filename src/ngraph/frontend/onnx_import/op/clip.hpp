@@ -27,12 +27,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector clip(const Node& node);
+                OutputVector clip(const Node& node);
             }
 
             namespace set_11
             {
-                NodeVector clip(const Node& node);
+                OutputVector clip(const Node& node);
             }
         }
     }

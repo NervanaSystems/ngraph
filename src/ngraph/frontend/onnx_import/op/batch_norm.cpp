@@ -31,7 +31,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector batch_norm(const Node& node)
+                OutputVector batch_norm(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     auto x = inputs.at(0);

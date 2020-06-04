@@ -196,7 +196,7 @@ namespace ngraph
             return results;
         }
 
-        NodeVector Graph::make_ng_nodes(const Node& onnx_node) const
+        OutputVector Graph::make_ng_nodes(const Node& onnx_node) const
         {
             const auto ng_node_factory =
                 m_model->get_operator(onnx_node.op_type(), onnx_node.domain());
@@ -209,7 +209,7 @@ namespace ngraph
         }
 
         void Graph::set_friendly_names(const Node& onnx_node,
-                                       const NodeVector& ng_node_vector) const
+                                       const OutputVector& ng_node_vector) const
         {
             for (int i = 0; i < ng_node_vector.size(); ++i)
             {
@@ -220,7 +220,7 @@ namespace ngraph
                     break;
                 }
 
-                ng_node_vector[i]->set_friendly_name(onnx_node.output(i));
+                ng_node_vector[i].get_node()->set_friendly_name(onnx_node.output(i));
             }
         }
 
@@ -253,7 +253,7 @@ namespace ngraph
         }
 
         void Graph::add_provenance_tags(const Node& onnx_node,
-                                        const NodeVector& ng_node_vector) const
+                                        const OutputVector& ng_node_vector) const
         {
             if (!ngraph::get_provenance_enabled())
             {
@@ -264,7 +264,7 @@ namespace ngraph
             const auto ng_inputs = onnx_node.get_ng_inputs();
 
             ngraph::traverse_nodes(
-                ng_node_vector,
+                as_node_vector(ng_node_vector),
                 [&tag](std::shared_ptr<ngraph::Node> ng_node) { ng_node->add_provenance_tag(tag); },
                 as_node_vector(ng_inputs));
         }

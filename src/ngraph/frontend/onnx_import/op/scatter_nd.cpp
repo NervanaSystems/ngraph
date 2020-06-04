@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector scatter_nd(const Node& node)
+                OutputVector scatter_nd(const Node& node)
                 {
                     OutputVector ng_inputs{node.get_ng_inputs()};
                     auto data = ng_inputs.at(0);

@@ -32,7 +32,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector hardmax(const Node& node)
+                OutputVector hardmax(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
                     const auto& input_shape = input.get_partial_shape();

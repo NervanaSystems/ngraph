@@ -32,7 +32,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector gemm(const Node& node)
+                OutputVector gemm(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     Output<ngraph::Node> input_a = inputs.at(0);
@@ -85,14 +85,14 @@ namespace ngraph
                     auto beta_times_input_c =
                         std::make_shared<default_opset::Multiply>(beta_node, input_c);
 
-                    return NodeVector{
+                    return OutputVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
             }
 
             namespace set_6
             {
-                NodeVector gemm(const Node& node)
+                OutputVector gemm(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     Output<ngraph::Node> input_a = inputs.at(0);
@@ -132,7 +132,7 @@ namespace ngraph
                     auto beta_times_input_c =
                         std::make_shared<default_opset::Multiply>(beta_node, input_c);
 
-                    return NodeVector{
+                    return OutputVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
             }

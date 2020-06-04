@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector clip(const Node& node)
+                OutputVector clip(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
 
@@ -45,7 +45,7 @@ namespace ngraph
 
             namespace set_11
             {
-                NodeVector clip(const Node& node)
+                OutputVector clip(const Node& node)
                 {
                     const OutputVector inputs{node.get_ng_inputs()};
                     const Output<ngraph::Node> data = inputs.at(0);

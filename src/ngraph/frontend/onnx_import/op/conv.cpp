@@ -100,7 +100,7 @@ namespace ngraph
                     }
                 }
 
-                NodeVector conv(const Node& node)
+                OutputVector conv(const Node& node)
                 {
                     // in the current implementation we assume that the data input rank is static
                     // and only the 'batch' dimension can be dynamic
