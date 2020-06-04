@@ -19,7 +19,7 @@
 
 #include "default_opset.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/selu.hpp"
+#include "ngraph/op/selu.hpp"
 #include "selu.hpp"
 
 namespace ngraph

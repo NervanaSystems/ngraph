@@ -21,7 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-TEST(type_prop, fused_clamp)
+TEST(type_prop, clamp)
 {
     const auto data = make_shared<op::Parameter>(element::f64, Shape{2, 2});
 
