@@ -52,18 +52,18 @@ namespace ngraph
                         Output<ngraph::Node> output_zero_point;
                     };
 
-                    std::shared_ptr<ngraph::Node>
-                        make_ng_quant_conv(const Output<ngraph::Node>& data,
-                                           const Output<ngraph::Node>& filters,
-                                           const Strides& strides,
-                                           const Strides& filter_dilations,
-                                           const CoordinateDiff& padding_below,
-                                           const CoordinateDiff& padding_above,
-                                           const Strides& data_dilations,
-                                           int groups,
-                                           const OpScale& op_scale,
-                                           const OpZeroPoint& op_zero_point,
-                                           const Output<ngraph::Node>& bias = Output<ngraph::Node>())
+                    std::shared_ptr<ngraph::Node> make_ng_quant_conv(
+                        const Output<ngraph::Node>& data,
+                        const Output<ngraph::Node>& filters,
+                        const Strides& strides,
+                        const Strides& filter_dilations,
+                        const CoordinateDiff& padding_below,
+                        const CoordinateDiff& padding_above,
+                        const Strides& data_dilations,
+                        int groups,
+                        const OpScale& op_scale,
+                        const OpZeroPoint& op_zero_point,
+                        const Output<ngraph::Node>& bias = Output<ngraph::Node>())
                     {
                         ngraph::element::Type output_type;
                         if (data.get_element_type() == ngraph::element::u8 &&

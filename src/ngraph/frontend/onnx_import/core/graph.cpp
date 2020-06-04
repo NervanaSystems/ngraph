@@ -22,7 +22,6 @@
 #include "node.hpp"
 #include "provenance.hpp"
 #include "utils/common.hpp"
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -199,17 +198,12 @@ namespace ngraph
 
         NodeVector Graph::make_ng_nodes(const Node& onnx_node) const
         {
-            NGRAPH_INFO << onnx_node;
             const auto ng_node_factory =
                 m_model->get_operator(onnx_node.op_type(), onnx_node.domain());
-            NGRAPH_INFO;
 
             const auto ng_node_vector = ng_node_factory(onnx_node);
-            NGRAPH_INFO;
             set_friendly_names(onnx_node, ng_node_vector);
-            NGRAPH_INFO;
             add_provenance_tags(onnx_node, ng_node_vector);
-            NGRAPH_INFO;
 
             return ng_node_vector;
         }

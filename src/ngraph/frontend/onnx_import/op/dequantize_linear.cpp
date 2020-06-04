@@ -48,7 +48,8 @@ namespace ngraph
                     else
                     {
                         zero_point =
-                            ngraph::builder::make_constant(x.get_element_type(), Shape{}, 0)->output(0);
+                            ngraph::builder::make_constant(x.get_element_type(), Shape{}, 0)
+                                ->output(0);
                     }
 
                     Shape y_scale_shape = x_scale.get_shape();
@@ -69,8 +70,8 @@ namespace ngraph
 
                     if (x.get_element_type() != zero_point.get_element_type())
                     {
-                        zero_point = std::make_shared<default_opset::Convert>(
-                            zero_point, x.get_element_type());
+                        zero_point = std::make_shared<default_opset::Convert>(zero_point,
+                                                                              x.get_element_type());
                     }
 
                     return {std::make_shared<ngraph::opset0::Dequantize>(

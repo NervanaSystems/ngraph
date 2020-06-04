@@ -371,9 +371,6 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_missing_input)
             Output<ngraph::Node> A = ng_inputs.at(0);
             Output<ngraph::Node> B = ng_inputs.at(1);
             Output<ngraph::Node> C = ng_inputs.at(2);
-            NGRAPH_INFO << static_cast<const void*>(A.get_node());
-            NGRAPH_INFO << static_cast<const void*>(B.get_node());
-            NGRAPH_INFO << static_cast<const void*>(C.get_node());
 
             A = A * C;
             if (B.get_node())
@@ -382,13 +379,9 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_missing_input)
             }
 
             C = C + C;
-            NGRAPH_INFO;
             std::shared_ptr<ngraph::Node> a = A.get_node_shared_ptr();
-            NGRAPH_INFO;
             std::shared_ptr<ngraph::Node> b = B.get_node_shared_ptr();
-            NGRAPH_INFO;
             std::shared_ptr<ngraph::Node> c = C.get_node_shared_ptr();
-            NGRAPH_INFO;
             return {a, b, c};
         });
 

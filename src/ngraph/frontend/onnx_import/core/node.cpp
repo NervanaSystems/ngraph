@@ -21,7 +21,6 @@
 #include "node.hpp"
 #include "null_node.hpp"
 #include "tensor.hpp"
-#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -143,7 +142,6 @@ namespace ngraph
                 }
                 else
                 {
-                    NGRAPH_INFO;
                     result.push_back(std::make_shared<NullNode>()->output(0));
                 }
             }
