@@ -18,7 +18,7 @@
 #include "exceptions.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "utils/convpool.hpp"
 
 using namespace ngraph::builder;

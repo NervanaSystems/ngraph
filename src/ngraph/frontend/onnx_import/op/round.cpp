@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "round.hpp"
 
 namespace ngraph

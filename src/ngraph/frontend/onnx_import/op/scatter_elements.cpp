@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "default_opset.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "scatter_elements.hpp"
 
 namespace ngraph
