@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/softmax_crossentropy.hpp"
+#include "ngraph/op/softmax_crossentropy.hpp"
 
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/constant.hpp"

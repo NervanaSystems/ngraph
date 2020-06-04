@@ -22,7 +22,7 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/fused/rnn_cell.hpp"
+#include "ngraph/op/rnn_cell.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 

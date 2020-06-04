@@ -13,14 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/op/fused/gemm.hpp"
+#include "ngraph/op/gemm.hpp"
 
 #include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/matmul.hpp"
 #include "ngraph/op/multiply.hpp"
 
 using namespace std;

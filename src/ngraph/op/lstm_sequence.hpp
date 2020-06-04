@@ -24,7 +24,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
+#include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/op/util/fused_op.hpp"
 
 namespace ngraph

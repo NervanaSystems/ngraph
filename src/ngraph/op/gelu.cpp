@@ -21,7 +21,7 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/gelu.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/subtract.hpp"
