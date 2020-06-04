@@ -175,7 +175,7 @@ namespace ngraph
                 m_nodes.emplace_back(node_proto, *this);
                 const Node& node{m_nodes.back()};
 
-                NodeVector ng_nodes{node.get_ng_nodes()};
+                OutputVector ng_nodes{node.get_ng_nodes()};
                 // Iterate over the number of outputs for given node in graph.
                 // Some of them may be optional and trimmed. See:
                 // https://github.com/onnx/onnx/blob/master/docs/IR.md#optional-inputs-and-outputs
@@ -191,7 +191,7 @@ namespace ngraph
             NodeVector results;
             for (const auto& output : m_graph_proto->output())
             {
-                results.emplace_back(get_ng_node_from_cache(output.name()));
+                results.emplace_back(get_ng_node_from_cache(output.name()).get_node_shared_ptr());
             }
             return results;
         }
