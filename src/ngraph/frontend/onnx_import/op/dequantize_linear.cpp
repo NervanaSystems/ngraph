@@ -41,7 +41,7 @@ namespace ngraph
                     Output<ngraph::Node> x = inputs.at(0);
                     Output<ngraph::Node> x_scale = inputs.at(1);
                     Output<ngraph::Node> zero_point;
-                    if (inputs.size() == 3 && inputs.at(2).get_node())
+                    if (inputs.size() == 3 && !inputs.at(2).get_node()->is_null())
                     {
                         zero_point = inputs.at(2);
                     }

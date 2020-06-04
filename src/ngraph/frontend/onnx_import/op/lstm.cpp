@@ -88,7 +88,7 @@ namespace ngraph
 
                         // ------ Optional inputs ------
                         // The bias tensor for input gate. Shape [num_directions, 4*hidden_size]
-                        if (ng_inputs.size() > 3 && ng_inputs.at(3).get_node())
+                        if (ng_inputs.size() > 3 && !ng_inputs.at(3).get_node()->is_null())
                         {
                             auto bias = ng_inputs.at(3);
                             auto split_bias = builder::opset1::split(bias, 2, 1);
@@ -103,7 +103,7 @@ namespace ngraph
                                                    0.f));
                         }
                         // The lengths of the sequences in a batch. Shape [batch_size]
-                        if (ng_inputs.size() > 4 && ng_inputs.at(4).get_node())
+                        if (ng_inputs.size() > 4 && !ng_inputs.at(4).get_node()->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_SEQ_LENGTHS] = ng_inputs.at(4);
                         }
@@ -119,7 +119,7 @@ namespace ngraph
                         }
                         // The initial value of the hidden.
                         // Shape [num_directions, batch_size, hidden_size]
-                        if (ng_inputs.size() > 5 && ng_inputs.at(5).get_node())
+                        if (ng_inputs.size() > 5 && !ng_inputs.at(5).get_node()->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_H] = ng_inputs.at(5);
                         }
@@ -132,7 +132,7 @@ namespace ngraph
                         }
                         // The initial value of the cell.
                         // Shape [num_directions, batch_size, hidden_size]
-                        if (ng_inputs.size() > 6 && ng_inputs.at(6).get_node())
+                        if (ng_inputs.size() > 6 && !ng_inputs.at(6).get_node()->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_INIT_C] = ng_inputs.at(6);
                         }
@@ -144,7 +144,7 @@ namespace ngraph
                                 std::vector<float>(num_directions * batch_size * hidden_size, 0.f));
                         }
                         // The weight tensor for peepholes. Shape [num_directions, 3*hidde_size]
-                        if (ng_inputs.size() > 7 && ng_inputs.at(7).get_node())
+                        if (ng_inputs.size() > 7 && !ng_inputs.at(7).get_node()->is_null())
                         {
                             m_map[LSTMInput::LSTM_INPUT_P] = ng_inputs.at(7);
                         }

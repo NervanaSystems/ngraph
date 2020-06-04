@@ -56,7 +56,7 @@ namespace ngraph
 
                     // If second input is provided, assign to min input, otherwise set lowest
                     // numeric limit of double as min input.
-                    if (inputs.size() > 1 && inputs.at(1).get_node())
+                    if (inputs.size() > 1 && !inputs.at(1).get_node()->is_null())
                     {
                         min = inputs.at(1);
                     }
@@ -68,7 +68,7 @@ namespace ngraph
 
                     // If third input is provided, assign to max input, otherwise set maximum
                     // numeric limit of double as max input.
-                    if (inputs.size() == 3 && inputs.at(2).get_node())
+                    if (inputs.size() == 3 && !inputs.at(2).get_node()->is_null())
                     {
                         max = inputs.at(2);
                     }

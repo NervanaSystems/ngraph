@@ -144,7 +144,7 @@ namespace ngraph
                 else
                 {
                     NGRAPH_INFO;
-                    result.push_back(Output<ngraph::Node>());
+                    result.push_back(std::make_shared<NullNode>()->output(0));
                 }
             }
             return result;
