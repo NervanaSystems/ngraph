@@ -1223,15 +1223,15 @@ IE_CPU.onnx_model_instance_normalization
 IE_CPU.onnx_model_reverse_sequence_1_batch_0
 IE_CPU.onnx_model_reverse_sequence_0_batch_1
 IE_CPU.cum_sum_2dim_default_axis
-IE_CPU.fused_clamp_double
-IE_CPU.fused_clamp_int8
-IE_CPU.fused_clamp_int16
-IE_CPU.fused_clamp_int32
-IE_CPU.fused_clamp_int64
-IE_CPU.fused_clamp_uint8
-IE_CPU.fused_clamp_uint16
-IE_CPU.fused_clamp_uint32
-IE_CPU.fused_clamp_uint64
+IE_CPU.clamp_double
+IE_CPU.clamp_int8
+IE_CPU.clamp_int16
+IE_CPU.clamp_int32
+IE_CPU.clamp_int64
+IE_CPU.clamp_uint8
+IE_CPU.clamp_uint16
+IE_CPU.clamp_uint32
+IE_CPU.clamp_uint64
 
 #Node <name> contains empty child edge for index 0
 IE_CPU.backwards_log
@@ -1442,7 +1442,7 @@ IE_GPU.normalize_across_chw_4d
 IE_GPU.normalize_across_h_4d
 IE_GPU.normalize_across_c_2x2_shape
 IE_GPU.normalize_across_c_2x4_shape
-IE_GPU.fused_clamp
+IE_GPU.clamp
 IE_GPU.grn_4d
 IE_GPU.squeeze
 IE_GPU.squared_difference
