@@ -19,7 +19,7 @@
 
 #include "default_opset.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/selu.hpp"
+#include "ngraph/op/selu.hpp"
 #include "selu.hpp"
 
 namespace ngraph
@@ -46,11 +46,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Selu>(data, alpha_node, gamma_node)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

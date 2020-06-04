@@ -37,11 +37,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::LRN>(data, alpha, beta, bias, size)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

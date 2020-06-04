@@ -32,8 +32,8 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -215,7 +215,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                                                             R_reshape,
                                                             bias_ifco,
                                                             rnn_type);
-        if (lstm_node->get_outputs().size() != 3)
+        if (lstm_node->get_output_size() != 3)
         {
             throw ngraph_error("Lstm node doesnt have three outputs");
         }
@@ -274,7 +274,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
             return false;
         }
 
-        if (m.get_match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
@@ -699,8 +699,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         {
                             if (goe1_user->get_argument(i) == goe_1)
                             {
-                                goe1_user->get_inputs().at(i).replace_output(
-                                    ht_slice_per_timestep[index]->get_outputs().at(0));
+                                goe1_user->get_input_descriptor(i).replace_output(
+                                    ht_slice_per_timestep[index]->get_output_descriptor(0));
                             }
                         }
                         NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()

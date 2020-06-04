@@ -26,7 +26,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
-#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
+#include "ngraph/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -600,9 +600,9 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
                                                                     CoordinateDiff{0, 0},
                                                                     CoordinateDiff{0, 0},
                                                                     Strides{1, 1});
-            auto goe0 = make_shared<op::GetOutputElement>(conv_bprop, 0);
-            auto goe1 = make_shared<op::GetOutputElement>(conv_bprop, 1);
-            return make_shared<Function>(NodeVector{goe0, goe1}, ParameterVector{data, delta});
+            auto goe0 = conv_bprop->output(0);
+            auto goe1 = conv_bprop->output(1);
+            return make_shared<Function>(OutputVector{goe0, goe1}, ParameterVector{data, delta});
         }
         else
         {

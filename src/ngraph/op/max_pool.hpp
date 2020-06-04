@@ -134,6 +134,9 @@ namespace ngraph
                 /// \return The default value for MaxPool.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -144,6 +147,11 @@ namespace ngraph
                 Shape m_padding_above;
                 PadType m_pad_type;
                 bool m_ceil_mode{false};
+
+            private:
+                void update_auto_padding(const PartialShape& in_shape,
+                                         Shape& new_padding_above,
+                                         Shape& new_padding_below);
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
@@ -200,7 +208,7 @@ namespace ngraph
                 Shape m_padding_below;
                 Shape m_padding_above;
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -278,6 +286,9 @@ namespace ngraph
                 /// \return The default value for MaxPool.
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -288,6 +299,11 @@ namespace ngraph
                 Shape m_pads_end;
                 PadType m_auto_pad;
                 op::RoundingType m_rounding_type{op::RoundingType::FLOOR};
+
+            private:
+                void update_auto_padding(const PartialShape& in_shape,
+                                         Shape& new_pads_end,
+                                         Shape& new_pads_begin);
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
@@ -332,9 +348,9 @@ namespace ngraph
                 Shape m_pads_begin;
                 Shape m_pads_end;
             };
-        } // namespace v1
+        }
 
         using v0::MaxPool;
         using v0::MaxPoolBackprop;
-    } // namespace op
-} // namespace ngraph
+    }
+}

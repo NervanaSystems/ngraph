@@ -158,8 +158,8 @@ namespace ngraph
             }
             return ::testing::AssertionSuccess();
         }
-    } // namespace test
-} // namespace ngraph
+    }
+}
 
 // apply pass, execute and compare with INTERPRETER using random data
 template <typename T, typename TIN, typename TOUT = TIN>

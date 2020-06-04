@@ -35,11 +35,7 @@ namespace ngraph
                 /// \return     Ngraph node representing this operation.
                 ///
                 NodeVector reshape(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

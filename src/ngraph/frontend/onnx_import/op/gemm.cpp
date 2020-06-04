@@ -21,7 +21,7 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/matmul.hpp"
 #include "ngraph/op/multiply.hpp"
 
 namespace ngraph
@@ -88,8 +88,7 @@ namespace ngraph
                     return NodeVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_6
             {
@@ -136,11 +135,7 @@ namespace ngraph
                     return NodeVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
-
-            } // namespace set_6
-
-        } // namespace op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+            }
+        }
+    }
+}

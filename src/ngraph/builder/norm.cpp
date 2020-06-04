@@ -26,7 +26,7 @@
 #include "ngraph/op/reduce_sum.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opset/opset1.hpp"
 #include "ngraph/shape.hpp"
 
 using namespace std;
@@ -153,7 +153,5 @@ namespace ngraph
                 return detail::opset1::lp_norm(value, p_norm, reduction_axes, bias);
             }
         }
-
-    } // namespace builder
-
-} // namespace ngraph
+    }
+}

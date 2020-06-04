@@ -40,7 +40,8 @@ namespace ngraph
                 CPU_Executable(std::shared_ptr<Function> func,
                                ngraph::pass::PassConfig& pass_config,
                                Allocator* allocator,
-                               bool performance_counters_enabled);
+                               bool performance_counters_enabled,
+                               bool codegen_enable);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 

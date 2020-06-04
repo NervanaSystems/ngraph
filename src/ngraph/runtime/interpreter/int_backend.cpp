@@ -44,6 +44,11 @@ runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_o
 {
 }
 
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
+{
+    return make_shared<runtime::HostTensor>();
+}
+
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
 {
@@ -97,17 +102,4 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
         }
     }
     return exec;
-}
-
-bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
-{
-    bool rc = false;
-    auto it = config.find("test_echo");
-    error = "";
-    if (it != config.end())
-    {
-        error = it->second;
-        rc = true;
-    }
-    return rc;
 }

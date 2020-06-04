@@ -30,7 +30,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/gelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -145,8 +145,8 @@ namespace ngraph
                     size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
-                    const auto& out = node->get_outputs();
-                    const auto& args = node->get_inputs();
+                    const auto& out = node->get_output_descriptors();
+                    const auto& args = node->get_input_descriptors();
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
                         static_cast<unsigned long>(rnn_node->get_src_sequence_length());
@@ -366,7 +366,7 @@ namespace ngraph
                     const bool append_relu,
                     const bool training)
                 {
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
@@ -563,7 +563,7 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     BatchNormTrainingBackprop)
                 {
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
                     const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
                     auto eps = batchnorm->get_eps_value();
 
@@ -657,7 +657,7 @@ namespace ngraph
                 {
                     auto concat = static_cast<OP*>(node);
                     size_t concat_dim = concat->get_concatenation_axis();
-                    size_t nargs = node->get_inputs().size();
+                    size_t nargs = node->get_input_size();
 
                     // query scratchpad size
                     auto concat_pd = mkldnn_emitter.get_concat_desc<OP>(node, nargs);
@@ -775,7 +775,7 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Slice)
                 {
-                    const auto& out = node->get_outputs();
+                    const auto& out = node->get_output_descriptors();
                     const Slice* slice = static_cast<const Slice*>(node);
                     auto result_shape = out[0].get_shape();
                     auto lower_bounds = slice->get_lower_bounds();
@@ -1942,7 +1942,7 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
-                    const auto& args = node->get_inputs();
+                    const auto& args = node->get_input_descriptors();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 

@@ -19,7 +19,7 @@ include(ExternalProject)
 set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID 376c6853)
+set(MLIR_LLVM_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
 
 # MLIR environment variables. Some of them are used by LIT tool.
 
@@ -67,6 +67,11 @@ add_definitions(${LLVM_DEFINITIONS})
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using modules in: ${LLVM_DIR}")
 message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
+
+set(MLIR_DIR "${MLIR_LLVM_BUILD_DIR}/lib/cmake/mlir"
+    CACHE PATH "Path to MLIR cmake modules")
+list(APPEND CMAKE_MODULE_PATH "${MLIR_DIR}")
+find_package(MLIR REQUIRED CONFIG)
 
 set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
 set(MLIR_BIN_INCLUDE_PATH ${MLIR_LLVM_BUILD_DIR}/tools/mlir/include)

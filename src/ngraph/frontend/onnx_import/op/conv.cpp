@@ -22,10 +22,10 @@
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/builder/reshape.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "utils/convpool.hpp"
 
 namespace ngraph
@@ -100,7 +100,7 @@ namespace ngraph
 
                         return {std::make_shared<default_opset::Add>(ng_conv, reshaped_bias)};
                     }
-                } // namespace
+                }
 
                 NodeVector conv(const Node& node)
                 {
@@ -146,11 +146,7 @@ namespace ngraph
                         return {add_bias(conv_node, bias)};
                     }
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

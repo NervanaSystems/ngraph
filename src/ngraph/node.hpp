@@ -83,7 +83,7 @@ namespace ngraph
         {
             class Result;
         }
-    } // namespace op
+    }
 
     namespace pattern
     {
@@ -221,7 +221,7 @@ namespace ngraph
         ///
         /// \return A vector of nodes comprising the sub-graph. The order of output
         ///         tensors must match the match output tensors of the FusedOp
-        virtual NodeVector decompose_op() const { return NodeVector(); }
+        virtual OutputVector decompose_op() const { return OutputVector(); }
         /// Returns the NodeTypeInfo for the node's class.
         /// During transition to type_info, returns a dummy type_info for Node if the class
         /// has not been updated yet.
@@ -315,17 +315,19 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_inputs() NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_inputs() const
+        std::deque<descriptor::Input>& get_input_descriptors()
             NGRAPH_DEPRECATED("use inputs() instead")
         {
             return m_inputs;
         }
-        std::deque<descriptor::Output>& get_outputs() NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_outputs() const
+        const std::deque<descriptor::Input>& get_input_descriptors() const
+            NGRAPH_DEPRECATED("use inputs() instead")
+        {
+            return m_inputs;
+        }
+        std::deque<descriptor::Output>& get_output_descriptors()
+            NGRAPH_DEPRECATED("use outputs() instead");
+        const std::deque<descriptor::Output>& get_output_descriptors() const
             NGRAPH_DEPRECATED("use outputs() instead");
 
         /// Get control dependencies registered on the node
@@ -452,15 +454,8 @@ namespace ngraph
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
         Output<Node> get_input_source_output(size_t i) const;
 
-    protected:
-        // Will be replaced with clone_with_new_inputs
-        virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const
-            NGRAPH_DEPRECATED("use copy_with_new_inputs instead");
-
     public:
-        // TODO: When all copy_with_new_args have been replaced with copy_with_new_inputs, make
-        // this pure and remove copy_with_new_args
-        virtual std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& inputs) const;
+        virtual std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& inputs) const = 0;
 
         std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
 
@@ -573,10 +568,12 @@ namespace ngraph
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
-    private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
+        const descriptor::Input& get_input_descriptor(size_t position) const;
+        const descriptor::Output& get_output_descriptor(size_t position) const;
 
+    private:
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;
@@ -637,6 +634,34 @@ namespace ngraph
         bool operator>=(const RawNodeOutput& other) const { return !(*this < other); }
     };
 
+    /// \brief Visits a reference to a node that has been registered with the visitor.
+    template <>
+    class NGRAPH_API AttributeAdapter<std::shared_ptr<Node>> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(std::shared_ptr<Node>& value);
+
+        bool visit_attributes(AttributeVisitor& visitor) override;
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        std::shared_ptr<Node>& m_ref;
+    };
+
+    template <>
+    class NGRAPH_API AttributeAdapter<NodeVector> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(NodeVector& ref);
+
+        bool visit_attributes(AttributeVisitor& visitor) override;
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+    protected:
+        NodeVector& m_ref;
+    };
+
     using RawNodeOutputMap = std::map<RawNodeOutput, Output<Node>>;
 
     class NGRAPH_API NodeValidationFailure : public CheckFailure
@@ -667,5 +692,4 @@ namespace ngraph
                               " but got ",
                               new_args.size());
     }
-
-} // namespace ngraph
+}

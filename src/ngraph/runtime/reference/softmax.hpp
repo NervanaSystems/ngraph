@@ -35,7 +35,7 @@ namespace ngraph
                 auto temp_elements = shape_size(temp_shape);
                 auto temp_ptr = new T[temp_elements];
 
-                max(arg, temp_ptr, shape, temp_shape, axes);
+                max(arg, temp_ptr, shape, axes);
 
                 CoordinateTransform transform(shape);
                 CoordinateTransform temp_transform(temp_shape);
@@ -46,7 +46,7 @@ namespace ngraph
                         arg[transform.index(coord)] - temp_ptr[temp_transform.index(temp_coord)]);
                 }
 
-                sum(out, temp_ptr, shape, temp_shape, axes);
+                sum(out, temp_ptr, shape, axes);
 
                 for (const Coordinate& coord : transform)
                 {

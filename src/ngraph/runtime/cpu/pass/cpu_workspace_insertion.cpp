@@ -27,11 +27,11 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -129,12 +129,12 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
 
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
-    for (auto& o : m_max_pool->get_outputs())
+    for (auto& o : m_max_pool->get_output_descriptors())
     {
         std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
         for (auto i : copy)
         {
-            i->replace_output(max_pool_with_indices_output->get_outputs().at(0));
+            i->replace_output(max_pool_with_indices_output->get_output_descriptor(0));
         }
     }
 

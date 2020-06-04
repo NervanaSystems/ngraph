@@ -24,7 +24,7 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/frontend/onnx_import/utils/convpool.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/strides.hpp"
 #include "quant_conv.hpp"
 
@@ -182,8 +182,7 @@ namespace ngraph
                             }
                         }
                     }
-
-                } // namespace
+                }
 
                 NodeVector quant_conv(const Node& node)
                 {
@@ -268,11 +267,7 @@ namespace ngraph
 
                     return {conv_node};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

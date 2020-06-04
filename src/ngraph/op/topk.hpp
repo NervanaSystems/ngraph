@@ -47,13 +47,13 @@ namespace ngraph
                 ///                           supported
                 /// \param k Number of top indices to compute. Compute all indices if k = 0
                 /// \param compute_max Compute top k max or top k min?
-                /// \param sort SortType for sorting results, default - SORT_VALUES
+                /// \param sort SortType for sorting results, default - value
                 TopK(const Output<Node>& arg,
                      size_t top_k_axis,
                      const element::Type& index_element_type,
                      size_t k = 0,
                      bool compute_max = true,
-                     SortType sort = SortType::SORT_VALUES);
+                     SortType sort = SortType::value);
                 /// \brief Constructs a TopK operation.
                 ///
                 /// \param arg The input tensor
@@ -62,13 +62,13 @@ namespace ngraph
                 /// \param index_element_type produce indices. Currently, only int64 or int32 are
                 ///                           supported
                 /// \param compute_max Compute top k max or top k min?
-                /// \param sort SortType for sorting results, default - SORT_VALUES
+                /// \param sort SortType for sorting results, default - value
                 TopK(const Output<Node>& arg,
                      const Output<Node>& k,
                      size_t top_k_axis,
                      const element::Type& index_element_type,
                      bool compute_max = true,
-                     SortType sort = SortType::SORT_VALUES);
+                     SortType sort = SortType::value);
 
                 /// \brief Constructs a TopK operation.
                 ///
@@ -84,7 +84,7 @@ namespace ngraph
                      const Output<Node>& top_k_axis,
                      const element::Type& index_element_type,
                      bool compute_max = true,
-                     SortType sort = SortType::NONE);
+                     SortType sort = SortType::none);
 
                 void validate_and_infer_types() override;
 
@@ -102,14 +102,20 @@ namespace ngraph
                 bool get_compute_max() const { return m_compute_max; }
                 SortType get_sort() const { return m_sort; }
                 size_t get_default_output_index() const override { return no_default_index(); }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             protected:
                 element::Type m_index_element_type;
                 bool m_compute_max{false};
-                SortType m_sort{SortType::NONE};
+                SortType m_sort{SortType::none};
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
+                Shape compute_output_shape(const Shape input_shape,
+                                           const int64_t k,
+                                           const size_t axis);
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -181,6 +187,9 @@ namespace ngraph
                 size_t get_k() const;
                 void set_k(size_t k);
                 size_t get_default_output_index() const override { return no_default_index(); }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             protected:
                 int64_t m_axis;
                 uint64_t m_normalized_axis;
@@ -196,8 +205,12 @@ namespace ngraph
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
+                Shape compute_output_shape(const std::string& node_description,
+                                           const PartialShape input_partial_shape,
+                                           const int64_t k);
+                void set_axis(const Rank input_rank, const int64_t axis);
             };
-        } // namespace v1
+        }
 
         namespace v3
         {
@@ -237,14 +250,19 @@ namespace ngraph
                      const element::Type& index_element_type = element::i32);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 virtual size_t
                     read_k_from_constant_node(const std::shared_ptr<Node>& node,
                                               const element::Type& k_element_type) const override;
             };
-        } // namespace v3
+        }
 
         using v0::TopK;
-    } // op
-} // ngraph
+    }
+}

@@ -1532,8 +1532,8 @@ size_t runtime::gpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto& input_shape = args[0].get_shape();
     auto& result_shape = out[0].get_shape();
     auto padding_below = node->get_padding_below();
@@ -2446,8 +2446,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     std::stringstream ss;
     ss << "convolution_fprop_" << runtime::gpu::kernel::emit_type_string(node);
 
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto input_shape = args[0].get_shape();
     auto filter_shape = args[1].get_shape();
     auto output_shape = out[0].get_shape();
@@ -2568,8 +2568,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, bool in_place_op)
 {
-    auto& args = node->get_inputs();
-    auto& out = node->get_outputs();
+    auto& args = node->get_input_descriptors();
+    auto& out = node->get_output_descriptors();
     auto& input_shape = args[0].get_shape();
     auto& replace_shape = args[1].get_shape();
     auto& lower_bounds = node->get_lower_bounds();

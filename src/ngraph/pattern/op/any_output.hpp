@@ -25,23 +25,25 @@ namespace ngraph
     {
         namespace op
         {
-            /// Matches any output of a node
-            class NGRAPH_API AnyOutput : public Pattern
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"patternAnyOutput", 0};
-                const NodeTypeInfo& get_type_info() const override;
-                /// \brief creates an AnyOutput node matching any output of a node
-                /// \param node The node to match
-                AnyOutput(const std::shared_ptr<Node>& pattern)
-                    : Pattern({pattern->output(0)})
-                {
-                }
-
-                bool match_value(pattern::Matcher* matcher,
-                                 const Output<Node>& pattern_value,
-                                 const Output<Node>& graph_value) override;
-            };
+            class AnyOutput;
         }
     }
 }
+
+/// Matches any output of a node
+class NGRAPH_API ngraph::pattern::op::AnyOutput : public Pattern
+{
+public:
+    static constexpr NodeTypeInfo type_info{"patternAnyOutput", 0};
+    const NodeTypeInfo& get_type_info() const override;
+    /// \brief creates an AnyOutput node matching any output of a node
+    /// \param node The node to match
+    AnyOutput(const std::shared_ptr<Node>& pattern)
+        : Pattern({pattern->output(0)})
+    {
+    }
+
+    bool match_value(pattern::Matcher* matcher,
+                     const Output<Node>& pattern_value,
+                     const Output<Node>& graph_value) override;
+};

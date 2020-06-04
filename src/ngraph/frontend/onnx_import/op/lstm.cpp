@@ -28,9 +28,9 @@
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/lstm_sequence.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/op/lstm_sequence.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -212,8 +212,7 @@ namespace ngraph
                     std::vector<float> m_activation_beta;
                     bool m_input_forget;
                 };
-
-            } // anonymous namespace
+            }
 
             namespace set_1
             {
@@ -243,10 +242,7 @@ namespace ngraph
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 1),
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 2)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

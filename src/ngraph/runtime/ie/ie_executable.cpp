@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/ie/ie_executable.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset.hpp"
+#include "ngraph/opset/opset.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/runtime/ie/ie_tensor.hpp"
@@ -74,17 +74,30 @@ namespace
     }
 }
 
+namespace
+{
+    std::set<NodeTypeInfo> get_ie_ops()
+    {
+        std::set<NodeTypeInfo> ie_ops = get_opset1().get_type_info_set();
+        auto& opset2 = get_opset2().get_type_info_set();
+        ie_ops.insert(opset2.begin(), opset2.end());
+        auto& opset3 = get_opset3().get_type_info_set();
+        ie_ops.insert(opset3.begin(), opset3.end());
+        return ie_ops;
+    }
+}
+
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     : m_device{device}
 {
-    const auto& opset = get_opset1();
+    static std::set<NodeTypeInfo> ie_ops = get_ie_ops();
     pass::Manager passes;
     passes.register_pass<pass::Opset1Upgrade>();
     passes.run_passes(func);
 
     for (const auto& node : func->get_ops())
     {
-        if (!opset.contains_op_type(node.get()))
+        if (ie_ops.find(node->get_type_info()) == ie_ops.end())
         {
             if (node->get_type_info() == op::GetOutputElement::type_info)
             {

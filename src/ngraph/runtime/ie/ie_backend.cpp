@@ -19,7 +19,7 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset.hpp"
+#include "ngraph/opset/opset.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/ie/ie_backend_visibility.hpp"
 #include "ngraph/runtime/ie/ie_executable.hpp"
@@ -70,6 +70,11 @@ shared_ptr<runtime::Tensor>
                                                    const PartialShape& shape)
 {
     return make_shared<IETensor>(type, shape);
+}
+
+shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor()
+{
+    throw runtime_error("IE_Backend::create_tensor() not supported");
 }
 
 shared_ptr<runtime::Tensor>

@@ -15,6 +15,9 @@
 # ******************************************************************************
 
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
+set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
+
+set(ONNX_LIBRARIES onnx)
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
@@ -73,6 +76,10 @@ set(SRC
     node_input_output.cpp
     nop_elimination.cpp
     op.cpp
+    op_eval/matmul.cpp
+    op_eval/mod.cpp
+    op_eval/non_zero.cpp
+    op_eval/strided_slice.cpp
     op_is.cpp
     opset1.cpp
     opset_pass/binary_elementwise_opset_pass.cpp
@@ -104,6 +111,7 @@ set(SRC
     provenance.cpp
     replace_node.cpp
     reshape_elimination.cpp
+    reshape_elimination_v1.cpp
     reshape_sinking.cpp
     shape.cpp
     specialize_function.cpp
@@ -117,6 +125,7 @@ set(SRC
     type_prop/batch_to_space.cpp
     type_prop/binary_elementwise.cpp
     type_prop/broadcast.cpp
+    type_prop/bucketize.cpp
     type_prop/clamp.cpp
     type_prop/compat.cpp
     type_prop/concat.cpp
@@ -136,7 +145,11 @@ set(SRC
     type_prop/dyn_slice.cpp
     type_prop/strided_slice.cpp
     type_prop/elu.cpp
+    type_prop/embeddingbag_offsetssum.cpp
     type_prop/embedding_lookup.cpp
+    type_prop/extractimagepatches.cpp
+    type_prop/embeddingbag_packedsum.cpp
+    type_prop/embedding_segments_sum.cpp
     type_prop/fake_quantize.cpp
     type_prop/gather.cpp
     type_prop/gather_nd.cpp
@@ -179,6 +192,7 @@ set(SRC
     type_prop/scatter_add.cpp
     type_prop/scatter_elements_update.cpp
     type_prop/scatter_nd.cpp
+    type_prop/scatter_nd_update.cpp
     type_prop/scatter_update.cpp
     type_prop/select.cpp
     type_prop/shape_of.cpp
@@ -248,17 +262,17 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-if (NGRAPH_IE_ENABLE)
-    if (ENABLE_MKL_DNN)
-        message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
-    endif()
+# if (NGRAPH_IE_ENABLE)
+#     if (ENABLE_MKL_DNN)
+#         message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
+#     endif()
 
-    if (ENABLE_CLDNN)
-        message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
-    endif()
-endif()
+#     if (ENABLE_CLDNN)
+#         message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
+#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
+#     endif()
+# endif()
 
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
@@ -273,6 +287,7 @@ if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
     if (NOT NGRAPH_DEX_ONLY)
         list(APPEND SRC cpu_codegen.cpp)
+        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "CPU:CODEGEN")
     endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
 endif()
@@ -301,6 +316,7 @@ add_subdirectory(util)
 set(MULTI_TEST_SRC
     backend/abc.in.cpp
     backend/abs.in.cpp
+    backend/acosh.in.cpp
     backend/acos.in.cpp
     backend/add.in.cpp
     backend/aliased_output.in.cpp
@@ -308,9 +324,11 @@ set(MULTI_TEST_SRC
     backend/any.in.cpp
     backend/api.in.cpp
     backend/arg_reduce.in.cpp
+    backend/asinh.in.cpp
     backend/asin.in.cpp
-    backend/atan.in.cpp
     backend/atan2.in.cpp
+    backend/atanh.in.cpp
+    backend/atan.in.cpp
     backend/auto_broadcast.in.cpp
     backend/autodiff.in.cpp
     backend/batch_mat_mul.in.cpp
@@ -319,50 +337,65 @@ set(MULTI_TEST_SRC
     backend/builder_flatten.in.cpp
     backend/builder_reduce_ops_opset1.in.cpp
     backend/ceiling.in.cpp
+    backend/clamp.in.cpp
     backend/comparison.in.cpp
     backend/computation_reuse.in.cpp
     backend/concat.in.cpp
     backend/constant.in.cpp
+    backend/conv_bias.in.cpp
     backend/convert.in.cpp
-    backend/convolution_reference.in.cpp
     backend/convolution.in.cpp
-    backend/cos.in.cpp
+    backend/convolution_reference.in.cpp
     backend/cosh.in.cpp
+    backend/cos.in.cpp
+    backend/cross_entropy.in.cpp
     backend/cum_sum.in.cpp
     backend/divide.in.cpp
     backend/dot.in.cpp
+    backend/dynamic.in.cpp
     backend/dyn_broadcast.in.cpp
     backend/dyn_replace_slice_reference.in.cpp
     backend/dyn_reshape.in.cpp
     backend/dyn_slice_reference.in.cpp
-    backend/strided_slice.in.cpp
-    backend/dynamic.in.cpp
+    backend/elu.in.cpp
     backend/embedding_lookup.in.cpp
     backend/erf.in.cpp
     backend/exp.in.cpp
+    backend/fake_quantize.in.cpp
     backend/floor.in.cpp
     backend/function_name.in.cpp
-    backend/fused_op.in.cpp
     backend/gather.in.cpp
     backend/gelu.in.cpp
+    backend/gemm.in.cpp
     backend/generate_mask.in.cpp
+    backend/graph_comparison.in.cpp
+    backend/grn.in.cpp
+    backend/group_conv.in.cpp
     backend/group_convolution.in.cpp
+    backend/gru_cell.in.cpp
+    backend/hard_sigmoid.in.cpp
     backend/layer_norm.in.cpp
-    backend/log.in.cpp
     backend/logical_and.in.cpp
     backend/logical_or.in.cpp
     backend/logical_xor.in.cpp
+    backend/log.in.cpp
     backend/lrn.in.cpp
+    backend/lstm_cell.in.cpp
     backend/matmul.in.cpp
-    backend/max.in.cpp
     backend/maximum.in.cpp
-    backend/min.in.cpp
+    backend/max.in.cpp
     backend/minimum.in.cpp
+    backend/min.in.cpp
+    backend/mlir.in.cpp
+    backend/mod.in.cpp
     backend/multiple_backends.in.cpp
     backend/multiple_result.in.cpp
     backend/multiply.in.cpp
+    backend/mvn.in.cpp
     backend/negative.in.cpp
     backend/node_name.in.cpp
+    backend/non_zero.in.cpp
+    backend/normalize.in.cpp
     backend/not.in.cpp
     backend/numeric.in.cpp
     backend/one_hot.in.cpp
@@ -371,36 +404,51 @@ set(MULTI_TEST_SRC
     backend/partial_slice.in.cpp
     backend/pool.in.cpp
     backend/power.in.cpp
+    backend/prelu.in.cpp
     backend/product.in.cpp
-    backend/quantize_dequantize.in.cpp
     backend/quantized_convolution.in.cpp
     backend/quantized_dot.in.cpp
+    backend/quantize_dequantize.in.cpp
     backend/random_uniform.in.cpp
     backend/range.in.cpp
+    backend/reduce_max.in.cpp
+    backend/reduce_mean.in.cpp
+    backend/reduce_min.in.cpp
+    backend/reduce_prod.in.cpp
+    backend/reduce_sum.in.cpp
     backend/relu.in.cpp
     backend/replace_slice.in.cpp
     backend/reshape.in.cpp
-    backend/reverse_sequence.in.cpp
     backend/reverse.in.cpp
+    backend/reverse_sequence.in.cpp
+    backend/rnn_cell.in.cpp
     backend/round.in.cpp
+    backend/scale.in.cpp
     backend/scatter.in.cpp
     backend/select.in.cpp
     backend/shape_of.in.cpp
+    backend/shuffle_channels.in.cpp
     backend/sigmoid.in.cpp
     backend/sign.in.cpp
-    backend/sin.in.cpp
     backend/sinh.in.cpp
+    backend/sin.in.cpp
     backend/slice.in.cpp
     backend/softmax.in.cpp
+    backend/split.in.cpp
     backend/sqrt.in.cpp
+    backend/squared_difference.in.cpp
+    backend/squeeze.in.cpp
+    backend/stack.in.cpp
+    backend/strided_slice.in.cpp
     backend/subtract.in.cpp
     backend/sum.in.cpp
-    backend/tan.in.cpp
     backend/tanh.in.cpp
+    backend/tan.in.cpp
     backend/tile.in.cpp
     backend/topk.in.cpp
     backend/transpose.in.cpp
     backend/unhandled_op.in.cpp
+    backend/unsqueeze.cpp
     backend/validate_call.in.cpp
     backend/zero_sized.in.cpp
 )
@@ -408,6 +456,10 @@ set(MULTI_TEST_SRC
 if (NGRAPH_MLIR_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
     list(APPEND SRC mlir/ops_test.cpp)
+endif()
+
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    list(APPEND MULTI_TEST_SRC backend/numpy.in.cpp)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -420,6 +472,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import_const_folding.in.cpp
             onnx/onnx_import_convpool.in.cpp
             onnx/onnx_import_dyn_shapes.in.cpp
+            onnx/onnx_import_library.in.cpp
             onnx/onnx_import_provenance.in.cpp
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
@@ -470,6 +523,17 @@ endif()
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
 
+if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+    target_link_libraries(unit-test PRIVATE ngraph pybind11::embed)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_UNIT_TEST_NUMPY_ENABLE)
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_include_directories(unit-test
+        SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
+    target_link_libraries(unit-test PRIVATE ${ONNX_LIBRARIES})
+endif()
+
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE libjson)
@@ -479,7 +543,7 @@ if(NOT WIN32)
 endif()
 target_link_libraries(unit-test PRIVATE ${CMAKE_DL_LIBS})
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$")
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$")
     target_compile_options(unit-test PRIVATE -Wno-undef -Wno-reserved-id-macro)
 endif()
 
@@ -487,6 +551,10 @@ endif()
 # We should probably split up type_prop.cpp.
 if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
@@ -530,6 +598,7 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
 endif()
 
 if (NOT NGRAPH_IE_ENABLE)

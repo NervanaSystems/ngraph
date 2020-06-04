@@ -39,8 +39,7 @@ namespace ngraph
             namespace detail
             {
                 AxisSet get_reduction_axes(const Node& node);
-
-            } // namespace  detail
+            }
 
             // An overload for reduction operators that take reduction axes as input
             using RuntimeReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
@@ -79,7 +78,6 @@ namespace ngraph
                 make_ng_reduction_op(const Node& node,
                                      const std::shared_ptr<ngraph::Node>& ng_input,
                                      RuntimeReductionFunction reduction_function);
-
-        } // namespace  reduction
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

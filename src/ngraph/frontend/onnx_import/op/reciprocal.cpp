@@ -36,11 +36,7 @@ namespace ngraph
                         default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
                     return {std::make_shared<default_opset::Divide>(one_node, data)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

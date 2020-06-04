@@ -23,7 +23,7 @@
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -76,11 +76,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::opset0::Dequantize>(
                         x, x_scale, zero_point, x_scale->get_element_type(), axes)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

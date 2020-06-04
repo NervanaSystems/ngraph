@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "default_opset.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "scatter_elements.hpp"
 
 namespace ngraph
@@ -41,10 +41,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::opset3::ScatterElementsUpdate>(
                         data, indices, updates, axis_node)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

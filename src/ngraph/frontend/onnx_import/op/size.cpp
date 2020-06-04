@@ -42,11 +42,7 @@ namespace ngraph
                         Shape{},
                         std::vector<std::int64_t>{tensor_elements_count})};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

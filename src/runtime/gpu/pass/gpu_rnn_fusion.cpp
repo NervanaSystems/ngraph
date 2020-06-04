@@ -82,7 +82,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
             return false;
         }
 
-        if (m.get_match_root()->get_outputs().size() != pattern_map[input]->get_outputs().size())
+        if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
@@ -323,7 +323,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
             {
                 if (node->get_argument(i) == pattern_map[ct_label])
                 {
-                    node->get_inputs().at(i).replace_output(ct_output->get_outputs().at(0));
+                    node->get_input_descriptors().at(i).replace_output(
+                        ct_output->get_output_descriptors().at(0));
                 }
             }
         }
@@ -547,7 +548,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t index = 0; index < lstm_nodes.size(); index++)
         {
             // now get the GOE0 which is the first output of lstm (ht)
-            for (auto& goes : lstm_nodes[index]->get_outputs().at(0).get_inputs())
+            for (auto& goes : lstm_nodes[index]->get_output_descriptors().at(0).get_inputs())
             {
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
                 // first output node of lstm
@@ -585,8 +586,9 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 if (map_goe_to_lstm_slices.find(node->get_argument(i)) !=
                     map_goe_to_lstm_slices.end())
                 {
-                    node->get_inputs().at(i).replace_output(
-                        map_goe_to_lstm_slices[node->get_argument(i)]->get_outputs().at(0));
+                    node->get_input_descriptors().at(i).replace_output(
+                        map_goe_to_lstm_slices[node->get_argument(i)]->get_output_descriptors().at(
+                            0));
                 }
             }
         }

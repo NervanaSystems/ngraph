@@ -126,31 +126,6 @@ std::shared_ptr<Node>
     return clone;
 }
 
-std::shared_ptr<Node> Node::copy_with_new_args(const NodeVector& args) const
-{
-    NODE_VALIDATION_CHECK(
-        this, false, "Internal error: copy_with_new_args not replaced by clone_with_new_inputs");
-}
-
-std::shared_ptr<Node> Node::clone_with_new_inputs(const OutputVector& inputs) const
-{
-    NodeVector args;
-    for (const Output<Node>& input : inputs)
-    {
-        args.push_back(get_output_element(input));
-    }
-    std::shared_ptr<Node> clone = copy_with_new_args(args);
-    // Remove the inserted GOEs
-    for (size_t i = 0; i < inputs.size(); ++i)
-    {
-        if (clone->input_value(i) != inputs.at(i))
-        {
-            clone->set_argument(i, inputs.at(i));
-        }
-    }
-    return clone;
-}
-
 void Node::safe_delete(NodeVector& nodes, bool recurse)
 {
     for (auto& input : m_inputs)
@@ -199,7 +174,7 @@ void Node::set_arguments(const OutputVector& arguments)
     for (auto& output : arguments)
     {
         auto output_node = output.get_node();
-        auto& output_descriptor = output_node->get_outputs().at(output.get_index());
+        auto& output_descriptor = output_node->get_output_descriptor(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
     }
 }
@@ -213,6 +188,11 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
+const descriptor::Input& Node::get_input_descriptor(size_t position) const
+{
+    return m_inputs.at(position);
+}
+
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -222,6 +202,11 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
             make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
+    return m_outputs.at(position);
+}
+
+const descriptor::Output& Node::get_output_descriptor(size_t position) const
+{
     return m_outputs.at(position);
 }
 
@@ -289,12 +274,12 @@ void Node::set_output_type(size_t i, const element::Type& element_type, const Pa
     get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
-std::deque<descriptor::Output>& Node::get_outputs()
+std::deque<descriptor::Output>& Node::get_output_descriptors()
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_outputs() const
+const std::deque<descriptor::Output>& Node::get_output_descriptors() const
 {
     return m_outputs;
 }
@@ -311,13 +296,9 @@ bool Node::is_constant() const
 
 const std::string& Node::description() const
 {
-    if (m_node_type.size() == 0)
-    {
-        // Terrible transitional kludge to keep description working while we change
-        // type_name to const_char and virtual description() to virtual get_type_name()
-        const_cast<Node*>(this)->m_node_type = get_type_name();
-    }
-
+    // Terrible transitional kludge to keep description working while we change
+    // type_name to const_char and virtual description() to virtual get_type_name()
+    const_cast<Node*>(this)->m_node_type = get_type_name();
     return m_node_type;
 }
 
@@ -1147,4 +1128,57 @@ bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_
         return true;
     }
     return false;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
+
+AttributeAdapter<std::shared_ptr<Node>>::AttributeAdapter(std::shared_ptr<Node>& value)
+    : m_ref(value)
+{
+}
+
+bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor)
+{
+    auto original_id = visitor.get_registered_node_id(m_ref);
+    auto id = original_id;
+    visitor.on_attribute("ID", id);
+    if (id != original_id)
+    {
+        m_ref = visitor.get_registered_node(id);
+    }
+    return true;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<NodeVector>::type_info;
+
+AttributeAdapter<NodeVector>::AttributeAdapter(NodeVector& ref)
+    : m_ref(ref)
+{
+}
+
+bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor)
+{
+    int64_t size = m_ref.size();
+    visitor.on_attribute("size", size);
+    if (size != m_ref.size())
+    {
+        m_ref.resize(size);
+    }
+    ostringstream index;
+    for (int64_t i = 0; i < size; i++)
+    {
+        index.str("");
+        index << i;
+        string id;
+        if (m_ref[i])
+        {
+            id = visitor.get_registered_node_id(m_ref[i]);
+        }
+        visitor.on_attribute(index.str(), id);
+        if (!m_ref[i])
+        {
+            m_ref[i] = visitor.get_registered_node(id);
+        }
+    }
+    return true;
 }

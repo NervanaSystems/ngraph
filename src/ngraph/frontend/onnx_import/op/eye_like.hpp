@@ -28,10 +28,7 @@ namespace ngraph
             namespace set_1
             {
                 NodeVector eye_like(const Node& node);
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

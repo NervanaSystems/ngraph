@@ -92,7 +92,7 @@ namespace ngraph
                 Shape node_shape = node->get_shape();
 
                 // If node is already a scalar, return original
-                if (node_shape.empty())
+                if (is_scalar(node_shape))
                 {
                     return node;
                 }
@@ -110,12 +110,8 @@ namespace ngraph
                         node->get_element_type(), ngraph::Shape{}, value);
                 }
 
-                const auto axis =
-                    default_opset::Constant::create(element::i64, ngraph::Shape{}, {0});
-
-                return std::make_shared<ngraph::opset1::Squeeze>(node, axis);
+                return builder::opset1::reshape(node, Shape{});
             }
-
-        } // namespace  reshape
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

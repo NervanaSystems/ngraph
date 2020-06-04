@@ -80,8 +80,10 @@ namespace ngraph
 
                 /// \return true and the AxisSet if broadcast axes can be fully determined.
                 std::pair<bool, AxisSet> get_broadcast_axes() const override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
-        } // namespace v3
+        }
 
         namespace v1
         {
@@ -136,11 +138,13 @@ namespace ngraph
                 }
 
                 void validate_and_infer_types() override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 AutoBroadcastSpec m_broadcast_spec;
             };
-        } // namespace v1
+        }
 
         namespace v0
         {
@@ -177,6 +181,9 @@ namespace ngraph
                 }
                 const Shape& get_broadcast_shape() const { return m_shape; }
                 void set_broadcast_shape(const Shape& shape) { m_shape = shape; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             protected:
                 Broadcast(const OutputVector& args,
                           const Shape& shape,
@@ -227,7 +234,7 @@ namespace ngraph
             protected:
                 AxisSet m_initial_broadcast_axes;
             };
-        } // namespace v0
+        }
 
         using v0::Broadcast;
         using v0::BroadcastLike;

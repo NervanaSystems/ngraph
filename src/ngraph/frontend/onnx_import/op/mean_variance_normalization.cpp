@@ -18,8 +18,8 @@
 
 #include "mean_variance_normalization.hpp"
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/op/mvn.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/validation_util.hpp"
 
 namespace ngraph
@@ -41,8 +41,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::opset0::MVN>(
                         data, across_channels, normalize_variance)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_9
             {
@@ -55,11 +54,7 @@ namespace ngraph
 
                     return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(normalized_axes))};
                 }
-
-            } // namespace set_9
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

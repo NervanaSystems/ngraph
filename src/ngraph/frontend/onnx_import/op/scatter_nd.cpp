@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "scatter_nd.hpp"
 
 namespace ngraph
@@ -36,11 +36,7 @@ namespace ngraph
 
                     return {std::make_shared<opset0::ScatterND>(data, indices, updates)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

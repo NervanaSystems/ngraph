@@ -65,6 +65,7 @@
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
@@ -85,14 +86,10 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/fused/matmul.hpp"
-#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
+#include "ngraph/op/gelu.hpp"
+#include "ngraph/op/gemm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -101,6 +98,8 @@
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/op/lstm_cell.hpp"
+#include "ngraph/op/matmul.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -135,6 +134,7 @@
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/softmax_crossentropy.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -159,6 +159,7 @@
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
@@ -240,16 +241,15 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool release_function)
+    const shared_ptr<ngraph::Function>& function, bool codegen_enable)
     : m_function(function)
-    , m_release_function(release_function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
     , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!getenv_bool("NGRAPH_CODEGEN"))
+    , m_direct_execution(!codegen_enable)
 #else
     , m_direct_execution(true)
 #endif
@@ -273,9 +273,9 @@ public:
     StaticInitializers(string directory) { ngraph::file_util::remove_directory(directory); }
 };
 
-#if !defined(NGRAPH_DEX_ONLY)
+static const string s_debug_dir = "cpu_codegen";
 
-static const string s_output_dir = "cpu_codegen";
+#if !defined(NGRAPH_DEX_ONLY)
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -308,8 +308,6 @@ static string emit_string_array(const vector<string>& s, size_t max_line_length)
     ss << line.str();
     return ss.str();
 }
-
-static StaticInitializers s_static_initializers(s_output_dir);
 
 #define TI(x) type_index(typeid(x))
 
@@ -370,6 +368,9 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Acos), &runtime::cpu::CPU_Emitter::emit<op::Acos>},
     {TI(ngraph::op::Atan), &runtime::cpu::CPU_Emitter::emit<op::Atan>},
     {TI(ngraph::op::Atan2), &runtime::cpu::CPU_Emitter::emit<op::Atan2>},
+    {TI(ngraph::op::Asinh), &runtime::cpu::CPU_Emitter::emit<op::Asinh>},
+    {TI(ngraph::op::Acosh), &runtime::cpu::CPU_Emitter::emit<op::Acosh>},
+    {TI(ngraph::op::Atanh), &runtime::cpu::CPU_Emitter::emit<op::Atanh>},
     {TI(ngraph::op::ReplaceSlice), &runtime::cpu::CPU_Emitter::emit<op::ReplaceSlice>},
     {TI(ngraph::op::UpdateSlice), &runtime::cpu::CPU_Emitter::emit<op::UpdateSlice>},
     {TI(ngraph::op::OneHot), &runtime::cpu::CPU_Emitter::emit<op::OneHot>},
@@ -454,6 +455,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dropout), &runtime::cpu::CPU_Emitter::emit<op::Dropout>},
     {TI(ngraph::op::Tile), &runtime::cpu::CPU_Emitter::emit<op::Tile>},
     {TI(ngraph::op::Gelu), &runtime::cpu::CPU_Emitter::emit<op::Gelu>},
+    {TI(ngraph::op::RandomUniform), &runtime::cpu::CPU_Emitter::emit<op::RandomUniform>},
     {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
     {TI(ngraph::op::Round), &runtime::cpu::CPU_Emitter::emit<op::Round>}};
 
@@ -528,6 +530,16 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     }
 #endif
 
+// Any #ifdef in cpu_runtime_context.hpp MUST be included in here or the CPURuntimeContext
+// structure in the codegen code will be different from the cpu backend compiled version and
+// mayhem will ensue
+#if defined(NGRAPH_TBB_ENABLE)
+    writer += "#define NGRAPH_TBB_ENABLE\n";
+#endif
+#if defined(NGRAPH_MLIR_ENABLE)
+    writer += "#define NGRAPH_MLIR_ENABLE\n";
+#endif
+
     writer +=
         R"(
 #include <cmath>
@@ -552,6 +564,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/convolution.hpp"
+#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/runtime/reference/cum_sum.hpp"
 #include "ngraph/runtime/reference/dequantize.hpp"
 #include "ngraph/runtime/reference/dot.hpp"
@@ -569,12 +582,14 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/reference/pad.hpp"
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
+#include "ngraph/runtime/reference/random_uniform.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/runtime/reference/result.hpp"
 #include "ngraph/runtime/reference/reverse.hpp"
 #include "ngraph/runtime/reference/reverse_sequence.hpp"
+#include "ngraph/runtime/reference/round.hpp"
 #include "ngraph/runtime/reference/scatter_add.hpp"
 #include "ngraph/runtime/reference/scatter_nd_add.hpp"
 #include "ngraph/runtime/reference/slice.hpp"
@@ -588,6 +603,7 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 
 using namespace ngraph::runtime::cpu::eigen;
 using namespace ngraph::runtime;
+using namespace ngraph;
 
 )";
 
@@ -658,7 +674,7 @@ using namespace ngraph::runtime;
         if (c)
         {
             m_active_constants.push_back(node);
-            shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptors()[0].get_tensor_ptr();
             string type = tv->get_element_type().c_type_string();
             writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
                    << c->get_data_ptr() << "));\n";
@@ -724,7 +740,7 @@ using namespace ngraph::runtime;
     {
         if (is_type<ngraph::op::Constant>(node))
         {
-            shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptors()[0].get_tensor_ptr();
             constants.insert(tv.get());
         }
     }
@@ -750,7 +766,7 @@ using namespace ngraph::runtime;
     {
         if (!node->is_parameter() && !node->is_constant())
         {
-            for (const descriptor::Input& input : node->get_inputs())
+            for (const descriptor::Input& input : node->get_input_descriptors())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -812,7 +828,7 @@ using namespace ngraph::runtime;
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_outputs().at(i).get_tensor();
+            auto output_tensor = &param->get_output_descriptor(i).get_tensor();
             param_index_map[output_tensor->get_name()] = arg_index;
             auto tensor_set = get_tensor_set(output_tensor);
 
@@ -883,7 +899,7 @@ using namespace ngraph::runtime;
         vector<string> node_output_names;
         vector<TensorTracerAttributes> t_in_attrs;
         vector<TensorTracerAttributes> t_out_attrs;
-        for (const descriptor::Input& input : node->get_inputs())
+        for (const descriptor::Input& input : node->get_input_descriptors())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -893,7 +909,7 @@ using namespace ngraph::runtime;
                 in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
         vector<TensorWrapper> out;
-        for (const descriptor::Output& output : node->get_outputs())
+        for (const descriptor::Output& output : node->get_output_descriptors())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
@@ -947,8 +963,8 @@ using namespace ngraph::runtime;
         // Op Control
         if (!node->is_parameter() && !node->is_constant())
         {
-            writer << "if (ctx->first_iteration ";
-            for (const descriptor::Input& input : node->get_inputs())
+            writer << "if (ctx->first_iteration";
+            for (const descriptor::Input& input : node->get_input_descriptors())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -972,7 +988,7 @@ using namespace ngraph::runtime;
             {
                 writer << " || 1";
             }
-            writer << ") {\n";
+            writer << ")\n{\n";
             writer.indent++;
         }
 
@@ -1026,7 +1042,7 @@ using namespace ngraph::runtime;
                 writer << "t_en[" << tensor_index_map[output_name] << "] = true;\n";
             }
             writer.indent--;
-            writer << "} else {\n";
+            writer << "}\nelse\n{\n";
             writer.indent++;
             for (auto output_name : node_output_names)
             {
@@ -1095,9 +1111,9 @@ using namespace ngraph::runtime;
     writer += "}\n\n";
 
     // TODO: Cleanup and make this a utility function
-    string filename = file_util::path_join(s_output_dir, m_function_name + "_codegen.cpp");
+    string filename = file_util::path_join(s_debug_dir, m_function_name + "_codegen.cpp");
     string code = writer.get_code();
-    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_output_dir, filename);
+    runtime::cpu::CPU_ExternalFunction::write_to_file(writer.get_code(), s_debug_dir, filename);
 
     m_compiler.reset(new codegen::Compiler());
     m_execution_engine.reset(new codegen::ExecutionEngine());
@@ -1172,7 +1188,7 @@ using namespace ngraph::runtime;
     }
 
     m_is_compiled = true;
-    if (m_release_function && !m_emit_timing)
+    if (!m_emit_timing)
     {
         release_function();
     }
@@ -1186,7 +1202,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto pass_map = pass_config.get_enables();
 
     auto dex = is_direct_execution();
-    auto is_supported = [dex](const Node& node) {
+    auto is_supported = [dex, this](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
         if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
@@ -1213,16 +1229,9 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
             // has peephole. LSTMCell with no peephole support is constant initialized to zero
             // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
-            // LSTMCell
-            // with peephole as well.
-            if (is_type<ngraph::op::Constant>(node.get_argument(6)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // LSTMCell with peephole as well.
+            // Not supported on codegen
+            return m_direct_execution && is_type<ngraph::op::Constant>(node.get_argument(6));
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
@@ -1263,6 +1272,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
+    REGISTER_KNOBBED_PASS(Opset1Downgrade, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(Opset0Downgrade, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
@@ -1446,7 +1456,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 #endif
 
     // stream writer to dump the debug manifest for the DEX
-    static const string s_debug_dir = "cpu_codegen";
     static StaticInitializers s_static_initializers(s_debug_dir);
     m_mkldnn_emitter.reset(new MKLDNNEmitter());
     ngraph::pass::Manager pass_manager;
@@ -1553,7 +1562,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_outputs().at(i).get_tensor();
+            auto output_tensor = &param->get_output_descriptor(i).get_tensor();
             auto tensor_set = get_tensor_set(output_tensor);
 
             auto& stale = tensor_stale[output_tensor->get_name()];
@@ -1609,7 +1618,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         vector<TensorWrapper> in;
         vector<string> in_names;
         vector<TensorTracerAttributes> t_in_attrs;
-        for (const descriptor::Input& input : node->get_inputs())
+        for (const descriptor::Input& input : node->get_input_descriptors())
         {
             const descriptor::Output& output = input.get_output();
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -1622,7 +1631,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         vector<string> out_names;
         vector<TensorTracerAttributes> t_out_attrs;
 
-        for (const descriptor::Output& output : node->get_outputs())
+        for (const descriptor::Output& output : node->get_output_descriptors())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorWrapper(tv, tv->get_name()));
@@ -1747,7 +1756,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 continue;
             }
-            for (const descriptor::Input& input : node->get_inputs())
+            for (const descriptor::Input& input : node->get_input_descriptors())
             {
                 const descriptor::Output& output = input.get_output();
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -1756,7 +1765,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                 temp.str("");
             }
 
-            for (const descriptor::Output& output : node->get_outputs())
+            for (const descriptor::Output& output : node->get_output_descriptors())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 temp << &m_buffer_indices[tv->get_name()];
@@ -1895,10 +1904,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
                         }
                     });
 
-                if (m_release_function)
-                {
-                    release_function();
-                }
+                release_function();
             }
             // Execute the flow graph
             (static_cast<tbb::flow::continue_node<tbb::flow::continue_msg>*>(&(*(ctx->G->begin()))))
@@ -2022,9 +2028,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     m_is_built = true;
 
 #if defined(NGRAPH_TBB_ENABLE)
-    if (m_release_function && !m_use_tbb)
-#else
-    if (m_release_function)
+    if (!m_use_tbb)
 #endif
     {
         release_function();
@@ -2063,8 +2067,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
 #if defined(NGRAPH_DEX_ONLY)
     if (is_codegen(pass_config))
     {
-        NGRAPH_WARN << "CPU Backend: Requested unsupported compilation mode (CODEGEN). Falling "
-                       "back to DEX instead";
+        throw runtime_error("CPU Backend: Requested unsupported compilation mode (CODEGEN)");
     }
 #else
     // Override DEX if pass_config requests CODEGEN
@@ -2141,10 +2144,7 @@ const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::g
                 }
             }
         }
-        if (m_release_function)
-        {
-            release_function();
-        }
+        release_function();
     }
 #endif
     return m_perf_counters;
@@ -2210,7 +2210,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     vector<TensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
-    for (const descriptor::Input& input : node.get_inputs())
+    for (const descriptor::Input& input : node.get_input_descriptors())
     {
         const descriptor::Output& output = input.get_output();
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
@@ -2228,7 +2228,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         in.push_back(tvw);
     }
     vector<TensorWrapper> out;
-    for (const descriptor::Output& output : node.get_outputs())
+    for (const descriptor::Output& output : node.get_output_descriptors())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorWrapper tvw{tv, "_out" + to_string(arg_index)};

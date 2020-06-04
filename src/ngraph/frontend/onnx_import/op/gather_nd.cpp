@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -33,11 +33,7 @@ namespace ngraph
 
                     return {std::make_shared<ngraph::opset0::GatherND>(data, indices)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

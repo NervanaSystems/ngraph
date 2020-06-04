@@ -70,7 +70,7 @@ namespace ngraph
                         axes.insert(ax);
                     }
 
-                    auto attrs = ngraph::op::InterpolateAttrs();
+                    auto attrs = ngraph::op::v0::InterpolateAttrs();
                     attrs.axes = axes;
                     attrs.mode = mode;
                     attrs.align_corners = false;
@@ -105,11 +105,7 @@ namespace ngraph
                     return {
                         std::make_shared<default_opset::Interpolate>(data, output_shape, attrs)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

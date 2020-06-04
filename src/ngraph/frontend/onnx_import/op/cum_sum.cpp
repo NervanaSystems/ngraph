@@ -18,7 +18,6 @@
 
 #include "cum_sum.hpp"
 #include "default_opset.hpp"
-#include "ngraph/opsets/opset0.hpp"
 
 namespace ngraph
 {
@@ -46,13 +45,9 @@ namespace ngraph
                             default_opset::Constant::create(element::i64, Shape{}, {0}); // default
                     }
                     return NodeVector{
-                        std::make_shared<ngraph::opset0::CumSum>(data, axis, exclusive, reverse)};
+                        std::make_shared<default_opset::CumSum>(data, axis, exclusive, reverse)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

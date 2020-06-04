@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/fused/squeeze.hpp"
+#include "ngraph/op/squeeze.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
 #include "ngraph/op/constant.hpp"
@@ -43,8 +43,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Squeeze>(data, axes_node)};
                 }
-
-            } // namespace set_1
-        }     // namespace op
-    }         // namespace onnx_import
-} // namespace ngraph
+            }
+        }
+    }
+}

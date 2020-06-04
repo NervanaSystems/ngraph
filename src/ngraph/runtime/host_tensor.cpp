@@ -84,7 +84,8 @@ void runtime::HostTensor::allocate_buffer()
     }
     else
     {
-        size_t allocation_size = m_buffer_size + alignment;
+        // Add 1 so that even for zero-sized tensor we get at least 1 byte
+        size_t allocation_size = m_buffer_size + alignment + 1;
         uint8_t* allocated_buffer_pool = static_cast<uint8_t*>(ngraph_malloc(allocation_size));
         m_allocated_buffer_pool = allocated_buffer_pool;
         size_t mod = size_t(allocated_buffer_pool) % alignment;
@@ -98,10 +99,17 @@ void runtime::HostTensor::allocate_buffer()
         }
     }
 }
+
 runtime::HostTensor::HostTensor(const std::shared_ptr<op::v0::Constant>& constant)
-    : HostTensor(
-          constant->get_output_element_type(0), constant->get_output_shape(0), constant->get_name())
+    : HostTensor(constant->output(0).get_tensor().get_name())
 {
+    initialize(constant);
+}
+
+void runtime::HostTensor::initialize(const std::shared_ptr<op::v0::Constant>& constant)
+{
+    set_element_type(constant->get_output_element_type(0));
+    set_shape(constant->get_output_shape(0));
     memcpy(get_data_ptr(), constant->get_data_ptr(), get_size_in_bytes());
 }
 
@@ -136,7 +144,14 @@ void runtime::HostTensor::write(const void* source, size_t n)
     {
         throw out_of_range("partial tensor write not supported");
     }
-    memcpy(target, source, n);
+    if (n > 0)
+    {
+        if (!source)
+        {
+            throw runtime_error("nullptr passed to HostTensor::write");
+        }
+        memcpy(target, source, n);
+    }
 }
 
 void runtime::HostTensor::read(void* target, size_t n) const
@@ -147,7 +162,14 @@ void runtime::HostTensor::read(void* target, size_t n) const
     {
         throw out_of_range("partial tensor read access not supported");
     }
-    memcpy(target, source, n);
+    if (n > 0)
+    {
+        if (!target)
+        {
+            throw runtime_error("nullptr passed to HostTensor::read");
+        }
+        memcpy(target, source, n);
+    }
 }
 
 bool runtime::HostTensor::get_is_allocated() const
@@ -185,6 +207,14 @@ void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
     element::Type element_type = arg0->get_element_type();
     NGRAPH_CHECK(element::Type::merge(element_type, element_type, arg1->get_element_type()),
                  "Argument element types are inconsistent.");
+    set_broadcast(autob, arg0, arg1, element_type);
+}
+
+void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
+                                        const HostTensorPtr& arg0,
+                                        const HostTensorPtr& arg1,
+                                        const element::Type& element_type)
+{
     set_element_type(element_type);
 
     PartialShape pshape = arg0->get_partial_shape();

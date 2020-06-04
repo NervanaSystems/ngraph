@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #pragma once
 
@@ -28,18 +30,18 @@
 #include "mlir/IR/Types.h"
 #include "ngraph/check.hpp"
 
-namespace mlir
-{
-    class NGraphOpsDialect : public mlir::Dialect
-    {
-    public:
-        explicit NGraphOpsDialect(mlir::MLIRContext* ctx);
+namespace mlir {
+class NGraphOpsDialect : public mlir::Dialect {
+public:
+  explicit NGraphOpsDialect(mlir::MLIRContext *ctx);
 
-        mlir::Type parseType(mlir::DialectAsmParser& parser) const override;
-        void printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const override;
+  mlir::Type parseType(mlir::DialectAsmParser &parser) const override;
+  void printType(mlir::Type type,
+                 mlir::DialectAsmPrinter &printer) const override;
 
-        static StringRef getDialectNamespace() { return "ng"; }
-    private:
-        mlir::Type parseEltType(mlir::DialectAsmParser& parser) const;
-    };
+  static StringRef getDialectNamespace() { return "ng"; }
+
+private:
+  mlir::Type parseEltType(mlir::DialectAsmParser &parser) const;
+};
 }

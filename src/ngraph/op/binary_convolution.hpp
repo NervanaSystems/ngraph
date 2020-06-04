@@ -57,7 +57,7 @@ namespace ngraph
                                   const CoordinateDiff& pads_begin,
                                   const CoordinateDiff& pads_end,
                                   const Strides& dilations,
-                                  const BinaryConvolutionMode& mode,
+                                  BinaryConvolutionMode mode,
                                   float pad_value,
                                   const PadType& auto_pad = PadType::EXPLICIT);
 
@@ -113,7 +113,7 @@ namespace ngraph
                 PadType m_auto_pad;
             };
         }
-    } // namespace op
+    }
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
@@ -133,5 +133,4 @@ namespace ngraph
             "AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-
-} // namespace ngraph
+}

@@ -21,7 +21,7 @@
 #include "core/null_node.hpp"
 #include "default_opset.hpp"
 #include "exceptions.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 
 namespace ngraph
 {
@@ -72,11 +72,7 @@ namespace ngraph
                             saved_mean,
                             saved_var};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

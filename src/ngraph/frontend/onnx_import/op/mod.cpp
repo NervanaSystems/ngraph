@@ -20,7 +20,7 @@
 #include "exceptions.hpp"
 #include "mod.hpp"
 #include "ngraph/op/abs.hpp"
-#include "ngraph/op/fused/mod.hpp"
+#include "ngraph/op/mod.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
@@ -42,11 +42,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Mod>(dividend, divisor)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

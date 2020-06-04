@@ -34,11 +34,7 @@ namespace ngraph
                 /// \return The vector containing an Ngraph node which produces the output
                 ///         of an ONNX ArgMax operation.
                 NodeVector argmax(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
