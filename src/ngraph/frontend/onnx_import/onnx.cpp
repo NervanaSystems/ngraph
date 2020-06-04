@@ -22,7 +22,6 @@
 #include "core/graph.hpp"
 #include "core/model.hpp"
 #include "ngraph/except.hpp"
-#include "ngraph/log.hpp"
 #include "onnx.hpp"
 #include "ops_bridge.hpp"
 
@@ -54,7 +53,6 @@ namespace ngraph
 
         std::shared_ptr<Function> import_onnx_model(std::istream& stream)
         {
-            NGRAPH_INFO;
             ONNX_NAMESPACE::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
             if (!model_proto.ParseFromIstream(&stream))
@@ -72,27 +70,17 @@ namespace ngraph
 
             Model model{model_proto};
             Graph graph{model_proto.graph(), model};
-            NGRAPH_INFO;
-            auto a = graph.get_ng_outputs();
-            NGRAPH_INFO;
-            auto b = graph.get_ng_parameters();
-            NGRAPH_INFO;
             auto function = std::make_shared<Function>(
-                a, b, graph.get_name());
-            NGRAPH_INFO;
+                graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
             for (std::size_t i{0}; i < function->get_output_size(); ++i)
             {
-            NGRAPH_INFO;
                 function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
-            NGRAPH_INFO;
             }
-            NGRAPH_INFO;
             return function;
         }
 
         std::shared_ptr<Function> import_onnx_model(const std::string& file_path)
         {
-            NGRAPH_INFO;
             std::ifstream ifs{file_path, std::ios::in | std::ios::binary};
             if (!ifs.is_open())
             {
