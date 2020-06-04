@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph

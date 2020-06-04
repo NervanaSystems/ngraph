@@ -17,7 +17,7 @@
 #include "utils/arg_min_max_factory.hpp"
 #include "default_opset.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/validation_util.hpp"
 
 namespace ngraph

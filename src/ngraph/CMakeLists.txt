@@ -519,7 +519,7 @@ set (SRC
     op/xor.cpp
     op/xor.hpp
     ops.hpp
-    opsets/opset.cpp
+    opset/opset.cpp
     partial_shape.cpp
     partial_shape.hpp
     pass/algebraic_simplification.cpp

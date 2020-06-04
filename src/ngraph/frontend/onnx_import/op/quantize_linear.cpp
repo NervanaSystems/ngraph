@@ -18,7 +18,7 @@
 #include <memory>
 
 #include "ngraph/axis_set.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/shape.hpp"
 #include "quantize_linear.hpp"
 
