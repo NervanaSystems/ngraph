@@ -25,8 +25,6 @@ set(MLIR_LLVM_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
 
 if (NGRAPH_USE_PREBUILT_MLIR)
     set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH})
-else()
-    set(MLIR_PROJECT_ROOT ${CMAKE_CURRENT_BINARY_DIR}/mlir_project)
 endif()
 
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-project)
@@ -62,7 +60,8 @@ if (NOT NGRAPH_USE_PREBUILT_MLIR)
                     -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
                     ${MLIR_LLVM_CMAKE_ARGS}
-                    -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS} .
+                    -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS}
+                    ${ext_mlir_SOURCE_DIR}/llvm
                     WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
 
     # Clone and build llvm + mlir.
