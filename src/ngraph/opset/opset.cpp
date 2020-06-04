@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/opsets/opset.hpp"
+#include "ngraph/opset/opset.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 
@@ -52,7 +52,7 @@ const ngraph::OpSet& ngraph::get_opset0()
         if (opset.size() == 0)
         {
 #define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
-#include "ngraph/opsets/opset0_tbl.hpp"
+#include "ngraph/opset/opset0_tbl.hpp"
 #undef NGRAPH_OP
         }
     }
@@ -70,7 +70,7 @@ const ngraph::OpSet& ngraph::get_opset1()
         if (!opset_is_initialized)
         {
 #define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opset/opset1_tbl.hpp"
 #undef NGRAPH_OP
             opset_is_initialized = true;
         }
@@ -89,7 +89,7 @@ const ngraph::OpSet& ngraph::get_opset2()
         if (!opset_is_initialized)
         {
 #define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
-#include "ngraph/opsets/opset2_tbl.hpp"
+#include "ngraph/opset/opset2_tbl.hpp"
 #undef NGRAPH_OP
             opset_is_initialized = true;
         }
@@ -108,7 +108,7 @@ const ngraph::OpSet& ngraph::get_opset3()
         if (!opset_is_initialized)
         {
 #define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
-#include "ngraph/opsets/opset3_tbl.hpp"
+#include "ngraph/opset/opset3_tbl.hpp"
 #undef NGRAPH_OP
             opset_is_initialized = true;
         }
@@ -127,9 +127,9 @@ const ngraph::OpSet& ngraph::get_ie_opset()
         if (!opset_is_initialized)
         {
 #define NGRAPH_OP(NAME, NAMESPACE) opset.insert<NAMESPACE::NAME>();
-#include "ngraph/opsets/opset1_tbl.hpp"
-#include "ngraph/opsets/opset2_tbl.hpp"
-#include "ngraph/opsets/opset3_tbl.hpp"
+#include "ngraph/opset/opset1_tbl.hpp"
+#include "ngraph/opset/opset2_tbl.hpp"
+#include "ngraph/opset/opset3_tbl.hpp"
 #undef NGRAPH_OP
             opset_is_initialized = true;
         }

@@ -17,14 +17,13 @@
 #pragma once
 
 #include "ngraph/ops.hpp"
-#include "ngraph/opsets/opset1.hpp"
 
 namespace ngraph
 {
-    namespace opset2
+    namespace opset3
     {
 #define NGRAPH_OP(a, b) using b::a;
-#include "ngraph/opsets/opset2_tbl.hpp"
+#include "ngraph/opset/opset3_tbl.hpp"
 #undef NGRAPH_OP
     }
 }
