@@ -54,13 +54,13 @@ namespace ngraph
                 /// \brief      Creates average pooling ONNX operation.
                 /// \return     Vector of output nodes.
                 ///
-                NodeVector make_avg_pool() const;
+                OutputVector make_avg_pool() const;
 
                 ///
                 /// \brief      Creates max pooling ONNX operation.
                 /// \return     Vector of output nodes.
                 ///
-                NodeVector make_max_pool() const;
+                OutputVector make_max_pool() const;
 
             protected:
                 explicit PoolingFactory(const Node& node);

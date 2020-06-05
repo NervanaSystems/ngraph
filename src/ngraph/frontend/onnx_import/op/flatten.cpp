@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector flatten(const Node& node)
+                OutputVector flatten(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     auto data = inputs.at(0);

@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector onehot(const Node& node)
+                OutputVector onehot(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     auto indices =

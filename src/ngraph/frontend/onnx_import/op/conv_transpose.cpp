@@ -229,7 +229,7 @@ namespace ngraph
                     }
                 }
 
-                NodeVector conv_transpose(const Node& node)
+                OutputVector conv_transpose(const Node& node)
                 {
                     const OutputVector& inputs = node.get_ng_inputs();
 
@@ -323,7 +323,7 @@ namespace ngraph
                     // no bias param
                     if (inputs.size() < 3)
                     {
-                        return as_node_vector({conv_node});
+                        return {conv_node};
                     }
                     const auto reshaped_bias = get_prepared_bias(inputs[2], conv_node);
 

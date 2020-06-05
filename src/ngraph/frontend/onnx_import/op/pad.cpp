@@ -62,7 +62,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector pad(const Node& node)
+                OutputVector pad(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
 
@@ -93,7 +93,7 @@ namespace ngraph
             }
             namespace set_11
             {
-                NodeVector pad(const Node& node)
+                OutputVector pad(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto pads = node.get_ng_inputs().at(1);

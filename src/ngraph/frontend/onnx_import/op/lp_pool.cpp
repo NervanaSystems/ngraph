@@ -35,7 +35,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector global_lp_pool(const Node& node)
+                OutputVector global_lp_pool(const Node& node)
                 {
                     const Output<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     const std::size_t channel_axis{1};

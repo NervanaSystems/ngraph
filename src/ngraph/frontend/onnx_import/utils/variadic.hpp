@@ -39,7 +39,7 @@ namespace ngraph
             ///
             /// \return nGraph node equivalent of the ONNX operation
             template <class T>
-            inline NodeVector
+            inline OutputVector
                 make_ng_variadic_op(const Node& node,
                                     const ngraph::op::AutoBroadcastSpec& auto_broadcast =
                                         ngraph::op::AutoBroadcastSpec::NUMPY)
@@ -59,7 +59,7 @@ namespace ngraph
                     ng_inputs.front(),                // Initial value - first input
                     binary_operation);
 
-                return as_node_vector({result});
+                return {result};
             }
         }
     }

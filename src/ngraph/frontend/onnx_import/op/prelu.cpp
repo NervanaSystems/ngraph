@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector prelu(const Node& node)
+                OutputVector prelu(const Node& node)
                 {
                     OutputVector ng_inputs{node.get_ng_inputs()};
                     const auto& data = ng_inputs.at(0);

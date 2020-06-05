@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector selu(const Node& node)
+                OutputVector selu(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto alpha =

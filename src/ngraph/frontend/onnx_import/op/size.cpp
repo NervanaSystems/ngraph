@@ -31,7 +31,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector size(const Node& node)
+                OutputVector size(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t tensor_elements_count{

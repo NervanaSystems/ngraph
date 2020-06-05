@@ -191,13 +191,13 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_add_abc_initializers)
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_override_op)
 {
     onnx_import::register_operator(
-        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
 
     onnx_import::register_operator(
-        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> NodeVector {
+        "FalseAdd", 1, "", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             return {std::make_shared<ngraph::op::Subtract>(ng_inputs.at(0), ng_inputs.at(1))};
         });
@@ -253,7 +253,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_unsupported_op)
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_custom_op)
 {
     onnx_import::register_operator(
-        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
@@ -270,7 +270,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_custom_op)
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_custom_op_default_domain)
 {
     onnx_import::register_operator(
-        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
@@ -308,7 +308,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_is_op_supported)
 
     // Registered custom operator
     onnx_import::register_operator(
-        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+        "AddQ", 1, "com.intel.ai", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
@@ -318,7 +318,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_is_op_supported)
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_missing_op_domain)
 {
     onnx_import::register_operator(
-        "CustomAdd", 1, "custom.op", [](const onnx_import::Node& node) -> NodeVector {
+        "CustomAdd", 1, "custom.op", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             return {std::make_shared<ngraph::op::Add>(ng_inputs.at(0), ng_inputs.at(1))};
         });
@@ -366,7 +366,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_op_in_unknown_domain)
 NGRAPH_TEST(${BACKEND_NAME}, onnx_model_missing_input)
 {
     onnx_import::register_operator(
-        "TestMissingInOut", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+        "TestMissingInOut", 1, "com.intel.ai", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             Output<ngraph::Node> A = ng_inputs.at(0);
             Output<ngraph::Node> B = ng_inputs.at(1);
@@ -386,7 +386,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_missing_input)
         });
 
     onnx_import::register_operator(
-        "TestMissingIn", 1, "com.intel.ai", [](const onnx_import::Node& node) -> NodeVector {
+        "TestMissingIn", 1, "com.intel.ai", [](const onnx_import::Node& node) -> OutputVector {
             OutputVector ng_inputs{node.get_ng_inputs()};
             std::shared_ptr<ngraph::Node> result = std::make_shared<ngraph::op::Constant>(
                 element::f32, ngraph::Shape{2, 2}, std::vector<float>{1, 1, 1, 1});

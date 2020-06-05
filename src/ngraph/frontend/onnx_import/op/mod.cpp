@@ -31,7 +31,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector mod(const Node& node)
+                OutputVector mod(const Node& node)
                 {
                     Output<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
                     Output<ngraph::Node> divisor{node.get_ng_inputs().at(1)};

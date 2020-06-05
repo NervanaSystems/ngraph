@@ -26,7 +26,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector resize(const onnx_import::Node& node)
+                OutputVector resize(const onnx_import::Node& node)
                 {
                     const auto inputs = node.get_ng_inputs();
                     const auto data = inputs.at(0);

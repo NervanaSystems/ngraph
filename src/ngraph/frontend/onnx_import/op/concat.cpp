@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector concat(const Node& node)
+                OutputVector concat(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");

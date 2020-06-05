@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector leaky_relu(const Node& node)
+                OutputVector leaky_relu(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     double alpha = node.get_attribute_value<double>("alpha", 0.01);

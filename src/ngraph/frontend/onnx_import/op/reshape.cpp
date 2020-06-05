@@ -33,7 +33,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector reshape(const Node& node)
+                OutputVector reshape(const Node& node)
                 {
                     OutputVector ng_inputs{node.get_ng_inputs()};
                     const auto data = ng_inputs.at(0);

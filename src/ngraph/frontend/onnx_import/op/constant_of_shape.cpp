@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector constant_of_shape(const onnx_import::Node& node)
+                OutputVector constant_of_shape(const onnx_import::Node& node)
                 {
                     Output<ngraph::Node> constant_value;
                     if (node.has_attribute("value"))

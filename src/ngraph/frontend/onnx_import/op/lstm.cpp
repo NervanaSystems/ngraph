@@ -213,7 +213,7 @@ namespace ngraph
 
             namespace set_1
             {
-                NodeVector lstm(const Node& node)
+                OutputVector lstm(const Node& node)
                 {
                     LSTMNgInputMap input_map{node};
                     LSTMAttributes attributes{node};
