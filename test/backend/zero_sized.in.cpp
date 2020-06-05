@@ -36,7 +36,7 @@ namespace
         Shape shape{0};
 
         ParameterVector params;
-        NodeVector result_list;
+        OutputVector result_list;
         for (size_t i = 0; i < s_known_element_types.size(); i++)
         {
             shared_ptr<op::Parameter> p =
@@ -92,7 +92,7 @@ namespace
             A.push_back(make_shared<op::Parameter>(s_known_element_types[i], shape));
         }
 
-        NodeVector result_list;
+        OutputVector result_list;
         for (shared_ptr<op::Parameter> p : A)
         {
             result_list.push_back(make_shared<OP>(p, p));
