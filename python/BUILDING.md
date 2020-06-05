@@ -34,7 +34,7 @@ cmake ..
       -G"Visual Studio 15 2017 Win64"
       -DCMAKE_BUILD_TYPE=Release
       -DCMAKE_INSTALL_PREFIX="C:\temporary_install_dir"
-      -DNGRAPH_DEX_ONLY=TRUE
+      -DNGRAPH_CPU_ENABLE=TRUE
       -DNGRAPH_PYTHON_BUILD_ENABLE=TRUE
       -DNGRAPH_ONNX_IMPORT_ENABLE=TRUE
       -DCMAKE_CXX_COMPILER=C:\Program Files (x86)\Microsoft Visual Studio\2017\Professional\VC\Tools\MSVC\14.16.27023\bin\Hostx64\x64
@@ -42,7 +42,6 @@ cmake ..
 There are a couple of things to notice here. One is that the full path to the x64 version of
 MSVC compiler has to be specified. This is because DNNL requires a 64-bit version and cmake may
 fail to detect it correctly.
-Only the DEX mode is supported on Windows systems, hence the `NGRAPH_DEX_ONLY` flag.
 The other equally important thing to note is that the temporary directory where the build is to be installed can be specified.
 This examples uses `C:\temporary_install_dir` however, a subdirectory of `ngraph\build` works as well.
 The final Python wheel will contain the contents of this temporary directory so it's very important to set it.

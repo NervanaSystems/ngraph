@@ -65,6 +65,7 @@
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
@@ -85,14 +86,10 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/fused/matmul.hpp"
-#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
+#include "ngraph/op/gelu.hpp"
+#include "ngraph/op/gemm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -101,6 +98,8 @@
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/op/lstm_cell.hpp"
+#include "ngraph/op/matmul.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -135,6 +134,7 @@
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/softmax_crossentropy.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -1202,7 +1202,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto pass_map = pass_config.get_enables();
 
     auto dex = is_direct_execution();
-    auto is_supported = [dex](const Node& node) {
+    auto is_supported = [dex, this](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
         if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
@@ -1229,16 +1229,9 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
             // has peephole. LSTMCell with no peephole support is constant initialized to zero
             // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
-            // LSTMCell
-            // with peephole as well.
-            if (is_type<ngraph::op::Constant>(node.get_argument(6)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // LSTMCell with peephole as well.
+            // Not supported on codegen
+            return m_direct_execution && is_type<ngraph::op::Constant>(node.get_argument(6));
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
@@ -2074,8 +2067,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
 #if defined(NGRAPH_DEX_ONLY)
     if (is_codegen(pass_config))
     {
-        NGRAPH_WARN << "CPU Backend: Requested unsupported compilation mode (CODEGEN). Falling "
-                       "back to DEX instead";
+        throw runtime_error("CPU Backend: Requested unsupported compilation mode (CODEGEN)");
     }
 #else
     // Override DEX if pass_config requests CODEGEN

@@ -43,11 +43,11 @@ namespace ngraph
 
             // An overload for reduction operators that take reduction axes as input
             using RuntimeReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
-                const std::shared_ptr<ngraph::Node>&, const std::shared_ptr<ngraph::Node>&, bool)>;
+                const Output<ngraph::Node>&, const Output<ngraph::Node>&, bool)>;
 
             // An overload for reduction operators that take reduction axes as an attribute
             using ReductionFunction = std::function<std::shared_ptr<ngraph::Node>(
-                const std::shared_ptr<ngraph::Node>&, const ngraph::AxisSet&)>;
+                const Output<ngraph::Node>&, const ngraph::AxisSet&)>;
 
             ///
             /// \brief      Create an nGraph version of an ONNX reduction operation.
@@ -61,7 +61,7 @@ namespace ngraph
             ///
             std::shared_ptr<ngraph::Node>
                 make_ng_reduction_op(const Node& node,
-                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     const Output<ngraph::Node>& ng_input,
                                      ReductionFunction reduction_function);
 
             ///
@@ -76,7 +76,7 @@ namespace ngraph
             ///
             std::shared_ptr<ngraph::Node>
                 make_ng_reduction_op(const Node& node,
-                                     const std::shared_ptr<ngraph::Node>& ng_input,
+                                     const Output<ngraph::Node>& ng_input,
                                      RuntimeReductionFunction reduction_function);
         }
     }

@@ -51,8 +51,8 @@ CPU.matmul_2x2x3_2x1x3_transpose_int64
 CPU.matmul_2x2x3_2x3x1_int64
 
 # no support for f16, bf16
-CPU.fused_clamp_float16
-CPU.fused_clamp_bfloat16
+CPU.clamp_float16
+CPU.clamp_bfloat16
 
 CPU.lstm_cell_no_bias_no_peepholes
 CPU.lstm_cell_zero_bias_peepholes_constant
@@ -73,5 +73,5 @@ CPU_CODEGEN.topk_v1_invalid_k
 CPU_CODEGEN.non_zero
 CPU_CODEGEN.non_zero_all_0s
 CPU_CODEGEN.non_zero_all_1s
-CPU_CODEGEN.fused_clamp_float16
-CPU_CODEGEN.fused_clamp_bfloat16
+CPU_CODEGEN.clamp_float16
+CPU_CODEGEN.clamp_bfloat16

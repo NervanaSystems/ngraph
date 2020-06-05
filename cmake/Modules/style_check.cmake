@@ -26,15 +26,8 @@ macro(STYLE_CHECK_FILE PATH)
     endif()
 endmacro()
 
-set(DIRECTORIES_OF_INTEREST
-    src
-    doc
-    test
-    python/pyngraph
-)
-
 if (CLANG_FORMAT)
-    foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+    foreach(DIRECTORY ${FORMAT_DIRS})
         set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
         file(GLOB_RECURSE XPP_FILES ${DIR})
         foreach(FILE ${XPP_FILES})

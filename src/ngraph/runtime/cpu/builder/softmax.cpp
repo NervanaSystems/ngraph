@@ -195,8 +195,6 @@ namespace ngraph
                         return;
                     }
                 }
-                NGRAPH_WARN << "Falling back to refernce kernel for softmax " << arg_shape
-                            << " over " << axes;
                 std::function<decltype(runtime::cpu::kernel::ref_softmax<float>)> kernel;
                 SELECT_KERNEL(
                     kernel, args[0].get_element_type(), runtime::cpu::kernel::ref_softmax);

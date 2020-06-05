@@ -121,6 +121,7 @@ option(NGRAPH_TEST_UTIL_ENABLE "Control the building of test utility" TRUE)
 option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
+option(NGRAPH_CPU_CODEGEN_ENABLE "Control the building of the CPU_CODEGEN backend" FALSE)
 option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
@@ -129,7 +130,6 @@ option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" T
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
-option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
 option(NGRAPH_ENABLE_CPU_CONV_AUTO "Enable mkldnn convolution_auto for CPU" TRUE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
@@ -153,6 +153,17 @@ option(NGRAPH_ADDRESS_SANITIZER_ENABLE "Compiles and links with Address Sanitize
 option(NGRAPH_THREAD_SANITIZER_ENABLE "Compiles and links with Thread Sanitizer" FALSE)
 option(NGRAPH_UB_SANITIZER_ENABLE "Compiles and links with Undefined Behavior Sanitizer" FALSE)
 
+if (NGRAPH_CPU_CODEGEN_ENABLE)
+    message(STATUS "NGRAPH_CPU_ENABLE Backend enabled because the NGRAPH_CPU_CODEGEN_ENABLE is enabled")
+    set(NGRAPH_CPU_ENABLE TRUE)
+endif()
+
+if (NGRAPH_CPU_ENABLE AND (NOT NGRAPH_CPU_CODEGEN_ENABLE))
+    set(NGRAPH_DEX_ONLY TRUE)
+else()
+    set(NGRAPH_DEX_ONLY FALSE)
+endif()
+
 if (NGRAPH_STATIC_LIB_ENABLE)
     message(WARNING "Workaround: "
                     "Turning off NGRAPH_EXPORT_TARGETS_ENABLE for nGraph static lib")
@@ -165,8 +176,7 @@ endif()
 
 if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
     #disable code-gen due to sym collision with LLVM
-    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
-                        "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
+    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON")
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -198,6 +208,7 @@ NORMALIZE_BOOL(NGRAPH_TEST_UTIL_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DOC_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_ENABLE)
+NORMALIZE_BOOL(NGRAPH_CPU_CODEGEN_ENABLE)
 NORMALIZE_BOOL(NGRAPH_MLIR_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
@@ -206,7 +217,6 @@ NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
-NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
 NORMALIZE_BOOL(NGRAPH_ENABLE_CPU_CONV_AUTO)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
@@ -234,10 +244,10 @@ NORMALIZE_BOOL(NGRAPH_UB_SANITIZER_ENABLE)
 message(STATUS "NGRAPH_ADDRESS_SANITIZER_ENABLE:      ${NGRAPH_ADDRESS_SANITIZER_ENABLE}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:          ${NGRAPH_CODE_COVERAGE_ENABLE}")
 message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_CPU_CODEGEN_ENABLE:            ${NGRAPH_CPU_CODEGEN_ENABLE}")
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:                  ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_DEPRECATED_ENABLE:             ${NGRAPH_DEPRECATED_ENABLE}")
-message(STATUS "NGRAPH_DEX_ONLY:                      ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_DOC_BUILD_ENABLE:              ${NGRAPH_DOC_BUILD_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
 message(STATUS "NGRAPH_ENABLE_CPU_CONV_AUTO:          ${NGRAPH_ENABLE_CPU_CONV_AUTO}")
@@ -402,9 +412,9 @@ else()
     set(CMAKE_VISIBILITY_INLINES_HIDDEN OFF)
     endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(Apple)?Clang$" AND NOT NGRAPH_BUILD_DIR)
+if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$" AND NOT NGRAPH_BUILD_DIR)
     message( STATUS "Setting clang flags...")
-    include( cmake/clang_4_0_flags.cmake )
+    include( cmake/clang_flags.cmake )
 endif()
 
 if (NOT WIN32 AND ${NGRAPH_WARNINGS_AS_ERRORS})
@@ -450,7 +460,6 @@ if (NGRAPH_IE_ENABLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_MLIR_ENABLE")
     set(NGRAPH_MLIR_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/contrib/mlir)
 endif()
 
@@ -497,10 +506,25 @@ endif()
 
 # Since UNIX support Bash we can use a Bash script to do the clang-format functions
 # This is much faster than the cmake method
+set(FORMAT_DIRS
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/test
+    ${PROJECT_SOURCE_DIR}/doc/examples
+    ${PROJECT_SOURCE_DIR}/python/src/pyngraph
+)
 if (UNIX)
-    add_custom_target(style-check COMMAND ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh)
-    add_custom_target(style-apply COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
-    add_custom_target(style COMMAND ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh)
+    add_custom_target(style-check
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/check-code-format.sh ${FORMAT_DIRS}
+    )
+    add_custom_target(style-apply
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh ${FORMAT_DIRS}
+    )
+    add_custom_target(style
+        COMMAND
+            ${PROJECT_SOURCE_DIR}/maint/apply-code-format.sh ${FORMAT_DIRS}
+    )
 else()
     add_custom_target(style-check
         COMMAND ${CMAKE_COMMAND}

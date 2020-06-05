@@ -18,7 +18,7 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/frontend/onnx_import/default_opset.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_downgrade.hpp"

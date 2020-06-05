@@ -17,7 +17,7 @@
 #include "gtest/gtest.h"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
