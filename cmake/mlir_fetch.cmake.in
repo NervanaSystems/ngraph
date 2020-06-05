@@ -32,10 +32,6 @@ if(N EQUAL 0)
     set(N 8)
 endif()
 
-# DOES NOT WORK
-# set(MLIR_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/mlir_project/llvm-project && git reset HEAD --hard)
-set(MLIR_PATCH_REVERT_COMMAND cd /localdisk/adstraw/ngraph/build/mlir_project/llvm-project && git reset HEAD --hard)
-
 ExternalProject_Add(
     ext_mlir_llvm
     PREFIX mlir_llvm
@@ -45,9 +41,7 @@ ExternalProject_Add(
     CMAKE_GENERATOR_PLATFORM "${CMAKE_GENERATOR_PLATFORM}"
     CMAKE_GENERATOR_TOOLSET "${CMAKE_GENERATOR_TOOLSET}"
     PATCH_COMMAND ${MLIR_PATCH_REVERT_COMMAND}
-    # DOES NOT WORK
-    # COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/mlir.patch
-    COMMAND git apply --ignore-space-change --ignore-whitespace /localdisk/adstraw/ngraph/cmake/mlir.patch
+    COMMAND git apply --ignore-space-change --ignore-whitespace @CMAKE_SOURCE_DIR@/cmake/mlir.patch
     CONFIGURE_COMMAND @CMAKE_COMMAND@ @MLIR_LLVM_SOURCE_DIR@ -G "@CMAKE_GENERATOR@" -DCMAKE_GENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM} -DCMAKE_GENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET} ${MLIR_LLVM_CMAKE_ARGS} -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
     BUILD_COMMAND @CMAKE_COMMAND@ --build . --target check-mlir -- -j${N}
     INSTALL_COMMAND ""
