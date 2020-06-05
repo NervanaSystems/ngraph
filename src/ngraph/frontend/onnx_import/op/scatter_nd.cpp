@@ -29,7 +29,7 @@ namespace ngraph
             {
                 NodeVector scatter_nd(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    OutputVector ng_inputs{node.get_ng_inputs()};
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
                     auto updates = ng_inputs.at(2);

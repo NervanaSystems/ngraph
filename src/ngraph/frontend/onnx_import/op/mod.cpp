@@ -33,8 +33,8 @@ namespace ngraph
             {
                 NodeVector mod(const Node& node)
                 {
-                    std::shared_ptr<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
-                    std::shared_ptr<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
+                    Output<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
+                    Output<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
 
                     std::int64_t fmod = node.get_attribute_value<std::int64_t>("fmod", 0);
                     ASSERT_IS_SUPPORTED(node, fmod == 1)
