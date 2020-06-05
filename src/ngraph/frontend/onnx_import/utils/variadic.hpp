@@ -59,7 +59,7 @@ namespace ngraph
                     ng_inputs.front(),                // Initial value - first input
                     binary_operation);
 
-                return as_node_vector({result});
+                return {result};
             }
         }
     }
