@@ -128,7 +128,7 @@ namespace ngraph
 
         OutputVector Node::Impl::get_ng_nodes(const Node& node) const
         {
-            return m_graph->make_ng_nodes(node);
+            return as_output_vector(m_graph->make_ng_nodes(node));
         }
 
         OutputVector Node::Impl::get_ng_inputs() const
