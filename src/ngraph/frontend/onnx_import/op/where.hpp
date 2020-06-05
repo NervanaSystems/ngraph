@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector where(const Node& node)
+                inline OutputVector where(const Node& node)
                 {
                     OutputVector ng_inputs{node.get_ng_inputs()};
 

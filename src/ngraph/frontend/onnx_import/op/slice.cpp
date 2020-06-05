@@ -153,7 +153,7 @@ namespace ngraph
                     }
                 }
 
-                NodeVector slice(const Node& node)
+                OutputVector slice(const Node& node)
                 {
                     OutputVector inputs{node.get_ng_inputs()};
                     const auto data = inputs.at(0);
@@ -228,7 +228,7 @@ namespace ngraph
 
             namespace set_1
             {
-                NodeVector slice(const Node& node)
+                OutputVector slice(const Node& node)
                 {
                     Output<ngraph::Node> data = node.get_ng_inputs().at(0);
                     Shape data_shape = data.get_shape();

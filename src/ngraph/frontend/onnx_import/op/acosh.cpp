@@ -31,7 +31,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector acosh(const Node& node)
+                OutputVector acosh(const Node& node)
                 {
                     Output<ngraph::Node> data{node.get_ng_inputs().at(0)};
 

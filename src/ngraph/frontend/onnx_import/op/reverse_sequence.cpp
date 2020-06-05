@@ -31,7 +31,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector reverse_sequence(const Node& node)
+                OutputVector reverse_sequence(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
 

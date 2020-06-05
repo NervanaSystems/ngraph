@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector shrink(const Node& node)
+                OutputVector shrink(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
                     const float bias = node.get_attribute_value<float>("bias", 0.0f);
