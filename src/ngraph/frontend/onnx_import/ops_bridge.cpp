@@ -51,6 +51,7 @@
 #include "op/dequantize_linear.hpp"
 #include "op/div.hpp"
 #include "op/dropout.hpp"
+#include "op/dynamic_quantize_linear.hpp"
 #include "op/elu.hpp"
 #include "op/equal.hpp"
 #include "op/erf.hpp"
@@ -276,6 +277,7 @@ namespace ngraph
             REGISTER_OPERATOR("Div", 1, div);
             REGISTER_OPERATOR("Div", 7, div);
             REGISTER_OPERATOR("Dropout", 1, dropout);
+            REGISTER_OPERATOR("DynamicQuantizeLinear", 1, dynamic_quantize_linear);
             REGISTER_OPERATOR("Elu", 1, elu);
             REGISTER_OPERATOR("Equal", 1, equal);
             REGISTER_OPERATOR("Erf", 1, erf);
