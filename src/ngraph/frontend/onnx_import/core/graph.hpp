@@ -37,9 +37,9 @@ namespace ngraph
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
-            NodeVector get_ng_outputs() const;
+            OutputVector get_ng_outputs() const;
             const ParameterVector& get_ng_parameters() const { return m_parameters; }
-            std::shared_ptr<ngraph::Node> get_ng_node_from_cache(const std::string& name) const
+            Output<ngraph::Node> get_ng_node_from_cache(const std::string& name) const
             {
                 return m_ng_node_cache.at(name);
             }
@@ -63,7 +63,7 @@ namespace ngraph
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;
             ParameterVector m_parameters;
-            std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
+            std::map<std::string, Output<ngraph::Node>> m_ng_node_cache;
             std::map<std::string, Tensor> m_initializers;
             Model* m_model;
         };

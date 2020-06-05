@@ -33,7 +33,7 @@ namespace ngraph
                     auto data = node.get_ng_inputs().at(0);
 
                     auto one_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1});
+                        default_opset::Constant::create(data.get_element_type(), Shape{}, {1});
                     return {std::make_shared<default_opset::Divide>(one_node, data)};
                 }
             }

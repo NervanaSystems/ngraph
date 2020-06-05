@@ -31,7 +31,7 @@ namespace ngraph
             {
                 NodeVector onehot(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    OutputVector inputs{node.get_ng_inputs()};
                     auto indices =
                         std::make_shared<default_opset::Convert>(inputs.at(0), element::i64);
                     auto depth = reshape::interpret_as_scalar(inputs.at(1));

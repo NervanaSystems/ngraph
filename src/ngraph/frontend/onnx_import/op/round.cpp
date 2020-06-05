@@ -29,7 +29,7 @@ namespace ngraph
             {
                 NodeVector round(const Node& node)
                 {
-                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    const Output<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
             }

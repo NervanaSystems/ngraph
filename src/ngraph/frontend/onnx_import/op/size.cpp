@@ -35,7 +35,7 @@ namespace ngraph
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t tensor_elements_count{
-                        static_cast<std::int64_t>(shape_size(data->get_shape()))};
+                        static_cast<std::int64_t>(shape_size(data.get_shape()))};
 
                     return {std::make_shared<default_opset::Constant>(
                         ngraph::element::i64,

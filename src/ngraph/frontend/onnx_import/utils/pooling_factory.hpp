@@ -66,7 +66,7 @@ namespace ngraph
                 explicit PoolingFactory(const Node& node);
 
                 Node m_onnx_node;
-                const NodeVector m_inputs;
+                const OutputVector m_inputs;
                 Shape m_kernel_shape;
                 Strides m_strides;
                 Strides m_dilations;

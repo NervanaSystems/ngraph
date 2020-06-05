@@ -33,7 +33,7 @@ namespace ngraph
                 inline NodeVector identity(const Node& node)
                 {
                     auto input = node.get_ng_inputs().at(0);
-                    auto zero = default_opset::Constant::create(input->get_element_type(), {}, {0});
+                    auto zero = default_opset::Constant::create(input.get_element_type(), {}, {0});
                     return {std::make_shared<default_opset::Add>(input, zero)};
                 }
             }
