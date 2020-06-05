@@ -235,7 +235,7 @@ TEST(gpu_fusion, lstm_analytic)
     auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
 
     auto f = make_shared<Function>(
-        NodeVector{ht, ct},
+        OutputVector{ht, ct},
         ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h});
 
     auto backend = runtime::Backend::create("GPU");

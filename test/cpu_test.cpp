@@ -1250,10 +1250,10 @@ TEST(cpu_test, constant_unary_binary)
     auto add_autob_numpy = make_shared<op::Add>(a, l, op::AutoBroadcastType::NUMPY);
 
     auto func = make_shared<Function>(
-        NodeVector{add,        sub,         mul,        divn,  min,         max,
-                   absn,       neg,         sqrt,       relu,  sign,        equal,
-                   not_equal,  greater,     greater_eq, less,  less_eq,     logical_and,
-                   logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
+        OutputVector{add,        sub,         mul,        divn,  min,         max,
+                     absn,       neg,         sqrt,       relu,  sign,        equal,
+                     not_equal,  greater,     greater_eq, less,  less_eq,     logical_and,
+                     logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
         ParameterVector{});
 
     auto func_error = make_shared<Function>(OutputVector{neg_sqrt}, ParameterVector{});

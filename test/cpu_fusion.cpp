@@ -1348,7 +1348,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
 
     // results from each time step
-    NodeVector results;
+    OutputVector results;
     for (size_t t = 0; t < time_steps; ++t)
     {
         auto data_slice = make_shared<op::Slice>(
@@ -1387,7 +1387,7 @@ std::vector<shared_ptr<runtime::Tensor>> rnn_matrix_fusion_eval(const size_t tim
     std::vector<shared_ptr<runtime::Tensor>> result_tensors;
     for (auto r : results)
     {
-        result_tensors.push_back(backend->create_tensor(element::f32, r->get_shape()));
+        result_tensors.push_back(backend->create_tensor(element::f32, r.get_shape()));
     }
 
     copy_data(data_tensor, data_val);
@@ -1610,7 +1610,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
     pass_manager.run_passes(bf);
     if (nv_cwi.size() > 0)
     {
-        NodeVector new_outputs;
+        OutputVector new_outputs;
         for (auto r : f->get_results())
         {
             new_outputs.push_back(r->get_argument(0));
@@ -1626,10 +1626,10 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
         dYdXs.push_back(bf->get_output_op(i)->get_argument(0));
     }
 
-    ngraph::NodeVector combined_outputs;
+    ngraph::OutputVector combined_outputs;
     for (auto r : f->get_results())
     {
-        combined_outputs.push_back(r->get_argument(0));
+        combined_outputs.push_back(r);
     }
 
     combined_outputs.insert(combined_outputs.end(), dYdXs.begin(), dYdXs.end());
@@ -1741,7 +1741,7 @@ TEST(cpu_fusion, convbias_batch_norm_folding)
             conv + std::make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
         auto bn = std::make_shared<op::BatchNormInference>(convbias, gamma, beta, mean, var, eps);
         auto f = make_shared<Function>(
-            NodeVector{bn}, ParameterVector{input, weights, bias, gamma, beta, mean, var});
+            OutputVector{bn}, ParameterVector{input, weights, bias, gamma, beta, mean, var});
         return f;
     };
 
@@ -3140,7 +3140,8 @@ TEST(cpu_quant_fusion, MLIR_DISABLE_TEST(qconcat))
             return dq;
         };
 
-        NodeVector concat_inputs, concats;
+        NodeVector concat_inputs;
+        OutputVector concats;
         ParameterVector inputs;
         Shape shape_input{1, 2, 4, 4};
         inputs.push_back(std::make_shared<op::Parameter>(element::f32, shape_input));
@@ -3471,7 +3472,7 @@ TEST(cpu_quant_fusion, qconvba_q)
         auto dq = std::make_shared<op::Dequantize>(
             q, output_scale_r, uint8_zero, element::f32, AxisSet{});
         return make_shared<Function>(
-            NodeVector{dq},
+            OutputVector{dq},
             ParameterVector{input_l, weights_l, bias_l, input_r, weights_r, bias_r});
     };
 

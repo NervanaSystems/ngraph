@@ -295,7 +295,7 @@ TEST(CSE, constant)
     auto abs112 = std::make_shared<op::Abs>(iconst112);
 
     auto f = std::make_shared<Function>(
-        NodeVector{abs0, abs0_1, abs1, abs1_1, absf, abs111, abs112}, ParameterVector{});
+        OutputVector{abs0, abs0_1, abs1, abs1_1, absf, abs111, abs112}, ParameterVector{});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::CommonSubexpressionElimination>();
