@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector reciprocal(const Node& node)
+                OutputVector reciprocal(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
 

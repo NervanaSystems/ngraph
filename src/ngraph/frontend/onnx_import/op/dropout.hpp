@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector dropout(const Node& node)
+                inline OutputVector dropout(const Node& node)
                 {
                     // First value is actual output of Dropout,
                     // the second one is just a placeholder for optional trailing output.

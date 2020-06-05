@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector eye_like(const Node& node)
+                OutputVector eye_like(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
                     const auto& input_shape = input.get_shape();

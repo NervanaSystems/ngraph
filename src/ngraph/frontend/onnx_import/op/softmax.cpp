@@ -61,7 +61,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector softmax(const Node& node)
+                OutputVector softmax(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
                     const auto data_rank = data.get_partial_shape().rank();

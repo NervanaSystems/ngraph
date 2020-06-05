@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector thresholded_relu(const Node& node)
+                OutputVector thresholded_relu(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
                     const double alpha = node.get_attribute_value<double>("alpha", 1.0);

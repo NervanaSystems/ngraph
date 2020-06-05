@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector hard_sigmoid(const Node& node)
+                OutputVector hard_sigmoid(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
 

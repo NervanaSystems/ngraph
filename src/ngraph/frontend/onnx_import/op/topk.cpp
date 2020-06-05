@@ -52,7 +52,7 @@ namespace
     }
 
     /// \return Return the outputs of the TopK node.
-    ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
+    ngraph::OutputVector get_outputs(const std::shared_ptr<ngraph::Node>& node)
     {
         std::shared_ptr<ngraph::Node> values =
             std::make_shared<ngraph::opset0::GetOutputElement>(node, 0);
@@ -71,7 +71,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector topk(const Node& node)
+                OutputVector topk(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     std::int64_t k{node.get_attribute_value<std::int64_t>("k")};
@@ -92,7 +92,7 @@ namespace ngraph
 
             namespace set_10
             {
-                NodeVector topk(const Node& node)
+                OutputVector topk(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto k = get_k(node);
@@ -112,7 +112,7 @@ namespace ngraph
 
             namespace set_11
             {
-                NodeVector topk(const Node& node)
+                OutputVector topk(const Node& node)
                 {
                     // Process inputs
                     auto data = node.get_ng_inputs().at(0);

@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector asinh(const Node& node)
+                OutputVector asinh(const Node& node)
                 {
                     Output<ngraph::Node> data{node.get_ng_inputs().at(0)};
 

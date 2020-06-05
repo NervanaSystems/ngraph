@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector softsign(const Node& node)
+                OutputVector softsign(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
 
