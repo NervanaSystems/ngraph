@@ -31,7 +31,7 @@ namespace ngraph
             {
                 NodeVector transpose(const Node& node)
                 {
-                    std::shared_ptr<ngraph::Node> data = node.get_ng_inputs().at(0);
+                    Output<ngraph::Node> data = node.get_ng_inputs().at(0);
 
                     auto permute_axes =
                         node.get_attribute_value<std::vector<std::size_t>>("perm", {});

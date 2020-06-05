@@ -32,7 +32,7 @@ namespace ngraph
             {
                 NodeVector concat(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    OutputVector inputs{node.get_ng_inputs()};
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
                     return {std::make_shared<default_opset::Concat>(inputs, axis)};
                 }

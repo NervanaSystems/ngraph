@@ -77,7 +77,7 @@ namespace ngraph
             GlobalPoolingFactory::GlobalPoolingFactory(const Node& node)
                 : PoolingFactory(node)
             {
-                const auto data_shape = node.get_ng_inputs().at(0)->get_output_partial_shape(0);
+                const auto data_shape = node.get_ng_inputs().at(0).get_partial_shape();
                 const auto data_rank = data_shape.rank();
                 CHECK_VALID_NODE(
                     node, data_rank.is_static(), "Data rank must be static for global pooling ops");

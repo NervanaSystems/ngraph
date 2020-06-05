@@ -37,7 +37,7 @@ namespace ngraph
                         << " alpha value should be in range (0,1)";
 
                     std::shared_ptr<ngraph::Node> alpha_node =
-                        default_opset::Constant::create(data->get_element_type(), Shape{}, {alpha});
+                        default_opset::Constant::create(data.get_element_type(), Shape{}, {alpha});
                     return {std::make_shared<default_opset::PRelu>(data, alpha_node)};
                 }
             }
