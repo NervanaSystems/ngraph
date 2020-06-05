@@ -57,7 +57,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_convolution)
                                                            G,
                                                            H,
                                                            element::i8);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -112,7 +112,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_conv_int32_output)
                                                     G,
                                                     H,
                                                     element::i32);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, E, G});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, C, E, G});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output

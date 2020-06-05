@@ -376,7 +376,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto tanh_2_0 = std::make_shared<op::Tanh>(ct_0);
     auto ht_0 = std::make_shared<op::Multiply>(output_gate_0, tanh_2_0);
 
-    auto f = make_shared<Function>(NodeVector{ht_0, ct_0},
+    auto f = make_shared<Function>(OutputVector{ht_0, ct_0},
                                    ParameterVector{input_xt,
                                                    weights_i2h,
                                                    weights_h2h,

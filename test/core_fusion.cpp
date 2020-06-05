@@ -103,7 +103,7 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast)
 
         auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
         auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
-        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+        return make_shared<Function>(OutputVector{divide_1_over_exp}, ParameterVector{input});
     };
     auto func = make_function();
 
@@ -127,7 +127,7 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast2)
 
         auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
         auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
-        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+        return make_shared<Function>(OutputVector{divide_1_over_exp}, ParameterVector{input});
     };
     auto func = make_function();
 
@@ -266,7 +266,7 @@ TEST(core_fusion, sparsity_opt_56x56)
                                   param_broadcast_w1,
                                   other_arg,
                                   weights_conv_s2};
-    auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
+    auto func = make_shared<Function>(OutputVector{conv_s2_1, conv_s2_2}, params);
     pass_manager.run_passes(func);
     auto results = func->get_results();
     auto t_eltwise_conv1 = as_type_ptr<op::Convolution>(results.at(0)->get_argument(0));
@@ -615,7 +615,7 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
                                                                           CoordinateDiff{0, 0},
                                                                           Strides{1, 1});
             auto bias_bprop = make_shared<op::Sum>(delta, AxisSet{0, 2, 3});
-            return make_shared<Function>(NodeVector{conv_bprop, bias_bprop},
+            return make_shared<Function>(OutputVector{conv_bprop, bias_bprop},
                                          ParameterVector{data, delta});
         }
     };
@@ -697,7 +697,7 @@ TEST(batch_fusion, group_convolution_fusion)
 
     auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
 
-    auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
+    auto f = make_shared<Function>(OutputVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::BatchFusion>();
     pass_manager.run_passes(f);

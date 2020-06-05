@@ -53,7 +53,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm)
     auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
-    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
     test_case.add_input<float>(vector<float>(18, 1));
@@ -73,7 +73,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_C)
     auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
-    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
     test_case.add_input<float>(vector<float>(18, 1));
@@ -93,7 +93,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
-    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
     test_case.add_input<float>(vector<float>(18, 1));
@@ -113,7 +113,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_0_input_C)
     auto C = make_shared<op::Parameter>(element::f32, Shape{1, 4});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
-    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
     test_case.add_input<float>(vector<float>(18, 1));
@@ -134,7 +134,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_1_input_C)
     auto C = make_shared<op::Parameter>(element::f32, Shape{3, 1});
 
     auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
-    auto function = make_shared<Function>(NodeVector{gemm_func}, ParameterVector{A, B, C});
+    auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
     test_case.add_input<float>(vector<float>(18, 1));

@@ -253,7 +253,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
                                                  CoordinateDiff{0, 0},
                                                  Strides{1, 1});
         auto squeeze = make_shared<op::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{32, 2, 2});
-        return make_shared<Function>(NodeVector{squeeze}, ParameterVector{A, B});
+        return make_shared<Function>(OutputVector{squeeze}, ParameterVector{A, B});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -293,7 +293,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
                                                  Strides{1, 1});
         auto expand =
             make_shared<op::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{1, 32, 2, 1, 2, 1});
-        return make_shared<Function>(NodeVector{expand}, ParameterVector{A, B});
+        return make_shared<Function>(OutputVector{expand}, ParameterVector{A, B});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -331,7 +331,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
                                                  CoordinateDiff{0, 0},
                                                  Strides{1, 1});
         auto squeeze = make_shared<op::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{2, 2});
-        return make_shared<Function>(NodeVector{squeeze}, ParameterVector{A, B});
+        return make_shared<Function>(OutputVector{squeeze}, ParameterVector{A, B});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -381,7 +381,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
                                                   CoordinateDiff{0, 0},
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
-        return make_shared<Function>(NodeVector{conv2}, ParameterVector{A, B1, B2});
+        return make_shared<Function>(OutputVector{conv2}, ParameterVector{A, B1, B2});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -431,7 +431,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
                                                   CoordinateDiff{0, 0},
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
-        return make_shared<Function>(NodeVector{conv2}, ParameterVector{A, B1, B2});
+        return make_shared<Function>(OutputVector{conv2}, ParameterVector{A, B1, B2});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -465,7 +465,7 @@ TEST(cpu_test, reshape_layout_optimizations6)
         auto sum = make_shared<op::Sum>(mul, AxisVector{0});
         auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 4, 3, 2});
         auto sqrt = make_shared<op::Sqrt>(reshape);
-        return make_shared<Function>(NodeVector{sqrt}, ParameterVector{A});
+        return make_shared<Function>(OutputVector{sqrt}, ParameterVector{A});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -498,7 +498,7 @@ TEST(cpu_test, reshape_layout_optimizations7)
         auto mul = make_shared<op::Multiply>(A, A);
         auto sum = make_shared<op::Sum>(mul, AxisVector{0, 1});
         auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 1, 10, 6, 10});
-        return make_shared<Function>(NodeVector{reshape}, ParameterVector{A});
+        return make_shared<Function>(OutputVector{reshape}, ParameterVector{A});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -530,7 +530,7 @@ TEST(cpu_test, DISABLED_collapse_dims1)
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
         auto sum1 = make_shared<op::Sum>(A, AxisVector{1});    // Shape{1, 10, 6, 10}
         auto sum2 = make_shared<op::Sum>(sum1, AxisVector{0}); // Shape{10, 6, 10}
-        return make_shared<Function>(NodeVector{sum2}, ParameterVector{A});
+        return make_shared<Function>(OutputVector{sum2}, ParameterVector{A});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -564,7 +564,7 @@ TEST(cpu_test, collapse_dims2)
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1, 1});
         auto B = make_shared<op::Parameter>(element::f32, Shape{1, 1});
         auto dot = make_shared<op::Dot>(A, B, 1);
-        return make_shared<Function>(NodeVector{dot}, ParameterVector{A, B});
+        return make_shared<Function>(OutputVector{dot}, ParameterVector{A, B});
     };
 
     auto backend = runtime::Backend::create("CPU");
@@ -599,7 +599,7 @@ TEST(cpu_test, convert_layout)
         auto sub1 = std::make_shared<op::Subtract>(X, W_reshape);
         auto mul1 = std::make_shared<op::Multiply>(X, W_reshape);
 
-        return make_shared<Function>(NodeVector{add1, sub1, mul1}, ParameterVector{W, X});
+        return make_shared<Function>(OutputVector{add1, sub1, mul1}, ParameterVector{W, X});
     };
     auto backend = runtime::Backend::create("CPU");
     auto cpu_f = make_function();
@@ -637,7 +637,7 @@ TEST(cpu_test, post_layout_reshape_convertlayout)
                                                  CoordinateDiff{0, 0},
                                                  Strides{1, 1});
         auto reshape = make_shared<op::Reshape>(conv, AxisVector{0, 2, 3, 1}, Shape{1, 3, 4, 5});
-        return make_shared<Function>(NodeVector{reshape}, ParameterVector{A, B});
+        return make_shared<Function>(OutputVector{reshape}, ParameterVector{A, B});
     };
 
     auto int_f = make_function();
@@ -655,7 +655,7 @@ TEST(cpu_test, mkldnn_layouts_eltwise)
         auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
         auto conv = std::make_shared<op::Convolution>(input, filter, Strides{2, 2}, Strides{1, 1});
         auto sigmoid = std::make_shared<op::Sigmoid>(conv);
-        auto f = make_shared<Function>(NodeVector{sigmoid}, ParameterVector{input, filter});
+        auto f = make_shared<Function>(OutputVector{sigmoid}, ParameterVector{input, filter});
         return f;
     };
 
@@ -678,7 +678,7 @@ TEST(cpu_test, convolution_large_padding)
                                                       Strides{9, 9},
                                                       CoordinateDiff{9, 9},
                                                       CoordinateDiff{9, 9});
-        auto f = make_shared<Function>(NodeVector{conv}, ParameterVector{input, filter});
+        auto f = make_shared<Function>(OutputVector{conv}, ParameterVector{input, filter});
         return f;
     };
 
@@ -1256,7 +1256,7 @@ TEST(cpu_test, constant_unary_binary)
                    logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
         ParameterVector{});
 
-    auto func_error = make_shared<Function>(NodeVector{neg_sqrt}, ParameterVector{});
+    auto func_error = make_shared<Function>(OutputVector{neg_sqrt}, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>(
@@ -2152,7 +2152,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
     auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
     auto QMP = make_shared<ngraph::op::MaxPool>(
         A_bf16, window_shape, window_movement_strides, padding_below, padding_above);
-    auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
