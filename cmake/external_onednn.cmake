@@ -188,7 +188,7 @@ endif()
 
 set(MKLDNN_GIT_REPO_URL https://github.com/oneapi-src/oneDNN)
 set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
-set(MKLDNN_PATCH_FILE mkldnn_v1.patch)
+set(MKLDNN_PATCH_FILE onednn.patch)
 set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
 
 # Revert prior changes to make incremental build work.
