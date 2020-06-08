@@ -1107,13 +1107,11 @@ REWRITER(NGArgMinRedOp) {
   return success();
 }
 
-bool is_signed(Operation *op) {
-  auto intType = op->getOperands()[0]
-                     .getType()
-                     .cast<NGTensorType>()
-                     .getElementType()
-                     .dyn_cast<NGIntegerType>();
-  if (intType && intType.isUnsigned()) {
+bool is_signed(NGTensorType ngTensorType) {
+  NGRAPH_CHECK(ngTensorType);
+  auto ngIntType = ngTensorType.getElementType().dyn_cast<NGIntegerType>();
+
+  if (ngIntType && ngIntType.isUnsigned()) {
     return false;
   } else {
     return true;
@@ -1148,10 +1146,15 @@ REWRITER(NGReluOp) {
   NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
   Type elemTy = lhs.getType().dyn_cast<MemRefType>().getElementType();
 
+  // get the original (nGraph) tensor type
+  // this will allow us to check signedness and lower to correct Affine op
+  NGRAPH_CHECK(op->getOperands()[0].getType().isa<NGTensorType>());
+  auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
+
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
     Value val = iLHS(ivs);
     Value zero = createZeroConstant(elemTy);
-    iRes(ivs) = std_select(gt(val, zero, is_signed(op)), val, zero);
+    iRes(ivs) = std_select(gt(val, zero, is_signed(ngTensorType)), val, zero);
   });
 
   rewriter.replaceOp(op, {result});
@@ -2355,6 +2358,11 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
   // element type of the operand
   Type elemTy = result.getType().cast<MemRefType>().getElementType();
 
+  // get the original (nGraph) tensor type
+  // this will allow us to check signedness and lower to correct Affine op
+  NGRAPH_CHECK(op->getOperands()[0].getType().isa<NGTensorType>());
+  auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
+
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)(
       // single stmt body
       [&] {
@@ -2373,21 +2381,21 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
         // instead of std_select once `zero_extendi` is
         // made available in the edsc::intrinsics namescope in MLIR repo.
         else if (isa<NGGreaterOp>(op)) {
-          iRes(ivs) =
-              std_select(gt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          iRes(ivs) = std_select(
+              gt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
+              createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGLessOp>(op)) {
-          iRes(ivs) =
-              std_select(lt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          iRes(ivs) = std_select(
+              lt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
+              createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGGreaterEqOp>(op)) {
-          iRes(ivs) =
-              std_select(ge(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          iRes(ivs) = std_select(
+              ge(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
+              createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGLessEqOp>(op)) {
-          iRes(ivs) =
-              std_select(le(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(op)),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          iRes(ivs) = std_select(
+              le(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
+              createOneConstant(elemTy), createZeroConstant(elemTy));
         } else if (isa<NGEqOp>(op)) {
           iRes(ivs) =
               std_select(eq(Value(iLHS(ivs)), Value(iRHS(ivs))),
@@ -2399,11 +2407,13 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
         } else if (isa<NGMaxOp>(op)) {
           auto left = Value(iLHS(ivs));
           auto right = Value(iRHS(ivs));
-          iRes(ivs) = std_select(gt(left, right, is_signed(op)), left, right);
+          iRes(ivs) =
+              std_select(gt(left, right, is_signed(ngTensorType)), left, right);
         } else if (isa<NGMinOp>(op)) {
           auto left = Value(iLHS(ivs));
           auto right = Value(iRHS(ivs));
-          iRes(ivs) = std_select(lt(left, right, is_signed(op)), left, right);
+          iRes(ivs) =
+              std_select(lt(left, right, is_signed(ngTensorType)), left, right);
         } else {
           NGRAPH_CHECK(false, "Unsupported op");
         }
@@ -2448,6 +2458,12 @@ void lowerIndexReduction(Operation *op, ArrayRef<Value> operands,
   auto argUbs = vArg.getUbs();
 
   Type resTy = result.getType().cast<MemRefType>().getElementType();
+
+  // get the original (nGraph) tensor type
+  // this will allow us to check signedness and lower to correct Affine op
+  NGRAPH_CHECK(op->getOperands()[0].getType().isa<NGTensorType>());
+  auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
+
   // Generate loop nest that initializes result to lower bound of the axis to be
   // reduced.
   {
@@ -2493,10 +2509,10 @@ void lowerIndexReduction(Operation *op, ArrayRef<Value> operands,
       }
       Value newRedIdx = std::is_same<RedOp, NGArgMinRedOp>()
                             ? std_select(lt(affineArg(allIVs), stdArg(tempIVs),
-                                            is_signed(op)),
+                                            is_signed(ngTensorType)),
                                          allIVs[axis], currRedIdx)
                             : std_select(lt(stdArg(tempIVs), affineArg(allIVs),
-                                            is_signed(op)),
+                                            is_signed(ngTensorType)),
                                          allIVs[axis], currRedIdx);
 
       iRes(nonRedIVs) = ValueBuilder<IndexCastOp>(newRedIdx, resTy);
