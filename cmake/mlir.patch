@@ -14,10 +14,10 @@ index 0d9da1fe0dc..6d139c72e7e 100644
  Value operator<=(Value lhs, Value rhs);
  Value operator>(Value lhs, Value rhs);
 diff --git a/mlir/lib/Dialect/Affine/EDSC/Builders.cpp b/mlir/lib/Dialect/Affine/EDSC/Builders.cpp
-index 50e26574b7d..151acd6e0df 100644
+index 50e26574b7d..abf7dba1f50 100644
 --- a/mlir/lib/Dialect/Affine/EDSC/Builders.cpp
 +++ b/mlir/lib/Dialect/Affine/EDSC/Builders.cpp
-@@ -251,6 +251,46 @@ Value mlir::edsc::op::ne(Value lhs, Value rhs) {
+@@ -251,6 +251,42 @@ Value mlir::edsc::op::ne(Value lhs, Value rhs) {
               ? createFComparisonExpr(CmpFPredicate::ONE, lhs, rhs)
               : createIComparisonExpr(CmpIPredicate::ne, lhs, rhs);
  }
@@ -25,8 +25,7 @@ index 50e26574b7d..151acd6e0df 100644
 +  auto type = lhs.getType();
 +  if (type.isa<FloatType>()) {
 +    return createFComparisonExpr(CmpFPredicate::OLT, lhs, rhs);
-+  }
-+  else {
++  } else {
 +    return is_signed ? createIComparisonExpr(CmpIPredicate::slt, lhs, rhs)
 +                     : createIComparisonExpr(CmpIPredicate::ult, lhs, rhs);
 +  }
@@ -35,8 +34,7 @@ index 50e26574b7d..151acd6e0df 100644
 +  auto type = lhs.getType();
 +  if (type.isa<FloatType>()) {
 +    return createFComparisonExpr(CmpFPredicate::OLE, lhs, rhs);
-+  }
-+  else {
++  } else {
 +    return is_signed ? createIComparisonExpr(CmpIPredicate::sle, lhs, rhs)
 +                     : createIComparisonExpr(CmpIPredicate::ule, lhs, rhs);
 +  }
@@ -45,8 +43,7 @@ index 50e26574b7d..151acd6e0df 100644
 +  auto type = lhs.getType();
 +  if (type.isa<FloatType>()) {
 +    return createFComparisonExpr(CmpFPredicate::OGT, lhs, rhs);
-+  }
-+  else {
++  } else {
 +    return is_signed ? createIComparisonExpr(CmpIPredicate::sgt, lhs, rhs)
 +                     : createIComparisonExpr(CmpIPredicate::ugt, lhs, rhs);
 +  }
@@ -55,8 +52,7 @@ index 50e26574b7d..151acd6e0df 100644
 +  auto type = lhs.getType();
 +  if (type.isa<FloatType>()) {
 +    return createFComparisonExpr(CmpFPredicate::OGE, lhs, rhs);
-+  }
-+  else {
++  } else {
 +    return is_signed ? createIComparisonExpr(CmpIPredicate::sge, lhs, rhs)
 +                     : createIComparisonExpr(CmpIPredicate::uge, lhs, rhs);
 +  }
