@@ -187,7 +187,7 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
         X = make_shared<op::ReverseSequence>(X, seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
     }
 
-    OutputVector in_seqs = builder::split(X, X->get_shape().at(0));
+    OutputVector in_seqs = builder::split(X, X->get_output_shape(0).at(0));
 
     for (auto& in_x : in_seqs)
     {

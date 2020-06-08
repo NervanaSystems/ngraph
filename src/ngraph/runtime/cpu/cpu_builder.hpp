@@ -78,7 +78,7 @@
                                                                                                    \
     SELECT_KERNEL(kernel, node->get_input_element_type(0), OP);                                    \
                                                                                                    \
-    auto element_count = shape_size(node->get_shape());                                            \
+    auto element_count = shape_size(node->get_output_shape(0));                                    \
                                                                                                    \
     auto functor = [&, kernel, element_count](const std::vector<void*>& inputs,                    \
                                               std::vector<void*>& outputs) {                       \
@@ -91,7 +91,7 @@
                                                                                                    \
     SELECT_KERNEL(kernel, node->get_input_element_type(0), OP);                                    \
                                                                                                    \
-    auto element_count = shape_size(node->get_shape());                                            \
+    auto element_count = shape_size(node->get_output_shape(0));                                    \
                                                                                                    \
     auto functor = [&, kernel, element_count](const std::vector<void*>& inputs,                    \
                                               std::vector<void*>& outputs) {                       \

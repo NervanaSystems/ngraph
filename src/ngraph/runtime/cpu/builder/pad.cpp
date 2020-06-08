@@ -121,7 +121,7 @@ namespace ngraph
                 auto pad = static_cast<const ngraph::op::Pad*>(node);
 
                 auto arg_shape = pad->get_input_shape(0);
-                auto out_shape = pad->get_shape();
+                auto out_shape = pad->get_output_shape(0);
                 auto padding_below = pad->get_padding_below();
                 auto padding_above = pad->get_padding_above();
                 auto pad_mode = pad->get_pad_mode();

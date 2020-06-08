@@ -26,14 +26,14 @@ shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> consta
                                                  shared_ptr<op::Constant> constant_perm,
                                                  shared_ptr<op::Transpose> transpose)
 {
-    const Shape& out_shape = transpose->get_shape();
+    const Shape& out_shape = transpose->get_output_shape(0);
     auto input_order = constant_perm->get_axis_vector_val();
 
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
     runtime::opt_kernel::reshape<T>(constant_data->get_data_ptr<T>(),
                                     buffer.get_ptr<T>(),
-                                    constant_data->get_shape(),
+                                    constant_data->get_output_shape(0),
                                     input_order,
                                     out_shape);
 

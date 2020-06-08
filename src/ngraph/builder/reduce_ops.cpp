@@ -71,7 +71,7 @@ namespace ngraph
             auto N = get_num_elements(value.get_shape(), reduction_axes);
             const auto& et = value.get_element_type();
 
-            auto divisor = op::Constant::create(et, xsum->get_shape(), {N});
+            auto divisor = op::Constant::create(et, xsum->get_output_shape(0), {N});
 
             return (xsum / divisor)->add_provenance_group_members_above({value});
         }
@@ -100,7 +100,7 @@ namespace ngraph
                 reshape[i] = 1;
             }
 
-            ngraph::AxisVector order = ngraph::get_default_order(mu->get_shape());
+            ngraph::AxisVector order = ngraph::get_default_order(mu->get_output_shape(0));
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 

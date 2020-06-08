@@ -226,7 +226,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         auto reshape_m_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(reshape_m.get(), 0);
         if (reshape_m_md.data.FORMAT_KIND != mkldnn_blocked ||
             !runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(
-                reshape_m_md, ngraph::get_default_order(reshape_m->get_shape())))
+                reshape_m_md, ngraph::get_default_order(reshape_m->get_output_shape(0))))
         {
             NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not creating a blocked/padded layout";
             return false;
@@ -252,8 +252,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
                                                                           rotated_lt_desc);
         cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 
-        auto reshape_n =
-            std::make_shared<ngraph::op::Reshape>(cvt_lt_n, reshape_order, cvt_lt_m->get_shape());
+        auto reshape_n = std::make_shared<ngraph::op::Reshape>(
+            cvt_lt_n, reshape_order, cvt_lt_m->get_output_shape(0));
         auto reshape_n_layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
             *reshape_n->get_output_tensor_ptr());
         reshape_n_layout->set_mkldnn_md(out_md);
@@ -298,7 +298,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
               // check if compensation is conv_s8s8(1U)
               result_desc.data.extra.flags & 0x1U))
     {
-        auto arg0_shape = input->get_shape();
+        auto arg0_shape = input->get_output_shape(0);
         input_desc = mkldnn::memory::desc(
             mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
             runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
