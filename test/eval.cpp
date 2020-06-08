@@ -1299,7 +1299,7 @@ TEST(eval, eval_transpose)
     for (auto& axis : axes)
     {
         auto x_transpose = make_shared<op::v1::Transpose>(x, axis);
-        auto fun = make_shared<Function>(NodeVector{x_transpose}, ParameterVector{x, axis});
+        auto fun = make_shared<Function>(OutputVector{x_transpose}, ParameterVector{x, axis});
 
         switch (axis->get_element_type())
         {

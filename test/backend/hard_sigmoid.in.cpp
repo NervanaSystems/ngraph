@@ -58,7 +58,7 @@ NGRAPH_TEST(${BACKEND_NAME}, hard_sigmoid)
     const auto beta = op::Constant::create<float>(A->get_element_type(), Shape{}, {beta_f});
 
     auto hardsigmoid = make_shared<op::HardSigmoid>(A, alpha, beta);
-    auto f0 = make_shared<Function>(NodeVector{hardsigmoid}, ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{hardsigmoid}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

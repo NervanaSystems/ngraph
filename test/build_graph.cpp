@@ -216,7 +216,7 @@ TEST(build_graph, validate_function_for_dynamic_shape)
         auto param_1 = std::make_shared<op::Parameter>(element::f32, param1_shape);
         auto param_2 = std::make_shared<op::Parameter>(element::f32, param2_shape);
         auto batch_dot = make_shared<op::BatchMatMul>(param_1, param_2);
-        auto f = make_shared<Function>(NodeVector{batch_dot}, ParameterVector{param_1, param_2});
+        auto f = make_shared<Function>(OutputVector{batch_dot}, ParameterVector{param_1, param_2});
         return f;
     };
 

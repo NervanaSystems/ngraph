@@ -60,7 +60,7 @@ TEST(concat_fusion, single_branch)
             NodeVector{concat_2, concat_2, concat_2, concat_2, concat_2, concat_2, concat_2}, 2);
         auto concat_4 = make_shared<op::Concat>(
             NodeVector{concat_3, concat_3, concat_3, concat_3, concat_3, concat_3, concat_3}, 3);
-        auto f_concat_1 = make_shared<Function>(NodeVector{concat_4}, ParameterVector{A});
+        auto f_concat_1 = make_shared<Function>(OutputVector{concat_4}, ParameterVector{A});
         return f_concat_1;
     };
 
@@ -105,7 +105,8 @@ TEST(concat_fusion, multiple_branches_1)
 
         auto concat_5 = make_shared<op::Concat>(NodeVector{A, A}, 2);
         auto concat_6 = make_shared<op::Concat>(NodeVector{concat_5, concat_5, concat_5}, 3);
-        auto f_concat_1 = make_shared<Function>(NodeVector{concat_4, concat_6}, ParameterVector{A});
+        auto f_concat_1 =
+            make_shared<Function>(OutputVector{concat_4, concat_6}, ParameterVector{A});
         return f_concat_1;
     };
 
@@ -146,7 +147,8 @@ TEST(concat_fusion, multiple_branches_2)
             NodeVector{concat_3, concat_3, concat_3, concat_3, concat_3, concat_3, concat_3}, 3);
 
         auto concat_6 = make_shared<op::Concat>(NodeVector{A, A, A}, 3);
-        auto f_concat_1 = make_shared<Function>(NodeVector{concat_4, concat_6}, ParameterVector{A});
+        auto f_concat_1 =
+            make_shared<Function>(OutputVector{concat_4, concat_6}, ParameterVector{A});
         return f_concat_1;
     };
 
@@ -195,7 +197,7 @@ TEST(concat_fusion, non_fusable_self_concat)
         auto concat_6 = make_shared<op::Concat>(NodeVector{concat_5, concat_5, concat_5}, 2);
         auto broadcast = make_shared<op::Broadcast>(concat_6, Shape{32, 8, 7, 3}, AxisSet{1});
         auto add = make_shared<op::Add>(concat_4, broadcast);
-        auto f_concat_1 = make_shared<Function>(NodeVector{add}, ParameterVector{A, B});
+        auto f_concat_1 = make_shared<Function>(OutputVector{add}, ParameterVector{A, B});
         return f_concat_1;
     };
 
@@ -248,7 +250,7 @@ TEST(concat_fusion, self_concat_with_fan_out)
         auto concat_5 = make_shared<op::Concat>(NodeVector{concat_4, concat_4, concat_4}, 3);
         auto concat_6 = make_shared<op::Concat>(NodeVector{concat_2, concat_4}, 3);
         auto f_concat_1 =
-            make_shared<Function>(NodeVector{concat_3, concat_6}, ParameterVector{A, B});
+            make_shared<Function>(OutputVector{concat_3, concat_6}, ParameterVector{A, B});
         return f_concat_1;
     };
 

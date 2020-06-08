@@ -209,7 +209,7 @@ TEST(pattern, graph_rewrite)
         auto graph_a = a + iconst0;
         auto graph_b = b + iconst0;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
+        auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, graph_a, c, graph_b},
                                             ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
@@ -696,7 +696,7 @@ TEST(pattern, recurrent_graph_rewrite)
 
         auto graph = abs_add_a3 * abs_add_b2;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, ParameterVector{a, b});
+        auto f = std::make_shared<Function>(ngraph::OutputVector{graph}, ParameterVector{a, b});
         pass_manager.run_passes(f);
 
         auto left_abs = graph->get_argument(0);

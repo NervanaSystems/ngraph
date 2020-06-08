@@ -703,7 +703,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_dynamic)
     auto sum = make_shared<op::Sum>(x, axes_i64);
     ASSERT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
 
-    auto f = make_shared<Function>(NodeVector{sum}, ParameterVector{x, axes});
+    auto f = make_shared<Function>(OutputVector{sum}, ParameterVector{x, axes});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 

@@ -148,7 +148,7 @@ TEST(nop_elimination, reshape_elimination_v1)
         auto reshape_v1_org = std::make_shared<op::v1::Reshape>(arg, pattern_org, zero);
         auto reshape_v1 = std::make_shared<op::v1::Reshape>(reshape_v1_org, pattern, zero);
         auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
-        return std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg});
+        return std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg});
     };
 
     auto func = generate_func(false);
@@ -172,7 +172,7 @@ TEST(nop_elimination, reshape_elimination_v1_dynamic)
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
     auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
     auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
-    auto f = std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg, pattern});
+    auto f = std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg, pattern});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
