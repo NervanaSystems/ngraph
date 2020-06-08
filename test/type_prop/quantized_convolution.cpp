@@ -64,7 +64,7 @@ TEST(type_prop, quantized_conv_8_bit_output)
                                                             axes);
 
     ASSERT_EQ(quant_conv->get_element_type(), output_type);
-    ASSERT_EQ(quant_conv->get_shape(), output_shape);
+    ASSERT_EQ(quant_conv->get_output_shape(0), output_shape);
 }
 
 TEST(type_prop, quantized_conv_32_bit_output)
@@ -111,7 +111,7 @@ TEST(type_prop, quantized_conv_32_bit_output)
                                                             axes);
 
     ASSERT_EQ(quant_conv->get_element_type(), output_type);
-    ASSERT_EQ(quant_conv->get_shape(), output_shape);
+    ASSERT_EQ(quant_conv->get_output_shape(0), output_shape);
 }
 
 TEST(type_prop, quantized_conv_non_quantized_input_fails)

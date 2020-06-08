@@ -158,7 +158,7 @@ TEST(constant_folding, constant_squeeze)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), shape_out);
+    ASSERT_EQ(new_const->get_output_shape(0), shape_out);
 
     auto values_out = new_const->get_vector<float>();
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
@@ -186,7 +186,7 @@ TEST(constant_folding, constant_unsqueeze)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), shape_out);
+    ASSERT_EQ(new_const->get_output_shape(0), shape_out);
 
     auto values_out = new_const->get_vector<float>();
     ASSERT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
@@ -920,7 +920,7 @@ TEST(constant_folding, const_reduceprod)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -951,7 +951,7 @@ TEST(constant_folding, const_reduceprod_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1007,7 +1007,7 @@ TEST(constant_folding, const_reducesum)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1038,7 +1038,7 @@ TEST(constant_folding, const_reducesum_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1094,7 +1094,7 @@ TEST(constant_folding, const_reducemax)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1125,7 +1125,7 @@ TEST(constant_folding, const_reducemax_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1181,7 +1181,7 @@ TEST(constant_folding, const_reducemin)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1212,7 +1212,7 @@ TEST(constant_folding, const_reducemin_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1243,7 +1243,7 @@ TEST(constant_folding, const_reducemean)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1274,7 +1274,7 @@ TEST(constant_folding, const_reducemean_keepdims)
 
     auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(new_const->get_shape(), output_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), output_shape);
 
     auto values_out = new_const->get_vector<int32_t>();
 
@@ -1329,7 +1329,7 @@ TEST(constant_folding, const_reduce_logical_and__no_keepdims)
     ASSERT_TRUE(new_const);
 
     const Shape expected_out_shape{3};
-    ASSERT_EQ(new_const->get_shape(), expected_out_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), expected_out_shape);
 
     const auto values_out = new_const->get_vector<char>();
 
@@ -1361,7 +1361,7 @@ TEST(constant_folding, const_reduce_logical_and__keepdims)
     // the output shape is expected to have 'ones' at the positions specified in the reduction axes
     // in case the keep_dims attribute of ReduceLogicalAnd is set to true
     const Shape expected_out_shape{3, 1};
-    ASSERT_EQ(new_const->get_shape(), expected_out_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), expected_out_shape);
 
     const auto values_out = new_const->get_vector<char>();
 
@@ -1391,7 +1391,7 @@ TEST(constant_folding, const_reduce_logical_and__keepdims_3d)
     ASSERT_TRUE(new_const);
 
     const Shape expected_out_shape{1, 2, 1};
-    ASSERT_EQ(new_const->get_shape(), expected_out_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), expected_out_shape);
 
     const auto values_out = new_const->get_vector<char>();
 
@@ -1446,7 +1446,7 @@ TEST(constant_folding, const_reduce_logical_or__no_keepdims)
     ASSERT_TRUE(new_const);
 
     const Shape expected_out_shape{3};
-    ASSERT_EQ(new_const->get_shape(), expected_out_shape);
+    ASSERT_EQ(new_const->get_output_shape(0), expected_out_shape);
 
     const auto values_out = new_const->get_vector<char>();
 
@@ -2843,7 +2843,7 @@ TEST(constant_folding, constant_non_zero_0D)
 
     const vector<int64_t> values_expected{0};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{1, 1}), new_const->get_shape());
+    ASSERT_EQ((Shape{1, 1}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_non_zero_1D)
@@ -2866,7 +2866,7 @@ TEST(constant_folding, constant_non_zero_1D)
 
     const vector<int64_t> values_expected{1, 3};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
+    ASSERT_EQ((Shape{1, 2}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_non_zero_int32_output_type)
@@ -2890,7 +2890,7 @@ TEST(constant_folding, constant_non_zero_int32_output_type)
 
     const vector<int32_t> values_expected{1, 3};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{1, 2}), new_const->get_shape());
+    ASSERT_EQ((Shape{1, 2}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_non_zero_1D_all_indices)
@@ -2913,7 +2913,7 @@ TEST(constant_folding, constant_non_zero_1D_all_indices)
 
     const vector<int64_t> values_expected{0, 1, 2, 3, 4, 5, 6, 7};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{1, values_in.size()}), new_const->get_shape());
+    ASSERT_EQ((Shape{1, values_in.size()}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_non_zero_2D)
@@ -2936,7 +2936,7 @@ TEST(constant_folding, constant_non_zero_2D)
 
     const vector<int64_t> values_expected{0, 1, 2, 2, 0, 1, 0, 1};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{2, 4}), new_const->get_shape());
+    ASSERT_EQ((Shape{2, 4}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_non_zero_2D_all_indices)
@@ -2959,7 +2959,7 @@ TEST(constant_folding, constant_non_zero_2D_all_indices)
 
     const vector<int64_t> values_expected{0, 0, 0, 1, 1, 1, 2, 2, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{2, values_in.size()}), new_const->get_shape());
+    ASSERT_EQ((Shape{2, values_in.size()}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_non_zero_2D_all_zeros)
@@ -2979,7 +2979,7 @@ TEST(constant_folding, constant_non_zero_2D_all_zeros)
 
     const auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
-    ASSERT_EQ(shape_size(new_const->get_shape()), 0);
+    ASSERT_EQ(shape_size(new_const->get_output_shape(0)), 0);
 }
 
 TEST(constant_folding, constant_non_zero_3D)
@@ -3003,7 +3003,7 @@ TEST(constant_folding, constant_non_zero_3D)
     const vector<int64_t> values_expected{0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 2, 2, 2,
                                           0, 0, 0, 1, 1, 2, 0, 2, 1, 0, 1, 2, 0, 1, 2, 0, 2, 1};
     ASSERT_EQ(values_expected, values_out);
-    ASSERT_EQ((Shape{3, 12}), new_const->get_shape());
+    ASSERT_EQ((Shape{3, 12}), new_const->get_output_shape(0));
 }
 
 TEST(constant_folding, constant_scatter_elements_update_basic)

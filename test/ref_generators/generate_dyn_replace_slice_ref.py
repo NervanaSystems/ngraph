@@ -572,7 +572,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, DynReplaceSliceTest, dyn_replace_slice)
     {
         setup();
         EXPECT_EQ(output->get_element_type(), t->input_element_type);
-        EXPECT_EQ(output->get_shape(), t->input_shape);
+        EXPECT_EQ(output->get_output_shape(0), t->input_shape);
         t->check_result_values(output);
     }
     else

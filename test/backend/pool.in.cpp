@@ -517,7 +517,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -1344,7 +1344,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }

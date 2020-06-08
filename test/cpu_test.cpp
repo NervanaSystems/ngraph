@@ -86,7 +86,7 @@ static void compare_backends(const std::shared_ptr<Function>& f1,
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : f1->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -264,7 +264,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -304,7 +304,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -342,7 +342,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -392,7 +392,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -442,7 +442,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -476,7 +476,7 @@ TEST(cpu_test, reshape_layout_optimizations6)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -509,7 +509,7 @@ TEST(cpu_test, reshape_layout_optimizations7)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -541,7 +541,7 @@ TEST(cpu_test, DISABLED_collapse_dims1)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -575,7 +575,7 @@ TEST(cpu_test, collapse_dims2)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -609,7 +609,7 @@ TEST(cpu_test, convert_layout)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -707,7 +707,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
 
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -728,7 +728,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size());
     for (size_t i = 0; i < args.size(); i++)
     {
-        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_shape());
+        auto t = backend->create_tensor(parms.at(i)->get_element_type(), parms.at(i)->get_output_shape(0));
         copy_data(t, args.at(i));
         arg_tensors.at(i) = t;
     }
@@ -739,7 +739,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     for (size_t i = 0; i < results.size(); i++)
     {
         result_tensors.at(i) =
-            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_shape());
+            backend->create_tensor(results.at(i)->get_element_type(), results.at(i)->get_output_shape(0));
     }
 
     ngraph::pass::PassConfig pass_config;
@@ -1377,7 +1377,7 @@ TEST(cpu_test, conv_test_winograd)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -1420,7 +1420,7 @@ TEST(cpu_test, gauss_error_function_erf_float32)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }

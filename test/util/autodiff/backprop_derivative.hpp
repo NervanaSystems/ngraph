@@ -67,7 +67,7 @@ namespace ngraph
             for (auto x : indep_params)
             {
                 // add df/dx to df/dX* arguments
-                auto x_shape = x->get_shape();
+                auto x_shape = x->get_output_shape(0);
                 df_output_args.push_back(backend->create_tensor<T>(x_shape));
 
                 // each element of y has a derivative with respect to each element of x

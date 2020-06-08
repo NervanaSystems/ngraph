@@ -142,7 +142,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     vector<vector<float>> dot_args;
     for (shared_ptr<op::Parameter> param : dot_params)
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         dot_rng.initialize(tensor_val);
         dot_args.push_back(tensor_val);
     }
@@ -151,7 +151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     vector<vector<float>> batchmatmul_args;
     for (shared_ptr<op::Parameter> param : batchmatmul_params)
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         batchmatmul_rng.initialize(tensor_val);
         batchmatmul_args.push_back(tensor_val);
     }
@@ -179,7 +179,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_batch_mat_mul_transpose_forward)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -203,7 +203,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
+        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_output_shape(0))));
     }
 
     auto g = make_function_from_file(file_name);

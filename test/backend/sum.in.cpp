@@ -570,7 +570,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -603,7 +603,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_stable_acc_double)
     vector<vector<double>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
