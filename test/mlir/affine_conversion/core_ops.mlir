@@ -23,13 +23,13 @@ func @simple_gather(%arg0: !ng.tensor<16x!ng.i64>, %arg1: !ng.tensor<512x32xf32>
 // CHECK-LABEL: func @simple_equal
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:      %[[C1:.*]] = constant 0 : i8 
-// CHECK-NEXT: 	    %[[C2:.*]] = constant 1 : i8 
-//      CHECK:	    %[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-//      CHECK:	    %[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	    %[[R1:.*]] = cmpf "oeq", %[[O2]], %[[O1]] : f32
-//      CHECK:      %[[R2:.*]] = select %[[R1]], %[[C2]], %[[C1]] : i8
-// CHECK-NEXT:      affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "oeq", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
+// CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_equal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
 %0 = "ng.equal"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
    "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
@@ -41,13 +41,13 @@ func @simple_equal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !n
 // CHECK-LABEL: func @simple_notequal
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:      %[[C1:.*]] = constant 0 : i8 
-// CHECK-NEXT: 	    %[[C2:.*]] = constant 1 : i8 
-//      CHECK:	    %[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-//      CHECK:	    %[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	    %[[R1:.*]] = cmpf "one", %[[O2]], %[[O1]] : f32
-//      CHECK:      %[[R2:.*]] = select %[[R1]], %[[C2]], %[[C1]] : i8
-// CHECK-NEXT:      affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "one", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
+// CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_notequal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
 %0 = "ng.not.equal"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
    "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()

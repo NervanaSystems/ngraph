@@ -2366,14 +2366,17 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
   AffineLoopNestBuilder(ivs, lbs, ubs, steps)(
       // single stmt body
       [&] {
+        auto left = Value(iLHS(ivs));
+        auto right = Value(iRHS(ivs));
+
         if (isa<NGAddOp>(op)) {
-          iRes(ivs) = iLHS(ivs) + iRHS(ivs);
+          iRes(ivs) = left + right;
         } else if (isa<NGSubOp>(op)) {
-          iRes(ivs) = iLHS(ivs) - iRHS(ivs);
+          iRes(ivs) = left - right;
         } else if (isa<NGMulOp>(op)) {
-          iRes(ivs) = iLHS(ivs) * iRHS(ivs);
+          iRes(ivs) = left * right;
         } else if (isa<NGDivOp>(op)) {
-          iRes(ivs) = iLHS(ivs) / iRHS(ivs);
+          iRes(ivs) = left / right;
         }
         // TODO(pthoreho) For all comparision operators, use
         // zero_extendi(Value(iLHS(ivs)) !=
@@ -2381,37 +2384,37 @@ void lowerBinaryElementwise(Operation *op, ArrayRef<Value> operands,
         // instead of std_select once `zero_extendi` is
         // made available in the edsc::intrinsics namescope in MLIR repo.
         else if (isa<NGGreaterOp>(op)) {
-          iRes(ivs) = std_select(
-              gt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
-              createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+          iRes(ivs) =
+              std_select(gt(left, right, is_signed(ngTensorType)), ones, zeros);
         } else if (isa<NGLessOp>(op)) {
-          iRes(ivs) = std_select(
-              lt(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
-              createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+          iRes(ivs) =
+              std_select(lt(left, right, is_signed(ngTensorType)), ones, zeros);
         } else if (isa<NGGreaterEqOp>(op)) {
-          iRes(ivs) = std_select(
-              ge(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
-              createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+          iRes(ivs) =
+              std_select(ge(left, right, is_signed(ngTensorType)), ones, zeros);
         } else if (isa<NGLessEqOp>(op)) {
-          iRes(ivs) = std_select(
-              le(Value(iLHS(ivs)), Value(iRHS(ivs)), is_signed(ngTensorType)),
-              createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+          iRes(ivs) =
+              std_select(le(left, right, is_signed(ngTensorType)), ones, zeros);
         } else if (isa<NGEqOp>(op)) {
-          iRes(ivs) =
-              std_select(eq(Value(iLHS(ivs)), Value(iRHS(ivs))),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+          iRes(ivs) = std_select(eq(left, right), ones, zeros);
         } else if (isa<NGNotEqOp>(op)) {
-          iRes(ivs) =
-              std_select(ne(Value(iLHS(ivs)), Value(iRHS(ivs))),
-                         createOneConstant(elemTy), createZeroConstant(elemTy));
+          auto ones = createOneConstant(elemTy);
+          auto zeros = createZeroConstant(elemTy);
+          iRes(ivs) = std_select(ne(left, right), ones, zeros);
         } else if (isa<NGMaxOp>(op)) {
-          auto left = Value(iLHS(ivs));
-          auto right = Value(iRHS(ivs));
           iRes(ivs) =
               std_select(gt(left, right, is_signed(ngTensorType)), left, right);
         } else if (isa<NGMinOp>(op)) {
-          auto left = Value(iLHS(ivs));
-          auto right = Value(iRHS(ivs));
           iRes(ivs) =
               std_select(lt(left, right, is_signed(ngTensorType)), left, right);
         } else {
