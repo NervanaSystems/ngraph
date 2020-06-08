@@ -72,7 +72,6 @@ void regclass_pyngraph_Node(py::module m)
 
     node.def("get_output_size", &ngraph::Node::get_output_size);
     node.def("get_output_element_type", &ngraph::Node::get_output_element_type);
-    node.def("get_element_type", &ngraph::Node::get_element_type);
     node.def("get_output_shape", &ngraph::Node::get_output_shape);
     node.def("get_output_partial_shape", &ngraph::Node::get_output_partial_shape);
     node.def("get_shape", &ngraph::Node::get_shape);
