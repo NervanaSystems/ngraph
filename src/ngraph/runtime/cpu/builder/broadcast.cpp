@@ -127,7 +127,7 @@ namespace ngraph
 
                 if (broadcast_axes.empty())
                 {
-                    size = shape_size(out_shape) * broadcast->get_element_type().size();
+                    size = shape_size(out_shape) * broadcast->get_output_element_type(0).size();
                     return;
                 }
 

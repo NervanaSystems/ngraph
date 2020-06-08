@@ -172,7 +172,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
 constexpr NodeTypeInfo op::v1::ConvolutionBackpropData::type_info;
 shared_ptr<Node> op::v1::Convolution::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
 }
 
 op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data,
@@ -893,7 +893,7 @@ void op::v0::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
 constexpr NodeTypeInfo op::v0::ConvolutionBackpropData::type_info;
 shared_ptr<Node> op::v0::Convolution::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
 }
 
 op::v0::ConvolutionBackpropData::ConvolutionBackpropData(

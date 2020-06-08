@@ -37,7 +37,7 @@ constexpr NodeTypeInfo op::v1::GroupConvolution::type_info;
 
 shared_ptr<Node> op::v1::GroupConvolution::get_default_value() const
 {
-    return op::Constant::create(get_element_type(), get_shape(), {0});
+    return op::Constant::create(get_output_element_type(0), get_shape(), {0});
 }
 
 op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,

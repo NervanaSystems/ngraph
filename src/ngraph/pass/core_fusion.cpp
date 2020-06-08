@@ -280,7 +280,7 @@ void pass::CoreFusion::construct_sigmoid()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -337,7 +337,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
         NGRAPH_DEBUG << "In a callback for construct_bprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -921,7 +921,7 @@ static bool
                                        size_t channel_index)
 {
     // Only match float32 convolutions
-    if (match_root->get_element_type() != ngraph::element::f32)
+    if (match_root->get_output_element_type(0) != ngraph::element::f32)
     {
         return false;
     }
@@ -1246,7 +1246,7 @@ void pass::CoreFusion::construct_conv_bias()
             conv_m = static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(1));
         }
 
-        if (conv_m->get_shape().size() > 5 || conv_m->get_element_type() != element::f32)
+        if (conv_m->get_shape().size() > 5 || conv_m->get_output_element_type(0) != element::f32)
         {
             // Most backends are unlikely to efficiently support these convolutions. Skip fusion
             return false;

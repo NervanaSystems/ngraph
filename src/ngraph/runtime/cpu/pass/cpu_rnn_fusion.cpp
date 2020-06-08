@@ -267,7 +267,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -373,7 +373,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         auto pattern_map = m.get_pattern_value_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -617,9 +617,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         CHECK_RANK(rnn_weights_iter, 2);
         CHECK_RANK(rnn_bias, 1);
 
-        if (rnn_src_layer->get_element_type() != element::f32 ||
-            rnn_src_iter->get_element_type() != element::f32 ||
-            rnn_src_iter_c->get_element_type() != element::f32)
+        if (rnn_src_layer->get_output_element_type(0) != element::f32 ||
+            rnn_src_iter->get_output_element_type(0) != element::f32 ||
+            rnn_src_iter_c->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "input tensor type and input recurrent state tensor are not float32";
             return false;

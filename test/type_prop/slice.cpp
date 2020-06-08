@@ -25,7 +25,7 @@ TEST(type_prop, slice_deduce_vector)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     auto sl = make_shared<op::Slice>(param, Coordinate{2}, Coordinate{5});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{3}));
 }
 
@@ -33,7 +33,7 @@ TEST(type_prop, slice_deduce_matrix)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{3, 6}));
 }
 
@@ -41,7 +41,7 @@ TEST(type_prop, slice_deduce_matrix_strided)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Strides{3, 2});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{1, 3}));
 }
 
@@ -49,7 +49,7 @@ TEST(type_prop, slice_deduce_matrix_strided_uneven)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{2, 1}, Coordinate{5, 7}, Strides{3, 4});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{1, 2}));
 }
 
@@ -57,7 +57,7 @@ TEST(type_prop, slice_deduce_vector_edge)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6});
     auto sl = make_shared<op::Slice>(param, Coordinate{0}, Coordinate{6});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{6}));
 }
 
@@ -65,7 +65,7 @@ TEST(type_prop, slice_deduce_matrix_edge)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 8});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{6, 8}));
 }
 
@@ -73,7 +73,7 @@ TEST(type_prop, slice_deduce_matrix_zero_cols)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{6, 0});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{6, 0}));
 }
 
@@ -81,7 +81,7 @@ TEST(type_prop, slice_deduce_matrix_zero_zero)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto sl = make_shared<op::Slice>(param, Coordinate{0, 0}, Coordinate{0, 0});
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{0, 0}));
 }
 
@@ -287,7 +287,7 @@ TEST(type_prop, slice_partial_arg_input_rank_dynamic_attribs_ok)
     auto param = make_shared<op::Parameter>(element::f32, input_shape);
     auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{0, 1, 2, 2}));
 }
 
@@ -357,7 +357,7 @@ TEST(type_prop, slice_partial_arg_rank_static_dynamic_ok)
     auto param = make_shared<op::Parameter>(element::f32, input_shape);
     auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{0, 1, 2, 2}));
 }
 
@@ -371,7 +371,7 @@ TEST(type_prop, slice_partial_arg_rank_static_dynamic_some_dims_known_ok)
     auto param = make_shared<op::Parameter>(element::f32, input_shape);
     auto sl = make_shared<op::Slice>(param, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_shape(), (Shape{0, 1, 2, 2}));
 }
 

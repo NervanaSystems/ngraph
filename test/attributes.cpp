@@ -1356,7 +1356,7 @@ TEST(attributes, constant_op)
     auto g_k = as_type_ptr<op::v0::Constant>(builder.create());
     g_k->validate_and_infer_types();
     ASSERT_TRUE(g_k);
-    EXPECT_EQ(k->get_element_type(), g_k->get_element_type());
+    EXPECT_EQ(k->get_output_element_type(0), g_k->get_output_element_type(0));
     EXPECT_EQ(k->get_shape(), g_k->get_shape());
     vector<float> g_data = g_k->get_vector<float>();
     EXPECT_EQ(data, g_data);

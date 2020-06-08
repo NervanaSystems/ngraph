@@ -27,7 +27,7 @@ TEST(type_prop, gemm)
     auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
     auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
-    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_output_element_type(0), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }
 
@@ -37,6 +37,6 @@ TEST(type_prop, gemm_broadcast_input_C)
     auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
     auto gemm_func = make_shared<op::Gemm>(A, B, C);
-    EXPECT_EQ(gemm_func->get_element_type(), element::f32);
+    EXPECT_EQ(gemm_func->get_output_element_type(0), element::f32);
     EXPECT_EQ(gemm_func->get_shape(), (Shape{3, 4}));
 }

@@ -29,7 +29,7 @@ TEST(type_prop, pad_deduce_1d)
     CoordinateDiff padding_below{2};
     CoordinateDiff padding_above{3};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_output_element_type(0), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{55}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{2}));
@@ -44,7 +44,7 @@ TEST(type_prop, pad_deduce_2d)
     CoordinateDiff padding_below{5, 3};
     CoordinateDiff padding_above{6, 9};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_output_element_type(0), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{61, 52}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5, 3}));
@@ -59,7 +59,7 @@ TEST(type_prop, pad_deduce_3d)
     CoordinateDiff padding_below{5, 3, 0};
     CoordinateDiff padding_above{6, 9, 4};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_output_element_type(0), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{61, 52, 24}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{5, 3, 0}));
@@ -74,7 +74,7 @@ TEST(type_prop, pad_deduce_3d_neg)
     CoordinateDiff padding_below{-5, 3, -2};
     CoordinateDiff padding_above{-6, -9, 4};
     auto pad = make_shared<op::Pad>(param0, param1, padding_below, padding_above);
-    EXPECT_EQ(pad->get_element_type(), element::f32);
+    EXPECT_EQ(pad->get_output_element_type(0), element::f32);
     EXPECT_EQ(pad->get_shape(), (Shape{39, 34, 22}));
 
     EXPECT_EQ(pad->get_padding_below(), (CoordinateDiff{-5, 3, -2}));

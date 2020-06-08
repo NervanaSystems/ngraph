@@ -35,7 +35,7 @@ bool pass::ConstantToBroadcast::run_on_node(shared_ptr<Node> node)
             if (constant->get_all_data_elements_bitwise_identical())
             {
                 auto scalar_constant = make_shared<op::Constant>(
-                    constant->get_element_type(), Shape{}, constant->get_data_ptr());
+                    constant->get_output_element_type(0), Shape{}, constant->get_data_ptr());
                 AxisSet broadcast_axes;
                 for (size_t i = 0; i < constant->get_output_shape(0).size(); i++)
                 {

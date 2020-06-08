@@ -163,7 +163,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto m_bias = m_broadcast->get_argument(0);
         auto pattern_map = m.get_pattern_map();
 
-        NGRAPH_CHECK(mpattern->get_element_type() != element::f64 || m_bias == nullptr,
+        NGRAPH_CHECK(mpattern->get_output_element_type(0) != element::f64 || m_bias == nullptr,
                      "Bias in DP MatMulBias is not supported yet");
 
         auto mmb = std::make_shared<ngraph::op::MatmulBias>(pattern_map[W],
@@ -207,7 +207,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
         auto mpattern = m.get_match_root();
         auto dot = m.get_match_root();
-        auto element_type = mpattern->get_element_type();
+        auto element_type = mpattern->get_output_element_type(0);
 
         if (element_type != element::f32 && element_type != element::f64)
         {
@@ -1109,7 +1109,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto value_const = ngraph::op::Constant::create(element::f32, Shape{1, 1, 2, 2}, {value});
     auto value_label = std::make_shared<pattern::op::Label>(value_const);
 
-    auto const1 = ngraph::op::Constant::create(x->get_element_type(), Shape{}, {1});
+    auto const1 = ngraph::op::Constant::create(x->get_output_element_type(0), Shape{}, {1});
     auto const1_label = std::make_shared<pattern::op::Label>(const1);
 
     bool use_seed = false;
@@ -1117,7 +1117,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto use_seed_label = std::make_shared<pattern::op::Label>(use_seed_const);
 
     auto genmask = std::make_shared<op::GenerateMask>(
-        const1_label, x->get_shape(), x->get_element_type(), seed, value, use_seed);
+        const1_label, x->get_shape(), x->get_output_element_type(0), seed, value, use_seed);
     auto genmask_label =
         std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
 
@@ -1257,7 +1257,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -1320,7 +1320,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
             return false;
         }
 
-        if (pattern_map[alpha]->get_element_type() != element::f32)
+        if (pattern_map[alpha]->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "Only float negative slope supported for leaky relu";
             return false;
@@ -1375,7 +1375,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         NGRAPH_DEBUG << "In a callback for construct_bounded_relu against "
                      << m.get_match_root()->get_name();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -1389,7 +1389,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         }
 
         // we wont fuse if the alpha and the Relu output element type are not same
-        if (pattern_map[alpha]->get_element_type() != pattern_map[relu_input]->get_element_type())
+        if (pattern_map[alpha]->get_output_element_type(0) !=
+            pattern_map[relu_input]->get_output_element_type(0))
         {
             return false;
         }
@@ -2251,7 +2252,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(concat_n,
                                                              dq_m->get_argument(1),
                                                              dq_m->get_argument(2),
-                                                             dq_m->get_element_type(),
+                                                             dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
         ngraph::replace_node(m.get_match_root(), dq_n);
 
@@ -2295,8 +2296,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()
             return false;
         }
 
-        if (m.get_match_root()->get_element_type() !=
-            m.get_pattern_map()[input]->get_element_type())
+        if (m.get_match_root()->get_output_element_type(0) !=
+            m.get_pattern_map()[input]->get_output_element_type(0))
         {
             NGRAPH_DEBUG << "Type mismatch between input and quantize output";
             return false;
@@ -2543,8 +2544,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         {
             return false;
         }
-        if (input_0->get_element_type() == element::u8 &&
-            input_1->get_element_type() == element::u8)
+        if (input_0->get_output_element_type(0) == element::u8 &&
+            input_1->get_output_element_type(0) == element::u8)
         {
             return false;
         }

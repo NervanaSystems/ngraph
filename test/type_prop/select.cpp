@@ -27,7 +27,7 @@ TEST(type_prop, select_deduce)
     auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{2, 4}));
 }
 
@@ -323,7 +323,7 @@ TEST_P(DeduceV1SelectTest, output_shape)
     auto select = make_shared<op::v1::Select>(cond, ptrue, pfalse, tp.auto_broadcast);
 
     ASSERT_EQ(select->get_shape(), tp.shapes[3]);
-    ASSERT_EQ(select->get_element_type(), tp.ets[3]);
+    ASSERT_EQ(select->get_output_element_type(0), tp.ets[3]);
 }
 
 INSTANTIATE_TEST_CASE_P(

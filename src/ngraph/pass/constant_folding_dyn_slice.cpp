@@ -69,7 +69,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                    plan.reverse_axes);
 
     return make_shared<op::Constant>(
-        data->get_element_type(), plan.reshape_out_shape, reverse_out_data);
+        data->get_output_element_type(0), plan.reshape_out_shape, reverse_out_data);
 }
 
 void pass::ConstantFolding::construct_constant_dyn_slice()

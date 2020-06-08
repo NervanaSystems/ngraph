@@ -38,6 +38,6 @@ TEST(type_prop, clamp)
     }
 
     const auto clamp = make_shared<op::Clamp>(data, 1.0, 2.0);
-    EXPECT_EQ(clamp->get_element_type(), element::f64);
+    EXPECT_EQ(clamp->get_output_element_type(0), element::f64);
     EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
 }

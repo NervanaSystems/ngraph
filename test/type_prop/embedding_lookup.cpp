@@ -46,7 +46,7 @@ TEST(type_prop, embedding_lookup_static_shapes)
     auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
     auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
     auto embed = make_shared<op::EmbeddingLookup>(data, weights);
-    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_EQ(embed->get_output_element_type(0), element::f32);
     ASSERT_EQ(embed->get_shape(), (Shape{8, 10, 12, 10}));
 }
 
@@ -55,7 +55,7 @@ TEST(type_prop, embedding_lookup_dynamic_shape_arg0)
     auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
     auto embed = make_shared<op::EmbeddingLookup>(data, weights);
-    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_EQ(embed->get_output_element_type(0), element::f32);
     ASSERT_TRUE(embed->get_output_partial_shape(0).rank().is_dynamic());
 }
 
@@ -64,7 +64,7 @@ TEST(type_prop, embedding_lookup_dynamic_shape_arg1)
     auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
     auto weights = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto embed = make_shared<op::EmbeddingLookup>(data, weights);
-    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_EQ(embed->get_output_element_type(0), element::f32);
     PartialShape expected{8, 10, 12, Dimension::dynamic()};
     ASSERT_TRUE(embed->get_output_partial_shape(0).same_scheme(expected));
 }
@@ -74,7 +74,7 @@ TEST(type_prop, embedding_lookup_shape_arg1_dynamic_embedding_length)
     auto data = make_shared<op::Parameter>(element::f32, Shape{8, 10, 12});
     auto weights = make_shared<op::Parameter>(element::f32, PartialShape{5, Dimension::dynamic()});
     auto embed = make_shared<op::EmbeddingLookup>(data, weights);
-    ASSERT_EQ(embed->get_element_type(), element::f32);
+    ASSERT_EQ(embed->get_output_element_type(0), element::f32);
     PartialShape expected{8, 10, 12, Dimension::dynamic()};
     ASSERT_TRUE(embed->get_output_partial_shape(0).same_scheme(expected));
 }

@@ -29,7 +29,7 @@ TEST(type_prop, gather_no_axis)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::Gather>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
     ASSERT_EQ(G->get_shape(), out_shape);
 }
 
@@ -41,7 +41,7 @@ TEST(type_prop, gather)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::Gather>(P, I, 1);
-    ASSERT_EQ(G->get_element_type(), element::f32);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
     ASSERT_EQ(G->get_shape(), out_shape);
 }
 

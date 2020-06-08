@@ -27,7 +27,7 @@ TEST(type_prop, batchmatmultranspose_deduce_3d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
     auto bc = make_shared<op::BatchMatMulTranspose>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
 }
 
@@ -37,7 +37,7 @@ TEST(type_prop, batchmatmultranspose_deduce_3d_transpose0)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
     auto bc = make_shared<op::BatchMatMulTranspose>(param1, param2, true, false);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
 }
 
@@ -47,7 +47,7 @@ TEST(type_prop, batchmatmultranspose_deduce_3d_transpose1)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 3, 2});
     auto bc = make_shared<op::BatchMatMulTranspose>(param1, param2, false, true);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
 }
 
@@ -57,7 +57,7 @@ TEST(type_prop, batchmatmultranspose_deduce_3d_transpose_both)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 3, 2});
     auto bc = make_shared<op::BatchMatMulTranspose>(param1, param2, true, true);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
 }
 
