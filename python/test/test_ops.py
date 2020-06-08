@@ -33,19 +33,19 @@ import test
 def binary_op(op_str, a, b):
 
     if op_str == "+":
-        return a + b
+        return (a + b)
     elif op_str == "Add":
         return ng.add(a, b)
     elif op_str == "-":
-        return a - b
+        return (a - b)
     elif op_str == "Sub":
         return ng.subtract(a, b)
     elif op_str == "*":
-        return a * b
+        return (a * b)
     elif op_str == "Mul":
         return ng.multiply(a, b)
     elif op_str == "/":
-        return a / b
+        return (a / b)
     elif op_str == "Div":
         return ng.divide(a, b)
     elif op_str == "Equal":
@@ -107,7 +107,7 @@ def binary_op_exec(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function([binary_op(op_str, A, B).output(0)], parameter_list, "test")
+    function = Function([binary_op(op_str, A, B)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
@@ -807,7 +807,7 @@ def test_convolution_simple():
     pads_end = [0, 0]
     dilations = [1, 1]
 
-    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations).output(0)
     function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -844,7 +844,7 @@ def test_convolution_with_strides():
     pads_end = [0, 0]
     dilations = [1, 1]
 
-    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations).output(0)
     function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -881,7 +881,7 @@ def test_convolution_with_filter_dilation():
     pads_end = [0, 0]
     dilations = [2, 2]
 
-    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations).output(0)
     function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -921,7 +921,7 @@ def test_convolution_with_padding():
     pads_begin = [0, 0]
     pads_end = [0, 0]
 
-    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations).output(0)
     function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
@@ -960,7 +960,7 @@ def test_convolution_with_non_zero_padding():
     pads_begin = [2, 1]
     pads_end = [1, 2]
 
-    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations)
+    model = ng.convolution(data, filters, strides, pads_begin, pads_end, dilations).output(0)
     function = Function([model], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
