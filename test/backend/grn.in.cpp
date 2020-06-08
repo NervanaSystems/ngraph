@@ -53,7 +53,7 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
     float bias{1e-6f};
 
     const auto grn = make_shared<op::GRN>(data, bias);
-    const auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
+    const auto function = make_shared<Function>(OutputVector{grn}, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -77,7 +77,7 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
     float bias{2.25f};
 
     const auto grn = make_shared<op::GRN>(data, bias);
-    const auto function = make_shared<Function>(NodeVector{grn}, ParameterVector{data});
+    const auto function = make_shared<Function>(OutputVector{grn}, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 

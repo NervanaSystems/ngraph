@@ -36,7 +36,7 @@ NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
     auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto f = make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
+    auto f = make_shared<Function>(OutputVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

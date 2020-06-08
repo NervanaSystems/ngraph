@@ -272,7 +272,7 @@ TEST(graph_util, clone_multiple_results)
     auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto f = make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
+    auto f = make_shared<Function>(OutputVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
 
     auto copy = clone_function(*f);
 }
@@ -353,7 +353,7 @@ TEST(util, test_fprop_cache)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto output = (A + B) * C + A;
 
-    auto f = make_shared<Function>(NodeVector{output}, ParameterVector{A, B, C});
+    auto f = make_shared<Function>(OutputVector{output}, ParameterVector{A, B, C});
 
     auto bf = autodiff::backprop_function(f);
 
@@ -551,7 +551,7 @@ TEST(graph, huge)
             n = make_shared<op::Negative>(n);
             weak_nodes.push_back(n);
         }
-        auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
+        auto f = make_shared<Function>(OutputVector{n}, ParameterVector{param});
     }
 
     for (auto& weak_node : weak_nodes)

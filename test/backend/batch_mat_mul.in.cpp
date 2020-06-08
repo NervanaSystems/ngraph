@@ -55,7 +55,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose)
     auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
     auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, false, false);
-    auto f0 = make_shared<Function>(NodeVector{bmmt}, ParameterVector{arg0, arg1});
+    auto f0 = make_shared<Function>(OutputVector{bmmt}, ParameterVector{arg0, arg1});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -80,7 +80,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose_with_transpose)
     auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
     auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
     auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, true, false);
-    auto f0 = make_shared<Function>(NodeVector{bmmt}, ParameterVector{arg0, arg1});
+    auto f0 = make_shared<Function>(OutputVector{bmmt}, ParameterVector{arg0, arg1});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

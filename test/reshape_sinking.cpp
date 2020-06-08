@@ -57,7 +57,7 @@ TEST(reshape_sinking, edge_splitting)
     auto absn = make_shared<op::Abs>(reshape);
     auto absn2 = make_shared<op::Abs>(absn);
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
-    auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
+    auto func = make_shared<Function>(OutputVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
     // size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::ReshapeSinking>();
@@ -94,7 +94,7 @@ TEST(reshape_sinking, broadcast_swimming)
     auto add = bias_broadcast + conv_reshape;
     auto relu = make_shared<op::Relu>(add);
 
-    auto func = make_shared<Function>(NodeVector{relu}, ParameterVector{bias, input, weights});
+    auto func = make_shared<Function>(OutputVector{relu}, ParameterVector{bias, input, weights});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::ReshapeSinking>();

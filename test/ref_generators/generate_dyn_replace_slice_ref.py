@@ -550,7 +550,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, DynReplaceSliceTest, dyn_replace_slice)
                                                          t->lb_mask, t->ub_mask, t->new_mask,
                                                          t->shrink_mask, t->ellipsis_mask);
 
-        auto f = std::make_shared<Function>(NodeVector{rsl}, ParameterVector{arg, repl, lb, ub, strides});
+        auto f = std::make_shared<Function>(OutputVector{rsl}, ParameterVector{arg, repl, lb, ub, strides});
 
         auto ex = backend->compile(f);
 

@@ -54,7 +54,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 
     auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
     auto function =
-        make_shared<Function>(NodeVector{scale_shift_func}, ParameterVector{data, scale, shift});
+        make_shared<Function>(OutputVector{scale_shift_func}, ParameterVector{data, scale, shift});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // Data
     test_case.add_input<float>(vector<float>(18, 2));
@@ -75,7 +75,7 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
 
     auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
     auto function =
-        make_shared<Function>(NodeVector{scale_shift_func}, ParameterVector{data, scale, shift});
+        make_shared<Function>(OutputVector{scale_shift_func}, ParameterVector{data, scale, shift});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // Data
     test_case.add_input<float>(vector<float>(18, 2));

@@ -52,7 +52,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_1d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto f0 = make_shared<Function>(NodeVector{conv_bias}, ParameterVector{data, filters, bias});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -76,7 +76,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_2d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto f0 = make_shared<Function>(NodeVector{conv_bias}, ParameterVector{data, filters, bias});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -100,7 +100,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_3d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto f0 = make_shared<Function>(NodeVector{conv_bias}, ParameterVector{data, filters, bias});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -162,8 +162,8 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_add_2d)
     auto add = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
     auto conv_bias_add = make_shared<op::ConvolutionBiasAdd>(conv_bias, add);
-    auto f0 =
-        make_shared<Function>(NodeVector{conv_bias_add}, ParameterVector{data, filters, bias, add});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias_add},
+                                    ParameterVector{data, filters, bias, add});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

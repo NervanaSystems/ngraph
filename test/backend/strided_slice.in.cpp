@@ -62,7 +62,7 @@ namespace
                                                                     shrink_axis_mask,
                                                                     ellipsis_mask);
 
-        auto f = std::make_shared<Function>(NodeVector{strided_slice},
+        auto f = std::make_shared<Function>(OutputVector{strided_slice},
                                             ParameterVector{arg, begin_op, end_op, strides_op});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
@@ -119,7 +119,7 @@ namespace
                                                                     shrink_axis_mask,
                                                                     ellipsis_mask);
 
-        auto f = std::make_shared<Function>(NodeVector{strided_slice},
+        auto f = std::make_shared<Function>(OutputVector{strided_slice},
                                             ParameterVector{arg, begin_op, end_op});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
