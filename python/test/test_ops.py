@@ -107,7 +107,7 @@ def binary_op_exec(op_str):
     A = Parameter(element_type, shape)
     B = Parameter(element_type, shape)
     parameter_list = [A, B]
-    function = Function([binary_op(op_str, A, B)], parameter_list, "test")
+    function = Function([binary_op(op_str, A, B).output(0)], parameter_list, "test")
     backend = Backend.create(test.BACKEND_NAME)
 
     a = backend.create_tensor(element_type, shape)
