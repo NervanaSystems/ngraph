@@ -1664,10 +1664,7 @@ namespace ngraph
                 {
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                        node->get_input_descriptor(0)
-                            .get_output()
-                            .get_tensor_ptr()
-                            ->get_tensor_layout());
+                        node->get_input_tensor(0).get_tensor_layout());
 
                     if (result->needs_default_layout() || !cpu_tvl->is_mkldnn_layout() ||
                         cpu_tvl->get_size() * cpu_tvl->get_element_type().size() !=
@@ -1779,10 +1776,7 @@ namespace ngraph
                     bool skip_reshape = false;
                     bool skip_input_reorder = false;
 
-                    auto tvl = node->get_input_descriptor(0)
-                                   .get_output()
-                                   .get_tensor_ptr()
-                                   ->get_tensor_layout();
+                    auto tvl = node->get_input_tensor(0).get_tensor_layout();
                     auto cpu_tvl = dynamic_cast<runtime::cpu::LayoutDescriptor*>(tvl.get());
                     if (cpu_tvl && cpu_tvl->is_mkldnn_layout())
                     {
