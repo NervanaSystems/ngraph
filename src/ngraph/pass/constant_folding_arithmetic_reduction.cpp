@@ -37,7 +37,7 @@ static shared_ptr<op::Constant>
     fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
                                               shared_ptr<Node> reduction_node)
 {
-    const Shape& out_shape = reduction_node->get_shape();
+    const Shape& out_shape = reduction_node->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 
@@ -113,7 +113,7 @@ static shared_ptr<op::Constant>
     }
 
     return make_shared<op::Constant>(
-        reduction_node->get_output_element_type(0), reduction_node->get_shape(), data_ptr);
+        reduction_node->get_output_element_type(0), reduction_node->get_output_shape(0), data_ptr);
 }
 
 static shared_ptr<op::Constant>

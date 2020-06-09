@@ -106,9 +106,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     vector<bool> args_cacheable;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        auto tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
+        auto tensor = backend->create_tensor(param->get_element_type(), param->get_output_shape(0));
         auto tensor_data =
-            make_shared<runtime::HostTensor>(param->get_element_type(), param->get_shape());
+            make_shared<runtime::HostTensor>(param->get_element_type(), param->get_output_shape(0));
         random_init(tensor_data);
         tensor->write(tensor_data->get_data_ptr(),
                       tensor_data->get_element_count() * tensor_data->get_element_type().size());
@@ -122,9 +122,9 @@ vector<runtime::PerformanceCounter> run_benchmark(shared_ptr<Function> f,
     vector<shared_ptr<runtime::Tensor>> results;
     for (shared_ptr<Node> out : f->get_results())
     {
-        auto result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        auto result = backend->create_tensor(out->get_element_type(), out->get_output_shape(0));
         auto tensor_data =
-            make_shared<runtime::HostTensor>(out->get_element_type(), out->get_shape());
+            make_shared<runtime::HostTensor>(out->get_element_type(), out->get_output_shape(0));
         results.push_back(result);
         result_data.push_back(tensor_data);
     }

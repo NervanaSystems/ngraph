@@ -85,7 +85,7 @@ OutputVector op::BatchMatMulTranspose::decompose_op() const
     for (size_t i = 0; i < num_batches; i++)
     {
         auto dot = std::make_shared<op::Dot>(dot_inputs[i], dot_inputs[i + num_batches]);
-        auto dot_shape = dot->get_shape();
+        auto dot_shape = dot->get_output_shape(0);
         auto dot_reshape = std::make_shared<op::Reshape>(
             dot, AxisVector{0, 1}, Shape{1, dot_shape.at(0), dot_shape.at(1)});
         concat_inputs.push_back(dot_reshape);

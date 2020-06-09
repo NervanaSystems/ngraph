@@ -28,7 +28,7 @@ shared_ptr<op::Parameter> getParamFromShape(const Shape& shape)
 
 inline const Shape& getShapeFromParam(const shared_ptr<Node>& node)
 {
-    return node->get_shape();
+    return node->get_output_shape(0);
 }
 
 // input shapes are equal so AutoBroadcast does nothing

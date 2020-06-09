@@ -60,7 +60,7 @@ OutputVector op::SoftmaxCrossEntropy::decompose_op() const
         auto convert =
             std::make_shared<ngraph::op::Convert>(not_equal, input_to_normalize.get_element_type());
         auto reshape = std::make_shared<ngraph::op::Reshape>(
-            convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0), 1});
+            convert, AxisVector{0, 1}, Shape{convert->get_output_shape(0).at(0), 1});
         return reshape;
     };
 
@@ -91,7 +91,7 @@ OutputVector op::SoftmaxCrossEntropy::decompose_op() const
         auto subtract_max_xj_from_input =
             std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
         auto broadcast_log = std::make_shared<ngraph::op::Broadcast>(
-            log_sum_over_j, subtract_max_xj_from_input->get_shape(), AxisSet{1});
+            log_sum_over_j, subtract_max_xj_from_input->get_output_shape(0), AxisSet{1});
         auto subtract_max_xj_from_input_from_log_sum_over_j =
             std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
 
@@ -127,7 +127,7 @@ OutputVector op::SoftmaxCrossEntropy::decompose_op() const
             std::make_shared<ngraph::op::Softmax>(input_to_normalize, AxisSet{softmax_axis});
         auto xe = create_xe(convert_one_hot, softmax);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
-            xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
+            xe, AxisVector{0}, Shape{xe->get_output_shape(0).at(0), 1});
         return {reshape_xe * mask};
     }
 }
@@ -232,7 +232,7 @@ OutputVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels, mask_constant);
         auto convert = std::make_shared<ngraph::op::Convert>(not_equal, delta.get_element_type());
         auto reshape = std::make_shared<ngraph::op::Reshape>(
-            convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0)});
+            convert, AxisVector{0, 1}, Shape{convert->get_output_shape(0).at(0)});
         auto broadcast_mask =
             std::make_shared<ngraph::op::Broadcast>(reshape, softmax.get_shape(), AxisSet{1});
 
@@ -244,12 +244,12 @@ OutputVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         auto convert_one_hot =
             std::make_shared<ngraph::op::Convert>(one_hot, delta.get_element_type());
 
-        if (delta.get_shape() != convert_one_hot->get_shape())
+        if (delta.get_shape() != convert_one_hot->get_output_shape(0))
         {
             auto reshape = std::make_shared<ngraph::op::Reshape>(
                 delta, AxisVector{0, 1}, Shape{delta.get_shape().at(0)});
             delta = std::make_shared<ngraph::op::Broadcast>(
-                reshape, convert_one_hot->get_shape(), AxisSet{1});
+                reshape, convert_one_hot->get_output_shape(0), AxisSet{1});
         }
 
         // (cross_entr * delta * mask)

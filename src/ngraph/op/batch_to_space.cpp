@@ -129,7 +129,7 @@ OutputVector op::v1::BatchToSpace::decompose_op() const
     //          crop(D_2 * B_2, crops_begin[2], crops_end[2]), ... ,
     //          crop(D_{N - 1} * B_{N - 1}, crops_begin[N - 1], crops_end[N - 1])]`
     vector<int64_t> upperbounds_values;
-    auto flat_node_shape = flat_node->get_shape();
+    auto flat_node_shape = flat_node->get_output_shape(0);
     for (size_t i = 0; i < flat_node_shape.size(); ++i)
     {
         upperbounds_values.push_back(flat_node_shape.at(i) - crops_end_values.at(i));

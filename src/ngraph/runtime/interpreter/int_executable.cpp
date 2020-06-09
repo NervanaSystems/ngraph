@@ -362,14 +362,16 @@ shared_ptr<runtime::Tensor>
     runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
-    return make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
+    return make_shared<runtime::HostTensor>(parameter->get_element_type(),
+                                            parameter->get_output_shape(0));
 }
 
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
-    return make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+    return make_shared<runtime::HostTensor>(result->get_element_type(),
+                                            result->get_output_shape(0));
 }
 
 vector<shared_ptr<runtime::Tensor>>
@@ -381,8 +383,8 @@ vector<shared_ptr<runtime::Tensor>>
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
-        auto t =
-            make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
+        auto t = make_shared<runtime::HostTensor>(parameter->get_element_type(),
+                                                  parameter->get_output_shape(0));
         tensor = static_pointer_cast<runtime::HostTensor>(t);
         tensors.push_back(tensor);
     }
@@ -403,7 +405,8 @@ vector<shared_ptr<runtime::Tensor>>
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
-        auto t = make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
+        auto t = make_shared<runtime::HostTensor>(result->get_element_type(),
+                                                  result->get_output_shape(0));
         tensor = static_pointer_cast<runtime::HostTensor>(t);
         tensors.push_back(tensor);
     }

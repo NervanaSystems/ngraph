@@ -375,12 +375,6 @@ namespace ngraph
         /// Throws no default
         size_t no_default_index() const;
 
-        /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
-        // calling code, or updates to the calling code if it is making an invalid assumption of
-        // only one output.
-        const Shape& get_shape() const;
-
         /// Returns the tensor for output or input i
         descriptor::Tensor& get_output_tensor(size_t i) const;
         descriptor::Tensor& get_input_tensor(size_t i) const;
@@ -388,21 +382,11 @@ namespace ngraph
         /// Returns the tensor name for output i
         const std::string& get_output_tensor_name(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
-            "output, or update calling code not to assume only one output");
-
         /// Returns the tensor of output i
         // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
         // replacement in Output.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
             NGRAPH_DEPRECATED("use &node->output(i).get_tensor() instead");
-
-        /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const NGRAPH_DEPRECATED(
-            "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
-            "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const

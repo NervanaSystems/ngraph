@@ -142,7 +142,7 @@ OutputVector builder::MatmulFactory::make_matmul_op()
     // Expand result _stack of matrices_ axes to get expected result shape.
     else
     {
-        const Shape& shape{result->get_shape()};
+        const Shape& shape{result->get_output_shape(0)};
         Shape result_shape(next(begin(shape)), end(shape));
         result_shape.insert(
             begin(result_shape), begin(left_shape), next(begin(left_shape), left_shape.size() - 2));

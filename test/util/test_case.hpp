@@ -166,7 +166,7 @@ namespace ngraph
             template <typename T>
             void add_expected_output(const std::vector<T>& values)
             {
-                auto shape = m_function->get_results().at(m_output_index)->get_shape();
+                auto shape = m_function->get_results().at(m_output_index)->get_output_shape(0);
                 add_expected_output<T>(shape, values);
             }
 

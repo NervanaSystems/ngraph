@@ -68,7 +68,7 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         if (negative_one > 0)
         {
             split_lengths[negative_one] =
-                static_cast<size_t>(data_node->get_shape()[norm_axis_val]) - sum_of_splits;
+                static_cast<size_t>(data_node->get_output_shape(0)[norm_axis_val]) - sum_of_splits;
         }
 
         const auto slices = builder::split(
