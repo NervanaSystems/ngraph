@@ -31,8 +31,11 @@ shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> ar
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 
-    runtime::reference::broadcast<T>(
-        arg->get_data_ptr<T>(), data_ptr, arg->get_shape(), out_shape, axes->get_axis_set_val());
+    runtime::reference::broadcast<T>(arg->get_data_ptr<T>(),
+                                     data_ptr,
+                                     arg->get_output_shape(0),
+                                     out_shape,
+                                     axes->get_axis_set_val());
 
     return make_shared<op::Constant>(arg->get_element_type(), out_shape, data_ptr);
 }

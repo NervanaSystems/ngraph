@@ -67,7 +67,7 @@ OutputVector op::v1::SpaceToBatch::decompose_op() const
     //      x = [batch + P_0, D_1 + P_1, D_2 + P_2, ..., D_{N - 1} + P_{N - 1}], where P_i =
     //      pads_begin[i] + pads_end[i]
     auto out = make_shared<op::v1::Pad>(data, pads_begin_const, pads_end_const, PadMode::CONSTANT);
-    auto out_shape = out->get_shape();
+    auto out_shape = out->get_output_shape(0);
 
     // First we have to disperse the data from spatial dimensions, then
     // rearrange them so as appropriate chunks of data where close to their

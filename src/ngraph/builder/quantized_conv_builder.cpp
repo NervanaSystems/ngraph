@@ -283,7 +283,7 @@ namespace ngraph
             if (output_et == element::u8)
             {
                 // Need to multiply by two to account for u8 requantization_scale
-                auto two = make_constant(element::f32, sum_scale->get_shape(), 2.0f);
+                auto two = make_constant(element::f32, sum_scale->get_output_shape(0), 2.0f);
                 sum_scale = two * sum_scale;
             }
 

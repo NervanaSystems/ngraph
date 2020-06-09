@@ -172,10 +172,10 @@ void op::v1::OneHot::validate_and_infer_types()
                               ").");
 
         NODE_VALIDATION_CHECK(this,
-                              is_scalar(depth->get_shape()),
+                              is_scalar(depth->get_output_shape(0)),
                               "A scalar input should be provided as 'depth' to OneHot",
                               " (got ",
-                              depth->get_shape(),
+                              depth->get_output_shape(0),
                               " elements).");
 
         const auto depth_constant = as_type_ptr<op::Constant>(depth);

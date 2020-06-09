@@ -35,7 +35,7 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& con
     , m_data_dilation_strides(conv->get_data_dilation_strides())
 {
     constructor_validate_and_infer_types();
-    set_output_type(0, conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_element_type(), conv->get_output_shape(0));
 }
 
 op::ConvolutionRelu::ConvolutionRelu(const Output<Node>& data_batch,

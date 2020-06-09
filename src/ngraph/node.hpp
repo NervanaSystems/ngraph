@@ -390,12 +390,6 @@ namespace ngraph
         /// Throws no default
         size_t no_default_index() const;
 
-        /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
-        // calling code, or updates to the calling code if it is making an invalid assumption of
-        // only one output.
-        const Shape& get_shape() const;
-
         /// Returns the tensor for output or input i
         descriptor::Tensor& get_output_tensor(size_t i) const;
         descriptor::Tensor& get_input_tensor(size_t i) const;
