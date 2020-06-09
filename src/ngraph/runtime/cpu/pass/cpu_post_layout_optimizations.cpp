@@ -281,7 +281,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     mkldnn::memory::desc& result_desc)
 {
     std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
-                              input->get_element_type().size());
+                              input->get_output_element_type(0).size());
 
     bool input_format_is_nchw = runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
         input_desc.data, mkldnn::memory::format_tag::nchw);
@@ -301,7 +301,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         auto arg0_shape = input->get_output_shape(0);
         input_desc = mkldnn::memory::desc(
             mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
+            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_output_element_type(0)),
             mkldnn::memory::format_tag::oihw);
     }
     else if (input_format_is_nchw && input_desc.data.ndims == 4 && result_desc.data.ndims == 5 &&
@@ -323,7 +323,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         }
         input_desc = mkldnn::memory::desc(
             mkldnn::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
+            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_output_element_type(0)),
             mkldnn::memory::format_tag::goihw);
     }
 
@@ -377,7 +377,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
 
                 std::shared_ptr<ngraph::op::Constant> replacement;
 
-                switch (m_input->get_element_type())
+                switch (m_input->get_output_element_type(0))
                 {
                 case element::Type_t::undefined:
                     NGRAPH_CHECK(

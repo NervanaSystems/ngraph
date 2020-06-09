@@ -37,7 +37,8 @@ shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> consta
                                     input_order,
                                     out_shape);
 
-    return make_shared<op::Constant>(transpose->get_element_type(), out_shape, buffer.get_ptr<T>());
+    return make_shared<op::Constant>(
+        transpose->get_output_element_type(0), out_shape, buffer.get_ptr<T>());
 }
 
 void pass::ConstantFolding::construct_constant_transpose()
@@ -64,7 +65,7 @@ void pass::ConstantFolding::construct_constant_transpose()
         NGRAPH_CHECK(revalidate_and_ensure_static(transpose_match));
 
         std::shared_ptr<Node> replacement;
-        auto type = transpose_match->get_element_type();
+        auto type = transpose_match->get_output_element_type(0);
         switch (type)
         {
         case element::Type_t::undefined:

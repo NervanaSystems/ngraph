@@ -2666,14 +2666,14 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::ArgMin*>(&n);
         node["axis"] = tmp->get_reduction_axis();
-        node["index_element_type"] = write_element_type(tmp->get_element_type());
+        node["index_element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }
     case OP_TYPEID::ArgMax:
     {
         auto tmp = static_cast<const op::ArgMax*>(&n);
         node["axis"] = tmp->get_reduction_axis();
-        node["index_element_type"] = write_element_type(tmp->get_element_type());
+        node["index_element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }
     case OP_TYPEID::All:
@@ -2810,7 +2810,7 @@ json JSONSerializer::serialize_node(const Node& n)
             node["value"] = tmp->get_value_strings();
         }
         node["shape"] = tmp->get_output_shape(0);
-        node["element_type"] = write_element_type(tmp->get_element_type());
+        node["element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }
     case OP_TYPEID::Convert:
@@ -2945,14 +2945,14 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
     case OP_TYPEID::DepthToSpace:
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
@@ -3394,7 +3394,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Quantize:
     {
         auto tmp = static_cast<const op::Quantize*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["axes"] = serialize_axis_set(tmp->get_axes());
         node["round_mode"] = tmp->get_round_mode();
         break;
@@ -3415,7 +3415,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["output_type"] = write_element_type(tmp->get_output_element_type(0));
         node["input_axes"] = tmp->get_input_axes();
         node["filter_axes"] = tmp->get_filter_axes();
         node["output_axes"] = tmp->get_output_axes();
@@ -3427,7 +3427,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::QuantizedDot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
-        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["output_type"] = write_element_type(tmp->get_output_element_type(0));
         node["input0_axes"] = tmp->get_input0_axes();
         node["input1_axes"] = tmp->get_input1_axes();
         node["output_axes"] = tmp->get_output_axes();
@@ -3551,7 +3551,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::SpaceToDepth:
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;

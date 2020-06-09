@@ -363,12 +363,6 @@ namespace ngraph
         /// Returns the element type for output i
         const element::Type& get_output_element_type(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
-        // the calling code, or updates to the calling code if it is making an invalid assumption
-        // of only one output.
-        const element::Type& get_element_type() const;
-
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
 

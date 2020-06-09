@@ -33,7 +33,7 @@ void regclass_pyngraph_op_Parameter(py::module m)
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
         std::string shape =
             py::cast(self.get_output_shape(0)).attr("__str__")().cast<std::string>();
-        std::string type = self.get_element_type().c_type_string();
+        std::string type = self.get_output_element_type(0).c_type_string();
         return "<" + class_name + ": '" + self.get_friendly_name() + "' (" + shape + ", " + type +
                ")>";
     });

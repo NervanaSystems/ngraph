@@ -344,7 +344,7 @@ namespace ngraph
                 template <typename T>
                 std::vector<T> cast_vector() const
                 {
-                    auto source_type = get_element_type();
+                    auto source_type = get_output_element_type(0);
                     std::vector<T> rc;
                     switch (source_type)
                     {
@@ -441,7 +441,7 @@ namespace ngraph
                 template <element::Type_t ET>
                 const typename element_type_traits<ET>::value_type* get_data_ptr() const
                 {
-                    NGRAPH_CHECK(ET == get_element_type(),
+                    NGRAPH_CHECK(ET == get_output_element_type(0),
                                  "get_data_ptr() called for incorrect element type.");
                     return static_cast<const typename element_type_traits<ET>::value_type*>(
                         get_data_ptr());
@@ -462,7 +462,7 @@ namespace ngraph
                 template <element::Type_t ET>
                 typename element_type_traits<ET>::value_type* get_data_ptr_nc()
                 {
-                    NGRAPH_CHECK(ET == get_element_type(),
+                    NGRAPH_CHECK(ET == get_output_element_type(0),
                                  "get_data_ptr_nc() called for incorrect element type.");
                     return static_cast<typename element_type_traits<ET>::value_type*>(
                         get_data_ptr_nc());

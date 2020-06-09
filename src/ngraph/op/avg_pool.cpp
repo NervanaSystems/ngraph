@@ -244,7 +244,7 @@ shared_ptr<Node> op::v0::AvgPool::clone_with_new_inputs(const OutputVector& new_
 constexpr NodeTypeInfo op::v0::AvgPoolBackprop::type_info;
 shared_ptr<Node> op::v0::AvgPool::get_default_value() const
 {
-    return Constant::create(get_element_type(), get_output_shape(0), {0});
+    return Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }
 
 op::v0::AvgPoolBackprop::AvgPoolBackprop(const Shape& forward_arg_shape,
@@ -745,5 +745,5 @@ void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
 shared_ptr<Node> op::v1::AvgPool::get_default_value() const
 {
-    return op::Constant::create(get_element_type(), get_output_shape(0), {0});
+    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }

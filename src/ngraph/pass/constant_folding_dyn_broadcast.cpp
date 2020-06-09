@@ -37,7 +37,7 @@ shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> ar
                                      out_shape,
                                      axes->get_axis_set_val());
 
-    return make_shared<op::Constant>(arg->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(arg->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dyn_broadcast()

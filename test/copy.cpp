@@ -140,7 +140,7 @@ TEST(copy, constant)
     ASSERT_TRUE(NodeVector{} == new_node->get_arguments());
     ASSERT_TRUE(node_cast->get_vector<float>() == c);
     ASSERT_TRUE(node_cast->get_output_shape(0) == shape);
-    ASSERT_TRUE(node_cast->get_element_type() == et);
+    ASSERT_TRUE(node_cast->get_output_element_type(0) == et);
 }
 
 TEST(copy, convert)

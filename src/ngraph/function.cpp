@@ -194,7 +194,7 @@ size_t Function::get_output_size() const
 
 const element::Type& Function::get_output_element_type(size_t i) const
 {
-    return m_results.at(i)->get_element_type();
+    return m_results.at(i)->get_output_element_type(0);
 }
 
 const Shape& Function::get_output_shape(size_t i) const

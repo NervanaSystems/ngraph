@@ -71,7 +71,7 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
     NGRAPH_DEBUG << "In cse_constant for " << a->get_name() << " and " << b->get_name();
 
     if (a->get_output_shape(0) != b->get_output_shape(0) ||
-        a->get_element_type() != b->get_element_type())
+        a->get_output_element_type(0) != b->get_output_element_type(0))
     {
         return false;
     }
@@ -79,7 +79,7 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::Constant* ca = static_cast<op::Constant*>(a.get());
     const op::Constant* cb = static_cast<op::Constant*>(b.get());
 
-    size_t size = shape_size(a->get_output_shape(0)) * a->get_element_type().size();
+    size_t size = shape_size(a->get_output_shape(0)) * a->get_output_element_type(0).size();
 
     if (ca->get_all_data_elements_bitwise_identical() ||
         cb->get_all_data_elements_bitwise_identical())
@@ -88,7 +88,8 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
             cb->get_all_data_elements_bitwise_identical())
         {
             // Since both Constants are uniform we only need to compare a single element
-            return !memcmp(ca->get_data_ptr(), cb->get_data_ptr(), a->get_element_type().size());
+            return !memcmp(
+                ca->get_data_ptr(), cb->get_data_ptr(), a->get_output_element_type(0).size());
         }
         else
         {

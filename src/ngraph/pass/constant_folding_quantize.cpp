@@ -40,7 +40,7 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
                                               quant->get_axes(),
                                               quant->get_round_mode());
 
-    return make_shared<op::Constant>(quant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(quant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_quantize()
@@ -70,9 +70,9 @@ void pass::ConstantFolding::construct_constant_quantize()
         auto scale = static_pointer_cast<op::Constant>(quant_match->get_input_node_shared_ptr(1));
         auto offset = static_pointer_cast<op::Constant>(quant_match->get_input_node_shared_ptr(2));
 
-        auto type = quant_match->get_element_type();
+        auto type = quant_match->get_output_element_type(0);
 
-        if (constant_match->get_element_type() != element::f32)
+        if (constant_match->get_output_element_type(0) != element::f32)
         {
             return false;
         }

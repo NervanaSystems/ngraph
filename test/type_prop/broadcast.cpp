@@ -26,7 +26,7 @@ TEST(type_prop, broadcast_deduce)
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     Shape bc_shape{2, 3, 4};
     auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), bc_shape);
 }
 
@@ -100,7 +100,7 @@ TEST(type_prop, broadcast_partial_rank_dynamic_ok)
     auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     Shape bc_shape{2, 3, 4};
     auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), bc_shape);
 }
 
@@ -130,7 +130,7 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_ok)
     auto param = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 4});
     Shape bc_shape{2, 3, 4};
     auto bc = make_shared<op::Broadcast>(param, bc_shape, AxisSet{1});
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), bc_shape);
 }
 
@@ -212,7 +212,7 @@ TYPED_TEST_P(BroadcastTests, broadcast_numpy)
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
 
     auto bc = make_shared<TypeParam>(param, target_shape);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 3, 6}));
 }
 
@@ -223,7 +223,7 @@ TYPED_TEST_P(BroadcastTests, broadcast_axes_mapping)
     auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 2});
 
     auto bc = make_shared<TypeParam>(param, target_shape, axes_mapping);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 3, 1}));
 }
 
@@ -488,7 +488,7 @@ TEST(type_prop, broadcast_v1_pdpd)
 
     auto bc = make_shared<op::v1::Broadcast>(
         param, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 3, 6}));
 }
 
@@ -499,7 +499,7 @@ TEST(type_prop, broadcast_v3_pdpd)
 
     auto bc = make_shared<op::v3::Broadcast>(
         param, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
-    ASSERT_EQ(bc->get_element_type(), element::f32);
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 3, 6}));
 }
 
@@ -570,7 +570,7 @@ TEST(type_prop, broadcast_v3_shape)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{1, 4, 4}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{2})));
 }
@@ -583,7 +583,7 @@ TEST(type_prop, broadcast_v3_shape_2)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{2, 3, 6}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }
@@ -596,7 +596,7 @@ TEST(type_prop, broadcast_v3_shape_3)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{2, 4}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{1})));
 }
@@ -609,7 +609,7 @@ TEST(type_prop, broadcast_v3_shape_4)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{1, 3, 1}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{})));
 }
@@ -622,7 +622,7 @@ TEST(type_prop, broadcast_v3_shape_5)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{1, 16, 50, 50}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(),
               (make_pair<bool, AxisSet>(true, AxisSet{0, 2, 3})));
@@ -636,7 +636,7 @@ TEST(type_prop, broadcast_v3_shape_6)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::f32);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{3, 3, 3}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }
@@ -649,7 +649,7 @@ TEST(type_prop, broadcast_v3_shape_6_type_infer)
 
     const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_element_type(), element::u16);
+    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::u16);
     ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{3, 3, 3}));
     ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }

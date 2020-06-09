@@ -464,7 +464,7 @@ static void generate_isnan_isinf_check(CodeWriter& writer,
                                        const std::vector<ngraph::runtime::cpu::TensorWrapper>& out,
                                        const char* funcname)
 {
-    auto ctype = node->get_element_type().c_type_string();
+    auto ctype = node->get_output_element_type(0).c_type_string();
     writer << "{   // A " << funcname << " for" << node->get_name() << "\n";
     writer.indent++;
     writer << " ngraph::check_fp_values<" << ctype << "," << funcname << "> (\"" << node->get_name()
@@ -1016,7 +1016,8 @@ using namespace ngraph;
         // skip multi-output nodes since they would be covered by GetOutputElement
         if (node->get_output_size() == 1 &&
             // skip non-FP nodes
-            (node->get_element_type() == element::f32 || node->get_element_type() == element::f64))
+            (node->get_output_element_type(0) == element::f32 ||
+             node->get_output_element_type(0) == element::f64))
         {
             // check inputs and constants?
             if ((!node->is_parameter() && !node->is_constant()) ||

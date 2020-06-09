@@ -1186,7 +1186,7 @@ namespace ngraph
             {
                 (void)external_function;
                 writer.block_begin();
-                bool integral_type = !node->get_element_type().is_real();
+                bool integral_type = !node->get_output_element_type(0).is_real();
                 if (integral_type)
                 {
                     // Check for divide by zero for integer types only
@@ -1354,7 +1354,8 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
+                    writer << "reference::lrn<" << lrn->get_output_element_type(0).c_type_string()
+                           << ">(";
                     writer << "            " << args[0].get_name() << ",\n";
                     writer << "            {" << join(lrn->get_reduction_axes()) << "},\n";
                     writer << "            " << out[0].get_name() << ",\n";
@@ -1769,8 +1770,9 @@ namespace ngraph
                 writer.block_begin();
                 const ngraph::op::EmbeddingLookup* embed =
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
-                auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
-                auto type_name = embed->get_element_type().c_type_string();
+                auto index_type_name =
+                    embed->get_argument(0)->get_output_element_type(0).c_type_string();
+                auto type_name = embed->get_output_element_type(0).c_type_string();
                 auto element_count = shape_size(embed->get_input_shape(0));
 
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";

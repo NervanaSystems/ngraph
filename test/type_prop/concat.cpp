@@ -28,7 +28,7 @@ TEST(type_prop, concat_deduce)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 7, 4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
     auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
-    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_output_element_type(0), element::f32);
     ASSERT_EQ(c->get_output_shape(0), (Shape{2, 12, 4}));
 }
 
@@ -111,7 +111,7 @@ TEST(type_prop, concat_deduce_axis_barely_in_bounds)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 8});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 3, 12});
     auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 2);
-    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_output_element_type(0), element::f32);
     ASSERT_EQ(c->get_output_shape(0), (Shape{2, 3, 24}));
 }
 
@@ -143,7 +143,7 @@ TEST(type_prop, concat_partial_et_consistent)
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4});
     auto c = make_shared<op::Concat>(NodeVector{param0, param1, param2}, 1);
 
-    ASSERT_EQ(c->get_element_type(), element::f32);
+    ASSERT_EQ(c->get_output_element_type(0), element::f32);
     ASSERT_EQ(c->get_output_shape(0), (Shape{2, 12, 4}));
 }
 

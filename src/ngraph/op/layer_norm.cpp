@@ -108,8 +108,8 @@ OutputVector op::LayerNorm::decompose_op() const
     auto var = builder::variance(data, post_reduction_axes);
 
     // Compute standard deviation with epsilon
-    auto epsilon =
-        builder::make_constant(var->get_element_type(), var->get_output_shape(0), m_epsilon);
+    auto epsilon = builder::make_constant(
+        var->get_output_element_type(0), var->get_output_shape(0), m_epsilon);
     auto stddev = make_shared<op::Sqrt>(var + epsilon);
     auto b_stddev = make_shared<op::Broadcast>(stddev, shape, post_axis_set);
 

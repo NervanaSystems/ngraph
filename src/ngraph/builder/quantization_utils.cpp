@@ -184,8 +184,8 @@ namespace ngraph
                 {
                     auto min = mins[i];
                     auto max = maxs[i];
-                    auto type = min->get_element_type();
-                    if (type != max->get_element_type())
+                    auto type = min->get_output_element_type(0);
+                    if (type != max->get_output_element_type(0))
                     {
                         throw ngraph_error("check_concat: min and max must have same type");
                     }

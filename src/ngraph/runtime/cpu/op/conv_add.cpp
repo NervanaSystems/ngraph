@@ -54,7 +54,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
 {
     constructor_validate_and_infer_types();
     util::validate_conv_shapes(this, conv->get_input_shape(0), conv->get_input_shape(1));
-    set_output_type(0, conv->get_element_type(), conv->get_output_shape(0));
+    set_output_type(0, conv->get_output_element_type(0), conv->get_output_shape(0));
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
