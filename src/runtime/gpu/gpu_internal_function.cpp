@@ -335,17 +335,16 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             vector<string> node_input_names;
             vector<string> node_output_names;
             vector<GPUTensorWrapper> in;
-            for (const descriptor::Input& input : node->get_input_descriptors())
+            for (Input<Node> input : node->inputs())
             {
-                const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = input.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];
                 in.push_back(
                     GPUTensorWrapper(tv, std::get<0>(var), std::get<1>(var), std::get<2>(var)));
                 node_input_names.emplace_back(tv->get_name());
             }
             vector<GPUTensorWrapper> out;
-            for (const descriptor::Output& output : node->get_output_descriptors())
+            for (Output<Node> output : node->outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 auto& var = m_variable_name_map[tv->get_name()];

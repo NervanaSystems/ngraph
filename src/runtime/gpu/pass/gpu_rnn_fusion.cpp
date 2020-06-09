@@ -320,7 +320,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
             {
                 if (node->get_argument(i) == pattern_map[ct_label])
                 {
-                    node->get_input_descriptor(i).replace_output(lstm->get_output_descriptor(2));
+                    node->input(i).replace_source_output(lstm->output(2));
                 }
             }
         }
@@ -582,8 +582,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 if (map_goe_to_lstm_slices.find(node->get_argument(i)) !=
                     map_goe_to_lstm_slices.end())
                 {
-                    node->get_input_descriptor(i).replace_output(
-                        map_goe_to_lstm_slices[node->get_argument(i)]->get_output_descriptor(0));
+                    node->input(i).replace_source_output(
+                        map_goe_to_lstm_slices[node->get_argument(i)]->output(0));
                 }
             }
         }
