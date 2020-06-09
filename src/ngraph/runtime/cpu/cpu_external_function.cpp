@@ -674,9 +674,9 @@ using namespace ngraph;
         if (c)
         {
             m_active_constants.push_back(node);
-            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptor(0).get_tensor_ptr();
-            string type = tv->get_element_type().c_type_string();
-            writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
+            const descriptor::Tensor& tv = node->get_output_tensor(0);
+            string type = tv.get_element_type().c_type_string();
+            writer << "static " << type << "* " << tv.get_name() << " = ((" << type << "*)("
                    << c->get_data_ptr() << "));\n";
 
             auto output_tensor = &node->get_output_tensor();
@@ -740,8 +740,8 @@ using namespace ngraph;
     {
         if (is_type<ngraph::op::Constant>(node))
         {
-            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptor(0).get_tensor_ptr();
-            constants.insert(tv.get());
+            descriptor::Tensor& tv = node->get_output_tensor(0);
+            constants.insert(&tv);
         }
     }
 
@@ -827,9 +827,9 @@ using namespace ngraph;
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_output_descriptor(i).get_tensor();
-            param_index_map[output_tensor->get_name()] = arg_index;
-            auto tensor_set = get_tensor_set(output_tensor);
+            descriptor::Tensor& output_tensor = param->get_output_tensor(i);
+            param_index_map[output_tensor.get_name()] = arg_index;
+            auto tensor_set = get_tensor_set(&output_tensor);
 
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
@@ -1560,10 +1560,10 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         for (size_t i = 0; i < param->get_output_size(); ++i)
         {
-            auto output_tensor = &param->get_output_descriptor(i).get_tensor();
-            auto tensor_set = get_tensor_set(output_tensor);
+            descriptor::Tensor& output_tensor = param->get_output_tensor(i);
+            auto tensor_set = get_tensor_set(&output_tensor);
 
-            auto& stale = tensor_stale[output_tensor->get_name()];
+            auto& stale = tensor_stale[output_tensor.get_name()];
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
