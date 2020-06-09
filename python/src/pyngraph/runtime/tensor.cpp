@@ -44,6 +44,6 @@ void regclass_pyngraph_runtime_Tensor(py::module m)
     tensor.def_property_readonly("shape", &ngraph::runtime::Tensor::get_shape);
     tensor.def_property_readonly("element_count", &ngraph::runtime::Tensor::get_element_count);
     tensor.def_property_readonly("element_type", [](const ngraph::runtime::Tensor& self) {
-        return self.get_output_element_type(0);
+        return self.get_element_type();
     });
 }
