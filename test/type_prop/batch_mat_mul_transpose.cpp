@@ -58,7 +58,7 @@ TEST(type_prop, batchmatmultranspose_deduce_3d_transpose_both)
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 3, 2});
     auto bc = make_shared<op::BatchMatMulTranspose>(param1, param2, true, true);
     ASSERT_EQ(bc->get_output_element_type(0), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{5, 4, 3}));
 }
 
 TEST(type_prop, batchmatmultranspose_deduce_left_rank_wrong)

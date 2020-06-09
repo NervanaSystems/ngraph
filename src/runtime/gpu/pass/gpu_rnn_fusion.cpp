@@ -75,7 +75,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -119,7 +119,7 @@ static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_
     NodeVector flat_params;
     for (auto& param : NodeVector{w_x, w_h, b_x, b_h})
     {
-        auto shape = param->get_shape();
+        auto shape = param->get_output_shape(0);
         flat_params.push_back(std::make_shared<op::Reshape>(
             param, get_default_order(shape), Shape{shape_size(shape)}));
     }
@@ -191,24 +191,25 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         auto pattern_map = m.get_pattern_map();
         NGRAPH_DEBUG << "In Lstm fprop call back";
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
             return false;
         }
 
-        auto input_xt_rank = input_xt->get_shape().size();
-        auto hidden_ht_rank = hidden_ht->get_shape().size();
-        auto weights_i2h_rank = weights_i2h->get_shape().size();
-        auto weights_h2h_rank = weights_h2h->get_shape().size();
+        auto input_xt_rank = input_xt->get_output_shape(0).size();
+        auto hidden_ht_rank = hidden_ht->get_output_shape(0).size();
+        auto weights_i2h_rank = weights_i2h->get_output_shape(0).size();
+        auto weights_h2h_rank = weights_h2h->get_output_shape(0).size();
         if (input_xt_rank != 2 || hidden_ht_rank != 2 || weights_i2h_rank != 2 ||
             weights_h2h_rank != 2)
         {
             return false;
         }
 
-        RETURN_IF_FALSE(bias_i2h->get_shape().size() == 1 && bias_h2h->get_shape().size() == 1,
+        RETURN_IF_FALSE(bias_i2h->get_output_shape(0).size() == 1 &&
+                            bias_h2h->get_output_shape(0).size() == 1,
                         "Bias should have rank of 1 for Rnn op");
 
         // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to
@@ -237,8 +238,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[input_xt]->get_shape()[1],
-                                                  pattern_map[hidden_ht]->get_shape()[1],
+                                                  pattern_map[input_xt]->get_output_shape(0)[1],
+                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
                                                   1,
                                                   1);
         }
@@ -258,8 +259,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[hidden_ht]->get_shape()[1],
-                                                  pattern_map[input_xt]->get_shape()[1],
+                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
+                                                  pattern_map[input_xt]->get_output_shape(0)[1],
                                                   1,
                                                   1);
         }
@@ -270,8 +271,9 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         // it will be misclassified as input data xt
         {
             // label input_xt is the output data from the previous LSTM cell
-            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_shape())
-                         << " hidden state shape: " << join(pattern_map[hidden_ht]->get_shape());
+            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_output_shape(0))
+                         << " hidden state shape: "
+                         << join(pattern_map[hidden_ht]->get_output_shape(0));
             auto params = compute_lstm_params(pattern_map[weights_i2h],
                                               pattern_map[weights_h2h],
                                               pattern_map[bias_i2h],
@@ -283,16 +285,17 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[input_xt]->get_shape()[1],
-                                                  pattern_map[hidden_ht]->get_shape()[1],
+                                                  pattern_map[input_xt]->get_output_shape(0)[1],
+                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
                                                   1,
                                                   1);
         }
         else
         {
             // label hidden_ht is the output data from the previous LSTM cell
-            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_shape())
-                         << " hidden state shape: " << join(pattern_map[input_xt]->get_shape());
+            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_output_shape(0))
+                         << " hidden state shape: "
+                         << join(pattern_map[input_xt]->get_output_shape(0));
             auto params = compute_lstm_params(pattern_map[weights_h2h],
                                               pattern_map[weights_i2h],
                                               pattern_map[bias_h2h],
@@ -304,8 +307,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[hidden_ht]->get_shape()[1],
-                                                  pattern_map[input_xt]->get_shape()[1],
+                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
+                                                  pattern_map[input_xt]->get_output_shape(0)[1],
                                                   1,
                                                   1);
         }
@@ -384,8 +387,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                1,
                                                4,
                                                1,
-                                               xt->get_shape()[1],
-                                               ht_1->get_shape()[1],
+                                               xt->get_output_shape(0)[1],
+                                               ht_1->get_output_shape(0)[1],
                                                1,
                                                1);
     auto goe = std::make_shared<op::GetOutputElement>(lstm, 0); // hidden output
@@ -457,16 +460,16 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         size_t num_gates_in_lstm = 4;
-        size_t batch_size = src_layer->get_shape()[0] / num_of_lstm_matched;
+        size_t batch_size = src_layer->get_output_shape(0)[0] / num_of_lstm_matched;
         size_t sequence_len = num_of_lstm_matched;
-        size_t src_layer_feature_size = src_layer->get_shape()[1];
-        size_t feature_size = ht_1_label[0]->get_shape()[1];
+        size_t src_layer_feature_size = src_layer->get_output_shape(0)[1];
+        size_t feature_size = ht_1_label[0]->get_output_shape(0)[1];
         // number of states for LSTM is 2
         size_t direction = 1;
         size_t num_fused_rnn_layers = 1;
 
-        NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
-        NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
+        NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_output_shape(0));
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
@@ -479,12 +482,12 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         "number of lstm inputs captured in the RNN fusion is not equal to "
                         "src_sequence_length");
 
-        auto src_layer_rank = src_layer->get_shape().size();
-        auto src_iter_rank = src_iter->get_shape().size();
+        auto src_layer_rank = src_layer->get_output_shape(0).size();
+        auto src_iter_rank = src_iter->get_output_shape(0).size();
         RETURN_IF_FALSE(src_layer_rank == 2 && src_iter_rank == 2,
                         "Pattern matcher error src_layer, src_iter, have rank 2 for RNN op");
-        RETURN_IF_FALSE(src_layer->get_element_type() == element::f32 &&
-                            src_iter->get_element_type() == element::f32,
+        RETURN_IF_FALSE(src_layer->get_output_element_type(0) == element::f32 &&
+                            src_iter->get_output_element_type(0) == element::f32,
                         "input tensor type and input recurrent state tensor type for RNN op should "
                         "be float32");
 
@@ -700,7 +703,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         //  we can fuse across different RNN layers only if SLC == DLC
         for (size_t i = 0; i < number_of_rnn_cell_matched; i++)
         {
-            if (src_nodes[i]->get_shape()[1] != rnn_ht_out_nodes[i]->get_shape()[1])
+            if (src_nodes[i]->get_output_shape(0)[1] != rnn_ht_out_nodes[i]->get_output_shape(0)[1])
             {
                 NGRAPH_DEBUG << "Not fusing since the feature sizes for xt and ht_1 dont match";
                 return false;
@@ -741,10 +744,10 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         size_t rnn_direction = rnn_nodes[0]->get_direction();
         size_t num_fused_rnn_layers = m.get_number_of_recurrent_matches();
 
-        NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_shape());
-        NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_shape());
-        NGRAPH_DEBUG << "state_iter: " << join(state_iter->get_shape());
-        NGRAPH_DEBUG << "params size {wx|wh|bx|bh}: " << shape_size(params->get_shape());
+        NGRAPH_DEBUG << "src_layer: " << join(src_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter: " << join(src_iter->get_output_shape(0));
+        NGRAPH_DEBUG << "state_iter: " << join(state_iter->get_output_shape(0));
+        NGRAPH_DEBUG << "params size {wx|wh|bx|bh}: " << shape_size(params->get_output_shape(0));
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "feature_size: " << feature_size;
