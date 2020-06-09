@@ -310,9 +310,6 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1);
         }
 
-        auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
-        auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 2);
-
         // Now identify the nodes which consume the outputs of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
@@ -323,14 +320,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
             {
                 if (node->get_argument(i) == pattern_map[ct_label])
                 {
-                    node->get_input_descriptors().at(i).replace_output(
-                        ct_output->get_output_descriptors().at(0));
+                    node->get_input_descriptor(i).replace_output(lstm->get_output_descriptor(2));
                 }
             }
         }
 
         // find the user's for {ht} and replace them with lstm_goe_0
-        ngraph::replace_node(m.get_match_root(), ht_output);
+        m.get_match_value().replace(lstm->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht);
