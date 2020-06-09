@@ -145,8 +145,6 @@ namespace ngraph
                     size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
-                    const auto& out = node->get_output_descriptors();
-                    const auto& args = node->get_input_descriptors();
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
                         static_cast<unsigned long>(rnn_node->get_src_sequence_length());
@@ -366,8 +364,6 @@ namespace ngraph
                     const bool append_relu,
                     const bool training)
                 {
-                    const auto& args = node->get_input_descriptors();
-
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
                     index = mkldnn_emitter.reserve_primitive_space(6);
@@ -563,7 +559,6 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     BatchNormTrainingBackprop)
                 {
-                    const auto& args = node->get_input_descriptors();
                     const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
                     auto eps = batchnorm->get_eps_value();
 
@@ -775,9 +770,8 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Slice)
                 {
-                    const auto& out = node->get_output_descriptors();
                     const Slice* slice = static_cast<const Slice*>(node);
-                    auto result_shape = out[0].get_shape();
+                    auto result_shape = node->get_output_shape(0);
                     auto lower_bounds = slice->get_lower_bounds();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -1942,7 +1936,6 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
-                    const auto& args = node->get_input_descriptors();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 

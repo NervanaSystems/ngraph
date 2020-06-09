@@ -1664,7 +1664,7 @@ namespace ngraph
                 {
                     auto result = static_cast<const ngraph::op::Result*>(node.get());
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                        node->get_input_descriptors()[0]
+                        node->get_input_descriptor(0)
                             .get_output()
                             .get_tensor_ptr()
                             ->get_tensor_layout());
@@ -1779,7 +1779,7 @@ namespace ngraph
                     bool skip_reshape = false;
                     bool skip_input_reorder = false;
 
-                    auto tvl = node->get_input_descriptors()[0]
+                    auto tvl = node->get_input_descriptor(0)
                                    .get_output()
                                    .get_tensor_ptr()
                                    ->get_tensor_layout();

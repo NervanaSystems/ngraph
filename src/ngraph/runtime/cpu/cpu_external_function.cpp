@@ -674,7 +674,7 @@ using namespace ngraph;
         if (c)
         {
             m_active_constants.push_back(node);
-            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptors()[0].get_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptor(0).get_tensor_ptr();
             string type = tv->get_element_type().c_type_string();
             writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
                    << c->get_data_ptr() << "));\n";
@@ -740,7 +740,7 @@ using namespace ngraph;
     {
         if (is_type<ngraph::op::Constant>(node))
         {
-            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptors()[0].get_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = node->get_output_descriptor(0).get_tensor_ptr();
             constants.insert(tv.get());
         }
     }

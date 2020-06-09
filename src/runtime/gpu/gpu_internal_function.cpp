@@ -324,8 +324,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
         {
             if (auto c = std::dynamic_pointer_cast<op::Constant>(node))
             {
-                shared_ptr<descriptor::Tensor> tv =
-                    node->get_output_descriptors()[0].get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = node->get_output_descriptor(0).get_tensor_ptr();
                 m_variable_name_map[tv->get_name()] =
                     std::make_tuple(TensorRole::CONSTANT, 0, node->get_name());
             }

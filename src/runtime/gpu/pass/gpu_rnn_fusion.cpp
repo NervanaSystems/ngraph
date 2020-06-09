@@ -544,7 +544,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t index = 0; index < lstm_nodes.size(); index++)
         {
             // now get the GOE0 which is the first output of lstm (ht)
-            for (auto& goes : lstm_nodes[index]->get_output_descriptors().at(0).get_inputs())
+            for (auto& goes : lstm_nodes[index]->get_output_descriptor(0).get_inputs())
             {
                 auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
                 // first output node of lstm
