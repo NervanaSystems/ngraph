@@ -290,7 +290,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
                 auto output_name = ss.str();
                 m_variable_name_map[it.get_name()] =
                     std::make_tuple(TensorRole::OUTPUT, i, ss.str());
-                // propagate_in_place_output(&(res->get_input_descriptors().at(0).get_output()),
+                // propagate_in_place_output(&(res->get_input_descriptor(0).get_output()),
                 // output_name);
             }
         }

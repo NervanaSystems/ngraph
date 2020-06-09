@@ -582,9 +582,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 if (map_goe_to_lstm_slices.find(node->get_argument(i)) !=
                     map_goe_to_lstm_slices.end())
                 {
-                    node->get_input_descriptors().at(i).replace_output(
-                        map_goe_to_lstm_slices[node->get_argument(i)]->get_output_descriptors().at(
-                            0));
+                    node->get_input_descriptor(i).replace_output(
+                        map_goe_to_lstm_slices[node->get_argument(i)]->get_output_descriptor(0));
                 }
             }
         }
