@@ -503,7 +503,7 @@ namespace
         ex->call_with_validate({output}, {input_arg, input_lb, input_ub, input_strides});
 
         EXPECT_EQ(output->get_element_type(), input_element_type);
-        EXPECT_EQ(output->get_shape(), expected_output_shape);
+        EXPECT_EQ(output->get_output_shape(0), expected_output_shape);
 
         auto output_values = read_vector<T>(output);
 

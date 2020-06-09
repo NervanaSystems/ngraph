@@ -135,7 +135,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
 
         const size_t IC = 1;
         auto slice = pattern_map[slice_weights_label];
-        if (weights->get_shape().at(IC) != slice->get_shape().at(IC))
+        if (weights->get_output_shape(0).at(IC) != slice->get_output_shape(0).at(IC))
         {
             slices.push_back(slice);
         }

@@ -155,7 +155,7 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(1)));
     ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
     ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
-    ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
+    ASSERT_EQ(gdot->get_output_shape(0), (Shape{1, 2}));
 }
 
 #ifdef NGRAPH_INTERPRETER_ENABLE
@@ -184,7 +184,7 @@ TEST(reshape_elimination, recurrent_reshapes)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes.png");
@@ -233,7 +233,7 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_elimination.png");
@@ -274,7 +274,7 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out.png");
@@ -314,7 +314,7 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out_at_end.png");
@@ -362,7 +362,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>(
@@ -405,7 +405,7 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_nonrecurrent_reshapes.png");
@@ -456,7 +456,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>(

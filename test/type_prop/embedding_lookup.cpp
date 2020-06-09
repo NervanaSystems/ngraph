@@ -47,7 +47,7 @@ TEST(type_prop, embedding_lookup_static_shapes)
     auto weights = make_shared<op::Parameter>(element::f32, Shape{5, 10});
     auto embed = make_shared<op::EmbeddingLookup>(data, weights);
     ASSERT_EQ(embed->get_element_type(), element::f32);
-    ASSERT_EQ(embed->get_shape(), (Shape{8, 10, 12, 10}));
+    ASSERT_EQ(embed->get_output_shape(0), (Shape{8, 10, 12, 10}));
 }
 
 TEST(type_prop, embedding_lookup_dynamic_shape_arg0)

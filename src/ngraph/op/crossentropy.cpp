@@ -81,7 +81,7 @@ static Output<Node> get_2d_tensor(Output<Node> node)
 
 static std::shared_ptr<Node> expand_shape(std::shared_ptr<Node> result, Output<Node> original)
 {
-    Shape result_shape = result->get_shape();
+    Shape result_shape = result->get_output_shape(0);
     Shape original_shape = original.get_shape();
 
     if (result_shape == original_shape && result_shape.size() == 2)
@@ -155,7 +155,7 @@ OutputVector op::CrossEntropy::decompose_op() const
         }
         auto xe = create_xe(labels, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
-            xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
+            xe, AxisVector{0}, Shape{xe->get_output_shape(0).at(0), 1});
         return {expand_shape(reshape_xe, input_value(0))};
     }
     else
@@ -172,7 +172,7 @@ OutputVector op::CrossEntropy::decompose_op() const
         // calculate loss
         auto xe = create_xe(convert_one_hot, input_to_normalize);
         auto reshape_xe = std::make_shared<ngraph::op::Reshape>(
-            xe, AxisVector{0}, Shape{xe->get_shape().at(0), 1});
+            xe, AxisVector{0}, Shape{xe->get_output_shape(0).at(0), 1});
         if (m_ignore_index > 0)
         {
             return {reshape_xe * mask};
@@ -265,7 +265,7 @@ OutputVector op::CrossEntropyBackprop::decompose_op() const
         {
             mask = create_mask(labels, input, m_ignore_index);
             mask = std::make_shared<ngraph::op::Reshape>(
-                mask, AxisVector{0, 1}, Shape{mask->get_shape().at(0)});
+                mask, AxisVector{0, 1}, Shape{mask->get_output_shape(0).at(0)});
             mask =
                 std::make_shared<ngraph::op::Broadcast>(mask, input.get_shape(), AxisSet{rank - 1});
         }

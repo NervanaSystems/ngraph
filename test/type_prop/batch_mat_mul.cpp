@@ -28,7 +28,7 @@ TEST(type_prop, batchmatmul_deduce_3d)
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
     auto bc = make_shared<op::BatchMatMul>(param1, param2);
     ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{5, 4, 3}));
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{5, 4, 3}));
 }
 
 TEST(type_prop, batchmatmul_deduce_left_rank_wrong)

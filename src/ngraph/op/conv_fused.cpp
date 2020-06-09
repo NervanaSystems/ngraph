@@ -208,13 +208,13 @@ OutputVector op::ConvolutionBias::decompose_op() const
                                              m_data_dilation_strides);
     AxisSet bcast_axes;
     bcast_axes.insert(0);
-    for (size_t i = 2; i < conv->get_shape().size(); i++)
+    for (size_t i = 2; i < conv->get_output_shape(0).size(); i++)
     {
         bcast_axes.insert(i);
     }
 
     auto conv_bias = make_shared<op::Add>(
-        conv, make_shared<op::Broadcast>(input_value(2), conv->get_shape(), bcast_axes));
+        conv, make_shared<op::Broadcast>(input_value(2), conv->get_output_shape(0), bcast_axes));
     if (m_with_relu)
     {
         return {make_shared<op::Relu>(conv_bias)};
@@ -351,7 +351,7 @@ OutputVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
 
     AxisSet reduce_axes;
     reduce_axes.insert(0);
-    for (size_t i = 2; i < conv_bprop->get_shape().size(); i++)
+    for (size_t i = 2; i < conv_bprop->get_output_shape(0).size(); i++)
     {
         reduce_axes.insert(i);
     }
@@ -468,13 +468,13 @@ OutputVector op::ConvolutionBiasAdd::decompose_op() const
                                              m_data_dilation_strides);
     AxisSet bcast_axes;
     bcast_axes.insert(0);
-    for (size_t i = 2; i < conv->get_shape().size(); i++)
+    for (size_t i = 2; i < conv->get_output_shape(0).size(); i++)
     {
         bcast_axes.insert(i);
     }
 
     auto conv_bias = make_shared<op::Add>(
-        conv, make_shared<op::Broadcast>(input_value(2), conv->get_shape(), bcast_axes));
+        conv, make_shared<op::Broadcast>(input_value(2), conv->get_output_shape(0), bcast_axes));
     if (m_with_relu)
     {
         return {make_shared<op::Relu>(conv_bias + input_value(3))};

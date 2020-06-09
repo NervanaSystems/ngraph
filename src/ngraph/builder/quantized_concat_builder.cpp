@@ -46,7 +46,7 @@ namespace ngraph
                     quantization_utils::get_scale(mins[i], maxs[i], q_type),
                     AxisVector{0},
                     Shape{});
-                auto zero = make_constant(q_type, in_scale->get_shape(), 0);
+                auto zero = make_constant(q_type, in_scale->get_output_shape(0), 0);
 
                 rescaled_args[i] =
                     make_shared<op::Dequantize>(args[i], in_scale, zero, element::f32, AxisSet{});

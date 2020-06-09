@@ -57,7 +57,7 @@
 
 #define STR(X) #X
 #define CHECK_RANK(X, RANK)                                                                        \
-    if (X->get_shape().size() != RANK)                                                             \
+    if (X->get_output_shape(0).size() != RANK)                                                     \
     {                                                                                              \
         NGRAPH_DEBUG << STR(X) << " does not have rank " << RANK;                                  \
         return false;                                                                              \
@@ -103,9 +103,9 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
         auto src_layer = pattern_map[src_layer_label];
         auto src_iter = pattern_map[src_iter_label];
 
-        size_t slc = src_layer->get_shape()[1];
-        size_t sic = src_iter->get_shape()[1];
-        size_t dlc = fused_weights->get_shape()[1];
+        size_t slc = src_layer->get_output_shape(0)[1];
+        size_t sic = src_iter->get_output_shape(0)[1];
+        size_t dlc = fused_weights->get_output_shape(0)[1];
         size_t n_gates = 1;
         size_t direction = 1;
         size_t n_layers = 1;
@@ -204,9 +204,13 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         }
 
         auto W_reshape = std::make_shared<op::Reshape>(
-            W_ifco, AxisVector{1, 0}, Shape{W_ifco->get_shape()[1], W_ifco->get_shape()[0]});
+            W_ifco,
+            AxisVector{1, 0},
+            Shape{W_ifco->get_output_shape(0)[1], W_ifco->get_output_shape(0)[0]});
         auto R_reshape = std::make_shared<op::Reshape>(
-            R_ifco, AxisVector{1, 0}, Shape{R_ifco->get_shape()[1], R_ifco->get_shape()[0]});
+            R_ifco,
+            AxisVector{1, 0},
+            Shape{R_ifco->get_output_shape(0)[1], R_ifco->get_output_shape(0)[0]});
 
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(pattern_map[X],
                                                             pattern_map[H_t],
@@ -576,20 +580,20 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto rnn_bias = m.get_bound_nodes_for_pattern(lstm_bias_label)[0];
 
         const size_t lstm_n_gates = 4;
-        const size_t batch_size = rnn_src_layer->get_shape()[0] / sequence_len;
-        const size_t src_iter_feature_size = rnn_weights_iter->get_shape()[0];
+        const size_t batch_size = rnn_src_layer->get_output_shape(0)[0] / sequence_len;
+        const size_t src_iter_feature_size = rnn_weights_iter->get_output_shape(0)[0];
         const size_t num_cell_states = 2;
         const size_t direction = 1;
         const size_t num_fused_rnn_layers = 1;
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
-        NGRAPH_DEBUG << "src_layer: " << join(rnn_src_layer->get_shape());
-        NGRAPH_DEBUG << "src_iter: " << join(rnn_src_iter->get_shape());
-        NGRAPH_DEBUG << "src_iter_c: " << join(rnn_src_iter_c->get_shape());
-        NGRAPH_DEBUG << "weights_layer: " << join(rnn_weights_layer->get_shape());
-        NGRAPH_DEBUG << "weights_iter: " << join(rnn_weights_iter->get_shape());
-        NGRAPH_DEBUG << "bias: " << join(rnn_bias->get_shape());
+        NGRAPH_DEBUG << "src_layer: " << join(rnn_src_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter: " << join(rnn_src_iter->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter_c: " << join(rnn_src_iter_c->get_output_shape(0));
+        NGRAPH_DEBUG << "weights_layer: " << join(rnn_weights_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "weights_iter: " << join(rnn_weights_iter->get_output_shape(0));
+        NGRAPH_DEBUG << "bias: " << join(rnn_bias->get_output_shape(0));
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
 
@@ -852,17 +856,18 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto mrnn_weights_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_weights_iter));
         auto mrnn_bias = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_bias));
 
-        NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer->get_shape());
-        NGRAPH_DEBUG << "src_iter: " << join(mrnn_src_iter->get_shape());
-        NGRAPH_DEBUG << "src_iter_c: " << join(mrnn_src_iter_c->get_shape());
-        NGRAPH_DEBUG << "weights_layer: " << join(mrnn_weights_layer->get_shape());
-        NGRAPH_DEBUG << "weights_iter: " << join(mrnn_weights_iter->get_shape());
-        NGRAPH_DEBUG << "bias: " << join(mrnn_bias->get_shape());
+        NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter: " << join(mrnn_src_iter->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter_c: " << join(mrnn_src_iter_c->get_output_shape(0));
+        NGRAPH_DEBUG << "weights_layer: " << join(mrnn_weights_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "weights_iter: " << join(mrnn_weights_iter->get_output_shape(0));
+        NGRAPH_DEBUG << "bias: " << join(mrnn_bias->get_output_shape(0));
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "src iter feature_size: " << src_iter_feature_size;
 
-        if ((mrnn_src_layer->get_shape()[0] / batch_size) != rnn_nodes[0]->get_num_timesteps())
+        if ((mrnn_src_layer->get_output_shape(0)[0] / batch_size) !=
+            rnn_nodes[0]->get_num_timesteps())
         {
             throw ngraph_error(
                 " input symbols for the layer fused RNN op, should be captured only for the first "
@@ -1050,20 +1055,21 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                      rnn_type);
 
         auto layer_rnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        size_t batch_size = layer_rnn_ht->get_shape()[0] / num_time_steps;
-        size_t feature_size = layer_rnn_ht->get_shape()[1];
+        size_t batch_size = layer_rnn_ht->get_output_shape(0)[0] / num_time_steps;
+        size_t feature_size = layer_rnn_ht->get_output_shape(0)[1];
 
         // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
         // squeezed_dims{t*n, c}
         std::shared_ptr<Node> layer_rnn_ht_reshape = layer_rnn_ht;
-        if (m.get_match_root()->get_shape() != layer_rnn_ht->get_shape())
+        if (m.get_match_root()->get_output_shape(0) != layer_rnn_ht->get_output_shape(0))
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                 layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
         }
 
         // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
-        if (m.get_match_root()->get_shape() == Shape{batch_size, num_time_steps, feature_size})
+        if (m.get_match_root()->get_output_shape(0) ==
+            Shape{batch_size, num_time_steps, feature_size})
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                 layer_rnn_ht_reshape,

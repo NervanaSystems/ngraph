@@ -42,7 +42,7 @@ void pass::ConvertFP32ToFP16::convert_constants_precision()
                 new_data[i] = ngraph::float16(data[i]);
             }
             auto new_const = std::make_shared<ngraph::op::Constant>(
-                element::f16, constant->get_shape(), new_data);
+                element::f16, constant->get_output_shape(0), new_data);
             new_const->set_friendly_name(constant->get_friendly_name());
             ngraph::replace_node(constant, new_const);
             return true;

@@ -33,7 +33,7 @@ shared_ptr<op::Constant> fold_constant_one_hot_ref(const shared_ptr<op::Constant
     std::vector<OUTPUT_TYPE> out_vec(shape_size(output_shape));
     runtime::reference::one_hot<INDICES_TYPE, OUTPUT_TYPE>(indices->get_data_ptr<INDICES_TYPE>(),
                                                            out_vec.data(),
-                                                           indices->get_shape(),
+                                                           indices->get_output_shape(0),
                                                            output_shape,
                                                            axis,
                                                            on_value->get_vector<OUTPUT_TYPE>()[0],

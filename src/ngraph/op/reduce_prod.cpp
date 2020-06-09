@@ -35,7 +35,7 @@ op::v1::ReduceProd::ReduceProd(const Output<Node>& arg,
 
 shared_ptr<Node> op::v1::ReduceProd::get_default_value() const
 {
-    return ngraph::make_constant_from_string("1", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("1", get_element_type(), get_output_shape(0));
 }
 
 shared_ptr<Node> op::v1::ReduceProd::clone_with_new_inputs(const OutputVector& new_args) const
