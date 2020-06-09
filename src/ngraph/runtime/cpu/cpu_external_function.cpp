@@ -898,7 +898,7 @@ using namespace ngraph;
         vector<string> node_output_names;
         vector<TensorTracerAttributes> t_in_attrs;
         vector<TensorTracerAttributes> t_out_attrs;
-        for (Output<Node> input : node->inputs())
+        for (Input<Node> input : node->inputs())
         {
             shared_ptr<descriptor::Tensor> tv = input.get_tensor_ptr();
             in.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
@@ -907,7 +907,7 @@ using namespace ngraph;
                 in.back().get_size(), in.back().get_shape(), in.back().get_element_type()));
         }
         vector<TensorWrapper> out;
-        for (Input<Node> output : node->outputs())
+        for (Output<Node> output : node->outputs())
         {
             shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
             out.push_back(TensorWrapper(tv, m_variable_name_map[tv->get_name()]));
@@ -964,6 +964,7 @@ using namespace ngraph;
             writer << "if (ctx->first_iteration";
             for (Input<Node> input : node->inputs())
             {
+                Output<Node> output = input.get_source_output();
                 shared_ptr<descriptor::Tensor> tv = input.get_tensor_ptr();
                 auto input_name = tv->get_name();
 
@@ -2206,10 +2207,9 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
     vector<TensorWrapper> in;
     size_t arg_index = 0;
     set<string> arg_names;
-    for (const descriptor::Input& input : node.get_input_descriptors())
+    for (Input<const Node> input : node.inputs())
     {
-        const descriptor::Output& output = input.get_output();
-        shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
+        shared_ptr<descriptor::Tensor> tv = input.get_tensor_ptr();
         TensorWrapper tvw{tv, "_arg" + to_string(arg_index)};
         if (arg_names.find(tvw.get_name()) == arg_names.end())
         {
@@ -2224,7 +2224,7 @@ string runtime::cpu::CPU_ExternalFunction::emit_op_as_function(const Node& node,
         in.push_back(tvw);
     }
     vector<TensorWrapper> out;
-    for (const descriptor::Output& output : node.get_output_descriptors())
+    for (Output<const Node> output : node.outputs())
     {
         shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
         TensorWrapper tvw{tv, "_out" + to_string(arg_index)};

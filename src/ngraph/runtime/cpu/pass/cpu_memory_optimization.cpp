@@ -104,7 +104,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             AxisVector axis_list = ngraph::get_default_order(shape);
 
             auto index = 0;
-            for (descriptor::Input& input : concat->get_input_descriptors())
+            for (Input<Node> input : concat->inputs())
             {
                 // no tensors with zero-sized dimensions after zero_dim_tensor_elimination
                 NGRAPH_CHECK(shape_size(input.get_shape()) != 0);
@@ -120,8 +120,8 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                const auto& output = input.get_output();
-                auto arg = output.get_node();
+                const auto& output = input.get_source_output();
+                auto arg = output.get_node_shared_ptr();
                 if (arg->is_constant() || arg->is_parameter())
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
@@ -149,13 +149,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     }
                 }
 
-                if (output.get_inputs().size() != 1)
+                if (output.get_target_inputs().size() != 1)
                 {
                     // check if we can do in place concat
                     auto concat_count = 0;
-                    for (auto output_input : output.get_inputs())
+                    for (Input<Node> output_input : output.get_target_inputs())
                     {
-                        auto user = output_input->get_node();
+                        auto user = output_input.get_node();
                         if (user->description() == "Concat")
                         {
                             concat_count++;

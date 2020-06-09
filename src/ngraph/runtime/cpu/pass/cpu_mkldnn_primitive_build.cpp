@@ -176,15 +176,16 @@ namespace ngraph
                         }
                     };
 
-                    if (out[0].get_shape().size() == 2 &&
-                        (out[0].get_shape()[1] != direction * feature_size))
+                    if (node->get_output_shape(0).size() == 2 &&
+                        (node->get_output_shape(0)[1] != direction * feature_size))
                     {
                         throw ngraph_error(
                             "input slc{ht} feature size is not equal to output dlc{ht} feature "
                             "size ");
                     }
 
-                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                    if (node->get_output_shape(1).size() == 2 &&
+                        (node->get_output_shape(1)[1] != feature_size) &&
                         rnn_node->get_num_timesteps() != 1)
                     {
                         throw ngraph_error(
@@ -213,28 +214,40 @@ namespace ngraph
                     Shape dst_iter_c_tz{num_fused_layers, direction, batch, feature_size};
 
                     // We create the memory descriptors used by the user
-                    auto src_layer_md = mkldnn_emitter.build_memory_descriptor(
-                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format_tag::tnc);
-                    auto src_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
+                    auto src_layer_md =
+                        mkldnn_emitter.build_memory_descriptor(src_layer_tz,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::tnc);
+                    auto src_iter_md =
+                        mkldnn_emitter.build_memory_descriptor(src_iter_tz,
+                                                               node->get_input_element_type(1),
+                                                               mkldnn::memory::format_tag::ldnc);
                     auto src_iter_c_md =
                         mkldnn_emitter.build_memory_descriptor(src_iter_c_tz,
-                                                               args[1].get_element_type(),
+                                                               node->get_input_element_type(1),
                                                                mkldnn::memory::format_tag::ldnc);
                     auto wei_layer_md =
                         mkldnn_emitter.build_memory_descriptor(wei_layer_tz,
-                                                               args[2].get_element_type(),
+                                                               node->get_input_element_type(2),
                                                                mkldnn::memory::format_tag::ldigo);
-                    auto wei_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format_tag::ldigo);
+                    auto wei_iter_md =
+                        mkldnn_emitter.build_memory_descriptor(wei_iter_tz,
+                                                               node->get_input_element_type(3),
+                                                               mkldnn::memory::format_tag::ldigo);
                     auto bias_md = mkldnn_emitter.build_memory_descriptor(
-                        bias_tz, args[4].get_element_type(), mkldnn::memory::format_tag::ldgo);
-                    auto dst_layer_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format_tag::tnc);
-                    auto dst_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
-                    auto dst_iter_c_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_iter_c_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
+                        bias_tz, node->get_input_element_type(4), mkldnn::memory::format_tag::ldgo);
+                    auto dst_layer_md =
+                        mkldnn_emitter.build_memory_descriptor(dst_layer_tz,
+                                                               node->get_output_element_type(0),
+                                                               mkldnn::memory::format_tag::tnc);
+                    auto dst_iter_md =
+                        mkldnn_emitter.build_memory_descriptor(dst_iter_tz,
+                                                               node->get_output_element_type(1),
+                                                               mkldnn::memory::format_tag::ldnc);
+                    auto dst_iter_c_md =
+                        mkldnn_emitter.build_memory_descriptor(dst_iter_c_tz,
+                                                               node->get_output_element_type(1),
+                                                               mkldnn::memory::format_tag::ldnc);
 
                     // query scratchpad size
                     auto rnn_desc = mkldnn::lstm_forward::desc(mkldnn::prop_kind::forward_training,
@@ -388,10 +401,12 @@ namespace ngraph
                     }
 
                     auto weights_shape =
-                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
+                        Shape{2, node->get_input_tensor(0).get_tensor_layout()->get_size()};
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                    auto weights_desc = mkldnn_emitter.build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
+                    auto weights_desc =
+                        mkldnn_emitter.build_memory_descriptor(weights_shape,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::nc);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     const float ops_scale = 1.f;
@@ -407,7 +422,7 @@ namespace ngraph
 
                     bool use_global_stats;
                     const mkldnn::memory::desc *mean_desc, *variance_desc;
-                    if (training && args.size() == 3)
+                    if (training && node->get_input_size() == 3)
                     {
                         mean_desc = &mkldnn_utils::get_output_mkldnn_md(node, 1);
                         variance_desc = &mkldnn_utils::get_output_mkldnn_md(node, 2);
@@ -563,16 +578,20 @@ namespace ngraph
                     auto eps = batchnorm->get_eps_value();
 
                     auto weights_shape =
-                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
-                    auto weights_desc = mkldnn_emitter.build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
+                        Shape{2, node->get_input_tensor(0).get_tensor_layout()->get_size()};
+                    auto weights_desc =
+                        mkldnn_emitter.build_memory_descriptor(weights_shape,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::nc);
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
                     auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 5);
                     auto dinput_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto dweights_desc = mkldnn_emitter.build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
+                    auto dweights_desc =
+                        mkldnn_emitter.build_memory_descriptor(weights_shape,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::nc);
 
                     // query scratchpad size
                     auto batchnorm_desc = mkldnn_emitter.get_batchnorm_backward_desc(node);
@@ -1956,10 +1975,10 @@ namespace ngraph
                               // check if compensation is conv_s8s8(1U)
                               result_desc.data.extra.flags & 0x1U))
                     {
-                        auto arg0_shape = args[0].get_shape();
+                        auto arg0_shape = node->get_input_shape(0);
                         input_desc = mkldnn::memory::desc(
                             mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0)),
                             mkldnn::memory::format_tag::oihw);
                     }
                     else if (input_format_is_nchw && input_desc.data.ndims == 4 &&
@@ -1984,7 +2003,7 @@ namespace ngraph
                         input_desc = mkldnn::memory::desc(
                             mkldnn::memory::dims(weights_shape_groups.begin(),
                                                  weights_shape_groups.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0)),
                             mkldnn::memory::format_tag::goihw);
                     }
 
