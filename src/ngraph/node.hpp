@@ -315,21 +315,6 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_input_descriptors()
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_input_descriptors() const
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        std::deque<descriptor::Output>& get_output_descriptors()
-            NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_output_descriptors() const
-            NGRAPH_DEPRECATED("use outputs() instead");
-
         /// Get control dependencies registered on the node
         const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
@@ -568,12 +553,10 @@ namespace ngraph
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
+    private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
-        const descriptor::Input& get_input_descriptor(size_t position) const;
-        const descriptor::Output& get_output_descriptor(size_t position) const;
 
-    private:
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;
