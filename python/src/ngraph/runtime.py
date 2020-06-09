@@ -84,7 +84,7 @@ class Computation(object):
 
         self.tensor_views = []  # type: List[Tensor]
         for parameter in self.parameters:
-            shape = parameter.get_shape()
+            shape = parameter.get_output_shape(0)
             element_type = parameter.get_output_element_type(0)
             self.tensor_views.append(runtime.backend.create_tensor(element_type, shape))
 
@@ -96,7 +96,7 @@ class Computation(object):
                 output_tensor = runtime.backend.create_dynamic_tensor(element_type, output_pshape)
                 self.result_views.append(output_tensor)
             else:
-                output_shape = result.get_shape()
+                output_shape = result.get_output_shape(0)
                 output_tensor = runtime.backend.create_tensor(element_type, output_shape)
                 self.result_views.append(output_tensor)
 

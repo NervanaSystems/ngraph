@@ -43,7 +43,7 @@ static Shape get_shape_no_keep_dims(const AxisSet& reduction_axes, const Shape& 
 static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
                                                                 shared_ptr<Node> reduction_node)
 {
-    runtime::AlignedBuffer buffer(shape_size(reduction_node->get_shape()) * sizeof(char));
+    runtime::AlignedBuffer buffer(shape_size(reduction_node->get_output_shape(0)) * sizeof(char));
     char* data_ptr = buffer.get_ptr<char>();
 
     if (auto all = as_type_ptr<::ngraph::op::All>(reduction_node))
@@ -51,7 +51,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
         runtime::reference::all(constant->get_vector<char>().data(),
                                 data_ptr,
                                 constant->get_output_shape(0),
-                                reduction_node->get_shape(),
+                                reduction_node->get_output_shape(0),
                                 all->get_reduction_axes());
     }
     else if (auto any = as_type_ptr<::ngraph::op::Any>(reduction_node))
@@ -59,7 +59,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
         runtime::reference::any(constant->get_vector<char>().data(),
                                 data_ptr,
                                 constant->get_output_shape(0),
-                                reduction_node->get_shape(),
+                                reduction_node->get_output_shape(0),
                                 any->get_reduction_axes());
     }
     else if (auto reduce_and = as_type_ptr<::ngraph::op::v1::ReduceLogicalAnd>(reduction_node))
@@ -93,7 +93,7 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
     }
 
     return make_shared<op::Constant>(
-        reduction_node->get_output_element_type(0), reduction_node->get_shape(), data_ptr);
+        reduction_node->get_output_element_type(0), reduction_node->get_output_shape(0), data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_logical_reduction()

@@ -57,7 +57,7 @@ TEST(type_prop, quantized_dot_8_bit_output)
                                                    axes);
 
     ASSERT_EQ(quant_dot->get_output_element_type(0), output_type);
-    ASSERT_EQ(quant_dot->get_shape(), output_shape);
+    ASSERT_EQ(quant_dot->get_output_shape(0), output_shape);
 }
 
 TEST(type_prop, quantized_dot_32_bit_output)
@@ -97,7 +97,7 @@ TEST(type_prop, quantized_dot_32_bit_output)
                                                    axes);
 
     ASSERT_EQ(quant_dot->get_output_element_type(0), output_type);
-    ASSERT_EQ(quant_dot->get_shape(), output_shape);
+    ASSERT_EQ(quant_dot->get_output_shape(0), output_shape);
 }
 
 TEST(type_prop, quantized_dot_non_quantized_input0_fails)

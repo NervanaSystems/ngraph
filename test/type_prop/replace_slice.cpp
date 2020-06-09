@@ -27,7 +27,7 @@ TEST(type_prop, replace_slice_deduce_vector)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2}, Coordinate{5});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix)
@@ -36,7 +36,7 @@ TEST(type_prop, replace_slice_deduce_matrix)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 6});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2, 1}, Coordinate{5, 7});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_strided)
@@ -46,7 +46,7 @@ TEST(type_prop, replace_slice_deduce_matrix_strided)
     auto rsl = make_shared<op::ReplaceSlice>(
         param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Strides{3, 2});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_strided_uneven)
@@ -56,7 +56,7 @@ TEST(type_prop, replace_slice_deduce_matrix_strided_uneven)
     auto rsl = make_shared<op::ReplaceSlice>(
         param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Strides{3, 4});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_vector_edge)
@@ -65,7 +65,7 @@ TEST(type_prop, replace_slice_deduce_vector_edge)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{6});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_edge)
@@ -74,7 +74,7 @@ TEST(type_prop, replace_slice_deduce_matrix_edge)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 8});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_zero_cols)
@@ -83,7 +83,7 @@ TEST(type_prop, replace_slice_deduce_matrix_zero_cols)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 0});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 0});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_matrix_zero_zero)
@@ -92,7 +92,7 @@ TEST(type_prop, replace_slice_deduce_matrix_zero_zero)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{0, 0});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{0, 0});
     ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
-    ASSERT_EQ(rsl->get_shape(), (Shape{6, 8}));
+    ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
 TEST(type_prop, replace_slice_deduce_vector_invalid_strides)

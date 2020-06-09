@@ -29,7 +29,7 @@ TEST(type_prop, unsqueeze)
     auto unsqueeze = make_shared<op::Unsqueeze>(param, axes_node);
 
     ASSERT_EQ(unsqueeze->get_output_element_type(0), element::f32);
-    ASSERT_EQ(unsqueeze->get_shape(), (Shape{4, 1, 1, 1, 4, 1, 8}));
+    ASSERT_EQ(unsqueeze->get_output_shape(0), (Shape{4, 1, 1, 1, 4, 1, 8}));
 }
 
 TEST(type_prop, unsqueeze_dynamic)

@@ -2798,7 +2798,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Constant:
     {
         auto tmp = static_cast<const op::Constant*>(&n);
-        if (tmp->get_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
+        if (tmp->get_all_data_elements_bitwise_identical() &&
+            shape_size(tmp->get_output_shape(0)) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
@@ -2808,7 +2809,7 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["value"] = tmp->get_value_strings();
         }
-        node["shape"] = tmp->get_shape();
+        node["shape"] = tmp->get_output_shape(0);
         node["element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }

@@ -30,7 +30,7 @@ shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> cons
 {
     // v1::Reshape and v0::DynReshape do not allow data transposes.
     return make_shared<op::Constant>(dyn_reshape->get_output_element_type(0),
-                                     dyn_reshape->get_shape(),
+                                     dyn_reshape->get_output_shape(0),
                                      constant_data->get_data_ptr<T>());
 }
 

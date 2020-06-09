@@ -44,5 +44,5 @@ std::shared_ptr<Node> op::ArgMin::get_default_value() const
 {
     // Choice of value here is arbitrary, because validation should be rejecting cases where the
     // axis of reduction has size zero.
-    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }

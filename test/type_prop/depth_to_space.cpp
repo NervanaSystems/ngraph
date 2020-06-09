@@ -28,7 +28,7 @@ TEST(type_prop, depth_to_space_output_shape_block_first_4D)
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 8);
 
     ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 64, 64}));
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 2, 64, 64}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_block_first_4D_2)
@@ -38,7 +38,7 @@ TEST(type_prop, depth_to_space_output_shape_block_first_4D_2)
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 3, 2 * 1080, 2 * 1616}));
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_block_first_5D)
@@ -48,7 +48,7 @@ TEST(type_prop, depth_to_space_output_shape_block_first_5D)
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 2 * 3, 2 * 1080, 2 * 1616}));
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 2, 2 * 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_depth_first_4D)
@@ -58,7 +58,7 @@ TEST(type_prop, depth_to_space_output_shape_depth_first_4D)
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 3, 2 * 1080, 2 * 1616}));
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_output_shape_depth_first_5D)
@@ -68,7 +68,7 @@ TEST(type_prop, depth_to_space_output_shape_depth_first_5D)
         make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
 
     ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 2, 2 * 3, 2 * 1080, 2 * 1616}));
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 2, 2 * 3, 2 * 1080, 2 * 1616}));
 }
 
 TEST(type_prop, depth_to_space_input_rank_not_supported)

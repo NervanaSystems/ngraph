@@ -172,7 +172,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
 constexpr NodeTypeInfo op::v1::ConvolutionBackpropData::type_info;
 shared_ptr<Node> op::v1::Convolution::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }
 
 op::v1::ConvolutionBackpropData::ConvolutionBackpropData(const Output<Node>& data,
@@ -500,7 +500,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
     shared_ptr<Node> filter_deconv_bprop = make_shared<op::v1::Convolution>(
         x, delta, strides, pads_begin, pads_end, Strides(x.get_shape().size() - 2, 1), m_auto_pad);
     AxisSet axes;
-    for (size_t i = 2; i < filter_deconv_bprop->get_shape().size(); ++i)
+    for (size_t i = 2; i < filter_deconv_bprop->get_output_shape(0).size(); ++i)
     {
         axes.insert(i);
     }
@@ -893,7 +893,7 @@ void op::v0::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
 constexpr NodeTypeInfo op::v0::ConvolutionBackpropData::type_info;
 shared_ptr<Node> op::v0::Convolution::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }
 
 op::v0::ConvolutionBackpropData::ConvolutionBackpropData(
@@ -1068,7 +1068,7 @@ void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
                                                                             padding_above,
                                                                             data_dilation_strides);
     AxisSet axes;
-    for (size_t i = 2; i < filter_deconv_bprop->get_shape().size(); ++i)
+    for (size_t i = 2; i < filter_deconv_bprop->get_output_shape(0).size(); ++i)
     {
         axes.insert(i);
     }

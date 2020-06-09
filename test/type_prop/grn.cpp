@@ -29,7 +29,7 @@ TEST(type_prop, grn)
     auto grn = make_shared<op::GRN>(A, bias);
 
     ASSERT_EQ(grn->get_output_element_type(0), element::f32);
-    ASSERT_EQ(grn->get_shape(), data_shape);
+    ASSERT_EQ(grn->get_output_shape(0), data_shape);
 }
 
 TEST(type_prop, grn_invalid_data_rank)

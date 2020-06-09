@@ -363,7 +363,7 @@ shared_ptr<runtime::Tensor>
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::HostTensor>(parameter->get_output_element_type(0),
-                                            parameter->get_shape());
+                                            parameter->get_output_shape(0));
 }
 
 shared_ptr<runtime::Tensor>
@@ -371,7 +371,7 @@ shared_ptr<runtime::Tensor>
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::HostTensor>(result->get_output_element_type(0),
-                                            result->get_shape());
+                                            result->get_output_shape(0));
 }
 
 vector<shared_ptr<runtime::Tensor>>
@@ -384,7 +384,7 @@ vector<shared_ptr<runtime::Tensor>>
     {
         shared_ptr<runtime::HostTensor> tensor;
         auto t = make_shared<runtime::HostTensor>(parameter->get_output_element_type(0),
-                                                  parameter->get_shape());
+                                                  parameter->get_output_shape(0));
         tensor = static_pointer_cast<runtime::HostTensor>(t);
         tensors.push_back(tensor);
     }
@@ -406,7 +406,7 @@ vector<shared_ptr<runtime::Tensor>>
     {
         shared_ptr<runtime::HostTensor> tensor;
         auto t = make_shared<runtime::HostTensor>(result->get_output_element_type(0),
-                                                  result->get_shape());
+                                                  result->get_output_shape(0));
         tensor = static_pointer_cast<runtime::HostTensor>(t);
         tensors.push_back(tensor);
     }

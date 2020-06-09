@@ -547,7 +547,7 @@ shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_arg
 template <typename T>
 static bool test_bitwise_identical(const op::Constant* constant)
 {
-    const size_t size = shape_size(constant->get_shape());
+    const size_t size = shape_size(constant->get_output_shape(0));
     bool data_is_constant = true;
     if (size > 0)
     {

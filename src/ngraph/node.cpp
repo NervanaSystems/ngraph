@@ -668,33 +668,11 @@ const PartialShape& Node::get_output_partial_shape(size_t i) const
     return m_outputs[i].get_partial_shape();
 }
 
-const Shape& Node::get_shape() const
-{
-    if (get_output_size() != 1)
-    {
-        stringstream es;
-        es << "get_shape() must be called on a node with exactly one output (" << description()
-           << ")";
-        throw ngraph_error(es);
-    }
-    return get_output_shape(0);
-}
-
 shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
 {
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_ptr(size_t i)");
     return m_outputs[i].get_tensor_ptr();
-}
-
-shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error(
-            "get_output_tensor_ptr() must be called on a node with exactly one output.");
-    }
-    return m_outputs[0].get_tensor_ptr();
 }
 
 const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
@@ -735,15 +713,6 @@ const string& Node::get_output_tensor_name(size_t i) const
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_name(size_t i)");
     return m_outputs[i].get_tensor().get_name();
-}
-
-descriptor::Tensor& Node::get_output_tensor() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
-    }
-    return get_output_tensor(0);
 }
 
 size_t Node::get_input_size() const

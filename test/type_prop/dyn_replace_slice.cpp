@@ -395,7 +395,7 @@ TEST(type_prop, dynreplaceslice_static_shape)
         make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_EQ(r->get_shape(), (Shape{2, 3, 4, 5, 6}));
+    EXPECT_EQ(r->get_output_shape(0), (Shape{2, 3, 4, 5, 6}));
 }
 
 TEST(type_prop, dynreplaceslice_static_shape_replacement_inconsistent)
@@ -464,7 +464,7 @@ TEST_P(DeduceDynReplaceSliceTest, output_shape)
                                               tp.shrink_axis,
                                               tp.ellipsis_mask);
 
-    EXPECT_EQ(r->get_shape(), tp.arg_shape);
+    EXPECT_EQ(r->get_output_shape(0), tp.arg_shape);
 }
 
 INSTANTIATE_TEST_CASE_P(

@@ -27,5 +27,5 @@ TEST(type_prop, elu)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     auto elu = make_shared<op::Elu>(data, 1);
     ASSERT_EQ(elu->get_output_element_type(0), element::f32);
-    ASSERT_EQ(elu->get_shape(), data_shape);
+    ASSERT_EQ(elu->get_output_shape(0), data_shape);
 }

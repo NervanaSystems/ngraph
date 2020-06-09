@@ -73,11 +73,11 @@ public:
             ASSERT_EQ(ref_data->get_element_type(), bk_isolated_data->get_element_type());
             ASSERT_EQ(ref_data->get_element_count(), bk_data->get_element_count());
             ASSERT_EQ(ref_data->get_element_count(), bk_isolated_data->get_element_count());
-            ASSERT_EQ(ref_data->get_shape(), bk_data->get_shape());
-            ASSERT_EQ(ref_data->get_shape(), bk_isolated_data->get_shape());
+            ASSERT_EQ(ref_data->get_output_shape(0), bk_data->get_output_shape(0));
+            ASSERT_EQ(ref_data->get_output_shape(0), bk_isolated_data->get_output_shape(0));
 
             msg << "  output type:       " << ref_data->get_element_type() << "\n";
-            msg << "  output shape:      " << ref_data->get_shape() << "\n";
+            msg << "  output shape:      " << ref_data->get_output_shape(0) << "\n";
             msg << "  output # elements: " << ref_data->get_element_count() << "\n";
 
             element::Type et = ref_data->get_element_type();
@@ -353,8 +353,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                     !(arg->get_output_size() > 1))
                 {
                     // Create new isolated arg which we'll fill in with reference results
-                    auto isolated_param =
-                        make_shared<op::Parameter>(arg->get_element_type(), arg->get_shape());
+                    auto isolated_param = make_shared<op::Parameter>(arg->get_element_type(),
+                                                                     arg->get_output_shape(0));
                     isolated_op_args.push_back(isolated_param);
                     isolated_parameters.push_back(isolated_param);
                     isolated_node_to_original_node[isolated_param.get()] = arg;
@@ -381,11 +381,12 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     default_random_engine engine(2112);
     for (shared_ptr<op::Parameter> param : new_func->get_parameters())
     {
-        auto data =
-            make_shared<ngraph::runtime::HostTensor>(param->get_element_type(), param->get_shape());
+        auto data = make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
+                                                             param->get_output_shape(0));
         random_init(data.get(), engine);
-        auto ref_tensor = ref->create_tensor(param->get_element_type(), param->get_shape());
-        auto bk_tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
+        auto ref_tensor = ref->create_tensor(param->get_element_type(), param->get_output_shape(0));
+        auto bk_tensor =
+            backend->create_tensor(param->get_element_type(), param->get_output_shape(0));
         ref_tensor->write(data->get_data_ptr(),
                           data->get_element_count() * data->get_element_type().size());
         bk_tensor->write(data->get_data_ptr(),
@@ -403,10 +404,10 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
 
     for (shared_ptr<Node>& out : new_results)
     {
-        auto ref_result = ref->create_tensor(out->get_element_type(), out->get_shape());
+        auto ref_result = ref->create_tensor(out->get_element_type(), out->get_output_shape(0));
         ref_results.push_back(ref_result);
         arg_to_ref_result[out.get()] = ref_result;
-        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_output_shape(0));
         bk_results.push_back(bk_result);
     }
 
@@ -459,9 +460,9 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                 found_reference_data = true;
                 auto ref_tensor = ref_tensor_it->second;
                 auto data = make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
-                                                                     param->get_shape());
+                                                                     param->get_output_shape(0));
                 auto bk_tensor =
-                    backend->create_tensor(param->get_element_type(), param->get_shape());
+                    backend->create_tensor(param->get_element_type(), param->get_output_shape(0));
                 size_t size_in_bytes = ref_tensor->get_size_in_bytes();
                 ref_tensor->read(data->get_data_ptr(), size_in_bytes);
                 bk_tensor->write(data->get_data_ptr(), size_in_bytes);
@@ -474,7 +475,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     bk_isolated_results.reserve(isolated_results.size());
     for (shared_ptr<Node>& out : isolated_results)
     {
-        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_output_shape(0));
         bk_isolated_results.push_back(bk_result);
     }
     handle = backend->compile(bk_isolated_func);

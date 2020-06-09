@@ -32,7 +32,7 @@ TEST(type_prop, batch_to_space_output_shape_2D)
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(batch_to_space->get_output_element_type(0), element::f32);
-    ASSERT_EQ(batch_to_space->get_shape(), (Shape{10 / 5, 26 * 5 - 2}));
+    ASSERT_EQ(batch_to_space->get_output_shape(0), (Shape{10 / 5, 26 * 5 - 2}));
 }
 
 TEST(type_prop, batch_to_space_output_shape_4D)
@@ -48,7 +48,8 @@ TEST(type_prop, batch_to_space_output_shape_4D)
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(batch_to_space->get_output_element_type(0), element::f32);
-    ASSERT_EQ(batch_to_space->get_shape(), (Shape{100 / (10 * 5), 7 * 10 - 3 - 3, 13 * 5 - 1, 3}));
+    ASSERT_EQ(batch_to_space->get_output_shape(0),
+              (Shape{100 / (10 * 5), 7 * 10 - 3 - 3, 13 * 5 - 1, 3}));
 }
 
 TEST(type_prop, batch_to_space_output_shape_5D)
@@ -65,7 +66,7 @@ TEST(type_prop, batch_to_space_output_shape_5D)
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(batch_to_space->get_output_element_type(0), element::f32);
-    ASSERT_EQ(batch_to_space->get_shape(),
+    ASSERT_EQ(batch_to_space->get_output_shape(0),
               (Shape{960 / (6 * 5 * 16), 6 * 6 - 2 - 2, 13 * 5 - 1, 128, 16 * 16}));
 }
 
@@ -82,11 +83,11 @@ TEST(type_prop, batch_to_space_and_space_to_batch)
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(batch_to_space->get_output_element_type(0), element::f32);
-    ASSERT_EQ(batch_to_space->get_shape(),
+    ASSERT_EQ(batch_to_space->get_output_shape(0),
               (Shape{4800 / (12 * 100 * 2), 9 * 12 - 3 - 5, 11 * 100 - 38 - 38, 2 * 2 - 1}));
 
     auto space_to_batch =
         make_shared<op::v1::SpaceToBatch>(batch_to_space, block_shape, pads_begin, pads_end);
     ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
-    ASSERT_EQ(space_to_batch->get_shape(), (Shape{4800, 9, 11, 2}));
+    ASSERT_EQ(space_to_batch->get_output_shape(0), (Shape{4800, 9, 11, 2}));
 }

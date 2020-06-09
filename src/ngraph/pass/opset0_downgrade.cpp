@@ -628,7 +628,7 @@ namespace
         {
             // In order to keep the original dimensions we need to reshape the Count node
             // before we use it in Divide with NUMPY broadcast
-            auto output_shape = count_node->get_shape();
+            auto output_shape = count_node->get_output_shape(0);
             auto reshaped_output_shape = output_shape;
             for (const auto& axis : node->get_reduction_axes())
             {

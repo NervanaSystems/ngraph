@@ -70,7 +70,7 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_constant for " << a->get_name() << " and " << b->get_name();
 
-    if (a->get_shape() != b->get_shape() ||
+    if (a->get_output_shape(0) != b->get_output_shape(0) ||
         a->get_output_element_type(0) != b->get_output_element_type(0))
     {
         return false;
@@ -79,7 +79,7 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::Constant* ca = static_cast<op::Constant*>(a.get());
     const op::Constant* cb = static_cast<op::Constant*>(b.get());
 
-    size_t size = shape_size(a->get_shape()) * a->get_output_element_type(0).size();
+    size_t size = shape_size(a->get_output_shape(0)) * a->get_output_element_type(0).size();
 
     if (ca->get_all_data_elements_bitwise_identical() ||
         cb->get_all_data_elements_bitwise_identical())
@@ -164,7 +164,7 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
 
     return (a->input_value(0) == b->input_value(0)) &&
            (one_hot_a->get_one_hot_axis() == one_hot_b->get_one_hot_axis()) &&
-           (a->get_shape() == b->get_shape());
+           (a->get_output_shape(0) == b->get_output_shape(0));
 }
 
 // To enable CSE for a new op, add a mapping between the op and a cse handler function to the map

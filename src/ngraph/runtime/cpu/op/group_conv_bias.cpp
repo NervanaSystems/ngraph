@@ -87,7 +87,7 @@ Shape op::GroupConvolutionBias::get_weights_dimensions()
 
     Shape weights_shape_groups{get_input_shape(1)};
 
-    weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
+    weights_shape_groups.at(OC) = get_output_shape(0).at(OC_IN_OUTPUT) / get_groups();
     weights_shape_groups.at(IC) = get_input_shape(0).at(IC) / get_groups();
 
     // push_front the number of groups

@@ -146,7 +146,7 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(si
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::cpu::CPUTensor>(parameter->get_output_element_type(0),
-                                                parameter->get_shape());
+                                                parameter->get_output_shape(0));
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(size_t input_index,
@@ -154,14 +154,14 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_input_tensor(si
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::cpu::CPUTensor>(
-        parameter->get_output_element_type(0), parameter->get_shape(), memory_pointer);
+        parameter->get_output_element_type(0), parameter->get_output_shape(0), memory_pointer);
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::cpu::CPUTensor>(result->get_output_element_type(0),
-                                                result->get_shape());
+                                                result->get_output_shape(0));
 }
 
 shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(size_t output_index,
@@ -169,7 +169,7 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Executable::create_output_tensor(s
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::cpu::CPUTensor>(
-        result->get_output_element_type(0), result->get_shape(), memory_pointer);
+        result->get_output_element_type(0), result->get_output_shape(0), memory_pointer);
 }
 
 vector<shared_ptr<runtime::Tensor>>
@@ -193,7 +193,7 @@ vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_input_t
         shared_ptr<runtime::cpu::CPUTensor> tensor;
         auto t =
             make_shared<runtime::cpu::CPUTensor>(parameter->get_element_type(),
-                                                 parameter->get_shape(),
+                                                 parameter->get_output_shape(0),
                                                  mem_ptr_size > 0 ? memory_pointers[i] : nullptr);
         tensor = static_pointer_cast<runtime::cpu::CPUTensor>(t);
         tensors.push_back(tensor);
@@ -227,7 +227,7 @@ vector<shared_ptr<runtime::Tensor>> runtime::cpu::CPU_Executable::create_output_
         shared_ptr<runtime::cpu::CPUTensor> tensor;
         auto t =
             make_shared<runtime::cpu::CPUTensor>(result->get_output_element_type(0),
-                                                 result->get_shape(),
+                                                 result->get_output_shape(0),
                                                  mem_ptr_size > 0 ? memory_pointers[i] : nullptr);
         tensor = static_pointer_cast<runtime::cpu::CPUTensor>(t);
         tensors.push_back(tensor);

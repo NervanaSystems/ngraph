@@ -44,7 +44,7 @@ namespace ngraph
 
                 const auto& arg0_shape = mm->get_a_shape();
                 const auto& arg1_shape = mm->get_b_shape();
-                const auto& arg2_shape = node->get_shape();
+                const auto& arg2_shape = node->get_output_shape(0);
                 const auto element_type = mm->get_input_element_type(0);
                 NGRAPH_CHECK(element_type == element::f32 || element_type == element::f64,
                              "MatmulBias element type not supported");

@@ -29,7 +29,7 @@ TEST(type_prop, avg_pool_1d_deduce)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 91}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 91}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{1});
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
@@ -46,7 +46,7 @@ TEST(type_prop, avg_pool_1d_deduce_strided)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 46}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 46}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{10});
@@ -63,7 +63,7 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_uneven)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 2}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 2}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
@@ -80,7 +80,7 @@ TEST(type_prop, avg_pool_1d_deduce_strided_small_even)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 3}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 3}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), Strides{2});
     EXPECT_EQ(avg_pool->get_window_shape(), Shape{2});
@@ -96,7 +96,7 @@ TEST(type_prop, avg_pool_2d_deduce)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 91, 131}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 91, 131}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{1, 1}));
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
@@ -113,7 +113,7 @@ TEST(type_prop, avg_pool_2d_deduce_strided)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 46, 44}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 46, 44}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3}));
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{10, 20}));
@@ -130,7 +130,7 @@ TEST(type_prop, avg_pool_3d_deduce_strided_small)
     auto avg_pool = make_shared<op::AvgPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 3, 2, 3}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 3, 2, 3}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
@@ -150,7 +150,7 @@ TEST(type_prop, avg_pool_3d_deduce_strided_padded_small)
         param, window_shape, move_strides, padding_below, padding_above, true);
 
     EXPECT_EQ(avg_pool->get_output_element_type(0), element::f32);
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 9, 6, 5}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 9, 6, 5}));
 
     EXPECT_EQ(avg_pool->get_window_movement_strides(), (Strides{2, 3, 4}));
     EXPECT_EQ(avg_pool->get_window_shape(), (Shape{2, 3, 2}));
@@ -176,7 +176,7 @@ TEST(type_prop, avg_pool_ceil_mode)
                                              true);
 
     // ceil((10 + 9 - 2)/4) + 1
-    EXPECT_EQ(avg_pool->get_shape(), (Shape{64, 3, 6}));
+    EXPECT_EQ(avg_pool->get_output_shape(0), (Shape{64, 3, 6}));
 }
 
 TEST(type_prop, avg_pool_invalid_0d_input)

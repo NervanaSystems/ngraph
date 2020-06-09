@@ -101,8 +101,8 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
         {
             // we don't have to create constants every time but this is the easiest
             // and it's CSE's job to eliminate the same ones
-            auto constant =
-                make_shared<op::Constant>(n->get_output_element_type(0), n->get_shape(), cvals);
+            auto constant = make_shared<op::Constant>(
+                n->get_output_element_type(0), n->get_output_shape(0), cvals);
             replace_node(n, constant);
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << constant->get_name();
             replaced = true;

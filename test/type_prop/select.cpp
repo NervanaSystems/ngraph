@@ -28,7 +28,7 @@ TEST(type_prop, select_deduce)
     auto tv0_2_4_param_2 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto bc = make_shared<op::Select>(tv0_2_4_param_0, tv0_2_4_param_1, tv0_2_4_param_2);
     ASSERT_EQ(bc->get_output_element_type(0), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{2, 4}));
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 4}));
 }
 
 TEST(type_prop, select_shape_mismatch_a)
@@ -322,7 +322,7 @@ TEST_P(DeduceV1SelectTest, output_shape)
     auto pfalse = make_shared<op::Parameter>(tp.ets[2], tp.shapes[2]);
     auto select = make_shared<op::v1::Select>(cond, ptrue, pfalse, tp.auto_broadcast);
 
-    ASSERT_EQ(select->get_shape(), tp.shapes[3]);
+    ASSERT_EQ(select->get_output_shape(0), tp.shapes[3]);
     ASSERT_EQ(select->get_output_element_type(0), tp.ets[3]);
 }
 
@@ -368,7 +368,7 @@ TEST(type_prop, select_v1_partial_shape)
     auto c = make_shared<op::Parameter>(element::f32, Shape{2, 4});
 
     auto select = make_shared<op::v1::Select>(a, b, c, op::AutoBroadcastType::NONE);
-    ASSERT_EQ(select->get_shape(), (Shape{2, 4}));
+    ASSERT_EQ(select->get_output_shape(0), (Shape{2, 4}));
 }
 
 TEST(type_prop, select_v1_partial_shape_autob)

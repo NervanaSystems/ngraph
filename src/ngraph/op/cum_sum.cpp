@@ -86,5 +86,5 @@ void op::v0::CumSum::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
 
 shared_ptr<Node> op::v0::CumSum::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }

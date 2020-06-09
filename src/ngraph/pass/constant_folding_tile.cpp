@@ -25,10 +25,10 @@ template <typename T>
 static shared_ptr<op::Constant> fold_constant_tile(const shared_ptr<op::Constant>& data,
                                                    const shared_ptr<Node>& tile)
 {
-    runtime::AlignedBuffer buffer(shape_size(tile->get_shape()) * sizeof(T));
+    runtime::AlignedBuffer buffer(shape_size(tile->get_output_shape(0)) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
     // No need to call the reference kernel.
-    if (shape_size(tile->get_shape()) == 0)
+    if (shape_size(tile->get_output_shape(0)) == 0)
     {
         return make_shared<op::Constant>(
             tile->get_output_element_type(0), tile->get_output_shape(0), data_ptr);
@@ -36,8 +36,10 @@ static shared_ptr<op::Constant> fold_constant_tile(const shared_ptr<op::Constant
 
     if (auto tile_v0 = as_type_ptr<op::v0::Tile>(tile))
     {
-        runtime::reference::tile<T>(
-            data->get_data_ptr<T>(), data_ptr, data->get_shape(), tile_v0->get_shape());
+        runtime::reference::tile<T>(data->get_data_ptr<T>(),
+                                    data_ptr,
+                                    data->get_output_shape(0),
+                                    tile_v0->get_output_shape(0));
     }
     else
     {

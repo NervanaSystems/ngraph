@@ -30,5 +30,5 @@ TEST(type_prop, hardsigmoid)
     const auto beta = op::Constant::create<float>(P->get_output_element_type(0), Shape{}, {1.2f});
     const auto H = make_shared<op::HardSigmoid>(P, alpha, beta);
     ASSERT_EQ(H->get_output_element_type(0), element::f32);
-    ASSERT_EQ(H->get_shape(), data_shape);
+    ASSERT_EQ(H->get_output_shape(0), data_shape);
 }

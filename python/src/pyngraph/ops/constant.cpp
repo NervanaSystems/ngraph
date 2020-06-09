@@ -42,7 +42,7 @@ std::vector<ssize_t> _get_byte_strides(const ngraph::Shape& s)
 template <typename T>
 py::buffer_info _get_buffer_info(const ngraph::op::Constant& c)
 {
-    ngraph::Shape shape = c.get_shape();
+    ngraph::Shape shape = c.get_output_shape(0);
     return py::buffer_info(
         const_cast<void*>(c.get_data_ptr()),                       /* Pointer to buffer */
         static_cast<ssize_t>(c.get_output_element_type(0).size()), /* Size of one scalar */

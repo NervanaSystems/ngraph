@@ -66,7 +66,7 @@ TEST(concat_fusion, single_branch)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConcatElimination>();
@@ -112,7 +112,7 @@ TEST(concat_fusion, multiple_branches_1)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConcatElimination>();
@@ -154,7 +154,7 @@ TEST(concat_fusion, multiple_branches_2)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConcatElimination>();
@@ -203,8 +203,8 @@ TEST(concat_fusion, non_fusable_self_concat)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape_1 = baseline_f->get_parameters().at(0)->get_shape();
-    auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
+    auto baseline_input_shape_1 = baseline_f->get_parameters().at(0)->get_output_shape(0);
+    auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_output_shape(0);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConcatElimination>();
@@ -256,8 +256,8 @@ TEST(concat_fusion, self_concat_with_fan_out)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape_1 = baseline_f->get_parameters().at(0)->get_shape();
-    auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_shape();
+    auto baseline_input_shape_1 = baseline_f->get_parameters().at(0)->get_output_shape(0);
+    auto baseline_input_shape_2 = baseline_f->get_parameters().at(1)->get_output_shape(0);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConcatElimination>();

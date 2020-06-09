@@ -179,7 +179,7 @@ shared_ptr<Node> op::v0::MaxPool::clone_with_new_inputs(const OutputVector& new_
 constexpr NodeTypeInfo op::v0::MaxPoolBackprop::type_info;
 shared_ptr<Node> op::v0::MaxPool::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }
 
 op::v0::MaxPoolBackprop::MaxPoolBackprop(const Output<Node>& arg_forward,
@@ -393,7 +393,7 @@ shared_ptr<Node> op::v1::MaxPool::clone_with_new_inputs(const OutputVector& new_
 
 shared_ptr<Node> op::v1::MaxPool::get_default_value() const
 {
-    return op::Constant::create(get_output_element_type(0), get_shape(), {0});
+    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }
 
 constexpr NodeTypeInfo op::v1::MaxPoolBackprop::type_info;

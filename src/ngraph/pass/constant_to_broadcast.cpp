@@ -29,7 +29,7 @@ bool pass::ConstantToBroadcast::run_on_node(shared_ptr<Node> node)
     if (node->description() == "Constant")
     {
         auto constant = static_pointer_cast<op::Constant>(node);
-        size_t size = shape_size(constant->get_shape());
+        size_t size = shape_size(constant->get_output_shape(0));
         if (size > minimum_size_of_interest)
         {
             if (constant->get_all_data_elements_bitwise_identical())
