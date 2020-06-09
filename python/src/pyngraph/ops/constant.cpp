@@ -44,13 +44,13 @@ py::buffer_info _get_buffer_info(const ngraph::op::Constant& c)
 {
     ngraph::Shape shape = c.get_shape();
     return py::buffer_info(
-        const_cast<void*>(c.get_data_ptr()),               /* Pointer to buffer */
+        const_cast<void*>(c.get_data_ptr()),                       /* Pointer to buffer */
         static_cast<ssize_t>(c.get_output_element_type(0).size()), /* Size of one scalar */
-        py::format_descriptor<T>::format(),                /* Python struct-style format
-                                                              descriptor */
-        static_cast<ssize_t>(shape.size()),                /* Number of dimensions */
-        std::vector<ssize_t>{shape.begin(), shape.end()},  /* Buffer dimensions */
-        _get_byte_strides<T>(shape)                        /* Strides (in bytes) for each index */
+        py::format_descriptor<T>::format(),                        /* Python struct-style format
+                                                                      descriptor */
+        static_cast<ssize_t>(shape.size()),                        /* Number of dimensions */
+        std::vector<ssize_t>{shape.begin(), shape.end()},          /* Buffer dimensions */
+        _get_byte_strides<T>(shape) /* Strides (in bytes) for each index */
         );
 }
 
