@@ -544,13 +544,13 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t index = 0; index < lstm_nodes.size(); index++)
         {
             // now get the GOE0 which is the first output of lstm (ht)
-            for (auto& goes : lstm_nodes[index]->get_output_descriptor(0).get_inputs())
+            for (Input<Node> goes : lstm_nodes[index]->output(0).get_target_inputs())
             {
-                auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                auto goe_node = dynamic_cast<op::GetOutputElement*>(goes.get_node());
                 // first output node of lstm
                 if (goe_node->get_n() == 0)
                 {
-                    goe_0 = goes->get_node();
+                    goe_0 = goes.get_node()->shared_from_this();
                     for (auto goe0_user : goe_0->get_users())
                     {
                         if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
@@ -568,7 +568,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 if ((index == 0) && (goe_node->get_n() == 1))
                 {
                     // check if the last LSTM cell has any consumers
-                    auto n_time_step_lstm_ct_goe = goes->get_node();
+                    auto n_time_step_lstm_ct_goe = goes.get_node()->shared_from_this();
                     ngraph::replace_node(n_time_step_lstm_ct_goe, layer_rnn_ct);
                 }
             }
