@@ -1111,11 +1111,7 @@ bool is_signed(NGTensorType ngTensorType) {
   NGRAPH_CHECK(ngTensorType);
   auto ngIntType = ngTensorType.getElementType().dyn_cast<NGIntegerType>();
 
-  if (ngIntType && ngIntType.isUnsigned()) {
-    return false;
-  } else {
-    return true;
-  }
+  return !(ngIntType && ngIntType.isUnsigned());
 }
 
 // Relu
