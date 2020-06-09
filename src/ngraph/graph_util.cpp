@@ -709,7 +709,7 @@ bool ngraph::is_strided(const Strides& strides)
 
 bool ngraph::is_valid_rank(const std::shared_ptr<Node>& node, std::vector<size_t> valid_ranks)
 {
-    auto node_rank = node->get_shape().size();
+    auto node_rank = node->get_output_shape(0).size();
     for (auto rank : valid_ranks)
     {
         if (rank == node_rank)

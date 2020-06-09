@@ -108,7 +108,7 @@ public:
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
-                pattern_map[pattern]->get_shape() != const_node->get_shape())
+                pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
                 return false;
@@ -154,7 +154,7 @@ public:
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
             if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
-                pattern_map[pattern]->get_shape() != const_node->get_shape())
+                pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
                 return false;

@@ -187,7 +187,7 @@ TEST(zero_dim_tensor_elimination, zero_argmax)
     EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 1);
     pass_manager.run_passes(f);
     EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 0);
-    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+    EXPECT_EQ(f->get_results().at(0)->get_output_shape(0), (Shape{0, 3}));
 }
 
 TEST(zero_dim_tensor_elimination, zero_argmin)
@@ -201,7 +201,7 @@ TEST(zero_dim_tensor_elimination, zero_argmin)
     EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 1);
     pass_manager.run_passes(f);
     EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 0);
-    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+    EXPECT_EQ(f->get_results().at(0)->get_output_shape(0), (Shape{0, 3}));
 }
 
 TEST(zero_dim_tensor_elimination, pass_property)

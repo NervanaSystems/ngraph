@@ -691,7 +691,7 @@ protected:
                                                args[1]->get_data_ptr<const T>(),
                                                out[0]->get_data_ptr<T>(),
                                                element_count,
-                                               embed->get_shape());
+                                               embed->get_output_shape(0));
             }
             else if (type == element::f64)
             {
@@ -699,7 +699,7 @@ protected:
                                                 args[1]->get_data_ptr<const T>(),
                                                 out[0]->get_data_ptr<T>(),
                                                 element_count,
-                                                embed->get_shape());
+                                                embed->get_output_shape(0));
             }
             else if (type == element::i32)
             {
@@ -707,7 +707,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else if (type == element::i64)
             {
@@ -715,7 +715,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else
             {

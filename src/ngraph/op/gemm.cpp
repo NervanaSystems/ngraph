@@ -67,7 +67,7 @@ OutputVector op::Gemm::decompose_op() const
 
     // alpha
     std::shared_ptr<Node> alpha_node = std::make_shared<op::Constant>(
-        a_dot_b->get_element_type(), a_dot_b->get_shape(), std::vector<double>{m_alpha});
+        a_dot_b->get_element_type(), a_dot_b->get_output_shape(0), std::vector<double>{m_alpha});
     // alpha * A' * B'
     a_dot_b = std::make_shared<op::Multiply>(alpha_node, a_dot_b);
 
@@ -78,7 +78,7 @@ OutputVector op::Gemm::decompose_op() const
 
     // alpha * A' * B' + beta * C
     // The input tensor `C` should be "unidirectionally broadcastable" to the `a_dot_b` tensor.
-    auto broadcasted_c = builder::numpy_broadcast(C, a_dot_b->get_shape());
+    auto broadcasted_c = builder::numpy_broadcast(C, a_dot_b->get_output_shape(0));
     return {std::make_shared<op::Add>(a_dot_b, broadcasted_c)};
 }
 

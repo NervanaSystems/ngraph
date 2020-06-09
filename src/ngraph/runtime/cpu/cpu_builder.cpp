@@ -522,7 +522,7 @@ namespace ngraph
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
                 SELECT_KERNEL(kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide)
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
                 bool pythondiv = divop->is_pythondiv();
                 auto functor = [&, kernel, element_count, pythondiv](
                     const std::vector<void*>& inputs, std::vector<void*>& outputs) {
@@ -624,7 +624,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::And)
             {
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
                                                   std::vector<void*>& outputs) {
@@ -637,7 +637,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Or)
             {
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
                                                   std::vector<void*>& outputs) {
@@ -650,7 +650,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Xor)
             {
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
                                                   std::vector<void*>& outputs) {

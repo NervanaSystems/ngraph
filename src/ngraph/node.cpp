@@ -677,18 +677,6 @@ const PartialShape& Node::get_output_partial_shape(size_t i) const
     return m_outputs[i].get_partial_shape();
 }
 
-const Shape& Node::get_shape() const
-{
-    if (get_output_size() != 1)
-    {
-        stringstream es;
-        es << "get_shape() must be called on a node with exactly one output (" << description()
-           << ")";
-        throw ngraph_error(es);
-    }
-    return get_output_shape(0);
-}
-
 shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
 {
     NGRAPH_CHECK(
