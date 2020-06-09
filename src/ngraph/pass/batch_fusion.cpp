@@ -27,10 +27,10 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
+#include "ngraph/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
-#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -135,7 +135,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
 
         const size_t IC = 1;
         auto slice = pattern_map[slice_weights_label];
-        if (weights->get_shape().at(IC) != slice->get_shape().at(IC))
+        if (weights->get_output_shape(0).at(IC) != slice->get_output_shape(0).at(IC))
         {
             slices.push_back(slice);
         }

@@ -1059,7 +1059,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         iota(tensor_val.begin(), tensor_val.end(), 0.0f);
         args.push_back(tensor_val);
     }
@@ -1096,7 +1096,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         iota(tensor_val.begin(), tensor_val.end(), 0.0f);
         args.push_back(tensor_val);
     }

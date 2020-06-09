@@ -28,5 +28,5 @@ TEST(type_prop, prelu)
     Shape prelu_shape{2, 4};
     auto prelu = make_shared<op::PRelu>(param, slope);
     ASSERT_EQ(prelu->get_element_type(), element::f32);
-    ASSERT_EQ(prelu->get_shape(), prelu_shape);
+    ASSERT_EQ(prelu->get_output_shape(0), prelu_shape);
 }

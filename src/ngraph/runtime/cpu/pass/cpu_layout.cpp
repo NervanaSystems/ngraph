@@ -32,13 +32,13 @@
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -1840,7 +1840,7 @@ namespace ngraph
                             }
 
                             auto output_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-                                node->get_output_tensor_ptr()->get_tensor_layout());
+                                node->get_output_tensor_ptr(0)->get_tensor_layout());
                             // TODO (jbobba): For now non-MKLDNN layouts are always in row-major
                             // format. Enable this once we support non row-major strided formats
                             // output_tvl->set_strides(output_strides);

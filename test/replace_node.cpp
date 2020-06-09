@@ -70,7 +70,7 @@ TEST(replace_node, replace_nodes)
     auto mul = add * k;
     auto sub = mul - z;
 
-    auto f = make_shared<Function>(NodeVector{sub}, ParameterVector{x, y, z});
+    auto f = make_shared<Function>(OutputVector{sub}, ParameterVector{x, y, z});
 
     unordered_map<shared_ptr<op::Parameter>, shared_ptr<op::Parameter>> parameter_replacement_map;
     auto x_replacement = make_shared<op::Parameter>(element::f32, Shape{2});

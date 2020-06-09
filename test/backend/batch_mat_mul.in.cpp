@@ -14,23 +14,90 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
+#include <cinttypes>
+#include <cmath>
+#include <cstdlib>
+#include <iterator>
+#include <limits>
+#include <random>
+#include <string>
+
+// clang-format off
+#ifdef ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#define DEFAULT_FLOAT_TOLERANCE_BITS ${BACKEND_NAME}_FLOAT_TOLERANCE_BITS
+#endif
+// clang-format on
+
 #include "gtest/gtest.h"
+#include "ngraph/check.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/pass/batch_fusion.hpp"
-#include "ngraph/pass/manager.hpp"
 #include "util/all_close.hpp"
 #include "util/all_close_f.hpp"
-#include "util/autodiff/numeric_compare.hpp"
-#include "util/known_element_types.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
+#include "util/test_case.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/autodiff/numeric_compare.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose)
+{
+    Shape shape0 = Shape{2, 2, 3};
+    Shape shape1 = Shape{2, 3, 4};
+    auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
+    auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
+    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, false, false);
+    auto f0 = make_shared<Function>(OutputVector{bmmt}, ParameterVector{arg0, arg1});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape0);
+    copy_data(a, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4});
+    auto b = backend->create_tensor(element::f32, shape1);
+    copy_data(
+        b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 2, 4});
+
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{6, 6, 6, 6, 12, 12, 12, 12, 18, 18, 18, 18, 24, 24, 24, 24};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose_with_transpose)
+{
+    Shape shape0 = Shape{2, 3, 2};
+    Shape shape1 = Shape{2, 3, 4};
+    auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
+    auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
+    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, true, false);
+    auto f0 = make_shared<Function>(OutputVector{bmmt}, ParameterVector{arg0, arg1});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::f32, shape0);
+    copy_data(a, vector<float>{1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4});
+    auto b = backend->create_tensor(element::f32, shape1);
+    copy_data(
+        b, vector<float>{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3});
+    auto result0 = backend->create_tensor(element::f32, Shape{2, 2, 4});
+
+    auto handle = backend->compile(f0);
+    handle->call_with_validate({result0}, {a, b});
+    vector<float> expected{9, 9, 9, 9, 11, 11, 11, 11, 21, 21, 21, 21, 23, 23, 23, 23};
+    EXPECT_EQ(expected, read_vector<float>(result0));
+    auto res = read_vector<float>(result0);
+}
 
 // This test operates against the INTERPRETER backend as a reference, so it is
 // disabled if INTERPRETER is disabled.
@@ -75,7 +142,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     vector<vector<float>> dot_args;
     for (shared_ptr<op::Parameter> param : dot_params)
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         dot_rng.initialize(tensor_val);
         dot_args.push_back(tensor_val);
     }
@@ -84,7 +151,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     vector<vector<float>> batchmatmul_args;
     for (shared_ptr<op::Parameter> param : batchmatmul_params)
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         batchmatmul_rng.initialize(tensor_val);
         batchmatmul_args.push_back(tensor_val);
     }
@@ -112,7 +179,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_batch_mat_mul_transpose_forward)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -136,7 +203,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
-        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_shape())));
+        args.push_back(rng.initialize(backend->create_tensor<float>(param->get_output_shape(0))));
     }
 
     auto g = make_function_from_file(file_name);

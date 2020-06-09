@@ -49,7 +49,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_2constant)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
-    auto f = make_shared<Function>(NodeVector{A, A}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{A, A}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -26,7 +26,7 @@ TEST(type_prop, one_hot_deduce_scalar)
     auto param = make_shared<op::Parameter>(element::i32, Shape{});
     auto oh = make_shared<op::OneHot>(param, Shape{9}, 0);
     ASSERT_EQ(oh->get_element_type(), element::i32);
-    ASSERT_EQ(oh->get_shape(), (Shape{9}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{9}));
 }
 
 TEST(type_prop, one_hot_deduce_vector_0)
@@ -34,7 +34,7 @@ TEST(type_prop, one_hot_deduce_vector_0)
     auto param = make_shared<op::Parameter>(element::i32, Shape{8});
     auto oh = make_shared<op::OneHot>(param, Shape{9, 8}, 0);
     ASSERT_EQ(oh->get_element_type(), element::i32);
-    ASSERT_EQ(oh->get_shape(), (Shape{9, 8}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{9, 8}));
 }
 
 TEST(type_prop, one_hot_deduce_vector_1)
@@ -42,7 +42,7 @@ TEST(type_prop, one_hot_deduce_vector_1)
     auto param = make_shared<op::Parameter>(element::i32, Shape{8});
     auto oh = make_shared<op::OneHot>(param, Shape{8, 9}, 1);
     ASSERT_EQ(oh->get_element_type(), element::i32);
-    ASSERT_EQ(oh->get_shape(), (Shape{8, 9}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{8, 9}));
 }
 
 TEST(type_prop, one_hot_deduce_matrix_0)
@@ -50,7 +50,7 @@ TEST(type_prop, one_hot_deduce_matrix_0)
     auto param = make_shared<op::Parameter>(element::i32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{2, 12, 24}, 0);
     ASSERT_EQ(oh->get_element_type(), element::i32);
-    ASSERT_EQ(oh->get_shape(), (Shape{2, 12, 24}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{2, 12, 24}));
 }
 
 TEST(type_prop, one_hot_deduce_matrix_1)
@@ -58,7 +58,7 @@ TEST(type_prop, one_hot_deduce_matrix_1)
     auto param = make_shared<op::Parameter>(element::i32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{12, 2, 24}, 1);
     ASSERT_EQ(oh->get_element_type(), element::i32);
-    ASSERT_EQ(oh->get_shape(), (Shape{12, 2, 24}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{12, 2, 24}));
 }
 
 TEST(type_prop, one_hot_deduce_matrix_2)
@@ -66,7 +66,7 @@ TEST(type_prop, one_hot_deduce_matrix_2)
     auto param = make_shared<op::Parameter>(element::i32, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
     ASSERT_EQ(oh->get_element_type(), element::i32);
-    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{12, 24, 2}));
 }
 
 TEST(type_prop, one_hot_deduce_et_dynamic)
@@ -74,7 +74,7 @@ TEST(type_prop, one_hot_deduce_et_dynamic)
     auto param = make_shared<op::Parameter>(element::dynamic, Shape{12, 24});
     auto oh = make_shared<op::OneHot>(param, Shape{12, 24, 2}, 2);
     ASSERT_EQ(oh->get_element_type(), element::dynamic);
-    ASSERT_EQ(oh->get_shape(), (Shape{12, 24, 2}));
+    ASSERT_EQ(oh->get_output_shape(0), (Shape{12, 24, 2}));
 }
 
 TEST(type_prop, one_hot_deduce_floating_point)
@@ -382,7 +382,7 @@ TEST(type_prop, one_hot_v1_output_shape)
     int64_t axis = -1;
     auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
     ASSERT_EQ(ont_hot->get_element_type(), element::u32);
-    ASSERT_EQ(ont_hot->get_shape(), (Shape{3, 2}));
+    ASSERT_EQ(ont_hot->get_output_shape(0), (Shape{3, 2}));
 }
 
 TEST(type_prop, one_hot_v1_output_shape_2)
@@ -394,7 +394,7 @@ TEST(type_prop, one_hot_v1_output_shape_2)
     int64_t axis = 3;
     auto ont_hot = make_shared<op::v1::OneHot>(indices, depth, on_value, off_value, axis);
     ASSERT_EQ(ont_hot->get_element_type(), element::f32);
-    ASSERT_EQ(ont_hot->get_shape(), (Shape{1, 3, 2, 4, 3}));
+    ASSERT_EQ(ont_hot->get_output_shape(0), (Shape{1, 3, 2, 4, 3}));
 }
 
 TEST(type_prop, one_hot_v1_indices_elem_not_integral)

@@ -44,7 +44,7 @@ namespace ngraph
                 ///
                 /// \return     Vector of nodes containting resulting nGraph nodes.
                 ///
-                NodeVector global_lp_pool(const Node& node);
+                OutputVector global_lp_pool(const Node& node);
             }
         }
     }

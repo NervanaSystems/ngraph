@@ -28,7 +28,7 @@ template <typename TI, typename TO>
 shared_ptr<op::Constant> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
                                                        const element::Type& output_element_type)
 {
-    const Shape& out_shape = constant->get_shape();
+    const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(TO));
     TO* data_ptr = buffer.get_ptr<TO>();
 

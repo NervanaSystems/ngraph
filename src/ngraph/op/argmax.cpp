@@ -44,5 +44,5 @@ std::shared_ptr<Node> op::ArgMax::get_default_value() const
 {
     // Choice of value here is arbitrary, because validation should be rejecting cases where the
     // axis of reduction has size zero.
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("0", get_element_type(), get_output_shape(0));
 }

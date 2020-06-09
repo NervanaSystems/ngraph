@@ -327,7 +327,7 @@ NGRAPH_TEST(${BACKEND_NAME}, all_dynamic)
     auto all = make_shared<op::All>(x, axes_i64);
     ASSERT_TRUE(all->get_output_partial_shape(0).rank().is_dynamic());
 
-    auto f = make_shared<Function>(NodeVector{all}, ParameterVector{x, axes});
+    auto f = make_shared<Function>(OutputVector{all}, ParameterVector{x, axes});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 

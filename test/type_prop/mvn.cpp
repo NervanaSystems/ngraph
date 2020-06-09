@@ -26,7 +26,7 @@ TEST(type_prop, mvn)
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
     auto mvn_func = make_shared<op::MVN>(data);
     EXPECT_EQ(mvn_func->get_element_type(), element::f32);
-    EXPECT_EQ(mvn_func->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(mvn_func->get_output_shape(0), (Shape{1, 3, 6}));
 }
 
 TEST(type_prop, mvn_partial)

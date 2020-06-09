@@ -628,7 +628,7 @@ namespace
         {
             // In order to keep the original dimensions we need to reshape the Count node
             // before we use it in Divide with NUMPY broadcast
-            auto output_shape = count_node->get_shape();
+            auto output_shape = count_node->get_output_shape(0);
             auto reshaped_output_shape = output_shape;
             for (const auto& axis : node->get_reduction_axes())
             {
@@ -904,7 +904,7 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opset/opset1_tbl.hpp"
             NGRAPH_OP(AvgPoolBackprop, op::v1) NGRAPH_OP(ConvolutionBackpropFilters, op::v1)
                 NGRAPH_OP(GenerateMask, op::v1) NGRAPH_OP(MaxPoolBackprop, op::v1)
 #undef NGRAPH_OP

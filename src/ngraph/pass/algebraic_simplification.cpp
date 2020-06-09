@@ -38,8 +38,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/opsets/opset2.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset2.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/rt_info.hpp"
 #include "ngraph/util.hpp"
@@ -125,7 +125,7 @@ static bool simplify_concat(shared_ptr<Node> n)
             prev_lower_bounds.assign(cur_lower_bounds.begin(), cur_lower_bounds.end());
 
             // slice shapes need to match
-            if (slice->get_shape() != prev_slice_shape)
+            if (slice->get_output_shape(0) != prev_slice_shape)
             {
                 NGRAPH_DEBUG << slice << " doesn't match the shape of the previous slice";
                 return false;
@@ -136,7 +136,8 @@ static bool simplify_concat(shared_ptr<Node> n)
             branch_tip = pattern_value_map[ltip];
             prev_lower_bounds.assign(slice->get_lower_bounds().begin(),
                                      slice->get_lower_bounds().end());
-            prev_slice_shape.assign(slice->get_shape().begin(), slice->get_shape().end());
+            prev_slice_shape.assign(slice->get_output_shape(0).begin(),
+                                    slice->get_output_shape(0).end());
             NGRAPH_DEBUG << "setting branch_tip to " << branch_tip;
         }
 
@@ -173,15 +174,15 @@ static bool simplify_concat(shared_ptr<Node> n)
     auto concat = static_pointer_cast<op::v0::Concat>(n);
     auto concat_axis = concat->get_concatenation_axis();
 
-    auto slice_shape = branch_tip.get_node_shared_ptr()->get_users(true).at(0)->get_shape();
+    auto slice_shape = branch_tip.get_node_shared_ptr()->get_users(true).at(0)->get_output_shape(0);
     size_t slice_axis = numeric_limits<size_t>::max();
 
     auto btip_shape = branch_tip.get_shape();
 
     // slices should cover all elements
-    if (shape_size(btip_shape) != shape_size(n->get_shape()))
+    if (shape_size(btip_shape) != shape_size(n->get_output_shape(0)))
     {
-        NGRAPH_DEBUG << "The number of elements in Concat (" << shape_size(n->get_shape())
+        NGRAPH_DEBUG << "The number of elements in Concat (" << shape_size(n->get_output_shape(0))
                      << ")  and the total of elements in slices (" << shape_size(btip_shape)
                      << ") don't match";
         return false;
@@ -205,19 +206,19 @@ static bool simplify_concat(shared_ptr<Node> n)
         return false;
     }
     auto replacement = branch_tip;
-    if (btip_shape != n->get_shape())
+    if (btip_shape != n->get_output_shape(0))
     {
         auto default_order = get_default_order(btip_shape);
         if (concat_axis == slice_axis)
         {
             // logical reshape only
-            replacement =
-                make_shared<op::v0::Reshape>(branch_tip, default_order, concat->get_shape());
+            replacement = make_shared<op::v0::Reshape>(
+                branch_tip, default_order, concat->get_output_shape(0));
         }
         else
         {
             // axis reordering required
-            auto transposed_shape = n->get_shape();
+            auto transposed_shape = n->get_output_shape(0);
 
             if (btip_shape.size() >= transposed_shape.size())
             {
@@ -371,7 +372,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
             return false;
         }
         // if rank of data and gather output dont match, we will skip
-        if (data.get_shape().size() != node->get_shape().size())
+        if (data.get_shape().size() != node->get_output_shape(0).size())
         {
             return false;
         }
@@ -389,7 +390,7 @@ static bool simplify_gather(std::shared_ptr<Node> node)
         // gathering the whole input tensor, so we can optimize this
         // op has Nop
 
-        if (data.get_shape()[axis] == 1 && data.get_shape() == node->get_shape())
+        if (data.get_shape()[axis] == 1 && data.get_shape() == node->get_output_shape(0))
         {
             return replace_output_update_name(gather->output(0), gather->input_value(0));
         }
@@ -670,13 +671,14 @@ static bool simplify_reduction(shared_ptr<Node> n)
     }
 
     auto cnst = as_type_ptr<op::Constant>(broadcast->input_value(0).get_node_shared_ptr());
-    if (!cnst || cnst->get_shape().size() > 0 /*not a scalar*/)
+    if (!cnst || cnst->get_output_shape(0).size() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";
         return false;
     }
 
-    auto multiplier = reduction_shape_size(reduction->get_reduction_axes(), broadcast->get_shape());
+    auto multiplier =
+        reduction_shape_size(reduction->get_reduction_axes(), broadcast->get_output_shape(0));
     auto reduction_cnst = F(cnst, multiplier);
 
     // Unsupported type
@@ -686,15 +688,15 @@ static bool simplify_reduction(shared_ptr<Node> n)
         return false;
     }
 
-    if (reduction->get_shape().size() > 0)
+    if (reduction->get_output_shape(0).size() > 0)
     {
         AxisSet axes{};
-        for (size_t i = 0; i < reduction->get_shape().size(); i++)
+        for (size_t i = 0; i < reduction->get_output_shape(0).size(); i++)
         {
             axes.insert(i);
         }
         reduction_cnst =
-            make_shared<op::v0::Broadcast>(reduction_cnst, reduction->get_shape(), axes);
+            make_shared<op::v0::Broadcast>(reduction_cnst, reduction->get_output_shape(0), axes);
     }
 
     replace_node(n, reduction_cnst);

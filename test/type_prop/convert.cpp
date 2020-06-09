@@ -27,5 +27,5 @@ TEST(type_prop, convert_deduce)
     auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
     auto c = make_shared<op::Convert>(param, element::i32);
     ASSERT_EQ(c->get_element_type(), element::i32);
-    ASSERT_EQ(c->get_shape(), (Shape{2, 3, 4}));
+    ASSERT_EQ(c->get_output_shape(0), (Shape{2, 3, 4}));
 }

@@ -18,8 +18,8 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset1.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset1.hpp"
+#include "ngraph/opset/opset3.hpp"
 
 #include "util/visitor.hpp"
 
@@ -1357,7 +1357,7 @@ TEST(attributes, constant_op)
     g_k->validate_and_infer_types();
     ASSERT_TRUE(g_k);
     EXPECT_EQ(k->get_element_type(), g_k->get_element_type());
-    EXPECT_EQ(k->get_shape(), g_k->get_shape());
+    EXPECT_EQ(k->get_output_shape(0), g_k->get_output_shape(0));
     vector<float> g_data = g_k->get_vector<float>();
     EXPECT_EQ(data, g_data);
 }

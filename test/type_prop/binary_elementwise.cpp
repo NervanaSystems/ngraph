@@ -224,13 +224,13 @@ void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastS
     auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});
     auto param3 = make_shared<op::Parameter>(et, Shape{2, 3, 6});
     auto param4 = make_shared<op::Parameter>(et, Shape{6});
-    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_shape(), (Shape{1, 3, 6}));
-    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_shape(), (Shape{2, 3, 6}));
-    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_shape(), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param2, autob)->get_output_shape(0), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param1, param3, autob)->get_output_shape(0), (Shape{2, 3, 6}));
+    EXPECT_EQ(make_shared<T>(param4, param3, autob)->get_output_shape(0), (Shape{2, 3, 6}));
 
     auto pp1 = make_shared<op::Parameter>(et, PartialShape{1, Dimension::dynamic(), 6});
     auto pp2 = make_shared<op::Parameter>(et, PartialShape{3, 1});
-    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(make_shared<T>(pp1, pp2, autob)->get_output_shape(0), (Shape{1, 3, 6}));
 }
 
 TEST(type_prop, eltwise_auto_bcast)
@@ -259,7 +259,7 @@ TEST(type_prop, comparison_good)
     auto tv0_2_4_param_1 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     auto eq = make_shared<op::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
     EXPECT_EQ(eq->get_element_type(), element::boolean);
-    EXPECT_EQ(eq->get_shape(), (Shape{2, 4}));
+    EXPECT_EQ(eq->get_output_shape(0), (Shape{2, 4}));
 }
 
 TEST(type_prop, binary_arithmetic_bad_argument_element_types)
@@ -299,7 +299,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_rank_dynamic_right_static)
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
-    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(add->get_output_shape(0), (Shape{1, 2, 3}));
 }
 
 TEST(type_prop, binary_elementwise_arithmetic_left_static_right_rank_dynamic)
@@ -309,7 +309,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_static_right_rank_dynamic)
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
-    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(add->get_output_shape(0), (Shape{1, 2, 3}));
 }
 
 TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_right_rank_dynamic)
@@ -344,7 +344,7 @@ TEST(type_prop,
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
-    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(add->get_output_shape(0), (Shape{1, 2, 3}));
 }
 
 TEST(
@@ -369,7 +369,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_static_right_rank_static_dyna
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
-    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(add->get_output_shape(0), (Shape{1, 2, 3}));
 }
 
 TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_right_static)
@@ -379,7 +379,7 @@ TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_right_sta
     auto add = make_shared<op::Add>(a, b);
 
     ASSERT_TRUE(add->get_output_partial_shape(0).is_static());
-    ASSERT_EQ(add->get_shape(), (Shape{1, 2, 3}));
+    ASSERT_EQ(add->get_output_shape(0), (Shape{1, 2, 3}));
 }
 
 TEST(type_prop, binary_elementwise_arithmetic_left_rank_static_dynamic_inconsistent)

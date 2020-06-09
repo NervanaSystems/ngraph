@@ -36,12 +36,14 @@
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/atan2.hpp"
 #include "ngraph/op/avg_pool.hpp"
+#include "ngraph/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/broadcast_distributed.hpp"
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
@@ -63,15 +65,13 @@
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
+#include "ngraph/op/gelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -455,8 +455,8 @@ namespace ngraph
 
                 const Shape& arg0_shape = pad_with(cg->get_a_shape(), 1, 3); // A
                 const Shape& arg1_shape = pad_with(cg->get_b_shape(), 1, 3); // B
-                const Shape& arg2_shape = node->get_shape();                 // bias (C)
-                const Shape& padded_result_shape = pad_with(node->get_shape(), 1, 3);
+                const Shape& arg2_shape = node->get_output_shape(0);         // bias (C)
+                const Shape& padded_result_shape = pad_with(node->get_output_shape(0), 1, 3);
                 // Step 1: dot(A,B)
                 emitBatchMatMul<ngraph::op::MatmulBias>(node,
                                                         arg0_shape,
@@ -514,7 +514,7 @@ namespace ngraph
                         emitCblasSgemmBatch(writer,
                                             Shape{1, arg2_shape.at(0), 1}, // ones shape
                                             Shape{1, 1, arg2_shape.at(1)}, // C shape
-                                            node->get_shape(),
+                                            node->get_output_shape(0),
                                             false,
                                             false,
                                             "ones",            // ones
@@ -533,7 +533,7 @@ namespace ngraph
                         emitCblasSgemmBatch(writer,
                                             Shape{1, arg2_shape.at(0), 1}, // C shape
                                             Shape{1, 1, arg2_shape.at(1)}, // ones shape
-                                            node->get_shape(),
+                                            node->get_output_shape(0),
                                             false, // C transpose
                                             false, // C shape
                                             mat_c.get_name(),
@@ -564,7 +564,7 @@ namespace ngraph
                     emitCblasSgemmBatch(writer,
                                         Shape{1, arg2_shape.at(0), 1}, // bias_vector shape
                                         Shape{1, 1, arg2_shape.at(1)}, // ones shape
-                                        node->get_shape(),
+                                        node->get_output_shape(0),
                                         false, // bias_vector tranpose
                                         false, // ones tranpose
                                         "bias_vector",
@@ -4252,7 +4252,7 @@ namespace ngraph
                 writer << "reference::result<" << out[0].get_type() << ">(" << args[0].get_name()
                        << ",\n";
                 writer << "               " << out[0].get_name() << ",\n";
-                writer << "               " << shape_size(node->get_shape()) << ");\n";
+                writer << "               " << shape_size(node->get_output_shape(0)) << ");\n";
             }
 
             template <>

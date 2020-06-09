@@ -65,6 +65,7 @@
 #include "ngraph/op/ceiling.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/cos.hpp"
@@ -85,14 +86,10 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/experimental/random_uniform.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/gelu.hpp"
-#include "ngraph/op/fused/gemm.hpp"
-#include "ngraph/op/fused/lstm_cell.hpp"
-#include "ngraph/op/fused/matmul.hpp"
-#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
+#include "ngraph/op/gelu.hpp"
+#include "ngraph/op/gemm.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
@@ -101,6 +98,8 @@
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/lrn.hpp"
+#include "ngraph/op/lstm_cell.hpp"
+#include "ngraph/op/matmul.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/maximum.hpp"
@@ -135,6 +134,7 @@
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/softmax_crossentropy.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -679,7 +679,7 @@ using namespace ngraph;
             writer << "static " << type << "* " << tv->get_name() << " = ((" << type << "*)("
                    << c->get_data_ptr() << "));\n";
 
-            auto output_tensor = &node->get_output_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto tensor_set = get_tensor_set(output_tensor);
             // process all tensors in the set containing the output tensor of the constant
             for (auto& ele_t : tensor_set)
@@ -732,7 +732,7 @@ using namespace ngraph;
     set<string> output_names;
     for (shared_ptr<Node> op : m_function->get_results())
     {
-        shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
+        shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr(0);
         output_names.insert(tv->get_name());
     }
     set<descriptor::Tensor*> constants;
@@ -870,7 +870,7 @@ using namespace ngraph;
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
-        auto output_tensor = &op->get_output_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto tensor_set = get_tensor_set(output_tensor);
         // process all tensors in the set containing the output tensor of the result
         for (auto& ele_t : tensor_set)
@@ -1202,7 +1202,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto pass_map = pass_config.get_enables();
 
     auto dex = is_direct_execution();
-    auto is_supported = [dex](const Node& node) {
+    auto is_supported = [dex, this](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
         if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
@@ -1229,16 +1229,9 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
             // has peephole. LSTMCell with no peephole support is constant initialized to zero
             // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
-            // LSTMCell
-            // with peephole as well.
-            if (is_type<ngraph::op::Constant>(node.get_argument(6)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            // LSTMCell with peephole as well.
+            // Not supported on codegen
+            return m_direct_execution && is_type<ngraph::op::Constant>(node.get_argument(6));
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {
@@ -1543,7 +1536,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     {
         if (node->is_constant())
         {
-            auto output_tensor = &node->get_output_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             m_buffer_indices[output_tensor->get_name()] = buffer_index;
             constant_tensor_data.emplace_back(
                 buffer_index,
@@ -1592,7 +1585,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
     for (size_t i = 0; i < m_function->get_output_size(); ++i)
     {
         shared_ptr<Node> op = m_function->get_output_op(i);
-        auto output_tensor = &op->get_output_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto tensor_set = get_tensor_set(output_tensor);
 
         // process all tensors in the set containing the output tensor of the result

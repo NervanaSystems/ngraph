@@ -72,7 +72,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_uint8)
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto QMP = make_shared<ngraph::op::MaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -95,7 +95,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_int8)
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     auto QMP = make_shared<ngraph::op::MaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto f = make_shared<Function>(NodeVector{QMP}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, shape_a);
@@ -118,7 +118,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_uint8)
     auto A = make_shared<op::Parameter>(element::u8, shape_a);
     auto QAP = make_shared<ngraph::op::AvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto f = make_shared<Function>(NodeVector{QAP}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QAP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -141,7 +141,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_int8)
     auto A = make_shared<op::Parameter>(element::i8, shape_a);
     auto QAP = make_shared<ngraph::op::AvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto f = make_shared<Function>(NodeVector{QAP}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QAP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i8, shape_a);
@@ -517,7 +517,7 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -1344,7 +1344,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -1376,7 +1376,7 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
                                                                window_shape,
                                                                true);
 
-    auto f = make_shared<Function>(NodeVector{avg_pool_bprop},
+    auto f = make_shared<Function>(OutputVector{avg_pool_bprop},
                                    ParameterVector{delta, forward_arg_shape});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);

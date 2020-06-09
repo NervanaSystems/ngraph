@@ -29,12 +29,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector add(const Node& node);
+                OutputVector add(const Node& node);
             }
 
             namespace set_7
             {
-                NodeVector add(const Node& node);
+                OutputVector add(const Node& node);
             }
         }
     }
