@@ -1753,16 +1753,15 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
             {
                 continue;
             }
-            for (const descriptor::Input& input : node->get_input_descriptors())
+            for (Input<Node> input : node->inputs())
             {
-                const descriptor::Output& output = input.get_output();
-                shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = input.get_tensor_ptr();
                 temp << &m_buffer_indices[tv->get_name()];
                 node_inputs.push_back(tv->get_name() + "(" + temp.str() + ")");
                 temp.str("");
             }
 
-            for (const descriptor::Output& output : node->get_output_descriptors())
+            for (Output<Node> output : node->outputs())
             {
                 shared_ptr<descriptor::Tensor> tv = output.get_tensor_ptr();
                 temp << &m_buffer_indices[tv->get_name()];
