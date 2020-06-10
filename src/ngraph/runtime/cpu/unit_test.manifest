@@ -20,16 +20,6 @@ CPU.onnx_top_k_opset_10
 # ONNX GatherND with int32
 CPU.onnx_model_gatherND_int32
 
-# RNN pattern fails after removing GOE
-CPU.fuse_rnn_across_layer_2layer_3timestep
-CPU.fuse_bi_directional_rnn
-CPU.bi_rnn_interpreter_vs_cpu
-CPU.fuse_lstm_cells
-CPU.fuse_2_layer_rnn
-CPU.fuse_1_layer_rnn
-CPU.rnn_fusion_1rnn_layer_3lstm_cell
-CPU.rnn_fusion_2rnn_layer_3lstm_cell
-
 #ONNX Flatten with dynamic reshape
 CPU.onnx_dyn_shapes_flatten_axis
 CPU.onnx_dyn_shapes_flatten_neg_axis
