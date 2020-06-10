@@ -154,19 +154,6 @@ void Node::safe_delete(NodeVector& nodes, bool recurse)
     }
 }
 
-void Node::set_arguments(const NodeVector& arguments)
-{
-    OutputVector outputs;
-    for (auto arg : arguments)
-    {
-        for (auto& output : arg->outputs())
-        {
-            outputs.push_back(output);
-        }
-    }
-    set_arguments(outputs);
-}
-
 void Node::set_arguments(const OutputVector& arguments)
 {
     // Add this node as a user of each argument.
