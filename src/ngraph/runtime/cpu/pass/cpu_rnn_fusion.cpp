@@ -221,24 +221,14 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             throw ngraph_error("Lstm node doesnt have three outputs");
         }
 
-        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
-        auto ct_slice = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
-
-        auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
-        auto dst_layer = goe_nodes[0];
-        auto dst_iter = goe_nodes[1];
+        auto dst_layer = m.get_match_root()->output(0);
+        auto dst_iter = m.get_match_root()->output(1);
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
-        // find the user's for {ht} and replace them with lstm_goe_0
-        if (is_type<ngraph::op::GetOutputElement>(dst_iter))
-        {
-            ngraph::replace_node(dst_iter, ct_slice);
-        }
-        // find the user's for {ht} and replace them with lstm_goe_0
-        if (is_type<ngraph::op::GetOutputElement>(dst_layer))
-        {
-            ngraph::replace_node(dst_layer, lstm_ht_output);
-        }
+        // find the user's for {ht} and replace them with lstm output 2
+        dst_iter.replace(lstm_node->output(2));
+        // find the user's for {ht} and replace them with lstm output 1
+        dst_layer.replace(lstm_node->output(1));
         return true;
     };
 
