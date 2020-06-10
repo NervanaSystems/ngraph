@@ -23,13 +23,13 @@ func @simple_gather(%arg0: !ng.tensor<16x!ng.i64>, %arg1: !ng.tensor<512x32xf32>
 // CHECK-LABEL: func @simple_equal
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:      %[[C1:.*]] = constant 0 : i8 
-// CHECK-NEXT: 	    %[[C2:.*]] = constant 1 : i8 
-//      CHECK:	    %[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-//      CHECK:	    %[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	    %[[R1:.*]] = cmpf "oeq", %[[O2]], %[[O1]] : f32
-//      CHECK:      %[[R2:.*]] = select %[[R1]], %[[C2]], %[[C1]] : i8
-// CHECK-NEXT:      affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "oeq", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
+// CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_equal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
 %0 = "ng.equal"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
    "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
@@ -41,13 +41,13 @@ func @simple_equal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !n
 // CHECK-LABEL: func @simple_notequal
 //      CHECK:  affine.for %[[I:.*]] = 0 to 2
 // CHECK-NEXT:    affine.for %[[J:.*]] = 0 to 2
-// CHECK-NEXT:      %[[C1:.*]] = constant 0 : i8 
-// CHECK-NEXT: 	    %[[C2:.*]] = constant 1 : i8 
-//      CHECK:	    %[[O1:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-//      CHECK:	    %[[O2:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
-// CHECK-NEXT:	    %[[R1:.*]] = cmpf "one", %[[O2]], %[[O1]] : f32
-//      CHECK:      %[[R2:.*]] = select %[[R1]], %[[C2]], %[[C1]] : i8
-// CHECK-NEXT:      affine.store %[[R2]], %{{.*}}[%[[I]], %[[J]]]
+// CHECK-NEXT:      %[[LHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[RHS:.*]] = affine.load  %{{.*}}[%[[I]], %[[J]]] : memref<2x2xf32>
+// CHECK-NEXT:      %[[ONE:.*]] = constant 1 : i8 
+// CHECK-NEXT:      %[[ZERO:.*]] = constant 0 : i8 
+// CHECK-NEXT:      %[[CMP:.*]] = cmpf "one", %[[LHS]], %[[RHS]] : f32
+// CHECK-NEXT:      %[[RES:.*]] = select %[[CMP]], %[[ONE]], %[[ZERO]] : i8
+// CHECK-NEXT:      affine.store %[[RES]], %{{.*}}[%[[I]], %[[J]]]
 func @simple_notequal(%arg0: !ng.tensor<2x2xf32>, %arg1: !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>{
 %0 = "ng.not.equal"(%arg1, %arg0) : (!ng.tensor<2x2xf32>, !ng.tensor<2x2xf32>) -> !ng.tensor<2x2x!ng.u8>
    "ng.return"(%0) : (!ng.tensor<2x2x!ng.u8>) -> ()
@@ -503,4 +503,147 @@ func @convolution(%arg0: !ng.tensor<1x2x2x2xf32>, %arg1: !ng.tensor<2x2x1x1xf32>
 func @groupConv(%arg0: !ng.tensor<1x4x2x2xf32>, %arg1: !ng.tensor<2x2x1x1xf32>) -> !ng.tensor<1x2x2x2xf32> {
   %0 = "ng.groupConv"(%arg0, %arg1) {groups = 2 : i64, padAbove = [0, 0], padBelow = [0, 0], strides = [1, 1]} : (!ng.tensor<1x4x2x2xf32>, !ng.tensor<2x2x1x1xf32>) -> !ng.tensor<1x2x2x2xf32>
   "ng.return"(%0) : (!ng.tensor<1x2x2x2xf32>) -> ()
+}
+
+
+// -----
+
+// argmin
+// CHECK:      func @argmin(%[[INPUT:.*]]: memref<4x3xf32>, %[[OUTPUT:.*]]: memref<3xi32>) {
+// CHECK:        affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:     %[[ZERO:.*]] = index_cast %[[CONST_ZERO:.*]] : index to i32
+// CHECK-NEXT:     store %[[ZERO]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:   }
+// CHECK-NEXT:   affine.for %[[ROW:.*]] = 0 to 4 {
+// CHECK-NEXT:     affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:       %[[MIN:.*]] = load %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:       %[[MIN_INDEX:.*]] = index_cast %[[MIN]] : i32 to index
+// CHECK-NEXT:       %[[INPUT_MIN:.*]] = load %[[INPUT]][%[[MIN_INDEX]], %[[COL]]] : memref<4x3xf32>
+// CHECK-NEXT:       %[[INPUT_CURR:.*]] = affine.load %[[INPUT]][%[[ROW]], %[[COL]]] : memref<4x3xf32>
+// CHECK-NEXT:       %[[CMP:.*]] = cmpf "olt", %[[INPUT_CURR]], %[[INPUT_MIN]] : f32
+// CHECK-NEXT:       %[[NEW_MIN_INDEX:.*]] = select %[[CMP]], %[[ROW]], %[[MIN_INDEX]] : index
+// CHECK-NEXT:       %[[NEW_MIN:.*]] = index_cast %[[NEW_MIN_INDEX]] : index to i32
+// CHECK-NEXT:       store %[[NEW_MIN]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:     }
+// CHECK-NEXT:   }
+func @argmin(%arg0: !ng.tensor<4x3xf32>) -> !ng.tensor<3xsi32> {
+   %0 = "ng.argmin.red"(%arg0) {axes = [0]} : (!ng.tensor<4x3xf32>) -> !ng.tensor<3xsi32>
+   "ng.return"(%0) : (!ng.tensor<3xsi32>) -> ()
+}
+
+// argmin (signed int)
+// CHECK:      func @argmin_int(%[[INPUT:.*]]: memref<4x3xi32>, %[[OUTPUT:.*]]: memref<3xi32>) {
+// CHECK:        affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:     %[[ZERO:.*]] = index_cast %[[CONST_ZERO:.*]] : index to i32
+// CHECK-NEXT:     store %[[ZERO]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:   }
+// CHECK-NEXT:   affine.for %[[ROW:.*]] = 0 to 4 {
+// CHECK-NEXT:     affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:       %[[MIN:.*]] = load %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:       %[[MIN_INDEX:.*]] = index_cast %[[MIN]] : i32 to index
+// CHECK-NEXT:       %[[INPUT_MIN:.*]] = load %[[INPUT]][%[[MIN_INDEX]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[INPUT_CURR:.*]] = affine.load %[[INPUT]][%[[ROW]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[CMP:.*]] = cmpi "slt", %[[INPUT_CURR]], %[[INPUT_MIN]] : i32
+// CHECK-NEXT:       %[[NEW_MIN_INDEX:.*]] = select %[[CMP]], %[[ROW]], %[[MIN_INDEX]] : index
+// CHECK-NEXT:       %[[NEW_MIN:.*]] = index_cast %[[NEW_MIN_INDEX]] : index to i32
+// CHECK-NEXT:       store %[[NEW_MIN]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:     }
+// CHECK-NEXT:   }
+func @argmin_int(%arg0: !ng.tensor<4x3xsi32>) -> !ng.tensor<3xsi32> {
+   %0 = "ng.argmin.red"(%arg0) {axes = [0]} : (!ng.tensor<4x3xsi32>) -> !ng.tensor<3xsi32>
+   "ng.return"(%0) : (!ng.tensor<3xsi32>) -> ()
+}
+
+// argmin (unsigned int)
+// CHECK:      func @argmin_uint(%[[INPUT:.*]]: memref<4x3xi32>, %[[OUTPUT:.*]]: memref<3xi32>) {
+// CHECK:        affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:     %[[ZERO:.*]] = index_cast %[[CONST_ZERO:.*]] : index to i32
+// CHECK-NEXT:     store %[[ZERO]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:   }
+// CHECK-NEXT:   affine.for %[[ROW:.*]] = 0 to 4 {
+// CHECK-NEXT:     affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:       %[[MIN:.*]] = load %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:       %[[MIN_INDEX:.*]] = index_cast %[[MIN]] : i32 to index
+// CHECK-NEXT:       %[[INPUT_MIN:.*]] = load %[[INPUT]][%[[MIN_INDEX]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[INPUT_CURR:.*]] = affine.load %[[INPUT]][%[[ROW]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[CMP:.*]] = cmpi "ult", %[[INPUT_CURR]], %[[INPUT_MIN]] : i32
+// CHECK-NEXT:       %[[NEW_MIN_INDEX:.*]] = select %[[CMP]], %[[ROW]], %[[MIN_INDEX]] : index
+// CHECK-NEXT:       %[[NEW_MIN:.*]] = index_cast %[[NEW_MIN_INDEX]] : index to i32
+// CHECK-NEXT:       store %[[NEW_MIN]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:     }
+// CHECK-NEXT:   }
+func @argmin_uint(%arg0: !ng.tensor<4x3xui32>) -> !ng.tensor<3xsi32> {
+   %0 = "ng.argmin.red"(%arg0) {axes = [0]} : (!ng.tensor<4x3xui32>) -> !ng.tensor<3xsi32>
+   "ng.return"(%0) : (!ng.tensor<3xsi32>) -> ()
+}
+
+// -----
+
+// argmax
+// CHECK:      func @argmax(%[[INPUT:.*]]: memref<4x3xf32>, %[[OUTPUT:.*]]: memref<3xi32>) {
+// CHECK:        affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:     %[[ZERO:.*]] = index_cast %[[CONST_ZERO:.*]] : index to i32
+// CHECK-NEXT:     store %[[ZERO]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:   }
+// CHECK-NEXT:   affine.for %[[ROW:.*]] = 0 to 4 {
+// CHECK-NEXT:     affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:       %[[MAX:.*]] = load %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:       %[[MAX_INDEX:.*]] = index_cast %[[MAX]] : i32 to index
+// CHECK-NEXT:       %[[INPUT_CURR:.*]] = affine.load %[[INPUT]][%[[ROW]], %[[COL]]] : memref<4x3xf32>
+// CHECK-NEXT:       %[[INPUT_MAX:.*]] = load %[[INPUT]][%[[MAX_INDEX]], %[[COL]]] : memref<4x3xf32>
+// CHECK-NEXT:       %[[CMP:.*]] = cmpf "olt", %[[INPUT_MAX]], %[[INPUT_CURR]] : f32
+// CHECK-NEXT:       %[[NEW_MAX_INDEX:.*]] = select %[[CMP]], %[[ROW]], %[[MAX_INDEX]] : index
+// CHECK-NEXT:       %[[NEW_MAX:.*]] = index_cast %[[NEW_MAX_INDEX]] : index to i32
+// CHECK-NEXT:       store %[[NEW_MAX]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:     }
+// CHECK-NEXT:   }
+func @argmax(%arg0: !ng.tensor<4x3xf32>) -> !ng.tensor<3xsi32> {
+   %0 = "ng.argmax.red"(%arg0) {axes = [0]} : (!ng.tensor<4x3xf32>) -> !ng.tensor<3xsi32>
+   "ng.return"(%0) : (!ng.tensor<3xsi32>) -> ()
+}
+
+// argmax (signed int)
+// CHECK:      func @argmax_int(%[[INPUT:.*]]: memref<4x3xi32>, %[[OUTPUT:.*]]: memref<3xi32>) {
+// CHECK:        affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:     %[[ZERO:.*]] = index_cast %[[CONST_ZERO:.*]] : index to i32
+// CHECK-NEXT:     store %[[ZERO]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:   }
+// CHECK-NEXT:   affine.for %[[ROW:.*]] = 0 to 4 {
+// CHECK-NEXT:     affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:       %[[MAX:.*]] = load %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:       %[[MAX_INDEX:.*]] = index_cast %[[MAX]] : i32 to index
+// CHECK-NEXT:       %[[INPUT_CURR:.*]] = affine.load %[[INPUT]][%[[ROW]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[INPUT_MAX:.*]] = load %[[INPUT]][%[[MAX_INDEX]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[CMP:.*]] = cmpi "slt", %[[INPUT_MAX]], %[[INPUT_CURR]] : i32
+// CHECK-NEXT:       %[[NEW_MAX_INDEX:.*]] = select %[[CMP]], %[[ROW]], %[[MAX_INDEX]] : index
+// CHECK-NEXT:       %[[NEW_MAX:.*]] = index_cast %[[NEW_MAX_INDEX]] : index to i32
+// CHECK-NEXT:       store %[[NEW_MAX]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:     }
+// CHECK-NEXT:   }
+func @argmax_int(%arg0: !ng.tensor<4x3xsi32>) -> !ng.tensor<3xsi32> {
+   %0 = "ng.argmax.red"(%arg0) {axes = [0]} : (!ng.tensor<4x3xsi32>) -> !ng.tensor<3xsi32>
+   "ng.return"(%0) : (!ng.tensor<3xsi32>) -> ()
+}
+
+// argmax (unsigned int)
+// CHECK:      func @argmax_uint(%[[INPUT:.*]]: memref<4x3xi32>, %[[OUTPUT:.*]]: memref<3xi32>) {
+// CHECK:        affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:     %[[ZERO:.*]] = index_cast %[[CONST_ZERO:.*]] : index to i32
+// CHECK-NEXT:     store %[[ZERO]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:   }
+// CHECK-NEXT:   affine.for %[[ROW:.*]] = 0 to 4 {
+// CHECK-NEXT:     affine.for %[[COL:.*]] = 0 to 3 {
+// CHECK-NEXT:       %[[MAX:.*]] = load %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:       %[[MAX_INDEX:.*]] = index_cast %[[MAX]] : i32 to index
+// CHECK-NEXT:       %[[INPUT_CURR:.*]] = affine.load %[[INPUT]][%[[ROW]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[INPUT_MAX:.*]] = load %[[INPUT]][%[[MAX_INDEX]], %[[COL]]] : memref<4x3xi32>
+// CHECK-NEXT:       %[[CMP:.*]] = cmpi "ult", %[[INPUT_MAX]], %[[INPUT_CURR]] : i32
+// CHECK-NEXT:       %[[NEW_MAX_INDEX:.*]] = select %[[CMP]], %[[ROW]], %[[MAX_INDEX]] : index
+// CHECK-NEXT:       %[[NEW_MAX:.*]] = index_cast %[[NEW_MAX_INDEX]] : index to i32
+// CHECK-NEXT:       store %[[NEW_MAX]], %[[OUTPUT]][%[[COL]]] : memref<3xi32>
+// CHECK-NEXT:     }
+// CHECK-NEXT:   }
+func @argmax_uint(%arg0: !ng.tensor<4x3xui32>) -> !ng.tensor<3xsi32> {
+   %0 = "ng.argmax.red"(%arg0) {axes = [0]} : (!ng.tensor<4x3xui32>) -> !ng.tensor<3xsi32>
+   "ng.return"(%0) : (!ng.tensor<3xsi32>) -> ()
 }
