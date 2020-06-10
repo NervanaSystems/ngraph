@@ -66,8 +66,10 @@ OutputVector op::Gemm::decompose_op() const
     std::shared_ptr<Node> a_dot_b = std::make_shared<op::Dot>(A, B);
 
     // alpha
-    std::shared_ptr<Node> alpha_node = std::make_shared<op::Constant>(
-        a_dot_b->get_element_type(), a_dot_b->get_output_shape(0), std::vector<double>{m_alpha});
+    std::shared_ptr<Node> alpha_node =
+        std::make_shared<op::Constant>(a_dot_b->get_output_element_type(0),
+                                       a_dot_b->get_output_shape(0),
+                                       std::vector<double>{m_alpha});
     // alpha * A' * B'
     a_dot_b = std::make_shared<op::Multiply>(alpha_node, a_dot_b);
 

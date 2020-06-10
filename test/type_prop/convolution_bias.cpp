@@ -28,7 +28,7 @@ TEST(type_prop, conv_bias_2d_deduce)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{128});
     auto conv = make_shared<op::ConvolutionBias>(param0, param1, param2);
-    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91, 131}));
 
     EXPECT_EQ(conv->get_window_movement_strides(), (Strides{1, 1}));
@@ -55,7 +55,7 @@ TEST(type_prop, conv_bias_add_2d_deduce)
                                                     CoordinateDiff{0, 0},
                                                     CoordinateDiff{0, 0},
                                                     Strides{1, 1});
-    EXPECT_EQ(conv->get_element_type(), element::f32);
+    EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91, 131}));
 }
 

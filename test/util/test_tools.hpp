@@ -244,7 +244,7 @@ std::vector<std::shared_ptr<ngraph::runtime::Tensor>>
 
     for (size_t i = 0; i < results.size(); i++)
     {
-        result_tensors.at(i) = backend->create_tensor(results.at(i)->get_element_type(),
+        result_tensors.at(i) = backend->create_tensor(results.at(i)->get_output_element_type(0),
                                                       results.at(i)->get_output_shape(0));
     }
 

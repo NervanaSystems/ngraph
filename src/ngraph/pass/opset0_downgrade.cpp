@@ -340,7 +340,7 @@ namespace
                      *node);
 
         NGRAPH_CHECK(
-            axis_node->get_element_type() == element::i64,
+            axis_node->get_output_element_type(0) == element::i64,
             "Unable to convert Gather:v1 to Gather:v0 with axis other type than int64. Node: ",
             *node);
 
@@ -361,7 +361,7 @@ namespace
         auto seed = node->get_seed();
         auto use_seed = node->get_use_seed();
         auto probability = node->get_probability();
-        auto et = node->get_element_type();
+        auto et = node->get_output_element_type(0);
 
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input_value(0), mask_shape, et, seed, probability, use_seed);

@@ -33,7 +33,7 @@ void pass::ConvertFP32ToFP16::convert_constants_precision()
             return false;
         }
 
-        if (constant->get_element_type() == element::f32)
+        if (constant->get_output_element_type(0) == element::f32)
         {
             auto data = constant->get_vector<float>();
             std::vector<ngraph::float16> new_data(data.size());

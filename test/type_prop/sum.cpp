@@ -26,19 +26,19 @@ TEST(type_prop, sum_deduce)
     auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
 
     auto r0 = make_shared<op::Sum>(param_0, AxisSet{0});
-    ASSERT_EQ(r0->get_element_type(), element::f32);
+    ASSERT_EQ(r0->get_output_element_type(0), element::f32);
     ASSERT_EQ(r0->get_output_shape(0), (Shape{4}));
 
     auto r1 = make_shared<op::Sum>(param_0, AxisSet{1});
-    ASSERT_EQ(r1->get_element_type(), element::f32);
+    ASSERT_EQ(r1->get_output_element_type(0), element::f32);
     ASSERT_EQ(r1->get_output_shape(0), (Shape{2}));
 
     auto r01 = make_shared<op::Sum>(param_0, AxisSet{0, 1});
-    ASSERT_EQ(r01->get_element_type(), element::f32);
+    ASSERT_EQ(r01->get_output_element_type(0), element::f32);
     ASSERT_EQ(r01->get_output_shape(0), (Shape{}));
 
     auto r_none = make_shared<op::Sum>(param_0, AxisSet{});
-    ASSERT_EQ(r_none->get_element_type(), element::f32);
+    ASSERT_EQ(r_none->get_output_element_type(0), element::f32);
     ASSERT_EQ(r_none->get_output_shape(0), (Shape{2, 4}));
 }
 

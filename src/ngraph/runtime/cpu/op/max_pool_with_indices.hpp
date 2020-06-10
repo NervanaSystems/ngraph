@@ -51,7 +51,7 @@ namespace ngraph
             virtual std::shared_ptr<Node> get_default_value() const override
             {
                 return ngraph::make_constant_from_string(
-                    "0", get_element_type(), get_output_shape(0));
+                    "0", get_output_element_type(0), get_output_shape(0));
             }
 
         protected:

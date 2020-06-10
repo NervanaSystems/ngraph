@@ -31,7 +31,7 @@ TEST(type_prop, space_to_batch_output_shape_2D)
     auto space_to_batch =
         make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
-    ASSERT_EQ(space_to_batch->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0), (Shape{2 * 5, (128 + 2) / 5}));
 }
 
@@ -47,7 +47,7 @@ TEST(type_prop, space_to_batch_output_shape_4D)
     auto space_to_batch =
         make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
-    ASSERT_EQ(space_to_batch->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0),
               (Shape{2 * 10 * 5, (64 + 3 + 3) / 10, (64 + 1) / 5, 3}));
 }
@@ -65,7 +65,7 @@ TEST(type_prop, space_to_batch_output_shape_5D)
     auto space_to_batch =
         make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
-    ASSERT_EQ(space_to_batch->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0),
               (Shape{2 * 6 * 5 * 16, (32 + 2 + 2) / 6, (64 + 1) / 5, 128, 256 / 16}));
 }
@@ -82,12 +82,12 @@ TEST(type_prop, space_to_batch_and_batch_to_space)
     auto space_to_batch =
         make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
-    ASSERT_EQ(space_to_batch->get_element_type(), element::f32);
+    ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0),
               (Shape{2 * 12 * 100 * 2, (100 + 3 + 5) / 12, (1024 + 38 + 38) / 100, (3 + 1) / 2}));
 
     auto batch_to_space =
         make_shared<op::v1::BatchToSpace>(space_to_batch, block_shape, pads_begin, pads_end);
-    ASSERT_EQ(batch_to_space->get_element_type(), element::f32);
+    ASSERT_EQ(batch_to_space->get_output_element_type(0), element::f32);
     ASSERT_EQ(batch_to_space->get_output_shape(0), (Shape{2, 100, 1024, 3}));
 }

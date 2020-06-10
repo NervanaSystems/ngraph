@@ -75,7 +75,7 @@ public:
         else
         {
             auto dn = *(deps.begin());
-            set_output_type(0, dn->get_element_type(), dn->get_output_shape(0));
+            set_output_type(0, dn->get_output_element_type(0), dn->get_output_shape(0));
         }
     }
 };

@@ -244,7 +244,7 @@ OutputVector op::v3::GRUCell::decompose_op() const
         h_t = m_activation_g(clip(add(Xt_W_zrh[2], add(rt_Ht_Rh, biases_zrh[2]))));
     }
 
-    auto one = op::Constant::create(z_t->get_element_type(),
+    auto one = op::Constant::create(z_t->get_output_element_type(0),
                                     z_t->get_output_shape(0),
                                     vector<float>(shape_size(z_t->get_output_shape(0)), 1.f));
     // Ht = (1 - zt) (.) ht + zt (.) Ht-1

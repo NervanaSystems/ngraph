@@ -26,7 +26,7 @@ TEST(type_prop, replace_slice_deduce_vector)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2}, Coordinate{5});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6}));
 }
 
@@ -35,7 +35,7 @@ TEST(type_prop, replace_slice_deduce_matrix)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{3, 6});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{2, 1}, Coordinate{5, 7});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
@@ -45,7 +45,7 @@ TEST(type_prop, replace_slice_deduce_matrix_strided)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{1, 3});
     auto rsl = make_shared<op::ReplaceSlice>(
         param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Strides{3, 2});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
@@ -55,7 +55,7 @@ TEST(type_prop, replace_slice_deduce_matrix_strided_uneven)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{1, 2});
     auto rsl = make_shared<op::ReplaceSlice>(
         param0, param1, Coordinate{2, 1}, Coordinate{5, 7}, Strides{3, 4});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
@@ -64,7 +64,7 @@ TEST(type_prop, replace_slice_deduce_vector_edge)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0}, Coordinate{6});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6}));
 }
 
@@ -73,7 +73,7 @@ TEST(type_prop, replace_slice_deduce_matrix_edge)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 8});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
@@ -82,7 +82,7 @@ TEST(type_prop, replace_slice_deduce_matrix_zero_cols)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 0});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{6, 0});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
@@ -91,7 +91,7 @@ TEST(type_prop, replace_slice_deduce_matrix_zero_zero)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8});
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{0, 0});
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, Coordinate{0, 0}, Coordinate{0, 0});
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{6, 8}));
 }
 
@@ -403,7 +403,7 @@ TEST(type_prop, replace_slice_partial_input_rank_dynamic_replacement_rank_dynami
     auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
         Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
 }
@@ -484,7 +484,7 @@ TEST(type_prop, replace_slice_partial_input_rank_static_dynamic_replacement_rank
     auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
         Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
 }
@@ -502,7 +502,7 @@ TEST(type_prop,
     auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_TRUE(
         rsl->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 10, Dimension::dynamic()}));
 }
@@ -589,7 +589,7 @@ TEST(type_prop, replace_slice_partial_input_rank_dynamic_replacement_rank_static
     auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
         Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
 }
@@ -607,7 +607,7 @@ TEST(type_prop,
     auto param1 = make_shared<op::Parameter>(element::f32, replacement_shape);
     auto rsl = make_shared<op::ReplaceSlice>(param0, param1, lower_bounds, upper_bounds, strides);
 
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_TRUE(rsl->get_output_partial_shape(0).same_scheme(PartialShape{
         Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic(), Dimension::dynamic()}));
 }

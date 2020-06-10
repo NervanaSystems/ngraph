@@ -28,7 +28,7 @@ TEST(type_prop, max_pool_1d_deduce)
     Shape window_shape{10};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 91}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{1});
@@ -43,7 +43,7 @@ TEST(type_prop, max_pool_1d_deduce_strided)
     auto move_strides = Strides{2};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 46}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
@@ -58,7 +58,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
     auto move_strides = Strides{2};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 2}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
@@ -73,7 +73,7 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_even)
     auto move_strides = Strides{2};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 3}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), Strides{2});
@@ -87,7 +87,7 @@ TEST(type_prop, max_pool_2d_deduce)
     Shape window_shape{10, 20};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 91, 131}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{1, 1}));
@@ -102,7 +102,7 @@ TEST(type_prop, max_pool_2d_deduce_strided)
     auto move_strides = Strides{2, 3};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 46, 44}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3}));
@@ -117,7 +117,7 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
     auto move_strides = Strides{2, 3, 4};
     auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
 
-    EXPECT_EQ(max_pool->get_element_type(), element::f32);
+    EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 3, 2, 3}));
 
     EXPECT_EQ(max_pool->get_window_movement_strides(), (Strides{2, 3, 4}));

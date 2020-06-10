@@ -147,7 +147,7 @@ namespace ngraph
                 NGRAPH_CHECK(m_output_index < results.size(),
                              "All function results already have expected outputs.");
 
-                auto function_output_type = results.at(m_output_index)->get_element_type();
+                auto function_output_type = results.at(m_output_index)->get_output_element_type(0);
 
                 const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
                 NGRAPH_CHECK(

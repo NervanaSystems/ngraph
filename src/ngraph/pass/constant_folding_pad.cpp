@@ -54,7 +54,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
                                    pad->get_pad_mode());
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_pad()
@@ -91,7 +91,7 @@ void pass::ConstantFolding::construct_constant_pad()
         }
 
         std::shared_ptr<Node> replacement;
-        auto type = constant_match->get_element_type();
+        auto type = constant_match->get_output_element_type(0);
         switch (type)
         {
         case element::Type_t::undefined:

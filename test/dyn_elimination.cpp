@@ -115,7 +115,7 @@ TEST(dyn_elimination, slice)
                                         shrink_mask,
                                         ellipsis_mask);
 
-    ASSERT_EQ(sl->get_element_type(), element::f32);
+    ASSERT_EQ(sl->get_output_element_type(0), element::f32);
     ASSERT_EQ(sl->get_output_shape(0), (Shape{2, 4, 2, 2, 1, 2, 2}));
 
     auto f = make_shared<Function>(sl, ParameterVector{input});
@@ -129,7 +129,7 @@ TEST(dyn_elimination, slice)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Reverse>(f), 1);
 
-    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
+    ASSERT_EQ(f->get_results().at(0)->get_output_element_type(0), element::f32);
     ASSERT_EQ(f->get_results().at(0)->get_output_shape(0), (Shape{2, 4, 2, 2, 1, 2, 2}));
 }
 
@@ -165,7 +165,7 @@ TEST(dyn_elimination, replace_slice)
                                                 shrink_mask,
                                                 ellipsis_mask);
 
-    ASSERT_EQ(rsl->get_element_type(), element::f32);
+    ASSERT_EQ(rsl->get_output_element_type(0), element::f32);
     ASSERT_EQ(rsl->get_output_shape(0), (Shape{2, 4, 6, 8, 2, 2, 2}));
 
     auto f = make_shared<Function>(rsl, ParameterVector{input, replacement});
@@ -179,7 +179,7 @@ TEST(dyn_elimination, replace_slice)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Reverse>(f), 1);
 
-    ASSERT_EQ(f->get_results().at(0)->get_element_type(), element::f32);
+    ASSERT_EQ(f->get_results().at(0)->get_output_element_type(0), element::f32);
     ASSERT_EQ(f->get_results().at(0)->get_output_shape(0), (Shape{2, 4, 6, 8, 2, 2, 2}));
 }
 
@@ -191,7 +191,7 @@ TEST(dyn_elimination, range)
 
     auto range = make_shared<op::Range>(constant_start, constant_stop, constant_step);
 
-    ASSERT_EQ(range->get_element_type(), element::i64);
+    ASSERT_EQ(range->get_output_element_type(0), element::i64);
     ASSERT_EQ(range->get_output_shape(0), (Shape{3}));
 
     auto f = make_shared<Function>(range, ParameterVector{});
@@ -206,7 +206,7 @@ TEST(dyn_elimination, range)
     auto replacement = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
 
     ASSERT_NE(replacement, nullptr);
-    ASSERT_EQ(replacement->get_element_type(), element::i64);
+    ASSERT_EQ(replacement->get_output_element_type(0), element::i64);
     ASSERT_EQ(replacement->get_output_shape(0), (Shape{3}));
 
     auto vals = replacement->get_vector<int64_t>();
@@ -222,7 +222,7 @@ TEST(dyn_elimination, range_f64)
 
     auto range = make_shared<op::Range>(constant_start, constant_stop, constant_step);
 
-    ASSERT_EQ(range->get_element_type(), element::f64);
+    ASSERT_EQ(range->get_output_element_type(0), element::f64);
     ASSERT_EQ(range->get_output_shape(0), (Shape{10}));
 
     auto f = make_shared<Function>(range, ParameterVector{});
@@ -237,7 +237,7 @@ TEST(dyn_elimination, range_f64)
     auto replacement = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
 
     ASSERT_NE(replacement, nullptr);
-    ASSERT_EQ(replacement->get_element_type(), element::f64);
+    ASSERT_EQ(replacement->get_output_element_type(0), element::f64);
     ASSERT_EQ(replacement->get_output_shape(0), (Shape{10}));
 
     auto vals = replacement->get_vector<double>();

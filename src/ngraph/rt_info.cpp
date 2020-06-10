@@ -18,34 +18,37 @@
 #include "ngraph/node.hpp"
 #include "ngraph/variant.hpp"
 
-ngraph::Node::RTMap mergeRuntimeInfo(const ngraph::NodeVector& nodes)
+namespace
 {
-    ngraph::Node::RTMap mergedInfo;
-    for (auto& node : nodes)
+    ngraph::Node::RTMap merge_runtime_info(const ngraph::NodeVector& nodes)
     {
-        for (auto& item : node->get_rt_info())
+        ngraph::Node::RTMap merged_info;
+        for (auto& node : nodes)
         {
-            mergedInfo[item.first] = item.second;
+            for (auto& item : node->get_rt_info())
+            {
+                merged_info[item.first] = item.second;
+            }
         }
-    }
 
-    ngraph::Node::RTMap newInfo;
-    for (auto& item : mergedInfo)
-    {
-        if (auto merge_attr = item.second->merge(nodes))
+        ngraph::Node::RTMap new_info;
+        for (auto& item : merged_info)
         {
-            newInfo[item.second->get_type_info().name] = merge_attr;
+            if (auto merge_attr = item.second->merge(nodes))
+            {
+                new_info[item.second->get_type_info().name] = merge_attr;
+            }
         }
-    }
 
-    return newInfo;
+        return new_info;
+    }
 }
 
 void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from, std::shared_ptr<ngraph::Node> to)
 {
-    auto& rtInfoFrom = from->get_rt_info();
-    auto& rtInfoTo = to->get_rt_info();
-    rtInfoTo = rtInfoFrom;
+    auto& rt_info_from = from->get_rt_info();
+    auto& rt_info_to = to->get_rt_info();
+    rt_info_to = rt_info_from;
 }
 
 void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeVector to)
@@ -58,16 +61,16 @@ void ngraph::copy_runtime_info(std::shared_ptr<ngraph::Node> from, ngraph::NodeV
 
 void ngraph::copy_runtime_info(const ngraph::NodeVector& from, std::shared_ptr<ngraph::Node> to)
 {
-    auto& rtInfoTo = to->get_rt_info();
-    rtInfoTo = mergeRuntimeInfo(from);
+    auto& rt_info_to = to->get_rt_info();
+    rt_info_to = merge_runtime_info(from);
 }
 
 void ngraph::copy_runtime_info(const ngraph::NodeVector& from, ngraph::NodeVector to)
 {
-    auto mergedInfo = mergeRuntimeInfo(from);
+    auto merged_info = merge_runtime_info(from);
     for (auto& node : to)
     {
-        auto& rtInfoTo = node->get_rt_info();
-        rtInfoTo = mergedInfo;
+        auto& rt_info_to = node->get_rt_info();
+        rt_info_to = merged_info;
     }
 }

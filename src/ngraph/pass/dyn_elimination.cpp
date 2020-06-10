@@ -168,9 +168,9 @@ void pass::DynElimination::construct_dyn_slice()
         auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
 
         if (data_arg->get_output_partial_shape(0).is_dynamic() ||
-            begins_arg->get_element_type() != element::i64 ||
-            ends_arg->get_element_type() != element::i64 ||
-            strides_arg->get_element_type() != element::i64)
+            begins_arg->get_output_element_type(0) != element::i64 ||
+            ends_arg->get_output_element_type(0) != element::i64 ||
+            strides_arg->get_output_element_type(0) != element::i64)
         {
             return false;
         }
@@ -248,9 +248,9 @@ void pass::DynElimination::construct_dyn_replace_slice()
 
         if (data_arg->get_output_partial_shape(0).is_dynamic() ||
             replacement_arg->get_output_partial_shape(0).is_dynamic() ||
-            begins_arg->get_element_type() != element::i64 ||
-            ends_arg->get_element_type() != element::i64 ||
-            strides_arg->get_element_type() != element::i64)
+            begins_arg->get_output_element_type(0) != element::i64 ||
+            ends_arg->get_output_element_type(0) != element::i64 ||
+            strides_arg->get_output_element_type(0) != element::i64)
         {
             return false;
         }

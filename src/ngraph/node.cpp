@@ -634,15 +634,6 @@ const element::Type& Node::get_output_element_type(size_t i) const
     return m_outputs[i].get_element_type();
 }
 
-const element::Type& Node::get_element_type() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error("get_element_type() must be called on a node with exactly one output.");
-    }
-    return get_output_element_type(0);
-}
-
 const Shape& Node::get_output_shape(size_t i) const
 {
     NGRAPH_CHECK(
