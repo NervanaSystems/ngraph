@@ -1496,12 +1496,12 @@ TEST(cpu_fusion, max_pool_with_indices)
     auto maxpool_goe_output =
         as_type_ptr<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(maxpool_goe_output);
-    ASSERT_EQ(maxpool_goe_output->get_n(), 0);
+    EXPECT_EQ(maxpool_goe_output->get_n(), 0);
     auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
     auto maxpool_goe_indices =
         as_type_ptr<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
     ASSERT_TRUE(maxpool_goe_indices);
-    ASSERT_EQ(maxpool_goe_indices->get_n(), 1);
+    EXPECT_EQ(maxpool_goe_indices->get_n(), 1);
 }
 
 TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)

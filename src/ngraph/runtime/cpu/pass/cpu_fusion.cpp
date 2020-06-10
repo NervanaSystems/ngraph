@@ -349,10 +349,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         {
             return false;
         }
-        auto normalized_output =
-            std::shared_ptr<Node>(new ngraph::op::GetOutputElement(bn_node, 0));
 
-        ngraph::replace_node(m.get_match_root(), normalized_output);
+        m.get_match_value().replace(bn_node->output(0));
         return true;
     };
 

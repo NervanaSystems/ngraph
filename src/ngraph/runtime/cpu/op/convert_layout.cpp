@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
