@@ -1083,8 +1083,8 @@ TEST(algebraic_simplification, gather_shapeof)
         pass_manager.register_pass<pass::AlgebraicSimplification>();
         pass_manager.run_passes(optimized_f);
 
-        ASSERT_EQ(baseline_f->get_results().at(0)->get_element_type(),
-                  optimized_f->get_results().at(0)->get_element_type());
+        ASSERT_EQ(baseline_f->get_results().at(0)->get_output_element_type(0),
+                  optimized_f->get_results().at(0)->get_output_element_type(0));
 
         auto ps = baseline_f->get_results()[0]->get_output_partial_shape(0);
         auto ps_r = optimized_f->get_results()[0]->get_output_partial_shape(0);

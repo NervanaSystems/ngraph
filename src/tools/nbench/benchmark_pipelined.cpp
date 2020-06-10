@@ -142,7 +142,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     {
         for (shared_ptr<Node> result : f->get_results())
         {
-            auto tensor_data = make_shared<runtime::HostTensor>(result->get_element_type(),
+            auto tensor_data = make_shared<runtime::HostTensor>(result->get_output_element_type(0),
                                                                 result->get_output_shape(0));
             tensor_collections[i].result_data.push_back(tensor_data);
         }

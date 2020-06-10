@@ -107,7 +107,8 @@ public:
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
+            if (pattern_map[pattern]->get_output_element_type(0) !=
+                    const_node->get_output_element_type(0) ||
                 pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
@@ -153,7 +154,8 @@ public:
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
+            if (pattern_map[pattern]->get_output_element_type(0) !=
+                    const_node->get_output_element_type(0) ||
                 pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";

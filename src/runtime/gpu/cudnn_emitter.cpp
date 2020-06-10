@@ -501,17 +501,15 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto input_shape = args[0].get_shape();
-    auto filter_shape = args[1].get_shape();
-    auto output_shape = out[0].get_shape();
+    auto input_shape = node->get_input_shape(0);
+    auto filter_shape = node->get_input_shape(1);
+    auto output_shape = node->get_output_shape(0);
     Strides window_dilation_strides = node->get_window_dilation_strides();
     Strides window_movement_strides = node->get_window_movement_strides();
     Strides data_dilation_strides = node->get_data_dilation_strides();
     CoordinateDiff padding_below_diff = node->get_padding_below();
     CoordinateDiff padding_above_diff = node->get_padding_above();
-    auto dtype = out[0].get_element_type().c_type_string();
+    auto dtype = node->get_output_element_type(0).c_type_string();
 
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
@@ -558,15 +556,15 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
             input_shape, padding_below, padding_above, padding_interior);
-        auto temp_size = shape_size(input_shape_padded) * args[0].get_element_type().size();
+        auto temp_size = shape_size(input_shape_padded) * node->get_input_element_type(0).size();
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
         idx_workspace = allocator.reserve_workspace(temp_size, true);
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
-        std::vector<std::string> dtypes = {args[0].get_element_type().c_type_string(),
-                                           out[0].get_element_type().c_type_string()};
+        std::vector<std::string> dtypes = {node->get_input_element_type(0).c_type_string(),
+                                           node->get_output_element_type(0).c_type_string()};
         pad_index = cuda_emitter->build_pad(
             dtypes, input_shape, input_shape_padded, padding_below, padding_interior);
 
@@ -610,18 +608,16 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto input_shape = args[0].get_shape();
-    auto filter_shape = args[1].get_shape();
-    auto output_shape = out[0].get_shape();
+    auto input_shape = node->get_input_shape(0);
+    auto filter_shape = node->get_input_shape(1);
+    auto output_shape = node->get_output_shape(0);
     Strides window_dilation_strides = node->get_window_dilation_strides_forward();
     Strides window_movement_strides = node->get_window_movement_strides_forward();
     Strides data_dilation_strides = node->get_data_dilation_strides_forward();
     CoordinateDiff padding_below_diff = node->get_padding_below_forward();
     CoordinateDiff padding_above_diff = node->get_padding_above_forward();
-    auto input_type = args[0].get_element_type().c_type_string();
-    auto output_type = out[0].get_element_type().c_type_string();
+    auto input_type = node->get_input_element_type(0).c_type_string();
+    auto output_type = node->get_output_element_type(0).c_type_string();
 
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
@@ -680,7 +676,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     {
         output_shape_padded =
             get_padded_shape(output_shape, padding_below, padding_above, padding_interior);
-        auto temp_size = shape_size(output_shape_padded) * args[0].get_element_type().size();
+        auto temp_size = shape_size(output_shape_padded) * node->get_input_element_type(0).size();
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
@@ -705,8 +701,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     }
 
     size_t conv_index = build_convolution_backward_data(output_type,
-                                                        args[0].get_shape(),
-                                                        args[1].get_shape(),
+                                                        node->get_input_shape(0),
+                                                        node->get_input_shape(1),
                                                         output_shape_padded,
                                                         window_movement_strides,
                                                         window_dilation_strides,
@@ -739,18 +735,16 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto input_shape_0 = args[0].get_shape();
-    auto input_shape_1 = args[1].get_shape();
-    auto filter_shape = out[0].get_shape();
+    auto input_shape_0 = node->get_input_shape(0);
+    auto input_shape_1 = node->get_input_shape(1);
+    auto filter_shape = node->get_output_shape(0);
     Strides window_dilation_strides = node->get_window_dilation_strides_forward();
     Strides window_movement_strides = node->get_window_movement_strides_forward();
     Strides data_dilation_strides = node->get_data_dilation_strides_forward();
     CoordinateDiff padding_below_diff = node->get_padding_below_forward();
     CoordinateDiff padding_above_diff = node->get_padding_above_forward();
-    auto input_type = args[0].get_element_type().c_type_string();
-    auto output_type = out[0].get_element_type().c_type_string();
+    auto input_type = node->get_input_element_type(0).c_type_string();
+    auto output_type = node->get_output_element_type(0).c_type_string();
 
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
@@ -797,7 +791,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     {
         input_shape_padded = runtime::gpu::get_padded_shape(
             input_shape_0, padding_below, padding_above, padding_interior);
-        auto temp_size = shape_size(input_shape_padded) * args[0].get_element_type().size();
+        auto temp_size = shape_size(input_shape_padded) * node->get_input_element_type(0).size();
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
 
         // reserve zero initialized workspace
@@ -848,14 +842,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto& input_shape = args[0].get_shape();
-    auto& result_shape = out[0].get_shape();
+    auto& input_shape = node->get_input_shape(0);
+    auto& result_shape = node->get_output_shape(0);
     auto padding_below = node->get_padding_below();
     auto padding_above = node->get_padding_above();
-    auto input_type = args[0].get_element_type().c_type_string();
-    auto output_type = out[0].get_element_type().c_type_string();
+    auto input_type = node->get_input_element_type(0).c_type_string();
+    auto output_type = node->get_output_element_type(0).c_type_string();
 
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
@@ -891,8 +883,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-        idx_workspace = allocator.reserve_argspace(temp.data(),
-                                                   padded_size * args[0].get_element_type().size());
+        idx_workspace = allocator.reserve_argspace(
+            temp.data(), padded_size * node->get_input_element_type(0).size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
         std::vector<std::string> dtypes = {input_type, output_type};
@@ -909,7 +901,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
     /// end asymmetric padding detection
 
     size_t max_pool_index = build_pooling(CUDNN_POOLING_MAX,
-                                          out[0].get_element_type(),
+                                          node->get_output_element_type(0),
                                           CUDNNEmitter::Prop::Forward,
                                           input_shape_padded,
                                           result_shape,
@@ -941,14 +933,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto& input_shape = args[0].get_shape();
-    auto& output_shape = out[0].get_shape();
+    auto& input_shape = node->get_input_shape(0);
+    auto& output_shape = node->get_output_shape(0);
     auto input_size = shape_size(input_shape);
     auto output_size = shape_size(output_shape);
-    auto output_element_size = out[0].get_element_type().size();
-    auto output_type = out[0].get_element_type();
+    auto output_element_size = node->get_output_element_type(0).size();
+    auto output_type = node->get_output_element_type(0);
 
     std::stringstream ss;
     ss << "max_" << output_type.c_type_string() << "_i" << join(input_shape, "_") << "_ra"
@@ -987,7 +977,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
     }
     else
     {
-        std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
+        std::vector<element::Type> dtypes{node->get_input_element_type(0),
+                                          node->get_output_element_type(0)};
         auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
         auto max_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MAX,
                                                              dtypes,
@@ -1004,14 +995,12 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
 
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto& input_shape = args[0].get_shape();
-    auto& output_shape = out[0].get_shape();
+    auto& input_shape = node->get_input_shape(0);
+    auto& output_shape = node->get_output_shape(0);
     auto input_size = shape_size(input_shape);
     auto output_size = shape_size(output_shape);
-    auto output_element_size = out[0].get_element_type().size();
-    auto output_type = out[0].get_element_type();
+    auto output_element_size = node->get_output_element_type(0).size();
+    auto output_type = node->get_output_element_type(0);
 
     std::stringstream ss;
     ss << "min_" << output_type.c_type_string() << "_i" << join(input_shape, "_") << "_ra"
@@ -1050,7 +1039,8 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
     }
     else
     {
-        std::vector<element::Type> dtypes{args[0].get_element_type(), out[0].get_element_type()};
+        std::vector<element::Type> dtypes{node->get_input_element_type(0),
+                                          node->get_output_element_type(0)};
         auto& cudnn_emitter = m_primitive_emitter->get_cudnn_emitter();
         auto min_index = cudnn_emitter->build_reduce_forward(CUDNN_REDUCE_TENSOR_MIN,
                                                              dtypes,
@@ -1068,12 +1058,10 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
 #if CUDNN_VERSION >= 7200
 size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto dtype = out[0].get_element_type().c_type_string();
+    auto dtype = node->get_output_element_type(0).c_type_string();
 
     std::stringstream ss;
-    ss << "rnn_psz" << shape_size(args[2].get_shape());
+    ss << "rnn_psz" << shape_size(node->get_input_shape(2));
     std::string hash = ss.str();
     // check if the requested kernel is already an inserted primitive
     size_t primitive_index = m_primitive_emitter->lookup(hash);
@@ -1246,7 +1234,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
                                                            dimensions.data()));
                 (kind == 0 ? weight_offsets : bias_offsets)
                     .emplace_back(reinterpret_cast<int64_t>(offset),
-                                  shape_size(dimensions) * args[0].get_element_type().size());
+                                  shape_size(dimensions) * node->get_input_element_type(0).size());
             }
         }
     }

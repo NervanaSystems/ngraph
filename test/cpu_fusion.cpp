@@ -1576,8 +1576,8 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
     {
         // Get the output
         // Create the Adjoint
-        auto C =
-            std::make_shared<ngraph::op::Parameter>(Y->get_element_type(), Y->get_output_shape(0));
+        auto C = std::make_shared<ngraph::op::Parameter>(Y->get_output_element_type(0),
+                                                         Y->get_output_shape(0));
         outputs.push_back(Y);
         adjoints.push_back(C);
     }

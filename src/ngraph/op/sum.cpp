@@ -56,7 +56,7 @@ void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
 shared_ptr<Node> op::v0::Sum::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_output_shape(0));
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }
 
 namespace

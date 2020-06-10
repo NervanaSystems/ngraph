@@ -129,12 +129,12 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
 
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
-    for (auto& o : m_max_pool->get_output_descriptors())
+    for (Output<Node> o : m_max_pool->outputs())
     {
-        std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
-        for (auto i : copy)
+        std::set<Input<Node>> copy = o.get_target_inputs();
+        for (Input<Node> i : copy)
         {
-            i->replace_output(max_pool_with_indices_output->get_output_descriptor(0));
+            i.replace_source_output(max_pool_with_indices_output->output(0));
         }
     }
 

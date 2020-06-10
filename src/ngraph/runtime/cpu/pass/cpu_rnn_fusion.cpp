@@ -271,7 +271,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -377,7 +377,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         auto pattern_map = m.get_pattern_value_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_root()->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -621,9 +621,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         CHECK_RANK(rnn_weights_iter, 2);
         CHECK_RANK(rnn_bias, 1);
 
-        if (rnn_src_layer->get_element_type() != element::f32 ||
-            rnn_src_iter->get_element_type() != element::f32 ||
-            rnn_src_iter_c->get_element_type() != element::f32)
+        if (rnn_src_layer->get_output_element_type(0) != element::f32 ||
+            rnn_src_iter->get_output_element_type(0) != element::f32 ||
+            rnn_src_iter_c->get_output_element_type(0) != element::f32)
         {
             NGRAPH_DEBUG << "input tensor type and input recurrent state tensor are not float32";
             return false;
@@ -693,7 +693,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             auto goe_1 = goe_nodes[1];
             if (goe_1)
             {
-                for (auto goe1_user : goe_1->get_users())
+                for (std::shared_ptr<Node> goe1_user : goe_1->get_users())
                 {
                     // do not include LSTM in the same layer
                     if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) ==
@@ -703,8 +703,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         {
                             if (goe1_user->get_argument(i) == goe_1)
                             {
-                                goe1_user->get_input_descriptor(i).replace_output(
-                                    ht_slice_per_timestep[index]->get_output_descriptor(0));
+                                goe1_user->input(i).replace_source_output(
+                                    ht_slice_per_timestep[index]->output(0));
                             }
                         }
                         NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()

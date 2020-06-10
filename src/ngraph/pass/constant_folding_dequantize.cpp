@@ -39,7 +39,7 @@ shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> const
                                                 scale->get_output_shape(0),
                                                 dequant->get_axes());
 
-    return make_shared<op::Constant>(dequant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(dequant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dequantize()
@@ -67,9 +67,9 @@ void pass::ConstantFolding::construct_constant_dequantize()
             as_type_ptr<op::Constant>(dequant_match->input_value(2).get_node_shared_ptr());
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dequantize_op));
-        auto type = constant_match->get_element_type();
+        auto type = constant_match->get_output_element_type(0);
 
-        if (dequant_match->get_element_type() != element::f32)
+        if (dequant_match->get_output_element_type(0) != element::f32)
         {
             return false;
         }

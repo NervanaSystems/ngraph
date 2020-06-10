@@ -1186,7 +1186,7 @@ namespace ngraph
             {
                 (void)external_function;
                 writer.block_begin();
-                bool integral_type = !node->get_element_type().is_real();
+                bool integral_type = !node->get_output_element_type(0).is_real();
                 if (integral_type)
                 {
                     // Check for divide by zero for integer types only
@@ -1354,7 +1354,8 @@ namespace ngraph
                 }
                 else
                 {
-                    writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
+                    writer << "reference::lrn<" << lrn->get_output_element_type(0).c_type_string()
+                           << ">(";
                     writer << "            " << args[0].get_name() << ",\n";
                     writer << "            {" << join(lrn->get_reduction_axes()) << "},\n";
                     writer << "            " << out[0].get_name() << ",\n";
@@ -1769,8 +1770,9 @@ namespace ngraph
                 writer.block_begin();
                 const ngraph::op::EmbeddingLookup* embed =
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
-                auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
-                auto type_name = embed->get_element_type().c_type_string();
+                auto index_type_name =
+                    embed->get_argument(0)->get_output_element_type(0).c_type_string();
+                auto type_name = embed->get_output_element_type(0).c_type_string();
                 auto element_count = shape_size(embed->get_input_shape(0));
 
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
@@ -4361,13 +4363,12 @@ namespace ngraph
 
             // GOEE doesn't see GOEs in subgraphs that are hidden inside CompiledKernels
             // we have to manually propagate the source output
-            static const ngraph::descriptor::Output*
-                get_goe_input_output(ngraph::descriptor::Output* output)
+            static Output<Node> get_goe_input_output(const Output<Node>& output)
             {
                 auto it = output;
-                while (auto goe = as_type_ptr<ngraph::op::GetOutputElement>(it->get_node()))
+                while (auto goe = as_type<ngraph::op::GetOutputElement>(it.get_node()))
                 {
-                    it = &goe->get_input_descriptor(0).get_output();
+                    it = goe->input(0).get_source_output();
                 }
                 return it;
             }
@@ -4376,8 +4377,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::CompiledKernel)
             {
                 (void)external_function;
-                std::unordered_map<const ngraph::descriptor::Output*, std::string>
-                    loop_symbol_table;
+                std::map<Output<Node>, std::string> loop_symbol_table;
                 // pre-fill symbol table with inputs
 
                 const ngraph::op::CompiledKernel* ck =
@@ -4389,7 +4389,7 @@ namespace ngraph
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(&ck->get_input_descriptor(i).get_output(), sname);
+                    auto entry = std::make_pair(ck->input(i).get_source_output(), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4400,8 +4400,7 @@ namespace ngraph
                     std::string sname = std::string(out[i].get_name()) + "[i]";
                     auto output = outputs[i];
                     auto output_node = output.get_node();
-                    auto entry = std::make_pair(
-                        &output_node->get_output_descriptor(output.get_index()), sname);
+                    auto entry = std::make_pair(output_node->output(output.get_index()), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4414,7 +4413,7 @@ namespace ngraph
                 for (size_t i = 0; i < node_list.size(); i++)
                 {
                     auto op_node = node_list[i];
-                    auto op = &op_node->get_output_descriptor(0);
+                    Output<Node> op = op_node->output(0);
                     std::string tmp;
                     if (loop_symbol_table.count(op) == 0)
                     {
@@ -4424,7 +4423,7 @@ namespace ngraph
                         auto entry = std::make_pair(op, tmp);
                         loop_symbol_table.insert(entry);
                         // declare a new tmp
-                        writer << op->get_element_type().c_type_string() << " ";
+                        writer << op.get_element_type().c_type_string() << " ";
                     }
                     else
                     {
@@ -4434,17 +4433,17 @@ namespace ngraph
 
                     // prepare arguments
                     std::vector<std::string> sargs;
-                    for (auto& input : op_node->get_input_descriptors())
+                    for (Input<Node> input : op_node->inputs())
                     {
                         // args are expected to be in a map already
                         sargs.push_back(
-                            loop_symbol_table.at(get_goe_input_output(&input.get_output())));
+                            loop_symbol_table.at(get_goe_input_output(input.get_source_output())));
                     }
 
                     if (as_type_ptr<ngraph::op::Relu>(op_node))
                     {
                         auto casted_zero = std::string("static_cast<") +
-                                           op->get_element_type().c_type_string() +
+                                           op.get_element_type().c_type_string() +
                                            std::string(">(0)");
                         sargs.push_back(casted_zero);
                     }

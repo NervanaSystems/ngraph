@@ -45,39 +45,48 @@ shared_ptr<Node> op::v0::Min::clone_with_new_inputs(const OutputVector& new_args
 
 shared_ptr<Node> op::v0::Min::get_default_value() const
 {
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean:
-        return make_constant_from_string("1", get_element_type(), get_output_shape(0));
+        return make_constant_from_string("1", get_output_element_type(0), get_output_shape(0));
     case element::Type_t::bf16:
     case element::Type_t::f16:
     case element::Type_t::f32:
     case element::Type_t::f64:
-        return make_constant_from_string("INFINITY", get_element_type(), get_output_shape(0));
+        return make_constant_from_string(
+            "INFINITY", get_output_element_type(0), get_output_shape(0));
     case element::Type_t::i8:
-        return make_constant_from_string(
-            to_string(numeric_limits<int8_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<int8_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::i16:
-        return make_constant_from_string(
-            to_string(numeric_limits<int16_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<int16_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::i32:
-        return make_constant_from_string(
-            to_string(numeric_limits<int32_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<int32_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::i64:
-        return make_constant_from_string(
-            to_string(numeric_limits<int64_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<int64_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u8:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint8_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<uint8_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u16:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint16_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<uint16_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u32:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint32_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<uint32_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u64:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint64_t>::max()), get_element_type(), get_output_shape(0));
+        return make_constant_from_string(to_string(numeric_limits<uint64_t>::max()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::dynamic:

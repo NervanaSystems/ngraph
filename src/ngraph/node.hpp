@@ -315,21 +315,6 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_input_descriptors()
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_input_descriptors() const
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        std::deque<descriptor::Output>& get_output_descriptors()
-            NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_output_descriptors() const
-            NGRAPH_DEPRECATED("use outputs() instead");
-
         /// Get control dependencies registered on the node
         const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
@@ -362,12 +347,6 @@ namespace ngraph
 
         /// Returns the element type for output i
         const element::Type& get_output_element_type(size_t i) const;
-
-        /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
-        // the calling code, or updates to the calling code if it is making an invalid assumption
-        // of only one output.
-        const element::Type& get_element_type() const;
 
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
@@ -552,12 +531,10 @@ namespace ngraph
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
+    private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
-        const descriptor::Input& get_input_descriptor(size_t position) const;
-        const descriptor::Output& get_output_descriptor(size_t position) const;
 
-    private:
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;

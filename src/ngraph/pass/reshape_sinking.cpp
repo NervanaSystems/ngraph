@@ -405,7 +405,7 @@ static void sink_slice(shared_ptr<op::Slice> n,
     auto def_order = ngraph::get_permutation_to_default_order(order);
     auto input_shape = ngraph::apply_permutation(arg_reshape->get_output_shape(0), def_order);
     auto dummy_correct_shape =
-        make_shared<pattern::op::Label>(arg_reshape->get_element_type(), input_shape);
+        make_shared<pattern::op::Label>(arg_reshape->get_output_element_type(0), input_shape);
 
     auto new_lower = ngraph::apply_permutation(n->get_lower_bounds(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_upper_bounds(), def_order);
@@ -432,7 +432,7 @@ static void sink_pad(shared_ptr<op::Pad> n,
     auto def_order = ngraph::get_permutation_to_default_order(order);
     auto input_shape = ngraph::apply_permutation(arg_reshape->get_output_shape(0), def_order);
     auto dummy_correct_shape =
-        make_shared<pattern::op::Label>(arg_reshape->get_element_type(), input_shape);
+        make_shared<pattern::op::Label>(arg_reshape->get_output_element_type(0), input_shape);
 
     auto new_lower = ngraph::apply_permutation(n->get_padding_below(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_padding_above(), def_order);
@@ -455,7 +455,7 @@ static void sink_quantize(shared_ptr<op::Quantize> quantize,
     auto new_quantize = make_shared<op::Quantize>(quantize->get_argument(0),
                                                   quantize->get_argument(1),
                                                   quantize->get_argument(2),
-                                                  quantize->get_element_type(),
+                                                  quantize->get_output_element_type(0),
                                                   axes_in_def_order,
                                                   quantize->get_round_mode());
 
@@ -475,7 +475,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
     auto def_order = ngraph::get_permutation_to_default_order(order);
     auto input_shape = ngraph::apply_permutation(arg_reshape->get_output_shape(0), def_order);
     auto dummy_correct_shape =
-        make_shared<pattern::op::Label>(arg_reshape->get_element_type(), input_shape);
+        make_shared<pattern::op::Label>(arg_reshape->get_output_element_type(0), input_shape);
 
     NodeVector new_args;
     new_args.push_back(dummy_correct_shape);
@@ -493,7 +493,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
 
         auto iinput_shape = ngraph::apply_permutation(iarg_reshape->get_output_shape(0), def_order);
         auto idummy_correct_shape =
-            make_shared<pattern::op::Label>(iarg_reshape->get_element_type(), iinput_shape);
+            make_shared<pattern::op::Label>(iarg_reshape->get_output_element_type(0), iinput_shape);
         new_args.push_back(idummy_correct_shape);
     }
 
@@ -522,7 +522,7 @@ static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
     auto new_dequantize = make_shared<op::Dequantize>(dequantize->get_argument(0),
                                                       dequantize->get_argument(1),
                                                       dequantize->get_argument(2),
-                                                      dequantize->get_element_type(),
+                                                      dequantize->get_output_element_type(0),
                                                       axes_in_def_order);
 
     ngraph::replace_node(dequantize, new_dequantize);
@@ -624,7 +624,8 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
     for (auto r : results)
     {
         NGRAPH_CHECK(r->get_output_shape(0) == r->get_input_shape(0) &&
-                         r->get_element_type() == r->get_argument(0)->get_element_type(),
+                         r->get_output_element_type(0) ==
+                             r->get_argument(0)->get_output_element_type(0),
                      " op::Result = ",
                      *r,
                      ", Arg = ",

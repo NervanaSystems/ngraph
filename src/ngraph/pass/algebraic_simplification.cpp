@@ -253,7 +253,7 @@ static bool is_uniform_constant(const op::Constant* constant, int value)
     bool rc = false;
     if (constant && constant->get_all_data_elements_bitwise_identical())
     {
-        switch (constant->get_element_type())
+        switch (constant->get_output_element_type(0))
         {
         case ngraph::element::Type_t::undefined:
         {
@@ -605,21 +605,21 @@ static shared_ptr<Node> pow_by(element::Type type, size_t multiplier, shared_ptr
 
 static shared_ptr<Node> get_sum_constant(shared_ptr<op::Constant> cnst, size_t multiplier)
 {
-    if (cnst->get_element_type() == element::i32)
+    if (cnst->get_output_element_type(0) == element::i32)
     {
-        return multiply_by<int>(cnst->get_element_type(), multiplier, cnst);
+        return multiply_by<int>(cnst->get_output_element_type(0), multiplier, cnst);
     }
-    else if (cnst->get_element_type() == element::i8)
+    else if (cnst->get_output_element_type(0) == element::i8)
     {
-        return multiply_by<signed char>(cnst->get_element_type(), multiplier, cnst);
+        return multiply_by<signed char>(cnst->get_output_element_type(0), multiplier, cnst);
     }
-    else if (cnst->get_element_type() == element::f32)
+    else if (cnst->get_output_element_type(0) == element::f32)
     {
-        return multiply_by<float>(cnst->get_element_type(), multiplier, cnst);
+        return multiply_by<float>(cnst->get_output_element_type(0), multiplier, cnst);
     }
-    else if (cnst->get_element_type() == element::f64)
+    else if (cnst->get_output_element_type(0) == element::f64)
     {
-        return multiply_by<double>(cnst->get_element_type(), multiplier, cnst);
+        return multiply_by<double>(cnst->get_output_element_type(0), multiplier, cnst);
     }
 
     return nullptr;
@@ -627,21 +627,21 @@ static shared_ptr<Node> get_sum_constant(shared_ptr<op::Constant> cnst, size_t m
 
 static shared_ptr<Node> get_prod_constant(shared_ptr<op::Constant> cnst, size_t multiplier)
 {
-    if (cnst->get_element_type() == element::i32)
+    if (cnst->get_output_element_type(0) == element::i32)
     {
-        return pow_by<int>(cnst->get_element_type(), multiplier, cnst);
+        return pow_by<int>(cnst->get_output_element_type(0), multiplier, cnst);
     }
-    else if (cnst->get_element_type() == element::i8)
+    else if (cnst->get_output_element_type(0) == element::i8)
     {
-        return pow_by<signed char>(cnst->get_element_type(), multiplier, cnst);
+        return pow_by<signed char>(cnst->get_output_element_type(0), multiplier, cnst);
     }
-    else if (cnst->get_element_type() == element::f32)
+    else if (cnst->get_output_element_type(0) == element::f32)
     {
-        return pow_by<float>(cnst->get_element_type(), multiplier, cnst);
+        return pow_by<float>(cnst->get_output_element_type(0), multiplier, cnst);
     }
-    else if (cnst->get_element_type() == element::f64)
+    else if (cnst->get_output_element_type(0) == element::f64)
     {
-        return pow_by<double>(cnst->get_element_type(), multiplier, cnst);
+        return pow_by<double>(cnst->get_output_element_type(0), multiplier, cnst);
     }
 
     return nullptr;

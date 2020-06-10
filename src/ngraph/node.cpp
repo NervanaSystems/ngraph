@@ -188,11 +188,6 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
-const descriptor::Input& Node::get_input_descriptor(size_t position) const
-{
-    return m_inputs.at(position);
-}
-
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -202,11 +197,6 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
             make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
-    return m_outputs.at(position);
-}
-
-const descriptor::Output& Node::get_output_descriptor(size_t position) const
-{
     return m_outputs.at(position);
 }
 
@@ -272,16 +262,6 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
     get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
-}
-
-std::deque<descriptor::Output>& Node::get_output_descriptors()
-{
-    return m_outputs;
-}
-
-const std::deque<descriptor::Output>& Node::get_output_descriptors() const
-{
-    return m_outputs;
 }
 
 bool Node::is_output() const
@@ -652,15 +632,6 @@ const element::Type& Node::get_output_element_type(size_t i) const
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_element_type(size_t i)");
     return m_outputs[i].get_element_type();
-}
-
-const element::Type& Node::get_element_type() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error("get_element_type() must be called on a node with exactly one output.");
-    }
-    return get_output_element_type(0);
 }
 
 const Shape& Node::get_output_shape(size_t i) const

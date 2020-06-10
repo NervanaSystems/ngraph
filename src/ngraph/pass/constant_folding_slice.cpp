@@ -37,7 +37,7 @@ shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
                                  slice->get_strides(),
                                  out_shape);
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_slice()

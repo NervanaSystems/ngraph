@@ -51,7 +51,7 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
                                       select_v1->get_auto_broadcast());
     }
 
-    return make_shared<op::Constant>(select->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(select->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_select()

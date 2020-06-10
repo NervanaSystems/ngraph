@@ -45,7 +45,7 @@ shared_ptr<Node> op::v0::Product::clone_with_new_inputs(const OutputVector& new_
 
 shared_ptr<Node> op::v0::Product::get_default_value() const
 {
-    return ngraph::make_constant_from_string("1", get_element_type(), get_output_shape(0));
+    return ngraph::make_constant_from_string("1", get_output_element_type(0), get_output_shape(0));
 }
 
 namespace

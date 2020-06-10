@@ -51,8 +51,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<pattern::op::Label>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_output_descriptor(0).get_tensor_ptr().get();
-    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
+    descriptor::Tensor& tvt = reshape_conv->get_output_tensor(0);
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
@@ -111,11 +111,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         auto m_cvt_lt_bprop = m_conv_bprop->get_argument(0);
         auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
 
-        NGRAPH_DEBUG << "Replacing input "
-                     << m_cvt_lt_bprop->get_input_descriptor(0).get_output().get_node()->get_name()
-                     << " to " << m_cvt_lt_bprop->get_name() << " with "
-                     << m_cvt_lt->get_output_descriptor(0).get_node()->get_name();
-        m_cvt_lt_bprop->get_input_descriptor(0).replace_output(m_cvt_lt->get_output_descriptor(0));
+        NGRAPH_DEBUG << "Replacing input " << m_cvt_lt_bprop->get_argument(0)->get_name() << " to "
+                     << m_cvt_lt_bprop->get_name() << " with " << m_cvt_lt->get_name();
+        m_cvt_lt_bprop->input(0).replace_source_output(m_cvt_lt->output(0));
 
         return true;
     };
@@ -130,8 +128,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 576, 17, 17});
     auto slice = std::make_shared<ngraph::op::Slice>(
         param, Coordinate{0, 0, 0, 0}, Coordinate{1, 192, 17, 17});
-    auto tvt = slice->get_output_descriptor(0).get_tensor_ptr().get();
-    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
+    descriptor::Tensor& tvt = slice->get_output_tensor(0);
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(tvt);
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(slice, lt_desc);
 
     auto callback = [param](pattern::Matcher& m) {
@@ -281,7 +279,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     mkldnn::memory::desc& result_desc)
 {
     std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
-                              input->get_element_type().size());
+                              input->get_output_element_type(0).size());
 
     bool input_format_is_nchw = runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
         input_desc.data, mkldnn::memory::format_tag::nchw);
@@ -301,7 +299,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         auto arg0_shape = input->get_output_shape(0);
         input_desc = mkldnn::memory::desc(
             mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
+            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_output_element_type(0)),
             mkldnn::memory::format_tag::oihw);
     }
     else if (input_format_is_nchw && input_desc.data.ndims == 4 && result_desc.data.ndims == 5 &&
@@ -323,7 +321,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         }
         input_desc = mkldnn::memory::desc(
             mkldnn::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
+            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_output_element_type(0)),
             mkldnn::memory::format_tag::goihw);
     }
 
@@ -377,7 +375,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
 
                 std::shared_ptr<ngraph::op::Constant> replacement;
 
-                switch (m_input->get_element_type())
+                switch (m_input->get_output_element_type(0))
                 {
                 case element::Type_t::undefined:
                     NGRAPH_CHECK(

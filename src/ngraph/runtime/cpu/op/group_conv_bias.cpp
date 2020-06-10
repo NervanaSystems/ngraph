@@ -123,7 +123,7 @@ op::GroupConvolutionBias::GroupConvolutionBias(const shared_ptr<op::GroupConvolu
     validate_groupconvbias_shapes(
         conv->get_input_shape(0), conv->get_input_shape(1), bias.get_shape(), output_shape, groups);
 
-    set_output_type(0, conv->get_element_type(), output_shape);
+    set_output_type(0, conv->get_output_element_type(0), output_shape);
 }
 
 op::GroupConvolutionBias::GroupConvolutionBias(const Output<Node>& data_batch,
