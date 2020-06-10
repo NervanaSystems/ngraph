@@ -132,10 +132,7 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
                                                           n_layers,
                                                           rnn_type);
 
-        auto dst_layer = std::make_shared<ngraph::op::GetOutputElement>(rnn_node, 0);
-        auto dst_iter = std::make_shared<ngraph::op::GetOutputElement>(rnn_node, 1);
-
-        ngraph::replace_node(m.get_match_root(), dst_layer);
+        m.get_match_value().replace(rnn_node->output(0));
         return true;
     };
 
