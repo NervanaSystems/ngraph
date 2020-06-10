@@ -153,12 +153,27 @@ private:
     std::unordered_map<Node*, int64_t> m_heights;
 };
 
-static std::string label_edge(const std::shared_ptr<Node>& /* src */,
+static std::string label_edge(const std::shared_ptr<Node>& src,
                               const std::shared_ptr<Node>& dst,
                               size_t arg_index,
                               int64_t jump_distance)
 {
     std::stringstream ss;
+    if (src->get_output_size() > 1)
+    {
+        for (Output<Node> output : src->outputs())
+        {
+            for (Input<Node> input :  output.get_target_inputs())
+            {
+                if (input.get_source_output() == output)
+                {
+                    stringstream label;
+                    label << "[label=\" " << output.get_index() << " \"]";
+                    ss << label.str();
+                }
+            }
+        }
+    }
     if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
@@ -166,18 +181,18 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         {
             output = goe->get_as_output().get_index();
         }
-        stringstream label_edge;
-        label_edge << "[label=\" " << output << " -> " << arg_index << " \"]";
-        ss << label_edge.str();
+        stringstream label;
+        label << "[label=\" " << output << " -> " << arg_index << " \"]";
+        ss << label.str();
     }
 
     else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
-            stringstream label_edge;
-            label_edge << "[label=\"jump=" << jump_distance << "\"]";
-            ss << label_edge.str();
+            stringstream label;
+            label << "[label=\"jump=" << jump_distance << "\"]";
+            ss << label.str();
         }
     }
     return ss.str();
