@@ -969,6 +969,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
+        NGRAPH_INFO << "In callback";
         auto pattern_map = m.get_pattern_map();
         auto rnn_ltor_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_left_to_right]);
         auto rnn_rtol_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_right_to_left]);
@@ -1041,17 +1042,16 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                      num_fused_rnn_layers,
                                                      rnn_type);
 
-        auto layer_rnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        size_t batch_size = layer_rnn_ht->get_output_shape(0)[0] / num_time_steps;
-        size_t feature_size = layer_rnn_ht->get_output_shape(0)[1];
+        size_t batch_size = rnn->get_output_shape(0)[0] / num_time_steps;
+        size_t feature_size = rnn->get_output_shape(0)[1];
 
         // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
         // squeezed_dims{t*n, c}
-        std::shared_ptr<Node> layer_rnn_ht_reshape = layer_rnn_ht;
-        if (m.get_match_root()->get_output_shape(0) != layer_rnn_ht->get_output_shape(0))
+        Output<Node> layer_rnn_ht_reshape = rnn->output(0);
+        if (m.get_match_root()->get_output_shape(0) != rnn->get_output_shape(0))
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
-                layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
+                rnn->output(0), AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size})->output(0);
         }
 
         // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
@@ -1061,10 +1061,10 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                 layer_rnn_ht_reshape,
                 AxisVector{1, 0, 2},
-                Shape{batch_size, num_time_steps, feature_size});
+                Shape{batch_size, num_time_steps, feature_size})->output(0);
         }
 
-        ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape);
+        m.get_match_value().replace(layer_rnn_ht_reshape);
         return true;
     };
 
