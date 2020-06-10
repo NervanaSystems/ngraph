@@ -80,7 +80,7 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
                         if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
                         {
                             // Replace GOE users
-                            set<Input<Node>> goe_users = goe->output(i).get_target_inputs();
+                            set<Input<Node>> goe_users = goe->output(0).get_target_inputs();
                             for (Input<Node> goe_user : goe_users)
                             {
                                 goe_user.replace_source_output(output_node->output(j));
