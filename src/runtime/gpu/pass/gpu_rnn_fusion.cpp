@@ -313,9 +313,6 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1);
         }
 
-        auto ht_output = std::make_shared<op::GetOutputElement>(lstm, 0);
-        auto ct_output = std::make_shared<op::GetOutputElement>(lstm, 2);
-
         // Now identify the nodes which consume the outputs of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
@@ -326,14 +323,13 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
             {
                 if (node->get_argument(i) == pattern_map[ct_label])
                 {
-                    node->get_input_descriptors().at(i).replace_output(
-                        ct_output->get_output_descriptors().at(0));
+                    node->input(i).replace_source_output(lstm->output(2));
                 }
             }
         }
 
         // find the user's for {ht} and replace them with lstm_goe_0
-        ngraph::replace_node(m.get_match_root(), ht_output);
+        m.get_match_value().replace(lstm->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht);
@@ -551,13 +547,13 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t index = 0; index < lstm_nodes.size(); index++)
         {
             // now get the GOE0 which is the first output of lstm (ht)
-            for (auto& goes : lstm_nodes[index]->get_output_descriptors().at(0).get_inputs())
+            for (Input<Node> goes : lstm_nodes[index]->output(0).get_target_inputs())
             {
-                auto goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(goes->get_node());
+                auto goe_node = dynamic_cast<op::GetOutputElement*>(goes.get_node());
                 // first output node of lstm
                 if (goe_node->get_n() == 0)
                 {
-                    goe_0 = goes->get_node();
+                    goe_0 = goes.get_node()->shared_from_this();
                     for (auto goe0_user : goe_0->get_users())
                     {
                         if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
@@ -575,7 +571,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 if ((index == 0) && (goe_node->get_n() == 1))
                 {
                     // check if the last LSTM cell has any consumers
-                    auto n_time_step_lstm_ct_goe = goes->get_node();
+                    auto n_time_step_lstm_ct_goe = goes.get_node()->shared_from_this();
                     ngraph::replace_node(n_time_step_lstm_ct_goe, layer_rnn_ct);
                 }
             }
@@ -589,9 +585,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 if (map_goe_to_lstm_slices.find(node->get_argument(i)) !=
                     map_goe_to_lstm_slices.end())
                 {
-                    node->get_input_descriptors().at(i).replace_output(
-                        map_goe_to_lstm_slices[node->get_argument(i)]->get_output_descriptors().at(
-                            0));
+                    node->input(i).replace_source_output(
+                        map_goe_to_lstm_slices[node->get_argument(i)]->output(0));
                 }
             }
         }

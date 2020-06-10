@@ -51,8 +51,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<pattern::op::Label>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_output_descriptor(0).get_tensor_ptr().get();
-    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
+    descriptor::Tensor& tvt = reshape_conv->get_output_tensor(0);
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
@@ -111,11 +111,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         auto m_cvt_lt_bprop = m_conv_bprop->get_argument(0);
         auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
 
-        NGRAPH_DEBUG << "Replacing input "
-                     << m_cvt_lt_bprop->get_input_descriptor(0).get_output().get_node()->get_name()
-                     << " to " << m_cvt_lt_bprop->get_name() << " with "
-                     << m_cvt_lt->get_output_descriptor(0).get_node()->get_name();
-        m_cvt_lt_bprop->get_input_descriptor(0).replace_output(m_cvt_lt->get_output_descriptor(0));
+        NGRAPH_DEBUG << "Replacing input " << m_cvt_lt_bprop->get_argument(0)->get_name() << " to "
+                     << m_cvt_lt_bprop->get_name() << " with " << m_cvt_lt->get_name();
+        m_cvt_lt_bprop->input(0).replace_source_output(m_cvt_lt->output(0));
 
         return true;
     };
@@ -130,8 +128,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 576, 17, 17});
     auto slice = std::make_shared<ngraph::op::Slice>(
         param, Coordinate{0, 0, 0, 0}, Coordinate{1, 192, 17, 17});
-    auto tvt = slice->get_output_descriptor(0).get_tensor_ptr().get();
-    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
+    descriptor::Tensor& tvt = slice->get_output_tensor(0);
+    auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(tvt);
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(slice, lt_desc);
 
     auto callback = [param](pattern::Matcher& m) {

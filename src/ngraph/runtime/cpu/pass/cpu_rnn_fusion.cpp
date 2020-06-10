@@ -693,7 +693,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             auto goe_1 = goe_nodes[1];
             if (goe_1)
             {
-                for (auto goe1_user : goe_1->get_users())
+                for (std::shared_ptr<Node> goe1_user : goe_1->get_users())
                 {
                     // do not include LSTM in the same layer
                     if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) ==
@@ -703,8 +703,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                         {
                             if (goe1_user->get_argument(i) == goe_1)
                             {
-                                goe1_user->get_input_descriptor(i).replace_output(
-                                    ht_slice_per_timestep[index]->get_output_descriptor(0));
+                                goe1_user->input(i).replace_source_output(
+                                    ht_slice_per_timestep[index]->output(0));
                             }
                         }
                         NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
