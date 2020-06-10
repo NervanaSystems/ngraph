@@ -1487,7 +1487,7 @@ TEST(cpu_fusion, max_pool_with_indices)
     auto f = std::make_shared<Function>(OutputVector{max_pool}, ParameterVector{input});
 
     {
-        NodeVector nv_cwi;
+        OutputVector nv_cwi;
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
         pass_manager.run_passes(df);
@@ -1542,7 +1542,7 @@ TEST(cpu_fusion, backwards_maxpool_with_indices_n4_c1_hw4_2x2_max)
     auto df = autodiff::backprop_function(f);
 
     {
-        NodeVector nv_cwi;
+        OutputVector nv_cwi;
         pass::Manager pass_manager;
         pass_manager.register_pass<runtime::cpu::pass::CPUWorkspaceInsertion>(nv_cwi);
         pass_manager.run_passes(df);
@@ -1603,7 +1603,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
 void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph::Function> bf)
 {
     // start by removing excess reshapes
-    NodeVector nv_cwi;
+    OutputVector nv_cwi;
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();
     pass_manager.register_pass<ngraph::pass::ReshapeElimination>();

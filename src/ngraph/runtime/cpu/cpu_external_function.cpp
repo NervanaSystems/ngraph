@@ -1312,7 +1312,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     }
 #endif
 
-    NodeVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
+    OutputVector nv_cwi; // We dont need CPUWorkspaceInsertion to return list of indices
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUWorkspaceInsertion, true, runtime::cpu::pass, nv_cwi, false)
     REGISTER_KNOBBED_PASS_WITH_ARGS(CPUAssignment, true, runtime::cpu::pass, this)
     REGISTER_KNOBBED_PASS_WITH_ARGS(ConstantFolding, true, ngraph::pass, GetGlobalCFDispatcherCPU())

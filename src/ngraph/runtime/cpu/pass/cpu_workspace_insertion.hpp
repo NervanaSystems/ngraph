@@ -38,9 +38,9 @@ class CPU_BACKEND_API ngraph::runtime::cpu::pass::CPUWorkspaceInsertion
     : public ngraph::pass::FunctionPass
 {
 public:
-    CPUWorkspaceInsertion(ngraph::NodeVector& indices_list, bool return_indices = true)
+    CPUWorkspaceInsertion(ngraph::OutputVector& index_list, bool return_indices = true)
         : FunctionPass()
-        , m_indices_list(indices_list)
+        , m_index_list(index_list)
         , m_return_indices(return_indices)
     {
     }
@@ -48,7 +48,7 @@ public:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> f);
 
 private:
-    ngraph::NodeVector& m_indices_list;
+    ngraph::OutputVector& m_index_list;
     bool m_return_indices;
     bool transform(ngraph::pattern::Matcher& m);
 };
