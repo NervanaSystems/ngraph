@@ -165,7 +165,7 @@ static std::string label_edge(const std::shared_ptr<Node>& src,
         {
             for (Input<Node> input : output.get_target_inputs())
             {
-                if (input.get_source_output() == output)
+                if (input.get_node() == dst.get())
                 {
                     stringstream label;
                     label << "[label=\" " << output.get_index() << " \"]";
