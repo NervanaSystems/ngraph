@@ -1051,7 +1051,10 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         if (m.get_match_root()->get_output_shape(0) != rnn->get_output_shape(0))
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
-                rnn->output(0), AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size})->output(0);
+                                       rnn->output(0),
+                                       AxisVector{0, 1},
+                                       Shape{num_time_steps, batch_size, feature_size})
+                                       ->output(0);
         }
 
         // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
@@ -1059,9 +1062,10 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
             Shape{batch_size, num_time_steps, feature_size})
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
-                layer_rnn_ht_reshape,
-                AxisVector{1, 0, 2},
-                Shape{batch_size, num_time_steps, feature_size})->output(0);
+                                       layer_rnn_ht_reshape,
+                                       AxisVector{1, 0, 2},
+                                       Shape{batch_size, num_time_steps, feature_size})
+                                       ->output(0);
         }
 
         m.get_match_value().replace(layer_rnn_ht_reshape);

@@ -163,7 +163,7 @@ static std::string label_edge(const std::shared_ptr<Node>& src,
     {
         for (Output<Node> output : src->outputs())
         {
-            for (Input<Node> input :  output.get_target_inputs())
+            for (Input<Node> input : output.get_target_inputs())
             {
                 if (input.get_source_output() == output)
                 {
