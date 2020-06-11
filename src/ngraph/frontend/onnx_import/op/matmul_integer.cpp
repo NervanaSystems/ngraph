@@ -26,13 +26,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector matmul_integer(const Node& node)
+                OutputVector matmul_integer(const Node& node)
                 {
                     auto ng_inputs = node.get_ng_inputs();
                     auto factory = builder::MatmulIntegerFactory(
                         OutputVector(std::begin(ng_inputs), std::end(ng_inputs)));
-                    std::size_t left_rank{ng_inputs.at(0)->get_shape().size()};
-                    std::size_t right_rank{ng_inputs.at(1)->get_shape().size()};
+                    std::size_t left_rank{ng_inputs.at(0).get_shape().size()};
+                    std::size_t right_rank{ng_inputs.at(1).get_shape().size()};
 
                     if (left_rank == 0 || right_rank == 0)
                     {
@@ -42,7 +42,7 @@ namespace ngraph
                                "accepts them. Consider use of element-wise multiplication instead "
                                "to conform with ONNX standard.";
                     }
-                    return as_node_vector(factory.make_matmul_op());
+                    return factory.make_matmul_op();
                 }
             }
         }

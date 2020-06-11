@@ -52,7 +52,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_1d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto f0 = make_shared<Function>(NodeVector{conv_bias}, ParameterVector{data, filters, bias});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -63,7 +63,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_1d)
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6});
     auto c = backend->create_tensor(element::f32, Shape{2});
     copy_data(c, vector<float>{1, 2});
-    auto result0 = backend->create_tensor(element::f32, conv_bias->get_shape());
+    auto result0 = backend->create_tensor(element::f32, conv_bias->get_output_shape(0));
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b, c});
     vector<float> expected{23, 29, 51, 66};
@@ -76,7 +76,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_2d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto f0 = make_shared<Function>(NodeVector{conv_bias}, ParameterVector{data, filters, bias});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -87,7 +87,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_2d)
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6});
     auto c = backend->create_tensor(element::f32, Shape{2});
     copy_data(c, vector<float>{1, 2});
-    auto result0 = backend->create_tensor(element::f32, conv_bias->get_shape());
+    auto result0 = backend->create_tensor(element::f32, conv_bias->get_output_shape(0));
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b, c});
     vector<float> expected{39, 45, 51, 57, 85, 100, 115, 130};
@@ -100,7 +100,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_3d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto f0 = make_shared<Function>(NodeVector{conv_bias}, ParameterVector{data, filters, bias});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -111,7 +111,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_3d)
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6});
     auto c = backend->create_tensor(element::f32, Shape{2});
     copy_data(c, vector<float>{1, 2});
-    auto result0 = backend->create_tensor(element::f32, conv_bias->get_shape());
+    auto result0 = backend->create_tensor(element::f32, conv_bias->get_output_shape(0));
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b, c});
     vector<float> expected{39, 45, 51, 57, 85, 100, 115, 130};
@@ -124,15 +124,16 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_bprop_2d)
     auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1});
     auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
     auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
-    auto conv_bprop = make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
-                                                                          filters->get_shape(),
-                                                                          bias->get_shape(),
-                                                                          delta,
-                                                                          Strides{1, 1},
-                                                                          Strides{1, 1},
-                                                                          CoordinateDiff{0, 0},
-                                                                          CoordinateDiff{0, 0},
-                                                                          Strides{1, 1});
+    auto conv_bprop =
+        make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
+                                                            filters->get_output_shape(0),
+                                                            bias->get_output_shape(0),
+                                                            delta,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1});
     auto goe0 = conv_bprop->output(0);
     auto goe1 = conv_bprop->output(1);
     auto f0 = make_shared<Function>(OutputVector{goe0, goe1}, ParameterVector{data, delta});
@@ -144,8 +145,8 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_bprop_2d)
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
     auto b = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
     copy_data(b, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result0 = backend->create_tensor(element::f32, filters->get_shape());
-    auto result1 = backend->create_tensor(element::f32, bias->get_shape());
+    auto result0 = backend->create_tensor(element::f32, filters->get_output_shape(0));
+    auto result1 = backend->create_tensor(element::f32, bias->get_output_shape(0));
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0, result1}, {a, b});
     vector<float> expected0{30, 70, 110, 70, 174, 278};
@@ -162,8 +163,8 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_add_2d)
     auto add = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
     auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
     auto conv_bias_add = make_shared<op::ConvolutionBiasAdd>(conv_bias, add);
-    auto f0 =
-        make_shared<Function>(NodeVector{conv_bias_add}, ParameterVector{data, filters, bias, add});
+    auto f0 = make_shared<Function>(OutputVector{conv_bias_add},
+                                    ParameterVector{data, filters, bias, add});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -176,7 +177,7 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_add_2d)
     copy_data(c, vector<float>{1, 2});
     auto d = backend->create_tensor(element::f32, Shape{1, 2, 2, 2});
     copy_data(d, vector<float>{1, 2, 3, 4, 5, 6, 7, 8});
-    auto result0 = backend->create_tensor(element::f32, conv_bias_add->get_shape());
+    auto result0 = backend->create_tensor(element::f32, conv_bias_add->get_output_shape(0));
     auto handle = backend->compile(f0);
     handle->call_with_validate({result0}, {a, b, c, d});
     vector<float> expected{40, 47, 54, 61, 90, 106, 122, 138};

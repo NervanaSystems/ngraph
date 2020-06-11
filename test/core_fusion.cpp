@@ -103,7 +103,7 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast)
 
         auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
         auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
-        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+        return make_shared<Function>(OutputVector{divide_1_over_exp}, ParameterVector{input});
     };
     auto func = make_function();
 
@@ -127,7 +127,7 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast2)
 
         auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
         auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
-        return make_shared<Function>(NodeVector{divide_1_over_exp}, ParameterVector{input});
+        return make_shared<Function>(OutputVector{divide_1_over_exp}, ParameterVector{input});
     };
     auto func = make_function();
 
@@ -151,7 +151,7 @@ TEST(core_fusion, reshape_broadcast)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::CoreFusion>();
@@ -266,7 +266,7 @@ TEST(core_fusion, sparsity_opt_56x56)
                                   param_broadcast_w1,
                                   other_arg,
                                   weights_conv_s2};
-    auto func = make_shared<Function>(NodeVector{conv_s2_1, conv_s2_2}, params);
+    auto func = make_shared<Function>(OutputVector{conv_s2_1, conv_s2_2}, params);
     pass_manager.run_passes(func);
     auto results = func->get_results();
     auto t_eltwise_conv1 = as_type_ptr<op::Convolution>(results.at(0)->get_argument(0));
@@ -303,7 +303,7 @@ TEST(core_fusion, reshape_softmax_reshape)
 
     test::Uniform<float> rng(0.0f, 100.0f);
     vector<vector<float>> args;
-    vector<float> tensor_val(shape_size(baseline_input->get_shape()));
+    vector<float> tensor_val(shape_size(baseline_input->get_output_shape(0)));
     rng.initialize(tensor_val);
     args.push_back(tensor_val);
 
@@ -442,8 +442,8 @@ TEST(core_fusion, conv_bias)
         else
         {
             auto conv = make_shared<op::Convolution>(data, weights);
-            auto conv_bias =
-                conv + make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+            auto conv_bias = conv + make_shared<op::Broadcast>(
+                                        bias, conv->get_output_shape(0), AxisSet{0, 2, 3});
             return make_shared<Function>(conv_bias, ParameterVector{data, weights, bias});
         }
     };
@@ -462,7 +462,7 @@ TEST(core_fusion, conv_bias)
 
     for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -493,8 +493,8 @@ TEST(core_fusion, conv_bias_bcast_reshape)
         {
             auto conv = make_shared<op::Convolution>(data, weights);
             auto bias_bcast = make_shared<op::Broadcast>(bias, Shape{2, 4, 12}, AxisSet{0, 2});
-            auto conv_bias =
-                conv + make_shared<op::Reshape>(bias_bcast, AxisVector{0, 1, 2}, conv->get_shape());
+            auto conv_bias = conv + make_shared<op::Reshape>(
+                                        bias_bcast, AxisVector{0, 1, 2}, conv->get_output_shape(0));
             return make_shared<Function>(conv_bias, ParameterVector{data, weights, bias});
         }
     };
@@ -513,7 +513,7 @@ TEST(core_fusion, conv_bias_bcast_reshape)
 
     for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -544,8 +544,8 @@ TEST(core_fusion, conv_bias_add)
         else
         {
             auto conv = make_shared<op::Convolution>(data, weights);
-            auto conv_bias =
-                conv + make_shared<op::Broadcast>(bias, conv->get_shape(), AxisSet{0, 2, 3});
+            auto conv_bias = conv + make_shared<op::Broadcast>(
+                                        bias, conv->get_output_shape(0), AxisSet{0, 2, 3});
             return make_shared<Function>(conv_bias + add,
                                          ParameterVector{data, weights, bias, add});
         }
@@ -565,7 +565,7 @@ TEST(core_fusion, conv_bias_add)
 
     for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -592,8 +592,8 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
         {
             auto conv_bprop =
                 make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
-                                                                    weights->get_shape(),
-                                                                    bias->get_shape(),
+                                                                    weights->get_output_shape(0),
+                                                                    bias->get_output_shape(0),
                                                                     delta,
                                                                     Strides{1, 1},
                                                                     Strides{1, 1},
@@ -606,16 +606,17 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
         }
         else
         {
-            auto conv_bprop = make_shared<op::ConvolutionBackpropFilters>(data,
-                                                                          weights->get_shape(),
-                                                                          delta,
-                                                                          Strides{1, 1},
-                                                                          Strides{1, 1},
-                                                                          CoordinateDiff{0, 0},
-                                                                          CoordinateDiff{0, 0},
-                                                                          Strides{1, 1});
+            auto conv_bprop =
+                make_shared<op::ConvolutionBackpropFilters>(data,
+                                                            weights->get_output_shape(0),
+                                                            delta,
+                                                            Strides{1, 1},
+                                                            Strides{1, 1},
+                                                            CoordinateDiff{0, 0},
+                                                            CoordinateDiff{0, 0},
+                                                            Strides{1, 1});
             auto bias_bprop = make_shared<op::Sum>(delta, AxisSet{0, 2, 3});
-            return make_shared<Function>(NodeVector{conv_bprop, bias_bprop},
+            return make_shared<Function>(OutputVector{conv_bprop, bias_bprop},
                                          ParameterVector{data, delta});
         }
     };
@@ -634,7 +635,7 @@ TEST(core_fusion, DISABLED_conv_bias_bprop)
 
     for (shared_ptr<op::Parameter> param : fused_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -697,7 +698,7 @@ TEST(batch_fusion, group_convolution_fusion)
 
     auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
 
-    auto f = make_shared<Function>(NodeVector{concat}, ParameterVector{A, B});
+    auto f = make_shared<Function>(OutputVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::BatchFusion>();
     pass_manager.run_passes(f);
@@ -730,7 +731,7 @@ TEST(core_fusion, softmax_crossentropy_fprop_1)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -757,7 +758,7 @@ TEST(core_fusion, softmax_crossentropy_fprop_2)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -784,7 +785,7 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_soft_labels)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -812,7 +813,7 @@ TEST(core_fusion, softmax_crossentropy_bprop_with_ignore_mask)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -849,7 +850,7 @@ void test_softmax_crossentropy(Shape input_shape,
     vector<vector<double>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -886,7 +887,7 @@ void test_crossentropy(Shape input_shape, Shape label_shape, bool soft_label, in
     vector<vector<double>> args;
     for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
     {
-        vector<double> tensor_val(shape_size(param->get_shape()));
+        vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }

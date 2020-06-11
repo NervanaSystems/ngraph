@@ -33,13 +33,13 @@ shared_ptr<op::Constant> fold_constant_one_hot_ref(const shared_ptr<op::Constant
     std::vector<OUTPUT_TYPE> out_vec(shape_size(output_shape));
     runtime::reference::one_hot<INDICES_TYPE, OUTPUT_TYPE>(indices->get_data_ptr<INDICES_TYPE>(),
                                                            out_vec.data(),
-                                                           indices->get_shape(),
+                                                           indices->get_output_shape(0),
                                                            output_shape,
                                                            axis,
                                                            on_value->get_vector<OUTPUT_TYPE>()[0],
                                                            off_value->get_vector<OUTPUT_TYPE>()[0]);
 
-    return make_shared<op::Constant>(on_value->get_element_type(), output_shape, out_vec);
+    return make_shared<op::Constant>(on_value->get_output_element_type(0), output_shape, out_vec);
 }
 
 template <class OUTPUT_TYPE>
@@ -50,7 +50,7 @@ shared_ptr<op::Constant> fold_constant_one_hot(const shared_ptr<op::Constant>& i
                                                size_t axis)
 {
     shared_ptr<op::Constant> rc;
-    switch (indices->get_element_type())
+    switch (indices->get_output_element_type(0))
     {
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
@@ -126,7 +126,7 @@ void pass::ConstantFolding::construct_constant_one_hot()
         auto one_hot = static_pointer_cast<op::v1::OneHot>(m.get_match_root());
         const size_t axis = one_hot->get_axis();
         const auto output_shape = one_hot->get_output_shape(0);
-        auto output_type = on_node->get_element_type();
+        auto output_type = on_node->get_output_element_type(0);
 
         std::shared_ptr<op::Constant> replacement =
             fold_constant_one_hot<char>(indices_node, on_node, off_node, output_shape, axis);

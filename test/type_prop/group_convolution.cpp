@@ -34,7 +34,7 @@ TEST(type_prop, group_conv)
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1},
                                                   2);
-    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+    EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91, 131}));
 }
 
 TEST(type_prop, group_conv_auto)
@@ -51,7 +51,7 @@ TEST(type_prop, group_conv_auto)
                                                   Strides{1, 1},
                                                   2,
                                                   op::PadType::AUTO);
-    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 100, 150}));
+    EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 100, 150}));
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{4, 9}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{5, 10}));
 }

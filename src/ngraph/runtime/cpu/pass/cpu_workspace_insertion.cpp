@@ -60,10 +60,10 @@ static std::shared_ptr<pattern::Matcher> create_maxpool_with_indices_matcher()
     auto data = std::make_shared<pattern::op::Label>(element::f32, shape_data);
     Shape window_shape{3};
     auto max_pool = std::make_shared<op::MaxPool>(data, window_shape);
-    auto delta = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape());
+    auto delta = std::make_shared<pattern::op::Label>(element::f32, max_pool->get_output_shape(0));
     auto is_max_pool = pattern::has_class<op::MaxPool>();
-    auto max_pool_label =
-        std::make_shared<pattern::op::Label>(element::f32, max_pool->get_shape(), is_max_pool);
+    auto max_pool_label = std::make_shared<pattern::op::Label>(
+        element::f32, max_pool->get_output_shape(0), is_max_pool);
     auto max_pool_bprop =
         std::make_shared<op::MaxPoolBackprop>(data,
                                               delta,
@@ -108,7 +108,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
     auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
 
-    if (m_max_pool_bprop->get_shape().size() != 4 ||
+    if (m_max_pool_bprop->get_output_shape(0).size() != 4 ||
         m_max_pool_bprop->get_window_shape().size() != 2 ||
         m_max_pool_bprop->get_input_element_type(0) != element::f32)
     {
@@ -129,12 +129,12 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
 
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
-    for (auto& o : m_max_pool->get_output_descriptors())
+    for (Output<Node> o : m_max_pool->outputs())
     {
-        std::set<ngraph::descriptor::Input*> copy{begin(o.get_inputs()), end(o.get_inputs())};
-        for (auto i : copy)
+        std::set<Input<Node>> copy = o.get_target_inputs();
+        for (Input<Node> i : copy)
         {
-            i->replace_output(max_pool_with_indices_output->get_output_descriptor(0));
+            i.replace_source_output(max_pool_with_indices_output->output(0));
         }
     }
 

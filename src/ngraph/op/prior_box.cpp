@@ -61,9 +61,9 @@ void op::PriorBox::validate_and_infer_types()
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(0).get_node_shared_ptr()))
     {
         NODE_VALIDATION_CHECK(this,
-                              shape_size(const_shape->get_shape()) == 2,
+                              shape_size(const_shape->get_output_shape(0)) == 2,
                               "Layer shape must have rank 2",
-                              const_shape->get_shape());
+                              const_shape->get_output_shape(0));
 
         auto layer_shape = const_shape->get_shape_val();
 

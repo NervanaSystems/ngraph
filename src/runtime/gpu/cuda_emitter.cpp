@@ -1532,14 +1532,12 @@ size_t runtime::gpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto& input_shape = args[0].get_shape();
-    auto& result_shape = out[0].get_shape();
+    auto& input_shape = node->get_input_shape(0);
+    auto& result_shape = node->get_input_shape(0);
     auto padding_below = node->get_padding_below();
     auto padding_above = node->get_padding_above();
-    auto input_type = args[0].get_element_type().c_type_string();
-    auto output_type = out[0].get_element_type().c_type_string();
+    auto input_type = node->get_input_element_type(0).c_type_string();
+    auto output_type = node->get_input_element_type(0).c_type_string();
 
     // construct hash to determine if kernel needs to be emitted
     // or if it already exists in the primitive list
@@ -1576,8 +1574,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
         float pad_value = std::numeric_limits<float>::lowest();
         std::vector<float> temp(padded_size, pad_value);
         GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-        idx_workspace = allocator.reserve_argspace(temp.data(),
-                                                   padded_size * args[0].get_element_type().size());
+        idx_workspace = allocator.reserve_argspace(
+            temp.data(), padded_size * node->get_input_element_type(0).size());
 
         auto& cuda_emitter = m_primitive_emitter->get_cuda_emitter();
         std::vector<std::string> dtypes = {input_type, output_type};
@@ -2446,11 +2444,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     std::stringstream ss;
     ss << "convolution_fprop_" << runtime::gpu::kernel::emit_type_string(node);
 
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto input_shape = args[0].get_shape();
-    auto filter_shape = args[1].get_shape();
-    auto output_shape = out[0].get_shape();
+    auto input_shape = node->get_input_shape(0);
+    auto filter_shape = node->get_input_shape(1);
+    auto output_shape = node->get_output_shape(0);
     auto tensor_size = input_shape.size();
 
     // primitive cache parameters
@@ -2476,12 +2472,12 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     // c.f runtime/cpu/pass/cpu_layout.cpp
 
     GPUAllocator allocator = m_primitive_emitter->get_memory_allocator();
-    size_t transposed_data_idx =
-        allocator.reserve_workspace(shape_size(input_shape) * args[0].get_element_type().size());
-    size_t transposed_filter_idx =
-        allocator.reserve_workspace(shape_size(filter_shape) * args[1].get_element_type().size());
-    size_t transposed_output_idx =
-        allocator.reserve_workspace(shape_size(output_shape) * out[0].get_element_type().size());
+    size_t transposed_data_idx = allocator.reserve_workspace(
+        shape_size(input_shape) * node->get_input_element_type(0).size());
+    size_t transposed_filter_idx = allocator.reserve_workspace(
+        shape_size(filter_shape) * node->get_input_element_type(1).size());
+    size_t transposed_output_idx = allocator.reserve_workspace(
+        shape_size(output_shape) * node->get_output_element_type(0).size());
 
     NVShape input_order;
     for (int i = 1; i <= tensor_size; i++)
@@ -2489,15 +2485,15 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
         input_order.push_back(i % tensor_size);
     }
 
-    size_t reshape_data_index = build_reshape(
-        {{args[0].get_element_type().c_type_string(), args[0].get_element_type().c_type_string()}},
-        input_shape,
-        input_order);
+    size_t reshape_data_index = build_reshape({{node->get_input_element_type(0).c_type_string(),
+                                                node->get_input_element_type(0).c_type_string()}},
+                                              input_shape,
+                                              input_order);
 
-    size_t reshape_filter_index = build_reshape(
-        {{args[1].get_element_type().c_type_string(), args[1].get_element_type().c_type_string()}},
-        filter_shape,
-        input_order);
+    size_t reshape_filter_index = build_reshape({{node->get_input_element_type(1).c_type_string(),
+                                                  node->get_input_element_type(1).c_type_string()}},
+                                                filter_shape,
+                                                input_order);
 
     // local helper to reshape tensor shape objects
     auto reshape = [](const Shape& shape, const NVShape& order) {
@@ -2516,9 +2512,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     // reorder axes of the output shape (NK{do_1,...,do_n} -> K{do_1,...,do_n}N)
     output_shape = reshape(output_shape, input_order);
 
-    size_t conv_index = build_convolution({{args[0].get_element_type().c_type_string(),
-                                            args[1].get_element_type().c_type_string(),
-                                            out[0].get_element_type().c_type_string()}},
+    size_t conv_index = build_convolution({{node->get_input_element_type(0).c_type_string(),
+                                            node->get_input_element_type(1).c_type_string(),
+                                            node->get_output_element_type(0).c_type_string()}},
                                           input_shape,
                                           filter_shape,
                                           output_shape,
@@ -2535,10 +2531,10 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
         input_order.push_back(i);
     }
 
-    size_t reshape_output_index = build_reshape(
-        {{args[1].get_element_type().c_type_string(), args[1].get_element_type().c_type_string()}},
-        output_shape,
-        input_order);
+    size_t reshape_output_index = build_reshape({{node->get_input_element_type(1).c_type_string(),
+                                                  node->get_input_element_type(1).c_type_string()}},
+                                                output_shape,
+                                                input_order);
 
     std::unique_ptr<gpu::primitive> kernel_launch(
         new gpu::primitive{[=](void** inputs, void** outputs) mutable {
@@ -2568,10 +2564,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
 
 size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, bool in_place_op)
 {
-    auto& args = node->get_input_descriptors();
-    auto& out = node->get_output_descriptors();
-    auto& input_shape = args[0].get_shape();
-    auto& replace_shape = args[1].get_shape();
+    auto& input_shape = node->get_input_shape(0);
+    auto& replace_shape = node->get_input_shape(1);
     auto& lower_bounds = node->get_lower_bounds();
     auto& upper_bounds = node->get_upper_bounds();
     auto& slice_strides = node->get_strides();
@@ -2587,9 +2581,9 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, 
                    slice_shape.begin(),
                    std::divides<size_t>());
 
-    auto input_type = args[0].get_element_type().c_type_string();
-    auto replace_type = args[1].get_element_type().c_type_string();
-    auto output_type = out[0].get_element_type().c_type_string();
+    auto input_type = node->get_input_element_type(0).c_type_string();
+    auto replace_type = node->get_input_element_type(1).c_type_string();
+    auto output_type = node->get_output_element_type(0).c_type_string();
 
     // assumes NC{d1,...,dn} format
     std::string type_str = input_type + "_" + replace_type + "_" + output_type;
@@ -2627,7 +2621,7 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, 
     else
     {
         size_t nthreads = shape_size(input_shape);
-        size_t size = nthreads * args[1].get_element_type().size();
+        size_t size = nthreads * node->get_input_element_type(1).size();
         std::unique_ptr<gpu::primitive> kernel_launch(
             new gpu::primitive{[=](void** inputs, void** outputs) mutable {
                 runtime::gpu::cuda_memcpyDtD(outputs[0], inputs[0], size);

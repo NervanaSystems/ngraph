@@ -25,19 +25,19 @@ template <class T>
 shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
                                              shared_ptr<op::Slice> slice)
 {
-    const Shape& out_shape = slice->get_shape();
+    const Shape& out_shape = slice->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 
     runtime::reference::slice<T>(constant->get_data_ptr<T>(),
                                  data_ptr,
-                                 constant->get_shape(),
+                                 constant->get_output_shape(0),
                                  slice->get_lower_bounds(),
                                  slice->get_upper_bounds(),
                                  slice->get_strides(),
                                  out_shape);
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_slice()

@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector min(const Node& node)
+                inline OutputVector min(const Node& node)
                 {
                     return variadic::make_ng_variadic_op<default_opset::Minimum>(
                         node, ngraph::op::AutoBroadcastSpec::NONE);
@@ -38,7 +38,7 @@ namespace ngraph
 
             namespace set_8
             {
-                inline NodeVector min(const Node& node)
+                inline OutputVector min(const Node& node)
                 {
                     return variadic::make_ng_variadic_op<default_opset::Minimum>(node);
                 }

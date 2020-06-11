@@ -50,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, elu)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
     auto elu = make_shared<op::Elu>(A, 0.5f);
-    auto function = make_shared<Function>(NodeVector{elu}, ParameterVector{A});
+    auto function = make_shared<Function>(OutputVector{elu}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input(vector<float>{-2.f, 3.f, -2.f, 1.f, -1.f, 0.f});
@@ -63,7 +63,7 @@ NGRAPH_TEST(${BACKEND_NAME}, elu_negative_alpha)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
     auto elu = make_shared<op::Elu>(A, -1.f);
-    auto function = make_shared<Function>(NodeVector{elu}, ParameterVector{A});
+    auto function = make_shared<Function>(OutputVector{elu}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input(vector<float>{-2.f, 3.f, -2.f, 1.f, -1.f, 0.f});

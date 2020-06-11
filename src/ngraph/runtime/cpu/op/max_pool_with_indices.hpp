@@ -50,7 +50,8 @@ namespace ngraph
             const Shape& get_padding_above() const { return m_padding_above; }
             virtual std::shared_ptr<Node> get_default_value() const override
             {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+                return ngraph::make_constant_from_string(
+                    "0", get_output_element_type(0), get_output_shape(0));
             }
 
         protected:

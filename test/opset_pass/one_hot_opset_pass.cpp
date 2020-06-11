@@ -62,7 +62,7 @@ TEST(opset_transform, opset1_one_hot_downgrade_pass)
     const auto pass_replacement_node = f->get_result()->input_value(0).get_node_shared_ptr();
     ASSERT_FALSE(is_type<op::v1::OneHot>(pass_replacement_node));
 
-    EXPECT_EQ(pass_replacement_node->get_shape(), (Shape{1, 3, 2, 4, 3}));
+    EXPECT_EQ(pass_replacement_node->get_output_shape(0), (Shape{1, 3, 2, 4, 3}));
 }
 
 TEST(opset_transform, opset1_one_hot_downgrade_pass_depth_not_constant)

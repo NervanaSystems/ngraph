@@ -33,7 +33,7 @@ static void visualize_layout_format(const Node& node, ostream& ss)
     try
     {
         auto input_desc = node.get_input_tensor(0).get_tensor_layout();
-        auto result_desc = node.get_output_tensor_ptr()->get_tensor_layout();
+        auto result_desc = node.get_output_tensor_ptr(0)->get_tensor_layout();
 
         auto in_tvl = static_pointer_cast<runtime::cpu::LayoutDescriptor>(input_desc);
         auto out_tvl = static_pointer_cast<runtime::cpu::LayoutDescriptor>(result_desc);

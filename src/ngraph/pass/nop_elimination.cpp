@@ -35,7 +35,7 @@
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/op/unsqueeze.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "ngraph/util.hpp"
 #include "nop_elimination.hpp"
 

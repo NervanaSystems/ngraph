@@ -228,8 +228,6 @@ namespace ngraph
         virtual const type_info_t& get_type_info() const = 0;
         const char* get_type_name() const { return get_type_info().name; }
         /// Sets/replaces the arguments with new arguments.
-        void set_arguments(const NodeVector& arguments);
-        /// Sets/replaces the arguments with new arguments.
         void set_arguments(const OutputVector& arguments);
         /// Sets/replaces the arguments with new arguments.
         void set_argument(size_t position, const Output<Node>& argument);
@@ -315,21 +313,6 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_input_descriptors()
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_input_descriptors() const
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        std::deque<descriptor::Output>& get_output_descriptors()
-            NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_output_descriptors() const
-            NGRAPH_DEPRECATED("use outputs() instead");
-
         /// Get control dependencies registered on the node
         const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
@@ -363,12 +346,6 @@ namespace ngraph
         /// Returns the element type for output i
         const element::Type& get_output_element_type(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
-        // the calling code, or updates to the calling code if it is making an invalid assumption
-        // of only one output.
-        const element::Type& get_element_type() const;
-
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
 
@@ -390,12 +367,6 @@ namespace ngraph
         /// Throws no default
         size_t no_default_index() const;
 
-        /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
-        // calling code, or updates to the calling code if it is making an invalid assumption of
-        // only one output.
-        const Shape& get_shape() const;
-
         /// Returns the tensor for output or input i
         descriptor::Tensor& get_output_tensor(size_t i) const;
         descriptor::Tensor& get_input_tensor(size_t i) const;
@@ -403,21 +374,11 @@ namespace ngraph
         /// Returns the tensor name for output i
         const std::string& get_output_tensor_name(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
-            "output, or update calling code not to assume only one output");
-
         /// Returns the tensor of output i
         // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
         // replacement in Output.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
             NGRAPH_DEPRECATED("use &node->output(i).get_tensor() instead");
-
-        /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const NGRAPH_DEPRECATED(
-            "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
-            "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
@@ -568,12 +529,10 @@ namespace ngraph
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
+    private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
-        const descriptor::Input& get_input_descriptor(size_t position) const;
-        const descriptor::Output& get_output_descriptor(size_t position) const;
 
-    private:
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;

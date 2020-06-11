@@ -40,7 +40,7 @@ namespace ngraph
                 auto broadcast_axes = broadcast->get_broadcast_axes();
 
                 auto arg_shape = broadcast->get_input_shape(0);
-                out_shape = broadcast->get_shape();
+                out_shape = broadcast->get_output_shape(0);
 
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
                 // and not in any one builder.
@@ -127,7 +127,7 @@ namespace ngraph
 
                 if (broadcast_axes.empty())
                 {
-                    size = shape_size(out_shape) * broadcast->get_element_type().size();
+                    size = shape_size(out_shape) * broadcast->get_output_element_type(0).size();
                     return;
                 }
 

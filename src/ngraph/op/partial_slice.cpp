@@ -83,7 +83,7 @@ OutputVector op::PartialSlice::decompose_op() const
     }
 
     auto sliced = std::make_shared<op::Slice>(data, ng_start, ng_end);
-    auto out_shape = sliced->get_shape();
+    auto out_shape = sliced->get_output_shape(0);
     Shape out_reshape_shape{};
 
     if (decrease_axes.size() > 0)
