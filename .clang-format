@@ -50,3 +50,6 @@ IncludeCategories:
   - Regex:           '^<.*'
     Priority:        2
 SortIncludes: true
+
+# Added for clang-format-6.0
+FixNamespaceComments: false
