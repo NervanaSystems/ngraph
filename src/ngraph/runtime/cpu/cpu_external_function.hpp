@@ -41,6 +41,7 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
+#include "ngraph/runtime/cpu/cpu_execution_mode.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
@@ -117,7 +118,7 @@ namespace ngraph
 
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool codegen_enable);
+                                     EXECUTION_MODE mode);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                     make_call_frame(ngraph::pass::PassConfig& pass_config, Allocator* allocator);
@@ -326,6 +327,7 @@ namespace ngraph
                     m_node_primitive_string_deps_index_size_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
                 const std::string m_desc_filename = "desc_file";
+                EXECUTION_MODE m_execution_mode;
             };
         }
     }

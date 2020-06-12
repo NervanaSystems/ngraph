@@ -23,6 +23,7 @@
 #include "cpu_backend_visibility.h"
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/allocator.hpp"
+#include "ngraph/runtime/cpu/cpu_execution_mode.hpp"
 #include "ngraph/runtime/executable.hpp"
 
 namespace ngraph
@@ -41,7 +42,7 @@ namespace ngraph
                                ngraph::pass::PassConfig& pass_config,
                                Allocator* allocator,
                                bool performance_counters_enabled,
-                               bool codegen_enable);
+                               EXECUTION_MODE mode);
                 bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
                           const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) override;
 
