@@ -62,7 +62,7 @@ public:
           const NodeVector& wrapped_values)
         : AnyOf(type,
                 s,
-                [pred](const Output<Node>& value) { return pred(value.as_single_output_node()); },
+                [pred](const Output<Node>& value) { return pred(value.get_node_shared_ptr()); },
                 as_output_vector(wrapped_values))
     {
     }
