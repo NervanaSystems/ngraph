@@ -72,6 +72,19 @@
 
 using namespace ngraph;
 
+namespace
+{
+    NodeVector get_output_elements(const std::shared_ptr<Node>& mon)
+    {
+        NodeVector goes(mon->get_output_size());
+        for (auto o : mon->outputs())
+        {
+            goes.at(o.get_index()) = o.as_single_output_node();
+        }
+        return goes;
+    }
+}
+
 void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
 {
     // pattern to capture the vanilla RNN
@@ -667,7 +680,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // LSTM in the same layer)
         for (size_t index = 0; index < sequence_len; index++)
         {
-            auto goe_nodes = ngraph::op::get_output_elements(lstm_nodes[index]);
+            auto goe_nodes = get_output_elements(lstm_nodes[index]);
 
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
@@ -702,7 +715,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         // replace last LSTM dst_iter_c with RNN dst iter_c for last LSTM dst_iter_c's users
-        auto last_lstm_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[2];
+        auto last_lstm_ct_goe = get_output_elements(lstm_nodes[sequence_len - 1])[2];
         if (last_lstm_ct_goe)
         {
             replace_collapse_node_user(last_lstm_ct_goe, rnn_ct_goe->output(0));
@@ -897,7 +910,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // i.e {RNN7, RNN6, RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
-            auto goe_nodes = ngraph::op::get_output_elements(rnn_nodes[index]);
+            auto goe_nodes = get_output_elements(rnn_nodes[index]);
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
             if (goe_nodes.size() != 3)

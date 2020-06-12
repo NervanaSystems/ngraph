@@ -38,6 +38,16 @@ namespace ngraph
         {
             namespace pass
             {
+                NodeVector get_output_elements(const shared_ptr<Node>& mon)
+                {
+                    NodeVector goes(mon->get_output_size());
+                    for (auto o : mon->outputs())
+                    {
+                        goes.at(o.get_index()) = o.as_single_output_node();
+                    }
+                    return goes;
+                }
+
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
@@ -117,7 +127,7 @@ namespace ngraph
                             pre_reshape, axis_order, pre_2d_reshape_out);
                         insert_new_node_between(parent_node, topk, pre_reshape);
                         insert_new_node_between(pre_reshape, topk, pre_2d_reshape);
-                        NodeVector goes = op::get_output_elements(topk);
+                        NodeVector goes = get_output_elements(topk);
                         auto new_topk =
                             make_shared<ngraph::op::TopK>(pre_2d_reshape,
                                                           1,

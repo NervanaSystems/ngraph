@@ -22,9 +22,6 @@ namespace ngraph
 {
     namespace op
     {
-        NGRAPH_API
-        NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
-
         namespace v0
         {
             /// \brief Operation to get an output from a node.
