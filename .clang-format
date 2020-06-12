@@ -20,7 +20,6 @@ AlwaysBreakTemplateDeclarations: true
 BinPackArguments: false
 BinPackParameters: false
 
-BreakBeforeBraces: Allman
 BreakConstructorInitializersBeforeComma: true
 
 ColumnLimit: 100
@@ -53,3 +52,19 @@ SortIncludes: true
 
 # Added for clang-format-6.0
 FixNamespaceComments: false
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterFunction: true
+  AfterExternBlock: false
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
