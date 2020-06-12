@@ -21,28 +21,39 @@ set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 # Change these commit IDs to move to latest stable versions
 set(MLIR_LLVM_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
 
+# If prebuilt path is given check if it is already populated with
+# correct with a build with commit id and cmake config files
+# otherwise build commit id and install to prebuilt path
+set(BUILD_MLIR TRUE)
+
+if(${MLIR_LLVM_PREBUILT_PATH})
+    set(VCSREVISION "${MLIR_LLVM_PREBUILT_PATH}/include/llvm/Support/VCSRevision.h")
+    if(EXISTS "${VCSREVISION}")
+        file(READ "${VCSREVISION}" REVISION_FILE)
+        string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
+        set(LONG_REV ${CMAKE_MATCH_1})
+        string(TOLOWER ${LONG_REV} LONG_REV)
+        string(TOLOWER ${COMMIT_ID} COMMIT_ID)
+        if(LONG_REV STREQUAL COMMIT_ID)
+            message(STATUS "SHA1 HASH Matches.")
+            set(BUILD_MLIR FALSE)
+        endif()
+    endif()
+endif()
+
 # MLIR environment variables. Some of them are used by LIT tool.
 
-if (NGRAPH_USE_PREBUILT_MLIR)
-    set(MLIR_PROJECT_ROOT ${MLIR_LLVM_PREBUILT_PATH})
-endif()
-
-file(READ /Users/silee2/.local/clang/include/llvm/Support/VCSRevision.h REVISION_FILE)
-string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
-set(LONG_REV ${CMAKE_MATCH_1})
-string(TOLOWER ${LONG_REV} LONG_REV)
-string(TOLOWER ${COMMIT_ID} COMMIT_ID)
-if(LONG_REV STREQUAL COMMIT_ID)
-    message(STATUS "SHA1 HASH Matches.")
-endif()
-
+# Only used in this file
 set(MLIR_LLVM_ROOT ${MLIR_PROJECT_ROOT}/llvm-project)
 set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
 set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
+# Used in test/mlir:
+# lit cfg
 set(MLIR_LLVM_BUILD_DIR ${MLIR_PROJECT_ROOT}/build)
-set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
 set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
+# lit cfg and path to llvm-lit
+set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 
 # MLIR has to be pre-built before ngraph build starts
 # this will clone and build MLIR during cmake config instead
@@ -96,8 +107,10 @@ set(MLIR_DIR "${MLIR_LLVM_BUILD_DIR}/lib/cmake/mlir"
 list(APPEND CMAKE_MODULE_PATH "${MLIR_DIR}")
 find_package(MLIR REQUIRED CONFIG)
 
+# Used by tblgen
 set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
 set(MLIR_BIN_INCLUDE_PATH ${MLIR_LLVM_BUILD_DIR}/tools/mlir/include)
+# Used by ngraph mlir and cpu backend
 set(MLIR_INCLUDE_PATHS ${MLIR_SRC_INCLUDE_PATH};${MLIR_BIN_INCLUDE_PATH})
 set(MLIR_LLVM_INCLUDE_PATH ${LLVM_INCLUDE_DIRS})
 
