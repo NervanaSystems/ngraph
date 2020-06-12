@@ -123,18 +123,13 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
                                                  m_max_pool->get_padding_below(),
                                                  m_max_pool->get_padding_above());
 
-    auto max_pool_with_indices_output =
-        std::make_shared<op::GetOutputElement>(max_pool_with_indices, 0);
-    auto max_pool_with_indices_indices =
-        std::make_shared<op::GetOutputElement>(max_pool_with_indices, 1);
-
     // rewire users to use a new MaxPoolWithIndices (maxpool's output)
     for (Output<Node> o : m_max_pool->outputs())
     {
         std::set<Input<Node>> copy = o.get_target_inputs();
         for (Input<Node> i : copy)
         {
-            i.replace_source_output(max_pool_with_indices_output->output(0));
+            i.replace_source_output(max_pool_with_indices->output(0));
         }
     }
 
@@ -142,7 +137,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto max_pool_with_indices_bprop =
         std::make_shared<op::MaxPoolWithIndicesBackprop>(pattern_map[data],
                                                          pattern_map[delta],
-                                                         max_pool_with_indices_indices,
+                                                         max_pool_with_indices->output(1),
                                                          m_max_pool->get_window_shape(),
                                                          m_max_pool->get_window_movement_strides(),
                                                          m_max_pool->get_padding_below(),
@@ -151,7 +146,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     ngraph::replace_node(m_max_pool_bprop, max_pool_with_indices_bprop);
     if (m_return_indices)
     {
-        m_indices_list.push_back(max_pool_with_indices_indices);
+        m_index_list.push_back(max_pool_with_indices->output(1));
     }
     return true;
 }

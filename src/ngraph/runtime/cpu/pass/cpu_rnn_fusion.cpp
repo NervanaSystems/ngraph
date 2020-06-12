@@ -132,10 +132,7 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
                                                           n_layers,
                                                           rnn_type);
 
-        auto dst_layer = std::make_shared<ngraph::op::GetOutputElement>(rnn_node, 0);
-        auto dst_iter = std::make_shared<ngraph::op::GetOutputElement>(rnn_node, 1);
-
-        ngraph::replace_node(m.get_match_root(), dst_layer);
+        m.get_match_value().replace(rnn_node->output(0));
         return true;
     };
 
@@ -224,24 +221,14 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             throw ngraph_error("Lstm node doesnt have three outputs");
         }
 
-        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
-        auto ct_slice = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
-
-        auto goe_nodes = ngraph::op::get_output_elements(m.get_match_root());
-        auto dst_layer = goe_nodes[0];
-        auto dst_iter = goe_nodes[1];
+        auto dst_layer = m.get_match_root()->output(0);
+        auto dst_iter = m.get_match_root()->output(1);
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
-        // find the user's for {ht} and replace them with lstm_goe_0
-        if (is_type<ngraph::op::GetOutputElement>(dst_iter))
-        {
-            ngraph::replace_node(dst_iter, ct_slice);
-        }
-        // find the user's for {ht} and replace them with lstm_goe_0
-        if (is_type<ngraph::op::GetOutputElement>(dst_layer))
-        {
-            ngraph::replace_node(dst_layer, lstm_ht_output);
-        }
+        // find the user's for {ht} and replace them with lstm output 2
+        dst_iter.replace(lstm_node->output(2));
+        // find the user's for {ht} and replace them with lstm output 1
+        dst_layer.replace(lstm_node->output(1));
         return true;
     };
 
@@ -982,6 +969,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
+        NGRAPH_INFO << "In callback";
         auto pattern_map = m.get_pattern_map();
         auto rnn_ltor_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_left_to_right]);
         auto rnn_rtol_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_right_to_left]);
@@ -1054,17 +1042,19 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
                                                      num_fused_rnn_layers,
                                                      rnn_type);
 
-        auto layer_rnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        size_t batch_size = layer_rnn_ht->get_output_shape(0)[0] / num_time_steps;
-        size_t feature_size = layer_rnn_ht->get_output_shape(0)[1];
+        size_t batch_size = rnn->get_output_shape(0)[0] / num_time_steps;
+        size_t feature_size = rnn->get_output_shape(0)[1];
 
         // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
         // squeezed_dims{t*n, c}
-        std::shared_ptr<Node> layer_rnn_ht_reshape = layer_rnn_ht;
-        if (m.get_match_root()->get_output_shape(0) != layer_rnn_ht->get_output_shape(0))
+        Output<Node> layer_rnn_ht_reshape = rnn->output(0);
+        if (m.get_match_root()->get_output_shape(0) != rnn->get_output_shape(0))
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
-                layer_rnn_ht, AxisVector{0, 1}, Shape{num_time_steps, batch_size, feature_size});
+                                       rnn->output(0),
+                                       AxisVector{0, 1},
+                                       Shape{num_time_steps, batch_size, feature_size})
+                                       ->output(0);
         }
 
         // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
@@ -1072,12 +1062,13 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
             Shape{batch_size, num_time_steps, feature_size})
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
-                layer_rnn_ht_reshape,
-                AxisVector{1, 0, 2},
-                Shape{batch_size, num_time_steps, feature_size});
+                                       layer_rnn_ht_reshape,
+                                       AxisVector{1, 0, 2},
+                                       Shape{batch_size, num_time_steps, feature_size})
+                                       ->output(0);
         }
 
-        ngraph::replace_node(m.get_match_root(), layer_rnn_ht_reshape);
+        m.get_match_value().replace(layer_rnn_ht_reshape);
         return true;
     };
 

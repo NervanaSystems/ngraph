@@ -349,10 +349,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         {
             return false;
         }
-        auto normalized_output =
-            std::shared_ptr<Node>(new ngraph::op::GetOutputElement(bn_node, 0));
 
-        ngraph::replace_node(m.get_match_root(), normalized_output);
+        m.get_match_value().replace(bn_node->output(0));
         return true;
     };
 
@@ -596,8 +594,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
     auto bn = std::make_shared<ngraph::op::BatchNormTraining>(eps, gamma, beta, input);
-    auto goe = std::make_shared<ngraph::op::GetOutputElement>(bn, 0);
-    auto prelu = std::make_shared<ngraph::op::Relu>(goe);
+    auto prelu = std::make_shared<ngraph::op::Relu>(bn->output(0));
 
     auto callback = [input, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
@@ -605,8 +602,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 
         auto pattern_map = m.get_pattern_map();
         auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
-            m.get_match_root()->get_input_node_shared_ptr(0)->get_input_node_shared_ptr(0));
-
+            m.get_match_root()->get_input_node_shared_ptr(0));
         if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
         {
             return false;
@@ -1163,11 +1159,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                                                                gm->get_argument(3),
                                                                gm->get_argument(4));
 
-        auto goe1 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 0);
-        ngraph::replace_node(m.get_match_root(), goe1);
-
-        auto goe2 = std::make_shared<ngraph::op::GetOutputElement>(dropout_n, 1);
-        ngraph::replace_node(pattern_map[genmask_label], goe2);
+        m.get_match_value().replace(dropout_n->output(0));
+        pattern_map[genmask_label]->output(0).replace(dropout_n->output(1));
 
         return true;
     };
