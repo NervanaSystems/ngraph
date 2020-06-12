@@ -74,12 +74,32 @@ using namespace ngraph;
 
 namespace
 {
+    std::shared_ptr<Node> output_to_node(Output<Node> output)
+    {
+        std::shared_ptr<Node> node = output.get_node_shared_ptr();
+        if (output.get_index() == 0 && output.get_node()->get_output_size() == 1)
+        {
+            return node;
+        }
+        else
+        {
+            for (auto in : output.get_target_inputs())
+            {
+                if (is_type<op::GetOutputElement>(in.get_node()))
+                {
+                    return in.get_node()->shared_from_this();
+                }
+            }
+            return std::make_shared<op::GetOutputElement>(node, output.get_index());
+        }
+    }
+
     NodeVector get_output_elements(const std::shared_ptr<Node>& mon)
     {
         NodeVector goes(mon->get_output_size());
         for (auto o : mon->outputs())
         {
-            goes.at(o.get_index()) = o.as_single_output_node();
+            goes.at(o.get_index()) = output_to_node(o);
         }
         return goes;
     }
