@@ -24,8 +24,7 @@
 
 namespace ngraph
 {
-    [[noreturn]] void numpy_transpose_error(const AxisVector& order, const Shape& in_shape)
-    {
+    [[noreturn]] void numpy_transpose_error(const AxisVector& order, const Shape& in_shape) {
         std::ostringstream os;
         os << "The axes order ";
         os << "[ " << ngraph::join(order) << " ]";

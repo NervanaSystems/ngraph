@@ -35,7 +35,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"

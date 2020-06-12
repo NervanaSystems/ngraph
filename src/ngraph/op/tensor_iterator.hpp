@@ -362,6 +362,7 @@ namespace ngraph
             ">>",
             0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         std::vector<std::shared_ptr<op::TensorIterator::InputDescription>>& m_ref;
     };
@@ -395,6 +396,7 @@ namespace ngraph
             ">>",
             0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         std::vector<std::shared_ptr<op::TensorIterator::OutputDescription>>& m_ref;
     };

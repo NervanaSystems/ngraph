@@ -209,7 +209,6 @@ TEST(build_graph, function_revalidate_and_infer)
 TEST(build_graph, validate_function_for_dynamic_shape)
 {
     auto make_function = [&](bool dynamic_shape) {
-
         auto param1_shape =
             dynamic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
         auto param2_shape = dynamic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};

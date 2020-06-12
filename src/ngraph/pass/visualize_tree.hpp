@@ -49,6 +49,7 @@ public:
     bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
     void set_ops_to_details(const visualize_tree_ops_map_t& ops_map) { m_ops_to_details = ops_map; }
+
 protected:
     void add_node_arguments(std::shared_ptr<Node> node,
                             std::unordered_map<Node*, HeightMap>& height_maps,

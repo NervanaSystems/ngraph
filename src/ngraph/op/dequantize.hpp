@@ -59,6 +59,7 @@ namespace ngraph
                 void set_axes(const AxisSet& axes) { m_axes = axes; }
                 const element::Type& get_type() const { return m_type; }
                 void set_type(const element::Type& type) { m_type = type; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

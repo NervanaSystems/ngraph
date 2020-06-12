@@ -342,7 +342,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
         auto window_movement_strides = Strides{2, 2};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -366,7 +365,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numer
         auto window_movement_strides = Strides{1, 1};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -392,7 +390,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_paddi
         auto avgpool = make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding, padding, false);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();

@@ -65,6 +65,7 @@ namespace ngraph
                 bool get_use_affine() const { return m_use_affine; }
                 double get_epsilon() const { return m_epsilon; }
                 int64_t get_begin_norm_axis() const { return m_begin_norm_axis; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -130,6 +131,7 @@ namespace ngraph
                 bool get_use_affine() const { return m_use_affine; }
                 double get_epsilon() const { return m_epsilon; }
                 int64_t get_begin_norm_axis() const { return m_begin_norm_axis; }
+
             private:
                 bool m_use_stats{true};
                 bool m_use_affine{true};

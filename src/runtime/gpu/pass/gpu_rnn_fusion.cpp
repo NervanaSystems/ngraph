@@ -391,8 +391,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_node_label = std::make_shared<pattern::op::Label>(goe, nullptr, NodeVector{goe});
 
     auto callback = [lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
-        pattern::RecurrentMatcher& m) {
-
+                        pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << " In RNN fusion callback";
 
         auto ht_1_label = m.get_bound_nodes_for_pattern(ht_1);
@@ -594,7 +593,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << m.get_match_root()->get_name();
         return true;
-
     };
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
@@ -680,8 +678,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::make_shared<pattern::op::Label>(rnn_ht_out, nullptr, NodeVector{rnn_ht_out});
 
     auto callback = [src_layer_label, src_iter_label, params_label, state_iter_label, rnn_ht_label](
-        pattern::RecurrentMatcher& m) {
-
+                        pattern::RecurrentMatcher& m) {
         if (m.get_number_of_recurrent_matches() <= 1)
         {
             return false;

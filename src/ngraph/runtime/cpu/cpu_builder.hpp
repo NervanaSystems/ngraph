@@ -42,7 +42,7 @@
     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());               \
                                                                                                    \
     auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](               \
-        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                                       \
+                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {                        \
         kernel(ctx->buffer_data[arg0_buffer_index],                                                \
                ctx->buffer_data[out0_buffer_index],                                                \
                element_count,                                                                      \

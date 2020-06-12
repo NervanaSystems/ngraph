@@ -2019,7 +2019,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         {
             NGRAPH_CHECK(m_op_attrs.size() == profiler_count);
         }
-
     };
 
     m_is_built = true;

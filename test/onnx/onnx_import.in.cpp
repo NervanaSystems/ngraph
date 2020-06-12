@@ -1757,12 +1757,12 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_erf)
     inputs.emplace_back(test::NDArray<float, 2>{
         {-std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity()},
         {-3.141592f, 0.0f},
-        {0.5f, 1.0f}}.get_vector());
+        {0.5f, 1.0f}}
+                            .get_vector());
 
-    const std::vector<float> expected_output = test::NDArray<float, 2>{
-        {-1.0f, 1.0f},
-        {-0.99999112f, 0.0f},
-        {0.52049988f, 0.84270079f}}.get_vector();
+    const std::vector<float> expected_output =
+        test::NDArray<float, 2>{{-1.0f, 1.0f}, {-0.99999112f, 0.0f}, {0.52049988f, 0.84270079f}}
+            .get_vector();
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_multiple_inputs(inputs);

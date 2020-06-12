@@ -85,6 +85,7 @@ public:
     std::list<node>::const_iterator end() const { return m_node_list.cend(); }
     const std::list<node>& get_node_list() const { return m_node_list; }
     size_t max_allocated() const { return m_max_allocated; }
+
 private:
     size_t first_fit(size_t size);
     size_t best_fit(size_t size);

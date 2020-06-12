@@ -224,9 +224,7 @@ void Node::set_output_size(size_t n)
     }
 }
 
-void Node::validate_and_infer_types()
-{
-}
+void Node::validate_and_infer_types() {}
 
 void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
 {

@@ -298,7 +298,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     };
 
     auto callback_matcher_v1 = [&]() -> void {
-
         // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
         // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to
         // D'=[x*y, z], then we have dot(D',W), result

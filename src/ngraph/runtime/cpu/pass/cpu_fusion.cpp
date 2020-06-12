@@ -311,7 +311,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
                      << m.get_match_root()->get_name();
 
@@ -1483,7 +1483,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
         ngraph::replace_node(m.get_match_root(), conv_bias);
 
         return true;
-
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CPUFusion.ConvBiasFoldedBatchNorm");
@@ -1620,7 +1619,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
         ngraph::replace_node(m.get_match_root(), convbias_n);
 
         return true;
-
     };
 
     auto m =
@@ -1657,7 +1655,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
         std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
 
     auto callback = [input, filters, conv_label, mean, var, gamma, beta](pattern::Matcher& m) {
-
         NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -1763,7 +1760,6 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     auto prelu = std::make_shared<ngraph::op::Relu>(conv_label);
 
     auto callback = [input, filters, bias, num, conv_label, prelu](pattern::Matcher& m) {
-
         NGRAPH_DEBUG << "In callback for GroupConvBias + Relu folding against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -1820,7 +1816,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
     auto bn = std::make_shared<op::BatchNormInference>(eps, gamma, beta, conv_label, mean, var);
 
     auto callback = [data_label, filters, out_delta, conv_label, mean, var, gamma, beta](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for deconv affine folding against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -2524,7 +2520,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
                                                             AxisSet{},
                                                             AxisSet{});
     auto callback = [input0, input1, input0_scale, input1_scale, output_scale](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 

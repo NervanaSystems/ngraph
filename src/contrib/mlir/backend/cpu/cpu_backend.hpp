@@ -85,6 +85,6 @@ public:
   // Global initialization done for CPU backend
   static bool initialized;
 };
-}
-}
-}
+} // namespace ngmlir
+} // namespace runtime
+} // namespace ngraph

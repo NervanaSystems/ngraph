@@ -33,9 +33,9 @@
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
@@ -134,7 +134,7 @@ private:
   TensorToInfoMap m_tensorToValueMap;
   static const MLIRCompOpMap &getOpDispatcher();
 };
-}
+} // namespace
 
 NgDialectConversionPass::NgDialectConversionPass(
     const NgDialectConversionPass &obj)
