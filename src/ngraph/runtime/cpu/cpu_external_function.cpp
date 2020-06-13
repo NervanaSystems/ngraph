@@ -1204,7 +1204,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto dex = is_direct_execution();
     auto is_supported = [dex, this](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
-        if ((m_mode == EXECUTION_MODE::MLIR) && getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        if ((m_execution_mode == EXECUTION_MODE::MLIR) && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
                 node.get_input_element_type(0) == element::f32 &&
@@ -1295,7 +1295,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
 // Disable CPUFusion if MLIR is enabled to preserve core ops.
 #ifdef NGRAPH_MLIR_ENABLE
-    if (m_mode != EXECUTION_MODE::MLIR)
+    if (m_execution_mode != EXECUTION_MODE::MLIR)
     {
 #endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
@@ -1307,7 +1307,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (m_mode == EXECUTION_MODE::MLIR)
+    if (m_execution_mode == EXECUTION_MODE::MLIR)
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
