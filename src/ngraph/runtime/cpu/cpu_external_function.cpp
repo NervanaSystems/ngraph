@@ -29,7 +29,7 @@
 #include <tbb/flow_graph.h>
 #endif
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 #include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/codegen/execution_engine.hpp"
@@ -247,7 +247,7 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 #if defined(NGRAPH_TBB_ENABLE)
     , m_use_tbb(getenv_bool("NGRAPH_CPU_USE_TBB"))
 #endif
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
     , m_is_compiled(false)
     , m_direct_execution(mode != EXECUTION_MODE::CODEGEN)
 #else
@@ -276,7 +276,7 @@ public:
 
 static const string s_debug_dir = "cpu_codegen";
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
 static string emit_string_array(const vector<string>& s, size_t max_line_length)
 {
@@ -1194,7 +1194,7 @@ using namespace ngraph;
     }
 }
 
-#endif // !defined(NGRAPH_DEX_ONLY)
+#endif // defined(CODEGEN_ENABLE)
 
 void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     ngraph::pass::Manager& pass_manager, ngraph::pass::PassConfig& pass_config)
@@ -1204,7 +1204,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto dex = is_direct_execution();
     auto is_supported = [dex, this](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
-        if ((m_execution_mode == EXECUTION_MODE::MLIR) && getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        if ((m_mode == EXECUTION_MODE::MLIR) && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
                 node.get_input_element_type(0) == element::f32 &&
@@ -1257,7 +1257,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         }
         else
         {
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
             auto handler = dispatcher.find(type_index(typeid(node)));
             if (handler == dispatcher.end())
             {
@@ -1295,7 +1295,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
 // Disable CPUFusion if MLIR is enabled to preserve core ops.
 #ifdef NGRAPH_MLIR_ENABLE
-    if (m_execution_mode != EXECUTION_MODE::MLIR)
+    if (m_mode != EXECUTION_MODE::MLIR)
     {
 #endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
@@ -1307,7 +1307,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (m_execution_mode == EXECUTION_MODE::MLIR)
+    if (m_mode == EXECUTION_MODE::MLIR)
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
@@ -2062,7 +2062,7 @@ shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
     runtime::cpu::CPU_ExternalFunction::make_call_frame(ngraph::pass::PassConfig& pass_config,
                                                         Allocator* allocator)
 {
-#if defined(NGRAPH_DEX_ONLY)
+#if !defined(CODEGEN_ENABLE)
     if (is_codegen(pass_config))
     {
         throw runtime_error("CPU Backend: Requested unsupported compilation mode (CODEGEN)");
@@ -2105,7 +2105,7 @@ const runtime::cpu::LayoutDescriptorPtrs&
 
 const vector<runtime::PerformanceCounter>& runtime::cpu::CPU_ExternalFunction::get_perf_counters()
 {
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
     // Codegen. Retrieve perf counters from compiled module
     if (m_execution_engine)
     {
@@ -2160,7 +2160,7 @@ void runtime::cpu::CPU_ExternalFunction::write_to_file(const std::string& code,
     out.close();
 }
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
 void runtime::cpu::CPU_ExternalFunction::emit_debug_function_entry(
     CodeWriter& writer,

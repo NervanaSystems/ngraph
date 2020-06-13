@@ -158,12 +158,6 @@ if (NGRAPH_CPU_CODEGEN_ENABLE)
     set(NGRAPH_CPU_ENABLE TRUE)
 endif()
 
-if (NGRAPH_CPU_ENABLE AND (NOT NGRAPH_CPU_CODEGEN_ENABLE))
-    set(NGRAPH_DEX_ONLY TRUE)
-else()
-    set(NGRAPH_DEX_ONLY FALSE)
-endif()
-
 if (NGRAPH_STATIC_LIB_ENABLE)
     message(WARNING "Workaround: "
                     "Turning off NGRAPH_EXPORT_TARGETS_ENABLE for nGraph static lib")
@@ -174,7 +168,7 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
 endif()
 
-if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
+if (NGRAPH_MLIR_ENABLE AND NGRAPH_CPU_CODEGEN_ENABLE)
     #disable code-gen due to sym collision with LLVM
     message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON")
 endif()
@@ -641,12 +635,6 @@ if(NGRAPH_CPU_ENABLE)
 endif()
 if (NGRAPH_MLIR_ENABLE)
     include(cmake/external_mlir.cmake)
-endif()
-
-if (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY)
-    set(NGRAPH_CODEGEN_ENABLE TRUE)
-else()
-    set(NGRAPH_CODEGEN_ENABLE FALSE)
 endif()
 
 if(NGRAPH_CODEGEN_ENABLE)
