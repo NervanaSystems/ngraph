@@ -57,26 +57,6 @@ namespace ngraph
     }
     Node* Output<Node>::get_node() const { return m_node.get(); }
     std::shared_ptr<Node> Output<Node>::get_node_shared_ptr() const { return m_node; }
-    std::shared_ptr<Node> Output<Node>::as_single_output_node() const
-    {
-        std::shared_ptr<Node> node = get_node_shared_ptr();
-        if (m_index == 0 && get_node()->get_output_size() == 1)
-        {
-            return node;
-        }
-        else
-        {
-            for (auto in : get_target_inputs())
-            {
-                if (is_type<op::GetOutputElement>(in.get_node()))
-                {
-                    return in.get_node()->shared_from_this();
-                }
-            }
-            return std::make_shared<op::GetOutputElement>(node, m_index);
-        }
-    }
-
     size_t Output<Node>::get_index() const { return m_index; }
     descriptor::Tensor& Output<Node>::get_tensor() const
     {

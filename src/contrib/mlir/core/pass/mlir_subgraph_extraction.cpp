@@ -296,19 +296,6 @@ MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func) {
       }
     }
   }
-  for (auto &node : ck_nodes) {
-    auto ck = std::static_pointer_cast<CompiledKernel>(node);
-    if (ck->get_output_size() > 1) {
-      for (auto &old_output : ck->outputs()) {
-        auto inputs = old_output.get_target_inputs();
-        auto goe_node = old_output.as_single_output_node();
-        auto new_output = goe_node->output(0);
-        for (auto &input : inputs) {
-          input.replace_source_output(new_output);
-        }
-      }
-    }
-  }
 
   return ck_nodes;
 }
