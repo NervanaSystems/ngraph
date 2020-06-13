@@ -241,7 +241,7 @@ using namespace ngraph;
     }
 
 runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
-    const shared_ptr<ngraph::Function>& function, bool codegen_enable)
+    const shared_ptr<ngraph::Function>& function, EXECUTION_MODE mode)
     : m_function(function)
     , m_emit_timing(false)
 #if defined(NGRAPH_TBB_ENABLE)
@@ -249,13 +249,14 @@ runtime::cpu::CPU_ExternalFunction::CPU_ExternalFunction(
 #endif
 #if !defined(NGRAPH_DEX_ONLY)
     , m_is_compiled(false)
-    , m_direct_execution(!codegen_enable)
+    , m_direct_execution(mode != EXECUTION_MODE::CODEGEN)
 #else
     , m_direct_execution(true)
 #endif
     , m_compiled_function(nullptr)
     , m_function_name(function->get_name())
     , m_is_built(false)
+    , m_execution_mode(mode)
 {
 }
 
@@ -1203,7 +1204,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     auto dex = is_direct_execution();
     auto is_supported = [dex, this](const Node& node) {
 #ifdef NGRAPH_MLIR_ENABLE
-        if (getenv_bool("NGRAPH_MLIR") && getenv_bool("NGRAPH_MLIR_CALLBACK"))
+        if ((m_execution_mode == EXECUTION_MODE::MLIR) && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
                 node.get_input_element_type(0) == element::f32 &&
@@ -1294,7 +1295,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
 // Disable CPUFusion if MLIR is enabled to preserve core ops.
 #ifdef NGRAPH_MLIR_ENABLE
-    if (!getenv_bool("NGRAPH_MLIR"))
+    if (m_execution_mode != EXECUTION_MODE::MLIR)
     {
 #endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
@@ -1306,7 +1307,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
 
 #ifdef NGRAPH_MLIR_ENABLE
-    if (getenv_bool("NGRAPH_MLIR"))
+    if (m_execution_mode == EXECUTION_MODE::MLIR)
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)
     }
