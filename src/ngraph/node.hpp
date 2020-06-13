@@ -100,14 +100,6 @@ namespace ngraph
     NGRAPH_API
     std::string node_validation_failure_loc_string(const Node* node);
 
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-    NGRAPH_API
-    const NodeVector& check_single_output_args(const NodeVector& args);
-
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-
     NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
     NGRAPH_API
