@@ -42,7 +42,6 @@
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/output_vector.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
 
@@ -428,10 +427,10 @@ namespace ngraph
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
         /// Get device placement
-        Placement get_placement() const;
+        int32_t get_placement() const;
 
         /// Set device placement
-        void set_placement(Placement placement);
+        void set_placement(int32_t placement);
 
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
@@ -545,7 +544,7 @@ namespace ngraph
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
-        Placement m_placement = Placement::DEFAULT;
+        int32_t m_placement = -1;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
