@@ -233,27 +233,22 @@ void MLIRSubgraphExtractionPass::build_subgraphs(
   }
 }
 
-namespace
-{
-    std::shared_ptr<ngraph::Node> output_to_node(ngraph::Output<ngraph::Node> output)
-    {
-        std::shared_ptr<ngraph::Node> node = output.get_node_shared_ptr();
-        if (output.get_index() == 0 && output.get_node()->get_output_size() == 1)
-        {
-            return node;
-        }
-        else
-        {
-            for (auto in : output.get_target_inputs())
-            {
-                if (ngraph::is_type<ngraph::op::GetOutputElement>(in.get_node()))
-                {
-                    return in.get_node()->shared_from_this();
-                }
-            }
-            return std::make_shared<ngraph::op::GetOutputElement>(node, output.get_index());
-        }
+namespace {
+std::shared_ptr<ngraph::Node>
+output_to_node(ngraph::Output<ngraph::Node> output) {
+  std::shared_ptr<ngraph::Node> node = output.get_node_shared_ptr();
+  if (output.get_index() == 0 && output.get_node()->get_output_size() == 1) {
+    return node;
+  } else {
+    for (auto in : output.get_target_inputs()) {
+      if (ngraph::is_type<ngraph::op::GetOutputElement>(in.get_node())) {
+        return in.get_node()->shared_from_this();
+      }
     }
+    return std::make_shared<ngraph::op::GetOutputElement>(node,
+                                                          output.get_index());
+  }
+}
 }
 
 ngraph::NodeVector
