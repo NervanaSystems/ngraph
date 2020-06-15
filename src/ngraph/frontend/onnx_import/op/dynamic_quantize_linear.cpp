@@ -24,7 +24,6 @@
 #include "onnx/proto_utils.h"
 #include "round.hpp"
 
-
 namespace ngraph
 {
     namespace onnx_import
@@ -97,10 +96,9 @@ namespace ngraph
                     y_zero_point->set_name("y_zero_point");
                     *y_zero_point->mutable_type() = uint8_type_no_scalar;
 
-                    std::cout<<"Schema"<<std::endl;
                     const auto* schema = ONNX_NAMESPACE::OpSchemaRegistry::Schema(node.op_type(), 11, "");
                     const ONNX_NAMESPACE::FunctionProto* func = schema->GetFunction();
-                     std::cout<<"Schema end"<<std::endl;
+
                     FunctionExpandHelper(*new_node, *func, graph);
 
                     graph.mutable_node()->erase(graph.node().begin());
@@ -131,7 +129,7 @@ namespace ngraph
                         }
                     }
                     // Quantze, Divde, Convert
-                    return NodeVector{nodes.at(19), nodes.at(10), nodes.at(16)};
+                    return NodeVector{nodes.at(23), nodes.at(10), nodes.at(16)};
                 }
             } // namespace set_1
 
