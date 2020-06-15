@@ -417,10 +417,6 @@ namespace ngraph
     NGRAPH_API
     std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
 
-    // Assert that nodes in the function is colocated and return that placement
-    NGRAPH_API
-    int32_t get_colocated_function_placement(std::shared_ptr<Function> func);
-
     NGRAPH_API
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::v0::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,

@@ -426,11 +426,14 @@ namespace ngraph
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
-        /// Get device placement
+        /// \brief Node placement is an arbitrary value used by a backend to describe where a Node
+        /// is to be executed. If a backend is a hybrid of, as an example, a CPU and a GPU then
+        /// it might use the value 0 to be the CPU and 1 to be the GPU. The value is not used by
+        /// ngraph core and is only intended as backend metadata.
+        /// The placement value -1 is defined to mean "default placement"
         int32_t get_placement() const;
-
-        /// Set device placement
         void set_placement(int32_t placement);
+        static constexpr int32_t default_placement = -1;
 
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
@@ -544,7 +547,7 @@ namespace ngraph
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
-        int32_t m_placement = -1;
+        int32_t m_placement = default_placement;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
