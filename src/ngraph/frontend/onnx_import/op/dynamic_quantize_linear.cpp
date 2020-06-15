@@ -35,35 +35,35 @@ namespace ngraph
                 NodeVector dynamic_quantize_linear(const Node& node)
                 {
                     // Create TypeProto
-                    onnx::TypeProto float_type_shape_6;
+                    ONNX_NAMESPACE::TypeProto float_type_shape_6;
                     float_type_shape_6.mutable_tensor_type()->set_elem_type(
-                        onnx::TensorProto_DataType_FLOAT);
+                        ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
                     float_type_shape_6.mutable_tensor_type()
                         ->mutable_shape()
                         ->add_dim()
                         ->set_dim_value(6);
 
-                    onnx::TypeProto uint8_type_shape_6;
+                    ONNX_NAMESPACE::TypeProto uint8_type_shape_6;
                     uint8_type_shape_6.mutable_tensor_type()->set_elem_type(
-                        onnx::TensorProto_DataType_UINT8);
+                        ONNX_NAMESPACE::TensorProto_DataType_UINT8);
                     uint8_type_shape_6.mutable_tensor_type()
                         ->mutable_shape()
                         ->add_dim()
                         ->set_dim_value(6);
 
-                    onnx::TypeProto float_type_no_scalar;
+                    ONNX_NAMESPACE::TypeProto float_type_no_scalar;
                     float_type_no_scalar.mutable_tensor_type()->set_elem_type(
-                        onnx::TensorProto_DataType_FLOAT);
+                        ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
 
-                    onnx::TypeProto uint8_type_no_scalar;
+                    ONNX_NAMESPACE::TypeProto uint8_type_no_scalar;
                     uint8_type_no_scalar.mutable_tensor_type()->set_elem_type(
-                        onnx::TensorProto_DataType_UINT8);
+                        ONNX_NAMESPACE::TensorProto_DataType_UINT8);
 
-                    const onnx::NodeProto node_proto = node.node_proto();
+                    const ONNX_NAMESPACE::NodeProto node_proto = node.node_proto();
 
                     // Create a graph
-                    onnx::GraphProto graph;
-                    onnx::NodeProto* new_node = graph.add_node();
+                    ONNX_NAMESPACE::GraphProto graph;
+                    ONNX_NAMESPACE::NodeProto* new_node = graph.add_node();
                     new_node->CopyFrom(node_proto);
                     new_node->clear_input();
                     new_node->clear_output();
@@ -72,7 +72,7 @@ namespace ngraph
                     for (std::shared_ptr<ngraph::Node> input : node.get_ng_inputs())
                     {
                         new_node->add_input(input->get_name());
-                        onnx::ValueInfoProto* proto_input = graph.add_input();
+                        ONNX_NAMESPACE::ValueInfoProto* proto_input = graph.add_input();
                         proto_input->set_name(input->get_name());
                         *proto_input->mutable_type() = float_type_shape_6;
                     }
@@ -84,27 +84,28 @@ namespace ngraph
                     }
 
                     // Add outputs to graph
-                    onnx::ValueInfoProto* y = graph.add_output();
+                    ONNX_NAMESPACE::ValueInfoProto* y = graph.add_output();
                     y->set_name("y");
                     *y->mutable_type() = uint8_type_shape_6;
 
-                    onnx::ValueInfoProto* y_scale = graph.add_output();
+                    ONNX_NAMESPACE::ValueInfoProto* y_scale = graph.add_output();
                     y_scale->set_name("y_scale");
                     *y_scale->mutable_type() = float_type_no_scalar;
 
-                    onnx::ValueInfoProto* y_zero_point = graph.add_output();
+                    ONNX_NAMESPACE::ValueInfoProto* y_zero_point = graph.add_output();
                     y_zero_point->set_name("y_zero_point");
                     *y_zero_point->mutable_type() = uint8_type_no_scalar;
 
-                    const auto* schema = onnx::OpSchemaRegistry::Schema(node.op_type(), 11, "");
-                    const onnx::FunctionProto* func = schema->GetFunction();
+                    const auto* schema =
+                        ONNX_NAMESPACE::OpSchemaRegistry::Schema(node.op_type(), 11, "");
+                    const ONNX_NAMESPACE::FunctionProto* func = schema->GetFunction();
 
                     FunctionExpandHelper(*new_node, *func, graph);
 
                     graph.mutable_node()->erase(graph.node().begin());
 
                     // Save graph to file
-                    onnx::ModelProto model;
+                    ONNX_NAMESPACE::ModelProto model;
                     auto* graph_ptr = model.mutable_graph();
                     *graph_ptr = graph;
                     model.set_ir_version(5);
@@ -129,7 +130,7 @@ namespace ngraph
                         }
                     }
                     // Quantze, Divde, Convert
-                    return NodeVector{nodes.at(19), nodes.at(10), nodes.at(16)};
+                    return NodeVector{nodes.at(23), nodes.at(10), nodes.at(16)};
                 }
             } // namespace set_1
 

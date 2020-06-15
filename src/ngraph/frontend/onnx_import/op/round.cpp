@@ -32,7 +32,6 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
-
             }
         }
     }

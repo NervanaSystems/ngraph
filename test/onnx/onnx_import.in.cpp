@@ -2053,7 +2053,6 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_model_reciprocal)
     test_case.run();
 }
 
-
 NGRAPH_TEST(onnx_${BACKEND_NAME}, model_dynamic_quantize_linear)
 {
     const auto dql_fn = onnx_import::import_onnx_model(
