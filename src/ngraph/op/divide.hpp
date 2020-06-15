@@ -54,19 +54,21 @@ namespace ngraph
                 Divide(const Output<Node>& arg0,
                        const Output<Node>& arg1,
                        const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 bool is_pythondiv() const { return m_pythondiv; }
                 void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 bool m_pythondiv{true};
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -103,22 +105,26 @@ namespace ngraph
                        const Output<Node>& arg1,
                        const AutoBroadcastSpec& auto_broadcast =
                            AutoBroadcastSpec(AutoBroadcastType::NUMPY));
-
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 bool is_pythondiv() const { return m_pythondiv; }
                 void set_is_pythondiv(bool pythondiv) { m_pythondiv = pythondiv; }
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
                 size_t get_version() const override { return 1; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
             protected:
                 bool m_pythondiv{true};
             };
-        } // namespace v1
+        }
 
         using v0::Divide;
-    } // namespace op
+    }
 
+    NGRAPH_API
     std::shared_ptr<Node> operator/(const Output<Node>& arg0, const Output<Node>& arg1);
-} // namespace ngraph
+}

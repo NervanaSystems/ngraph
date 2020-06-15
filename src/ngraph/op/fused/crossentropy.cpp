@@ -27,7 +27,6 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -118,7 +117,7 @@ static std::shared_ptr<ngraph::Node>
     return convert;
 }
 
-NodeVector op::CrossEntropy::decompose_op() const
+OutputVector op::CrossEntropy::decompose_op() const
 {
     // we will reshape the labels and input tensor to 2d
     auto input_to_normalize = get_2d_tensor(input_value(0));
@@ -182,7 +181,7 @@ NodeVector op::CrossEntropy::decompose_op() const
     }
 }
 
-shared_ptr<Node> op::CrossEntropy::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CrossEntropy::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<CrossEntropy>(new_args.at(0), new_args.at(1), m_soft_label, m_ignore_index);
@@ -231,14 +230,14 @@ void op::CrossEntropyBackprop::pre_validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
 }
 
-shared_ptr<Node> op::CrossEntropyBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CrossEntropyBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<CrossEntropyBackprop>(
         new_args.at(0), new_args.at(1), new_args.at(2), m_soft_label, m_ignore_index);
 }
 
-NodeVector op::CrossEntropyBackprop::decompose_op() const
+OutputVector op::CrossEntropyBackprop::decompose_op() const
 {
     auto input = get_2d_tensor(input_value(0));
     auto labels = get_2d_tensor(input_value(1));

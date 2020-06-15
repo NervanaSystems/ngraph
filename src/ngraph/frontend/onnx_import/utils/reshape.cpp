@@ -19,6 +19,7 @@
 #include <iterator>
 #include <numeric>
 
+#include "default_opset.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/shape.hpp"
@@ -91,7 +92,7 @@ namespace ngraph
                 Shape node_shape = node->get_shape();
 
                 // If node is already a scalar, return original
-                if (node_shape.empty())
+                if (is_scalar(node_shape))
                 {
                     return node;
                 }
@@ -104,14 +105,13 @@ namespace ngraph
                 if (node->is_constant())
                 {
                     const auto value =
-                        ngraph::as_type_ptr<ngraph::op::Constant>(node)->get_data_ptr();
-                    return std::make_shared<ngraph::op::Constant>(
+                        ngraph::as_type_ptr<default_opset::Constant>(node)->get_data_ptr();
+                    return std::make_shared<default_opset::Constant>(
                         node->get_element_type(), ngraph::Shape{}, value);
                 }
 
-                return ngraph::builder::opset1::reshape(node, Shape{});
+                return builder::opset1::reshape(node, Shape{});
             }
-
-        } // namespace  reshape
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

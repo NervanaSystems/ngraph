@@ -91,7 +91,7 @@ namespace ngraph
                         if (ng_inputs.size() > 3 && !ng_inputs.at(3)->is_null())
                         {
                             auto bias = ng_inputs.at(3);
-                            auto split_bias = builder::split(bias, 2, 1);
+                            auto split_bias = builder::opset1::split(bias, 2, 1);
                             m_map[LSTMInput::LSTM_INPUT_B] = split_bias.at(0) + split_bias.at(1);
                         }
                         else
@@ -212,8 +212,7 @@ namespace ngraph
                     std::vector<float> m_activation_beta;
                     bool m_input_forget;
                 };
-
-            } // anonymous namespace
+            }
 
             namespace set_1
             {
@@ -243,10 +242,7 @@ namespace ngraph
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 1),
                             std::make_shared<ngraph::opset0::GetOutputElement>(lstmSequence, 2)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

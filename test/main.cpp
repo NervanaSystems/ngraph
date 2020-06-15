@@ -25,9 +25,16 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/interpreter/int_backend.hpp"
+
+#ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
+#include <pybind11/embed.h>
+#endif
 
 using namespace std;
+
+#ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
+namespace py = pybind11;
+#endif
 
 int main(int argc, char** argv)
 {
@@ -51,23 +58,22 @@ int main(int argc, char** argv)
         }
     }
     ngraph::runtime::Backend::set_backend_shared_library_search_directory(cpath);
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
-#ifdef NGRAPH_INTERPRETER_ENABLE
-    ngraph_register_interpreter_backend();
-#endif
-
 #ifdef NGRAPH_MLIR_ENABLE
     // Initialize MLIR
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 #endif
 
-    auto start = std::chrono::system_clock::now();
+#ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
+    // Setup embedded python interpreter and import numpy
+    py::scoped_interpreter guard{};
+    py::exec(R"(
+import numpy as np
+)",
+             py::globals(),
+             py::dict());
+#endif
+
     int rc = RUN_ALL_TESTS();
-    auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-        std::chrono::system_clock::now() - start);
-    NGRAPH_DEBUG_PRINT("[MAIN] Tests finished: Time: %d ms Exit code: %d", elapsed.count(), rc);
 
     return rc;
 }

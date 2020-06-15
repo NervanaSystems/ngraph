@@ -22,6 +22,7 @@
 #include <typeindex>
 #include <unordered_map>
 #include <vector>
+#include "ngraph/env_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
@@ -138,9 +139,9 @@
 using namespace std;
 using namespace ngraph;
 
-static bool s_use_ref_kernels = (std::getenv("NGRAPH_CPU_USE_REF_KERNELS") != nullptr);
+static bool s_use_ref_kernels = getenv_bool("NGRAPH_CPU_USE_REF_KERNELS");
 
-static string eigen_vector_format(const runtime::cpu::TensorViewWrapper& tvi)
+static string eigen_vector_format(const runtime::cpu::TensorWrapper& tvi)
 {
     return "fmt::V{" + to_string(tvi.get_size()) + "}";
 }
@@ -184,7 +185,7 @@ namespace ngraph
                                               size_t& index,
                                               std::vector<std::size_t>& deps,
                                               size_t& scratchpad_size,
-                                              const std::vector<TensorViewWrapper>& args)
+                                              const std::vector<TensorWrapper>& args)
             {
                 writer << "if (ctx->first_iteration)\n";
                 writer.block_begin();
@@ -386,8 +387,8 @@ namespace ngraph
                                         const Shape& shape_a,
                                         const Shape& shape_b,
                                         const Shape& shape_c,
-                                        const std::vector<TensorViewWrapper>& args,
-                                        const std::vector<TensorViewWrapper>& out,
+                                        const std::vector<TensorWrapper>& args,
+                                        const std::vector<TensorWrapper>& out,
                                         const bool transpose_a,
                                         const bool transpose_b,
                                         CodeWriter& writer)
@@ -687,8 +688,8 @@ namespace ngraph
             void CPU_Emitter::emitBatchNorm(CPU_ExternalFunction* external_function,
                                             CodeWriter& writer,
                                             const ngraph::Node* node,
-                                            const std::vector<TensorViewWrapper>& args,
-                                            const std::vector<TensorViewWrapper>& out,
+                                            const std::vector<TensorWrapper>& args,
+                                            const std::vector<TensorWrapper>& out,
                                             bool /* append_relu */,
                                             bool training)
             {
@@ -1355,6 +1356,7 @@ namespace ngraph
                 {
                     writer << "reference::lrn<" << lrn->get_element_type().c_type_string() << ">(";
                     writer << "            " << args[0].get_name() << ",\n";
+                    writer << "            {" << join(lrn->get_reduction_axes()) << "},\n";
                     writer << "            " << out[0].get_name() << ",\n";
                     writer << "            {" << join(args[0].get_shape()) << "},\n";
                     writer << "            " << lrn->get_alpha() << ",\n";
@@ -1769,7 +1771,7 @@ namespace ngraph
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
                 auto index_type_name = embed->get_argument(0)->get_element_type().c_type_string();
                 auto type_name = embed->get_element_type().c_type_string();
-                auto element_count = shape_size(embed->get_argument(0)->get_shape());
+                auto element_count = shape_size(embed->get_input_shape(0));
 
                 writer << "reference::embedding<" << type_name << "," << index_type_name << ">(";
                 writer << "            " << args[0].get_name() << ",\n";
@@ -1919,14 +1921,56 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << ", "
+                writer << out[0].get_name() << "[i] = atan2(" << args[0].get_name() << "[i], "
                        << args[1].get_name() << "[i]);\n";
                 writer.block_end();
                 writer.block_end();
             }
 
-            static void emitArgMinArgMax(const std::vector<TensorViewWrapper>& args,
-                                         const std::vector<TensorViewWrapper>& out,
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Asinh)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = asinh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Acosh)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = acosh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            template <>
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::Atanh)
+            {
+                (void)external_function;
+                (void)node;
+                writer.block_begin();
+                writer << "#pragma omp parallel for\n";
+                writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
+                writer.block_begin();
+                writer << out[0].get_name() << "[i] = atanh(" << args[0].get_name() << "[i]);\n";
+                writer.block_end();
+                writer.block_end();
+            }
+
+            static void emitArgMinArgMax(const std::vector<TensorWrapper>& args,
+                                         const std::vector<TensorWrapper>& out,
                                          size_t reduction_axis,
                                          const char* kernel_name,
                                          CodeWriter& writer)
@@ -1977,15 +2021,17 @@ namespace ngraph
 
                 writer.block_begin();
                 writer << "reference::topk<" << args[0].get_type() << ", "
-                       << out[0].get_element_type().c_type_string() << ">(" << args[0].get_name()
-                       << ",\n";
+                       << out[0].get_element_type().c_type_string() << ">(\n";
+                writer << "                   " << args[0].get_name() << ",\n";
                 writer << "                   " << out[0].get_name() << ",\n";
                 writer << "                   " << out[1].get_name() << ",\n";
                 writer << "                   {" << join(args[0].get_shape()) << "},\n";
                 writer << "                   {" << join(out[0].get_shape()) << "},\n";
                 writer << "                   " << topk->get_top_k_axis() << ",\n";
                 writer << "                   " << topk->get_k() << ",\n";
-                writer << "                   " << topk->get_compute_max() << ");\n";
+                writer << "                   " << topk->get_compute_max() << ",\n";
+                writer << "                   ngraph::op::TopKSortType::" << topk->get_sort()
+                       << ");\n";
                 writer.block_end();
             }
 
@@ -2310,7 +2356,14 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = ceil(" << args[0].get_name() << "[i]);\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -2325,7 +2378,15 @@ namespace ngraph
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
                 writer.block_begin();
-                writer << out[0].get_name() << "[i] = floor(" << args[0].get_name() << "[i]);\n";
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i];\n";
+                }
+                else
+                {
+                    writer << out[0].get_name() << "[i] = floor(" << args[0].get_name()
+                           << "[i]);\n";
+                }
                 writer.block_end();
                 writer.block_end();
             }
@@ -2335,14 +2396,21 @@ namespace ngraph
             {
                 (void)external_function;
                 (void)node;
-                writer.block_begin();
                 size_t element_count = out[0].get_size();
-                writer << "#pragma omp parallel for\n";
-                writer << "for (size_t i = 0; i < " << element_count << "; i++)\n";
-                writer.block_begin();
-                writer << out[0].get_name() << "[i] = round(" << args[0].get_name() << "[i]);\n";
-                writer.block_end();
-                writer.block_end();
+                if (args[0].get_element_type().is_integral())
+                {
+                    writer << "reference::copy(";
+                    writer << args[0].get_name() << ",\n";
+                    writer << "                " << out[0].get_name() << ",\n";
+                    writer << "                " << element_count << ");\n";
+                }
+                else
+                {
+                    writer << "reference::round(";
+                    writer << args[0].get_name() << ",\n";
+                    writer << "                 " << out[0].get_name() << ",\n";
+                    writer << "                 " << element_count << ");\n";
+                }
             }
 
             template <>
@@ -3464,7 +3532,6 @@ namespace ngraph
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(product->get_reduction_axes())
                        << "});\n";
                 writer.block_end();
@@ -3492,7 +3559,6 @@ namespace ngraph
                            << ",\n";
                     writer << "                         " << out[0].get_name() << ",\n";
                     writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                    writer << "                         {" << join(out[0].get_shape()) << "},\n";
                     writer << "                         {" << join(max->get_reduction_axes())
                            << "});\n";
                 }
@@ -3534,7 +3600,6 @@ namespace ngraph
                        << ",\n";
                 writer << "                         " << out[0].get_name() << ",\n";
                 writer << "                         {" << join(args[0].get_shape()) << "},\n";
-                writer << "                         {" << join(out[0].get_shape()) << "},\n";
                 writer << "                         {" << join(min->get_reduction_axes())
                        << "});\n";
                 writer.block_end();
@@ -3915,11 +3980,11 @@ namespace ngraph
                 // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
                 auto sigmoid_mul_backprop =
                     static_cast<const ngraph::op::SigmoidMultiplyBackprop*>(node);
-                const TensorViewWrapper& data_0 = args[0];
-                const TensorViewWrapper& data_1 = args[1];
-                const TensorViewWrapper& delta = args[2];
-                const TensorViewWrapper& input_0_delta = out[0];
-                const TensorViewWrapper& input_1_delta = out[1];
+                const TensorWrapper& data_0 = args[0];
+                const TensorWrapper& data_1 = args[1];
+                const TensorWrapper& delta = args[2];
+                const TensorWrapper& input_0_delta = out[0];
+                const TensorWrapper& input_1_delta = out[1];
                 std::string numer_0 = "numer_0";
                 std::string denom_0 = "denom_0";
                 std::string numer_1 = "numer_1";
@@ -4302,7 +4367,7 @@ namespace ngraph
                 auto it = output;
                 while (auto goe = as_type_ptr<ngraph::op::GetOutputElement>(it->get_node()))
                 {
-                    it = &goe->get_inputs().at(0).get_output();
+                    it = &goe->get_input_descriptor(0).get_output();
                 }
                 return it;
             }
@@ -4318,13 +4383,13 @@ namespace ngraph
                 const ngraph::op::CompiledKernel* ck =
                     static_cast<const ngraph::op::CompiledKernel*>(node);
 
-                NodeVector output_nodes = ck->get_kernel_outputs();
+                OutputVector outputs = ck->get_kernel_outputs();
                 NodeVector node_list = ck->get_node_list();
 
                 for (size_t i = 0; i < args.size(); i++)
                 {
                     std::string sname = std::string(args[i].get_name()) + "[i]";
-                    auto entry = std::make_pair(&ck->get_inputs().at(i).get_output(), sname);
+                    auto entry = std::make_pair(&ck->get_input_descriptor(i).get_output(), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4333,8 +4398,10 @@ namespace ngraph
                 for (size_t i = 0; i < out.size(); i++)
                 {
                     std::string sname = std::string(out[i].get_name()) + "[i]";
-                    // TODO: no support for multiple-output ops in loop kernel
-                    auto entry = std::make_pair(&output_nodes.at(i)->get_outputs().at(0), sname);
+                    auto output = outputs[i];
+                    auto output_node = output.get_node();
+                    auto entry = std::make_pair(
+                        &output_node->get_output_descriptor(output.get_index()), sname);
                     loop_symbol_table.insert(entry);
                 }
 
@@ -4347,7 +4414,7 @@ namespace ngraph
                 for (size_t i = 0; i < node_list.size(); i++)
                 {
                     auto op_node = node_list[i];
-                    auto op = &op_node->get_outputs().at(0);
+                    auto op = &op_node->get_output_descriptor(0);
                     std::string tmp;
                     if (loop_symbol_table.count(op) == 0)
                     {
@@ -4367,7 +4434,7 @@ namespace ngraph
 
                     // prepare arguments
                     std::vector<std::string> sargs;
-                    for (auto& input : op_node->get_inputs())
+                    for (auto& input : op_node->get_input_descriptors())
                     {
                         // args are expected to be in a map already
                         sargs.push_back(
@@ -4394,31 +4461,30 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::GenerateMask)
             {
                 auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
-                writer.block_begin();
                 auto index = external_function->add_state(
                     new ngraph::BernoulliRNGState(gm->get_seed(), gm->get_probability()));
                 writer << "auto state = static_cast<ngraph::BernoulliRNGState*>(ctx->states["
                        << index << "]);\n";
                 writer << "bool training = static_cast<bool>(" << args[0].get_name() << "[0]);\n";
                 writer << "bool use_seed = static_cast<bool>(" << args[2].get_name() << "[0]);\n";
-
                 writer << "uint64_t seed = static_cast<uint64_t>(" << args[3].get_name()
                        << "[0]);\n";
                 writer << "double keep_prob = static_cast<double>(" << args[4].get_name()
                        << "[0]);\n";
-                writer << "if (use_seed == false) \n";
-                writer << "{\n";
-                writer << "    reference::generate_mask(\n";
-                writer << "                " << out[0].get_name() << ",\n";
-                writer << "                " << out[0].get_size() << ",\n";
-                writer << "                state, training);\n";
-                writer << "}\n";
-                writer << "else {\n";
-                writer << "       reference::generate_mask_no_state(\n";
-                writer << "           " << out[0].get_name() << ",\n";
-                writer << "           " << out[0].get_size() << ",\n";
-                writer << "           training, seed, keep_prob);\n";
-                writer << "}\n";
+                writer << "if (use_seed == false)\n";
+                writer.block_begin();
+                writer << "reference::generate_mask(\n";
+                writer << "            " << out[0].get_name() << ",\n";
+                writer << "            " << out[0].get_size() << ",\n";
+                writer << "            state,\n";
+                writer << "            training);\n";
+                writer.block_end();
+                writer << "else\n";
+                writer.block_begin();
+                writer << "reference::generate_mask_no_state(\n";
+                writer << "    " << out[0].get_name() << ",\n";
+                writer << "    " << out[0].get_size() << ",\n";
+                writer << "    training, seed, keep_prob);\n";
                 writer.block_end();
             }
 
@@ -4435,26 +4501,26 @@ namespace ngraph
                 auto index = external_function->add_state(new UniformRNGState());
                 auto fixed_seed = ru->get_fixed_seed();
 
-                writer << "auto state = static_cast<ngraph::RandomUniformRNGState*>(ctx->states["
-                       << index << "]);\n";
+                writer << "auto state = static_cast<ngraph::UniformRNGState*>(ctx->states[" << index
+                       << "]);\n";
                 writer << "bool use_fixed_seed = static_cast<bool>(" << args[3].get_name()
                        << "[0]);\n";
 
                 writer << "if (use_fixed_seed == false) \n";
                 writer << "{\n";
-                writer << "    reference::random_uniform<" << args[0].get_type() << ">(\n";
+                writer << "    reference::random_uniform<" << out[0].get_type() << ">(\n";
                 writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   " << args[0].get_name() << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   *" << args[0].get_name() << ",\n";
+                writer << "                   *" << args[1].get_name() << ",\n";
                 writer << "                   " << out[0].get_size() << ",\n";
                 writer << "                   state);\n";
                 writer << "}\n";
                 writer << "else {\n";
-                writer << "    reference::random_uniform_with_fixed_seed<" << args[0].get_type()
+                writer << "    reference::random_uniform_with_fixed_seed<" << out[0].get_type()
                        << ">(\n";
                 writer << "                   " << out[0].get_name() << ",\n";
-                writer << "                   " << args[0].get_name() << ",\n";
-                writer << "                   " << args[1].get_name() << ",\n";
+                writer << "                   *" << args[0].get_name() << ",\n";
+                writer << "                   *" << args[1].get_name() << ",\n";
                 writer << "                   " << out[0].get_size() << ",\n";
                 writer << "                   " << fixed_seed << ");\n";
                 writer << "}\n";
@@ -4651,11 +4717,10 @@ namespace ngraph
                 writer << "            " << cumsum->is_reverse() << ");\n";
                 writer.block_end();
             }
-
 #undef TI
-        } // namespace cpu
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
 
 //------------------------------------------------------------------------------------------------
 // Utility methods
@@ -4690,7 +4755,7 @@ std::string
     return ss.str();
 }
 
-std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorViewWrapper& tvi,
+std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorWrapper& tvi,
                                                    const string& name)
 {
     stringstream ss;
@@ -4701,7 +4766,7 @@ std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorVie
     return ss.str();
 }
 
-string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWrapper& tvi,
+string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorWrapper& tvi,
                                                const string& name)
 {
     stringstream ss;
@@ -4712,7 +4777,7 @@ string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorViewWra
     return ss.str();
 }
 
-string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorViewWrapper& tvi,
+string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorWrapper& tvi,
                                               const string& name)
 {
     stringstream ss;

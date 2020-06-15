@@ -40,11 +40,7 @@ namespace ngraph
                                 ? ngraph::builder::opset1::transpose(data)
                                 : ngraph::builder::opset1::reorder_axes(data, permute_axes)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

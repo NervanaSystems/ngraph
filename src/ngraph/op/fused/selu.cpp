@@ -34,7 +34,12 @@ op::v0::Selu::Selu(const Output<Node>& data, const Output<Node>& alpha, const Ou
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::v0::Selu::decompose_op() const
+bool ngraph::op::v0::Selu::visit_attributes(AttributeVisitor& visitor)
+{
+    return true;
+}
+
+OutputVector op::v0::Selu::decompose_op() const
 {
     const auto data = input_value(0);
     const auto alpha = input_value(1);
@@ -53,7 +58,7 @@ NodeVector op::v0::Selu::decompose_op() const
                 alpha)))};
 }
 
-shared_ptr<Node> op::v0::Selu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::Selu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::Selu>(new_args.at(0), new_args.at(1), new_args.at(2));

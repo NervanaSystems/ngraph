@@ -19,18 +19,11 @@ function(STYLE_APPLY_FILE PATH)
         OUTPUT_VARIABLE STYLE_CHECK_RESULT)
 endfunction()
 
-set(DIRECTORIES_OF_INTEREST
-    src
-    doc
-    test
-    python/pyngraph
-)
-
 set(CLANG_FORMAT_FILENAME clang-format-3.9)
 find_program(CLANG_FORMAT ${CLANG_FORMAT_FILENAME} PATHS ENV PATH)
 
 if (CLANG_FORMAT)
-    foreach(DIRECTORY ${DIRECTORIES_OF_INTEREST})
+    foreach(DIRECTORY ${FORMAT_DIRS})
         set(DIR "${NGRAPH_SOURCE_DIR}/${DIRECTORY}/*.?pp")
         file(GLOB_RECURSE XPP_FILES ${DIR})
         foreach(FILE ${XPP_FILES})

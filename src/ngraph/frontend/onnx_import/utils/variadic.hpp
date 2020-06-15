@@ -22,7 +22,6 @@
 #include "ngraph/coordinate_diff.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 
 namespace ngraph
@@ -63,9 +62,6 @@ namespace ngraph
 
                 return {result};
             }
-
-        } // namespace variadic
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+        }
+    }
+}

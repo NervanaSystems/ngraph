@@ -59,7 +59,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                     for (auto oi_pair : op_annotations->get_in_place_oi_pairs())
                     {
                         auto output = &node->output(oi_pair.output).get_tensor();
-                        auto input = &node->input(oi_pair.input).get_tensor();
+                        auto input = &node->get_input_tensor(oi_pair.input);
                         auto input_node = node->get_input_node_ptr(oi_pair.input);
 
                         // For destructive kernel, this should be the last use

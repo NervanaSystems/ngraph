@@ -36,11 +36,7 @@ namespace ngraph
                 ///         operation.
                 ///
                 NodeVector max_pool(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

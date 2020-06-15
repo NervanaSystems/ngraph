@@ -20,9 +20,14 @@
 
 #include "ngraph/env_util.hpp"
 
+#include "ngraph/ngraph_visibility.hpp"
+
 namespace ngraph
 {
     static bool s_provenance_enabled = getenv_bool("NGRAPH_PROVENANCE_ENABLE");
+
+    NGRAPH_API
     void set_provenance_enabled(bool enabled);
+    NGRAPH_API
     bool get_provenance_enabled();
 }

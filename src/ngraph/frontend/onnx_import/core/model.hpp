@@ -31,7 +31,7 @@ namespace ngraph
         {
         public:
             Model() = delete;
-            explicit Model(const onnx::ModelProto& model_proto);
+            explicit Model(const ONNX_NAMESPACE::ModelProto& model_proto);
 
             Model(const Model&) = default;
             Model(Model&&) = default;
@@ -41,7 +41,7 @@ namespace ngraph
 
             const onnx::ModelProto* get_model() const { return m_model_proto; }
             const std::string& get_producer_name() const { return m_model_proto->producer_name(); }
-            const onnx::GraphProto& get_graph() const { return m_model_proto->graph(); }
+            const ONNX_NAMESPACE::GraphProto& get_graph() const { return m_model_proto->graph(); }
             std::int64_t get_model_version() const { return m_model_proto->model_version(); }
             const std::string& get_producer_version() const
             {
@@ -62,7 +62,7 @@ namespace ngraph
 
             /// \brief Check availability of operator base on NodeProto.
             /// \return `true` if the operator is available, otherwise it returns `false`.
-            bool is_operator_available(const onnx::NodeProto& node_proto) const;
+            bool is_operator_available(const ONNX_NAMESPACE::NodeProto& node_proto) const;
 
             /// \brief      Enable operators from provided domain to use by this model.
             ///
@@ -74,7 +74,7 @@ namespace ngraph
             void enable_opset_domain(const std::string& domain);
 
         private:
-            const onnx::ModelProto* m_model_proto;
+            const ONNX_NAMESPACE::ModelProto* m_model_proto;
             std::unordered_map<std::string, OperatorSet> m_opset;
         };
 
@@ -82,7 +82,5 @@ namespace ngraph
         {
             return (outs << "<Model: " << model.get_producer_name() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

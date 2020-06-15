@@ -39,7 +39,7 @@ op::Dropout::Dropout(const Output<Node>& input,
     set_output_type(1, get_input_element_type(0), input.get_shape());
 }
 
-shared_ptr<Node> op::Dropout::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Dropout::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 5)
     {

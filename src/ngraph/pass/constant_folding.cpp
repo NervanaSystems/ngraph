@@ -31,3 +31,32 @@ bool ngraph::pass::revalidate_and_ensure_static(shared_ptr<Node> n)
     }
     return true;
 }
+
+void ngraph::pass::ConstantFolding::construct_constant_default()
+{
+    add_handler("Constant folding defaults",
+                [](const std::shared_ptr<Node>& node) -> bool {
+                    OutputVector replacements(node->get_output_size());
+                    if (!node->constant_fold(replacements, node->input_values()))
+                    {
+                        return false;
+                    }
+                    NGRAPH_CHECK(
+                        replacements.size() == node->get_output_size(),
+                        "constant_fold_default returned incorrect number of replacements for ",
+                        node);
+                    bool result{false};
+                    for (size_t i = 0; i < replacements.size(); ++i)
+                    {
+                        auto node_output = node->output(i);
+                        auto replacement = replacements.at(i);
+                        if (replacement.get_node_shared_ptr() && (node_output != replacement))
+                        {
+                            node_output.replace(replacement);
+                            result = true;
+                        }
+                    }
+                    return result;
+                },
+                PassProperty::CHANGE_DYNAMIC_STATE);
+}

@@ -92,8 +92,8 @@ namespace ngraph
         /// \returns A const reference to the function's friendly name.
         const std::string& get_friendly_name() const;
 
-        std::vector<std::shared_ptr<Node>> get_ops(bool include_control_deps = true) const;
-        std::vector<std::shared_ptr<Node>> get_ordered_ops(bool include_control_deps = true) const;
+        std::vector<std::shared_ptr<Node>> get_ops() const;
+        std::vector<std::shared_ptr<Node>> get_ordered_ops() const;
         void map_unordered_ops(std::function<void(Node*)> f) const;
 
         friend std::ostream& operator<<(std::ostream&, const Function&);
@@ -127,7 +127,7 @@ namespace ngraph
                                const std::shared_ptr<op::Parameter>& parameter);
 
         using topological_sort_t = std::function<std::vector<std::shared_ptr<Node>>(
-            const std::vector<std::shared_ptr<Node>>& root_nodes, bool include_control_deps)>;
+            const std::vector<std::shared_ptr<Node>>& root_nodes)>;
         void set_topological_sort(topological_sort_t);
 
     protected:

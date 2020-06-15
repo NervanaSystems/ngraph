@@ -14,124 +14,63 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <fstream>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/text_format.h>
-#include <memory>
+#pragma once
 
-#include "core/graph.hpp"
-#include "core/model.hpp"
-#include "ngraph/except.hpp"
-#include "onnx.hpp"
-#include "ops_bridge.hpp"
+#include <onnx/onnx_pb.h>
+#include <string>
+#include <vector>
+
+#include "default_opset.hpp"
+#include "model.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "operator_set.hpp"
+#include "value_info.hpp"
 
 namespace ngraph
 {
     namespace onnx_import
     {
-        namespace detail
+        class Graph
         {
-            namespace error
+        public:
+            Graph(const ONNX_NAMESPACE::GraphProto& proto, Model& model);
+            const std::vector<Node>& get_nodes() const { return m_nodes; }
+            const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
+            const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
+            NodeVector get_ng_outputs() const;
+            const ParameterVector& get_ng_parameters() const { return m_parameters; }
+            std::shared_ptr<ngraph::Node> get_ng_node_from_cache(const std::string& name) const
             {
-                struct file_open : ngraph_error
-                {
-                    explicit file_open(const std::string& path)
-                        : ngraph_error{"Failure opening file: " + path}
-                    {
-                    }
-                };
-
-                struct stream_parse : ngraph_error
-                {
-                    explicit stream_parse(std::istream&)
-                        : ngraph_error{"Failure parsing data from the provided input stream"}
-                    {
-                    }
-                };
-
-            } // namespace error
-        }     // namespace detail
-
-        std::shared_ptr<Function> import_onnx_model(std::istream& sin)
-        {
-            onnx::ModelProto model_proto;
-            // Try parsing input as a binary protobuf message
-            if (!model_proto.ParseFromIstream(&sin))
-            {
-                // Rewind to the beginning and clear stream state.
-                sin.clear();
-                sin.seekg(0);
-                google::protobuf::io::IstreamInputStream iistream(&sin);
-                // Try parsing input as a prototxt message
-                if (!google::protobuf::TextFormat::Parse(&iistream, &model_proto))
-                {
-                    throw detail::error::stream_parse{sin};
-                }
+                return m_ng_node_cache.at(name);
             }
+            const std::string& get_name() const { return m_graph_proto->name(); }
+            NodeVector make_ng_nodes(const Node& onnx_node) const;
 
-            Model model{model_proto};
-            Graph graph{model_proto.graph(), model};
-            auto function = std::make_shared<Function>(
-                graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
-            for (std::size_t i{0}; i < function->get_output_size(); ++i)
-            {
-                function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
-            }
-            return function;
-        }
+        protected:
+            void set_friendly_names(const Node& onnx_node, const NodeVector& ng_node_vector) const;
 
-        // std::shared_ptr<Function> import_onnx_proto_model(onnx::ModelProto model_proto)
-        // {
-        //     Model model{model_proto};
-        //     Graph graph{model_proto.graph(), model};
-        //     auto function = std::make_shared<Function>(
-        //         graph.get_ng_outputs(), graph.get_ng_parameters(), graph.get_name());
-        //     for (std::size_t i{0}; i < function->get_output_size(); ++i)
-        //     {
-        //         function->get_output_op(i)->set_friendly_name(graph.get_outputs().at(i).get_name());
-        //     }
-        //     return function;
-        // }
+            void add_provenance_tag_to_initializer(
+                const Tensor& initializer, std::shared_ptr<default_opset::Constant> node) const;
 
-        std::shared_ptr<Function> import_onnx_model(const std::string& path)
+            void add_provenance_tag_to_input(const ValueInfo& input,
+                                             std::shared_ptr<ngraph::Node> node) const;
+
+            void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector) const;
+
+        private:
+            const ONNX_NAMESPACE::GraphProto* m_graph_proto;
+            std::vector<Node> m_nodes;
+            std::vector<ValueInfo> m_inputs;
+            std::vector<ValueInfo> m_outputs;
+            ParameterVector m_parameters;
+            std::map<std::string, std::shared_ptr<ngraph::Node>> m_ng_node_cache;
+            std::map<std::string, Tensor> m_initializers;
+            Model* m_model;
+        };
+
+        inline std::ostream& operator<<(std::ostream& outs, const Graph& graph)
         {
-            std::ifstream ifs{path, std::ios::in | std::ios::binary};
-            if (!ifs.is_open())
-            {
-                throw detail::error::file_open{path};
-            }
-            return import_onnx_model(ifs);
+            return (outs << "<Graph: " << graph.get_name() << ">");
         }
-
-        void register_operator(const std::string& name,
-                               std::int64_t version,
-                               const std::string& domain,
-                               Operator fn)
-        {
-            OperatorsBridge::register_operator(name, version, domain, std::move(fn));
-        }
-
-        std::set<std::string> get_supported_operators(std::int64_t version,
-                                                      const std::string& domain)
-        {
-            OperatorSet op_set{
-                OperatorsBridge::get_operator_set(domain == "ai.onnx" ? "" : domain, version)};
-            std::set<std::string> op_list{};
-            for (const auto& op : op_set)
-            {
-                op_list.emplace(op.first);
-            }
-            return op_list;
-        }
-
-        bool is_operator_supported(const std::string& op_name,
-                                   std::int64_t version,
-                                   const std::string& domain)
-        {
-            return OperatorsBridge::is_operator_registered(
-                op_name, version, domain == "ai.onnx" ? "" : domain);
-        }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

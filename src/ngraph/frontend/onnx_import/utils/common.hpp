@@ -28,7 +28,6 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -69,12 +68,15 @@ namespace ngraph
                 return range;
             }
 
-            /// \brief Return the outputs of the node as vector.
+            /// \brief      Return a monotonic sequence which end is determined by value rank.
             ///
-            /// \param[in] node            Node with multiple outputs.
+            /// \param[in]  value        The value node which rank determines end of the sequence.
+            /// \param[in]  start_value  The start value of the sequence.
+            /// \param[in]  step         The step value for the sequence.
             ///
-            /// \return                    Vector of outputs of input node.
-            ngraph::NodeVector get_outputs(const std::shared_ptr<ngraph::Node>& node);
+            /// \return     The node which represents monotonic sequence.
+            std::shared_ptr<ngraph::Node> get_monotonic_range_along_node_rank(
+                const Output<ngraph::Node>& value, int64_t start_value = 0, int64_t step = 1);
 
             /// \brief Creates a shifted square identity matrix.
             /// \note Shifting in the context of this operator means that
@@ -87,7 +89,7 @@ namespace ngraph
             ///
             /// \return A Constant node representing shifted identity matrix.
             template <typename T = double>
-            std::shared_ptr<ngraph::op::Constant>
+            std::shared_ptr<default_opset::Constant>
                 shifted_square_identity(const Shape output_shape,
                                         const element::Type& output_type,
                                         const std::int64_t shift)
@@ -124,7 +126,6 @@ namespace ngraph
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }
-
-        } // namespace  common
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

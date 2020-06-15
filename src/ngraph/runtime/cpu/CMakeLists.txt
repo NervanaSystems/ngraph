@@ -14,6 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS FALSE)
+
 include(FindOpenMP)
 
 if (NGRAPH_CPU_STATIC_LIB_ENABLE)
@@ -27,13 +29,14 @@ set(SRC
     cpu_builder.cpp
     cpu_builder_registry.cpp
     cpu_call_frame.cpp
+    cpu_executable.cpp
     cpu_executor.cpp
     cpu_external_function.cpp
     cpu_kernels.cpp
     cpu_layout_descriptor.cpp
     cpu_op_annotations.cpp
-    cpu_tensor_view_wrapper.cpp
-    cpu_tensor_view.cpp
+    cpu_tensor_wrapper.cpp
+    cpu_tensor.cpp
     cpu_tracing.cpp
     cpu_visualize_tree.cpp
     cpu_cse.cpp
@@ -191,9 +194,6 @@ if (NGRAPH_CPU_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    if (NGRAPH_USE_LEGACY_MKLDNN)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_USE_LEGACY_MKLDNN")
-    endif()
     if (NGRAPH_DEX_ONLY)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
     endif()
@@ -234,7 +234,7 @@ if (NGRAPH_CPU_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
     endif()    
     if (NGRAPH_TBB_ENABLE)
-        target_link_libraries(cpu_backend PUBLIC libtbb)
+        target_link_libraries(cpu_backend PUBLIC TBB::tbb)
     endif()
     if (NOT NGRAPH_DEX_ONLY)
         target_link_libraries(cpu_backend PRIVATE codegen)

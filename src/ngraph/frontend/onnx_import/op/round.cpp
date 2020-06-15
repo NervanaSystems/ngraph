@@ -32,6 +32,7 @@ namespace ngraph
                     const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
+<<<<<<< HEAD
             } // namespace set_1
 
         } // namespace op
@@ -39,3 +40,9 @@ namespace ngraph
     } // namespace onnx_import
 
 } // namespace ngraph
+=======
+            }
+        }
+    }
+}
+>>>>>>> origin/master

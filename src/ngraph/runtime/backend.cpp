@@ -69,9 +69,17 @@ std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string
     return dummy_node;
 }
 
-std::shared_ptr<runtime::Backend> runtime::Backend::create(const string& type,
+std::shared_ptr<runtime::Backend> runtime::Backend::create(const string& t,
                                                            bool must_support_dynamic)
 {
+    // Rewrite backend name BACKEND_OPTION to BACKEND:OPTION
+    string type = t;
+    auto pos = type.find('_');
+    if (pos != string::npos)
+    {
+        type = type.replace(pos, 1, ":");
+    }
+
     auto inner_backend = BackendManager::create_backend(type);
 
     if (!must_support_dynamic || inner_backend->supports_dynamic_tensors())
@@ -145,12 +153,6 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
         s_backend_shared_library_search_directory = find_my_pathname();
     }
     return s_backend_shared_library_search_directory;
-}
-
-bool runtime::Backend::set_config(const map<string, string>& /* config */, string& error)
-{
-    error = "set_config not supported";
-    return false;
 }
 
 bool runtime::Backend::executable_can_create_tensors()

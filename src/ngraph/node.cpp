@@ -24,6 +24,7 @@
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
@@ -38,20 +39,6 @@ atomic<size_t> Node::m_next_instance_id(0);
 Node::Node(size_t output_size)
     : Node()
 {
-    set_output_size(output_size);
-}
-
-Node::Node(const std::string& node_type, const NodeVector& arguments, size_t output_size)
-    : m_node_type(node_type)
-{
-    set_arguments(arguments);
-    set_output_size(output_size);
-}
-
-Node::Node(const NodeVector& arguments, size_t output_size)
-    : Node()
-{
-    set_arguments(arguments);
     set_output_size(output_size);
 }
 
@@ -88,61 +75,50 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
     return copy_with_new_inputs(inputs, get_control_dependencies());
 }
 
-std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i, bool for_get_output_element)
+std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
 {
-    for (auto in : output(i).get_target_inputs())
+    if (i == 0 && get_output_size() == 1)
     {
-        if (is_type<op::GetOutputElement>(in.get_node()))
-        {
-            return in.get_node()->shared_from_this();
-        }
+        return shared_from_this();
     }
-    return get_output_element(output(i), for_get_output_element);
+    else
+    {
+        for (auto in : output(i).get_target_inputs())
+        {
+            if (is_type<op::GetOutputElement>(in.get_node()))
+            {
+                return in.get_node()->shared_from_this();
+            }
+        }
+        return make_shared<op::GetOutputElement>(shared_from_this(), i);
+    }
+}
+
+Output<const Node> Node::get_default_output() const
+{
+    return output(get_default_output_index());
+}
+
+Output<Node> Node::get_default_output()
+{
+    return output(get_default_output_index());
+}
+
+size_t Node::get_default_output_index() const
+{
+    return 0;
+}
+
+size_t Node::no_default_index() const
+{
+    NODE_VALIDATION_CHECK(this, false, "Default output not supported");
 }
 
 std::shared_ptr<Node>
     Node::copy_with_new_inputs(const OutputVector& inputs,
                                const std::vector<std::shared_ptr<Node>>& control_dependencies) const
 {
-    shared_ptr<Node> clone;
-    if (is_type<op::GetOutputElement>(this))
-    {
-        auto& value = inputs.at(0);
-        clone = make_shared<op::GetOutputElement>(value.get_node_shared_ptr(), value.get_index());
-    }
-    else
-    {
-        NodeVector args;
-        for (const Output<Node>& input : inputs)
-        {
-            args.push_back(get_output_element(input, false));
-        }
-        for (int i = 0; i < inputs.size(); ++i)
-        {
-            auto in_val = inputs.at(i);
-            if (is_type<op::GetOutputElement>(in_val.get_node()))
-            {
-                in_val = as_type_ptr<op::GetOutputElement>(in_val.get_node_shared_ptr())
-                             ->get_as_output();
-            }
-            auto in_index = in_val.get_index();
-            auto arg = args.at(i);
-            size_t out_index = 0;
-            if (is_type<op::GetOutputElement>(arg))
-            {
-                out_index = as_type_ptr<op::GetOutputElement>(arg)->get_n();
-            }
-            if (in_index != out_index)
-            {
-                cerr << "Mismatch in: " << in_index << " arg: " << out_index << endl;
-                cerr << "ARG: " << *arg << endl;
-                cerr << "IN: " << *inputs.at(i).get_node() << endl;
-                cerr << "INV: " << *in_val.get_node() << endl;
-                cerr << "In node " << *this << endl;
-            }
-        }
-        clone = copy_with_new_args(args);
-    }
+    shared_ptr<Node> clone = clone_with_new_inputs(inputs);
     for (auto& cdep : control_dependencies)
     {
         clone->add_control_dependency(cdep);
@@ -198,7 +174,7 @@ void Node::set_arguments(const OutputVector& arguments)
     for (auto& output : arguments)
     {
         auto output_node = output.get_node();
-        auto& output_descriptor = output_node->get_outputs().at(output.get_index());
+        auto& output_descriptor = output_node->get_output_descriptor(output.get_index());
         m_inputs.emplace_back(this, i++, output_descriptor);
     }
 }
@@ -212,6 +188,11 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
+const descriptor::Input& Node::get_input_descriptor(size_t position) const
+{
+    return m_inputs.at(position);
+}
+
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -221,6 +202,11 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
             make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
+    return m_outputs.at(position);
+}
+
+const descriptor::Output& Node::get_output_descriptor(size_t position) const
+{
     return m_outputs.at(position);
 }
 
@@ -288,12 +274,12 @@ void Node::set_output_type(size_t i, const element::Type& element_type, const Pa
     get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
 
-std::deque<descriptor::Output>& Node::get_outputs()
+std::deque<descriptor::Output>& Node::get_output_descriptors()
 {
     return m_outputs;
 }
 
-const std::deque<descriptor::Output>& Node::get_outputs() const
+const std::deque<descriptor::Output>& Node::get_output_descriptors() const
 {
     return m_outputs;
 }
@@ -310,13 +296,9 @@ bool Node::is_constant() const
 
 const std::string& Node::description() const
 {
-    if (m_node_type.size() == 0)
-    {
-        // Terrible transitional kludge to keep description working while we change
-        // type_name to const_char and virtual description() to virtual get_type_name()
-        const_cast<Node*>(this)->m_node_type = get_type_name();
-    }
-
+    // Terrible transitional kludge to keep description working while we change
+    // type_name to const_char and virtual description() to virtual get_type_name()
+    const_cast<Node*>(this)->m_node_type = get_type_name();
     return m_node_type;
 }
 
@@ -351,16 +333,6 @@ Placement Node::get_placement() const
 void Node::set_placement(Placement placement)
 {
     m_placement = placement;
-}
-
-size_t Node::get_placement_index() const
-{
-    return m_placement_index;
-}
-
-void Node::set_placement_index(size_t placement)
-{
-    m_placement_index = placement;
 }
 
 void Node::add_provenance_group_member(const shared_ptr<Node>& node)
@@ -497,21 +469,21 @@ void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
         }
     };
 
-    traverse_nodes({shared_from_this()}, set_replacement_prov, false, common_args);
+    traverse_nodes({shared_from_this()}, set_replacement_prov, common_args);
     replacement->add_provenance_tags(removed_subgraph_tags);
 
     auto set_prov_new_nodes = [&removed_subgraph_tags](std::shared_ptr<Node> node) {
         node->add_provenance_tags(removed_subgraph_tags);
     };
 
-    traverse_nodes({replacement}, set_prov_new_nodes, false, common_args);
+    traverse_nodes({replacement}, set_prov_new_nodes, common_args);
 }
 
 std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return m_inputs[index].get_output().get_node();
+    return input_value(index).as_single_output_node();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const
@@ -528,13 +500,18 @@ std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
     return m_inputs[index].get_output().get_node();
 }
 
+Output<Node> Node::get_input_source_output(size_t i) const
+{
+    return input(i).get_source_output();
+}
+
 NodeVector Node::get_arguments() const
 {
     NodeVector result;
-    for (auto& i : m_inputs)
+    for (size_t i = 0; i < get_input_size(); ++i)
     {
         {
-            result.push_back(i.get_output().get_node());
+            result.push_back(get_argument(i));
         }
     }
     return result;
@@ -736,11 +713,30 @@ const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
     return m_outputs[i].get_inputs();
 }
 
+std::set<Input<Node>> Node::get_output_target_inputs(size_t i) const
+{
+    std::set<Input<Node>> result;
+
+    for (auto& input : m_outputs.at(i).get_inputs())
+    {
+        result.emplace(input->get_raw_pointer_node(), input->get_index());
+    }
+
+    return result;
+}
+
 descriptor::Tensor& Node::get_output_tensor(size_t i) const
 {
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor(size_t i)");
     return m_outputs[i].get_tensor();
+}
+
+descriptor::Tensor& Node::get_input_tensor(size_t i) const
+{
+    NGRAPH_CHECK(i < m_inputs.size(), "index '", i, "' out of range in get_input_tensor(size_t i)");
+    descriptor::Input input = m_inputs[i];
+    return input.get_tensor();
 }
 
 const string& Node::get_output_tensor_name(size_t i) const
@@ -811,25 +807,17 @@ bool Node::has_same_type(std::shared_ptr<const Node> node) const
 NodeVector Node::get_users(bool check_is_used) const
 {
     NodeVector result;
-
-    for (size_t i = 0; i < get_output_size(); ++i)
+    for (auto output : outputs())
     {
-        for (auto input : m_outputs.at(i).get_inputs())
+        for (auto input : output.get_target_inputs())
         {
-            if (check_is_used)
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
             {
-                if (is_used(input->get_node().get()))
-                {
-                    result.push_back(input->get_node());
-                }
-            }
-            else
-            {
-                result.push_back(input->get_node());
+                result.push_back(input_node->shared_from_this());
             }
         }
     }
-
     return result;
 }
 
@@ -860,7 +848,7 @@ const NodeVector& ngraph::check_single_output_args(const NodeVector& args)
 OutputVector ngraph::as_output_vector(const NodeVector& args)
 {
     OutputVector output_vector;
-    for (auto& arg : check_single_output_args(args))
+    for (auto arg : args)
     {
         output_vector.push_back(arg);
     }
@@ -970,10 +958,14 @@ bool Node::match_value(pattern::Matcher* matcher,
     {
         return false;
     }
+    return match_node(matcher, graph_value);
+}
 
+bool Node::match_node(pattern::Matcher* matcher, const Output<Node>& graph_value)
+{
     matcher->add_node(graph_value);
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
-           matcher->match_arguments(pattern_value, graph_value);
+           matcher->match_arguments(this, graph_value.get_node_shared_ptr());
 }
 
 // default implementation for the node to check if it contains partial shape
@@ -989,49 +981,6 @@ bool Node::is_dynamic() const
         }
     }
     return false;
-}
-
-namespace ngraph
-{
-    std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
-    {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
-    {
-        return input.get_node()->write_description(out, 0) << ".input(" << input.get_index()
-                                                           << "):" << input.get_element_type()
-                                                           << input.get_partial_shape();
-    }
-
-    void Output<Node>::replace(const Output<Node>& replacement)
-    {
-        for (auto& input : get_target_inputs())
-        {
-            // GOEs are used as handles in passes
-            if (!is_type<op::GetOutputElement>(input.get_node()))
-            {
-                input.replace_source_output(replacement);
-            }
-        }
-    }
 }
 
 Input<Node> Node::input(size_t input_index)
@@ -1061,7 +1010,8 @@ Input<const Node> Node::input(size_t input_index) const
 
 Output<Node> Node::output(size_t output_index)
 {
-    if (output_index >= m_outputs.size())
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
     {
         throw out_of_range("node output index is out of range");
     }
@@ -1071,7 +1021,8 @@ Output<Node> Node::output(size_t output_index)
 
 Output<const Node> Node::output(size_t output_index) const
 {
-    if (output_index >= m_outputs.size())
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
     {
         throw out_of_range("node output index is out of range");
     }
@@ -1137,4 +1088,97 @@ vector<Output<const Node>> Node::outputs() const
     }
 
     return result;
+}
+
+bool Node::evaluate(const HostTensorVector& output_values, const HostTensorVector& input_values)
+{
+    return false;
+}
+
+bool Node::constant_fold(OutputVector& output_values, const OutputVector& input_values)
+{
+    // If all the inputs are constants, try to evaluate the outputs
+    HostTensorVector input_tensors;
+    for (auto input : input_values)
+    {
+        if (auto constant = as_type_ptr<op::v0::Constant>(input.get_node_shared_ptr()))
+        {
+            auto host_tensor = make_shared<runtime::HostTensor>(constant);
+            input_tensors.push_back(host_tensor);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    HostTensorVector output_tensors;
+    OutputVector output_constants;
+    for (auto output : outputs())
+    {
+        auto tensor =
+            make_shared<HostTensor>(output.get_element_type(), output.get_partial_shape());
+        output_tensors.push_back(tensor);
+    }
+    if (evaluate(output_tensors, input_tensors))
+    {
+        for (size_t i = 0; i < output_tensors.size(); ++i)
+        {
+            output_values[i] = make_shared<op::Constant>(output_tensors[i]);
+        }
+        return true;
+    }
+    return false;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<shared_ptr<Node>>::type_info;
+
+AttributeAdapter<std::shared_ptr<Node>>::AttributeAdapter(std::shared_ptr<Node>& value)
+    : m_ref(value)
+{
+}
+
+bool AttributeAdapter<std::shared_ptr<Node>>::visit_attributes(AttributeVisitor& visitor)
+{
+    auto original_id = visitor.get_registered_node_id(m_ref);
+    auto id = original_id;
+    visitor.on_attribute("ID", id);
+    if (id != original_id)
+    {
+        m_ref = visitor.get_registered_node(id);
+    }
+    return true;
+}
+
+constexpr DiscreteTypeInfo AttributeAdapter<NodeVector>::type_info;
+
+AttributeAdapter<NodeVector>::AttributeAdapter(NodeVector& ref)
+    : m_ref(ref)
+{
+}
+
+bool AttributeAdapter<NodeVector>::visit_attributes(AttributeVisitor& visitor)
+{
+    int64_t size = m_ref.size();
+    visitor.on_attribute("size", size);
+    if (size != m_ref.size())
+    {
+        m_ref.resize(size);
+    }
+    ostringstream index;
+    for (int64_t i = 0; i < size; i++)
+    {
+        index.str("");
+        index << i;
+        string id;
+        if (m_ref[i])
+        {
+            id = visitor.get_registered_node_id(m_ref[i]);
+        }
+        visitor.on_attribute(index.str(), id);
+        if (!m_ref[i])
+        {
+            m_ref[i] = visitor.get_registered_node(id);
+        }
+    }
+    return true;
 }

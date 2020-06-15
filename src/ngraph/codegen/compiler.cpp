@@ -133,6 +133,10 @@ void codegen::Compiler::add_header_search_path(const std::string& path)
 
 std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& source)
 {
+    if (getenv_bool("NGRAPH_CODEGEN_DUMP_SOURCE"))
+    {
+        cout << source << endl;
+    }
     // lock_guard<mutex> lock(m_mutex);
     CompilerInfo& compiler_info = s_compiler_info[m_precompiled_header_source];
     if (!compiler_info.compiler)
@@ -196,15 +200,11 @@ void codegen::CompilerCore::initialize()
     args.push_back("-DNGRAPH_TBB_ENABLE");
 #endif
 
-#if defined(NGRAPH_USE_LEGACY_MKLDNN)
-    args.push_back("-DNGRAPH_USE_LEGACY_MKLDNN");
-#endif
-
     // Prepare DiagnosticEngine
     IntrusiveRefCntPtr<DiagnosticOptions> diag_options = new DiagnosticOptions();
     diag_options->ErrorLimit = 20;
-    diag_options->ShowCarets = false;
-    diag_options->ShowFixits = false;
+    diag_options->ShowCarets = true;
+    diag_options->ShowFixits = true;
     IntrusiveRefCntPtr<DiagnosticIDs> diag_id(new DiagnosticIDs());
     // create a diagnosetic buffer for errors caused by argument parsing
     TextDiagnosticBuffer* diag_buffer = new TextDiagnosticBuffer();

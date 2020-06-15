@@ -31,7 +31,6 @@ namespace ngraph
         CPU,
         GPU,
         NNP,
-        PLAIDML,
     };
 
     std::string placement_to_string(Placement placement);

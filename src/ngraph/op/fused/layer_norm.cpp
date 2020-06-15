@@ -29,7 +29,6 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -66,7 +65,7 @@ op::LayerNorm::LayerNorm(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::LayerNorm::decompose_op() const
+OutputVector op::LayerNorm::decompose_op() const
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     if (data_shape.is_dynamic())
@@ -139,7 +138,7 @@ NodeVector op::LayerNorm::decompose_op() const
     }
 
     // Return output nodes
-    NodeVector retval;
+    OutputVector retval;
     retval.emplace_back(norm);
     if (m_keep_stats)
     {
@@ -149,7 +148,7 @@ NodeVector op::LayerNorm::decompose_op() const
     return retval;
 }
 
-shared_ptr<Node> op::LayerNorm::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::LayerNorm::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1 && new_args.size() != 3)
     {
@@ -186,7 +185,7 @@ void op::LayerNorm::pre_validate_and_infer_types()
     int64_t n_axis = -1;
     if (data_rank.is_static())
     {
-        d_rank = static_cast<int64_t>(data_rank);
+        d_rank = data_rank.get_length();
         n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : d_rank + m_begin_norm_axis;
         NODE_VALIDATION_CHECK(
             this, n_axis >= 0 && n_axis < d_rank, "begin_norm_axis is out of range");
@@ -199,8 +198,8 @@ void op::LayerNorm::pre_validate_and_infer_types()
             Rank bias_rank = bias_shape.rank();
             if (scale_rank.is_static() && bias_rank.is_static())
             {
-                int64_t s_rank = static_cast<int64_t>(scale_rank);
-                int64_t b_rank = static_cast<int64_t>(bias_rank);
+                int64_t s_rank = scale_rank.get_length();
+                int64_t b_rank = bias_rank.get_length();
                 NODE_VALIDATION_CHECK(this,
                                       s_rank == b_rank &&
                                           ((s_rank == (d_rank - n_axis)) || s_rank == 1),
@@ -339,7 +338,7 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-NodeVector op::LayerNormBackprop::decompose_op() const
+OutputVector op::LayerNormBackprop::decompose_op() const
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     if (data_shape.is_dynamic())
@@ -439,7 +438,7 @@ NodeVector op::LayerNormBackprop::decompose_op() const
                    builder::mean(-d_data * norm, post_reduction_axes), shape, post_axis_set);
     d_data = d_data + d_mean + d_stddev;
 
-    NodeVector retval;
+    OutputVector retval;
     retval.emplace_back(d_data);
 
     // Get gradients for affine
@@ -472,7 +471,7 @@ NodeVector op::LayerNormBackprop::decompose_op() const
     return retval;
 }
 
-shared_ptr<Node> op::LayerNormBackprop::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::LayerNormBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() < 2 || new_args.size() > 5)
     {
@@ -525,7 +524,7 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
     int64_t n_axis = -1;
     if (data_rank.is_static())
     {
-        d_rank = static_cast<int64_t>(data_rank);
+        d_rank = data_rank.get_length();
         n_axis = m_begin_norm_axis >= 0 ? m_begin_norm_axis : d_rank + m_begin_norm_axis;
         NODE_VALIDATION_CHECK(
             this, n_axis >= 0 && n_axis < d_rank, "begin_norm_axis is out of range");
@@ -533,7 +532,7 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
         const PartialShape& delta_shape = get_input_partial_shape(1);
         Rank delta_rank = delta_shape.rank();
         NODE_VALIDATION_CHECK(this,
-                              delta_rank.is_dynamic() || static_cast<int64_t>(delta_rank) == d_rank,
+                              delta_rank.is_dynamic() || delta_rank.get_length() == d_rank,
                               "Delta rank is incorrect");
 
         if (m_use_stats)
@@ -544,8 +543,8 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
             Rank var_rank = var_shape.rank();
             if (mean_rank.is_static() && var_rank.is_static())
             {
-                int64_t m_rank = static_cast<int64_t>(mean_rank);
-                int64_t v_rank = static_cast<int64_t>(var_rank);
+                int64_t m_rank = mean_rank.get_length();
+                int64_t v_rank = var_rank.get_length();
                 NODE_VALIDATION_CHECK(this,
                                       m_rank == v_rank && m_rank == n_axis,
                                       "Mean and/or variance rank is incorrect");
@@ -558,7 +557,7 @@ void op::LayerNormBackprop::pre_validate_and_infer_types()
             Rank scale_rank = scale_shape.rank();
             if (scale_rank.is_static())
             {
-                int64_t s_rank = static_cast<int64_t>(scale_rank);
+                int64_t s_rank = scale_rank.get_length();
                 NODE_VALIDATION_CHECK(
                     this, (s_rank == (d_rank - n_axis)) || s_rank == 1, "Scale rank is incorrect");
             }

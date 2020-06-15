@@ -18,60 +18,62 @@
 # Fetch and configure TBB
 #------------------------------------------------------------------------------
 
-set(TBB_GIT_REPO_URL https://github.com/01org/tbb)
-set(NGRAPH_TBB_VERSION "2019_U3")
-
-if(NGRAPH_TBB_ENABLE)
-    set(TBB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/tbb/tbb-src)
-
-    configure_file(${CMAKE_SOURCE_DIR}/cmake/tbb_fetch.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/tbb/CMakeLists.txt)
-    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tbb")
-    execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/tbb")
-
-    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${CMAKE_CURRENT_BINARY_DIR}/tbb_build
-        tbb_build_prefix=tbb stdver=c++${NGRAPH_CXX_STANDARD} CONFIG_DIR TBB_DIR)
-    find_package(TBB REQUIRED tbb)
-    if (NOT TBB_FOUND)
-        message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
-    else()
-        message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
-    endif()
-
-    set_source_files_properties(cpu_external_function.cpp
-        PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
-
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(TBB_LIB_NAME tbb_debug)
-        set(TBB_BUILDDIR_NAME tbb_debug)
-    else()
-        set(TBB_LIB_NAME tbb)
-        set(TBB_BUILDDIR_NAME tbb_release)
-    endif()
-    set(TBB_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/tbb_build/${TBB_BUILDDIR_NAME})
-    set(TBB_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}${TBB_LIB_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    file(COPY
-             ${TBB_BUILD_DIR}/${TBB_LIB}
-         DESTINATION ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY})
-    if(LINUX)
-        execute_process(COMMAND grep TBB_COMPATIBLE_INTERFACE_VERSION ${TBB_ROOT}/include/tbb/tbb_stddef.h OUTPUT_VARIABLE TBB_SOVER_LINE)
-        string(REGEX MATCH "[0-9.]+" TBB_SOVER ${TBB_SOVER_LINE})
-        message(STATUS "TBB so version: ${TBB_SOVER}")
-        file(COPY
-                ${TBB_BUILD_DIR}/${TBB_LIB}.${TBB_SOVER}
-             DESTINATION ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY})
-    endif()
-    install(FILES ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${TBB_LIB}
-        DESTINATION ${NGRAPH_INSTALL_LIB})
-    if(LINUX)
-        install(FILES ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${TBB_LIB}.${TBB_SOVER}
-            DESTINATION ${NGRAPH_INSTALL_LIB})
-    endif()
-    add_library(libtbb INTERFACE)
-    target_link_libraries(libtbb INTERFACE
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${TBB_LIB}
-    )
-    target_include_directories(libtbb SYSTEM INTERFACE ${TBB_ROOT}/include)
+if(NOT NGRAPH_TBB_ENABLE)
+    return()
 endif()
+
+set(TBB_GIT_REPO_URL https://github.com/oneapi-src/oneTBB.git)
+set(NGRAPH_TBB_VERSION "2019_U3")
+set(NGRAPH_TBB_SUB_VERSION "tbb2019_20181203oss")
+
+if (WIN32)
+    set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_win.zip)
+    set(TBB_SHA1_HASH 1989458a49e780d76248edac13b963f80c9a460c)
+elseif(APPLE)
+    set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_mac.tgz)
+    set(TBB_SHA1_HASH 36926fb46add578b88a5c7e19652b94bb612e4be)
+endif()
+
+include(FetchContent)
+
+if(WIN32 OR APPLE)
+    FetchContent_Declare(
+        ngraphtbb
+        URL            ${TBB_FILE}
+        URL_HASH       SHA1=${TBB_SHA1_HASH}
+    )
+else()
+    FetchContent_Declare(
+        ngraphtbb
+        GIT_REPOSITORY ${TBB_GIT_REPO_URL}
+        GIT_TAG        ${NGRAPH_TBB_VERSION}
+        GIT_SHALLOW    1
+    )
+endif()
+
+FetchContent_GetProperties(ngraphtbb)
+if(NOT ngraphtbb_POPULATED)
+    FetchContent_Populate(ngraphtbb)
+endif()
+
+if(WIN32 OR APPLE)
+    set(TBB_DIR  ${ngraphtbb_SOURCE_DIR}/${NGRAPH_TBB_SUB_VERSION}/cmake)
+else()
+    set(TBB_ROOT ${ngraphtbb_SOURCE_DIR})
+    include(${TBB_ROOT}/cmake/TBBBuild.cmake)
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${PROJECT_BINARY_DIR}/tbb_build
+        tbb_build_prefix=tbb stdver=c++${NGRAPH_CXX_STANDARD} CONFIG_DIR TBB_DIR)
+endif()
+
+find_package(TBB REQUIRED tbb)
+if (NOT TBB_FOUND)
+    message(FATAL_ERROR "TBB is needed by the CPU backend and was not found")
+else()
+    message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
+endif()
+
+set_source_files_properties(cpu_external_function.cpp
+    PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")
+
+install(FILES $<TARGET_FILE:TBB::tbb>
+    DESTINATION ${NGRAPH_INSTALL_LIB})

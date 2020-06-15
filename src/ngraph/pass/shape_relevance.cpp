@@ -29,7 +29,7 @@ using namespace ngraph;
 //       |            |
 //       |            |
 //       |            |
-//       N2[DynReshape]
+//       N2[v1::Reshape]
 //
 // N1 (but not N0) will be flagged as shape-relevant, because N1 feeds into the "shape" input
 // of N2.
@@ -38,7 +38,7 @@ using namespace ngraph;
 //       |            |
 //       |            N2[ShapeOf]
 //       |            |
-//       N3[DynReshape]
+//       N3[v1::Reshape]
 //
 // Neither N0 nor N1 will be flagged as shape-relevant. (N1 does feed into the "shape" input of N3,
 // but only via the value-irrelevant input of ShapeOf.)

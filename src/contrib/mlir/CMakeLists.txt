@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NOT NGRAPH_MLIR_ENABLE)
+    return()
+endif()
+
 include_directories(
     ${NGRAPH_INCLUDE_PATH}
     ${MLIR_LLVM_INCLUDE_PATH}
@@ -34,6 +38,8 @@ set(SRC
     core/pass/mlir_subgraph_extraction.hpp
     core/pass/ng_dialect_builder.cpp
     core/pass/ng_dialect_builder.hpp
+    core/pass/ng_dialect_fused_ops.cpp
+    core/pass/ng_dialect_fused_ops.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     runtime/cpu/cpu_callbacks.cpp
@@ -46,7 +52,9 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link MLIR libs
 target_link_libraries(
-    mlir_backend PRIVATE 
+    mlir_backend PRIVATE
+    MLIRAffineOps
+    MLIRAffineEDSC
     MLIRAffineToStandard
     MLIRAnalysis
     MLIREDSC
@@ -60,6 +68,7 @@ target_link_libraries(
     MLIRTargetLLVMIR
     MLIRTransforms
     MLIRSupport
+    MLIRAffineTransforms
 )
 # some libs need whole archive linkage because of Globals static initialization
 function(whole_archive_link target)
@@ -125,7 +134,12 @@ ngraph_tablegen(ops_attributes.h.inc -gen-enum-decls)
 ngraph_tablegen(ops_attributes.cpp.inc -gen-enum-defs)
 add_public_tablegen_target(ngraph_ops_attributes_gen)
 
-add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen)
+# tabel-gen ops fused_ops_pattern.td
+set(LLVM_TARGET_DEFINITIONS core/pass/fused_ops_pattern.td)
+ngraph_tablegen(fused_ops_pattern.h.inc -gen-rewriters)
+add_public_tablegen_target(ngraph_ops_pattern_gen)
+
+add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_ops_pattern_gen)
 
 target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 

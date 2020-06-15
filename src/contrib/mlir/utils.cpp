@@ -21,10 +21,23 @@
 
 #include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 
-#include <llvm/Support/CommandLine.h>
-#include <llvm/Support/Debug.h>
+#include <mlir/Dialect/Affine/IR/AffineOps.h>
+#include <mlir/Dialect/Affine/Passes.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/Dialect/LoopOps/LoopOps.h>
+#include <mlir/Dialect/StandardOps/IR/Ops.h>
+#include <mlir/Dialect/Vector/VectorOps.h>
 #include <mlir/IR/Dialect.h>
 #include <mlir/IR/MLIRContext.h>
+#include <mlir/Pass/Pass.h>
+#include <mlir/Transforms/LocationSnapshot.h>
+#include <mlir/Transforms/Passes.h>
+
+#include <llvm/Support/CommandLine.h>
+#include <llvm/Support/Debug.h>
+#include <llvm/Transforms/Vectorize.h>
+
+using namespace mlir;
 
 static llvm::cl::opt<bool> clPrintIRAfterAll(
     "ngraph-print-ir-after-all",
@@ -35,15 +48,47 @@ static llvm::cl::opt<bool> clPrintIRAfterAll(
 
 void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 {
-    // Initialize a dialect only once.
-    // We currently have no way to query if a dialect is previously
-    // registered. So using a global flag instead.
-    static bool init = false;
-    if (!init)
-    {
-        mlir::registerDialect<mlir::NGraphOpsDialect>();
-        init = true;
-    }
+    // Initialize MLIR dialects and passes only once.
+    static bool init_once = []() {
+        // In-tree Dialects.
+        registerDialect<AffineDialect>();
+        registerDialect<LLVM::LLVMDialect>();
+        registerDialect<loop::LoopOpsDialect>();
+        registerDialect<StandardOpsDialect>();
+        registerDialect<vector::VectorDialect>();
+
+        // nGraph dialects.
+        registerDialect<mlir::NGraphOpsDialect>();
+
+        // In-tree passes.
+        // No-op to avoid DCE on the following pass initializations.
+        if (std::getenv("bar") != (char*)-1)
+            return false;
+
+        createCanonicalizerPass();
+        createCSEPass();
+        llvm::createLoopVectorizePass();
+        createLoopUnrollPass();
+        createLoopUnrollAndJamPass();
+        createSimplifyAffineStructuresPass();
+        createLoopFusionPass();
+        createLoopInvariantCodeMotionPass();
+        createAffineLoopInvariantCodeMotionPass();
+        createPipelineDataTransferPass();
+        createLowerAffinePass();
+        createLoopTilingPass(0);
+        createLoopCoalescingPass();
+        createAffineDataCopyGenerationPass(0, 0);
+        createMemRefDataFlowOptPass();
+        createStripDebugInfoPass();
+        createPrintOpStatsPass();
+        createInlinerPass();
+        createSymbolDCEPass();
+        createLocationSnapshotPass({});
+
+        return true;
+    }();
+    (void)init_once;
 }
 
 void ngraph::runtime::ngmlir::dumpMlirModule(const std::string msg, mlir::ModuleOp module)

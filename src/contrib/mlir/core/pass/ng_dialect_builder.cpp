@@ -44,11 +44,12 @@ using namespace ngraph::runtime::ngmlir;
 
 namespace
 {
-    /// NgDialectConversionPass is an MLIR ModulePass Given an nGraph sub-graph, represented as
+    /// NgDialectConversionPass is an MLIR Pass Given an nGraph sub-graph, represented as
     /// CompiledKernel node, it
     /// translates the graph down to nGraph dialect
 
-    class NgDialectConversionPass : public mlir::ModulePass<NgDialectConversionPass>
+    class NgDialectConversionPass
+        : public mlir::PassWrapper<NgDialectConversionPass, mlir::OperationPass<mlir::ModuleOp>>
     {
     public:
         using TensorList = std::vector<descriptor::Tensor*>;
@@ -75,9 +76,7 @@ namespace
         // Converts an nGraph sub-graph to MLIR nGraph dialect.
         void buildNgDialectModule();
         void buildNgDialect(mlir::FuncOp function);
-        void runOnModule() override;
-        // Applies any nGraph dialect optimizations
-        void optimizeNgDialect() { /*TODO: Add Core NG dialect optimizations */}
+        void runOnOperation() override;
 
         mlir::Type getMlirType(const descriptor::Tensor* tensor);
         mlir::Type getMlirType(const element::Type& type);
@@ -137,8 +136,8 @@ namespace
         TensorToInfoMap m_tensorToValueMap;
         static const MLIRCompOpMap& getOpDispatcher();
     };
+}
 
-} // end of namespace
 NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& obj)
     : m_compiledKernel(obj.m_compiledKernel)
     , m_context(obj.m_context)
@@ -147,11 +146,11 @@ NgDialectConversionPass::NgDialectConversionPass(const NgDialectConversionPass& 
 {
 }
 
-void NgDialectConversionPass::runOnModule()
+void NgDialectConversionPass::runOnOperation()
 {
     TypeList argsTypeList, resultTypeList;
 
-    mlir::ModuleOp module = getModule();
+    mlir::ModuleOp module = getOperation();
     // Retrieve input and output tensors.
     const auto& kernelInputs = m_compiledKernel->get_arguments();
     const auto& kernelOutput = m_compiledKernel->get_kernel_outputs();
@@ -165,7 +164,7 @@ void NgDialectConversionPass::runOnModule()
 
     for (auto output : kernelOutput)
     {
-        resultTypeList.push_back(getMlirType(output.get()));
+        resultTypeList.push_back(getMlirType(output.get_node()));
     }
 
     auto funcType = mlir::FunctionType::get(argsTypeList, resultTypeList, m_context);
@@ -174,11 +173,13 @@ void NgDialectConversionPass::runOnModule()
 
     // populate Tensor->Value maps
     int i = 0;
-    for (auto input : kernelInputs)
+    for (auto p : m_compiledKernel->get_input_map())
     {
-        auto arg = function.getArgument(i);
-        TensorInfo tensorInfo{arg};
-        m_tensorToValueMap.insert(TensorToInfo(input->get_output_tensor_ptr().get(), tensorInfo));
+        auto paramNode = p.first;
+        auto argId = p.second;
+        auto argValue = function.getArgument(argId);
+        m_tensorToValueMap.insert(
+            TensorToInfo(paramNode->get_output_tensor_ptr().get(), {argValue}));
         i++;
     }
 
@@ -230,6 +231,9 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
 
+    auto sign = mlir::NGIntegerType::SignednessSemantics::Signed;
+    auto unsign = mlir::NGIntegerType::SignednessSemantics::Unsigned;
+
     switch (type)
     {
     case ngraph::element::Type_t::undefined:
@@ -240,15 +244,15 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type& type)
     case ngraph::element::Type_t::f16: return mlir::NGFloatType::getF16(m_context);
     case ngraph::element::Type_t::f32: return mlir::NGFloatType::getF32(m_context);
     case ngraph::element::Type_t::f64: return mlir::NGFloatType::getF64(m_context);
-    case ngraph::element::Type_t::i8: return mlir::NGIntegerType::getInt8(m_context);
+    case ngraph::element::Type_t::i8: return mlir::NGIntegerType::get(8, sign, m_context);
     case ngraph::element::Type_t::u8:
-    case ngraph::element::Type_t::boolean: return mlir::NGIntegerType::getUInt8(m_context);
-    case ngraph::element::Type_t::i16: return mlir::NGIntegerType::getInt16(m_context);
-    case ngraph::element::Type_t::u16: return mlir::NGIntegerType::getInt16(m_context);
-    case ngraph::element::Type_t::i32: return mlir::NGIntegerType::getInt32(m_context);
-    case ngraph::element::Type_t::u32: return mlir::NGIntegerType::getUInt32(m_context);
-    case ngraph::element::Type_t::i64: return mlir::NGIntegerType::getInt64(m_context);
-    case ngraph::element::Type_t::u64: return mlir::NGIntegerType::getUInt64(m_context);
+    case ngraph::element::Type_t::boolean: return mlir::NGIntegerType::get(8, unsign, m_context);
+    case ngraph::element::Type_t::i16: return mlir::NGIntegerType::get(16, sign, m_context);
+    case ngraph::element::Type_t::u16: return mlir::NGIntegerType::get(16, unsign, m_context);
+    case ngraph::element::Type_t::i32: return mlir::NGIntegerType::get(32, sign, m_context);
+    case ngraph::element::Type_t::u32: return mlir::NGIntegerType::get(32, unsign, m_context);
+    case ngraph::element::Type_t::i64: return mlir::NGIntegerType::get(64, sign, m_context);
+    case ngraph::element::Type_t::u64: return mlir::NGIntegerType::get(64, unsign, m_context);
     }
     NGRAPH_CHECK(false, "Unreachable");
     return mlir::Type();
@@ -479,6 +483,21 @@ mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::GroupConvo
 }
 
 template <>
+mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::ConvolutionBias)
+{
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(ngNode);
+    auto convNode = static_cast<const ngraph::op::ConvolutionBias*>(ngNode);
+    auto convOp = llvm::cast<mlir::NGConvBiasOp>(op);
+
+    convOp.setStrides(NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides()));
+    convOp.setDilation(NgDialectObj.getShapeAsAttr(convNode->get_window_dilation_strides()));
+    convOp.setPadBelow(NgDialectObj.getShapeAsAttr(convNode->get_padding_below()));
+    convOp.setPadAbove(NgDialectObj.getShapeAsAttr(convNode->get_padding_above()));
+    convOp.setWithRelu(NgDialectObj.m_builder.getBoolAttr(convNode->with_relu()));
+    return op;
+}
+
+template <>
 mlir::Operation* NgDialectConversionPass::COMPILE_OP_DECL(ngraph::op::AvgPool)
 {
     mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
@@ -616,7 +635,6 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 {
     std::vector<mlir::Value> argValues;
     std::vector<mlir::Type> resTypes;
-    auto inputMap = m_compiledKernel->get_input_map();
     std::shared_ptr<descriptor::Tensor> argTensor;
     int i = 0;
     for (auto& argOutput : ngNode->input_values())
@@ -625,19 +643,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
         {
             break;
         }
-        auto argOutputNode = argOutput.get_node();
-        if (is_type<op::Parameter>(argOutputNode))
-        {
-            auto it = inputMap.find(argOutputNode->shared_from_this());
-            NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
-
-            argTensor = m_compiledKernel->input_values().at(it->second).get_tensor_ptr();
-        }
-        else
-        {
-            argTensor = argOutput.get_tensor_ptr();
-        }
-
+        argTensor = argOutput.get_tensor_ptr();
         auto argV = getTensorValue(argTensor.get()).m_value;
         argValues.push_back(argV);
         i++;
@@ -670,7 +676,7 @@ void NgDialectConversionPass::createReturn()
     std::vector<mlir::Value> valueList;
     for (auto output : m_compiledKernel->get_kernel_outputs())
     {
-        valueList.push_back(getTensorValue(output->get_output_tensor_ptr().get()).m_value);
+        valueList.push_back(getTensorValue(output.get_tensor_ptr().get()).m_value);
     }
     m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
 }

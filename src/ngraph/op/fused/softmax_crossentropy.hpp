@@ -46,12 +46,12 @@ namespace ngraph
                                     bool soft_label = false,
                                     int64_t ignore_index = -100);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool get_soft_label() const { return m_soft_label; }
                 int64_t get_ignore_index() const { return m_ignore_index; }
@@ -83,12 +83,12 @@ namespace ngraph
                                             bool soft_label = false,
                                             int64_t ignore_index = -100);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool get_soft_label() const { return m_soft_label; }
                 int64_t get_ignore_index() const { return m_ignore_index; }
             private:
@@ -98,5 +98,5 @@ namespace ngraph
         }
         using v0::SoftmaxCrossEntropy;
         using v0::SoftmaxCrossEntropyBackprop;
-    } // namespace op
-} // namespace ngraph
+    }
+}

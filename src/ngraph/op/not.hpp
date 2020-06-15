@@ -37,10 +37,13 @@ namespace ngraph
                 /// \param arg Node that produces the input tensor.
                 LogicalNot(const Output<Node>& arg);
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
         }
         namespace v0
@@ -61,10 +64,12 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
         }
 
         using v0::Not;
-    } // namespace op
-} // namespace ngraph
+    }
+}

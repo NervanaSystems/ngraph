@@ -39,7 +39,7 @@ namespace ngraph
             BoundedRelu(const Output<ngraph::Node>& arg, float alpha);
             float get_alpha() const { return m_alpha; }
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
         private:
             float m_alpha;

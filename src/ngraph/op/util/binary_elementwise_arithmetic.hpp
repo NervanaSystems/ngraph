@@ -57,26 +57,11 @@ namespace ngraph
                 BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob);
 
                 /// \brief Constructs a binary elementwise arithmetic operation.
-                BinaryElementwiseArithmetic(const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1,
-                                            const AutoBroadcastSpec& autob);
-
-                /// \brief Constructs a binary elementwise arithmetic operation.
                 ///
                 /// \param arg0 Output that produces the first input tensor.
                 /// \param arg1 Output that produces the second input tensor.
                 BinaryElementwiseArithmetic(const Output<Node>& arg0,
                                             const Output<Node>& arg1,
-                                            const AutoBroadcastSpec& autob);
-
-                /// \brief Constructs a binary elementwise arithmetic operation.
-                ///
-                /// \param arg0 Node that produces the first input tensor.
-                /// \param arg1 Node that produces the second input tensor.
-                /// \param autob AutoBroadcast mode.
-                BinaryElementwiseArithmetic(const std::string& node_type,
-                                            const std::shared_ptr<Node>& arg0,
-                                            const std::shared_ptr<Node>& arg1,
                                             const AutoBroadcastSpec& autob);
 
             public:

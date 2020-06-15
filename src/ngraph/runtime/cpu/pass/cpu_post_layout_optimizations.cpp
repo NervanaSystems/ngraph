@@ -22,7 +22,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/group_conv.hpp"
+#include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
@@ -51,7 +51,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
     auto reshape_conv =
         std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<pattern::op::Label>(element::f32, Shape{16, 4, 7, 7});
-    auto tvt = reshape_conv->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt = reshape_conv->get_output_descriptor(0).get_tensor_ptr().get();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
     auto conv = std::make_shared<ngraph::op::Convolution>(
@@ -112,10 +112,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
 
         NGRAPH_DEBUG << "Replacing input "
-                     << m_cvt_lt_bprop->get_inputs().at(0).get_output().get_node()->get_name()
+                     << m_cvt_lt_bprop->get_input_descriptor(0).get_output().get_node()->get_name()
                      << " to " << m_cvt_lt_bprop->get_name() << " with "
-                     << m_cvt_lt->get_outputs().at(0).get_node()->get_name();
-        m_cvt_lt_bprop->get_inputs().at(0).replace_output(m_cvt_lt->get_outputs().at(0));
+                     << m_cvt_lt->get_output_descriptor(0).get_node()->get_name();
+        m_cvt_lt_bprop->get_input_descriptor(0).replace_output(m_cvt_lt->get_output_descriptor(0));
 
         return true;
     };
@@ -130,7 +130,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 576, 17, 17});
     auto slice = std::make_shared<ngraph::op::Slice>(
         param, Coordinate{0, 0, 0, 0}, Coordinate{1, 192, 17, 17});
-    auto tvt = slice->get_outputs().at(0).get_tensor_ptr().get();
+    auto tvt = slice->get_output_descriptor(0).get_tensor_ptr().get();
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(*tvt);
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(slice, lt_desc);
 
@@ -248,8 +248,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             *reshape_m->get_argument(0)->get_output_tensor_ptr());
         rotated_lt_desc->set_mkldnn_md(rotated_md);
 
-        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(
-            reshape_m->get_argument(0), 0, rotated_lt_desc);
+        auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_m->input_value(0),
+                                                                          rotated_lt_desc);
         cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 
         auto reshape_n =
@@ -280,58 +280,9 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     mkldnn::memory::desc& input_desc,
     mkldnn::memory::desc& result_desc)
 {
-    std::vector<T> result_vec(convertlayout->output(0).get_tensor().size() /
+    std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
                               input->get_element_type().size());
 
-#if MKLDNN_VERSION_MAJOR < 1
-    if (input_desc.data.format == mkldnn_nchw && result_desc.data.format == mkldnn_goihw)
-    {
-        // becomes a copy
-        input_desc = result_desc;
-    }
-    else if ((input_desc.data.format == mkldnn_nchw || input_desc.data.format == mkldnn_nhwc) &&
-             result_desc.data.format == mkldnn_OIhw4i16o4i_s8s8)
-    {
-        input_desc.data.format = mkldnn_oihw;
-    }
-    else if (input_desc.data.format == mkldnn_nchw && input_desc.data.ndims == 4 &&
-             result_desc.data.ndims == 5 && convertlayout->get_users().size() == 1)
-    {
-        Shape weights_shape_groups;
-        if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(convertlayout->get_users()[0]))
-        {
-            weights_shape_groups = gconv->get_weights_dimensions();
-        }
-        else if (auto gconvb =
-                     as_type_ptr<ngraph::op::GroupConvolutionBias>(convertlayout->get_users()[0]))
-        {
-            weights_shape_groups = gconvb->get_weights_dimensions();
-        }
-        else
-        {
-            throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
-        }
-        input_desc = mkldnn::memory::desc(
-            mkldnn::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_element_type()),
-            mkldnn::memory::format::goihw);
-    }
-
-    // build mkldnn primitive and execute
-    mkldnn::memory in{{input_desc, runtime::cpu::executor::global_cpu_engine},
-                      const_cast<void*>(input->get_data_ptr())};
-    mkldnn::memory out{{result_desc, runtime::cpu::executor::global_cpu_engine}, result_vec.data()};
-    mkldnn::reorder reorder{in, out};
-    mkldnn::stream s(mkldnn::stream::kind::eager);
-    try
-    {
-        s.submit({reorder}).wait();
-    }
-    catch (const mkldnn::error& e)
-    {
-        throw ngraph_error("Could not run mkdnn primitive " + e.message);
-    }
-#else
     bool input_format_is_nchw = runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
         input_desc.data, mkldnn::memory::format_tag::nchw);
     if (input_format_is_nchw && runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
@@ -396,7 +347,6 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     {
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
-#endif
 
     return make_shared<ngraph::op::Constant>(
         convertlayout->get_output_element_type(0), convertlayout->get_output_shape(0), result_vec);

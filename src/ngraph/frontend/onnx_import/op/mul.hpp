@@ -20,10 +20,10 @@
 
 #include "core/node.hpp"
 #include "default_opset.hpp"
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 
 namespace ngraph
 {
@@ -41,13 +41,12 @@ namespace ngraph
                     auto rhs_rank = rhs_node.get_shape().size();
                     auto axis = node.get_attribute_value<std::int64_t>("axis", lhs_rank - rhs_rank);
                     // Unidirectional broadcast right node to left shape.
-                    rhs_node = ngraph::op::opset1::legacy_style_broadcast_for_binary_operation(
+                    rhs_node = ngraph::builder::opset1::legacy_broadcast_for_binary_operation(
                         lhs_node, rhs_node, axis);
                     return {std::make_shared<default_opset::Multiply>(
                         lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_7
             {
@@ -56,11 +55,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Multiply>(node.get_ng_inputs().at(0),
                                                                       node.get_ng_inputs().at(1))};
                 }
-
-            } // namespace set_7
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

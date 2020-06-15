@@ -32,7 +32,7 @@ static void visualize_layout_format(const Node& node, ostream& ss)
 {
     try
     {
-        auto input_desc = node.input(0).get_tensor().get_tensor_layout();
+        auto input_desc = node.get_input_tensor(0).get_tensor_layout();
         auto result_desc = node.get_output_tensor_ptr()->get_tensor_layout();
 
         auto in_tvl = static_pointer_cast<runtime::cpu::LayoutDescriptor>(input_desc);
@@ -50,7 +50,6 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             ss << "\ninput_order=" << reshape->get_input_order();
         }
-#if MKLDNN_VERSION_MAJOR >= 1
         auto in_md = in_tvl->get_mkldnn_md();
         auto out_md = out_tvl->get_mkldnn_md();
         ss << "\nin strides={";
@@ -65,14 +64,6 @@ static void visualize_layout_format(const Node& node, ostream& ss)
             ss << out_md.data.format_desc.blocking.strides[i] << ",";
         }
         ss << out_md.data.format_desc.blocking.strides[out_md.data.ndims - 1] << "}";
-#else
-        ss << "\nin=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                             static_cast<mkldnn::memory::FORMAT_KIND>(
-                                 in_tvl->get_mkldnn_md().data.FORMAT_KIND));
-        ss << " out=" << runtime::cpu::mkldnn_utils::get_mkldnn_format_string(
-                             static_cast<mkldnn::memory::FORMAT_KIND>(
-                                 out_tvl->get_mkldnn_md().data.FORMAT_KIND));
-#endif
         ss << " ";
     }
     catch (...)

@@ -21,11 +21,11 @@ include_directories(ngraph)
 add_subdirectory(resource)
 
 # This must be added before any backend that uses MLIR
-if (NGRAPH_MLIR_ENABLE)
-    add_subdirectory(${NGRAPH_MLIR_SOURCE_DIR})
-endif()
+add_subdirectory(contrib)
 
 add_subdirectory(ngraph)
+
+add_subdirectory(runtime)
 
 if (NGRAPH_TOOLS_ENABLE)
     add_subdirectory(tools)

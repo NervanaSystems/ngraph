@@ -33,11 +33,9 @@ namespace ngraph
                     const auto data = node.get_ng_inputs().at(0);
 
                     const std::shared_ptr<ngraph::Node> zero_node =
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), data->get_shape(), std::vector<float>{0.f});
+                        default_opset::Constant::create(data->get_element_type(), Shape{}, {0.f});
                     const std::shared_ptr<ngraph::Node> one_node =
-                        std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), data->get_shape(), std::vector<float>{1.f});
+                        default_opset::Constant::create(data->get_element_type(), Shape{}, {1.f});
 
                     // data + log(exp(-data) + 1)
                     const std::shared_ptr<ngraph::Node> positive_val_node =
@@ -64,11 +62,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Select>(
                         condition_node, positive_val_node, negative_val_node)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

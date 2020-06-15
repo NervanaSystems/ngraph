@@ -13,17 +13,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
+#include "ngraph/pass/opset1_upgrade.hpp"
 
 #include <functional>
 #include <iterator>
 #include <limits>
 #include <numeric>
 
+#include "ngraph/builder/autobroadcast.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/util/broadcasting.hpp"
 #include "ngraph/ops.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -108,7 +108,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::Broadcast> node)
     {
-        auto replacement_node = ngraph::op::opset1::make_broadcast(
+        auto replacement_node = ngraph::builder::opset1::make_broadcast(
             node->input_value(0), node->get_broadcast_shape(), node->get_broadcast_axes());
         replace_node(node, replacement_node.get_node_shared_ptr());
         return replacement_node.get_node_shared_ptr();
@@ -220,11 +220,10 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::DynReshape> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::Reshape> node)
     {
-        auto zero_flag = false;
-        auto replacement_node =
-            make_shared<op::v1::Reshape>(node->input_value(0), node->input_value(1), zero_flag);
+        shared_ptr<Node> replacement_node =
+            builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -298,14 +297,13 @@ namespace
 
             auto reshaped_filters = builder::reshape(node->input_value(1), filters_shape);
 
-            replacement_node =
-                make_shared<op::v1::GroupConvolution>(node->input(0).get_source_output(),
-                                                      reshaped_filters,
-                                                      strides,
-                                                      pads_begin,
-                                                      pads_end,
-                                                      dilations,
-                                                      auto_pad);
+            replacement_node = make_shared<op::v1::GroupConvolution>(node->input_value(0),
+                                                                     reshaped_filters,
+                                                                     strides,
+                                                                     pads_begin,
+                                                                     pads_end,
+                                                                     dilations,
+                                                                     auto_pad);
         }
         replace_node(node, replacement_node);
         return replacement_node;
@@ -318,8 +316,8 @@ namespace
         const auto pads_begin = node->get_padding_below();
         const auto pads_end = node->get_padding_above();
 
-        const auto data_batch_pshape = node->input(0).get_partial_shape();
-        const auto filters_pshape = node->input(1).get_partial_shape();
+        const auto data_batch_pshape = node->get_input_partial_shape(0);
+        const auto filters_pshape = node->get_input_partial_shape(1);
 
         NGRAPH_CHECK(data_batch_pshape.is_static(),
                      "Unable to convert GroupConvolutionBackpropData:0 to "
@@ -471,7 +469,7 @@ namespace
         NGRAPH_CHECK(output_pshape[one_hot_axis].is_static(),
                      "OneHot:v0 one hot axis dimension must be static ",
                      *node);
-        const auto depth = static_cast<int64_t>(output_pshape[one_hot_axis]);
+        const auto depth = output_pshape[one_hot_axis].get_length();
         const auto depth_node = op::Constant::create(element::i64, Shape{}, {depth});
 
         const auto on_value = op::Constant::create(element::i64, Shape{}, {1});
@@ -643,9 +641,9 @@ namespace
         std::string sort;
         switch (node->get_sort())
         {
-        case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
-        case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
-        case op::TopK::SortType::NONE: sort = "none"; break;
+        case op::TopK::SortType::index: sort = "index"; break;
+        case op::TopK::SortType::value: sort = "value"; break;
+        case op::TopK::SortType::none: sort = "none"; break;
         }
 
         std::string mode;
@@ -704,7 +702,7 @@ namespace
         };
         return dispatch_map;
     }
-} // namespace
+}
 
 bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {

@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "ngraph/axis_vector.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/fused_op.hpp"
@@ -47,12 +48,12 @@ namespace ngraph
                              const std::vector<int64_t>& upper_bounds,
                              const AxisVector& decrease_axes);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const AxisVector& get_axes() const { return m_axes; }
                 const std::vector<int64_t>& get_lower_bounds() const { return m_lower_bounds; }
@@ -90,12 +91,12 @@ namespace ngraph
                                      const std::vector<int64_t>& lower_bounds,
                                      const std::vector<int64_t>& upper_bounds);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 void pre_validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const AxisVector& get_axes() const { return m_axes; }
                 const std::vector<int64_t>& get_lower_bounds() const { return m_lower_bounds; }
