@@ -28,18 +28,7 @@ namespace ngraph
             namespace set_1
             {
                 NodeVector round(const Node& node);
-<<<<<<< HEAD
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
-=======
             }
         }
     }
 }
->>>>>>> origin/master
