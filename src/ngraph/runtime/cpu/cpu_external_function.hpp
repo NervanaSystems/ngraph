@@ -27,7 +27,7 @@
 #include <utility>
 #include <vector>
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -61,7 +61,7 @@ namespace ngraph
             class CPU_Debugger;
             class CPU_DebugTracer;
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   CodeWriter&,
@@ -184,7 +184,7 @@ namespace ngraph
             protected:
                 void build(ngraph::pass::PassConfig& pass_config);
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
                 void compile(ngraph::pass::PassConfig& pass_config);
 
@@ -203,7 +203,7 @@ namespace ngraph
 
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
                 void emit_debug_function_entry(CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorWrapper>& in,
@@ -245,7 +245,7 @@ namespace ngraph
 #if defined(NGRAPH_TBB_ENABLE)
                 bool m_use_tbb;
 #endif
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
                 bool m_is_compiled;
 #endif
                 bool m_direct_execution;
