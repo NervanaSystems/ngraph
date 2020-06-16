@@ -161,10 +161,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto mpattern = m.get_match_root(); // add
         auto m_matmul = ngraph::pattern::Matcher::unique_match<ngraph::op::MatmulBias>(mpattern);
         auto m_broadcast = ngraph::pattern::Matcher::unique_match<ngraph::op::Broadcast>(mpattern);
-        auto m_bias = m_broadcast->get_argument(0);
+        auto m_bias = m_broadcast->input_value(0);
         auto pattern_map = m.get_pattern_map();
 
-        NGRAPH_CHECK(mpattern->get_output_element_type(0) != element::f64 || m_bias == nullptr,
+        NGRAPH_CHECK(mpattern->get_output_element_type(0) != element::f64,
                      "Bias in DP MatMulBias is not supported yet");
 
         auto mmb = std::make_shared<ngraph::op::MatmulBias>(pattern_map[W],
