@@ -359,7 +359,7 @@ namespace ngraph
 
         /// Return the output to use when converting to an Output<Node> with no index specified.
         /// Throws when not supported.
-        Output<const Node> get_default_output() const;
+        // Output<const Node> get_default_output() const;
         Output<Node> get_default_output();
 
         /// Returns the output of the default output, or throws if there is none
@@ -512,7 +512,7 @@ namespace ngraph
 
         /// \return A handle to the `output_index`th output of this node.
         /// \throw std::out_of_range if the node does not have at least `output_index+1` outputs.
-        Output<const Node> output(size_t output_index) const;
+        // Output<const Node> output(size_t output_index) const;
 
         void set_op_annotations(std::shared_ptr<ngraph::op::util::OpAnnotations> op_annotations)
         {
