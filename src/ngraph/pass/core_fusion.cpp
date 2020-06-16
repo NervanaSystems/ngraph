@@ -511,13 +511,13 @@ void pass::CoreFusion::construct_conv_affine_folding()
         auto get_bcast_input = [](const shared_ptr<op::Broadcast>& bcast) {
             if (bcast->get_input_shape(0).size() == 1)
             {
-                return bcast->get_argument(0);
+                return bcast->input_value(0);
             }
             if (bcast->get_input_shape(0).size() == 2)
             {
                 Shape bshape{bcast->get_input_shape(0)[1]};
-                return static_pointer_cast<Node>(
-                    make_shared<op::Reshape>(bcast->get_argument(0), AxisVector{0, 1}, bshape));
+                return make_shared<op::Reshape>(bcast->input_value(0), AxisVector{0, 1}, bshape)
+                    ->output(0);
             }
             throw ngraph_error("Unexpected shape for bcast input");
         };
