@@ -32,6 +32,9 @@ void regclass_pyngraph_Function(py::module m)
     function.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
                           const std::string&>());
+    function.def(py::init<const std::vector<ngraph::Output<ngraph::Node>>&,
+                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const std::string&>());
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
                           const std::string&>());
