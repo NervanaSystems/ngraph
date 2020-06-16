@@ -134,7 +134,7 @@ set(SRC
     pass/cpu_workspace_insertion.cpp
 )
 
-if (NOT NGRAPH_DEX_ONLY)
+if (NGRAPH_CPU_CODEGEN_ENABLE)
     set(SRC
         ${SRC}
         cpu_emitter.cpp
@@ -194,8 +194,8 @@ if (NGRAPH_CPU_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    if (NGRAPH_DEX_ONLY)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    if (NGRAPH_CPU_CODEGEN_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "CODEGEN_ENABLE")
     endif()
     if (NGRAPH_ENABLE_CPU_CONV_AUTO)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
@@ -236,7 +236,7 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_TBB_ENABLE)
         target_link_libraries(cpu_backend PUBLIC TBB::tbb)
     endif()
-    if (NOT NGRAPH_DEX_ONLY)
+    if (NGRAPH_CPU_CODEGEN_ENABLE)
         target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
     target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
