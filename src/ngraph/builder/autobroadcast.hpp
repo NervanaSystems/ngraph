@@ -98,7 +98,7 @@ namespace ngraph
         ///
         /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         NGRAPH_API
-        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+        std::pair<Output<Node>, Output<Node>>
             numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
         /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style
