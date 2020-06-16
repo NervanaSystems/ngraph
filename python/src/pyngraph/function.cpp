@@ -29,9 +29,6 @@ void regclass_pyngraph_Function(py::module m)
 {
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
     function.doc() = "ngraph.impl.Function wraps ngraph::Function";
-    function.def(py::init<const std::vector<ngraph::Output<ngraph::Node>>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
-                          const std::string&>());
     function.def(py::init([](const std::vector<std::shared_ptr<ngraph::Node>>& outputs,
                              const std::vector<std::shared_ptr<ngraph::op::Parameter>>& in,
                              const std::string& name) {
@@ -42,6 +39,9 @@ void regclass_pyngraph_Function(py::module m)
         }
         return std::make_shared<ngraph::Function>(ov, in, name);
     }));
+    function.def(py::init<const std::vector<ngraph::Output<ngraph::Node>>&,
+                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const std::string&>());
 
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
                           const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
