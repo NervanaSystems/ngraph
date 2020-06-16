@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include <algorithm>   // std::generate
-#include <cmath>       // std::floor, std::min
-#include <cstddef>     // std::size_t
-#include <cstdint>     // std::int64_t
-#include <iterator>    // std::begin, std::end
-#include <memory>      // std::shared_ptr, std::make_shared
+#include <algorithm> // std::generate
+#include <cmath>     // std::floor, std::min
+#include <cstddef>   // std::size_t
+#include <cstdint>   // std::int64_t
+#include <iterator>  // std::begin, std::end
+#include <memory>    // std::shared_ptr, std::make_shared
+#include <onnx/onnx_pb.h>
 #include <type_traits> // std::enable_if
 #include <vector>
 
@@ -126,6 +127,12 @@ namespace ngraph
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }
+
+            ONNX_NAMESPACE::TypeProto get_proto_type(element::Type type, Shape shape);
+            std::vector<std::shared_ptr<ngraph::Node>>
+                get_extanded_function(ONNX_NAMESPACE::NodeProto* new_node,
+                                      ONNX_NAMESPACE::GraphProto graph,
+                                      int opset_version);
         }
     }
 }

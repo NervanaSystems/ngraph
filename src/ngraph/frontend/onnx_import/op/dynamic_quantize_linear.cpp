@@ -14,15 +14,13 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <fstream>
 #include <memory>
 
-#include "ngraph/frontend/onnx_import/onnx.hpp"
-#include "ngraph/runtime/backend.hpp"
+#include "dynamic_quantize_linear.hpp"
 #include "onnx/defs/function.h"
 #include "onnx/defs/schema.h"
 #include "onnx/proto_utils.h"
-#include "round.hpp"
+#include "utils/common.hpp"
 
 namespace ngraph
 {
@@ -32,31 +30,6 @@ namespace ngraph
         {
             namespace set_1
             {
-                ONNX_NAMESPACE::TypeProto get_proto_type(element::Type type, Shape shape)
-                {
-                    ONNX_NAMESPACE::TypeProto target_type;
-                    switch (type)
-                    {
-                    case element::Type_t::f32:
-                        target_type.mutable_tensor_type()->set_elem_type(
-                            ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
-                        break;
-                    case element::Type_t::u8:
-                        target_type.mutable_tensor_type()->set_elem_type(
-                            ONNX_NAMESPACE::TensorProto_DataType_UINT8);
-                        break;
-                    }
-
-                    for (auto dim : shape)
-                    {
-                        target_type.mutable_tensor_type()
-                            ->mutable_shape()
-                            ->add_dim()
-                            ->set_dim_value(dim);
-                    }
-                    return target_type;
-                }
-
                 NodeVector dynamic_quantize_linear(const Node& node)
                 {
                     const ONNX_NAMESPACE::NodeProto node_proto = node.node_proto();
@@ -75,7 +48,7 @@ namespace ngraph
                     proto_input->set_name(input->get_name());
                     auto input_type = input->get_element_type();
                     auto input_shape = input->get_output_shape(0);
-                    *proto_input->mutable_type() = get_proto_type(input_type, input_shape);
+                    *proto_input->mutable_type() = common::get_proto_type(input_type, input_shape);
                     // Warning: Consider PartialShape
 
                     // Add outputs to node
@@ -88,37 +61,19 @@ namespace ngraph
                     // This part is secific for each func op
                     ONNX_NAMESPACE::ValueInfoProto* y = graph.add_output();
                     y->set_name(node.get_output_names()[0]);
-                    *y->mutable_type() = get_proto_type(element::Type_t::u8, input_shape);
+                    *y->mutable_type() = common::get_proto_type(element::Type_t::u8, input_shape);
 
                     ONNX_NAMESPACE::ValueInfoProto* y_scale = graph.add_output();
                     y_scale->set_name(node.get_output_names()[1]);
-                    *y_scale->mutable_type() = get_proto_type(input_type, Shape(1));
+                    *y_scale->mutable_type() = common::get_proto_type(input_type, Shape(1));
 
                     ONNX_NAMESPACE::ValueInfoProto* y_zero_point = graph.add_output();
                     y_zero_point->set_name(node.get_output_names()[2]);
-                    *y_zero_point->mutable_type() = get_proto_type(element::Type_t::u8, Shape(1));
+                    *y_zero_point->mutable_type() =
+                        common::get_proto_type(element::Type_t::u8, Shape(1));
 
-                    const auto* schema =
-                        ONNX_NAMESPACE::OpSchemaRegistry::Schema(node.op_type(), 11, "");
-                    const ONNX_NAMESPACE::FunctionProto* func = schema->GetFunction();
-
-                    FunctionExpandHelper(*new_node, *func, graph);
-
-                    graph.mutable_node()->erase(graph.node().begin());
-
-                    // Save graph to file
-                    ONNX_NAMESPACE::ModelProto model;
-                    auto* graph_ptr = model.mutable_graph();
-                    *graph_ptr = graph;
-                    model.set_ir_version(5);
-                    model.set_producer_name("backend-test");
-                    auto* opset_version = model.add_opset_import();
-                    opset_version->set_version(11);
-                    std::istringstream model_stream{model.SerializeAsString()};
-
-                    auto function = ngraph::onnx_import::import_onnx_model(model_stream);
-                    std::vector<std::shared_ptr<ngraph::Node>> nodes = function->get_ordered_ops();
-
+                    std::vector<std::shared_ptr<ngraph::Node>> nodes =
+                        common::get_extanded_function(new_node, graph, 11);
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
                         for (auto& input : nodes.at(i)->inputs())

@@ -15,9 +15,16 @@
 //*****************************************************************************
 #include <onnx/onnx_pb.h> // onnx types
 
+#include <fstream>
+
 #include "common.hpp"
 #include "default_opset.hpp"
+#include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "onnx/defs/function.h"
+#include "onnx/defs/schema.h"
+#include "onnx/proto_utils.h"
 
 namespace ngraph
 {
@@ -65,6 +72,53 @@ namespace ngraph
                     default_opset::Constant::create(element::i64, {}, {start_value}),
                     std::make_shared<default_opset::ShapeOf>(value_shape),
                     default_opset::Constant::create(element::i64, {}, {step}));
+            }
+
+            ONNX_NAMESPACE::TypeProto get_proto_type(element::Type type, Shape shape)
+            {
+                ONNX_NAMESPACE::TypeProto target_type;
+                switch (type)
+                {
+                case element::Type_t::f32:
+                    target_type.mutable_tensor_type()->set_elem_type(
+                        ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
+                    break;
+                case element::Type_t::u8:
+                    target_type.mutable_tensor_type()->set_elem_type(
+                        ONNX_NAMESPACE::TensorProto_DataType_UINT8);
+                    break;
+                }
+
+                for (auto dim : shape)
+                {
+                    target_type.mutable_tensor_type()->mutable_shape()->add_dim()->set_dim_value(
+                        dim);
+                }
+                return target_type;
+            }
+
+            std::vector<std::shared_ptr<ngraph::Node>>
+                get_extanded_function(ONNX_NAMESPACE::NodeProto* new_node,
+                                      ONNX_NAMESPACE::GraphProto graph,
+                                      int opset_version)
+            {
+                const auto* schema = ONNX_NAMESPACE::OpSchemaRegistry::Schema(
+                    new_node->op_type(), opset_version, "");
+                const ONNX_NAMESPACE::FunctionProto* func = schema->GetFunction();
+
+                FunctionExpandHelper(*new_node, *func, graph);
+
+                graph.mutable_node()->erase(graph.node().begin());
+
+                // Save graph to file
+                ONNX_NAMESPACE::ModelProto model;
+                auto* graph_ptr = model.mutable_graph();
+                *graph_ptr = graph;
+
+                std::istringstream model_stream{model.SerializeAsString()};
+
+                auto function = ngraph::onnx_import::import_onnx_model(model_stream);
+                return function->get_ordered_ops();
             }
         }
     }
