@@ -17,7 +17,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/node_output.hpp"     // ngraph::Output<Node>
+#include "ngraph/node_output.hpp"  // ngraph::Output<Node>
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
 #include "pyngraph/output.hpp"
 
