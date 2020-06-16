@@ -94,10 +94,10 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
     }
 }
 
-// Output<const Node> Node::get_default_output() const
-// {
-//     return output(get_default_output_index());
-// }
+Output<const Node> Node::get_default_output() const
+{
+    return output(get_default_output_index());
+}
 
 Output<Node> Node::get_default_output()
 {
@@ -946,16 +946,16 @@ Output<Node> Node::output(size_t output_index)
     return Output<Node>(this, output_index);
 }
 
-// Output<const Node> Node::output(size_t output_index) const
-// {
-//     // All nodes will have at least 1 output
-//     if (output_index > 0 && output_index >= m_outputs.size())
-//     {
-//         throw out_of_range("node output index is out of range");
-//     }
+Output<const Node> Node::output(size_t output_index) const
+{
+    // All nodes will have at least 1 output
+    if (output_index > 0 && output_index >= m_outputs.size())
+    {
+        throw out_of_range("node output index is out of range");
+    }
 
-//     return Output<const Node>(this, output_index);
-// }
+    return Output<const Node>(this, output_index);
+}
 
 vector<Input<Node>> Node::inputs()
 {
