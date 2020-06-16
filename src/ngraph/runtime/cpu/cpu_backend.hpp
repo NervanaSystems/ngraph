@@ -26,6 +26,7 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/cpu/cpu_executable.hpp"
+#include "ngraph/runtime/cpu/cpu_execution_mode.hpp"
 
 namespace ngraph
 {
@@ -82,7 +83,7 @@ namespace ngraph
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
                 Allocator* m_allocator;
-                bool m_codegen_enable;
+                EXECUTION_MODE m_execution_mode;
             };
         }
     }

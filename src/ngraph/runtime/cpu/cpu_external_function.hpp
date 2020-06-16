@@ -27,7 +27,7 @@
 #include <utility>
 #include <vector>
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
 #include "ngraph/code_writer.hpp"
 #include "ngraph/codegen/compiler.hpp"
@@ -41,6 +41,7 @@
 #include "ngraph/pass/pass_config.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
+#include "ngraph/runtime/cpu/cpu_execution_mode.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
 #include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
@@ -60,7 +61,7 @@ namespace ngraph
             class CPU_Debugger;
             class CPU_DebugTracer;
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
             using OpFunction = std::function<void(CPU_ExternalFunction* external_function,
                                                   CodeWriter&,
@@ -117,7 +118,7 @@ namespace ngraph
 
             public:
                 CPU_ExternalFunction(const std::shared_ptr<ngraph::Function>& function,
-                                     bool codegen_enable);
+                                     EXECUTION_MODE mode);
                 ~CPU_ExternalFunction();
                 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame>
                     make_call_frame(ngraph::pass::PassConfig& pass_config, Allocator* allocator);
@@ -183,7 +184,7 @@ namespace ngraph
             protected:
                 void build(ngraph::pass::PassConfig& pass_config);
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
                 void compile(ngraph::pass::PassConfig& pass_config);
 
@@ -202,7 +203,7 @@ namespace ngraph
 
                 bool computes_result(Node* node);
                 void release_function() { m_function = nullptr; }
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
                 void emit_debug_function_entry(CodeWriter& writer,
                                                Node* node,
                                                const std::vector<TensorWrapper>& in,
@@ -244,7 +245,7 @@ namespace ngraph
 #if defined(NGRAPH_TBB_ENABLE)
                 bool m_use_tbb;
 #endif
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
                 bool m_is_compiled;
 #endif
                 bool m_direct_execution;
@@ -326,6 +327,7 @@ namespace ngraph
                     m_node_primitive_string_deps_index_size_map;
                 /// Name of the file to store descriptors for mkldnn_primitives
                 const std::string m_desc_filename = "desc_file";
+                EXECUTION_MODE m_execution_mode;
             };
         }
     }
