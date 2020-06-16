@@ -579,10 +579,8 @@ static shared_ptr<Node> reduce_broadcast(shared_ptr<Node> broadcast)
     Shape shape_w1{matched_broadcast_w1->get_output_shape(0)};
     shape_w1[H] /= 2;
     shape_w1[W] /= 2;
-    auto new_broadcast_w1 =
-        std::make_shared<op::Broadcast>(matched_broadcast_w1->input_value(0),
-                                        shape_w1,
-                                        matched_broadcast_w1->get_broadcast_axes());
+    auto new_broadcast_w1 = std::make_shared<op::Broadcast>(
+        matched_broadcast_w1->input_value(0), shape_w1, matched_broadcast_w1->get_broadcast_axes());
     return move(new_broadcast_w1);
 }
 

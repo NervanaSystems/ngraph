@@ -39,6 +39,7 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
+        friend class Node;
         void eliminate_goe() NGRAPH_DEPRECATED("Remove when GetOrderedOutput is removed");
 
     public:
@@ -110,6 +111,8 @@ namespace ngraph
         bool operator>=(const Output& other) const;
 
     private:
+        std::shared_ptr<Node> as_single_output_node() const;
+
         std::shared_ptr<Node> m_node;
         size_t m_index{0};
     };

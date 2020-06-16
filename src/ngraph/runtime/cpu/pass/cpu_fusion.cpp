@@ -88,7 +88,7 @@
 #include "ngraph/util.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
-                           std::shared_ptr<ngraph::Node> arg,
+                           ngraph::Output<ngraph::Node> arg,
                            bool& transpose_w,
                            ngraph::Shape& shape_w)
 {
@@ -96,10 +96,9 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
 
     if (!r_w)
     {
-        if (arg->get_output_shape(0).size() != 2)
+        if (arg.get_shape().size() != 2)
         {
-            NGRAPH_DEBUG << arg->get_name() << " 's rank != 2 "
-                         << ngraph::vector_to_string(arg->get_output_shape(0));
+            NGRAPH_DEBUG << arg << " 's rank != 2 " << ngraph::vector_to_string(arg.get_shape());
             return false;
         }
         return true; // nth to do; reshape isn't a reshape
@@ -113,7 +112,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
     }
 
     auto io = r_w->get_input_order();
-    if (r_w->get_output_shape(0).size() != arg->get_output_shape(0).size()) // reshape
+    if (r_w->get_output_shape(0).size() != arg.get_shape().size()) // reshape
     {
         auto dio = ngraph::get_default_order(io);
         if (io != dio) // we can't reshape and transpose at the same time
@@ -121,7 +120,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
             NGRAPH_DEBUG << "Reshape for " << reshape->get_name() << " is not in default order "
                          << ngraph::vector_to_string(io);
             NGRAPH_DEBUG << "r_w shape = " << ngraph::vector_to_string(r_w->get_output_shape(0));
-            NGRAPH_DEBUG << "arg shape = " << ngraph::vector_to_string(arg->get_output_shape(0));
+            NGRAPH_DEBUG << "arg shape = " << ngraph::vector_to_string(arg.get_shape());
             return false;
         }
 

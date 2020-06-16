@@ -153,7 +153,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
                 continue;
             }
 
-            auto new_slice = std::make_shared<ngraph::op::Slice>(m_slice->get_argument(0),
+            auto new_slice = std::make_shared<ngraph::op::Slice>(m_slice->input_value(0),
                                                                  slice_ptr->get_lower_bounds(),
                                                                  slice_ptr->get_upper_bounds(),
                                                                  slice_ptr->get_strides());

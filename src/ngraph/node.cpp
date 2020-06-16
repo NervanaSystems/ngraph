@@ -75,6 +75,25 @@ std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) con
     return copy_with_new_inputs(inputs, get_control_dependencies());
 }
 
+std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
+{
+    if (i == 0 && get_output_size() == 1)
+    {
+        return shared_from_this();
+    }
+    else
+    {
+        for (auto in : output(i).get_target_inputs())
+        {
+            if (is_type<op::GetOutputElement>(in.get_node()))
+            {
+                return in.get_node()->shared_from_this();
+            }
+        }
+        return make_shared<op::GetOutputElement>(shared_from_this(), i);
+    }
+}
+
 Output<const Node> Node::get_default_output() const
 {
     return output(get_default_output_index());
@@ -431,7 +450,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return input_value(index).get_node_shared_ptr();
+    return input_value(index).as_single_output_node();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const
