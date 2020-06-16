@@ -90,14 +90,14 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 {
     const auto& opset = get_opset1();
     pass::Manager passes;
-    passes.register_pass<pass::LikeReplacement>();
-    passes.register_pass<pass::NopElimination>();
-    passes.register_pass<pass::ZeroDimTensorElimination>();
-    passes.register_pass<pass::AlgebraicSimplification>();
-    passes.register_pass<pass::ReshapeSinking>();
-    passes.register_pass<pass::ReshapeElimination>();
-    passes.register_pass<pass::RecurrentReshapeElimination>();
-    passes.register_pass<pass::GetOutputElementElimination>();
+    // passes.register_pass<pass::LikeReplacement>();
+    // passes.register_pass<pass::NopElimination>();
+    // passes.register_pass<pass::ZeroDimTensorElimination>();
+    // passes.register_pass<pass::AlgebraicSimplification>();
+    // passes.register_pass<pass::ReshapeSinking>();
+    // passes.register_pass<pass::ReshapeElimination>();
+    // passes.register_pass<pass::RecurrentReshapeElimination>();
+    // passes.register_pass<pass::GetOutputElementElimination>();
     passes.register_pass<pass::Opset1Upgrade>();
     passes.run_passes(func);
 
@@ -160,7 +160,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
             }
         }
     }
-    cout << "\nAfter m_nongraph_const_outputs ==> "; for (auto const& pair : m_nongraph_const_outputs) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    //BANI_DBG: cout << "\nAfter m_nongraph_const_outputs ==> "; for (auto const& pair : m_nongraph_const_outputs) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
     // Example: Constant_673->Result_353, Constant_675->Result_352, ngraph_output_1->Result_350, ngraph_output_2->Result_351, 
     // ngraph_output_6->Result_355, ngraph_output_7->Result_356, ngraph_output_8->Result_357, ngraph_output_9->Result_358,
 
@@ -170,7 +170,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
         m_map_result_to_ngnode.insert(std::pair<std::string, std::string>(aNodeShPtr->get_friendly_name(), "UNKNOWN"));
     }
     for (const auto& node : m_network.getFunction()->get_ops()) {
-        std::cout << "    trying fn(name) = " << node->get_friendly_name() << "(" << node->get_name() << ", " << node->get_type_name() << ")\n";
+        //BANI_DBG: std::cout << "    trying fn(name) = " << node->get_friendly_name() << "(" << node->get_name() << ", " << node->get_type_name() << ")\n";
         auto outputs = node->outputs(); // std::vector<Output<Node>>
         if(outputs.size() == 1) {
             auto const& outHndl = outputs[0];
@@ -191,7 +191,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
             }
         }
     }
-    cout << "\nAfter m_map_result_to_ngnode ==> "; for (auto const& pair : m_map_result_to_ngnode) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    //BANI_DBG: cout << "\nAfter m_map_result_to_ngnode ==> "; for (auto const& pair : m_map_result_to_ngnode) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
 #endif
 
     // Bani
@@ -210,7 +210,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
             }
         }
     }
-    cout << "\nIE_Executable ctor, m_map_cnnparam_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnparam_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    //BANI_DBG: cout << "\nIE_Executable ctor, m_map_cnnparam_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnparam_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
 
 
     // Bani
@@ -235,7 +235,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 
         if(m_nongraph_const_outputs.find(output_name) != m_nongraph_const_outputs.end()) {
             // So, we will shortcut the Const value into the Result_ node
-            std::cout << "    found Constant node in m_nongraph_const_outputs: " << output_name << "\n";
+            //BANI_DBG: std::cout << "    found Constant node in m_nongraph_const_outputs: " << output_name << "\n";
             bool found = false;
             for(const auto& node : m_network.getFunction()->get_ops()) {
                 if(node->get_friendly_name().compare(output_name) == 0) { // Example output_name: Constant_673
@@ -278,7 +278,7 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     // Example Const to ng result map (m_nongraph_const_outputs), helpful for tensor data copying:
     //     Constant_673->Result_353, Constant_675->Result_352, ngraph_output_1->Result_350, ngraph_output_2->Result_351, 
     //     ngraph_output_6->Result_355, ngraph_output_7->Result_356, ngraph_output_8->Result_357, ngraph_output_9->Result_358,
-    std::cout << "\nIn BEGIN runtime::ie::IE_Executable::call ... " << ", " << m_network.getFunction()->get_friendly_name() << "\n";
+    //BANI_DBG: std::cout << "\nIn BEGIN runtime::ie::IE_Executable::call ... " << ", " << m_network.getFunction()->get_friendly_name() << "\n";
 
     stopwatch timer;
     //  Prepare input blobs
@@ -292,7 +292,7 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     size_t i = 0;
     for (const auto& it : input_info)
     {
-        std::cout << "    runtime::ie::IE_Executable::call, input iterator = " << it.first << ", " << m_network.getFunction()->get_friendly_name() << "\n";
+        //BANI_DBG: std::cout << "    runtime::ie::IE_Executable::call, input iterator = " << it.first << ", " << m_network.getFunction()->get_friendly_name() << "\n";
         // Check which TF-tensor-input# this it.first matches with
         if(m_map_cnnparam_to_tfidx.find(it.first) == m_map_cnnparam_to_tfidx.end()) {
             THROW_IE_EXCEPTION << "\n!!! Cannot locate in m_map_cnnparam_to_tfidx, input/param = " << it.first << " !!!\n";
@@ -328,10 +328,10 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     i = 0;
     for (const auto& it : output_info)
     {
-        std::cout << "    runtime::ie::IE_Executable::call, output iterator = " << it.first << ", " << m_network.getFunction()->get_friendly_name() << "\n";
+        //BANI_DBG: std::cout << "    runtime::ie::IE_Executable::call, output iterator = " << it.first << ", " << m_network.getFunction()->get_friendly_name() << "\n";
         // Check which TF-tensor-output# this it.first matches with
         if(m_map_cnnresult_to_tfidx.find(it.first) == m_map_cnnresult_to_tfidx.end()) {
-            THROW_IE_EXCEPTION << "\n!!! Cannot locate in m_map_cnnresult_to_tfidx, output = " << it.first << " !!!\n";
+            NGRAPH_CHECK(false, "!!! Cannot locate in m_map_cnnresult_to_tfidx, output = ", it.first, " !!!");
         }
         int idx_tensor_output = m_map_cnnresult_to_tfidx.at(it.first);
         if(idx_tensor_output >= outputs.size()) {
@@ -344,7 +344,7 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
             const ngraph::op::Constant* const_node = (ngraph::op::Constant*)(it2->second);
             if(const_node) {
                 auto num_bytes = shape_size(const_node->get_shape()) * const_node->get_element_type().size();
-                std::cout << "    shortcut data from Const node to TF Output, num_bytes=" << num_bytes << "\n";
+                //BANI_DBG: std::cout << "    shortcut data from Const node to TF Output, num_bytes=" << num_bytes << "\n";
                 const void* value = const_node->get_data_ptr();
                 outputs[idx_tensor_output]->write(value, num_bytes);
                 continue;
@@ -374,7 +374,7 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
                  << "Prepare Inputs: " << time_prep_inputs << "ms, Prepare Outputs "
                  << time_prep_outputs << "ms, Infer " << time_infer << "ms " << endl;
     
-    std::cout << "\nIn END runtime::ie::IE_Executable::call" << ", " << m_network.getFunction()->get_friendly_name() << "...\n\n\n\n";
+    //BANI_DBG: std::cout << "\nIn END runtime::ie::IE_Executable::call" << ", " << m_network.getFunction()->get_friendly_name() << "...\n\n\n\n";
 
     return true;
 }
