@@ -510,7 +510,17 @@ namespace ngraph
                                                  const AxisSet& broadcast_axes)
             {
                 vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
-                return op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+                // Bani
+                if(axes_mapping.size() == 0) {
+                    vector<size_t> axes(broadcast_axes.size());
+                    for(auto ax : broadcast_axes) {
+                        axes.emplace_back(ax);
+                    }
+                    return op::Constant::create(element::i64, Shape{axes.size()}, axes);
+                }
+                else {
+                    return op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+                }
             }
 
             Output<Node> make_broadcast(const Output<Node>& node,
@@ -520,7 +530,8 @@ namespace ngraph
                 return make_shared<op::v1::Broadcast>(
                     node,
                     op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
-                    get_axes_mapping_output(target_shape, broadcast_axes));
+                    get_axes_mapping_output(target_shape, broadcast_axes),
+                    op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY)); // Bani
             }
 
             Output<Node> make_broadcast(const Output<Node>& node,
