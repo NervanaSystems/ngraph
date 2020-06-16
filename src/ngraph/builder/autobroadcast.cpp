@@ -143,7 +143,7 @@ namespace ngraph
             // If node already has the required shape, return original node
             if (output_shape == value.get_shape())
             {
-                return value.get_node_shared_ptr();
+                return broadcasted_node;
             }
 
             NGRAPH_CHECK(source_shape.size() == output_shape.size(),
