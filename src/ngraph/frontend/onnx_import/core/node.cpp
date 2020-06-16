@@ -185,8 +185,6 @@ namespace ngraph
 
         NodeVector Node::get_ng_inputs() const { return m_pimpl->get_ng_inputs(); }
         NodeVector Node::get_ng_nodes() const { return m_pimpl->get_ng_nodes(*this); }
-        // const ONNX_NAMESPACE::ModelProto* Node::model() const { return
-        // m_pimpl->graph().get_model(); }
         const ONNX_NAMESPACE::NodeProto& Node::node_proto() const { return m_pimpl->node_proto(); }
         const std::string& Node::domain() const { return m_pimpl->domain(); }
         const std::string& Node::op_type() const { return m_pimpl->op_type(); }
