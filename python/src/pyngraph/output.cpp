@@ -29,12 +29,6 @@ void regclass_pyngraph_Output(py::module m)
 {
     py::class_<ngraph::Output<ngraph::Node>> output(m, "Output");
     output.doc() = "ngraph.impl.Output wraps ngraph::Output<Node>";
-    // output.def(py::init<std::shared_ptr<ngraph::Node>, size_t index>
-    //                       const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
-    //                       const std::string&>());
-    // output.def(py::init<const std::shared_ptr<ngraph::Node>&,
-    //                       const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
-    //                       const std::string&>());
     output.def("get_index", &ngraph::Output<ngraph::Node>::get_index);
     output.def("get_node", &ngraph::Output<ngraph::Node>::get_node_shared_ptr);
 }
