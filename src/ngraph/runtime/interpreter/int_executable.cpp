@@ -64,11 +64,10 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
-    // To verify that the serializer works correctly let's just run this graph round-trip
-    {
-        string ser = serialize(function, 4);
-        m_function = deserialize(ser);
-    }
+    // To verify that the serializer and deserializer work correctly let's just run this
+    // graph round-trip
+    m_function = deserialize(serialize(function));
+
     auto is_supported = [](const Node& node) {
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
