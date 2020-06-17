@@ -47,38 +47,25 @@ runtime::cpu::CPU_Executable::CPU_Executable(shared_ptr<Function> func,
                                              bool performance_counters_enabled,
                                              EXECUTION_MODE mode)
 {
-    FunctionInstance& instance = m_function_instance;
-    if (instance.m_external_function == nullptr)
-    {
-        instance.m_external_function = make_shared<CPU_ExternalFunction>(func, mode);
-        instance.m_external_function->m_emit_timing = performance_counters_enabled;
-        auto cf = instance.m_external_function->make_call_frame(pass_config, allocator);
-        instance.m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
-    }
+    m_external_function = make_shared<CPU_ExternalFunction>(func, mode);
+    m_external_function->m_emit_timing = performance_counters_enabled;
+    auto cf = m_external_function->make_call_frame(pass_config, allocator);
+    m_call_frame = dynamic_pointer_cast<CPU_CallFrame>(cf);
+
     set_parameters_and_results(*func);
 }
 
 std::shared_ptr<ngraph::runtime::cpu::CPU_CallFrame> runtime::cpu::CPU_Executable::get_call_frame()
 {
-    FunctionInstance& instance = m_function_instance;
-    return instance.m_call_frame;
+    return m_call_frame;
 }
 
 bool runtime::cpu::CPU_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                         const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    bool rc = true;
+    m_call_frame->call(outputs, inputs);
 
-    FunctionInstance& instance = m_function_instance;
-    if (instance.m_external_function == nullptr)
-    {
-        NGRAPH_INFO;
-        throw runtime_error("compile() must be called before call().");
-    }
-
-    instance.m_call_frame->call(outputs, inputs);
-
-    return rc;
+    return true;
 }
 
 void runtime::cpu::CPU_Backend::remove_compiled_function(shared_ptr<Executable> exec)
@@ -118,13 +105,9 @@ void runtime::cpu::CPU_Backend::set_host_memory_allocator(Allocator* allocator)
 vector<runtime::PerformanceCounter> runtime::cpu::CPU_Executable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
-    const FunctionInstance& instance = m_function_instance;
-    if (instance.m_external_function != nullptr)
-    {
-        rc.insert(rc.end(),
-                  instance.m_external_function->get_perf_counters().begin(),
-                  instance.m_external_function->get_perf_counters().end());
-    }
+    rc.insert(rc.end(),
+              m_external_function->get_perf_counters().begin(),
+              m_external_function->get_perf_counters().end());
     return rc;
 }
 
