@@ -916,7 +916,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
 }
 
 static bool
-    zero_padded_conv_consistency_check(const std::shared_ptr<ngraph::Node>& match_root,
+    zero_padded_conv_consistency_check(const Output<ngraph::Node>& match_root,
                                        const std::shared_ptr<ngraph::op::Constant>& pad_value_op,
                                        const std::shared_ptr<ngraph::Node>& pad_input,
                                        const std::shared_ptr<ngraph::op::Pad>& matched_pad,
@@ -926,7 +926,7 @@ static bool
                                        size_t channel_index)
 {
     // Only match float32 convolutions
-    if (match_root->get_output_element_type(0) != ngraph::element::f32)
+    if (match_root.get_element_type() != ngraph::element::f32)
     {
         return false;
     }
@@ -1021,7 +1021,7 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
             input_order,
             Shape(hoisted_reshape_output_shape.begin(), hoisted_reshape_output_shape.end()));
 
-        if (!zero_padded_conv_consistency_check(m.get_match_root(),
+        if (!zero_padded_conv_consistency_check(m.get_match_value(),
                                                 pad_value_op,
                                                 pattern_map[pad_input],
                                                 matched_pad,
@@ -1094,7 +1094,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
             std::static_pointer_cast<ngraph::op::Convolution>(pattern_map[conv_label]);
         const auto& matched_pad = std::static_pointer_cast<ngraph::op::Pad>(pattern_map[pad_label]);
 
-        if (!zero_padded_conv_consistency_check(m.get_match_root(),
+        if (!zero_padded_conv_consistency_check(m.get_match_value(),
                                                 pad_value_op,
                                                 pattern_map[pad_input],
                                                 matched_pad,
@@ -1165,7 +1165,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
             pattern_map[conv_label]);
         const auto& matched_pad = std::static_pointer_cast<ngraph::op::Pad>(pattern_map[pad_label]);
 
-        if (!zero_padded_conv_consistency_check(m.get_match_root(),
+        if (!zero_padded_conv_consistency_check(m.get_match_value(),
                                                 pad_value_op,
                                                 pattern_map[pad_input],
                                                 matched_pad,

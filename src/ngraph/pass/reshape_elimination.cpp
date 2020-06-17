@@ -101,9 +101,9 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
                 r2->get_input_order() == get_default_order(r1->get_output_shape(0)) &&
                 r1->get_users().size() == 1)
             {
-                replace_node(
-                    m.get_match_root(),
-                    make_shared<op::Reshape>(gop, r1->get_input_order(), r2->get_output_shape(0)));
+                m.get_match_value().replace(
+                    make_shared<op::Reshape>(gop, r1->get_input_order(), r2->get_output_shape(0))
+                        ->output(0));
                 return true;
             }
             else

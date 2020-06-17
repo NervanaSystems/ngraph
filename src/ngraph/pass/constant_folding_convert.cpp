@@ -26,7 +26,7 @@ using namespace ngraph;
 // determine the appropriate C++ types for "TI" (input type) and "TO" (output type).
 template <typename TI, typename TO>
 Output<Node> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
-                                                       const element::Type& output_element_type)
+                                           const element::Type& output_element_type)
 {
     const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(TO));
@@ -43,7 +43,7 @@ Output<Node> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
 // (input type).
 template <typename TI>
 Output<Node> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
-                                                       const element::Type& output_element_type)
+                                           const element::Type& output_element_type)
 {
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic push
@@ -96,7 +96,7 @@ Output<Node> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
 }
 
 static Output<Node> fold_constant_convert(shared_ptr<op::Constant> constant,
-                                                      const element::Type& output_element_type)
+                                          const element::Type& output_element_type)
 {
     auto& input_element_type = constant->get_output_element_type(0);
 

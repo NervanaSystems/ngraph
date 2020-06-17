@@ -33,9 +33,8 @@ using namespace std;
 using namespace ngraph;
 
 template <typename T>
-static Output<Node>
-    fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
-                                              shared_ptr<Node> reduction_node)
+static Output<Node> fold_constant_arithmetic_reduction_helper(shared_ptr<op::Constant> constant,
+                                                              shared_ptr<Node> reduction_node)
 {
     const Shape& out_shape = reduction_node->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
@@ -116,9 +115,8 @@ static Output<Node>
         reduction_node->get_output_element_type(0), reduction_node->get_output_shape(0), data_ptr);
 }
 
-static Output<Node>
-    fold_constant_arithmetic_reduction(shared_ptr<op::Constant> constant,
-                                       shared_ptr<Node> reduction_node)
+static Output<Node> fold_constant_arithmetic_reduction(shared_ptr<op::Constant> constant,
+                                                       shared_ptr<Node> reduction_node)
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
@@ -198,8 +196,8 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
 
         NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match.get_node_shared_ptr()));
 
-        reduction_match.replace(
-                     fold_constant_arithmetic_reduction(constant_match, reduction_match.get_node_shared_ptr()));
+        reduction_match.replace(fold_constant_arithmetic_reduction(
+            constant_match, reduction_match.get_node_shared_ptr()));
         return true;
     };
 

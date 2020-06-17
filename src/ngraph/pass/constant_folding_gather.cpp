@@ -43,7 +43,6 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
 
         const auto indices = static_pointer_cast<op::Constant>(pattern_map[indices_label]);
         const auto axis = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-        const auto gather = m.get_match_root();
 
         // only along axis=0
         if (axis->cast_vector<int64_t>()[0] != 0 || concat->get_axis() != 0)
