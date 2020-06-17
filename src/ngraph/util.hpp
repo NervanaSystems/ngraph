@@ -190,6 +190,27 @@ namespace ngraph
     }
 
     template <typename T>
+    std::string to_cpp_string(T value)
+    {
+        std::string rc;
+        if (std::isnan(value))
+        {
+            rc = "NAN";
+        }
+        else if (std::isinf(value))
+        {
+            rc = (value > 0 ? "INFINITY" : "-INFINITY");
+        }
+        else
+        {
+            std::stringstream ss;
+            ss << value;
+            rc = ss.str();
+        }
+        return rc;
+    }
+
+    template <typename T>
     T ceil_div(const T& x, const T& y)
     {
         return (x == 0 ? 0 : (1 + (x - 1) / y));

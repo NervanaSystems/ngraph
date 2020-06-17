@@ -1058,8 +1058,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Clamp:
         {
-            const auto clamp_min = node_js.at("min").get<float>();
-            const auto clamp_max = node_js.at("max").get<float>();
+            const double clamp_min = parse_string<double>(node_js.at("min").get<string>());
+            const double clamp_max = parse_string<double>(node_js.at("max").get<string>());
             node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
             break;
         }
@@ -2785,8 +2785,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Clamp:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
-        node["min"] = tmp->get_min();
-        node["max"] = tmp->get_max();
+        node["min"] = to_cpp_string<double>(tmp->get_min());
+        node["max"] = to_cpp_string<double>(tmp->get_max());
         break;
     }
     case OP_TYPEID::Concat:

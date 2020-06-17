@@ -64,13 +64,19 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
-#ifdef INTERPRETER_FORCE_SERIALIZE
     // To verify that the serializer works correctly let's just run this graph round-trip
-    string ser = serialize(function);
-    m_function = deserialize(ser);
-#else
-    m_function = clone_function(*function);
-#endif
+    {
+        string ser;
+        try
+        {
+            ser = serialize(function, 4);
+            m_function = deserialize(ser);
+        }
+        catch(exception err)
+        {
+            cout << ser << endl;
+        }
+    }
     auto is_supported = [](const Node& node) {
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
