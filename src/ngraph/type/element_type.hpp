@@ -99,7 +99,7 @@ namespace ngraph
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
             friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Type&);
-            static std::vector<const Type*> get_known_types();
+            static const std::vector<Type>& get_known_types();
 
             /// \brief Checks whether this element type is merge-compatible with `t`.
             /// \param t The element type to compare this element type to.

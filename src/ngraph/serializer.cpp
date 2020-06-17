@@ -382,36 +382,25 @@ static json write_element_type(const ngraph::element::Type& n)
 
 static element::Type read_element_type(json j)
 {
-    size_t bitwidth = 0;
-    bool is_real = false;
-    bool is_signed = false;
-    bool is_quantized = false;
-    string c_type_string = "";
+    string c_type_string;
+    element::Type rc;
     if (j.is_object())
     {
-        bitwidth = j.at("bitwidth").get<size_t>();
-        is_real = j.at("is_real").get<bool>();
-        is_signed = j.at("is_signed").get<bool>();
-        is_quantized = j.at("is_quantized").get<bool>();
         c_type_string = j.at("c_type_string").get<string>();
     }
     else
     {
-        string c_type = j.get<string>();
-        for (const element::Type* t : element::Type::get_known_types())
+        c_type_string = j.get<string>();
+    }
+    for (element::Type t : element::Type::get_known_types())
+    {
+        if (t.c_type_string() == c_type_string)
         {
-            if (t->c_type_string() == c_type)
-            {
-                bitwidth = t->bitwidth();
-                is_real = t->is_real();
-                is_signed = t->is_signed();
-                is_quantized = t->is_quantized();
-                c_type_string = t->c_type_string();
-                break;
-            }
+            rc = t;
+            break;
         }
     }
-    return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
+    return rc;
 }
 
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
@@ -1060,6 +1049,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             const double clamp_min = parse_string<double>(node_js.at("min").get<string>());
             const double clamp_max = parse_string<double>(node_js.at("max").get<string>());
+            NGRAPH_INFO << clamp_min;
+            NGRAPH_INFO << clamp_max;
             node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
             break;
         }
@@ -2785,6 +2776,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Clamp:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
+        NGRAPH_INFO << to_cpp_string<double>(tmp->get_min());
+        NGRAPH_INFO << to_cpp_string<double>(tmp->get_max());
         node["min"] = to_cpp_string<double>(tmp->get_min());
         node["max"] = to_cpp_string<double>(tmp->get_max());
         break;
