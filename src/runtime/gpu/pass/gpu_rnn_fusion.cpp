@@ -90,7 +90,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
         }
 
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
-        ngraph::replace_node(m.get_match_root(), sigmoid_node);
+        m.get_match_value().replace(sigmoid_node->output(0));
         return true;
     };
 

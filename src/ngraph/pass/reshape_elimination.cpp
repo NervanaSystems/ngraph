@@ -129,7 +129,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
         if (r1->get_input_order() == do_r1 && r2->get_input_order() == do_r2)
         {
             NGRAPH_DEBUG << "Two reshapes were removed!";
-            replace_node(m.get_match_root(), gop);
+            m.get_match_value().replace(gop->output(0));
             return true;
         }
 
@@ -138,7 +138,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
         if (perm2 == do_r1)
         {
             NGRAPH_DEBUG << "Two transposes were removed!";
-            replace_node(m.get_match_root(), gop);
+            m.get_match_value().replace(gop->output(0));
             return true;
         }
 
@@ -200,7 +200,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
         auto reshape1 = make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
         auto tdot = shared_ptr<Node>(new op::Dot(reshape1, reshape0));
-        replace_node(m.get_match_root(), tdot);
+        m.get_match_value().replace(tdot->output(0));
         return true;
     };
 

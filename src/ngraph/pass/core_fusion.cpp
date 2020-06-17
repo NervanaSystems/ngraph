@@ -87,7 +87,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
         auto labels = pattern_map[param_2];
         auto softmax_crossentropy =
             std::make_shared<ngraph::op::SoftmaxCrossEntropy>(input_to_normalize, labels, true);
-        ngraph::replace_node(m.get_match_root(), softmax_crossentropy);
+        m.get_match_value().replace(softmax_crossentropy->output(0));
 
         return true;
     };
@@ -144,7 +144,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
 
         auto sm_ce_bprop =
             std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(delta, softmax, labels, true);
-        ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
+        m.get_match_value().replace(sm_ce_bprop->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(multiply, "CoreFusion.SoftmaxCrossEntropyBprop");
@@ -222,7 +222,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
         auto ignore_index = *(static_cast<size_t const*>(mask_constant_op->get_data_ptr()));
         auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
             delta, softmax, labels, false, ignore_index);
-        ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
+        m.get_match_value().replace(sm_ce_bprop->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(multiply, "CoreFusion.SoftmaxCrossEntropyBprop");
@@ -252,7 +252,7 @@ void pass::CoreFusion::construct_relu()
         auto mpattern = m.get_match_root();
 
         auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
-        replace_node(m.get_match_root(), cg);
+        m.get_match_value().replace(cg->output(0));
         return true;
     };
 
@@ -300,7 +300,7 @@ void pass::CoreFusion::construct_sigmoid()
             return false;
         }
         auto sigmoid_node = make_shared<op::Sigmoid>(pattern_map[input]);
-        replace_node(m.get_match_root(), sigmoid_node);
+        m.get_match_value().replace(sigmoid_node->output(0));
         return true;
     };
 
@@ -352,7 +352,7 @@ void pass::CoreFusion::construct_sigmoid_bprop()
             return false;
         }
         auto dsigmoid = make_shared<op::SigmoidBackprop>(pattern_map[input], pattern_map[delta]);
-        replace_node(m.get_match_root(), dsigmoid);
+        m.get_match_value().replace(dsigmoid->output(0));
         return true;
     };
 
@@ -430,7 +430,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
                                                  m_conv->get_data_dilation_strides());
         auto conv_bias = conv + make_shared<op::Broadcast>(
                                     new_biases, conv->get_output_shape(0), AxisSet{0, 2, 3});
-        replace_node(m.get_match_root(), conv_bias);
+        m.get_match_value().replace(conv_bias->output(0));
 
         return true;
 
@@ -540,7 +540,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
                                                    conv_m->get_padding_above(),
                                                    conv_m->get_data_dilation_strides());
         auto convbias_n = conv_n + B_m;
-        replace_node(m.get_match_root(), convbias_n);
+        m.get_match_value().replace(convbias_n->output(0));
 
         return true;
 
@@ -671,7 +671,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
 
         auto new_broadcast =
             make_shared<op::Broadcast>(input_m, broadcast_m->get_output_shape(0), new_axes);
-        replace_node(m.get_match_root(), new_broadcast);
+        m.get_match_value().replace(new_broadcast->output(0));
         return true;
     };
 
@@ -907,7 +907,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
         }
 
         auto new_softmax = make_shared<op::Softmax>(input_m, new_axes);
-        replace_node(m.get_match_root(), new_softmax);
+        m.get_match_value().replace(new_softmax->output(0));
         return true;
     };
 
@@ -1051,7 +1051,7 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
                                                       padding_above,
                                                       matched_conv->get_data_dilation_strides());
 
-        ngraph::replace_node(m.get_match_root(), zero_padded_conv);
+        m.get_match_value().replace(zero_padded_conv->output(0));
         return true;
     };
 
@@ -1122,7 +1122,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
                                                       padding_above,
                                                       matched_conv->get_data_dilation_strides());
 
-        ngraph::replace_node(m.get_match_root(), zero_padded_conv);
+        m.get_match_value().replace(zero_padded_conv->output(0));
         return true;
     };
 
@@ -1195,7 +1195,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
                 padding_above,
                 matched_conv->get_data_dilation_strides_forward());
 
-        ngraph::replace_node(m.get_match_root(), zero_padded_conv_backprop_filters);
+        m.get_match_value().replace(zero_padded_conv_backprop_filters->output(0));
         return true;
     };
 
@@ -1281,12 +1281,12 @@ void pass::CoreFusion::construct_conv_bias()
             auto bias_reshape =
                 make_shared<op::Reshape>(bias, order, Shape{conv_m->get_input_shape(1)[0]});
             auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias_reshape));
-            replace_node(m.get_match_root(), conv_bias);
+            m.get_match_value().replace(conv_bias->output(0));
         }
         else
         {
             auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias));
-            replace_node(m.get_match_root(), conv_bias);
+            m.get_match_value().replace(conv_bias->output(0));
         }
         return true;
     };
@@ -1335,7 +1335,7 @@ void pass::CoreFusion::construct_conv_bias_add()
         }
 
         auto conv_add = shared_ptr<Node>(new op::ConvolutionBiasAdd(conv_m, add_input_m, false));
-        replace_node(m.get_match_root(), conv_add);
+        m.get_match_value().replace(conv_add->output(0));
         return true;
     };
 

@@ -105,7 +105,7 @@ void pass::ConcatElimination::construct_concat_elimination()
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
             NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
-            replace_node(m.get_match_root(), op);
+            m.get_match_value().replace(op->output(0));
 
             return true;
         }

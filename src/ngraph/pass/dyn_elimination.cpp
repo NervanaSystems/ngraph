@@ -84,7 +84,7 @@ void pass::DynElimination::construct_transpose()
 
         auto replacement = std::make_shared<op::Reshape>(data_arg, perm, output_shape);
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 
@@ -129,7 +129,7 @@ void pass::DynElimination::construct_dyn_broadcast()
 
             auto replacement = std::make_shared<op::Broadcast>(data_arg, shape, axes);
 
-            replace_node(m.get_match_root(), replacement);
+            m.get_match_value().replace(replacement->output(0));
             return true;
         };
 
@@ -202,7 +202,7 @@ void pass::DynElimination::construct_dyn_slice()
             replacement = make_shared<op::Reverse>(replacement, p.reverse_axes);
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 
@@ -288,7 +288,7 @@ void pass::DynElimination::construct_dyn_replace_slice()
                                           Coordinate(p.ends.begin(), p.ends.end()),
                                           Strides(p.strides.begin(), p.strides.end()));
 
-        replace_node(m.get_match_root(), substitute_rsl);
+        m.get_match_value().replace(substitute_rsl->output(0));
         return true;
     };
 

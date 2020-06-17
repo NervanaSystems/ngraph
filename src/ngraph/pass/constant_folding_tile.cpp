@@ -97,7 +97,7 @@ void pass::ConstantFolding::construct_constant_tile()
         case element::Type_t::u64: replacement = fold_constant_tile<uint64_t>(data, tile); break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

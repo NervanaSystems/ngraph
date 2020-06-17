@@ -91,7 +91,7 @@ Pattern for capturing
                 auto mpattern = m.get_match_root();
 
                 auto cg = shared_ptr(new op::Relu(pattern_map[val]));
-                ngraph::replace_node(m.get_match_root(), cg);
+                m.get_match_value().replace(cg->output(0));
                 return true;
             };
 

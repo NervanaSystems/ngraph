@@ -176,7 +176,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
                                                             m_matmul->get_is_b_transposed(),
                                                             m_broadcast->get_broadcast_axes());
 
-        ngraph::replace_node(m.get_match_root(), mmb);
+        m.get_match_value().replace(mmb->output(0));
         return true;
     };
 
@@ -421,12 +421,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
                 bias, order, Shape{conv_m->get_input_shape(1)[0]});
             auto conv_bias =
                 std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias_reshape));
-            ngraph::replace_node(m.get_match_root(), conv_bias);
+            m.get_match_value().replace(conv_bias->output(0));
         }
         else
         {
             auto conv_bias = std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias));
-            ngraph::replace_node(m.get_match_root(), conv_bias);
+            m.get_match_value().replace(conv_bias->output(0));
         }
         return true;
     };
@@ -495,7 +495,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                     auto out1 = conv_bias_bprop->output(1);
                     NGRAPH_DEBUG << "Replacing " << m.get_match_value().get_node()->get_name()
                                  << "with ConvolutionBiasBackpropFiltersBias";
-                    ngraph::replace_node(m.get_match_root(), {out0});
+                    m.get_match_value().replace(out0);
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
                                     "ConvolutionBiasBackpropFiltersBias";
                     if (flag)
@@ -680,7 +680,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
         if (bn_relu)
         {
-            ngraph::replace_node(m.get_match_root(), bn_relu);
+            m.get_match_value().replace(bn_relu->output(0));
             return true;
         }
 
@@ -818,7 +818,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
 
         if (bn_relu)
         {
-            ngraph::replace_node(m.get_match_root(), bn_relu);
+            m.get_match_value().replace(bn_relu->output(0));
             return true;
         }
 
@@ -866,7 +866,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         }
 
         auto conv_relu = std::shared_ptr<Node>(new ngraph::op::ConvolutionRelu(conv));
-        ngraph::replace_node(m.get_match_root(), conv_relu);
+        m.get_match_value().replace(conv_relu->output(0));
         return true;
     };
 
@@ -917,7 +917,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
                                                           conv->get_padding_above(),
                                                           conv->get_data_dilation_strides(),
                                                           true);
-        ngraph::replace_node(m.get_match_root(), conv_relu);
+        m.get_match_value().replace(conv_relu->output(0));
         return true;
     };
 
@@ -976,7 +976,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
 
         auto conv_add =
             std::shared_ptr<Node>(new ngraph::op::ConvolutionAdd(conv_m, inplace_input, false));
-        ngraph::replace_node(m.get_match_root(), conv_add);
+        m.get_match_value().replace(conv_add->output(0));
         return true;
     };
 
@@ -1026,7 +1026,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
                                                          conv_m->get_padding_above(),
                                                          conv_m->get_data_dilation_strides(),
                                                          true);
-        ngraph::replace_node(m.get_match_root(), conv_n);
+        m.get_match_value().replace(conv_n->output(0));
         return true;
     };
 
@@ -1088,7 +1088,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 
         auto conv_add =
             std::shared_ptr<Node>(new ngraph::op::ConvolutionBiasAdd(conv_m, inplace_input, false));
-        ngraph::replace_node(m.get_match_root(), conv_add);
+        m.get_match_value().replace(conv_add->output(0));
         return true;
     };
 
@@ -1226,7 +1226,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
                                                              conv_m->get_padding_above(),
                                                              conv_m->get_data_dilation_strides(),
                                                              true);
-        ngraph::replace_node(m.get_match_root(), conv_n);
+        m.get_match_value().replace(conv_n->output(0));
         return true;
     };
 
@@ -1286,7 +1286,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
         }
         auto sigmoid_mul_node = std::make_shared<ngraph::op::SigmoidMultiply>(
             input_nodes[0], input_nodes[1], input_type[0], input_type[1]);
-        ngraph::replace_node(m.get_match_root(), sigmoid_mul_node);
+        m.get_match_value().replace(sigmoid_mul_node->output(0));
         return true;
     };
 
@@ -1349,7 +1349,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
 
         auto cg =
             std::shared_ptr<Node>(new ngraph::op::CPULeakyRelu(pattern_map[input], alpha_vec[0]));
-        ngraph::replace_node(m.get_match_root(), cg);
+        m.get_match_value().replace(cg->output(0));
         return true;
     };
 
@@ -1403,7 +1403,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
 
         auto cg =
             std::shared_ptr<Node>(new ngraph::op::BoundedRelu(pattern_map[relu_input], alpha_val));
-        ngraph::replace_node(m.get_match_root(), cg);
+        m.get_match_value().replace(cg->output(0));
         return true;
     };
 
@@ -1482,7 +1482,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
                                                           m_conv->get_padding_below(),
                                                           m_conv->get_padding_above(),
                                                           m_conv->get_data_dilation_strides());
-        ngraph::replace_node(m.get_match_root(), conv_bias);
+        m.get_match_value().replace(conv_bias->output(0));
 
         return true;
 
@@ -1619,7 +1619,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
                                                           conv_m->get_padding_below(),
                                                           conv_m->get_padding_above(),
                                                           conv_m->get_data_dilation_strides());
-        ngraph::replace_node(m.get_match_root(), convbias_n);
+        m.get_match_value().replace(convbias_n->output(0));
 
         return true;
 
@@ -1723,7 +1723,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
             conv_m->get_output_shape(0),
             false,
             1.0);
-        ngraph::replace_node(m.get_match_root(), g_conv_bias);
+        m.get_match_value().replace(g_conv_bias->output(0));
 
         return true;
     };
@@ -1786,7 +1786,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
             conv_m->get_groups(),
             conv_m->get_output_shape(0),
             true);
-        ngraph::replace_node(m.get_match_root(), g_conv_bias_relu);
+        m.get_match_value().replace(g_conv_bias_relu->output(0));
         return true;
     };
 
@@ -1883,7 +1883,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
                                                     conv_m->get_padding_above_forward(),
                                                     conv_m->get_data_dilation_strides_forward(),
                                                     false);
-        ngraph::replace_node(m.get_match_root(), g_conv_bprop_data_bias);
+        m.get_match_value().replace(g_conv_bprop_data_bias->output(0));
         return true;
     };
 
@@ -1941,7 +1941,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
             deconvb_m->get_padding_above_forward(),
             deconvb_m->get_data_dilation_strides_forward(),
             true);
-        ngraph::replace_node(m.get_match_root(), g_deconvbias_relu);
+        m.get_match_value().replace(g_deconvbias_relu->output(0));
         return true;
     };
 
@@ -1990,7 +1990,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
                                                                       replace_m->get_lower_bounds(),
                                                                       replace_m->get_upper_bounds(),
                                                                       replace_m->get_strides());
-        ngraph::replace_node(m.get_match_root(), update_slice);
+        m.get_match_value().replace(update_slice->output(0));
         return true;
     };
 
@@ -2117,7 +2117,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
         auto zp = builder::make_constant<uint8_t>(element::u8, dq_m->get_input_shape(1), 0);
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(
             qconv_n, dq_m->get_argument(1), zp, dq_m->get_output_element_type(0), dq_m->get_axes());
-        ngraph::replace_node(m.get_match_root(), dq_n);
+        m.get_match_value().replace(dq_n->output(0));
         return true;
     };
 
@@ -2163,7 +2163,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
                                                              dq_m->get_argument(2),
                                                              dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
-        ngraph::replace_node(m.get_match_root(), dq_n);
+        m.get_match_value().replace(dq_n->output(0));
         return true;
     };
 
@@ -2200,7 +2200,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
                                                              dq_m->get_argument(2),
                                                              dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
-        ngraph::replace_node(m.get_match_root(), dq_n);
+        m.get_match_value().replace(dq_n->output(0));
         return true;
     };
 
@@ -2253,7 +2253,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
                                                              dq_m->get_argument(2),
                                                              dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
-        ngraph::replace_node(m.get_match_root(), dq_n);
+        m.get_match_value().replace(dq_n->output(0));
 
         return true;
     };
@@ -2308,7 +2308,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()
             return false;
         }
 
-        ngraph::replace_node(m.get_match_root(), m.get_pattern_map()[input]);
+        m.get_match_value().replace(m.get_pattern_map()[input]->output(0));
         return true;
     };
 
@@ -2488,7 +2488,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         auto zp = ngraph::op::Constant::create(element::u8, Shape{}, {0});
         auto DQ = std::make_shared<ngraph::op::Dequantize>(
             qconvba, dq_l_scale, zp, element::f32, AxisSet{});
-        ngraph::replace_node(m.get_match_root(), DQ);
+        m.get_match_value().replace(DQ->output(0));
 
         return true;
     };
@@ -2557,7 +2557,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         auto qmatmul = std::make_shared<ngraph::op::QuantizedMatmul>(
             input_0, reshape_input1, scale_new, qdot->get_output_type());
 
-        ngraph::replace_node(m.get_match_root(), qmatmul);
+        m.get_match_value().replace(qmatmul->output(0));
         return true;
     };
 

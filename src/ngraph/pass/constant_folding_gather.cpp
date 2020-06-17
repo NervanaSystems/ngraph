@@ -76,7 +76,7 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
             auto axes = op::Constant::create(element::i64, Shape{1}, {0});
             gathered = make_shared<op::v0::Squeeze>(gathered_concat_input, axes);
         }
-        replace_node(m.get_match_root(), gathered);
+        m.get_match_value().replace(gathered->output(0));
         return true;
     };
 

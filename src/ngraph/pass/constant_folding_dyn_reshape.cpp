@@ -119,7 +119,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         shared_ptr<Node> replacement;
         replacement =
             do_fold(static_pointer_cast<op::v1::Reshape>(match_root), constant_data_match);
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

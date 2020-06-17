@@ -125,7 +125,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -172,7 +172,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 

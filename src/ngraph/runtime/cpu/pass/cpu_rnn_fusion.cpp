@@ -273,7 +273,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
         }
 
         auto sigmoid_node = std::make_shared<ngraph::op::Sigmoid>(pattern_map[input]);
-        ngraph::replace_node(m.get_match_root(), sigmoid_node);
+        m.get_match_value().replace(sigmoid_node->output(0));
         return true;
     };
 
@@ -476,7 +476,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                                        lstm_ct_output->output(0));
         }
         // find the user's for {ht} and replace them with lstm_goe_1
-        ngraph::replace_node(m.get_match_root(), lstm_ht_output);
+        m.get_match_value().replace(lstm_ht_output->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht, "LSTMFusion.Fprop");
