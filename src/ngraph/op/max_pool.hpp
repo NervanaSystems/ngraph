@@ -256,7 +256,6 @@ namespace ngraph
                         op::RoundingType rounding_mode);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
@@ -331,7 +330,6 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
 
                 const Shape& get_kernel() const { return m_kernel; }

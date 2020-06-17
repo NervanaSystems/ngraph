@@ -10,15 +10,5 @@ INTERPRETER.onnx_top_k_opset_10
 reduce_sum_large_1d_to_scalar
 reduce_sum_keep_large_1d_to_scalar
 
-# Currently the serializer does not handle ops with attribute visitors unless those ops register
-# with the FactoryRegistry so disable these tests for now
-INTERPRETER.onnx_model_argmin_no_keepdims
-INTERPRETER.onnx_model_argmax_int32
-INTERPRETER.onnx_model_argmin_int32
-INTERPRETER.onnx_model_top_k
-INTERPRETER.onnx_top_k_opset_10_const_k
-INTERPRETER.onnx_top_k_opset_11_const_k_smallest
-INTERPRETER.onnx_model_one_hot_with_axis
-INTERPRETER.onnx_model_one_hot_without_axis
-INTERPRETER.onnx_model_instance_normalization
+#INTERPRETER.onnx_model_instance_normalization
 INTERPRETER.unhandled_op

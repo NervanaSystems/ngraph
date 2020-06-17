@@ -477,7 +477,7 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
         /// \return Version of this node
-        virtual size_t get_version() const { return get_type_info().version; }
+        virtual size_t get_version() const final { return get_type_info().version; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }

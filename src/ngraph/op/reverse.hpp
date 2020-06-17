@@ -117,7 +117,6 @@ namespace ngraph
                 /// \return The second input data interpretation mode.
                 Mode get_mode() const { return m_mode; }
                 void set_mode(const Mode mode) { m_mode = mode; }
-                virtual size_t get_version() const override { return 1; }
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
