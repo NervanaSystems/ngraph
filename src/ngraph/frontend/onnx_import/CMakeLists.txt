@@ -88,8 +88,6 @@ add_library(onnx_importer SHARED
         op/dequantize_linear.hpp
         op/div.hpp
         op/dropout.hpp
-        op/dynamic_quantize_linear.cpp
-        op/dynamic_quantize_linear.hpp
         op/elu.cpp
         op/elu.hpp
         op/equal.hpp

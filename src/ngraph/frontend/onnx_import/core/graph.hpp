@@ -58,7 +58,7 @@ namespace ngraph
             void add_provenance_tags(const Node& onnx_node, const NodeVector& ng_node_vector) const;
 
         private:
-            onnx::GraphProto m_graph_proto;
+            ONNX_NAMESPACE::GraphProto m_graph_proto;
             std::vector<Node> m_nodes;
             std::vector<ValueInfo> m_inputs;
             std::vector<ValueInfo> m_outputs;

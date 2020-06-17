@@ -99,7 +99,7 @@ namespace ngraph
             }
         }
 
-        Graph::Graph(const onnx::GraphProto& graph_proto, Model& model)
+        Graph::Graph(const ONNX_NAMESPACE::GraphProto& graph_proto, Model& model)
             : m_graph_proto{graph_proto}
             , m_model{&model}
         {
@@ -145,7 +145,8 @@ namespace ngraph
             }
 
             // Verify that ONNX graph contains only nodes of available operator types
-            std::map<std::string, std::reference_wrapper<const onnx::NodeProto>> unknown_operators;
+            std::map<std::string, std::reference_wrapper<const ONNX_NAMESPACE::NodeProto>>
+                unknown_operators;
             for (const auto& node_proto : m_graph_proto.node())
             {
                 if (!m_model->is_operator_available(node_proto))
@@ -285,17 +286,18 @@ namespace ngraph
                 if (expand_function_whitelist.count(node.op_type()))
                 {
                     const auto operator_set_id = m_model->get_opset_version(node.domain());
-                    const onnx::OpSchemaRegistry* schema_registry =
-                        onnx::OpSchemaRegistry::Instance();
+                    const ONNX_NAMESPACE::OpSchemaRegistry* schema_registry =
+                        ONNX_NAMESPACE::OpSchemaRegistry::Instance();
 
                     const auto node_op_schema = schema_registry->GetSchema(
                         node.op_type(), static_cast<int>(operator_set_id), node.domain());
 
                     if (node_op_schema && node_op_schema->HasFunction())
                     {
-                        onnx::GraphProto gp;
-                        const onnx::FunctionProto* proto_func = node_op_schema->GetFunction();
-                        onnx::FunctionExpandHelper(node, *proto_func, m_graph_proto);
+                        ONNX_NAMESPACE::GraphProto gp;
+                        const ONNX_NAMESPACE::FunctionProto* proto_func =
+                            node_op_schema->GetFunction();
+                        ONNX_NAMESPACE::FunctionExpandHelper(node, *proto_func, m_graph_proto);
 
                         // Remove node with function.
                         m_graph_proto.mutable_node()->erase(m_graph_proto.node().begin() + i);
@@ -305,4 +307,3 @@ namespace ngraph
         }
     }
 }
-
