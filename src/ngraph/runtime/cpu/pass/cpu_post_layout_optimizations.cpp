@@ -200,6 +200,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
                      << m.get_match_root()->get_name();
 
         auto cvt_lt_m = m.get_match_root_as<runtime::cpu::op::ConvertLayout>();
+        NGRAPH_CHECK(cvt_lt_m,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `runtime::cpu::op::ConvertLayout`");
         auto reshape_m = static_pointer_cast<ngraph::op::Reshape>(cvt_lt_m->get_argument(0));
 
         if (reshape_m->get_users().size() > 1)

@@ -44,6 +44,7 @@ void pass::ReshapeEliminationV1::construct_identity_reshape_pattern()
         auto gop = pattern_map[op];
 
         auto r1 = m.get_match_root_as<op::v1::Reshape>();
+        NGRAPH_CHECK(r1, "match root node ", *m.get_match_root(), " not of type `op::v1::Reshape`");
 
         if (gop->get_output_partial_shape(0).is_dynamic() ||
             r1->get_output_partial_shape(0).is_dynamic() ||

@@ -61,6 +61,10 @@ void pass::ConstantFolding::construct_constant_transpose()
         auto constant_perm_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_perm_label]);
         auto transpose_match = m.get_match_root_as<op::Transpose>();
+        NGRAPH_CHECK(transpose_match,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::Transpose`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(transpose_match));
 

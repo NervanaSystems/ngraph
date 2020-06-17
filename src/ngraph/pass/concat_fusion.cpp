@@ -102,6 +102,7 @@ void pass::ConcatElimination::construct_concat_elimination()
         auto op = pattern_map[op_label];
 
         auto root = m.get_match_root_as<op::Concat>();
+        NGRAPH_CHECK(root, "match root node ", *m.get_match_root(), " not of type `op::Concat`");
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
             NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";

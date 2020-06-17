@@ -101,6 +101,8 @@ void pass::ConstantFolding::construct_constant_reverse()
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
         auto reverse_match = m.get_match_root_as<op::Reverse>();
+        NGRAPH_CHECK(
+            reverse_match, "match root node ", *m.get_match_root(), " not of type `op::Reverse`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(reverse_match));
 

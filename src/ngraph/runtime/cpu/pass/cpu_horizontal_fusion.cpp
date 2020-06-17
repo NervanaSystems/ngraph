@@ -106,6 +106,10 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
                      << m.get_match_root()->get_name();
 
         auto conv_bias_root = m.get_match_root_as<op::ConvolutionBias>();
+        NGRAPH_CHECK(conv_bias_root,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::ConvolutionBias`");
 
         // check if the node has been replaced
         if (conv_bias_root->get_users().empty())

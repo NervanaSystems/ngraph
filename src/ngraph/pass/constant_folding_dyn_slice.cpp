@@ -104,6 +104,8 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
         auto ub_node = static_pointer_cast<op::Constant>(pattern_map[ub_label]);
         auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
         auto dyn_slice = m.get_match_root_as<op::DynSlice>();
+        NGRAPH_CHECK(
+            dyn_slice, "match root node ", *m.get_match_root(), " not of type `op::DynSlice`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dyn_slice));
 

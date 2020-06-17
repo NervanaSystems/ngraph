@@ -55,6 +55,7 @@ void pass::ConstantFolding::construct_constant_slice()
 
         auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         auto slice = m.get_match_root_as<op::Slice>();
+        NGRAPH_CHECK(slice, "match root node ", *m.get_match_root(), " not of type `op::Slice`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(slice));
 

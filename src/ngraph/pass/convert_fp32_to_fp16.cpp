@@ -28,12 +28,7 @@ void pass::ConvertFP32ToFP16::convert_constants_precision()
 
     ngraph::graph_rewrite_callback callback = [](pattern::Matcher& m) {
         auto constant = m.get_match_root_as<ngraph::op::Constant>();
-        if (!constant)
-        {
-            return false;
-        }
-
-        if (constant->get_output_element_type(0) == element::f32)
+        if (constant && constant->get_output_element_type(0) == element::f32)
         {
             auto data = constant->get_vector<float>();
             std::vector<ngraph::float16> new_data(data.size());

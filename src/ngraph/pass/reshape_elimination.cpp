@@ -50,6 +50,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
         auto gop = pattern_map[op];
 
         auto r1 = m.get_match_root_as<op::Reshape>();
+        NGRAPH_CHECK(r1, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
 
         if (r1->get_output_shape(0) != gop.get_shape())
         {
@@ -90,6 +91,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
         auto gop = pattern_map[op];
 
         auto r2 = m.get_match_root_as<op::Reshape>();
+        NGRAPH_CHECK(r2, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
         auto r1 = static_pointer_cast<op::Reshape>(r2->get_argument(0));
 
         if (gop->get_output_shape(0) != m.get_match_root()->get_output_shape(0))
@@ -161,6 +163,8 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
                      << m.get_match_root()->get_name();
 
         auto mtranspose = m.get_match_root_as<op::Reshape>();
+        NGRAPH_CHECK(
+            mtranspose, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
         // this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
