@@ -97,7 +97,7 @@ void pass::ConcatElimination::construct_concat_elimination()
     auto callback = [op_label](pattern::Matcher& m) {
         NGRAPH_DEBUG
             << "concat_elimination: In callback for construct_concat_elimination against node = "
-            << m.get_match_root()->get_name();
+            << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto op = pattern_map[op_label];
 

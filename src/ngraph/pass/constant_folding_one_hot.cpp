@@ -115,7 +115,7 @@ void pass::ConstantFolding::construct_constant_one_hot()
 
     auto one_hot_callback = [indices_label, depth_label, on_label, off_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for one_hot_callback against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto indices_node = static_pointer_cast<op::Constant>(pattern_map[indices_label]);

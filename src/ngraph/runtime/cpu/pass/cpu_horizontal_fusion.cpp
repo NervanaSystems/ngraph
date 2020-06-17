@@ -103,7 +103,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
 
     auto callback = [data_conv](pattern::Matcher& m) {
         NGRAPH_DEBUG << "conv_horizontal_fusion: In a callback for conv horizontal fusion for "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto conv_bias_root = std::static_pointer_cast<op::ConvolutionBias>(m.get_match_root());
 

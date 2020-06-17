@@ -80,7 +80,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
 
     auto callback = [reduction_axes_label, param_1, param_2](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_fprop against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto input_to_normalize = pattern_map[param_1];
@@ -134,7 +134,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto callback = [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto input = pattern_map[input_x];
@@ -209,7 +209,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
                      mask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG
             << "In a callback for construct_softmax_cross_entropy_bprop_with_ignore_mask against "
-            << m.get_match_root()->get_name();
+            << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto input = pattern_map[input_x];
@@ -240,7 +240,7 @@ void pass::CoreFusion::construct_relu()
 
     auto callback = [val, zero](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_relu against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto mzero = m.get_pattern_map()[zero];
@@ -277,19 +277,19 @@ void pass::CoreFusion::construct_sigmoid()
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input, constant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << " type is not float!";
             return false;
         }
 
         if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
             return false;
         }
@@ -335,19 +335,19 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bprop_sigmoid pattern against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << " type is not float!";
             return false;
         }
 
-        if (m.get_match_root()->get_output_shape(0).size() !=
+        if (m.get_match_value().get_shape().size() !=
             pattern_map[input]->get_output_shape(0).size())
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
             return false;
         }
@@ -387,7 +387,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
 
     auto callback = [input, filters, mean, var, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for folded batch norm against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto m_bn = static_pointer_cast<op::BatchNormInference>(m.get_match_root());
@@ -467,7 +467,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
 
     auto callback = [input, filters, conv_label, A_label, B_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for conv affine folding against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto conv_m = static_pointer_cast<op::Convolution>(pattern_map[conv_label]);
@@ -618,7 +618,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
 
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_broadcast against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto broadcast_m = static_pointer_cast<op::Broadcast>(m.get_match_root());
@@ -729,7 +729,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                      broadcast_w3_label,
                      broadcast_w1_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_skip against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         if (m.get_match_root()->get_users().empty())
         {
@@ -879,7 +879,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
 
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_softmax_reshape against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto reshape2_m = static_pointer_cast<op::Reshape>(m.get_match_root());
@@ -1241,14 +1241,15 @@ void pass::CoreFusion::construct_conv_bias()
 
     auto callback = [pbcast_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_value().get_node()->get_argument(0));
 
         if (conv_m == nullptr)
         {
-            conv_m = static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(1));
+            conv_m = static_pointer_cast<op::Convolution>(
+                m.get_match_value().get_node()->get_argument(1));
         }
 
         if (conv_m->get_output_shape(0).size() > 5 ||
@@ -1274,7 +1275,7 @@ void pass::CoreFusion::construct_conv_bias()
         auto bias = bcast_m->get_argument(0);
         if (bias->get_output_shape(0).size() > 1)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";
             auto order = get_default_order(bias->get_output_shape(0));
             auto bias_reshape =
@@ -1314,7 +1315,7 @@ void pass::CoreFusion::construct_conv_bias_add()
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto add_m = m.get_match_root();
         auto pattern_map = m.get_pattern_map();

@@ -37,7 +37,7 @@ void pass::ConstantFolding::construct_constant_variadic_split()
     auto constant_variadic_split_callback = [this, data_label, axis_label, lengths_label](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_variadic_split_callback against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);

@@ -95,7 +95,7 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
     auto constant_dyn_slice_callback = [data_label, lb_label, ub_label, strides_label](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_dyn_slice_callback against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 

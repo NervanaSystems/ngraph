@@ -221,8 +221,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             throw ngraph_error("Lstm node doesnt have three outputs");
         }
 
-        auto dst_layer = m.get_match_root()->output(0);
-        auto dst_iter = m.get_match_root()->output(1);
+        auto dst_layer = m.get_match_value().get_node()->output(0);
+        auto dst_iter = m.get_match_value().get_node()->output(1);
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
         // find the user's for {ht} and replace them with lstm output 2
@@ -254,20 +254,20 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << " type is not float!";
             return false;
         }
 
         if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
             return false;
         }
@@ -360,13 +360,13 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto callback = [ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_value_map();
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
                          << " type is not float!";
             return false;
         }
@@ -709,7 +709,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
-                     << "matched_node: " << m.get_match_root()->get_name();
+                     << "matched_node: " << m.get_match_value().get_node()->get_name();
         return true;
     };
 
@@ -776,7 +776,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << " In Recurrent multi layer RNN fusion callback ";
         NGRAPH_DEBUG << " Number of RNN's Matched: " << number_of_rnn_cell_matched;
-        NGRAPH_DEBUG << " matched_root: " << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << " matched_root: " << m.get_match_value().get_node()->get_name();
 
         if (number_of_rnn_cell_matched < 2)
         {
@@ -1047,7 +1047,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
         // squeezed_dims{t*n, c}
         Output<Node> layer_rnn_ht_reshape = rnn->output(0);
-        if (m.get_match_root()->get_output_shape(0) != rnn->get_output_shape(0))
+        if (m.get_match_value().get_shape() != rnn->get_output_shape(0))
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                                        rnn->output(0),
@@ -1057,8 +1057,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         }
 
         // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
-        if (m.get_match_root()->get_output_shape(0) ==
-            Shape{batch_size, num_time_steps, feature_size})
+        if (m.get_match_value().get_shape() == Shape{batch_size, num_time_steps, feature_size})
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                                        layer_rnn_ht_reshape,

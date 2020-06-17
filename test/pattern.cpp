@@ -94,7 +94,7 @@ public:
 
         auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_multiply_by_one against "
-                         << m.get_match_root()->get_name();
+                         << m.get_match_value().get_node()->get_name();
             NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
@@ -141,7 +141,7 @@ public:
 
         auto callback = [pattern](pattern::Matcher& m) {
             NGRAPH_DEBUG << "In a callback for construct_add_zero against "
-                         << m.get_match_root()->get_name();
+                         << m.get_match_value().get_node()->get_name();
             NGRAPH_CHECK(m.get_match_root()->get_arguments().size() == 2);
 
             auto pattern_map = m.get_pattern_map();
@@ -637,7 +637,7 @@ public:
 
         auto callback = [iconst_label, rpattern](pattern::RecurrentMatcher& rm) {
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
-                         << rm.get_match_root()->get_name();
+                         << rm.get_match_value().get_node()->get_name();
 
             auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
 
@@ -659,7 +659,7 @@ public:
             // replace the topmost add with the seed (i.e. the first parameter to add)
             // matches are added in reverse order (i.e. the first match is the topmost node)
             auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
-            NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
+            NGRAPH_DEBUG << "Replacing " << rm.get_match_value().get_node()->get_name() << " with "
                          << arg->get_name();
             ngraph::replace_node(rm.get_match_root(), arg);
             return true;

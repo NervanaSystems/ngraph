@@ -79,7 +79,7 @@ Pattern for capturing
 
         pattern::graph_rewrite_callback callback = [val, zero](pattern::Matcher& m) { 
                 NGRAPH_DEBUG << "In a callback for construct_relu_pattern against "
-                            << m.get_match_root()->get_name();
+                            << m.get_match_value().get_node()->get_name();
 
                 auto pattern_map = m.get_pattern_map();
                 auto mzero = m.get_pattern_map()[zero];

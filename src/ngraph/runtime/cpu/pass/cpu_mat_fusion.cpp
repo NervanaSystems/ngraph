@@ -153,7 +153,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             if (!ngraph::is_valid_rank(matcher_v2->get_match_root(), supported_ranks))
             {
-                NGRAPH_DEBUG << "Add (mat_fusion_v2) " << matcher_v2->get_match_root()->get_name()
+                NGRAPH_DEBUG << "Add (mat_fusion_v2) "
+                             << matcher_v2->get_match_value().get_node()->get_name()
                              << " isn't 2D or 3D";
                 continue;
             }

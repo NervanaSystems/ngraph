@@ -56,7 +56,7 @@ void pass::ConstantFolding::construct_constant_quantize()
 
     auto constant_quantize_callback = [constant_label, quant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_quantize_callback against node = "
-                     << m.get_match_root()->get_name();
+                     << m.get_match_value().get_node()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 

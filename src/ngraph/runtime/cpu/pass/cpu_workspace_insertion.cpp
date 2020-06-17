@@ -102,7 +102,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
     auto delta = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
     auto max_pool = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(2));
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
-                 << m.get_match_root()->get_name();
+                 << m.get_match_value().get_node()->get_name();
 
     auto pattern_map = m.get_pattern_map();
     auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
