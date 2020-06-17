@@ -39,12 +39,15 @@ namespace ngraph
             class CPU_BACKEND_API CPU_Backend : public runtime::Backend
             {
             public:
+                CPU_Backend(const std::string& config);
                 ~CPU_Backend() override;
 
                 std::shared_ptr<CPU_CallFrame>
                     make_call_frame(const std::shared_ptr<CPU_ExternalFunction>& external_function,
                                     ngraph::pass::PassConfig& pass_config,
                                     Allocator* allocator);
+
+                std::shared_ptr<ngraph::runtime::Tensor> create_tensor() override;
 
                 std::shared_ptr<ngraph::runtime::Tensor>
                     create_tensor(const ngraph::element::Type& element_type,
@@ -79,6 +82,7 @@ namespace ngraph
                 std::unordered_map<std::shared_ptr<Function>, std::shared_ptr<Executable>>
                     m_exec_map;
                 Allocator* m_allocator;
+                bool m_codegen_enable;
             };
         }
     }

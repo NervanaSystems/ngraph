@@ -20,7 +20,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/util.hpp"
@@ -41,7 +40,7 @@ op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::BatchMatMulTranspose::decompose_op() const
+OutputVector op::BatchMatMulTranspose::decompose_op() const
 {
     const PartialShape& arg0_pshape = get_input_partial_shape(0);
     const PartialShape& arg1_pshape = get_input_partial_shape(1);
@@ -96,7 +95,7 @@ NodeVector op::BatchMatMulTranspose::decompose_op() const
     return {concat_result};
 }
 
-shared_ptr<Node> op::BatchMatMulTranspose::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::BatchMatMulTranspose::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<BatchMatMulTranspose>(

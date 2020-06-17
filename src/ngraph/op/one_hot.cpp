@@ -45,7 +45,7 @@ void op::v0::OneHot::validate_and_infer_types()
         this, m_shape.rank().is_static(), "Requested result shape has dynamic rank.");
 
     NODE_VALIDATION_CHECK(this,
-                          m_one_hot_axis < static_cast<size_t>(m_shape.rank()),
+                          m_one_hot_axis < m_shape.rank().get_length(),
                           "One-hot axis (",
                           m_one_hot_axis,
                           ") is out of bounds (requested result shape: ",
@@ -65,8 +65,8 @@ void op::v0::OneHot::validate_and_infer_types()
 
     if (arg_rank.is_static())
     {
-        std::vector<Dimension> expected_input_dims(static_cast<size_t>(m_shape.rank()));
-        for (size_t i = 0; i < static_cast<size_t>(m_shape.rank()); i++)
+        std::vector<Dimension> expected_input_dims(m_shape.rank().get_length());
+        for (size_t i = 0; i < m_shape.rank().get_length(); i++)
         {
             expected_input_dims[i] = m_shape[i];
         }
@@ -82,8 +82,8 @@ void op::v0::OneHot::validate_and_infer_types()
                               expected_input_shape,
                               ".");
 
-        std::vector<Dimension> output_dims(static_cast<size_t>(merged_input_shape.rank()));
-        for (size_t i = 0; i < static_cast<size_t>(merged_input_shape.rank()); i++)
+        std::vector<Dimension> output_dims(merged_input_shape.rank().get_length());
+        for (size_t i = 0; i < merged_input_shape.rank().get_length(); i++)
         {
             output_dims[i] = merged_input_shape[i];
         }
@@ -94,7 +94,7 @@ void op::v0::OneHot::validate_and_infer_types()
     set_output_type(0, arg_et, result_shape);
 }
 
-shared_ptr<Node> op::v0::OneHot::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v0::OneHot::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v0::OneHot>(new_args.at(0), m_shape, m_one_hot_axis);
@@ -154,7 +154,7 @@ void op::v1::OneHot::validate_and_infer_types()
 
     if (indices_shape.is_static() && indices_shape.rank().is_static() && depth->is_constant())
     {
-        const auto indices_rank = static_cast<int64_t>(indices_shape.rank());
+        const auto indices_rank = indices_shape.rank().get_length();
 
         std::vector<Dimension> out_dims(indices_rank);
         for (auto i = 0; i < indices_rank; i++)
@@ -201,7 +201,7 @@ bool ngraph::op::v1::OneHot::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::v1::OneHot::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::OneHot::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::OneHot>(

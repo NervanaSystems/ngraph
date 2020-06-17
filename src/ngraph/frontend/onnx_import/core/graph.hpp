@@ -33,7 +33,7 @@ namespace ngraph
         class Graph
         {
         public:
-            Graph(const onnx::GraphProto& proto, Model& model);
+            Graph(const ONNX_NAMESPACE::GraphProto& proto, Model& model);
             const std::vector<Node>& get_nodes() const { return m_nodes; }
             const std::vector<ValueInfo>& get_inputs() const { return m_inputs; }
             const std::vector<ValueInfo>& get_outputs() const { return m_outputs; }
@@ -75,7 +75,5 @@ namespace ngraph
         {
             return (outs << "<Graph: " << graph.get_name() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

@@ -30,7 +30,6 @@ namespace ngraph
             const std::string& get_name() const override;
             int get_size() override;
             int get_rank() override;
-            void log_print(const std::string& timestamp, const std::vector<char>& buf) override;
             void all_reduce(void* in,
                             void* out,
                             element::Type_t element_type,

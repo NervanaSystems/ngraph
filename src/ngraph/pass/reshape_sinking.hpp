@@ -23,25 +23,11 @@ namespace ngraph
 {
     namespace pass
     {
-        class NGRAPH_API ReshapeSinking : public ngraph::pass::FunctionPass
+        class NGRAPH_API ReshapeSinking : public pass::FunctionPass
         {
         public:
             ReshapeSinking() { set_property(PassProperty::REQUIRE_STATIC_SHAPE, true); }
-            bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
+            bool run_on_function(std::shared_ptr<Function> function) override;
         };
     }
 }
-
-extern template ngraph::AxisVector
-    ngraph::apply_permutation<ngraph::AxisVector>(ngraph::AxisVector input,
-                                                  ngraph::AxisVector order);
-
-extern template ngraph::Coordinate
-    ngraph::apply_permutation<ngraph::Coordinate>(ngraph::Coordinate input,
-                                                  ngraph::AxisVector order);
-
-extern template ngraph::Strides
-    ngraph::apply_permutation<ngraph::Strides>(ngraph::Strides input, ngraph::AxisVector order);
-
-extern template ngraph::Shape ngraph::apply_permutation<ngraph::Shape>(ngraph::Shape input,
-                                                                       ngraph::AxisVector order);

@@ -17,6 +17,8 @@
 #pragma once
 
 #include <cmath>
+#include <map>
+#include <vector>
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
@@ -31,12 +33,9 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void mean(const T* arg,
-                      T* out,
-                      const Shape& in_shape,
-                      const Shape& out_shape,
-                      const AxisSet& reduction_axes)
+            void mean(const T* arg, T* out, const Shape& in_shape, const AxisSet& reduction_axes)
             {
+                auto out_shape = reduce(in_shape, reduction_axes);
                 CoordinateTransform output_transform(out_shape);
                 std::vector<T> cs(shape_size(out_shape));
 

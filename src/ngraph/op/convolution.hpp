@@ -66,7 +66,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
 
@@ -164,7 +164,7 @@ namespace ngraph
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The output spatial dimensions shape.
                 const PartialShape get_output_shape() const;
@@ -190,6 +190,27 @@ namespace ngraph
                 {
                     m_output_padding = output_padding;
                 }
+                /// \brief      Calculates output spatial features size.
+                ///
+                /// \param[in]  input_data_shape      The input data partial shape
+                /// \param[in]  filters_shape         The filters partial shape
+                /// \param[in]  strides               The strides values.
+                /// \param[in]  dilations             The dilations values.
+                /// \param[in]  pads_begin            The paddings at the beginning of axis.
+                /// \param[in]  pads_end              The paddings at the end of axis.
+                /// \param[in]  output_padding    The output padding values.
+                /// \param      output_spatial_shape  The placeholder for computed output spatial partial
+                /// shape.
+                ///
+                void
+                    infer_conv_backprop_output_spatial_shape(const std::vector<Dimension>& input_data_shape,
+                                                            const std::vector<Dimension>& filters_shape,
+                                                            const Strides& strides,
+                                                            const Strides& dilations,
+                                                            const CoordinateDiff& pads_begin,
+                                                            const CoordinateDiff& pads_end,
+                                                            const CoordinateDiff& output_padding,
+                                                            std::vector<Dimension>& output_spatial_shape);
 
             protected:
                 Strides m_strides;
@@ -229,7 +250,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The filters tensor shape.
                 const Shape get_filters_shape() const;
@@ -254,8 +275,7 @@ namespace ngraph
                 CoordinateDiff m_pads_begin;
                 CoordinateDiff m_pads_end;
             };
-
-        } // namespace v1
+}
 
         namespace v0
         {
@@ -380,7 +400,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
 
@@ -477,7 +497,7 @@ namespace ngraph
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The data batch shape.
                 const Shape& get_data_batch_shape() const { return m_data_batch_shape; }
@@ -578,7 +598,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The filters tensor shape.
                 const Shape& get_filters_shape() const { return m_filters_shape; }
@@ -641,8 +661,7 @@ namespace ngraph
                 CoordinateDiff m_padding_above_forward;
                 Strides m_data_dilation_strides_forward;
             };
-
-        } // namespace v0
+}
 
         namespace util
         {
@@ -663,11 +682,8 @@ namespace ngraph
                                                  size_t input_channel_axis_filters,
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
-                                                 size_t output_channel_axis_result);
-        } // namespace util
+                                                 size_t output_channel_axis_result);}
 
         using v0::Convolution;
         using v0::ConvolutionBackpropData;
-        using v0::ConvolutionBackpropFilters;
-    } // namespace op
-} // namespace ngraph
+        using v0::ConvolutionBackpropFilters;}}

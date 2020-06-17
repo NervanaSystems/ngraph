@@ -30,7 +30,5 @@ namespace ngraph
                 NodeVector log(const Node& node);
             }
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

@@ -38,12 +38,14 @@ namespace ngraph
                 Unsqueeze(const Output<Node>& data, const Output<Node>& axes);
 
                 virtual void pre_validate_and_infer_types() override;
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         using v0::Unsqueeze;

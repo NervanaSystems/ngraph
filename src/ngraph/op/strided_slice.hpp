@@ -99,9 +99,13 @@ namespace ngraph
                     return m_shrink_axis_mask;
                 }
                 const std::vector<int64_t>& get_ellipsis_mask() const { return m_ellipsis_mask; }
-                std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override;
+                std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
                 size_t get_version() const override { return 1; }
+                bool evaluate(const HostTensorVector& output_values,
+                              const HostTensorVector& input_values) override;
+
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;

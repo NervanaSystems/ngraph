@@ -26,7 +26,6 @@
 #include <llvm/ADT/DenseSet.h>
 #include <map>
 #include <mlir/EDSC/Builders.h>
-#include <mlir/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
@@ -597,4 +596,4 @@ namespace mlir
         NGRAPH_CHECK(moduleOp != nullptr, "Expecting FuncOp for anaylsis");
         memoryAssignment.run(&moduleOp);
     }
-} // namespace mlir
+}

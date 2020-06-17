@@ -20,14 +20,14 @@
 
 using namespace std;
 
-extern "C" const char* get_ngraph_version_string()
+extern "C" NGRAPH_API const char* get_ngraph_version_string()
 {
     return NGRAPH_VERSION;
 }
 
 namespace ngraph
 {
-    void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra)
+    NGRAPH_API void get_version(size_t& major, size_t& minor, size_t& patch, std::string& extra)
     {
         string version = NGRAPH_VERSION;
         ngraph::parse_version_string(version, major, minor, patch, extra);

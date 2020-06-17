@@ -22,6 +22,7 @@
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/shape.hpp"
 
@@ -61,7 +62,7 @@ void op::GRN::pre_validate_and_infer_types()
     }
 }
 
-NodeVector op::GRN::decompose_op() const
+OutputVector op::GRN::decompose_op() const
 {
     Output<Node> data{input_value(0)};
     const Shape& input_shape{data.get_shape()};
@@ -74,8 +75,9 @@ NodeVector op::GRN::decompose_op() const
         data = builder::reshape(data, data_shape);
     }
 
+    const auto axis_set_const = op::Constant::create(element::i64, {}, {1});
     // Calculate l2 norm across channels.
-    shared_ptr<Node> norm = builder::opset1::l2_norm(data, AxisSet{1}, m_bias);
+    shared_ptr<Node> norm = builder::opset1::l2_norm(data, axis_set_const, m_bias);
     // Get back reduced axis.
     norm = std::make_shared<Broadcast>(norm, data.get_shape(), AxisSet{1});
     data = data / norm;
@@ -86,10 +88,10 @@ NodeVector op::GRN::decompose_op() const
         data = builder::reshape(data, input_shape);
     }
 
-    return as_node_vector({data});
+    return OutputVector{data};
 }
 
-shared_ptr<Node> op::GRN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::GRN::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

@@ -52,8 +52,7 @@ void op::CropAndResize::validate_and_infer_types()
     Dimension image_depth;
     if (image_shape.is_static())
     {
-        NODE_VALIDATION_CHECK(
-            this, static_cast<int64_t>(image_shape.rank()) == 4, "Image must be NHWC");
+        NODE_VALIDATION_CHECK(this, image_shape.rank().get_length() == 4, "Image must be NHWC");
         image_depth = image_shape[3];
     }
 
@@ -62,10 +61,10 @@ void op::CropAndResize::validate_and_infer_types()
     if (boxes_shape.is_static())
     {
         auto boxes_rank = boxes_shape.rank();
-        NODE_VALIDATION_CHECK(this, static_cast<int64_t>(boxes_rank) == 2, "Boxes must be 2d");
+        NODE_VALIDATION_CHECK(this, boxes_rank.get_length() == 2, "Boxes must be 2d");
         auto boxes_dim1 = boxes_shape[1];
         NODE_VALIDATION_CHECK(
-            this, static_cast<int64_t>(boxes_dim1) == 4, "Second boxes dimension must be 4");
+            this, boxes_dim1.get_length() == 4, "Second boxes dimension must be 4");
     }
     NODE_VALIDATION_CHECK(
         this, boxes.get_element_type().is_real(), "Boxes must be real values in [0, 1]");
@@ -75,9 +74,8 @@ void op::CropAndResize::validate_and_infer_types()
     Dimension num_boxes;
     if (box_indices_shape.is_static())
     {
-        NODE_VALIDATION_CHECK(this,
-                              static_cast<int64_t>(box_indices_shape.rank()) == 1,
-                              "Box indices must have rank 1");
+        NODE_VALIDATION_CHECK(
+            this, box_indices_shape.rank().get_length() == 1, "Box indices must have rank 1");
         num_boxes = box_indices_shape[0];
     }
     NODE_VALIDATION_CHECK(
@@ -90,11 +88,9 @@ void op::CropAndResize::validate_and_infer_types()
                           crop_size_shape.is_static() || crop_size_rank.is_dynamic(),
                           "Dynamic crop_size not supported");
 
+    NODE_VALIDATION_CHECK(this, crop_size_rank.get_length() == 1, "crop_size must be a vector");
     NODE_VALIDATION_CHECK(
-        this, static_cast<int64_t>(crop_size_rank) == 1, "crop_size must be a vector");
-    NODE_VALIDATION_CHECK(this,
-                          static_cast<int64_t>(crop_size_shape[0]) == 2,
-                          "crop_size must be a vector of length 2");
+        this, crop_size_shape[0].get_length() == 2, "crop_size must be a vector of length 2");
     auto& crop_size_et = crop_size.get_element_type();
     NODE_VALIDATION_CHECK(this, crop_size_et.is_integral(), "crops_size must be integral");
     auto crop_size_node = crop_size.get_node_shared_ptr();
@@ -149,7 +145,7 @@ void op::CropAndResize::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::CropAndResize::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::CropAndResize::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<CropAndResize>(new_args.at(0),

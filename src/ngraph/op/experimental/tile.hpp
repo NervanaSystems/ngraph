@@ -14,41 +14,4 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
-
-#include "ngraph/op/op.hpp"
-
-namespace ngraph
-{
-    namespace op
-    {
-        namespace v0
-        {
-            /// \brief Dynamic Tiling operation which repeats a tensor multiple times
-            ///        along each dimension
-            class NGRAPH_API Tile : public Op
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"Tile", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                Tile() = default;
-                /// \brief Perform dynamic padding of a tensor
-                ///
-                /// \param data The node producing input tensor to be padded.
-                /// \param repeats The node producing the per-dimension replication factor
-                Tile(const Output<Node>& data, const Output<Node>& repeats);
-
-                bool visit_attributes(AttributeVisitor& visitor) override;
-                void validate_and_infer_types() override;
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
-
-            protected:
-                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
-            };
-        }
-        using v0::Tile;
-    }
-}
+#include "ngraph/op/tile.hpp"

@@ -59,10 +59,10 @@ namespace ngraph
                      bool transA = false,
                      bool transB = false);
 
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 double get_alpha() const { return m_alpha; }
                 double get_beta() const { return m_beta; }

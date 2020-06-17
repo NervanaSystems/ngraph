@@ -39,7 +39,7 @@ ngraph::op::v1::BatchToSpace::BatchToSpace(const ngraph::Output<ngraph::Node>& d
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::v1::BatchToSpace::decompose_op() const
+OutputVector op::v1::BatchToSpace::decompose_op() const
 {
     auto data = input_value(0);
     auto block = input_value(1);
@@ -141,7 +141,7 @@ NodeVector op::v1::BatchToSpace::decompose_op() const
     vector<int64_t> end_mask(data_shape.size(), 0);
     flat_node = make_shared<op::v1::StridedSlice>(
         flat_node, crops_begin_const, upperbounds, begin_mask, end_mask);
-    return NodeVector{flat_node};
+    return OutputVector{flat_node};
 }
 
 void ngraph::op::v1::BatchToSpace::pre_validate_and_infer_types()
@@ -190,7 +190,7 @@ void ngraph::op::v1::BatchToSpace::pre_validate_and_infer_types()
 }
 
 std::shared_ptr<ngraph::Node>
-    ngraph::op::v1::BatchToSpace::copy_with_new_args(const ngraph::NodeVector& new_args) const
+    ngraph::op::v1::BatchToSpace::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<BatchToSpace>(

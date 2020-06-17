@@ -62,6 +62,13 @@ public:
     static std::vector<std::string> get_registered_devices();
 
     /// \brief Create a tensor specific to this backend
+    /// This call is used when an output is dynamic and not known until execution time. When
+    /// passed as an output to a function the tensor will have a type and shape after executing
+    /// a call.
+    /// \returns shared_ptr to a new backend-specific tensor
+    virtual std::shared_ptr<ngraph::runtime::Tensor> create_tensor() = 0;
+
+    /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend-specific tensor
@@ -142,15 +149,6 @@ public:
     /// \param op_name is the name of the backend specific op
     /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
-
-    /// \brief Allows sending backend specific configuration. The map contains key, value pairs
-    ///     specific to a particluar backend. The definition of these key, value pairs is
-    ///     defined by each backend.
-    /// \param config The configuration map sent to the backend
-    /// \param error An error string describing any error encountered
-    /// \returns true if the configuration is supported, false otherwise. On false the error
-    ///     parameter value is valid.
-    virtual bool set_config(const std::map<std::string, std::string>& config, std::string& error);
 
     static void set_backend_shared_library_search_directory(const std::string& path);
     static const std::string& get_backend_shared_library_search_directory();

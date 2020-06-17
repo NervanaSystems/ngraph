@@ -20,6 +20,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/reshape.hpp"
+#include "ngraph/runtime/reference/copy.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -36,8 +37,10 @@ op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
 void op::Unsqueeze::pre_validate_and_infer_types()
 {
     const auto data = input_value(0);
+    auto data_partial_shape = data.get_partial_shape();
+    const auto data_rank = data_partial_shape.rank();
+
     const auto axes_node = input_value(1).get_node_shared_ptr();
-    const auto data_rank = data.get_partial_shape().rank();
 
     if (data_rank.is_dynamic() || !axes_node->is_constant())
     {
@@ -45,10 +48,12 @@ void op::Unsqueeze::pre_validate_and_infer_types()
         return;
     }
 
+    uint64_t data_rank_value = data_partial_shape.rank().get_length();
+
     // Get value of axes from Constant
-    const auto axes_constant = as_type_ptr<op::Constant>(axes_node);
+    const auto axes_constant = as_type_ptr<op::v0::Constant>(axes_node);
     const auto axes_values = axes_constant->cast_vector<int64_t>();
-    const auto expanded_rank = static_cast<size_t>(data_rank) + axes_values.size();
+    const auto expanded_rank = data_rank_value + axes_values.size();
     auto axes = normalize_axes(this->description(), axes_values, expanded_rank);
 
     NODE_VALIDATION_CHECK(this, !axes.empty(), "'axes' input is mandatory.");
@@ -56,30 +61,20 @@ void op::Unsqueeze::pre_validate_and_infer_types()
                           axes.size() == set<int64_t>(begin(axes), end(axes)).size(),
                           "'axes' input has a duplicate axis.");
 
-    if (data.get_partial_shape().is_dynamic())
-    {
-        set_output_type(0,
-                        get_input_element_type(0),
-                        PartialShape::dynamic(data.get_partial_shape().rank() + axes.size()));
-        return;
-    }
-
-    auto data_shape = data.get_shape();
     sort(begin(axes), end(axes), less<int64_t>());
 
-    AxisVector input_order{ngraph::get_default_order(data_shape.size())};
-
+    vector<Dimension> output_shape{data_partial_shape};
     for (auto axis : axes)
     {
         NODE_VALIDATION_CHECK(
-            this, axis <= data_shape.size(), "provided 'axes' value ", axis, " is not valid.");
+            this, axis <= expanded_rank, "provided 'axes' value ", axis, " is not valid.");
 
-        data_shape.insert(next(begin(data_shape), axis), 1);
+        output_shape.insert(next(begin(output_shape), axis), 1);
     }
-    set_output_type(0, get_input_element_type(0), data_shape);
+    set_output_type(0, get_input_element_type(0), PartialShape{output_shape});
 }
 
-NodeVector op::Unsqueeze::decompose_op() const
+OutputVector op::Unsqueeze::decompose_op() const
 {
     NODE_VALIDATION_CHECK(
         this,
@@ -97,11 +92,86 @@ bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Unsqueeze::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Unsqueeze::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
         throw ngraph_error("Incorrect number of new arguments");
     }
     return make_shared<Unsqueeze>(new_args.at(0), new_args.at(1));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg0, const HostTensorPtr& out)
+    {
+        runtime::reference::copy(
+            arg0->get_data_ptr<ET>(), out->get_data_ptr<ET>(), shape_size(out->get_shape()));
+        return true;
+    }
+
+    bool evaluate_unsqueeze(const HostTensorPtr& arg0,
+                            const HostTensorPtr& arg1,
+                            const HostTensorPtr& out)
+    {
+        auto element_type = arg0->get_element_type();
+        out->set_element_type(element_type);
+
+        auto data_shape = arg0->get_shape();
+        int64_t data_rank = static_cast<int64_t>(data_shape.size());
+        auto axes_shape = arg1->get_shape();
+        NGRAPH_CHECK(axes_shape.size() == 1, "Axes to add must be a vector.");
+        NGRAPH_CHECK(axes_shape[0] > 0, "Axes cannot be empty.");
+
+        auto out_shape = data_shape;
+        int64_t out_rank = data_rank + static_cast<int64_t>(shape_size(axes_shape));
+        // Get axes
+        vector<int64_t> axes = read_index_vector(arg1);
+        // Normalize axes
+        std::transform(axes.begin(), axes.end(), axes.begin(), [out_rank](int64_t i) -> int64_t {
+            return i < 0 ? out_rank + i : i;
+        });
+        // Sort in increasing order
+        std::set<int64_t, less<int64_t>> axes_set(axes.begin(), axes.end());
+        NGRAPH_CHECK(axes.size() == axes_set.size(), "Axes has duplicate axis.");
+        for (int64_t axis : axes_set)
+        {
+            NGRAPH_CHECK(axis >= 0 && axis < out_rank, "Axis is out of bounds: ", axis);
+            out_shape.insert(out_shape.begin() + axis, 1);
+        }
+        out->set_shape(out_shape);
+
+        bool rc = true;
+        switch (element_type)
+        {
+            TYPE_CASE(i8)(arg0, out);
+            break;
+            TYPE_CASE(i16)(arg0, out);
+            break;
+            TYPE_CASE(i32)(arg0, out);
+            break;
+            TYPE_CASE(i64)(arg0, out);
+            break;
+            TYPE_CASE(u8)(arg0, out);
+            break;
+            TYPE_CASE(u16)(arg0, out);
+            break;
+            TYPE_CASE(u32)(arg0, out);
+            break;
+            TYPE_CASE(u64)(arg0, out);
+            break;
+            TYPE_CASE(f32)(arg0, out);
+            break;
+            TYPE_CASE(f64)(arg0, out);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Unsqueeze::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_unsqueeze(inputs[0], inputs[1], outputs[0]);
 }

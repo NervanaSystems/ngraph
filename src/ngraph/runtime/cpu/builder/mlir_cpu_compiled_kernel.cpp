@@ -136,13 +136,13 @@ namespace ngraph
                         mlir_backend.codegen();
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
-                        mlir_runtime.run(mem_ref_arg_vec);
+                        mlir_runtime.run(mem_ref_arg_vec, true /*firstIteration*/);
                     }
                     else
                     {
                         // We have found a cached runtime, just invoke.
                         MLIRCPURuntime& mlir_runtime = it->second;
-                        mlir_runtime.run(mem_ref_arg_vec);
+                        mlir_runtime.run(mem_ref_arg_vec, false /*firstIteration*/);
                     }
                 };
 

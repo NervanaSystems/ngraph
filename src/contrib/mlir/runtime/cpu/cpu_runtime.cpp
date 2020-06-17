@@ -60,27 +60,29 @@ llvm::cl::opt<bool> clEnableBarePtrMemRefLowering(
     llvm::cl::init(false),
     llvm::cl::desc("Enable the lowering of MemRefs to LLVM bare pointers"));
 
-void MLIRCPURuntime::run(const std::vector<MemRefArg>& args)
+void MLIRCPURuntime::run(const std::vector<MemRefArg>& args, bool firstIteration)
 {
-    // run_internal(*reinterpret_cast<std::vector<void*>*>(args), shapeVec, stridesVec);
-    run_internal(args);
+    run_internal(args, firstIteration);
 }
 
-void MLIRCPURuntime::run_internal(const std::vector<MemRefArg>& args)
+void MLIRCPURuntime::run_internal(const std::vector<MemRefArg>& args, bool firstIteration)
 {
     // Create an MLIR execution engine. We use a null MLIR pass manager for now to make sure we
     // don't run MLIR passes that were already run. We also pass a default transformer created with
     // the default or user-provided optimization level.
 
-    auto llvmTransformer = mlir::makeOptimizingTransformer(
-        MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
-    auto maybeEngine = mlir::ExecutionEngine::create(
-        m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
-    NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
-    m_engine = std::move(maybeEngine.get());
+    if (!m_engine)
+    {
+        auto llvmTransformer = mlir::makeOptimizingTransformer(
+            MLIRCPUBackend::mlirOptLevel, /*sizeLevel=*/0, MLIRCPUBackend::targetMachine.get());
+        auto maybeEngine = mlir::ExecutionEngine::create(
+            m_module.get(), llvmTransformer, MLIRCPUBackend::mlirOptLevel);
+        NGRAPH_CHECK(maybeEngine, "failed to construct an execution engine");
+        m_engine = std::move(maybeEngine.get());
+    }
 
     bindArguments(args);
-    execute();
+    execute(firstIteration);
     cleanup();
 }
 
@@ -90,7 +92,8 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 {
     NGRAPH_CHECK(m_module, "MLIR module is not ready.");
 
-    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>("_mlir_ciface_main");
+    auto name = clEnableBarePtrMemRefLowering ? "main" : "_mlir_ciface_main";
+    auto func = m_module->lookupSymbol<mlir::LLVM::LLVMFuncOp>(name);
     NGRAPH_CHECK(func && !func.getBlocks().empty(), "Function not found");
 
     // Set external arguments
@@ -138,21 +141,46 @@ void MLIRCPURuntime::bindArguments(const std::vector<MemRefArg>& args)
 }
 
 // Lowers standard dialect to LLVM dialect and uses the MLIR execution engine to execute the code.
-void MLIRCPURuntime::execute()
+void MLIRCPURuntime::execute(bool firstIteration)
 {
     // Invoke the JIT-compiled function with the arguments. Note that, for API
     // uniformity reasons, it takes a list of type-erased pointers to arguments.
     // Please, note that 'invoke' method is overloaded with a parameter pack version.
     // Make sure the MutableArrayRef version is invoked.
-    auto invocationResult =
-        m_engine->invoke("_mlir_ciface_main", llvm::MutableArrayRef<void*>(m_invokeArgs));
-
-    if (clDumpObjectFile)
+    if (!clEnableBarePtrMemRefLowering)
     {
-        m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
-                                                            : clObjectFilename.getValue());
+        if (firstIteration)
+        {
+            auto invocationResult = m_engine->invoke("_mlir_ciface_callback_init");
+            if (clDumpObjectFile)
+            {
+                m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                                    : clObjectFilename.getValue());
+            }
+            NGRAPH_CHECK(!invocationResult,
+                         "JIT invocation of '_mlir_ciface_callback_init' failed\n");
+        }
+
+        auto invocationResult =
+            m_engine->invoke("_mlir_ciface_main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+        if (clDumpObjectFile)
+        {
+            m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                                : clObjectFilename.getValue());
+        }
+        NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_main' failed\n");
     }
-    NGRAPH_CHECK(!invocationResult, "JIT invocation of '_mlir_ciface_main' failed\n");
+    else
+    {
+        auto invocationResult =
+            m_engine->invoke("main", llvm::MutableArrayRef<void*>(m_invokeArgs));
+        if (clDumpObjectFile)
+        {
+            m_engine->dumpToObjectFile(clObjectFilename.empty() ? "jitted_mlir.o"
+                                                                : clObjectFilename.getValue());
+        }
+        NGRAPH_CHECK(!invocationResult, "JIT invocation of 'main' failed\n");
+    }
 }
 
 void MLIRCPURuntime::cleanup()

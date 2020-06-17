@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/scatter_base.hpp"
 
 namespace ngraph
 {
@@ -49,9 +50,38 @@ namespace ngraph
                 {
                     throw ngraph_error("Not yet implemented");
                 }
+                virtual std::shared_ptr<Node>
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
+            };
+        }
+
+        namespace v3
+        {
+            ///
+            /// \brief      Add updates to slices from inputs addressed by indices
+            ///
+            class NGRAPH_API ScatterAdd : public util::ScatterBase
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"ScatterAdd", 3};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+                ScatterAdd() = default;
+
+                ///
+                /// \brief      Constructs ScatterAdd object.
+                ///
+                /// \param      data     The input tensor to be updated.
+                /// \param      indices  The tensor with indexes which will be updated.
+                /// \param      updates  The tensor with update values.
+                /// \param[in]  axis     The axis at which elements will be updated.
+                ///
+                ScatterAdd(const Output<Node>& data,
+                           const Output<Node>& indices,
+                           const Output<Node>& updates,
+                           const Output<Node>& axis);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& inputs) const override;
             };
         }
         using v0::ScatterAdd;

@@ -25,10 +25,9 @@ namespace ngraph
         namespace v1
         {
             /// \brief Elementwise type conversion operation.
-            class ConvertLike : public Op
+            class NGRAPH_API ConvertLike : public Op
             {
             public:
-                NGRAPH_API
                 static constexpr NodeTypeInfo type_info{"ConvertLike", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a conversion operation.
@@ -42,7 +41,7 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

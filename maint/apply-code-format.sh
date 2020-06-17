@@ -18,14 +18,22 @@ set -u
 # limitations under the License.
 # ******************************************************************************
 
+if [[ $# -lt 1 ]]
+then
+    echo "Minimal arguments: apply-code-format.sh [path] ..."
+    echo "e.g. apply-code-format.sh src test doc/examples"
+    echo "     This will apply format to directories src, tests, and doc/examples"
+    exit 1
+fi
+
 # NOTE: The results of `clang-format` depend _both_ of the following factors:
 # - The `.clang-format` file, and
 # - The particular version of the `clang-format` program being used.
 #
 # For this reason, this script specifies the exact version of clang-format to be used.
 
-declare CLANG_FORMAT_BASENAME="clang-format-3.9"
 declare REQUIRED_CLANG_FORMAT_VERSION=3.9
+declare CLANG_FORMAT_BASENAME="clang-format-"${REQUIRED_CLANG_FORMAT_VERSION}
 
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -40,22 +48,17 @@ fi
 clang_format_lib_verify_version "${CLANG_FORMAT_PROG}" "${REQUIRED_CLANG_FORMAT_VERSION}"
 echo "Verified that '${CLANG_FORMAT_PROG}' has version '${REQUIRED_CLANG_FORMAT_VERSION}'"
 
-pushd "${THIS_SCRIPT_DIR}/.."
-
-declare ROOT_SUBDIR
-for ROOT_SUBDIR in src test doc/examples python/pyngraph; do
-    if ! [[ -d "${ROOT_SUBDIR}" ]]; then
-        echo "In directory '$(pwd)', no subdirectory named '${ROOT_SUBDIR}' was found."
+declare DIR
+for DIR in "$@"; do
+    if ! [[ -d "${DIR}" ]]; then
+        echo "No directory named '${DIR}' was found."
+        exit 1
     else
-        echo "About to format C/C++ code in directory tree '$(pwd)/${ROOT_SUBDIR}' ..."
+        echo "Formatting C/C++ code in directory tree '${DIR}'"
 
         # Note that we restrict to "-type f" to exclude symlinks. Emacs sometimes
         # creates dangling symlinks with .cpp/.hpp suffixes as a sort of locking
         # mechanism, and this confuses clang-format.
-        find "${ROOT_SUBDIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
-
-        echo "Done."
+        find "${DIR}" -type f -and \( -name '*.cpp' -or -name '*.hpp' \) | xargs "${CLANG_FORMAT_PROG}" -i -style=file
     fi
 done
-
-popd

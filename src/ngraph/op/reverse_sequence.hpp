@@ -30,9 +30,13 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"ReverseSequence", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ReverseSequence() = default;
-                /// \brief Constructs an arcsin operation.
+                /// \brief Constructs a ReverseSequence operation.
                 ///
-                /// \param arg Node that produces the input tensor.
+                /// \param arg         tensor with input data to reverse
+                /// \param seq_lengths 1D tensor of integers with sequence lengths in the input
+                /// tensor.
+                /// \param batch_axis  index of the batch dimension.
+                /// \param seq_axis    index of the sequence dimension.
                 ReverseSequence(const Output<Node>& arg,
                                 const Output<Node>& seq_lengths,
                                 int64_t batch_axis,
@@ -42,7 +46,7 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 size_t get_batch_axis() const { return m_normalized_batch_axis; }
                 int64_t get_origin_batch_axis() const { return m_batch_axis; }

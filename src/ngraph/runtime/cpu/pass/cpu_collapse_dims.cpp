@@ -95,7 +95,7 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
 {
     bool replaced = false;
     auto node = std::static_pointer_cast<op::Broadcast>(n).get();
-    auto input_shape = node->get_argument(0)->get_shape();
+    auto input_shape = node->get_input_shape(0);
     auto output_shape = node->get_shape();
     auto operated_axes = node->get_broadcast_axes();
 
@@ -144,7 +144,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
 {
     bool replaced = false;
     auto node = std::static_pointer_cast<T>(n).get();
-    auto input_shape = node->get_argument(0)->get_shape();
+    auto input_shape = node->get_input_shape(0);
     auto output_shape = node->get_shape();
     auto operated_axes = node->get_reduction_axes();
 
@@ -192,8 +192,8 @@ static bool collapse_dot(std::shared_ptr<Node> n)
 {
     bool replaced = false;
     auto node = std::static_pointer_cast<T>(n).get();
-    auto A_shape = node->get_argument(0)->get_shape();
-    auto B_shape = node->get_argument(1)->get_shape();
+    auto A_shape = node->get_input_shape(0);
+    auto B_shape = node->get_input_shape(1);
     auto reduction_count = node->get_reduction_axes_count();
 
     AxisSet operated_axes_A, operated_axes_B;

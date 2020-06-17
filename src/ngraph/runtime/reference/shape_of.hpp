@@ -24,11 +24,12 @@ namespace ngraph
     {
         namespace reference
         {
-            inline void shape_of(const Shape& arg_shape, uint64_t* out)
+            template <typename T>
+            inline void shape_of(const Shape& arg_shape, T* out)
             {
                 for (size_t i = 0; i < arg_shape.size(); i++)
                 {
-                    out[i] = static_cast<uint64_t>(arg_shape[i]);
+                    out[i] = static_cast<T>(arg_shape[i]);
                 }
             }
         }

@@ -30,17 +30,12 @@ namespace ngraph
             namespace set_1
             {
                 NodeVector add(const Node& node);
-
-            } // namespace set_1
+            }
 
             namespace set_7
             {
                 NodeVector add(const Node& node);
-
-            } // namespace set_7
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

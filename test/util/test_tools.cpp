@@ -231,7 +231,7 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
         size_t arg_count = node->get_input_size();
         for (size_t i = 0; i < arg_count; ++i)
         {
-            Node* dep = node->input(i).get_source_output().get_node();
+            Node* dep = node->get_input_node_ptr(i);
             if (seen.count(dep) == 0)
             {
                 return ::testing::AssertionFailure() << "Argument " << *dep
@@ -257,4 +257,14 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
         }
     }
     return ::testing::AssertionSuccess();
+}
+
+constexpr NodeTypeInfo ngraph::TestOpMultiOut::type_info;
+
+bool ngraph::TestOpMultiOut::evaluate(const HostTensorVector& outputs,
+                                      const HostTensorVector& inputs)
+{
+    inputs[0]->read(outputs[0]->get_data_ptr(), inputs[0]->get_size_in_bytes());
+    inputs[1]->read(outputs[1]->get_data_ptr(), inputs[1]->get_size_in_bytes());
+    return true;
 }

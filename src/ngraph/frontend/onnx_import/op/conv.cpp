@@ -83,7 +83,7 @@ namespace ngraph
                                  const std::shared_ptr<ngraph::Node>& bias)
                     {
                         const auto rank_of_conv =
-                            static_cast<size_t>(ng_conv->get_output_partial_shape(0).rank());
+                            ng_conv->get_output_partial_shape(0).rank().get_length();
 
                         // reshape the bias node {M} to {1, M, 1, 1, ..., 1}
                         // this is required by the addition operation that needs to be able
@@ -100,7 +100,7 @@ namespace ngraph
 
                         return {std::make_shared<default_opset::Add>(ng_conv, reshaped_bias)};
                     }
-                } // namespace
+                }
 
                 NodeVector conv(const Node& node)
                 {
@@ -146,11 +146,7 @@ namespace ngraph
                         return {add_bias(conv_node, bias)};
                     }
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

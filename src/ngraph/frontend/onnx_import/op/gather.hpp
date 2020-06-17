@@ -45,11 +45,7 @@ namespace ngraph
                         indices,
                         default_opset::Constant::create(element::i64, Shape{}, {valid_axis}))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

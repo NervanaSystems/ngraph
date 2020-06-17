@@ -38,7 +38,7 @@ ngraph::op::v1::SpaceToBatch::SpaceToBatch(const ngraph::Output<ngraph::Node>& d
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::v1::SpaceToBatch::decompose_op() const
+OutputVector op::v1::SpaceToBatch::decompose_op() const
 {
     auto data = input_value(0);
     auto block = input_value(1);
@@ -124,7 +124,7 @@ NodeVector op::v1::SpaceToBatch::decompose_op() const
     }
     flat_node = builder::opset1::reshape(flat_node, squeezed_shape);
 
-    return NodeVector{flat_node};
+    return OutputVector{flat_node};
 }
 
 void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
@@ -173,7 +173,7 @@ void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
 }
 
 std::shared_ptr<Node>
-    ngraph::op::v1::SpaceToBatch::copy_with_new_args(const ngraph::NodeVector& new_args) const
+    ngraph::op::v1::SpaceToBatch::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<SpaceToBatch>(

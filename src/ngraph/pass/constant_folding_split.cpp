@@ -17,7 +17,7 @@
 #include "constant_folding.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/split.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -48,7 +48,7 @@ void pass::ConstantFolding::construct_constant_split()
         int index = 0;
         for (auto& output : split->outputs())
         {
-            output.replace(slices[index++]->output(0));
+            output.replace(slices[index++]);
         }
         split->outputs().clear();
         construct_constant_slice();

@@ -170,7 +170,7 @@ def NGRNNCellOp :
 
   let builders = [
     OpBuilder<
-    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "OpBuilder &builder, OperationState &tblgen_state, Type res,"
     "Value X, Value W, Value R, Value H_t, "
     "Attribute hiddenSize, ArrayAttr activations,"
     "ArrayAttr activationAlpha, ArrayAttr activationBeta, Attribute clip", [{
@@ -262,7 +262,7 @@ def NGMVN :
 
   let builders = [
     OpBuilder<
-    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "OpBuilder &builder, OperationState &tblgen_state, Type res,"
     "Value data, ArrayAttr reductionAxes, Attribute normalizeVariance,"
     "Attribute eps", [{
       tblgen_state.addOperands(data);
@@ -362,7 +362,7 @@ def NGLSTMCellOp :
 
   let builders = [
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "OpBuilder &builder, OperationState &tblgen_state, Type res,"
       "Value X, Value W, Value R, Value H_t, Value C_t,"
       "Attribute hiddenSize, ArrayAttr activations,"
       "ArrayAttr activationAlpha, ArrayAttr activationBeta,"
@@ -378,7 +378,7 @@ def NGLSTMCellOp :
       }]>,
 
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "OpBuilder &builder, OperationState &tblgen_state, Type res,"
       "Value X, Value W, Value R, Value H_t, Value C_t,"
       "Attribute hiddenSize",
       [{
@@ -499,7 +499,7 @@ def NGGRUCellOp :
 
   let builders = [
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "OpBuilder &builder, OperationState &tblgen_state, Type res,"
       "Value X, Value W, Value R, Value H_t,"
       "Attribute hiddenSize, ArrayAttr activations,"
       "ArrayAttr activationAlpha, ArrayAttr activationBeta,"
@@ -514,7 +514,7 @@ def NGGRUCellOp :
       }]>,
 
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res,"
+      "OpBuilder &builder, OperationState &tblgen_state, Type res,"
       "Value X, Value W, Value R, Value H_t,"
       "Attribute hiddenSize",
       [{
@@ -556,7 +556,7 @@ def NGLayerNormOp :
     
   let builders = [
     OpBuilder<
-    "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
+    "OpBuilder &builder, OperationState &tblgen_state, ArrayRef<Type> res,"
     "Value data, Attribute keepStats, Attribute beginNormAxis, Attribute epsilon", [{
        tblgen_state.addOperands(data);
        tblgen_state.addAttribute("keepStats", keepStats);
@@ -607,7 +607,7 @@ def NGLayerNormBackpropOp :
     
   let builders = [
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
+      "OpBuilder &builder, OperationState &tblgen_state, ArrayRef<Type> res,"
       "Value data, Value delta, Value mean, Value variance,"
       "Attribute beginNormAxis, Attribute epsilon", [{
         tblgen_state.addOperands({data, delta, mean, variance});
@@ -617,7 +617,7 @@ def NGLayerNormBackpropOp :
       }]>,
 
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
+      "OpBuilder &builder, OperationState &tblgen_state, ArrayRef<Type> res,"
       "Value data, Value delta, Value scale,"
       "Attribute beginNormAxis, Attribute epsilon", [{
         tblgen_state.addOperands({data, delta, scale});
@@ -627,7 +627,7 @@ def NGLayerNormBackpropOp :
       }]>,
 
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, ArrayRef<Type> res,"
+      "OpBuilder &builder, OperationState &tblgen_state, ArrayRef<Type> res,"
       "Value data, Value delta,"
       "Attribute beginNormAxis, Attribute epsilon", [{
         tblgen_state.addOperands({data, delta});
@@ -722,7 +722,7 @@ def NGGroupConvOp :
   let builders = [
     // Builder without padType
     OpBuilder<
-      "Builder *builder, OperationState &tblgen_state, Type res, Value images,"
+      "OpBuilder &builder, OperationState &tblgen_state, Type res, Value images,"
       "Value filters, ArrayAttr strides, ArrayAttr padBelow, ArrayAttr padAbove,"
       "Attribute groups",
       [{
@@ -771,18 +771,18 @@ def NGGroupConvTransposeOp :
   }];
 
   let builders = [
-    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+    OpBuilder<"OpBuilder &builder, OperationState &tblgen_state, Type res,"
               "Value images, Value filters, Attribute groups", [{
       tblgen_state.addOperands({images, filters});
       tblgen_state.addAttribute("groups", groups);
       tblgen_state.addTypes(res);
     }]>,
-    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+    OpBuilder<"OpBuilder &builder, OperationState &tblgen_state, Type res,"
               "Value images, Value filters", [{
       tblgen_state.addOperands({images, filters});
       tblgen_state.addTypes(res);
     }]>,
-    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+    OpBuilder<"OpBuilder &builder, OperationState &tblgen_state, Type res,"
               "Value images, Value filters, ArrayAttr strides,"
               "ArrayAttr outputPad, ArrayAttr outputShape,"
               "Attribute groups", [{
@@ -792,7 +792,7 @@ def NGGroupConvTransposeOp :
       tblgen_state.addAttribute("outputShape", outputShape);
       tblgen_state.addAttribute("groups", groups);
     }]>,
-    OpBuilder<"Builder *builder, OperationState &tblgen_state, Type res,"
+    OpBuilder<"OpBuilder &builder, OperationState &tblgen_state, Type res,"
               "Value images, Value filters,"
               "ArrayAttr outputShape, Attribute groups", [{
       tblgen_state.addOperands({images, filters});
@@ -942,15 +942,15 @@ def NGDepthToSpaceOp :
 def NGConvBiasOp :
     NG_OneResult_Op<"convBias", [NoSideEffect, DeclareOpInterfaceMethods<FusedOp>]>,
     Arguments<(ins NG_TensorType:$images, NG_TensorType:$filters, NG_TensorType:$bias,
-               I64ArrayAttr:$strides, I64ArrayAttr:$padBelow, I64ArrayAttr:$padAbove,
-               DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
+               I64ArrayAttr:$strides, I64ArrayAttr:$dilation, I64ArrayAttr:$padBelow,
+               I64ArrayAttr:$padAbove, DefaultValuedAttr<BoolAttr, "false">:$withRelu)>
 {
   let summary = "Convolution Bias Op";
   let description = "Convolution + bias forward prop for batched convolution operation.";
 
   let builders = [
     OpBuilder<
-    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "OpBuilder &builder, OperationState &tblgen_state, Type res,"
     "Value images, Value filters, Value bias, Attribute withRelu", [{
        tblgen_state.addOperands({images, filters, bias});
        tblgen_state.addAttribute("withRelu", withRelu);
@@ -958,7 +958,7 @@ def NGConvBiasOp :
      }]>,
 
     OpBuilder<
-    "Builder *builder, OperationState &tblgen_state, Type res,"
+    "OpBuilder &builder, OperationState &tblgen_state, Type res,"
     "Value images, Value filters, Value bias", [{
        tblgen_state.addOperands({images, filters, bias});
        tblgen_state.addTypes(res);
@@ -967,9 +967,10 @@ def NGConvBiasOp :
 
   let extraClassDeclaration = [{
     void setStrides(const ArrayAttr& attr)  { this->setAttr("strides", attr);  }
+    void setDilation(const ArrayAttr& attr) { this->setAttr("dilation", attr); }
     void setPadAbove(const ArrayAttr& attr) { this->setAttr("padAbove", attr); }
     void setPadBelow(const ArrayAttr& attr) { this->setAttr("padBelow", attr); }
-    void setWithRelu(const Attribute& attr)  {this->setAttr("withRelu", attr); }
+    void setWithRelu(const Attribute& attr) { this->setAttr("withRelu", attr); }
   }];
 }
 

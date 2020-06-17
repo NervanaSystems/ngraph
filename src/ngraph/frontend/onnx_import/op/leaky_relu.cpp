@@ -40,11 +40,7 @@ namespace ngraph
                         default_opset::Constant::create(data->get_element_type(), Shape{}, {alpha});
                     return {std::make_shared<default_opset::PRelu>(data, alpha_node)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

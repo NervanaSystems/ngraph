@@ -66,10 +66,10 @@ namespace ngraph
 
                 std::size_t get_block_size() const { return m_blocksize; }
                 DepthToSpaceMode get_mode() const { return m_mode; }
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 std::size_t m_blocksize;
@@ -79,6 +79,8 @@ namespace ngraph
         }
         using v0::DepthToSpace;
     }
+
+    NGRAPH_API
     std::ostream& operator<<(std::ostream& s, const op::v0::DepthToSpace::DepthToSpaceMode& type);
 
     template <>

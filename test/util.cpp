@@ -545,13 +545,13 @@ TEST(graph, huge)
     {
         auto param = make_shared<op::Parameter>(element::f32, Shape{3, 3});
         std::shared_ptr<Node> n = param;
+        weak_nodes.push_back(n);
         for (size_t i = 0; i < 1000000; i++)
         {
             n = make_shared<op::Negative>(n);
+            weak_nodes.push_back(n);
         }
         auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
-        f->map_unordered_ops(
-            [&weak_nodes](Node* node) { weak_nodes.push_back(node->shared_from_this()); });
     }
 
     for (auto& weak_node : weak_nodes)
@@ -711,4 +711,57 @@ TEST(util, topological_sort_replace)
     f->get_ordered_ops();
 
     EXPECT_TRUE(custom_sorter_used);
+}
+
+TEST(util, double_to_int_limits)
+{
+    auto round_func = [](double x) { return std::round(x); };
+
+    double x = -std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::min() == double_to_int<int8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::min() == double_to_int<int16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::min() == double_to_int<int32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::min() == double_to_int<int64_t>(x, round_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::min() == double_to_int<uint8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::min() == double_to_int<uint16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::min() == double_to_int<uint32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::min() == double_to_int<uint64_t>(x, round_func));
+
+    x = std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::max() == double_to_int<int8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::max() == double_to_int<int16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::max() == double_to_int<int32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::max() == double_to_int<int64_t>(x, round_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::max() == double_to_int<uint8_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::max() == double_to_int<uint16_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::max() == double_to_int<uint32_t>(x, round_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::max() == double_to_int<uint64_t>(x, round_func));
+}
+
+TEST(util, double_to_int_assert)
+{
+    auto round_func = [](double x) { return std::round(x); };
+    ASSERT_THROW(double_to_int<float>(123.123, round_func), std::runtime_error);
+    ASSERT_THROW(double_to_int<double>(123.123, round_func), std::runtime_error);
+}
+
+TEST(util, double_to_int)
+{
+    auto ceil_func = [](double x) { return std::ceil(x); };
+    auto floor_func = [](double x) { return std::floor(x); };
+    auto round_func = [](double x) { return std::round(x); };
+
+    double x = -1.5;
+    EXPECT_TRUE(double_to_int<int32_t>(x, ceil_func) == -1);
+    EXPECT_TRUE(double_to_int<int32_t>(x, floor_func) == -2);
+    EXPECT_TRUE(double_to_int<int32_t>(x, round_func) == -2);
+
+    x = 1.5;
+    EXPECT_TRUE(double_to_int<int32_t>(x, ceil_func) == 2);
+    EXPECT_TRUE(double_to_int<int32_t>(x, floor_func) == 1);
+    EXPECT_TRUE(double_to_int<int32_t>(x, round_func) == 2);
 }

@@ -87,7 +87,7 @@ void op::Dot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           reduction_axes_ambiguous || arg0_shape.rank().is_dynamic() ||
-                              m_reduction_axes_count <= size_t(arg0_shape.rank()),
+                              m_reduction_axes_count <= arg0_shape.rank().get_length(),
                           "Reduction axes count (",
                           m_reduction_axes_count,
                           ") is too large (arg0 shape: ",
@@ -98,7 +98,7 @@ void op::Dot::validate_and_infer_types()
 
     NODE_VALIDATION_CHECK(this,
                           reduction_axes_ambiguous || arg1_shape.rank().is_dynamic() ||
-                              m_reduction_axes_count <= size_t(arg1_shape.rank()),
+                              m_reduction_axes_count <= arg1_shape.rank().get_length(),
                           "Reduction axes count (",
                           m_reduction_axes_count,
                           ") is too large (arg0 shape: ",
@@ -111,7 +111,7 @@ void op::Dot::validate_and_infer_types()
     {
         for (size_t i = 0; i < m_reduction_axes_count; i++)
         {
-            size_t axis_index_arg0 = size_t(arg0_shape.rank()) - m_reduction_axes_count + i;
+            size_t axis_index_arg0 = arg0_shape.rank().get_length() - m_reduction_axes_count + i;
             size_t axis_index_arg1 = i;
 
             NODE_VALIDATION_CHECK(
@@ -130,16 +130,17 @@ void op::Dot::validate_and_infer_types()
                 ").");
         }
 
-        std::vector<Dimension> result_dims(size_t(arg0_shape.rank()) + size_t(arg1_shape.rank()) -
+        std::vector<Dimension> result_dims(arg0_shape.rank().get_length() +
+                                           arg1_shape.rank().get_length() -
                                            2 * m_reduction_axes_count);
 
         size_t i = 0;
 
-        for (size_t j = 0; j < size_t(arg0_shape.rank()) - m_reduction_axes_count; j++)
+        for (size_t j = 0; j < arg0_shape.rank().get_length() - m_reduction_axes_count; j++)
         {
             result_dims[i++] = arg0_shape[j];
         }
-        for (size_t j = m_reduction_axes_count; j < size_t(arg1_shape.rank()); j++)
+        for (size_t j = m_reduction_axes_count; j < arg1_shape.rank().get_length(); j++)
         {
             result_dims[i++] = arg1_shape[j];
         }

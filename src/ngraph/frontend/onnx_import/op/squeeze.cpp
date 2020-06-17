@@ -43,8 +43,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Squeeze>(data, axes_node)};
                 }
-
-            } // namespace set_1
-        }     // namespace op
-    }         // namespace onnx_import
-} // namespace ngraph
+            }
+        }
+    }
+}

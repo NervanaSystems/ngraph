@@ -31,10 +31,10 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/erf.hpp"
-#include "ngraph/op/experimental/tile.hpp"
 #include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
+#include "ngraph/op/tile.hpp"
 #include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -117,8 +117,8 @@ TEST(cpu_test, trivial_in_place_relu)
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_EQ(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
+    ASSERT_EQ(relu->get_output_tensor(0).get_pool_offset(),
+              add->get_output_tensor(0).get_pool_offset());
 }
 
 TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
@@ -131,8 +131,8 @@ TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("CPU");
     (backend->compile(f));
-    ASSERT_NE(relu->output(0).get_tensor().get_pool_offset(),
-              add->output(0).get_tensor().get_pool_offset());
+    ASSERT_NE(relu->get_output_tensor(0).get_pool_offset(),
+              add->get_output_tensor(0).get_pool_offset());
 }
 
 #ifdef NGRAPH_TBB_ENABLE
@@ -967,21 +967,8 @@ TEST(cpu_test, rotated_pooling)
 constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
 constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
 
-bool static is_codegen_mode()
-{
-    static bool codegen_mode = getenv_bool("NGRAPH_CODEGEN");
-    return codegen_mode;
-}
-
 TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 {
-    if (is_codegen_mode())
-    {
-        // TODO change to skip when there is a new release of gtest
-        NGRAPH_WARN << "This test is skipped for CODEGEN mode.";
-        return;
-    }
-
     set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
 
     Shape shape_a{2, 1, 3, 5};
@@ -1052,8 +1039,15 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
     unset_environment("NGRAPH_CPU_CONCURRENCY");
 }
 
-TEST(cpu_test, constant_convertlayout)
+// This test checks if a ConverLayout node is inserted before the ConvolutionBias node.
+// Since MLIR supports ConvolutionBias through callback, the data layout conversion is done in
+// callback.
+// There is no ConvertLayout node when MLIR and MLIR CALLBACK are enabled.
+// Thus this test is disabled with MLIR enabled.
+TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape data_shape{1, 64, 56, 56};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     Shape weights_shape{64, 64, 3, 3};
@@ -1068,15 +1062,15 @@ TEST(cpu_test, constant_convertlayout)
     auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
 
     auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
-    auto backend = runtime::Backend::create("CPU");
     auto handle = backend->compile(f);
-
     size_t convert_layout = count_ops_of_type<runtime::cpu::op::ConvertLayout>(f);
     ASSERT_EQ(convert_layout, 1);
 }
 
 TEST(cpu_test, constant_reshape)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2, 4};
     Shape shape_out{2, 4, 1};
 
@@ -1102,6 +1096,8 @@ TEST(cpu_test, constant_reshape)
 
 TEST(cpu_test, constant_reshape_permute)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2, 4};
     Shape shape_out{4, 2};
 
@@ -1128,6 +1124,8 @@ TEST(cpu_test, constant_reshape_permute)
 
 TEST(cpu_test, constant_broadcast)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2};
     Shape shape_out{2, 4};
 
@@ -1154,6 +1152,8 @@ TEST(cpu_test, constant_broadcast)
 
 TEST(cpu_test, constant_pad_exterior)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2};
 
     vector<int> values_in{777, 888};
@@ -1191,6 +1191,8 @@ static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t po
 
 TEST(cpu_test, constant_unary_binary)
 {
+    // Initialize CPU constant folders
+    auto backend = runtime::Backend::create("CPU");
     Shape shape_in{2, 2};
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};
@@ -1336,7 +1338,7 @@ TEST(cpu_test, constant_unary_binary)
         get_result_constant<float>(func, 21), floor_expected, MIN_FLOAT_TOLERANCE_BITS));
     ASSERT_EQ(get_result_constant<char>(func, 22), not_expected);
     ASSERT_EQ(get_result_constant<int>(func, 23), add_autob_numpy_expected);
-    ASSERT_ANY_THROW(pass_manager.run_passes(func_error));
+    ASSERT_NO_THROW(pass_manager.run_passes(func_error));
 }
 
 TEST(cpu_test, conv_test_winograd)
@@ -1473,8 +1475,8 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     Shape shape_r{2, 2, 4, 3};
-    auto data = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 0));
-    auto indices = make_shared<op::Result>(make_shared<op::GetOutputElement>(max_pool, 1));
+    auto data = make_shared<op::Result>(max_pool->output(0));
+    auto indices = make_shared<op::Result>(max_pool->output(1));
     auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("CPU");
@@ -1545,7 +1547,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
-    auto indices = make_shared<op::GetOutputElement>(max_pool, 1);
+    auto indices = max_pool->output(1);
     Shape shape_i{2, 2, 4, 3};
     auto delta = make_shared<op::Parameter>(element::f32, shape_i);
 

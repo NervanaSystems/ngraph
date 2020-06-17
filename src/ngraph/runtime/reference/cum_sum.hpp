@@ -17,6 +17,9 @@
 #pragma once
 
 #include <cmath>
+#include <map>
+#include <utility>
+#include <vector>
 
 #include "ngraph/coordinate_transform.hpp"
 #include "ngraph/type/bfloat16.hpp"

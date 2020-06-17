@@ -54,11 +54,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Multiply>(half, log_node)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

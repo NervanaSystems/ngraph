@@ -81,7 +81,7 @@ void op::LRN::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this,
         axes_shape.is_dynamic() || input_shape_rank.is_dynamic() ||
-            static_cast<size_t>(axes_shape[0]) <= static_cast<size_t>(input_shape_rank),
+            axes_shape[0].get_length() <= input_shape_rank.get_length(),
         "Number of elements of axes must be >= 0 and <= argument rank (axes_shape[0]: ",
         axes_shape[0],
         ").");
@@ -92,7 +92,7 @@ void op::LRN::validate_and_infer_types()
         for (auto axis : reduction_axes)
         {
             NODE_VALIDATION_CHECK(this,
-                                  axis < size_t(input_shape_rank),
+                                  axis < input_shape_rank.get_length(),
                                   "Reduction axis (",
                                   axis,
                                   ") is out of bounds ",
@@ -121,7 +121,7 @@ bool ngraph::op::v0::LRN::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::LRN::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::LRN::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::LRN>(new_args.at(0), new_args.at(1), m_alpha, m_beta, m_bias, m_size);

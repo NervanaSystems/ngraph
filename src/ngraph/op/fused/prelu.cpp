@@ -40,7 +40,7 @@ bool ngraph::op::v0::PRelu::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-NodeVector op::PRelu::decompose_op() const
+OutputVector op::PRelu::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape();
@@ -77,7 +77,7 @@ NodeVector op::PRelu::decompose_op() const
     return {data * slope};
 }
 
-shared_ptr<Node> op::PRelu::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::PRelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {

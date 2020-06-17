@@ -40,12 +40,11 @@ TEST(opset_transform, opset1_transpose_downgrade_pass)
     pass_manager.run_passes(f);
 
     auto reshape_result = f->get_results().at(0);
-    auto reshape_node = as_type_ptr<op::v0::Reshape>(
-        reshape_result->input(0).get_source_output().get_node_shared_ptr());
+    auto reshape_node = as_type_ptr<op::v0::Reshape>(reshape_result->get_input_node_shared_ptr(0));
 
     ASSERT_TRUE(reshape_node);
     EXPECT_EQ(reshape_node->get_input_order(), order);
-    EXPECT_EQ(reshape_node->get_output_shape(), Shape({6, 5, 7, 4}));
+    EXPECT_EQ(reshape_node->get_output_shape(0), Shape({6, 5, 7, 4}));
 }
 
 TEST(opset_transform, opset1_transpose_downgrade_pass_data_shape_not_staic)

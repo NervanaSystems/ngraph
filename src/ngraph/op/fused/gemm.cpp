@@ -44,7 +44,7 @@ op::Gemm::Gemm(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
-NodeVector op::Gemm::decompose_op() const
+OutputVector op::Gemm::decompose_op() const
 {
     auto A = input_value(0);
     auto B = input_value(1);
@@ -82,7 +82,7 @@ NodeVector op::Gemm::decompose_op() const
     return {std::make_shared<op::Add>(a_dot_b, broadcasted_c)};
 }
 
-shared_ptr<Node> op::Gemm::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Gemm::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

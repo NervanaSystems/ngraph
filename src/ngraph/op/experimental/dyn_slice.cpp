@@ -96,9 +96,9 @@ void op::DynSlice::validate_and_infer_types()
                         get_input_element_type(0),
                         infer_slice_shape(this,
                                           get_input_partial_shape(0),
-                                          lower_bounds->get_vector<int64_t>(),
-                                          upper_bounds->get_vector<int64_t>(),
-                                          strides->get_vector<int64_t>(),
+                                          lower_bounds->cast_vector<int64_t>(),
+                                          upper_bounds->cast_vector<int64_t>(),
+                                          strides->cast_vector<int64_t>(),
                                           m_lower_bounds_mask,
                                           m_upper_bounds_mask,
                                           m_new_axis,
@@ -111,7 +111,7 @@ void op::DynSlice::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::DynSlice::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::DynSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynSlice>(new_args.at(0),

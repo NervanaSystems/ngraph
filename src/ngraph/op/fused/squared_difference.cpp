@@ -41,7 +41,7 @@ bool ngraph::op::v0::SquaredDifference::visit_attributes(AttributeVisitor& visit
     return true;
 }
 
-NodeVector op::SquaredDifference::decompose_op() const
+OutputVector op::SquaredDifference::decompose_op() const
 {
     const auto x1 = input_value(0);
     const auto x2 = input_value(1);
@@ -51,7 +51,7 @@ NodeVector op::SquaredDifference::decompose_op() const
     return {difference * difference};
 }
 
-shared_ptr<Node> op::SquaredDifference::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::SquaredDifference::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

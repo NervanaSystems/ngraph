@@ -437,6 +437,6 @@ namespace ngraph
                 REGISTER_OP_BUILDER(BatchMatMul);
                 REGISTER_OP_BUILDER(BatchMatMulTranspose);
             }
-        } // namespace cpu
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

@@ -208,6 +208,15 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
             p.reshape_in_shape[i_in] = dim;
             p.reshape_out_shape[i_out] = dim;
 
+            auto slice_size = real_end - real_begin;
+            if (slice_size > 0 && real_stride > slice_size)
+                real_stride = slice_size;
+            if (real_stride == slice_size)
+            {
+                real_end = real_begin + 1;
+                real_stride = 1;
+            }
+
             // Set up the begin/end/stride.
             p.begins[i_in] = real_begin;
             p.ends[i_in] = real_end;
@@ -225,4 +234,22 @@ SlicePlan ngraph::make_slice_plan(const Shape& input_shape,
         expand_ellipsis();
     }
     return p;
+}
+
+bool SlicePlan::operator==(const ngraph::SlicePlan& other) const
+{
+    bool equal = true;
+    equal &= begins == other.begins;
+    equal &= ends == other.ends;
+    equal &= strides == other.strides;
+    equal &= reshape_in_shape == other.reshape_in_shape;
+    equal &= reshape_out_shape == other.reshape_out_shape;
+    equal &= reverse_axes == other.reverse_axes;
+
+    return equal;
+}
+
+bool SlicePlan::operator!=(const ngraph::SlicePlan& other) const
+{
+    return !(*this == other);
 }

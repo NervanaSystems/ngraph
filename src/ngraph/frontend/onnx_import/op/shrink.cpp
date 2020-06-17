@@ -89,11 +89,7 @@ namespace ngraph
                     return {
                         std::make_shared<default_opset::Add>(input_plus_bias, input_minus_bias)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

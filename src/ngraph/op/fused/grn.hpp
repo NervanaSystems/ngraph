@@ -45,10 +45,10 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 float get_bias() const { return m_bias; }
                 virtual void pre_validate_and_infer_types() override;
-                virtual NodeVector decompose_op() const override;
+                virtual OutputVector decompose_op() const override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 float m_bias = 1.0f;

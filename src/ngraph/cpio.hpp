@@ -21,6 +21,8 @@
 #include <string>
 #include <vector>
 
+#include <ngraph/ngraph_visibility.hpp>
+
 // The CPIO file format can be found at
 // https://www.mkssoftware.com/docs/man4/cpio.4.asp
 
@@ -59,7 +61,7 @@ public:
 private:
 };
 
-class ngraph::cpio::FileInfo
+class NGRAPH_API ngraph::cpio::FileInfo
 {
 public:
     FileInfo(const std::string& name, size_t size, size_t offset)
@@ -78,7 +80,7 @@ private:
     size_t m_offset;
 };
 
-class ngraph::cpio::Writer
+class NGRAPH_API ngraph::cpio::Writer
 {
 public:
     Writer();
@@ -95,7 +97,7 @@ private:
     std::ofstream m_my_stream;
 };
 
-class ngraph::cpio::Reader
+class NGRAPH_API ngraph::cpio::Reader
 {
 public:
     Reader();
