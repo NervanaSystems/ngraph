@@ -38,7 +38,7 @@ void pass::ConstantFolding::construct_constant_split()
 
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         const auto axis_node = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-        const auto split = static_pointer_cast<op::v1::Split>(m.get_match_root());
+        const auto split = m.get_match_root_as<op::v1::Split>();
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
         const auto norm_axis_val = ngraph::normalize_axis(

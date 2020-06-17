@@ -106,7 +106,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 
     auto pattern_map = m.get_pattern_map();
     auto m_max_pool = std::static_pointer_cast<op::MaxPool>(pattern_map[max_pool]);
-    auto m_max_pool_bprop = std::static_pointer_cast<op::MaxPoolBackprop>(m.get_match_root());
+    auto m_max_pool_bprop = m.get_match_root_as<op::MaxPoolBackprop>();
 
     if (m_max_pool_bprop->get_output_shape(0).size() != 4 ||
         m_max_pool_bprop->get_window_shape().size() != 2 ||

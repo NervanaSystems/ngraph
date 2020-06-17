@@ -168,7 +168,7 @@ void pass::ConstantFolding::construct_constant_convert()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto convert_match = static_pointer_cast<op::Convert>(m.get_match_root());
+        auto convert_match = m.get_match_root_as<op::Convert>();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(convert_match));
 

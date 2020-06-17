@@ -182,7 +182,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
-        auto lstmcell_op = as_type_ptr<op::LSTMCell>(m.get_match_root());
+        auto lstmcell_op = m.get_match_root_as<op::LSTMCell>();
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
 

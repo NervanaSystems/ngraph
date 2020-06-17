@@ -199,7 +199,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         NGRAPH_DEBUG << "In a callback for construct_reshape_converLayout against "
                      << m.get_match_root()->get_name();
 
-        auto cvt_lt_m = static_pointer_cast<runtime::cpu::op::ConvertLayout>(m.get_match_root());
+        auto cvt_lt_m = m.get_match_root_as<runtime::cpu::op::ConvertLayout>();
         auto reshape_m = static_pointer_cast<ngraph::op::Reshape>(cvt_lt_m->get_argument(0));
 
         if (reshape_m->get_users().size() > 1)

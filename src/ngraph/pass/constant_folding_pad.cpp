@@ -78,7 +78,7 @@ void pass::ConstantFolding::construct_constant_pad()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
+        auto pad_match = m.get_match_root_as<op::Pad>();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(pad_match));
 
