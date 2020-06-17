@@ -67,7 +67,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     // To verify that the serializer works correctly let's just run this graph round-trip
     {
         string ser = serialize(function, 4);
-        cout << ser << endl;
+        // cout << ser << endl;
         m_function = deserialize(ser);
     }
     auto is_supported = [](const Node& node) {

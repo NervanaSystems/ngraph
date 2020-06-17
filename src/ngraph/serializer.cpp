@@ -1049,8 +1049,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
             const double clamp_min = parse_string<double>(node_js.at("min").get<string>());
             const double clamp_max = parse_string<double>(node_js.at("max").get<string>());
-            NGRAPH_INFO << clamp_min;
-            NGRAPH_INFO << clamp_max;
             node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
             break;
         }
@@ -2531,7 +2529,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
     }
     catch (exception& err)
     {
-        NGRAPH_INFO << err.what();
         string node_name;
         auto it = node_js.find("name");
         if (it != node_js.end())
@@ -2776,8 +2773,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Clamp:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
-        NGRAPH_INFO << to_cpp_string<double>(tmp->get_min());
-        NGRAPH_INFO << to_cpp_string<double>(tmp->get_max());
         node["min"] = to_cpp_string<double>(tmp->get_min());
         node["max"] = to_cpp_string<double>(tmp->get_max());
         break;
@@ -3684,8 +3679,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::UnknownOp: { break;
-    }
+    case OP_TYPEID::UnknownOp:
     default:
     {
         auto& factory_registry = FactoryRegistry<Node>::get();
@@ -3695,10 +3689,18 @@ json JSONSerializer::serialize_node(const Node& n)
             JSONAttributeSerializer visitor(node);
             if (!const_cast<Node&>(n).visit_attributes(visitor))
             {
-                NGRAPH_ERR << "Cannot serialize: " << node;
+                NGRAPH_ERR << "Cannot serialize: "
+                           << "v" << n.get_type_info().version << "::" << n.get_type_info().name;
             }
             return node;
         }
+        else
+        {
+            NGRAPH_ERR << "Cannot serialize, no factory found: "
+                       << "v" << n.get_type_info().version << "::" << n.get_type_info().name;
+        }
+
+        break;
     }
     }
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))
