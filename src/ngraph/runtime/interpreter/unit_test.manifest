@@ -11,4 +11,4 @@ reduce_sum_large_1d_to_scalar
 reduce_sum_keep_large_1d_to_scalar
 
 # Throws the wrong exception
-INTERPRETER.unhandled_op
+unhandled_op
