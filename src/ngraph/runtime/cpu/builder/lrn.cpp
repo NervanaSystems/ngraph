@@ -62,11 +62,11 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_lrn_forward(ctx->dnnl_memories,
-                                                              ctx->dnnl_primitives,
-                                                              ctx->dnnl_scratchpad_mds,
-                                                              lrn_desc,
-                                                              deps,
-                                                              lrn_index);
+                                                            ctx->dnnl_primitives,
+                                                            ctx->dnnl_scratchpad_mds,
+                                                            lrn_desc,
+                                                            deps,
+                                                            lrn_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);

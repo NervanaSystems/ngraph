@@ -17,9 +17,9 @@
 #include "ngraph/op/softmax.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/softmax.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/softmax.hpp"
 #include "ngraph/runtime/reference/softmax.hpp"
 
 using namespace std;
@@ -65,23 +65,22 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_softmax_forward(ctx->dnnl_memories,
-                                                                  ctx->dnnl_primitives,
-                                                                  ctx->dnnl_scratchpad_mds,
-                                                                  softmax_desc,
-                                                                  deps,
-                                                                  softmax_index);
+                                                                ctx->dnnl_primitives,
+                                                                ctx->dnnl_scratchpad_mds,
+                                                                softmax_desc,
+                                                                deps,
+                                                                softmax_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            softmax_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::SOFTMAX,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               softmax_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::SOFTMAX,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                     return;

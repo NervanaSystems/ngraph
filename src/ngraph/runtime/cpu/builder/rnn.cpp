@@ -87,12 +87,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_vanilla_rnn_forward(ctx->dnnl_memories,
-                                                                      ctx->dnnl_primitives,
-                                                                      ctx->dnnl_scratchpad_mds,
-                                                                      ctx->dnnl_workspaces,
-                                                                      vanilla_rnn_desc,
-                                                                      deps,
-                                                                      rnn_index);
+                                                                    ctx->dnnl_primitives,
+                                                                    ctx->dnnl_scratchpad_mds,
+                                                                    ctx->dnnl_workspaces,
+                                                                    vanilla_rnn_desc,
+                                                                    deps,
+                                                                    rnn_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[src_layer_buffer_index]);
@@ -110,12 +110,11 @@ namespace ngraph
                             ctx, deps[6], ctx->buffer_data[dst_iter_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[7], ctx->dnnl_workspaces[deps[8]]);
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            rnn_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::VANILLA_RNN,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               rnn_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::VANILLA_RNN,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -160,12 +159,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_rnn_forward(ctx->dnnl_memories,
-                                                              ctx->dnnl_primitives,
-                                                              ctx->dnnl_scratchpad_mds,
-                                                              ctx->dnnl_workspaces,
-                                                              rnn_desc,
-                                                              deps,
-                                                              rnn_index);
+                                                            ctx->dnnl_primitives,
+                                                            ctx->dnnl_scratchpad_mds,
+                                                            ctx->dnnl_workspaces,
+                                                            rnn_desc,
+                                                            deps,
+                                                            rnn_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[src_layer_buffer_index]);

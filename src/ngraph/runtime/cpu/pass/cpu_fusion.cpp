@@ -1068,8 +1068,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::ConvolutionBias>(
-                conv_m.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::ConvolutionBias>(conv_m.get()))
         {
             NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;

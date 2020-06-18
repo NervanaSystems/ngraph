@@ -19,9 +19,9 @@
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
-#include "ngraph/runtime/cpu/kernel/dot.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/dot.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -40,8 +40,7 @@ namespace ngraph
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::u8)
                     {
-                        throw ngraph_error(
-                            "Unsupported data types for QuantizedDot DNNL kernel.");
+                        throw ngraph_error("Unsupported data types for QuantizedDot DNNL kernel.");
                     }
                     auto& functors = external_function->get_functors();
                     auto arg0_buffer_index =
@@ -58,11 +57,11 @@ namespace ngraph
                     auto scales_size = shape_size(args[3].get_shape());
 
                     auto ip_desc =
-                        dnnl_emitter
-                            ->get_inner_product_forward_desc<ngraph::op::QuantizedDotBias>(node);
+                        dnnl_emitter->get_inner_product_forward_desc<ngraph::op::QuantizedDotBias>(
+                            node);
                     auto ip_attr =
-                        dnnl_emitter
-                            ->get_inner_product_forward_attr<ngraph::op::QuantizedDotBias>(node);
+                        dnnl_emitter->get_inner_product_forward_attr<ngraph::op::QuantizedDotBias>(
+                            node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD_2ARGS(ip_forward, ip_desc, ip_attr);
 
                     size_t ip_index = dnnl_emitter->inner_product_forward_init(true);

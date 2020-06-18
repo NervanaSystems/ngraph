@@ -24,8 +24,7 @@
 #include <unordered_map>
 
 #define CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(op_name)                                             \
-    construct_primitive_build_string<op_name>(ngraph::runtime::cpu::DNNLEmitter &                \
-                                                  dnnl_emitter,                                  \
+    construct_primitive_build_string<op_name>(ngraph::runtime::cpu::DNNLEmitter & dnnl_emitter,    \
                                               ngraph::Node * node,                                 \
                                               std::string & construct_string,                      \
                                               std::vector<size_t> & deps,                          \

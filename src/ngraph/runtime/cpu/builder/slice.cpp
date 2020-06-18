@@ -18,9 +18,9 @@
 
 #include "ngraph/op/slice.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/slice.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/slice.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -113,14 +113,14 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_slice(ctx->dnnl_memories,
-                                                        ctx->dnnl_primitives,
-                                                        ctx->dnnl_scratchpad_mds,
-                                                        input_desc,
-                                                        result_desc,
-                                                        lower_bounds,
-                                                        out_shape,
-                                                        deps,
-                                                        slice_index);
+                                                      ctx->dnnl_primitives,
+                                                      ctx->dnnl_scratchpad_mds,
+                                                      input_desc,
+                                                      result_desc,
+                                                      lower_bounds,
+                                                      out_shape,
+                                                      deps,
+                                                      slice_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
@@ -128,10 +128,10 @@ namespace ngraph
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                         cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
-                                                                   slice_index,
-                                                                   deps,
-                                                                   cpu::dnnl_utils::OpType::SLICE,
-                                                                   scratchpad_size);
+                                                               slice_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::SLICE,
+                                                               scratchpad_size);
                     };
 
                     functors.emplace_back(functor);

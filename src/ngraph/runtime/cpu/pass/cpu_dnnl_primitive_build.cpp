@@ -216,51 +216,51 @@ namespace ngraph
                     // We create the memory descriptors used by the user
                     auto src_layer_md =
                         dnnl_emitter.build_memory_descriptor(src_layer_tz,
-                                                               node->get_input_element_type(0),
-                                                               dnnl::memory::format_tag::tnc);
+                                                             node->get_input_element_type(0),
+                                                             dnnl::memory::format_tag::tnc);
                     auto src_iter_md =
                         dnnl_emitter.build_memory_descriptor(src_iter_tz,
-                                                               node->get_input_element_type(1),
-                                                               dnnl::memory::format_tag::ldnc);
+                                                             node->get_input_element_type(1),
+                                                             dnnl::memory::format_tag::ldnc);
                     auto src_iter_c_md =
                         dnnl_emitter.build_memory_descriptor(src_iter_c_tz,
-                                                               node->get_input_element_type(1),
-                                                               dnnl::memory::format_tag::ldnc);
+                                                             node->get_input_element_type(1),
+                                                             dnnl::memory::format_tag::ldnc);
                     auto wei_layer_md =
                         dnnl_emitter.build_memory_descriptor(wei_layer_tz,
-                                                               node->get_input_element_type(2),
-                                                               dnnl::memory::format_tag::ldigo);
+                                                             node->get_input_element_type(2),
+                                                             dnnl::memory::format_tag::ldigo);
                     auto wei_iter_md =
                         dnnl_emitter.build_memory_descriptor(wei_iter_tz,
-                                                               node->get_input_element_type(3),
-                                                               dnnl::memory::format_tag::ldigo);
+                                                             node->get_input_element_type(3),
+                                                             dnnl::memory::format_tag::ldigo);
                     auto bias_md = dnnl_emitter.build_memory_descriptor(
                         bias_tz, node->get_input_element_type(4), dnnl::memory::format_tag::ldgo);
                     auto dst_layer_md =
                         dnnl_emitter.build_memory_descriptor(dst_layer_tz,
-                                                               node->get_output_element_type(0),
-                                                               dnnl::memory::format_tag::tnc);
+                                                             node->get_output_element_type(0),
+                                                             dnnl::memory::format_tag::tnc);
                     auto dst_iter_md =
                         dnnl_emitter.build_memory_descriptor(dst_iter_tz,
-                                                               node->get_output_element_type(1),
-                                                               dnnl::memory::format_tag::ldnc);
+                                                             node->get_output_element_type(1),
+                                                             dnnl::memory::format_tag::ldnc);
                     auto dst_iter_c_md =
                         dnnl_emitter.build_memory_descriptor(dst_iter_c_tz,
-                                                               node->get_output_element_type(1),
-                                                               dnnl::memory::format_tag::ldnc);
+                                                             node->get_output_element_type(1),
+                                                             dnnl::memory::format_tag::ldnc);
 
                     // query scratchpad size
                     auto rnn_desc = dnnl::lstm_forward::desc(dnnl::prop_kind::forward_training,
-                                                               get_dnnl_rnn_direction(),
-                                                               src_layer_md,
-                                                               src_iter_md,
-                                                               src_iter_c_md,
-                                                               wei_layer_md,
-                                                               wei_iter_md,
-                                                               bias_md,
-                                                               dst_layer_md,
-                                                               dst_iter_md,
-                                                               dst_iter_c_md);
+                                                             get_dnnl_rnn_direction(),
+                                                             src_layer_md,
+                                                             src_iter_md,
+                                                             src_iter_c_md,
+                                                             wei_layer_md,
+                                                             wei_iter_md,
+                                                             bias_md,
+                                                             dst_layer_md,
+                                                             dst_iter_md,
+                                                             dst_iter_c_md);
                     scratchpad_size = dnnl_emitter.query_scratchpad_rnn_forward(rnn_desc);
 
                     // Lstm/Rnn needs 11 primitives: src_layer, src_iter, src_iter_c, weights_layer,
@@ -275,14 +275,14 @@ namespace ngraph
 
                     // Write memory descriptors to file
                     std::vector<dnnl::memory::desc> descs = {src_layer_md,
-                                                               src_iter_md,
-                                                               src_iter_c_md,
-                                                               wei_layer_md,
-                                                               wei_iter_md,
-                                                               bias_md,
-                                                               dst_layer_md,
-                                                               dst_iter_md,
-                                                               dst_iter_c_md};
+                                                             src_iter_md,
+                                                             src_iter_c_md,
+                                                             wei_layer_md,
+                                                             wei_iter_md,
+                                                             bias_md,
+                                                             dst_layer_md,
+                                                             dst_iter_md,
+                                                             dst_iter_c_md};
                     auto desc_index = dnnl_emitter.get_dnnl_descriptors_size();
                     dnnl_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
@@ -291,7 +291,7 @@ namespace ngraph
                     writer << "auto rnn_desc = "
                               "dnnl::lstm_forward::desc(dnnl::prop_kind::forward_training, "
                            << get_dnnl_rnn_direction_string() << ", "
-                                                                   "*cg_ctx->dnnl_descriptors["
+                                                                 "*cg_ctx->dnnl_descriptors["
                            << desc_index << "], "
                                             "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "], "
@@ -405,8 +405,8 @@ namespace ngraph
                     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 2);
                     auto weights_desc =
                         dnnl_emitter.build_memory_descriptor(weights_shape,
-                                                               node->get_input_element_type(0),
-                                                               dnnl::memory::format_tag::nc);
+                                                             node->get_input_element_type(0),
+                                                             dnnl::memory::format_tag::nc);
                     auto result_desc = dnnl_utils::get_output_dnnl_md(node, 0);
 
                     const float ops_scale = 1.f;
@@ -507,8 +507,8 @@ namespace ngraph
                 }
 
                 template <>
-                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    BatchNormTraining)
+                void
+                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(BatchNormTraining)
                 {
                     construct_primitive_build_string_batchnorm<BatchNormTraining>(
                         dnnl_emitter,
@@ -581,8 +581,8 @@ namespace ngraph
                         Shape{2, node->get_input_tensor(0).get_tensor_layout()->get_size()};
                     auto weights_desc =
                         dnnl_emitter.build_memory_descriptor(weights_shape,
-                                                               node->get_input_element_type(0),
-                                                               dnnl::memory::format_tag::nc);
+                                                             node->get_input_element_type(0),
+                                                             dnnl::memory::format_tag::nc);
                     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 2);
                     auto mean_desc = dnnl_utils::get_input_dnnl_md(node, 3);
                     auto variance_desc = dnnl_utils::get_input_dnnl_md(node, 4);
@@ -590,8 +590,8 @@ namespace ngraph
                     auto dinput_desc = dnnl_utils::get_output_dnnl_md(node, 0);
                     auto dweights_desc =
                         dnnl_emitter.build_memory_descriptor(weights_shape,
-                                                               node->get_input_element_type(0),
-                                                               dnnl::memory::format_tag::nc);
+                                                             node->get_input_element_type(0),
+                                                             dnnl::memory::format_tag::nc);
 
                     // query scratchpad size
                     auto batchnorm_desc = dnnl_emitter.get_batchnorm_backward_desc(node);
@@ -607,12 +607,12 @@ namespace ngraph
 
                     // Write memory descriptors to file
                     std::vector<dnnl::memory::desc> descs = {weights_desc,
-                                                               input_desc,
-                                                               mean_desc,
-                                                               variance_desc,
-                                                               delta_desc,
-                                                               dinput_desc,
-                                                               dweights_desc};
+                                                             input_desc,
+                                                             mean_desc,
+                                                             variance_desc,
+                                                             delta_desc,
+                                                             dinput_desc,
+                                                             dweights_desc};
                     auto desc_index = dnnl_emitter.get_dnnl_descriptors_size();
                     dnnl_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
@@ -879,8 +879,7 @@ namespace ngraph
                     CodeWriter writer;
 
                     writer << "// Write in memory descriptors\n";
-                    std::vector<dnnl::memory::desc> descs = {
-                        data_desc, weights_desc, result_desc};
+                    std::vector<dnnl::memory::desc> descs = {data_desc, weights_desc, result_desc};
 
                     if (dnnl_emitter.has_bias<OP>())
                     {
@@ -980,8 +979,7 @@ namespace ngraph
                 }
 
                 template <>
-                void
-                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionRelu)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionRelu)
                 {
                     construct_primitive_build_string_conv<ConvolutionRelu>(dnnl_emitter,
                                                                            node,
@@ -1007,8 +1005,7 @@ namespace ngraph
                 }
 
                 template <>
-                void
-                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionBias)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(ConvolutionBias)
                 {
                     construct_primitive_build_string_conv<ConvolutionBias>(dnnl_emitter,
                                                                            node,
@@ -1087,8 +1084,7 @@ namespace ngraph
                 }
 
                 template <>
-                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    GroupConvolution)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(GroupConvolution)
                 {
                     construct_primitive_build_string_conv<GroupConvolution>(dnnl_emitter,
                                                                             node,
@@ -1274,8 +1270,8 @@ namespace ngraph
                         ngraph::op::ConvolutionBackpropData>(node);
                     auto fwd_desc = dnnl_emitter.get_convolution_forward_desc_for_backward_op<
                         ngraph::op::ConvolutionBackpropData>(node);
-                    scratchpad_size = dnnl_emitter.query_scratchpad_convolution_backward_data(
-                        fwd_desc, bwd_desc);
+                    scratchpad_size =
+                        dnnl_emitter.query_scratchpad_convolution_backward_data(fwd_desc, bwd_desc);
 
                     Strides window_dilation_strides_adjusted;
                     for (size_t s : convolution->get_window_dilation_strides_forward())
@@ -1356,8 +1352,8 @@ namespace ngraph
                 }
 
                 template <>
-                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    DeconvolutionBias)
+                void
+                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(DeconvolutionBias)
                 {
                     auto dconv = static_cast<const DeconvolutionBias*>(node);
 
@@ -1471,10 +1467,8 @@ namespace ngraph
 
                     // query scratchpad size
                     auto max_pool_desc =
-                        dnnl_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
-                                                                                         false);
-                    scratchpad_size =
-                        dnnl_emitter.query_scratchpad_pooling_forward(max_pool_desc);
+                        dnnl_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPool>(node, false);
+                    scratchpad_size = dnnl_emitter.query_scratchpad_pooling_forward(max_pool_desc);
 
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
@@ -1537,10 +1531,8 @@ namespace ngraph
 
                     // query scratchpad size
                     auto avg_pool_desc =
-                        dnnl_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
-                                                                                         false);
-                    scratchpad_size =
-                        dnnl_emitter.query_scratchpad_pooling_forward(avg_pool_desc);
+                        dnnl_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node, false);
+                    scratchpad_size = dnnl_emitter.query_scratchpad_pooling_forward(avg_pool_desc);
 
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
@@ -1634,8 +1626,7 @@ namespace ngraph
                     // query scratchpad size
                     auto max_pool_desc = dnnl_emitter.get_max_pooling_with_indices_forward_desc<
                         ngraph::op::MaxPoolWithIndices>(node);
-                    scratchpad_size =
-                        dnnl_emitter.query_scratchpad_pooling_forward(max_pool_desc);
+                    scratchpad_size = dnnl_emitter.query_scratchpad_pooling_forward(max_pool_desc);
 
                     // MaxPoolWithIndices needs 4 primitives: input, result, workspace, and
                     // pooling_forward.
@@ -1682,8 +1673,7 @@ namespace ngraph
                 }
 
                 template <>
-                void
-                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPoolBackprop)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(AvgPoolBackprop)
                 {
                     auto diff_dst_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                     auto diff_src_desc = dnnl_utils::get_output_dnnl_md(node, 0);
@@ -1718,9 +1708,8 @@ namespace ngraph
                     dnnl_emitter.reserve_descriptor_space(descs.size());
                     serialize_memory_descs(desc_file, descs, deps[0]);
 
-                    writer
-                        << "auto fwd_desc = "
-                           "dnnl::pooling_forward::desc(dnnl::prop_kind::forward_training,\n";
+                    writer << "auto fwd_desc = "
+                              "dnnl::pooling_forward::desc(dnnl::prop_kind::forward_training,\n";
                     writer << algo_string << ",\n";
                     writer << "*cg_ctx->dnnl_descriptors[" << desc_index + 1
                            << "],\n"
@@ -1762,8 +1751,7 @@ namespace ngraph
                 }
 
                 template <>
-                void
-                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(MaxPoolBackprop)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(MaxPoolBackprop)
                 {
                     auto fprop_src_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                     auto diff_dst_desc = dnnl_utils::get_input_dnnl_md(node, 1);
@@ -1961,8 +1949,8 @@ namespace ngraph
                     bool input_format_is_nchw = dnnl_utils::dnnl_md_matches_format_tag(
                         input_desc.data, dnnl::memory::format_tag::nchw);
                     if (input_format_is_nchw &&
-                        dnnl_utils::dnnl_md_matches_format_tag(
-                            result_desc.data, dnnl::memory::format_tag::goihw))
+                        dnnl_utils::dnnl_md_matches_format_tag(result_desc.data,
+                                                               dnnl::memory::format_tag::goihw))
                     {
                         // becomes a copy
                         input_desc = result_desc;
@@ -2002,7 +1990,7 @@ namespace ngraph
                         }
                         input_desc = dnnl::memory::desc(
                             dnnl::memory::dims(weights_shape_groups.begin(),
-                                                 weights_shape_groups.end()),
+                                               weights_shape_groups.end()),
                             dnnl_utils::get_dnnl_data_type(node->get_input_element_type(0)),
                             dnnl::memory::format_tag::goihw);
                     }
@@ -2083,9 +2071,8 @@ namespace ngraph
                     writer << "attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);\n";
 
                     writer << "\n// create forward relu primitive descriptor\n";
-                    writer
-                        << "auto relu_fwd_pd = dnnl::eltwise_forward::primitive_desc(fwd_desc, "
-                           "cg_ctx->global_cpu_engine);\n";
+                    writer << "auto relu_fwd_pd = dnnl::eltwise_forward::primitive_desc(fwd_desc, "
+                              "cg_ctx->global_cpu_engine);\n";
 
                     writer << "\n// create backward relu primitive_descriptor\n";
                     writer << "auto relu_bwd_pd = "
@@ -2395,8 +2382,7 @@ namespace ngraph
                 }
 
                 template <>
-                void
-                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(SigmoidBackprop)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(SigmoidBackprop)
                 {
                     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                     auto delta_desc = dnnl_utils::get_input_dnnl_md(node, 1);
@@ -2630,8 +2616,7 @@ namespace ngraph
                     CodeWriter writer;
 
                     // Write memory descriptors to file
-                    std::vector<dnnl::memory::desc> descs = {
-                        data_desc, weights_desc, result_desc};
+                    std::vector<dnnl::memory::desc> descs = {data_desc, weights_desc, result_desc};
 
                     if (has_bias)
                     {
@@ -2691,8 +2676,7 @@ namespace ngraph
                 }
 
                 template <>
-                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
-                    QuantizedDotBias)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedDotBias)
                 {
                     construct_primitive_build_string_inner_product<QuantizedDotBias>(
                         dnnl_emitter,
@@ -2705,8 +2689,7 @@ namespace ngraph
                 }
 
                 template <>
-                void
-                    DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedMatmul)
+                void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(QuantizedMatmul)
                 {
                     construct_primitive_build_string_inner_product<QuantizedMatmul>(
                         dnnl_emitter,
@@ -2755,8 +2738,7 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBias>},
     {TI(ConvolutionBiasAdd),
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBiasAdd>},
-    {TI(ConvolutionAdd),
-     &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionAdd>},
+    {TI(ConvolutionAdd), &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionAdd>},
     {TI(GroupConvolution),
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<GroupConvolution>},
     {TI(GroupConvolutionBias),
@@ -2770,15 +2752,13 @@ static const PrimitiveBuildStringConstructOpMap prim_build_string_construct_disp
     {TI(QuantizedConvolutionBiasAdd),
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolutionBiasAdd>},
     {TI(QuantizedConvolutionBiasSignedAdd),
-     &DNNLPrimitiveBuildPass::construct_primitive_build_string<
-         QuantizedConvolutionBiasSignedAdd>},
+     &DNNLPrimitiveBuildPass::construct_primitive_build_string<QuantizedConvolutionBiasSignedAdd>},
     {TI(ConvolutionBackpropData),
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBackpropData>},
     {TI(ConvolutionBackpropFilters),
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBackpropFilters>},
     {TI(ConvolutionBiasBackpropFiltersBias),
-     &DNNLPrimitiveBuildPass::construct_primitive_build_string<
-         ConvolutionBiasBackpropFiltersBias>},
+     &DNNLPrimitiveBuildPass::construct_primitive_build_string<ConvolutionBiasBackpropFiltersBias>},
     {TI(DeconvolutionBias),
      &DNNLPrimitiveBuildPass::construct_primitive_build_string<DeconvolutionBias>},
     {TI(MaxPoolWithIndices),

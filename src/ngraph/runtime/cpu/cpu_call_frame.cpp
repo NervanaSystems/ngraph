@@ -216,8 +216,8 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
                 std::vector<dnnl::primitive*>(dnnl_emitter->get_dnnl_primitives().size());
             ctx->dnnl_memories =
                 std::vector<dnnl::memory*>(dnnl_emitter->get_dnnl_memories().size());
-            ctx->dnnl_scratchpad_mds = std::vector<dnnl::memory::desc*>(
-                dnnl_emitter->get_dnnl_scratchpad_mds().size());
+            ctx->dnnl_scratchpad_mds =
+                std::vector<dnnl::memory::desc*>(dnnl_emitter->get_dnnl_scratchpad_mds().size());
             if (scratchpad_size > 0)
             {
                 ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);

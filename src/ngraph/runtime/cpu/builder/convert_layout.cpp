@@ -47,16 +47,15 @@ namespace ngraph
 
                 bool input_format_is_nchw = dnnl_utils::dnnl_md_matches_format_tag(
                     input_desc.data, dnnl::memory::format_tag::nchw);
-                if (input_format_is_nchw &&
-                    dnnl_utils::dnnl_md_matches_format_tag(result_desc.data,
-                                                               dnnl::memory::format_tag::goihw))
+                if (input_format_is_nchw && dnnl_utils::dnnl_md_matches_format_tag(
+                                                result_desc.data, dnnl::memory::format_tag::goihw))
                 {
                     // becomes a copy
                     input_desc = result_desc;
                 }
                 else if ((input_format_is_nchw ||
-                          dnnl_utils::dnnl_md_matches_format_tag(
-                              input_desc.data, dnnl::memory::format_tag::nhwc)) &&
+                          dnnl_utils::dnnl_md_matches_format_tag(input_desc.data,
+                                                                 dnnl::memory::format_tag::nhwc)) &&
                          (dnnl_utils::dnnl_md_matches_format_tag(
                               result_desc.data, dnnl::memory::format_tag::OIhw4i16o4i) &&
                           // check if compensation is conv_s8s8(1U)
@@ -88,7 +87,7 @@ namespace ngraph
                     }
                     input_desc = dnnl::memory::desc(
                         dnnl::memory::dims(weights_shape_groups.begin(),
-                                             weights_shape_groups.end()),
+                                           weights_shape_groups.end()),
                         dnnl_utils::get_dnnl_data_type(args[0].get_element_type()),
                         dnnl::memory::format_tag::goihw);
                 }
@@ -109,24 +108,23 @@ namespace ngraph
                     if (ctx->first_iteration)
                     {
                         dnnl_emitter->build_reorder(ctx->dnnl_memories,
-                                                      ctx->dnnl_primitives,
-                                                      ctx->dnnl_scratchpad_mds,
-                                                      input_desc,
-                                                      result_desc,
-                                                      deps,
-                                                      reorder_index);
+                                                    ctx->dnnl_primitives,
+                                                    ctx->dnnl_scratchpad_mds,
+                                                    input_desc,
+                                                    result_desc,
+                                                    deps,
+                                                    reorder_index);
                     }
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                    cpu::dnnl_utils::dnnl_invoke_primitive(
-                        ctx,
-                        reorder_index,
-                        deps,
-                        cpu::dnnl_utils::OpType::CONVERTLAYOUT,
-                        scratchpad_size);
+                    cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                           reorder_index,
+                                                           deps,
+                                                           cpu::dnnl_utils::OpType::CONVERTLAYOUT,
+                                                           scratchpad_size);
                 };
                 functors.emplace_back(functor);
             }

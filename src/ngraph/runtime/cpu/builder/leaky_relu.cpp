@@ -16,9 +16,9 @@
 
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -60,23 +60,22 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_leaky_relu(ctx->dnnl_memories,
-                                                             ctx->dnnl_primitives,
-                                                             ctx->dnnl_scratchpad_mds,
-                                                             leaky_relu_desc,
-                                                             deps,
-                                                             leaky_relu_index);
+                                                           ctx->dnnl_primitives,
+                                                           ctx->dnnl_scratchpad_mds,
+                                                           leaky_relu_desc,
+                                                           deps,
+                                                           leaky_relu_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            leaky_relu_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::LEAKYRELU,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               leaky_relu_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::LEAKYRELU,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

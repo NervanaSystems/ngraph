@@ -16,9 +16,9 @@
 
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/sigmoid_multiply.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/sigmoid_multiply.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 using namespace std;
@@ -59,11 +59,11 @@ namespace ngraph
                     if (ctx->first_iteration)
                     {
                         dnnl_emitter->build_sigmoid_forward(ctx->dnnl_memories,
-                                                              ctx->dnnl_primitives,
-                                                              ctx->dnnl_scratchpad_mds,
-                                                              sigmoid_desc,
-                                                              deps,
-                                                              sigmoid_index);
+                                                            ctx->dnnl_primitives,
+                                                            ctx->dnnl_scratchpad_mds,
+                                                            sigmoid_desc,
+                                                            deps,
+                                                            sigmoid_index);
                     }
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -71,10 +71,10 @@ namespace ngraph
                         ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
                     cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
-                                                               sigmoid_index,
-                                                               deps,
-                                                               cpu::dnnl_utils::OpType::SIGMOID,
-                                                               scratchpad_size);
+                                                           sigmoid_index,
+                                                           deps,
+                                                           cpu::dnnl_utils::OpType::SIGMOID,
+                                                           scratchpad_size);
                 };
                 functors.emplace_back(functor);
             }
@@ -114,12 +114,12 @@ namespace ngraph
                     if (ctx->first_iteration)
                     {
                         dnnl_emitter->build_sigmoid_backward(ctx->dnnl_memories,
-                                                               ctx->dnnl_primitives,
-                                                               ctx->dnnl_scratchpad_mds,
-                                                               bwd_desc,
-                                                               fwd_desc,
-                                                               deps,
-                                                               sigmoid_index);
+                                                             ctx->dnnl_primitives,
+                                                             ctx->dnnl_scratchpad_mds,
+                                                             bwd_desc,
+                                                             fwd_desc,
+                                                             deps,
+                                                             sigmoid_index);
                     }
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -128,12 +128,11 @@ namespace ngraph
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
-                    cpu::dnnl_utils::dnnl_invoke_primitive(
-                        ctx,
-                        sigmoid_index,
-                        deps,
-                        cpu::dnnl_utils::OpType::SIGMOIDBACKPROP,
-                        scratchpad_size);
+                    cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                           sigmoid_index,
+                                                           deps,
+                                                           cpu::dnnl_utils::OpType::SIGMOIDBACKPROP,
+                                                           scratchpad_size);
                 };
                 functors.emplace_back(functor);
             }

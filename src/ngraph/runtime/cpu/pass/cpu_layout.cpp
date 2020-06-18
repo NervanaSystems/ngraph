@@ -193,8 +193,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
 
         if (cpu_tvl && cpu_tvl->is_dnnl_layout())
         {
-            auto native_md =
-                dnnl_utils::create_blocked_dnnl_md(shape, cpu_tvl->get_strides(), et);
+            auto native_md = dnnl_utils::create_blocked_dnnl_md(shape, cpu_tvl->get_strides(), et);
             if (!dnnl_utils::compare_dnnl_mds(cpu_tvl->get_dnnl_md(), native_md))
             {
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
@@ -255,8 +254,7 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
         if (dnnl_utils::can_create_dnnl_md(shape, layout->get_strides(), et))
         {
-            auto native_md =
-                dnnl_utils::create_blocked_dnnl_md(shape, layout->get_strides(), et);
+            auto native_md = dnnl_utils::create_blocked_dnnl_md(shape, layout->get_strides(), et);
             layout->set_dnnl_md(native_md);
         }
         tv->set_tensor_layout(layout);
@@ -289,7 +287,7 @@ void set_layouts_binaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* exter
                                std::shared_ptr<ngraph::Node> node)
 {
     std::vector<dnnl::memory::desc> arg_mds{dnnl_utils::get_input_dnnl_md(node.get(), 0),
-                                              dnnl_utils::get_input_dnnl_md(node.get(), 1)};
+                                            dnnl_utils::get_input_dnnl_md(node.get(), 1)};
     bool md_check;
     md_check = arg_mds[0].data.format_kind !=
                    static_cast<dnnl_format_kind_t>(dnnl::memory::format_kind::undef) &&
@@ -368,10 +366,9 @@ namespace ngraph
                     memory::dims dnnl_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims dnnl_arg1_shape(arg1_shape.begin(), arg1_shape.end());
                     memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
-                    memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                       filter_strides.end());
+                    memory::dims dnnl_filter_strides(filter_strides.begin(), filter_strides.end());
                     memory::dims dnnl_dilated_strides(window_dilation_strides_adjusted.begin(),
-                                                        window_dilation_strides_adjusted.end());
+                                                      window_dilation_strides_adjusted.end());
                     memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
                     const memory::desc input_data_desc(dnnl_arg0_shape, et, memory::FORMAT::any);
@@ -400,8 +397,7 @@ namespace ngraph
                             dnnl_utils::get_dnnl_data_type(node->get_input_element_type(2));
                         auto arg2_shape = node->get_input_shape(2);
                         memory::dims dnnl_arg2_shape(arg2_shape.begin(), arg2_shape.end());
-                        const memory::desc bias_desc(
-                            dnnl_arg2_shape, et_bias, memory::FORMAT::any);
+                        const memory::desc bias_desc(dnnl_arg2_shape, et_bias, memory::FORMAT::any);
                         try
                         {
                             fwd_desc.reset(
@@ -490,8 +486,7 @@ namespace ngraph
                             dnnl_utils::get_dnnl_data_type(node->get_input_element_type(2));
                         auto arg2_shape = node->get_input_shape(2);
                         memory::dims dnnl_arg2_shape(arg2_shape.begin(), arg2_shape.end());
-                        const memory::desc bias_desc(
-                            dnnl_arg2_shape, et_bias, memory::FORMAT::any);
+                        const memory::desc bias_desc(dnnl_arg2_shape, et_bias, memory::FORMAT::any);
                         try
                         {
                             fwd_desc.reset(new inner_product_forward::desc(prop_kind::forward,
@@ -881,20 +876,16 @@ namespace ngraph
                         memory::dims dnnl_arg2_shape(bias_shape.begin(), bias_shape.end());
                         memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
                         memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                           filter_strides.end());
-                        memory::dims dnnl_dilated_strides(
-                            window_dilation_strides_adjusted.begin(),
-                            window_dilation_strides_adjusted.end());
-                        memory::dims dnnl_padding_below(padding_below.begin(),
-                                                          padding_below.end());
-                        memory::dims dnnl_padding_above(padding_above.begin(),
-                                                          padding_above.end());
+                                                         filter_strides.end());
+                        memory::dims dnnl_dilated_strides(window_dilation_strides_adjusted.begin(),
+                                                          window_dilation_strides_adjusted.end());
+                        memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
+                        memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
                         const memory::desc weights_desc(dnnl_arg0_shape, et, memory::FORMAT::any);
                         const memory::desc delta_desc(dnnl_arg1_shape, et, memory::FORMAT::any);
                         const memory::desc bias_desc(dnnl_arg2_shape, et, memory::FORMAT::any);
-                        const memory::desc result_desc(
-                            dnnl_result_shape, et, memory::FORMAT::any);
+                        const memory::desc result_desc(dnnl_result_shape, et, memory::FORMAT::any);
 
                         deconvolution_forward::desc deconv_desc(prop_kind::forward_inference,
                                                                 algorithm::deconvolution_direct,
@@ -956,19 +947,15 @@ namespace ngraph
                         memory::dims dnnl_arg1_shape(arg1_shape.begin(), arg1_shape.end());
                         memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
                         memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                           filter_strides.end());
-                        memory::dims dnnl_dilated_strides(
-                            window_dilation_strides_adjusted.begin(),
-                            window_dilation_strides_adjusted.end());
-                        memory::dims dnnl_padding_below(padding_below.begin(),
-                                                          padding_below.end());
-                        memory::dims dnnl_padding_above(padding_above.begin(),
-                                                          padding_above.end());
+                                                         filter_strides.end());
+                        memory::dims dnnl_dilated_strides(window_dilation_strides_adjusted.begin(),
+                                                          window_dilation_strides_adjusted.end());
+                        memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
+                        memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
                         const memory::desc weights_desc(dnnl_arg0_shape, et, memory::FORMAT::any);
                         const memory::desc delta_desc(dnnl_arg1_shape, et, memory::FORMAT::any);
-                        const memory::desc result_desc(
-                            dnnl_result_shape, et, memory::FORMAT::any);
+                        const memory::desc result_desc(dnnl_result_shape, et, memory::FORMAT::any);
 
                         convolution_backward_data::desc bwd_desc(algorithm::convolution_direct,
                                                                  result_desc,
@@ -1035,10 +1022,9 @@ namespace ngraph
                     memory::dims dnnl_data_shape(data_shape.begin(), data_shape.end());
                     memory::dims dnnl_delta_shape(delta_shape.begin(), delta_shape.end());
                     memory::dims dnnl_filters_shape(filters_shape.begin(), filters_shape.end());
-                    memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                       filter_strides.end());
+                    memory::dims dnnl_filter_strides(filter_strides.begin(), filter_strides.end());
                     memory::dims dnnl_dilated_strides(window_dilation_strides_adjusted.begin(),
-                                                        window_dilation_strides_adjusted.end());
+                                                      window_dilation_strides_adjusted.end());
                     memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
@@ -1174,8 +1160,7 @@ namespace ngraph
                     memory::dims dnnl_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
                     memory::dims dnnl_filter_shape(filter_shape.begin(), filter_shape.end());
-                    memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                       filter_strides.end());
+                    memory::dims dnnl_filter_strides(filter_strides.begin(), filter_strides.end());
                     memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
@@ -1264,15 +1249,12 @@ namespace ngraph
                         memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
                         memory::dims dnnl_filter_shape(filter_shape.begin(), filter_shape.end());
                         memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                           filter_strides.end());
-                        memory::dims dnnl_padding_below(padding_below.begin(),
-                                                          padding_below.end());
-                        memory::dims dnnl_padding_above(padding_above.begin(),
-                                                          padding_above.end());
+                                                         filter_strides.end());
+                        memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
+                        memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
                         auto input_desc = dnnl_utils::get_input_dnnl_md(node.get(), 0);
-                        auto result_desc =
-                            memory::desc(dnnl_result_shape, et, memory::FORMAT::any);
+                        auto result_desc = memory::desc(dnnl_result_shape, et, memory::FORMAT::any);
 
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
@@ -1337,8 +1319,7 @@ namespace ngraph
                     memory::dims dnnl_arg0_shape(arg0_shape.begin(), arg0_shape.end());
                     memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
                     memory::dims dnnl_filter_shape(filter_shape.begin(), filter_shape.end());
-                    memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                       filter_strides.end());
+                    memory::dims dnnl_filter_strides(filter_strides.begin(), filter_strides.end());
                     memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
@@ -1562,8 +1543,7 @@ namespace ngraph
                     memory::dims dnnl_arg1_shape(arg1_shape.begin(), arg1_shape.end());
                     memory::dims dnnl_result_shape(result_shape.begin(), result_shape.end());
                     memory::dims dnnl_filter_shape(filter_shape.begin(), filter_shape.end());
-                    memory::dims dnnl_filter_strides(filter_strides.begin(),
-                                                       filter_strides.end());
+                    memory::dims dnnl_filter_strides(filter_strides.begin(), filter_strides.end());
                     memory::dims dnnl_padding_below(padding_below.begin(), padding_below.end());
                     memory::dims dnnl_padding_above(padding_above.begin(), padding_above.end());
 
@@ -1616,8 +1596,7 @@ namespace ngraph
                     }
                     catch (const dnnl::error& e)
                     {
-                        throw ngraph_error("DNNL Unsupported pooling layout" +
-                                           DNNL_ERROR_MESSAGE);
+                        throw ngraph_error("DNNL Unsupported pooling layout" + DNNL_ERROR_MESSAGE);
                     }
                 }
 
@@ -1792,8 +1771,8 @@ namespace ngraph
                         // Default: Convert to row-major if needed
                         if (can_be_rotated(reshape, input_md))
                         {
-                            auto output_md = dnnl_utils::rotate_blocked_md(
-                                input_md, reshape->get_input_order());
+                            auto output_md =
+                                dnnl_utils::rotate_blocked_md(input_md, reshape->get_input_order());
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
@@ -1808,8 +1787,7 @@ namespace ngraph
                         }
                         else if (can_be_expanded(reshape, input_md, expanded_axis))
                         {
-                            auto output_md =
-                                dnnl_utils::expand_blocked_md(input_md, expanded_axis);
+                            auto output_md = dnnl_utils::expand_blocked_md(input_md, expanded_axis);
                             set_output_layouts(node, {output_md});
                             skip_reshape = true;
                             skip_input_reorder = true;
@@ -1950,10 +1928,10 @@ namespace ngraph
                                      vector<memory::desc>& o_mds)
                 {
                     auto input_md = dnnl_utils::get_input_dnnl_md(node.get(), 2);
-                    auto arg0_md = dnnl_utils::create_default_dnnl_md(
-                        node.get(), 0, false, memory::FORMAT::x);
-                    auto arg1_md = dnnl_utils::create_default_dnnl_md(
-                        node.get(), 1, false, memory::FORMAT::x);
+                    auto arg0_md =
+                        dnnl_utils::create_default_dnnl_md(node.get(), 0, false, memory::FORMAT::x);
+                    auto arg1_md =
+                        dnnl_utils::create_default_dnnl_md(node.get(), 1, false, memory::FORMAT::x);
 
                     if (node->get_input_size() == 3)
                     {
@@ -2113,8 +2091,7 @@ namespace ngraph
 
                         auto input_md = dnnl_utils::get_input_dnnl_md(node.get(), 0);
                         // TODO Do we need more cases?
-                        dnnl::memory::format_tag result_format =
-                            dnnl::memory::format_tag::undef;
+                        dnnl::memory::format_tag result_format = dnnl::memory::format_tag::undef;
                         if (dnnl_utils::is_dnnl_desc_blocked_data_format(input_md))
                         {
                             set_native_layouts(external_function, node);

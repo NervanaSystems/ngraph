@@ -25,19 +25,18 @@
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 extern "C" void ngraph::runtime::cpu::dnnl_utils::set_memory_ptr(CPURuntimeContext* ctx,
-                                                                   size_t index,
-                                                                   void* ptr)
+                                                                 size_t index,
+                                                                 void* ptr)
 {
     auto memory = ctx->dnnl_memories[index];
     memory->set_data_handle(ptr);
 }
 
-extern "C" void
-    ngraph::runtime::cpu::dnnl_utils::dnnl_invoke_primitive(CPURuntimeContext* ctx,
-                                                                size_t primitive_index,
-                                                                std::vector<size_t>& deps,
-                                                                OpType type,
-                                                                size_t scratchpad_size)
+extern "C" void ngraph::runtime::cpu::dnnl_utils::dnnl_invoke_primitive(CPURuntimeContext* ctx,
+                                                                        size_t primitive_index,
+                                                                        std::vector<size_t>& deps,
+                                                                        OpType type,
+                                                                        size_t scratchpad_size)
 {
     std::unordered_map<int, dnnl::memory> exec_args;
     size_t nargs;
@@ -196,8 +195,8 @@ extern "C" void
     if (scratchpad_size)
     {
         dnnl::memory scratchpad(*ctx->dnnl_scratchpad_mds[primitive_index],
-                                  executor::global_cpu_engine,
-                                  ctx->scratchpad_buffer->get_ptr());
+                                executor::global_cpu_engine,
+                                ctx->scratchpad_buffer->get_ptr());
         exec_args.insert({DNNL_ARG_SCRATCHPAD, scratchpad});
     }
 

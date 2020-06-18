@@ -89,12 +89,11 @@ namespace ngraph
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            conv_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::CONVOLUTION,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               conv_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::CONVOLUTION,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -302,11 +301,11 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto conv_desc =
-                        dnnl_emitter
-                            ->get_convolution_forward_desc<ngraph::op::ConvolutionBiasAdd>(node);
+                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::ConvolutionBiasAdd>(
+                            node);
                     auto conv_attr =
-                        dnnl_emitter
-                            ->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(node);
+                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(
+                            node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -486,14 +485,13 @@ namespace ngraph
                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            dnnl_emitter->build_convolution_backward_data(
-                                ctx->dnnl_memories,
-                                ctx->dnnl_primitives,
-                                ctx->dnnl_scratchpad_mds,
-                                bwd_desc,
-                                fwd_desc,
-                                deps,
-                                conv_index);
+                            dnnl_emitter->build_convolution_backward_data(ctx->dnnl_memories,
+                                                                          ctx->dnnl_primitives,
+                                                                          ctx->dnnl_scratchpad_mds,
+                                                                          bwd_desc,
+                                                                          fwd_desc,
+                                                                          deps,
+                                                                          conv_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -932,14 +930,13 @@ namespace ngraph
                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            dnnl_emitter->build_deconvolutionbias_forward(
-                                ctx->dnnl_memories,
-                                ctx->dnnl_primitives,
-                                ctx->dnnl_scratchpad_mds,
-                                deconvbias_desc,
-                                deps,
-                                conv_index,
-                                weights_desc);
+                            dnnl_emitter->build_deconvolutionbias_forward(ctx->dnnl_memories,
+                                                                          ctx->dnnl_primitives,
+                                                                          ctx->dnnl_scratchpad_mds,
+                                                                          deconvbias_desc,
+                                                                          deps,
+                                                                          conv_index,
+                                                                          weights_desc);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);

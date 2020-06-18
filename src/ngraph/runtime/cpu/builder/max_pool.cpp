@@ -53,7 +53,7 @@ namespace ngraph
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto max_pool_desc =
                         dnnl_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
-                                                                                          false);
+                                                                                        false);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
 
                     // MaxPool needs 3 primitives: input, result, and pooling_forward.
@@ -70,23 +70,22 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_pooling_forward(ctx->dnnl_memories,
-                                                                  ctx->dnnl_primitives,
-                                                                  ctx->dnnl_scratchpad_mds,
-                                                                  max_pool_desc,
-                                                                  deps,
-                                                                  max_pool_index);
+                                                                ctx->dnnl_primitives,
+                                                                ctx->dnnl_scratchpad_mds,
+                                                                max_pool_desc,
+                                                                deps,
+                                                                max_pool_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            max_pool_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::MAXPOOL,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               max_pool_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::MAXPOOL,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -211,16 +210,16 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_max_pooling_backward(ctx->dnnl_memories,
-                                                                       ctx->dnnl_primitives,
-                                                                       ctx->dnnl_scratchpad_mds,
-                                                                       ctx->dnnl_workspaces,
-                                                                       bwd_pool_desc,
-                                                                       fwd_pool_desc,
-                                                                       fprop_src_desc,
-                                                                       fdeps,
-                                                                       bdeps,
-                                                                       fwd_pool_index,
-                                                                       bwd_pool_index);
+                                                                     ctx->dnnl_primitives,
+                                                                     ctx->dnnl_scratchpad_mds,
+                                                                     ctx->dnnl_workspaces,
+                                                                     bwd_pool_desc,
+                                                                     fwd_pool_desc,
+                                                                     fprop_src_desc,
+                                                                     fdeps,
+                                                                     bdeps,
+                                                                     fwd_pool_index,
+                                                                     bwd_pool_index);
                         }
                         functor_fprop(ctx, ectx);
                         functor_bprop(ctx, ectx);

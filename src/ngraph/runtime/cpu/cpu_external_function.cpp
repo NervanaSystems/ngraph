@@ -198,13 +198,13 @@
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_dnnl_primitive_build.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_dnnl_primitive_build.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -544,8 +544,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     writer +=
         R"(
 #include <cmath>
-#include <fstream>
 #include <dnnl.hpp>
+#include <fstream>
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"

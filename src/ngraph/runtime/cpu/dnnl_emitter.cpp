@@ -132,7 +132,7 @@ size_t DNNLEmitter::get_dnnl_descriptors_size()
 }
 
 size_t DNNLEmitter::insert_workspace(std::vector<char*>& dnnl_workspaces,
-                                       std::unique_ptr<DNNLWorkspace>& workspace)
+                                     std::unique_ptr<DNNLWorkspace>& workspace)
 {
     dnnl_workspaces.push_back(workspace.get()->buf);
     m_workspaces.push_back(std::move(workspace));
@@ -154,17 +154,16 @@ size_t DNNLEmitter::get_max_scratchpad_size() const
     return m_max_scratchpad_size;
 }
 
-dnnl::memory::desc
-    DNNLEmitter::build_blocked_memory_descriptor(const dnnl::memory::dims& dim,
-                                                   const dnnl::memory::dims& strides,
-                                                   dnnl::memory::data_type dtype) const
+dnnl::memory::desc DNNLEmitter::build_blocked_memory_descriptor(const dnnl::memory::dims& dim,
+                                                                const dnnl::memory::dims& strides,
+                                                                dnnl::memory::data_type dtype) const
 {
     return dnnl::memory::desc(dim, dtype, strides);
 }
 
 size_t DNNLEmitter::build_quantize_reorder(const dnnl::memory::desc& input_desc,
-                                             const dnnl::memory::desc& result_desc,
-                                             const std::vector<float>& scales)
+                                           const dnnl::memory::desc& result_desc,
+                                           const std::vector<float>& scales)
 {
     dnnl::primitive_attr attr;
     attr.set_output_scales(0, scales);
@@ -184,8 +183,8 @@ size_t DNNLEmitter::build_quantize_reorder(const dnnl::memory::desc& input_desc,
 }
 
 size_t DNNLEmitter::build_dequantization(const ngraph::Node* node,
-                                           const dnnl::memory::desc& input_desc,
-                                           const dnnl::memory::desc& result_desc)
+                                         const dnnl::memory::desc& input_desc,
+                                         const dnnl::memory::desc& result_desc)
 {
     auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
     auto scale_const_op = as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
@@ -202,7 +201,7 @@ size_t DNNLEmitter::build_dequantization(const ngraph::Node* node,
 }
 
 size_t DNNLEmitter::build_reorder(const dnnl::memory::desc& input_desc,
-                                    const dnnl::memory::desc& result_desc)
+                                  const dnnl::memory::desc& result_desc)
 {
     size_t input_index, result_index, primitive_index;
 
@@ -230,12 +229,12 @@ dnnl::lrn_forward::desc DNNLEmitter::get_lrn_forward_desc(const ngraph::Node* no
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
 
     return dnnl::lrn_forward::desc(dnnl::prop_kind::forward_scoring,
-                                     dnnl::algorithm::lrn_across_channels,
-                                     input_desc,
-                                     nsize,
-                                     alpha,
-                                     beta,
-                                     bias);
+                                   dnnl::algorithm::lrn_across_channels,
+                                   input_desc,
+                                   nsize,
+                                   alpha,
+                                   beta,
+                                   bias);
 }
 
 dnnl::eltwise_forward::desc DNNLEmitter::get_relu_forward_desc(const ngraph::Node* node)
@@ -259,7 +258,7 @@ dnnl::eltwise_backward::desc DNNLEmitter::get_relu_backward_desc(const ngraph::N
 }
 
 dnnl::eltwise_forward::desc DNNLEmitter::get_sigmoid_forward_desc(const ngraph::Node* node,
-                                                                      bool backward_op)
+                                                                  bool backward_op)
 {
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
 
@@ -270,11 +269,8 @@ dnnl::eltwise_forward::desc DNNLEmitter::get_sigmoid_forward_desc(const ngraph::
     }
     else
     {
-        return dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training,
-                                             dnnl::algorithm::eltwise_logistic,
-                                             input_desc,
-                                             0,
-                                             0);
+        return dnnl::eltwise_forward::desc(
+            dnnl::prop_kind::forward_training, dnnl::algorithm::eltwise_logistic, input_desc, 0, 0);
     }
 }
 
@@ -298,10 +294,10 @@ dnnl::batch_normalization_backward::desc
     auto delta_desc = dnnl_utils::get_input_dnnl_md(node, 5);
 
     return dnnl::batch_normalization_backward::desc(dnnl::prop_kind::backward,
-                                                      delta_desc,
-                                                      input_desc,
-                                                      eps,
-                                                      dnnl::BN_FLAG_CLASS::use_scale_shift);
+                                                    delta_desc,
+                                                    input_desc,
+                                                    eps,
+                                                    dnnl::BN_FLAG_CLASS::use_scale_shift);
 }
 
 dnnl::softmax_forward::desc DNNLEmitter::get_softmax_forward_desc(const ngraph::Node* node)
@@ -317,8 +313,7 @@ dnnl::softmax_forward::desc DNNLEmitter::get_softmax_forward_desc(const ngraph::
 
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
 
-    return dnnl::softmax_forward::desc(
-        dnnl::prop_kind::forward_scoring, input_desc, softmax_axis);
+    return dnnl::softmax_forward::desc(dnnl::prop_kind::forward_scoring, input_desc, softmax_axis);
 }
 
 dnnl::eltwise_forward::desc DNNLEmitter::get_leaky_relu_desc(const ngraph::Node* node)
@@ -327,11 +322,8 @@ dnnl::eltwise_forward::desc DNNLEmitter::get_leaky_relu_desc(const ngraph::Node*
 
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
 
-    return dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training,
-                                         dnnl::algorithm::eltwise_relu,
-                                         input_desc,
-                                         alpha,
-                                         0.0f);
+    return dnnl::eltwise_forward::desc(
+        dnnl::prop_kind::forward_training, dnnl::algorithm::eltwise_relu, input_desc, alpha, 0.0f);
 }
 
 dnnl::eltwise_forward::desc DNNLEmitter::get_bounded_relu_desc(const ngraph::Node* node)
@@ -341,21 +333,18 @@ dnnl::eltwise_forward::desc DNNLEmitter::get_bounded_relu_desc(const ngraph::Nod
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
 
     return dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training,
-                                         dnnl::algorithm::eltwise_bounded_relu,
-                                         input_desc,
-                                         alpha,
-                                         0.0f);
+                                       dnnl::algorithm::eltwise_bounded_relu,
+                                       input_desc,
+                                       alpha,
+                                       0.0f);
 }
 
 dnnl::eltwise_forward::desc DNNLEmitter::get_gelu_forward_desc(const ngraph::Node* node)
 {
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
 
-    return dnnl::eltwise_forward::desc(dnnl::prop_kind::forward_training,
-                                         dnnl::algorithm::eltwise_gelu,
-                                         input_desc,
-                                         1.0f,
-                                         0.0f);
+    return dnnl::eltwise_forward::desc(
+        dnnl::prop_kind::forward_training, dnnl::algorithm::eltwise_gelu, input_desc, 1.0f, 0.0f);
 }
 
 dnnl::eltwise_backward::desc DNNLEmitter::get_gelu_backward_desc(const ngraph::Node* node)
@@ -455,13 +444,12 @@ size_t DNNLEmitter::reserve_primitive_space(size_t count, bool fwd_bwd, bool new
     return m_dnnl_primitives.size() - 1;
 }
 
-size_t DNNLEmitter::build_quantized_inner_product_forward(
-    const dnnl::memory::desc& input_data_desc,
-    const dnnl::memory::desc& weights_desc,
-    const dnnl::memory::desc& bias_desc,
-    const dnnl::memory::desc& result_desc,
-    const float scale,
-    const dnnl::post_ops& pops)
+size_t DNNLEmitter::build_quantized_inner_product_forward(const dnnl::memory::desc& input_data_desc,
+                                                          const dnnl::memory::desc& weights_desc,
+                                                          const dnnl::memory::desc& bias_desc,
+                                                          const dnnl::memory::desc& result_desc,
+                                                          const float scale,
+                                                          const dnnl::post_ops& pops)
 {
     std::vector<float> output_scale;
     output_scale.push_back(scale);
@@ -480,24 +468,23 @@ size_t DNNLEmitter::build_quantized_inner_product_forward(
     // dnnl inner_product
     ip_index =
         insert_primitive(new dnnl::inner_product_forward({{
-                                                                dnnl::prop_kind::forward_scoring,
-                                                                input_data_desc,
-                                                                weights_desc,
-                                                                bias_desc,
-                                                                result_desc,
-                                                            },
-                                                            ip_attr,
-                                                            executor::global_cpu_engine}));
+                                                              dnnl::prop_kind::forward_scoring,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              bias_desc,
+                                                              result_desc,
+                                                          },
+                                                          ip_attr,
+                                                          executor::global_cpu_engine}));
     m_primitive_deps[ip_index] = {input_data_index, weights_index, bias_index, result_index};
     return ip_index;
 }
 
-size_t DNNLEmitter::build_quantized_inner_product_forward(
-    const dnnl::memory::desc& input_data_desc,
-    const dnnl::memory::desc& weights_desc,
-    const dnnl::memory::desc& result_desc,
-    const float scale,
-    const dnnl::post_ops& pops)
+size_t DNNLEmitter::build_quantized_inner_product_forward(const dnnl::memory::desc& input_data_desc,
+                                                          const dnnl::memory::desc& weights_desc,
+                                                          const dnnl::memory::desc& result_desc,
+                                                          const float scale,
+                                                          const dnnl::post_ops& pops)
 {
     std::vector<float> output_scale;
     output_scale.push_back(scale);
@@ -523,23 +510,20 @@ size_t DNNLEmitter::build_quantized_inner_product_forward(
     return ip_index;
 }
 
-dnnl::memory::desc
-    DNNLEmitter::build_memory_descriptor(const TensorWrapper& tvw,
-                                           dnnl::memory::format_tag fmt_tag) const
+dnnl::memory::desc DNNLEmitter::build_memory_descriptor(const TensorWrapper& tvw,
+                                                        dnnl::memory::format_tag fmt_tag) const
 {
-    return dnnl::memory::desc(
-        dnnl::memory::dims(tvw.get_shape().begin(), tvw.get_shape().end()),
-        dnnl_utils::get_dnnl_data_type(tvw.get_element_type()),
-        fmt_tag);
+    return dnnl::memory::desc(dnnl::memory::dims(tvw.get_shape().begin(), tvw.get_shape().end()),
+                              dnnl_utils::get_dnnl_data_type(tvw.get_element_type()),
+                              fmt_tag);
 }
 
 dnnl::memory::desc DNNLEmitter::build_memory_descriptor(const ngraph::Shape& shape,
-                                                            const ngraph::element::Type& et,
-                                                            dnnl::memory::format_tag fmt) const
+                                                        const ngraph::element::Type& et,
+                                                        dnnl::memory::format_tag fmt) const
 {
-    return dnnl::memory::desc(dnnl::memory::dims(shape.begin(), shape.end()),
-                                dnnl_utils::get_dnnl_data_type(et),
-                                fmt);
+    return dnnl::memory::desc(
+        dnnl::memory::dims(shape.begin(), shape.end()), dnnl_utils::get_dnnl_data_type(et), fmt);
 }
 
 size_t DNNLEmitter::build_memory(const dnnl::memory::desc& desc)
@@ -554,8 +538,8 @@ void DNNLEmitter::build_memory(const dnnl::memory::desc& desc, size_t index)
 }
 
 void DNNLEmitter::build_memory(std::vector<dnnl::memory*>& dnnl_memories,
-                                 const dnnl::memory::desc& desc,
-                                 size_t index)
+                               const dnnl::memory::desc& desc,
+                               size_t index)
 {
     dnnl_memories[index] = new dnnl::memory(desc, executor::global_cpu_engine, nullptr);
 }
@@ -578,16 +562,15 @@ dnnl::sum::primitive_desc DNNLEmitter::get_elementwise_add_desc(const ngraph::No
     return sum_pd;
 }
 
-void DNNLEmitter::build_quantize_reorder(
-    std::vector<dnnl::memory*>& dnnl_memories,
-    std::vector<dnnl::primitive*>& dnnl_primitives,
-    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-    const dnnl::memory::desc& input_desc,
-    const dnnl::memory::desc& result_desc,
-    const std::vector<float>& scales,
-    const std::vector<size_t>& deps,
-    size_t quantize_index,
-    const int mask)
+void DNNLEmitter::build_quantize_reorder(std::vector<dnnl::memory*>& dnnl_memories,
+                                         std::vector<dnnl::primitive*>& dnnl_primitives,
+                                         std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                         const dnnl::memory::desc& input_desc,
+                                         const dnnl::memory::desc& result_desc,
+                                         const std::vector<float>& scales,
+                                         const std::vector<size_t>& deps,
+                                         size_t quantize_index,
+                                         const int mask)
 {
     size_t input_index = deps[0];
     build_memory(dnnl_memories, input_desc, input_index);
@@ -616,8 +599,8 @@ void DNNLEmitter::build_deconvolutionbias_forward(
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
-    auto deconv_pd = dnnl::deconvolution_forward::primitive_desc(
-        deconv_desc, attr, executor::global_cpu_engine);
+    auto deconv_pd =
+        dnnl::deconvolution_forward::primitive_desc(deconv_desc, attr, executor::global_cpu_engine);
     dnnl_scratchpad_mds[deconv_index] = new dnnl::memory::desc(deconv_pd.scratchpad_desc());
 
     size_t weights_index = deps[0];
@@ -721,11 +704,11 @@ void DNNLEmitter::build_convolution_backward_data(
 }
 
 void DNNLEmitter::build_pooling_forward(std::vector<dnnl::memory*>& dnnl_memories,
-                                          std::vector<dnnl::primitive*>& dnnl_primitives,
-                                          std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                          const dnnl::pooling_forward::desc& pool_desc,
-                                          const std::vector<size_t>& deps,
-                                          size_t pool_index)
+                                        std::vector<dnnl::primitive*>& dnnl_primitives,
+                                        std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                        const dnnl::pooling_forward::desc& pool_desc,
+                                        const std::vector<size_t>& deps,
+                                        size_t pool_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -741,14 +724,13 @@ void DNNLEmitter::build_pooling_forward(std::vector<dnnl::memory*>& dnnl_memorie
     dnnl_primitives[pool_index] = new dnnl::pooling_forward(pool_pd);
 }
 
-void DNNLEmitter::build_pooling_backward(
-    std::vector<dnnl::memory*>& dnnl_memories,
-    std::vector<dnnl::primitive*>& dnnl_primitives,
-    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-    const dnnl::pooling_backward::desc& pool_desc,
-    const dnnl::pooling_forward::desc& pool_fwd_desc,
-    const std::vector<size_t>& deps,
-    size_t pool_index)
+void DNNLEmitter::build_pooling_backward(std::vector<dnnl::memory*>& dnnl_memories,
+                                         std::vector<dnnl::primitive*>& dnnl_primitives,
+                                         std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                         const dnnl::pooling_backward::desc& pool_desc,
+                                         const dnnl::pooling_forward::desc& pool_fwd_desc,
+                                         const std::vector<size_t>& deps,
+                                         size_t pool_index)
 {
     auto pool_fwd_pd =
         dnnl::pooling_forward::primitive_desc(pool_fwd_desc, executor::global_cpu_engine);
@@ -767,18 +749,17 @@ void DNNLEmitter::build_pooling_backward(
     dnnl_primitives[pool_index] = new dnnl::pooling_backward(pool_bwd_pd);
 }
 
-void DNNLEmitter::build_max_pooling_backward(
-    std::vector<dnnl::memory*>& dnnl_memories,
-    std::vector<dnnl::primitive*>& dnnl_primitives,
-    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-    std::vector<char*>& dnnl_workspaces,
-    const dnnl::pooling_backward::desc& bwd_pool_desc,
-    const dnnl::pooling_forward::desc& fwd_pool_desc,
-    const dnnl::memory::desc& fprop_src_desc,
-    std::vector<size_t>& fdeps,
-    std::vector<size_t>& bdeps,
-    size_t fwd_pool_index,
-    size_t bwd_pool_index)
+void DNNLEmitter::build_max_pooling_backward(std::vector<dnnl::memory*>& dnnl_memories,
+                                             std::vector<dnnl::primitive*>& dnnl_primitives,
+                                             std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                             std::vector<char*>& dnnl_workspaces,
+                                             const dnnl::pooling_backward::desc& bwd_pool_desc,
+                                             const dnnl::pooling_forward::desc& fwd_pool_desc,
+                                             const dnnl::memory::desc& fprop_src_desc,
+                                             std::vector<size_t>& fdeps,
+                                             std::vector<size_t>& bdeps,
+                                             size_t fwd_pool_index,
+                                             size_t bwd_pool_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -803,8 +784,8 @@ void DNNLEmitter::build_max_pooling_backward(
 
     // Allocate workspace
     // TODO (jbobba): Might need to align memory
-    auto ws = std::unique_ptr<DNNLWorkspace>(
-        new DNNLWorkspace(pool_fwd_pd.workspace_desc().get_size()));
+    auto ws =
+        std::unique_ptr<DNNLWorkspace>(new DNNLWorkspace(pool_fwd_pd.workspace_desc().get_size()));
     auto ws_buf_index = insert_workspace(dnnl_workspaces, ws);
     fdeps[3] = ws_buf_index;
     bdeps[3] = ws_buf_index;
@@ -869,12 +850,12 @@ void DNNLEmitter::build_max_pooling_with_indices_backward(
 }
 
 void DNNLEmitter::build_reorder(std::vector<dnnl::memory*>& dnnl_memories,
-                                  std::vector<dnnl::primitive*>& dnnl_primitives,
-                                  std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                  const dnnl::memory::desc& input_desc,
-                                  const dnnl::memory::desc& result_desc,
-                                  const std::vector<size_t>& deps,
-                                  size_t reorder_index)
+                                std::vector<dnnl::primitive*>& dnnl_primitives,
+                                std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                const dnnl::memory::desc& input_desc,
+                                const dnnl::memory::desc& result_desc,
+                                const std::vector<size_t>& deps,
+                                size_t reorder_index)
 {
     size_t input_index = deps[0];
     build_memory(dnnl_memories, input_desc, input_index);
@@ -890,11 +871,11 @@ void DNNLEmitter::build_reorder(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_lrn_forward(std::vector<dnnl::memory*>& dnnl_memories,
-                                      std::vector<dnnl::primitive*>& dnnl_primitives,
-                                      std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                      const dnnl::lrn_forward::desc& lrn_desc,
-                                      const std::vector<size_t>& deps,
-                                      size_t lrn_index)
+                                    std::vector<dnnl::primitive*>& dnnl_primitives,
+                                    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                    const dnnl::lrn_forward::desc& lrn_desc,
+                                    const std::vector<size_t>& deps,
+                                    size_t lrn_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -910,11 +891,11 @@ void DNNLEmitter::build_lrn_forward(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_relu_forward(std::vector<dnnl::memory*>& dnnl_memories,
-                                       std::vector<dnnl::primitive*>& dnnl_primitives,
-                                       std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                       const dnnl::eltwise_forward::desc& relu_desc,
-                                       const std::vector<size_t>& deps,
-                                       size_t relu_index)
+                                     std::vector<dnnl::primitive*>& dnnl_primitives,
+                                     std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                     const dnnl::eltwise_forward::desc& relu_desc,
+                                     const std::vector<size_t>& deps,
+                                     size_t relu_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -931,16 +912,15 @@ void DNNLEmitter::build_relu_forward(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_relu_backward(std::vector<dnnl::memory*>& dnnl_memories,
-                                        std::vector<dnnl::primitive*>& dnnl_primitives,
-                                        std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                        const dnnl::eltwise_backward::desc& bwd_desc,
-                                        const dnnl::eltwise_forward::desc& fwd_desc,
-                                        const std::vector<size_t>& deps,
-                                        size_t relu_index)
+                                      std::vector<dnnl::primitive*>& dnnl_primitives,
+                                      std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                      const dnnl::eltwise_backward::desc& bwd_desc,
+                                      const dnnl::eltwise_forward::desc& fwd_desc,
+                                      const std::vector<size_t>& deps,
+                                      size_t relu_index)
 {
     /* create forward relu primitive descriptor*/
-    auto relu_fwd_pd =
-        dnnl::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+    auto relu_fwd_pd = dnnl::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
     /* create backward relu primitive_descriptor */
     dnnl::primitive_attr attr;
@@ -960,11 +940,11 @@ void DNNLEmitter::build_relu_backward(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_sigmoid_forward(std::vector<dnnl::memory*>& dnnl_memories,
-                                          std::vector<dnnl::primitive*>& dnnl_primitives,
-                                          std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                          const dnnl::eltwise_forward::desc& sigmoid_desc,
-                                          const std::vector<size_t>& deps,
-                                          size_t sigmoid_index)
+                                        std::vector<dnnl::primitive*>& dnnl_primitives,
+                                        std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                        const dnnl::eltwise_forward::desc& sigmoid_desc,
+                                        const std::vector<size_t>& deps,
+                                        size_t sigmoid_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -980,14 +960,13 @@ void DNNLEmitter::build_sigmoid_forward(std::vector<dnnl::memory*>& dnnl_memorie
     dnnl_primitives[sigmoid_index] = new dnnl::eltwise_forward(sigmoid_pd);
 }
 
-void DNNLEmitter::build_sigmoid_backward(
-    std::vector<dnnl::memory*>& dnnl_memories,
-    std::vector<dnnl::primitive*>& dnnl_primitives,
-    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-    const dnnl::eltwise_backward::desc& bwd_desc,
-    const dnnl::eltwise_forward::desc& fwd_desc,
-    const std::vector<size_t>& deps,
-    size_t sigmoid_index)
+void DNNLEmitter::build_sigmoid_backward(std::vector<dnnl::memory*>& dnnl_memories,
+                                         std::vector<dnnl::primitive*>& dnnl_primitives,
+                                         std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                         const dnnl::eltwise_backward::desc& bwd_desc,
+                                         const dnnl::eltwise_forward::desc& fwd_desc,
+                                         const std::vector<size_t>& deps,
+                                         size_t sigmoid_index)
 {
     // sigmoid forward primitive desc
     auto sigmoid_fwd_pd =
@@ -997,8 +976,7 @@ void DNNLEmitter::build_sigmoid_backward(
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto sigmoid_bwd_pd = dnnl::eltwise_backward::primitive_desc(
         bwd_desc, attr, executor::global_cpu_engine, sigmoid_fwd_pd);
-    dnnl_scratchpad_mds[sigmoid_index] =
-        new dnnl::memory::desc(sigmoid_bwd_pd.scratchpad_desc());
+    dnnl_scratchpad_mds[sigmoid_index] = new dnnl::memory::desc(sigmoid_bwd_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(dnnl_memories, sigmoid_bwd_pd.src_desc(), input_index);
@@ -1011,11 +989,11 @@ void DNNLEmitter::build_sigmoid_backward(
 }
 
 void DNNLEmitter::build_elementwise_add(std::vector<dnnl::memory*>& dnnl_memories,
-                                          std::vector<dnnl::primitive*>& dnnl_primitives,
-                                          std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                          const dnnl::sum::primitive_desc& sum_pd,
-                                          const std::vector<size_t>& deps,
-                                          size_t add_index)
+                                        std::vector<dnnl::primitive*>& dnnl_primitives,
+                                        std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                        const dnnl::sum::primitive_desc& sum_pd,
+                                        const std::vector<size_t>& deps,
+                                        size_t add_index)
 {
     size_t input0_data_index = deps[0];
     build_memory(dnnl_memories, sum_pd.dst_desc(), input0_data_index);
@@ -1046,8 +1024,7 @@ void DNNLEmitter::build_batchnorm_forward(
     bn_attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto batchnorm_pd = dnnl::batch_normalization_forward::primitive_desc(
         batchnorm_desc, bn_attr, executor::global_cpu_engine);
-    dnnl_scratchpad_mds[batchnorm_index] =
-        new dnnl::memory::desc(batchnorm_pd.scratchpad_desc());
+    dnnl_scratchpad_mds[batchnorm_index] = new dnnl::memory::desc(batchnorm_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(dnnl_memories, batchnorm_pd.src_desc(), input_index);
@@ -1095,9 +1072,9 @@ void DNNLEmitter::build_batchnorm_backward(
 {
     auto batchnorm_fdesc =
         dnnl::batch_normalization_forward::desc(dnnl::prop_kind::forward_training,
-                                                  input_desc,
-                                                  epsilon,
-                                                  dnnl::BN_FLAG_CLASS::use_scale_shift);
+                                                input_desc,
+                                                epsilon,
+                                                dnnl::BN_FLAG_CLASS::use_scale_shift);
     auto batchnorm_fpd = dnnl::batch_normalization_forward::primitive_desc(
         batchnorm_fdesc, executor::global_cpu_engine);
 
@@ -1105,8 +1082,7 @@ void DNNLEmitter::build_batchnorm_backward(
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto batchnorm_pd = dnnl::batch_normalization_backward::primitive_desc(
         batchnorm_desc, attr, executor::global_cpu_engine, batchnorm_fpd);
-    dnnl_scratchpad_mds[batchnorm_index] =
-        new dnnl::memory::desc(batchnorm_pd.scratchpad_desc());
+    dnnl_scratchpad_mds[batchnorm_index] = new dnnl::memory::desc(batchnorm_pd.scratchpad_desc());
 
     size_t weights_index = deps[0];
     build_memory(dnnl_memories, weights_desc, weights_index);
@@ -1126,14 +1102,13 @@ void DNNLEmitter::build_batchnorm_backward(
     dnnl_primitives[batchnorm_index] = new dnnl::batch_normalization_backward(batchnorm_pd);
 }
 
-void DNNLEmitter::build_vanilla_rnn_forward(
-    std::vector<dnnl::memory*>& dnnl_memories,
-    std::vector<dnnl::primitive*>& dnnl_primitives,
-    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-    std::vector<char*>& dnnl_workspaces,
-    const dnnl::vanilla_rnn_forward::desc& rnn_desc,
-    std::vector<size_t>& deps,
-    size_t rnn_index)
+void DNNLEmitter::build_vanilla_rnn_forward(std::vector<dnnl::memory*>& dnnl_memories,
+                                            std::vector<dnnl::primitive*>& dnnl_primitives,
+                                            std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                            std::vector<char*>& dnnl_workspaces,
+                                            const dnnl::vanilla_rnn_forward::desc& rnn_desc,
+                                            std::vector<size_t>& deps,
+                                            size_t rnn_index)
 {
     size_t src_layer_index = deps[0];
     build_memory(dnnl_memories, rnn_desc.data.src_layer_desc, src_layer_index);
@@ -1155,8 +1130,7 @@ void DNNLEmitter::build_vanilla_rnn_forward(
 
     auto rnn_layer_prim_desc =
         dnnl::vanilla_rnn_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
-    dnnl_scratchpad_mds[rnn_index] =
-        new dnnl::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
+    dnnl_scratchpad_mds[rnn_index] = new dnnl::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
     size_t workspace_index = deps[7];
     build_memory(dnnl_memories, rnn_layer_prim_desc.workspace_desc(), workspace_index);
     auto workspace = std::unique_ptr<DNNLWorkspace>(
@@ -1168,12 +1142,12 @@ void DNNLEmitter::build_vanilla_rnn_forward(
 }
 
 void DNNLEmitter::build_rnn_forward(std::vector<dnnl::memory*>& dnnl_memories,
-                                      std::vector<dnnl::primitive*>& dnnl_primitives,
-                                      std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                      std::vector<char*>& dnnl_workspaces,
-                                      const dnnl::lstm_forward::desc& rnn_desc,
-                                      std::vector<size_t>& deps,
-                                      size_t rnn_index)
+                                    std::vector<dnnl::primitive*>& dnnl_primitives,
+                                    std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                    std::vector<char*>& dnnl_workspaces,
+                                    const dnnl::lstm_forward::desc& rnn_desc,
+                                    std::vector<size_t>& deps,
+                                    size_t rnn_index)
 {
     size_t src_layer_index = deps[0];
     build_memory(dnnl_memories, rnn_desc.data.src_layer_desc, src_layer_index);
@@ -1198,8 +1172,7 @@ void DNNLEmitter::build_rnn_forward(std::vector<dnnl::memory*>& dnnl_memories,
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto rnn_layer_prim_desc =
         dnnl::lstm_forward::primitive_desc(rnn_desc, attr, executor::global_cpu_engine);
-    dnnl_scratchpad_mds[rnn_index] =
-        new dnnl::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
+    dnnl_scratchpad_mds[rnn_index] = new dnnl::memory::desc(rnn_layer_prim_desc.scratchpad_desc());
 
     size_t workspace_index = deps[9];
     build_memory(dnnl_memories, rnn_layer_prim_desc.workspace_desc(), workspace_index);
@@ -1212,12 +1185,12 @@ void DNNLEmitter::build_rnn_forward(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_concat(std::vector<dnnl::memory*>& dnnl_memories,
-                                 std::vector<dnnl::primitive*>& dnnl_primitives,
-                                 std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                 const dnnl::concat::primitive_desc& concat_pd,
-                                 const std::vector<dnnl::memory::desc>& inputs_data_desc,
-                                 const std::vector<size_t>& deps,
-                                 size_t concat_index)
+                               std::vector<dnnl::primitive*>& dnnl_primitives,
+                               std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                               const dnnl::concat::primitive_desc& concat_pd,
+                               const std::vector<dnnl::memory::desc>& inputs_data_desc,
+                               const std::vector<size_t>& deps,
+                               size_t concat_index)
 {
     for (size_t i = 0; i < inputs_data_desc.size(); i++)
     {
@@ -1234,14 +1207,14 @@ void DNNLEmitter::build_concat(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_slice(std::vector<dnnl::memory*>& dnnl_memories,
-                                std::vector<dnnl::primitive*>& dnnl_primitives,
-                                std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                dnnl::memory::desc input_desc,
-                                const dnnl::memory::desc& result_desc,
-                                const ngraph::Coordinate& lower_bounds,
-                                const ngraph::Shape& result_shape,
-                                const std::vector<size_t>& deps,
-                                size_t slice_index)
+                              std::vector<dnnl::primitive*>& dnnl_primitives,
+                              std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                              dnnl::memory::desc input_desc,
+                              const dnnl::memory::desc& result_desc,
+                              const ngraph::Coordinate& lower_bounds,
+                              const ngraph::Shape& result_shape,
+                              const std::vector<size_t>& deps,
+                              size_t slice_index)
 {
     auto dims = dnnl::memory::dims(result_shape.begin(), result_shape.end());
     auto offsets = dnnl::memory::dims(lower_bounds.begin(), lower_bounds.end());
@@ -1263,11 +1236,11 @@ void DNNLEmitter::build_slice(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_softmax_forward(std::vector<dnnl::memory*>& dnnl_memories,
-                                          std::vector<dnnl::primitive*>& dnnl_primitives,
-                                          std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                          const dnnl::softmax_forward::desc& softmax_desc,
-                                          const std::vector<size_t>& deps,
-                                          size_t softmax_index)
+                                        std::vector<dnnl::primitive*>& dnnl_primitives,
+                                        std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                        const dnnl::softmax_forward::desc& softmax_desc,
+                                        const std::vector<size_t>& deps,
+                                        size_t softmax_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -1284,18 +1257,17 @@ void DNNLEmitter::build_softmax_forward(std::vector<dnnl::memory*>& dnnl_memorie
 }
 
 void DNNLEmitter::build_leaky_relu(std::vector<dnnl::memory*>& dnnl_memories,
-                                     std::vector<dnnl::primitive*>& dnnl_primitives,
-                                     std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                     const dnnl::eltwise_forward::desc& leaky_relu_desc,
-                                     const std::vector<size_t>& deps,
-                                     size_t leaky_relu_index)
+                                   std::vector<dnnl::primitive*>& dnnl_primitives,
+                                   std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                   const dnnl::eltwise_forward::desc& leaky_relu_desc,
+                                   const std::vector<size_t>& deps,
+                                   size_t leaky_relu_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto leaky_relu_pd =
         dnnl::eltwise_forward::primitive_desc(leaky_relu_desc, attr, executor::global_cpu_engine);
-    dnnl_scratchpad_mds[leaky_relu_index] =
-        new dnnl::memory::desc(leaky_relu_pd.scratchpad_desc());
+    dnnl_scratchpad_mds[leaky_relu_index] = new dnnl::memory::desc(leaky_relu_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(dnnl_memories, leaky_relu_pd.src_desc(), input_index);
@@ -1306,16 +1278,16 @@ void DNNLEmitter::build_leaky_relu(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_bounded_relu(std::vector<dnnl::memory*>& dnnl_memories,
-                                       std::vector<dnnl::primitive*>& dnnl_primitives,
-                                       std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                       const dnnl::eltwise_forward::desc& bounded_relu_desc,
-                                       const std::vector<size_t>& deps,
-                                       size_t bounded_relu_index)
+                                     std::vector<dnnl::primitive*>& dnnl_primitives,
+                                     std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                     const dnnl::eltwise_forward::desc& bounded_relu_desc,
+                                     const std::vector<size_t>& deps,
+                                     size_t bounded_relu_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
-    auto bounded_relu_pd = dnnl::eltwise_forward::primitive_desc(
-        bounded_relu_desc, attr, executor::global_cpu_engine);
+    auto bounded_relu_pd =
+        dnnl::eltwise_forward::primitive_desc(bounded_relu_desc, attr, executor::global_cpu_engine);
     dnnl_scratchpad_mds[bounded_relu_index] =
         new dnnl::memory::desc(bounded_relu_pd.scratchpad_desc());
 
@@ -1328,11 +1300,11 @@ void DNNLEmitter::build_bounded_relu(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_gelu(std::vector<dnnl::memory*>& dnnl_memories,
-                               std::vector<dnnl::primitive*>& dnnl_primitives,
-                               std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                               const dnnl::eltwise_forward::desc& gelu_desc,
-                               const std::vector<size_t>& deps,
-                               size_t gelu_index)
+                             std::vector<dnnl::primitive*>& dnnl_primitives,
+                             std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                             const dnnl::eltwise_forward::desc& gelu_desc,
+                             const std::vector<size_t>& deps,
+                             size_t gelu_index)
 {
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
@@ -1349,23 +1321,21 @@ void DNNLEmitter::build_gelu(std::vector<dnnl::memory*>& dnnl_memories,
 }
 
 void DNNLEmitter::build_gelu_backward(std::vector<dnnl::memory*>& dnnl_memories,
-                                        std::vector<dnnl::primitive*>& dnnl_primitives,
-                                        std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
-                                        const dnnl::eltwise_backward::desc& bwd_desc,
-                                        const dnnl::eltwise_forward::desc& fwd_desc,
-                                        const std::vector<size_t>& deps,
-                                        size_t gelu_bprop_index)
+                                      std::vector<dnnl::primitive*>& dnnl_primitives,
+                                      std::vector<dnnl::memory::desc*>& dnnl_scratchpad_mds,
+                                      const dnnl::eltwise_backward::desc& bwd_desc,
+                                      const dnnl::eltwise_forward::desc& fwd_desc,
+                                      const std::vector<size_t>& deps,
+                                      size_t gelu_bprop_index)
 {
     // gelu forward primitive desc
-    auto gelu_fwd_pd =
-        dnnl::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+    auto gelu_fwd_pd = dnnl::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
 
     dnnl::primitive_attr attr;
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto gelu_bwd_pd = dnnl::eltwise_backward::primitive_desc(
         bwd_desc, attr, executor::global_cpu_engine, gelu_fwd_pd);
-    dnnl_scratchpad_mds[gelu_bprop_index] =
-        new dnnl::memory::desc(gelu_bwd_pd.scratchpad_desc());
+    dnnl_scratchpad_mds[gelu_bprop_index] = new dnnl::memory::desc(gelu_bwd_pd.scratchpad_desc());
 
     size_t input_index = deps[0];
     build_memory(dnnl_memories, gelu_bwd_pd.src_desc(), input_index);
@@ -1400,24 +1370,26 @@ size_t DNNLEmitter::query_scratchpad_pooling_forward(const dnnl::pooling_forward
     GET_SIZE
 }
 
-size_t DNNLEmitter::query_scratchpad_avg_pooling_backward(
-    const dnnl::pooling_forward::desc& fwd_desc, const dnnl::pooling_backward::desc& bwd_desc)
+size_t
+    DNNLEmitter::query_scratchpad_avg_pooling_backward(const dnnl::pooling_forward::desc& fwd_desc,
+                                                       const dnnl::pooling_backward::desc& bwd_desc)
 {
     ATTR_S
     auto fwd_pd = dnnl::pooling_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
-    auto pd = dnnl::pooling_backward::primitive_desc(
-        bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
+    auto pd =
+        dnnl::pooling_backward::primitive_desc(bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
     GET_SIZE
 }
 
-size_t DNNLEmitter::query_scratchpad_max_pooling_backward(
-    const dnnl::pooling_forward::desc& fwd_desc, const dnnl::pooling_backward::desc& bwd_desc)
+size_t
+    DNNLEmitter::query_scratchpad_max_pooling_backward(const dnnl::pooling_forward::desc& fwd_desc,
+                                                       const dnnl::pooling_backward::desc& bwd_desc)
 {
     ATTR_S
     auto fwd_pd =
         dnnl::pooling_forward::primitive_desc(fwd_desc, attr, executor::global_cpu_engine);
-    auto pd = dnnl::pooling_backward::primitive_desc(
-        bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
+    auto pd =
+        dnnl::pooling_backward::primitive_desc(bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
     dnnl::memory::desc scratchpad_md = pd.scratchpad_desc();
     size_t size = scratchpad_md.get_size();
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;
@@ -1433,8 +1405,8 @@ size_t DNNLEmitter::query_scratchpad_max_pooling_with_indices_backward(
     ATTR_S
     auto fwd_pd =
         dnnl::pooling_forward::primitive_desc(fwd_desc, attr, executor::global_cpu_engine);
-    auto pd = dnnl::pooling_backward::primitive_desc(
-        bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
+    auto pd =
+        dnnl::pooling_backward::primitive_desc(bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
     GET_SIZE
 }
 
@@ -1443,8 +1415,8 @@ size_t DNNLEmitter::query_scratchpad_batchnorm_forward(
 {
     ATTR_S
     attr.set_post_ops(pops);
-    auto pd = dnnl::batch_normalization_forward::primitive_desc(
-        desc, attr, executor::global_cpu_engine);
+    auto pd =
+        dnnl::batch_normalization_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
     GET_SIZE
 }
 size_t DNNLEmitter::query_scratchpad_batchnorm_backward(
@@ -1453,11 +1425,10 @@ size_t DNNLEmitter::query_scratchpad_batchnorm_backward(
     float epsilon)
 {
     ATTR_S
-    auto fwd_desc =
-        dnnl::batch_normalization_forward::desc(dnnl::prop_kind::forward_training,
-                                                  input_desc,
-                                                  epsilon,
-                                                  dnnl::BN_FLAG_CLASS::use_scale_shift);
+    auto fwd_desc = dnnl::batch_normalization_forward::desc(dnnl::prop_kind::forward_training,
+                                                            input_desc,
+                                                            epsilon,
+                                                            dnnl::BN_FLAG_CLASS::use_scale_shift);
     auto fwd_pd =
         dnnl::batch_normalization_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
     auto pd = dnnl::batch_normalization_backward::primitive_desc(
@@ -1465,8 +1436,9 @@ size_t DNNLEmitter::query_scratchpad_batchnorm_backward(
     GET_SIZE
 }
 
-size_t DNNLEmitter::query_scratchpad_convolution_forward(
-    const dnnl::convolution_forward::desc& desc, dnnl::primitive_attr& attr)
+size_t
+    DNNLEmitter::query_scratchpad_convolution_forward(const dnnl::convolution_forward::desc& desc,
+                                                      dnnl::primitive_attr& attr)
 {
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
     auto pd = dnnl::convolution_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
@@ -1478,8 +1450,7 @@ size_t DNNLEmitter::query_scratchpad_convolution_backward_data(
     const dnnl::convolution_backward_data::desc& bwd_desc)
 {
     ATTR_S
-    auto fwd_pd =
-        dnnl::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+    auto fwd_pd = dnnl::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
     auto pd = dnnl::convolution_backward_data::primitive_desc(
         bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
     GET_SIZE
@@ -1490,8 +1461,7 @@ size_t DNNLEmitter::query_scratchpad_convolution_backward_weights(
     const dnnl::convolution_backward_weights::desc& bwd_desc)
 {
     ATTR_S
-    auto fwd_pd =
-        dnnl::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
+    auto fwd_pd = dnnl::convolution_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
     auto pd = dnnl::convolution_backward_weights::primitive_desc(
         bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
     GET_SIZE
@@ -1501,8 +1471,7 @@ size_t DNNLEmitter::query_scratchpad_deconvolution_forward(
     const dnnl::deconvolution_forward::desc& desc)
 {
     ATTR_S
-    auto pd =
-        dnnl::deconvolution_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
+    auto pd = dnnl::deconvolution_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
     GET_SIZE
 }
 
@@ -1513,28 +1482,26 @@ size_t DNNLEmitter::query_scratchpad_eltwise_forward(const dnnl::eltwise_forward
     GET_SIZE
 }
 
-size_t
-    DNNLEmitter::query_scratchpad_eltwise_backward(const dnnl::eltwise_forward::desc& fwd_desc,
-                                                     const dnnl::eltwise_backward::desc& bwd_desc)
+size_t DNNLEmitter::query_scratchpad_eltwise_backward(const dnnl::eltwise_forward::desc& fwd_desc,
+                                                      const dnnl::eltwise_backward::desc& bwd_desc)
 {
     ATTR_S
     auto fwd_pd = dnnl::eltwise_forward::primitive_desc(fwd_desc, executor::global_cpu_engine);
-    auto pd = dnnl::eltwise_backward::primitive_desc(
-        bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
+    auto pd =
+        dnnl::eltwise_backward::primitive_desc(bwd_desc, attr, executor::global_cpu_engine, fwd_pd);
     GET_SIZE
 }
 
 size_t DNNLEmitter::query_scratchpad_ip_forward(const dnnl::inner_product_forward::desc& desc,
-                                                  dnnl::primitive_attr& attr)
+                                                dnnl::primitive_attr& attr)
 {
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
-    auto pd =
-        dnnl::inner_product_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
+    auto pd = dnnl::inner_product_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
     GET_SIZE
 }
 
 size_t DNNLEmitter::query_scratchpad_reorder(const dnnl::memory::desc& input_desc,
-                                               const dnnl::memory::desc& result_desc)
+                                             const dnnl::memory::desc& result_desc)
 {
     ATTR_S
     auto pd = dnnl::reorder::primitive_desc(
@@ -1549,8 +1516,8 @@ size_t DNNLEmitter::query_scratchpad_rnn_forward(const dnnl::lstm_forward::desc&
     GET_SIZE
 }
 
-size_t DNNLEmitter::query_scratchpad_vanilla_rnn_forward(
-    const dnnl::vanilla_rnn_forward::desc& desc)
+size_t
+    DNNLEmitter::query_scratchpad_vanilla_rnn_forward(const dnnl::vanilla_rnn_forward::desc& desc)
 {
     ATTR_S
     auto pd = dnnl::vanilla_rnn_forward::primitive_desc(desc, attr, executor::global_cpu_engine);
@@ -1565,9 +1532,9 @@ size_t DNNLEmitter::query_scratchpad_lrn_forward(const dnnl::lrn_forward::desc& 
 }
 
 size_t DNNLEmitter::query_scratchpad_slice(dnnl::memory::desc& input_desc,
-                                             const dnnl::memory::desc& output_desc,
-                                             const ngraph::Coordinate& lower_bounds,
-                                             const ngraph::Shape& result_shape)
+                                           const dnnl::memory::desc& output_desc,
+                                           const ngraph::Coordinate& lower_bounds,
+                                           const ngraph::Shape& result_shape)
 {
     ATTR_S
     auto dims = dnnl::memory::dims(result_shape.begin(), result_shape.end());

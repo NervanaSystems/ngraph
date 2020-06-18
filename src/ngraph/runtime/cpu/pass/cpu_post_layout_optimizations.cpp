@@ -331,13 +331,12 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
 
     // build dnnl primitive and execute
     dnnl::memory in{input_desc,
-                      runtime::cpu::executor::global_cpu_engine,
-                      const_cast<void*>(input->get_data_ptr())};
+                    runtime::cpu::executor::global_cpu_engine,
+                    const_cast<void*>(input->get_data_ptr())};
     dnnl::memory out{result_desc, runtime::cpu::executor::global_cpu_engine, result_vec.data()};
     dnnl::reorder reorder{in, out};
 
-    std::unordered_map<int, dnnl::memory> exec_args = {{DNNL_ARG_SRC, in},
-                                                         {DNNL_ARG_DST, out}};
+    std::unordered_map<int, dnnl::memory> exec_args = {{DNNL_ARG_SRC, in}, {DNNL_ARG_DST, out}};
 
     dnnl::stream s(runtime::cpu::executor::global_cpu_engine);
     try

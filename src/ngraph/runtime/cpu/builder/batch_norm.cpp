@@ -19,9 +19,9 @@
 
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 
 using namespace std;
@@ -82,8 +82,7 @@ namespace ngraph
                     auto out2_buffer_index = external_function->get_buffer_index(out[2].get_name());
 
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
-                    auto batchnorm_desc =
-                        dnnl_emitter->get_batchnorm_forward_desc<OP>(node, true);
+                    auto batchnorm_desc = dnnl_emitter->get_batchnorm_forward_desc<OP>(node, true);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
@@ -115,14 +114,14 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_batchnorm_forward(ctx->dnnl_memories,
-                                                                    ctx->dnnl_primitives,
-                                                                    ctx->dnnl_scratchpad_mds,
-                                                                    batchnorm_desc,
-                                                                    weights_desc,
-                                                                    training,
-                                                                    deps,
-                                                                    batchnorm_index,
-                                                                    ops);
+                                                                  ctx->dnnl_primitives,
+                                                                  ctx->dnnl_scratchpad_mds,
+                                                                  batchnorm_desc,
+                                                                  weights_desc,
+                                                                  training,
+                                                                  deps,
+                                                                  batchnorm_index,
+                                                                  ops);
                         }
                         memcpy(stacked_weights.get(),
                                ctx->buffer_data[arg0_buffer_index],
@@ -158,8 +157,7 @@ namespace ngraph
                         external_function->get_buffer_index(args[4].get_name());
 
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
-                    auto batchnorm_desc =
-                        dnnl_emitter->get_batchnorm_forward_desc<OP>(node, false);
+                    auto batchnorm_desc = dnnl_emitter->get_batchnorm_forward_desc<OP>(node, false);
 
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
@@ -192,14 +190,14 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_batchnorm_forward(ctx->dnnl_memories,
-                                                                    ctx->dnnl_primitives,
-                                                                    ctx->dnnl_scratchpad_mds,
-                                                                    batchnorm_desc,
-                                                                    weights_desc,
-                                                                    training,
-                                                                    deps,
-                                                                    batchnorm_index,
-                                                                    ops);
+                                                                  ctx->dnnl_primitives,
+                                                                  ctx->dnnl_scratchpad_mds,
+                                                                  batchnorm_desc,
+                                                                  weights_desc,
+                                                                  training,
+                                                                  deps,
+                                                                  batchnorm_index,
+                                                                  ops);
                         }
                         memcpy(stacked_weights.get(),
                                ctx->buffer_data[arg0_buffer_index],
@@ -553,15 +551,15 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_batchnorm_backward(ctx->dnnl_memories,
-                                                                     ctx->dnnl_primitives,
-                                                                     ctx->dnnl_scratchpad_mds,
-                                                                     batchnorm_desc,
-                                                                     input_desc,
-                                                                     weights_desc,
-                                                                     dweights_desc,
-                                                                     eps,
-                                                                     deps,
-                                                                     batchnorm_index);
+                                                                   ctx->dnnl_primitives,
+                                                                   ctx->dnnl_scratchpad_mds,
+                                                                   batchnorm_desc,
+                                                                   input_desc,
+                                                                   weights_desc,
+                                                                   dweights_desc,
+                                                                   eps,
+                                                                   deps,
+                                                                   batchnorm_index);
                         }
                         memcpy(stacked_weights.get(),
                                ctx->buffer_data[arg0_buffer_index],

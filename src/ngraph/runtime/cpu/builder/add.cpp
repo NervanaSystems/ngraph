@@ -18,9 +18,9 @@
 
 #include "ngraph/op/add.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/add.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/add.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -63,11 +63,11 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_elementwise_add(ctx->dnnl_memories,
-                                                                  ctx->dnnl_primitives,
-                                                                  ctx->dnnl_scratchpad_mds,
-                                                                  sum_pd,
-                                                                  deps,
-                                                                  add_index);
+                                                                ctx->dnnl_primitives,
+                                                                ctx->dnnl_scratchpad_mds,
+                                                                sum_pd,
+                                                                deps,
+                                                                add_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);

@@ -89,13 +89,13 @@ namespace ngraph
                                     static_cast<float*>(ctx->buffer_data[arg1_buffer_index]) +
                                         scales_size);
                                 dnnl_emitter->build_quantize_reorder(ctx->dnnl_memories,
-                                                                       ctx->dnnl_primitives,
-                                                                       ctx->dnnl_scratchpad_mds,
-                                                                       input_desc,
-                                                                       result_desc,
-                                                                       dyn_scales,
-                                                                       deps,
-                                                                       dequantize_index);
+                                                                     ctx->dnnl_primitives,
+                                                                     ctx->dnnl_scratchpad_mds,
+                                                                     input_desc,
+                                                                     result_desc,
+                                                                     dyn_scales,
+                                                                     deps,
+                                                                     dequantize_index);
                             }
                             cpu::dnnl_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -131,13 +131,13 @@ namespace ngraph
                             if (ctx->first_iteration)
                             {
                                 dnnl_emitter->build_quantize_reorder(ctx->dnnl_memories,
-                                                                       ctx->dnnl_primitives,
-                                                                       ctx->dnnl_scratchpad_mds,
-                                                                       input_desc,
-                                                                       result_desc,
-                                                                       scales,
-                                                                       deps,
-                                                                       dequantize_index);
+                                                                     ctx->dnnl_primitives,
+                                                                     ctx->dnnl_scratchpad_mds,
+                                                                     input_desc,
+                                                                     result_desc,
+                                                                     scales,
+                                                                     deps,
+                                                                     dequantize_index);
                             }
                             cpu::dnnl_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -377,14 +377,14 @@ namespace ngraph
                                 // quantize across first dim (mask=2^0) if dyn_scales is a vector
                                 const int mask = scales_size == 1 ? 0 : 1;
                                 dnnl_emitter->build_quantize_reorder(ctx->dnnl_memories,
-                                                                       ctx->dnnl_primitives,
-                                                                       ctx->dnnl_scratchpad_mds,
-                                                                       input_desc,
-                                                                       result_desc,
-                                                                       dyn_scales,
-                                                                       deps,
-                                                                       quantize_index,
-                                                                       mask);
+                                                                     ctx->dnnl_primitives,
+                                                                     ctx->dnnl_scratchpad_mds,
+                                                                     input_desc,
+                                                                     result_desc,
+                                                                     dyn_scales,
+                                                                     deps,
+                                                                     quantize_index,
+                                                                     mask);
                             }
                             cpu::dnnl_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
@@ -420,13 +420,13 @@ namespace ngraph
                             if (ctx->first_iteration)
                             {
                                 dnnl_emitter->build_quantize_reorder(ctx->dnnl_memories,
-                                                                       ctx->dnnl_primitives,
-                                                                       ctx->dnnl_scratchpad_mds,
-                                                                       input_desc,
-                                                                       result_desc,
-                                                                       scales,
-                                                                       deps,
-                                                                       quantize_index);
+                                                                     ctx->dnnl_primitives,
+                                                                     ctx->dnnl_scratchpad_mds,
+                                                                     input_desc,
+                                                                     result_desc,
+                                                                     scales,
+                                                                     deps,
+                                                                     quantize_index);
                             }
                             cpu::dnnl_utils::set_memory_ptr(
                                 ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);

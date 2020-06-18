@@ -451,8 +451,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(
     if (!getenv_bool("NGRAPH_MLIR_CALLBACK")) {
       return false;
     }
-    return can_use_dnnl_conv_callback<ngraph::op::ConvolutionBias>(
-        node.get());
+    return can_use_dnnl_conv_callback<ngraph::op::ConvolutionBias>(node.get());
   }
 
   // DNNL only supports softmax across single axis

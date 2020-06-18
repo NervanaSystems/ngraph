@@ -18,9 +18,9 @@
 
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/reshape.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/reshape.hpp"
 
 using namespace std;
 using namespace ngraph;

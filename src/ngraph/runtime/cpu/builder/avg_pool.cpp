@@ -54,7 +54,7 @@ namespace ngraph
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto avg_pool_desc =
                         dnnl_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
-                                                                                          false);
+                                                                                        false);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(pooling_forward, avg_pool_desc);
 
                     // AvgPool needs 3 primitives: input, result, and pooling_forward.
@@ -71,23 +71,22 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_pooling_forward(ctx->dnnl_memories,
-                                                                  ctx->dnnl_primitives,
-                                                                  ctx->dnnl_scratchpad_mds,
-                                                                  avg_pool_desc,
-                                                                  deps,
-                                                                  avg_pool_index);
+                                                                ctx->dnnl_primitives,
+                                                                ctx->dnnl_scratchpad_mds,
+                                                                avg_pool_desc,
+                                                                deps,
+                                                                avg_pool_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            avg_pool_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::AVGPOOL,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               avg_pool_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::AVGPOOL,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -170,12 +169,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_pooling_backward(ctx->dnnl_memories,
-                                                                   ctx->dnnl_primitives,
-                                                                   ctx->dnnl_scratchpad_mds,
-                                                                   avg_pool_desc,
-                                                                   avg_pool_fwd_desc,
-                                                                   deps,
-                                                                   avg_pool_index);
+                                                                 ctx->dnnl_primitives,
+                                                                 ctx->dnnl_scratchpad_mds,
+                                                                 avg_pool_desc,
+                                                                 avg_pool_fwd_desc,
+                                                                 deps,
+                                                                 avg_pool_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[delta_buffer_index]);

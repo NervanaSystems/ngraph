@@ -94,12 +94,12 @@ namespace ngraph
                     if (ctx->first_iteration)
                     {
                         dnnl_emitter->build_rnn_forward(ctx->dnnl_memories,
-                                                          ctx->dnnl_primitives,
-                                                          ctx->dnnl_scratchpad_mds,
-                                                          ctx->dnnl_workspaces,
-                                                          lstm_desc,
-                                                          deps,
-                                                          lstm_index);
+                                                        ctx->dnnl_primitives,
+                                                        ctx->dnnl_scratchpad_mds,
+                                                        ctx->dnnl_workspaces,
+                                                        lstm_desc,
+                                                        deps,
+                                                        lstm_index);
                     }
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[src_layer_buffer_index]);
@@ -119,8 +119,7 @@ namespace ngraph
                         ctx, deps[7], ctx->buffer_data[dst_iter_buffer_index]);
                     cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[8], ctx->buffer_data[dst_iter_c_buffer_index]);
-                    cpu::dnnl_utils::set_memory_ptr(
-                        ctx, deps[9], ctx->dnnl_workspaces[deps[10]]);
+                    cpu::dnnl_utils::set_memory_ptr(ctx, deps[9], ctx->dnnl_workspaces[deps[10]]);
 
                     cpu::dnnl_utils::dnnl_invoke_primitive(
                         ctx, lstm_index, deps, cpu::dnnl_utils::OpType::LSTM, scratchpad_size);

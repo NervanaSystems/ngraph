@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
 #include <dnnl.hpp>
+#include <iostream>
 #include <vector>
 
 #include "gtest/gtest.h"

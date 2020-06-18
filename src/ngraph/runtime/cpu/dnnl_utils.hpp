@@ -48,11 +48,11 @@
     dnnl_emitter->query_scratchpad_##op_name(x, y, z, u)
 
 #define ATTR_S                                                                                     \
-    dnnl::primitive_attr attr;                                                                   \
+    dnnl::primitive_attr attr;                                                                     \
     attr.set_scratchpad_mode(dnnl::scratchpad_mode::user);
 
 #define GET_SIZE                                                                                   \
-    dnnl::memory::desc scratchpad_md = pd.scratchpad_desc();                                     \
+    dnnl::memory::desc scratchpad_md = pd.scratchpad_desc();                                       \
     size_t size = scratchpad_md.get_size();                                                        \
     m_max_scratchpad_size = size > m_max_scratchpad_size ? size : m_max_scratchpad_size;           \
     return size;
@@ -82,35 +82,34 @@ namespace ngraph
                 const dnnl::memory::desc& get_output_dnnl_md(const Node* node, size_t index);
 
                 dnnl::memory::desc create_default_dnnl_md(const Node* node,
-                                                              size_t index,
-                                                              bool is_output,
-                                                              dnnl::memory::FORMAT format);
+                                                          size_t index,
+                                                          bool is_output,
+                                                          dnnl::memory::FORMAT format);
                 bool is_perm_sorted(const Strides& a, const AxisVector& perm);
                 bool can_create_dnnl_md(const ngraph::element::Type type);
                 bool can_create_dnnl_md(const Shape& dims,
-                                          const Strides& strides,
-                                          const ngraph::element::Type type);
+                                        const Strides& strides,
+                                        const ngraph::element::Type type);
                 dnnl::memory::desc create_blocked_dnnl_md(const Shape& dims,
-                                                              const Strides& strides,
-                                                              const ngraph::element::Type type);
+                                                          const Strides& strides,
+                                                          const ngraph::element::Type type);
                 dnnl::memory::desc
                     create_blocked_dnnl_md_helper(const dnnl::memory::dims& dim,
-                                                    const Strides& strides,
-                                                    const dnnl::memory::dims& stride,
-                                                    const dnnl::memory::data_type dtype);
+                                                  const Strides& strides,
+                                                  const dnnl::memory::dims& stride,
+                                                  const dnnl::memory::data_type dtype);
                 dnnl::memory::desc try_get_named_md(const dnnl_memory_desc_t& md);
                 dnnl::memory::desc rotate_blocked_md(const dnnl::memory::desc& in,
-                                                       const AxisVector& axis_order);
+                                                     const AxisVector& axis_order);
                 dnnl::memory::desc squeeze_blocked_md(const dnnl::memory::desc& in,
-                                                        AxisVector& axis_list);
+                                                      AxisVector& axis_list);
                 dnnl::memory::desc expand_blocked_md(const dnnl::memory::desc& in,
-                                                       AxisVector& axis_list);
+                                                     AxisVector& axis_list);
 
                 bool compare_dnnl_formats(dnnl::memory::FORMAT lhs, dnnl::memory::FORMAT rhs);
-                bool compare_dnnl_mds(const dnnl::memory::desc& lhs,
-                                        const dnnl::memory::desc& rhs);
+                bool compare_dnnl_mds(const dnnl::memory::desc& lhs, const dnnl::memory::desc& rhs);
                 bool is_dnnl_padded_layout(const dnnl::memory::desc& in,
-                                             const AxisVector& axis_list);
+                                           const AxisVector& axis_list);
                 bool is_dnnl_filter_format(dnnl::memory::FORMAT fmt);
                 bool is_dnnl_blocked_data_format(dnnl::memory::FORMAT fmt);
                 bool can_use_dnnl_batchnorm_fprop(const ngraph::Node* node);
@@ -134,8 +133,7 @@ namespace ngraph
                 bool use_dnnl_kernel(const ngraph::Node* node);
                 void assign_dnnl_kernel(Node* node);
 
-                std::map<element::Type, const dnnl::memory::data_type>&
-                    get_dnnl_data_type_map();
+                std::map<element::Type, const dnnl::memory::data_type>& get_dnnl_data_type_map();
                 std::map<element::Type, const std::string>& get_dnnl_data_type_string_map();
                 std::map<dnnl::memory::FORMAT, const std::string>& get_dnnl_format_string_map();
                 std::set<dnnl::memory::FORMAT>& get_filter_formats();
@@ -209,20 +207,19 @@ namespace ngraph
 
                 std::map<dnnl::memory::format_kind, const std::string>&
                     get_dnnl_format_kind_string_map();
-                const std::string&
-                    get_dnnl_format_kind_string(dnnl::memory::format_kind fmt_kind);
-                bool inline compare_dnnl_dims(dnnl_dims_t& arr1,
-                                                dnnl_dims_t& arr2,
-                                                size_t size);
+                const std::string& get_dnnl_format_kind_string(dnnl::memory::format_kind fmt_kind);
+                bool inline compare_dnnl_dims(dnnl_dims_t& arr1, dnnl_dims_t& arr2, size_t size);
                 bool compare_dnnl_strides_order(dnnl_dims_t& stride1,
-                                                  dnnl_dims_t& stride2,
-                                                  size_t size);
+                                                dnnl_dims_t& stride2,
+                                                size_t size);
                 bool compare_dnnl_md_formats(const dnnl::memory::desc& lhs,
-                                               const dnnl::memory::desc& rhs);
+                                             const dnnl::memory::desc& rhs);
                 bool dnnl_md_matches_format_tag(const dnnl::memory::desc&,
-                                                  const dnnl::memory::format_tag&);
-                dnnl::memory::desc create_default_dnnl_md_with_strides(
-                    const Node* node, size_t index, dnnl::memory::dims& strides, bool is_output);
+                                                const dnnl::memory::format_tag&);
+                dnnl::memory::desc create_default_dnnl_md_with_strides(const Node* node,
+                                                                       size_t index,
+                                                                       dnnl::memory::dims& strides,
+                                                                       bool is_output);
                 bool is_dnnl_desc_blocked_data_format(const dnnl::memory::desc& desc);
             }
         }

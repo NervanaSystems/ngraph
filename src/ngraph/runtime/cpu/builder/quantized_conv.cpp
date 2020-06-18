@@ -20,9 +20,9 @@
 #include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
-#include "ngraph/runtime/cpu/kernel/convolution.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/convolution.hpp"
 
 using namespace std;
 using namespace ngraph;

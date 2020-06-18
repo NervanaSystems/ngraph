@@ -87,7 +87,7 @@ namespace ngraph
                         return false;
                     }
                     return runtime::cpu::dnnl_utils::compare_dnnl_mds(m_dnnl_md,
-                                                                          p_other->get_dnnl_md());
+                                                                      p_other->get_dnnl_md());
                 }
 
                 if (m_strides != p_other->m_strides)

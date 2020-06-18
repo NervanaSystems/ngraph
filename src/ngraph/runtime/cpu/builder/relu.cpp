@@ -57,22 +57,19 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_relu_forward(ctx->dnnl_memories,
-                                                               ctx->dnnl_primitives,
-                                                               ctx->dnnl_scratchpad_mds,
-                                                               relu_desc,
-                                                               deps,
-                                                               relu_index);
+                                                             ctx->dnnl_primitives,
+                                                             ctx->dnnl_scratchpad_mds,
+                                                             relu_desc,
+                                                             deps,
+                                                             relu_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
-                                                                   relu_index,
-                                                                   deps,
-                                                                   cpu::dnnl_utils::OpType::RELU,
-                                                                   scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
+                            ctx, relu_index, deps, cpu::dnnl_utils::OpType::RELU, scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }
@@ -116,12 +113,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_relu_backward(ctx->dnnl_memories,
-                                                                ctx->dnnl_primitives,
-                                                                ctx->dnnl_scratchpad_mds,
-                                                                bwd_desc,
-                                                                fwd_desc,
-                                                                deps,
-                                                                relu_index);
+                                                              ctx->dnnl_primitives,
+                                                              ctx->dnnl_scratchpad_mds,
+                                                              bwd_desc,
+                                                              fwd_desc,
+                                                              deps,
+                                                              relu_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_fwd_buffer_index]);

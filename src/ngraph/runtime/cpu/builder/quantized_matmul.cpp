@@ -18,9 +18,9 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
-#include "ngraph/runtime/cpu/kernel/dot.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/dot.hpp"
 
 using namespace std;
 using namespace ngraph;

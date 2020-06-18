@@ -94,8 +94,8 @@ static bool compareMkldnnMdFormats(const dnnl::memory::desc &lhs,
 }
 
 static dnnl::memory convertLayoutIfDiff(const dnnl::memory::desc &lhs,
-                                          const dnnl::memory::desc &rhs,
-                                          void *ptr, dnnl::engine cpuEngine) {
+                                        const dnnl::memory::desc &rhs,
+                                        void *ptr, dnnl::engine cpuEngine) {
   if (!compareMkldnnMdFormats(lhs, rhs)) {
     dnnl::memory reorderIn = {lhs, cpuEngine, ptr};
     dnnl::memory reorderOut = {rhs, cpuEngine};
@@ -121,8 +121,8 @@ static void convertOutputLayout(dnnl::memory &reorderIn,
                                 dnnl::engine cpuEngine) {
   dnnl::memory reorderOut = {rhs, cpuEngine, ptr};
   dnnl::reorder convert(reorderIn, reorderOut);
-  std::unordered_map<int, dnnl::memory> execArgs = {
-      {DNNL_ARG_SRC, reorderIn}, {DNNL_ARG_DST, reorderOut}};
+  std::unordered_map<int, dnnl::memory> execArgs = {{DNNL_ARG_SRC, reorderIn},
+                                                    {DNNL_ARG_DST, reorderOut}};
   dnnl::stream s(cpuEngine);
   try {
     convert.execute(s, execArgs);
@@ -143,10 +143,10 @@ static dnnl::algorithm getConvAlgo() {
 
 /// Callback for ConvBias
 static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
-                                   StaticMemRef *memRefWeights,
-                                   StaticMemRef *memRefBias,
-                                   StaticMemRef *memRefOutput,
-                                   opAttrs *attrsPtr) {
+                                 StaticMemRef *memRefWeights,
+                                 StaticMemRef *memRefBias,
+                                 StaticMemRef *memRefOutput,
+                                 opAttrs *attrsPtr) {
   dnnl::memory::dims dataDims(rank);
   dnnl::memory::dims dataStrides(rank);
   dnnl::memory::dims weightsDims(rank);
@@ -180,8 +180,7 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
       dnnl::memory::desc(biasDims, dtype, dnnl::memory::FORMAT::any);
   auto resultDesc =
       dnnl::memory::desc(resultDims, dtype, dnnl::memory::FORMAT::any);
-  auto resultDescOrigin =
-      dnnl::memory::desc(resultDims, dtype, resultStrides);
+  auto resultDescOrigin = dnnl::memory::desc(resultDims, dtype, resultStrides);
 
   dnnl::primitive_attr attr;
   dnnl::engine cpuEngine(dnnl::engine::kind::cpu, 0);
@@ -197,16 +196,15 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
     try {
       auto convDesc = dnnl::convolution_forward::desc(
           dnnl::prop_kind::forward_inference, alg, dataDesc, weightsDesc,
-          biasDesc, resultDesc,
-          dnnl::memory::dims{convAttrs.windowStrides[0]},
+          biasDesc, resultDesc, dnnl::memory::dims{convAttrs.windowStrides[0]},
           dnnl::memory::dims{convAttrs.windowDilation[0] - 1},
           dnnl::memory::dims{convAttrs.padBelow[0]},
           dnnl::memory::dims{convAttrs.padAbove[0]});
       if (convAttrs.withRelu) {
         attr.set_post_ops(ops);
       }
-      convPd = dnnl::convolution_forward::primitive_desc(convDesc, attr,
-                                                           cpuEngine);
+      convPd =
+          dnnl::convolution_forward::primitive_desc(convDesc, attr, cpuEngine);
     } catch (const dnnl::error &e) {
       throw ngraph_error("Could not create dnnl conv descriptor " +
                          std::string(e.message));
@@ -216,18 +214,17 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
     try {
       auto convDesc = dnnl::convolution_forward::desc(
           dnnl::prop_kind::forward_inference, alg, dataDesc, weightsDesc,
-          biasDesc, resultDesc,
-          dnnl::memory::dims{convAttrs.windowStrides[0],
-                               convAttrs.windowStrides[1]},
+          biasDesc, resultDesc, dnnl::memory::dims{convAttrs.windowStrides[0],
+                                                   convAttrs.windowStrides[1]},
           dnnl::memory::dims{convAttrs.windowDilation[0] - 1,
-                               convAttrs.windowDilation[1] - 1},
+                             convAttrs.windowDilation[1] - 1},
           dnnl::memory::dims{convAttrs.padBelow[0], convAttrs.padBelow[1]},
           dnnl::memory::dims{convAttrs.padAbove[0], convAttrs.padAbove[1]});
       if (convAttrs.withRelu) {
         attr.set_post_ops(ops);
       }
-      convPd = dnnl::convolution_forward::primitive_desc(convDesc, attr,
-                                                           cpuEngine);
+      convPd =
+          dnnl::convolution_forward::primitive_desc(convDesc, attr, cpuEngine);
     } catch (const dnnl::error &e) {
       throw ngraph_error("Could not create dnnl conv descriptor " +
                          std::string(e.message));
@@ -237,22 +234,21 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
     try {
       auto convDesc = dnnl::convolution_forward::desc(
           dnnl::prop_kind::forward_inference, alg, dataDesc, weightsDesc,
-          biasDesc, resultDesc,
-          dnnl::memory::dims{convAttrs.windowStrides[0],
-                               convAttrs.windowStrides[1],
-                               convAttrs.windowStrides[2]},
+          biasDesc, resultDesc, dnnl::memory::dims{convAttrs.windowStrides[0],
+                                                   convAttrs.windowStrides[1],
+                                                   convAttrs.windowStrides[2]},
           dnnl::memory::dims{convAttrs.windowDilation[0] - 1,
-                               convAttrs.windowDilation[1] - 1,
-                               convAttrs.windowDilation[2] - 1},
+                             convAttrs.windowDilation[1] - 1,
+                             convAttrs.windowDilation[2] - 1},
           dnnl::memory::dims{convAttrs.padBelow[0], convAttrs.padBelow[1],
-                               convAttrs.padBelow[2]},
+                             convAttrs.padBelow[2]},
           dnnl::memory::dims{convAttrs.padAbove[0], convAttrs.padAbove[1],
-                               convAttrs.padAbove[2]});
+                             convAttrs.padAbove[2]});
       if (convAttrs.withRelu) {
         attr.set_post_ops(ops);
       }
-      convPd = dnnl::convolution_forward::primitive_desc(convDesc, attr,
-                                                           cpuEngine);
+      convPd =
+          dnnl::convolution_forward::primitive_desc(convDesc, attr, cpuEngine);
     } catch (const dnnl::error &e) {
       throw ngraph_error("Could not create dnnl conv descriptor " +
                          std::string(e.message));
@@ -260,8 +256,8 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
   }
 
   dnnl::convolution_forward conv(convPd);
-  dnnl::memory data = convertLayoutIfDiff(
-      dataDescOrigin, convPd.src_desc(), memRefData->allocatedPtr, cpuEngine);
+  dnnl::memory data = convertLayoutIfDiff(dataDescOrigin, convPd.src_desc(),
+                                          memRefData->allocatedPtr, cpuEngine);
   dnnl::memory weights =
       convertLayoutIfDiff(weightsDescOrigin, convPd.weights_desc(),
                           memRefWeights->allocatedPtr, cpuEngine);
@@ -272,15 +268,14 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
     out = dnnl::memory(convPd.dst_desc(), cpuEngine);
     needConvert = true;
   } else {
-    out = dnnl::memory(convPd.dst_desc(), cpuEngine,
-                         memRefOutput->allocatedPtr);
+    out =
+        dnnl::memory(convPd.dst_desc(), cpuEngine, memRefOutput->allocatedPtr);
   }
 
-  std::unordered_map<int, dnnl::memory> execArgs = {
-      {DNNL_ARG_SRC, data},
-      {DNNL_ARG_WEIGHTS, weights},
-      {DNNL_ARG_BIAS, bias},
-      {DNNL_ARG_DST, out}};
+  std::unordered_map<int, dnnl::memory> execArgs = {{DNNL_ARG_SRC, data},
+                                                    {DNNL_ARG_WEIGHTS, weights},
+                                                    {DNNL_ARG_BIAS, bias},
+                                                    {DNNL_ARG_DST, out}};
 
   dnnl::stream s(cpuEngine);
   try {
@@ -299,9 +294,9 @@ static void __mlir_dnnl_convbias(size_t rank, StaticMemRef *memRefData,
 
 /// Callback for MaxPoolBackprop
 static void __mlir_dnnl_maxpoolbackprop(size_t rank, StaticMemRef *memRefSrc,
-                                          StaticMemRef *memRefDelta,
-                                          StaticMemRef *memRefOutput,
-                                          opAttrs *attrsPtr) {
+                                        StaticMemRef *memRefDelta,
+                                        StaticMemRef *memRefOutput,
+                                        opAttrs *attrsPtr) {
   dnnl::memory::dims srcDims(rank);
   dnnl::memory::dims srcStrides(rank);
   dnnl::memory::dims deltaDims(rank);
@@ -337,20 +332,18 @@ static void __mlir_dnnl_maxpoolbackprop(size_t rank, StaticMemRef *memRefSrc,
       auto maxpoolDescF = dnnl::pooling_forward::desc(
           dnnl::prop_kind::forward_training, dnnl::algorithm::pooling_max,
           diffSrcDesc, diffDstDesc,
-          dnnl::memory::dims{pAttrs.windowStrides[0],
-                               pAttrs.windowStrides[1]},
+          dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
       auto maxpoolDescB = dnnl::pooling_backward::desc(
           dnnl::algorithm::pooling_max, diffSrcDesc, diffDstDesc,
-          dnnl::memory::dims{pAttrs.windowStrides[0],
-                               pAttrs.windowStrides[1]},
+          dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-      maxpoolPdF = dnnl::pooling_forward::primitive_desc(maxpoolDescF, attr,
-                                                           cpuEngine);
+      maxpoolPdF =
+          dnnl::pooling_forward::primitive_desc(maxpoolDescF, attr, cpuEngine);
       maxpoolPdB = dnnl::pooling_backward::primitive_desc(
           maxpoolDescB, attr, cpuEngine, maxpoolPdF);
     } catch (const dnnl::error &e) {
@@ -364,25 +357,25 @@ static void __mlir_dnnl_maxpoolbackprop(size_t rank, StaticMemRef *memRefSrc,
           dnnl::prop_kind::forward_training, dnnl::algorithm::pooling_max,
           diffSrcDesc, diffDstDesc,
           dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1],
-                               pAttrs.windowStrides[2]},
+                             pAttrs.windowStrides[2]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1],
-                               pAttrs.windowShape[2]},
+                             pAttrs.windowShape[2]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1],
-                               pAttrs.padBelow[2]},
+                             pAttrs.padBelow[2]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1],
-                               pAttrs.padAbove[2]});
+                             pAttrs.padAbove[2]});
       auto maxpoolDescB = dnnl::pooling_backward::desc(
           dnnl::algorithm::pooling_max, diffSrcDesc, diffDstDesc,
           dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1],
-                               pAttrs.windowStrides[2]},
+                             pAttrs.windowStrides[2]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1],
-                               pAttrs.windowShape[2]},
+                             pAttrs.windowShape[2]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1],
-                               pAttrs.padBelow[2]},
+                             pAttrs.padBelow[2]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1],
-                               pAttrs.padAbove[2]});
-      maxpoolPdF = dnnl::pooling_forward::primitive_desc(maxpoolDescF, attr,
-                                                           cpuEngine);
+                             pAttrs.padAbove[2]});
+      maxpoolPdF =
+          dnnl::pooling_forward::primitive_desc(maxpoolDescF, attr, cpuEngine);
       maxpoolPdB = dnnl::pooling_backward::primitive_desc(
           maxpoolDescB, attr, cpuEngine, maxpoolPdF);
     } catch (const dnnl::error &e) {
@@ -409,7 +402,7 @@ static void __mlir_dnnl_maxpoolbackprop(size_t rank, StaticMemRef *memRefSrc,
     needConvert = true;
   } else {
     diffSrc = dnnl::memory(maxpoolPdB.diff_src_desc(), cpuEngine,
-                             memRefOutput->allocatedPtr);
+                           memRefOutput->allocatedPtr);
   }
 
   std::unordered_map<int, dnnl::memory> execArgsF = {
@@ -439,10 +432,9 @@ static void __mlir_dnnl_maxpoolbackprop(size_t rank, StaticMemRef *memRefSrc,
 }
 
 /// Callback for AvgPoolBackprop
-static void __mlir_dnnl_avgpoolbackprop(size_t rank,
-                                          StaticMemRef *memRefInput,
-                                          StaticMemRef *memRefOutput,
-                                          opAttrs *attrsPtr) {
+static void __mlir_dnnl_avgpoolbackprop(size_t rank, StaticMemRef *memRefInput,
+                                        StaticMemRef *memRefOutput,
+                                        opAttrs *attrsPtr) {
   dnnl::memory::dims dims(rank);
   dnnl::memory::dims strides(rank);
   dnnl::memory::dims outDims(rank);
@@ -474,8 +466,7 @@ static void __mlir_dnnl_avgpoolbackprop(size_t rank,
                ? dnnl::algorithm::pooling_avg_include_padding
                : dnnl::algorithm::pooling_avg_exclude_padding),
           diffSrcDesc, diffDstDesc,
-          dnnl::memory::dims{pAttrs.windowStrides[0],
-                               pAttrs.windowStrides[1]},
+          dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
@@ -484,13 +475,12 @@ static void __mlir_dnnl_avgpoolbackprop(size_t rank,
                ? dnnl::algorithm::pooling_avg_include_padding
                : dnnl::algorithm::pooling_avg_exclude_padding),
           diffSrcDesc, diffDstDesc,
-          dnnl::memory::dims{pAttrs.windowStrides[0],
-                               pAttrs.windowStrides[1]},
+          dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-      auto avgpoolPdF = dnnl::pooling_forward::primitive_desc(
-          avgpoolDescF, attr, cpuEngine);
+      auto avgpoolPdF =
+          dnnl::pooling_forward::primitive_desc(avgpoolDescF, attr, cpuEngine);
       avgpoolPdB = dnnl::pooling_backward::primitive_desc(
           avgpoolDescB, attr, cpuEngine, avgpoolPdF);
     } catch (const dnnl::error &e) {
@@ -507,28 +497,28 @@ static void __mlir_dnnl_avgpoolbackprop(size_t rank,
                : dnnl::algorithm::pooling_avg_exclude_padding),
           diffSrcDesc, diffDstDesc,
           dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1],
-                               pAttrs.windowStrides[2]},
+                             pAttrs.windowStrides[2]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1],
-                               pAttrs.windowShape[2]},
+                             pAttrs.windowShape[2]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1],
-                               pAttrs.padBelow[2]},
+                             pAttrs.padBelow[2]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1],
-                               pAttrs.padAbove[2]});
+                             pAttrs.padAbove[2]});
       auto avgpoolDescB = dnnl::pooling_backward::desc(
           (pAttrs.includePaddingInAvgComputation
                ? dnnl::algorithm::pooling_avg_include_padding
                : dnnl::algorithm::pooling_avg_exclude_padding),
           diffSrcDesc, diffDstDesc,
           dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1],
-                               pAttrs.windowStrides[2]},
+                             pAttrs.windowStrides[2]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1],
-                               pAttrs.windowShape[2]},
+                             pAttrs.windowShape[2]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1],
-                               pAttrs.padBelow[2]},
+                             pAttrs.padBelow[2]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1],
-                               pAttrs.padAbove[2]});
-      auto avgpoolPdF = dnnl::pooling_forward::primitive_desc(
-          avgpoolDescF, attr, cpuEngine);
+                             pAttrs.padAbove[2]});
+      auto avgpoolPdF =
+          dnnl::pooling_forward::primitive_desc(avgpoolDescF, attr, cpuEngine);
       avgpoolPdB = dnnl::pooling_backward::primitive_desc(
           avgpoolDescB, attr, cpuEngine, avgpoolPdF);
     } catch (const dnnl::error &e) {
@@ -548,10 +538,10 @@ static void __mlir_dnnl_avgpoolbackprop(size_t rank,
     needConvert = true;
   } else {
     out = dnnl::memory(avgpoolPdB.diff_src_desc(), cpuEngine,
-                         memRefOutput->allocatedPtr);
+                       memRefOutput->allocatedPtr);
   }
-  std::unordered_map<int, dnnl::memory> execArgs = {
-      {DNNL_ARG_DIFF_DST, in}, {DNNL_ARG_DIFF_SRC, out}};
+  std::unordered_map<int, dnnl::memory> execArgs = {{DNNL_ARG_DIFF_DST, in},
+                                                    {DNNL_ARG_DIFF_SRC, out}};
 
   dnnl::stream s(cpuEngine);
   try {
@@ -570,8 +560,8 @@ static void __mlir_dnnl_avgpoolbackprop(size_t rank,
 
 /// Callback for AvgPool and MaxPool
 static void __mlir_dnnl_pooling(size_t rank, StaticMemRef *memRefInput,
-                                  StaticMemRef *memRefOutput, opAttrs *attrsPtr,
-                                  OpType type) {
+                                StaticMemRef *memRefOutput, opAttrs *attrsPtr,
+                                OpType type) {
   dnnl::memory::dims dims(rank);
   dnnl::memory::dims strides(rank);
   dnnl::memory::dims outDims(rank);
@@ -605,13 +595,11 @@ static void __mlir_dnnl_pooling(size_t rank, StaticMemRef *memRefInput,
     try {
       auto poolDesc = dnnl::pooling_forward::desc(
           dnnl::prop_kind::forward_inference, alg, inputDesc, resultDesc,
-          dnnl::memory::dims{pAttrs.windowStrides[0],
-                               pAttrs.windowStrides[1]},
+          dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1]});
-      poolPd =
-          dnnl::pooling_forward::primitive_desc(poolDesc, attr, cpuEngine);
+      poolPd = dnnl::pooling_forward::primitive_desc(poolDesc, attr, cpuEngine);
     } catch (const dnnl::error &e) {
       throw ngraph_error("Could not create dnnl pooling descriptor " +
                          std::string(e.message));
@@ -628,15 +616,14 @@ static void __mlir_dnnl_pooling(size_t rank, StaticMemRef *memRefInput,
       auto poolDesc = dnnl::pooling_forward::desc(
           dnnl::prop_kind::forward_inference, alg, inputDesc, resultDesc,
           dnnl::memory::dims{pAttrs.windowStrides[0], pAttrs.windowStrides[1],
-                               pAttrs.windowStrides[2]},
+                             pAttrs.windowStrides[2]},
           dnnl::memory::dims{pAttrs.windowShape[0], pAttrs.windowShape[1],
-                               pAttrs.windowShape[2]},
+                             pAttrs.windowShape[2]},
           dnnl::memory::dims{pAttrs.padBelow[0], pAttrs.padBelow[1],
-                               pAttrs.padBelow[2]},
+                             pAttrs.padBelow[2]},
           dnnl::memory::dims{pAttrs.padAbove[0], pAttrs.padAbove[1],
-                               pAttrs.padAbove[2]});
-      poolPd =
-          dnnl::pooling_forward::primitive_desc(poolDesc, attr, cpuEngine);
+                             pAttrs.padAbove[2]});
+      poolPd = dnnl::pooling_forward::primitive_desc(poolDesc, attr, cpuEngine);
     } catch (const dnnl::error &e) {
       throw ngraph_error("Could not create dnnl pooing descriptor " +
                          std::string(e.message));
@@ -645,18 +632,18 @@ static void __mlir_dnnl_pooling(size_t rank, StaticMemRef *memRefInput,
 
   dnnl::pooling_forward pool(poolPd);
   dnnl::memory in = convertLayoutIfDiff(inputDescOrigin, poolPd.src_desc(),
-                                          memRefInput->allocatedPtr, cpuEngine);
+                                        memRefInput->allocatedPtr, cpuEngine);
   dnnl::memory out;
   bool needConvert = false;
   if (!compareMkldnnMdFormats(resultDescOrigin, poolPd.dst_desc())) {
     out = dnnl::memory(poolPd.dst_desc(), cpuEngine);
     needConvert = true;
   } else {
-    out = dnnl::memory(poolPd.dst_desc(), cpuEngine,
-                         memRefOutput->allocatedPtr);
+    out =
+        dnnl::memory(poolPd.dst_desc(), cpuEngine, memRefOutput->allocatedPtr);
   }
   std::unordered_map<int, dnnl::memory> execArgs = {{DNNL_ARG_SRC, in},
-                                                      {DNNL_ARG_DST, out}};
+                                                    {DNNL_ARG_DST, out}};
 
   dnnl::stream s(cpuEngine);
   try {
@@ -675,8 +662,7 @@ static void __mlir_dnnl_pooling(size_t rank, StaticMemRef *memRefInput,
 
 /// Callback for Softmax
 static void __mlir_dnnl_softmax(size_t rank, StaticMemRef *memRefInput,
-                                  StaticMemRef *memRefOutput,
-                                  opAttrs *attrsPtr) {
+                                StaticMemRef *memRefOutput, opAttrs *attrsPtr) {
   dnnl::memory::dims dims(rank);
   dnnl::memory::dims strides(rank);
   for (auto i = 0; i < rank; i++) {
@@ -703,11 +689,10 @@ static void __mlir_dnnl_softmax(size_t rank, StaticMemRef *memRefInput,
   dnnl::softmax_forward softmax(softmaxPd);
 
   dnnl::memory in{softmaxPd.src_desc(), cpuEngine, memRefInput->allocatedPtr};
-  dnnl::memory out{softmaxPd.dst_desc(), cpuEngine,
-                     memRefOutput->allocatedPtr};
+  dnnl::memory out{softmaxPd.dst_desc(), cpuEngine, memRefOutput->allocatedPtr};
 
   std::unordered_map<int, dnnl::memory> execArgs = {{DNNL_ARG_SRC, in},
-                                                      {DNNL_ARG_DST, out}};
+                                                    {DNNL_ARG_DST, out}};
 
   dnnl::stream s(cpuEngine);
   try {
@@ -813,9 +798,9 @@ extern "C" void _mlir_ciface_callback_1_input(void *input, void *output,
         unrankedMemRefOutput->memRefDescPtr, static_cast<opAttrs *>(attrsPtr));
   } else if (type == OpType::AVGPOOL || type == OpType::MAXPOOL) {
     __mlir_dnnl_pooling(unrankedMemRefInput->rank,
-                          unrankedMemRefInput->memRefDescPtr,
-                          unrankedMemRefOutput->memRefDescPtr,
-                          static_cast<opAttrs *>(attrsPtr), type);
+                        unrankedMemRefInput->memRefDescPtr,
+                        unrankedMemRefOutput->memRefDescPtr,
+                        static_cast<opAttrs *>(attrsPtr), type);
   } else if (type == OpType::AVGPOOLBACKPROP) {
     __mlir_dnnl_avgpoolbackprop(
         unrankedMemRefInput->rank, unrankedMemRefInput->memRefDescPtr,

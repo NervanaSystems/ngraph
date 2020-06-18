@@ -16,9 +16,9 @@
 
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/relu.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/relu.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -60,23 +60,22 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_bounded_relu(ctx->dnnl_memories,
-                                                               ctx->dnnl_primitives,
-                                                               ctx->dnnl_scratchpad_mds,
-                                                               bounded_relu_desc,
-                                                               deps,
-                                                               bounded_relu_index);
+                                                             ctx->dnnl_primitives,
+                                                             ctx->dnnl_scratchpad_mds,
+                                                             bounded_relu_desc,
+                                                             deps,
+                                                             bounded_relu_index);
                         }
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            bounded_relu_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::BOUNDEDRELU,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               bounded_relu_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::BOUNDEDRELU,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

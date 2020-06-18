@@ -16,9 +16,9 @@
 
 #include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/kernel/concat.hpp"
 #include "ngraph/runtime/cpu/dnnl_invoke.hpp"
 #include "ngraph/runtime/cpu/dnnl_utils.hpp"
+#include "ngraph/runtime/cpu/kernel/concat.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -99,8 +99,7 @@ namespace ngraph
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
-                    auto concat_pd =
-                        dnnl_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
+                    auto concat_pd = dnnl_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(concat, concat_pd);
 
                     std::vector<dnnl::memory::desc> inputs_data_desc;
@@ -125,12 +124,12 @@ namespace ngraph
                         if (ctx->first_iteration)
                         {
                             dnnl_emitter->build_concat(ctx->dnnl_memories,
-                                                         ctx->dnnl_primitives,
-                                                         ctx->dnnl_scratchpad_mds,
-                                                         concat_pd,
-                                                         inputs_data_desc,
-                                                         deps,
-                                                         concat_index);
+                                                       ctx->dnnl_primitives,
+                                                       ctx->dnnl_scratchpad_mds,
+                                                       concat_pd,
+                                                       inputs_data_desc,
+                                                       deps,
+                                                       concat_index);
                         }
                         for (size_t i = 0; i < nargs; i++)
                         {
@@ -140,12 +139,11 @@ namespace ngraph
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::dnnl_utils::dnnl_invoke_primitive(
-                            ctx,
-                            concat_index,
-                            deps,
-                            cpu::dnnl_utils::OpType::CONCAT,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               concat_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::CONCAT,
+                                                               scratchpad_size);
                     };
 
                     functors.emplace_back(functor);
