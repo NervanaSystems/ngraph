@@ -14,24 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-#pragma once
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+#include "ngraph/node_output.hpp"  // ngraph::Output<Node>
+#include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
+#include "pyngraph/output.hpp"
 
-namespace ngraph
+namespace py = pybind11;
+
+static const char* CAPSULE_NAME = "ngraph_function";
+
+void regclass_pyngraph_Output(py::module m)
 {
-    enum class Placement
-    {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-    };
-
-    std::string placement_to_string(Placement placement);
+    py::class_<ngraph::Output<ngraph::Node>> output(m, "Output");
+    output.doc() = "ngraph.impl.Output wraps ngraph::Output<Node>";
+    output.def("get_index", &ngraph::Output<ngraph::Node>::get_index);
+    output.def("get_node", &ngraph::Output<ngraph::Node>::get_node_shared_ptr);
 }

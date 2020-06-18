@@ -452,8 +452,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto conv_bprop =
-            std::static_pointer_cast<ngraph::op::ConvolutionBackpropFilters>(m.get_match_root());
+        auto conv_bprop = m.get_match_root_as<ngraph::op::ConvolutionBackpropFilters>();
+        NGRAPH_CHECK(conv_bprop,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::ConvolutionBackpropFilters`");
 
         if (conv_bprop->get_input_shape(0).size() == 4 &&
             conv_bprop->get_input_shape(1).size() == 4 &&
@@ -1127,7 +1130,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto m_div = std::static_pointer_cast<ngraph::op::Divide>(m.get_match_root());
+        auto m_div = m.get_match_root_as<ngraph::op::Divide>();
+        NGRAPH_CHECK(
+            m_div, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Divide`");
 
         auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
 
@@ -1435,7 +1440,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormInference>(m.get_match_root());
+        auto m_bn = m.get_match_root_as<ngraph::op::BatchNormInference>();
+        NGRAPH_CHECK(m_bn,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::BatchNormInference`");
         auto m_conv = std::static_pointer_cast<ngraph::op::ConvolutionBias>(m_bn->get_argument(2));
 
         if (m_conv->get_users().size() > 1)
@@ -1661,7 +1670,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormInference>(m.get_match_root());
+        auto m_bn = m.get_match_root_as<ngraph::op::BatchNormInference>();
+        NGRAPH_CHECK(m_bn,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::BatchNormInference`");
         auto conv_m =
             std::static_pointer_cast<ngraph::op::GroupConvolution>(pattern_map[conv_label]);
 
@@ -1769,7 +1782,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::
 
         auto conv_m =
             std::static_pointer_cast<ngraph::op::GroupConvolutionBias>(pattern_map[conv_label]);
-        auto relu_m = as_type_ptr<ngraph::op::Relu>(m.get_match_root());
+        auto relu_m = m.get_match_root_as<ngraph::op::Relu>();
+        NGRAPH_CHECK(
+            relu_m, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Relu`");
 
         auto g_conv_bias_relu = std::make_shared<ngraph::op::GroupConvolutionBias>(
             conv_m->get_argument(0),
@@ -1825,7 +1840,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
         auto pattern_map = m.get_pattern_map();
 
         // Matcher guarantees this is the right type
-        auto m_bn = std::static_pointer_cast<op::BatchNormInference>(m.get_match_root());
+        auto m_bn = m.get_match_root_as<op::BatchNormInference>();
+        NGRAPH_CHECK(
+            m_bn, "match root node ", *m.get_match_root(), " not of type `op::BatchNormInference`");
         auto conv_m =
             std::static_pointer_cast<op::ConvolutionBackpropData>(pattern_map[conv_label]);
 
@@ -1965,7 +1982,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
         NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto slice_m = std::static_pointer_cast<ngraph::op::Slice>(pattern_map[slice_label]);
-        auto replace_m = std::static_pointer_cast<ngraph::op::ReplaceSlice>(m.get_match_root());
+        auto replace_m = m.get_match_root_as<ngraph::op::ReplaceSlice>();
+        NGRAPH_CHECK(replace_m,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::ReplaceSlice`");
         if (replace_m->get_lower_bounds() != slice_m->get_lower_bounds() ||
             replace_m->get_upper_bounds() != slice_m->get_upper_bounds() ||
             replace_m->get_strides() != slice_m->get_strides())
@@ -2144,7 +2165,11 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         NGRAPH_DEBUG << "In a callback for construct_qavg_pool against "
                      << m.get_match_root()->get_name();
 
-        auto avg_pool_m = std::static_pointer_cast<ngraph::op::AvgPool>(m.get_match_root());
+        auto avg_pool_m = m.get_match_root_as<ngraph::op::AvgPool>();
+        NGRAPH_CHECK(avg_pool_m,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::AvgPool`");
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(avg_pool_m->get_argument(0));
 
         auto qavg_pool_n = std::make_shared<ngraph::op::AvgPool>(
@@ -2182,7 +2207,11 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         NGRAPH_DEBUG << "In a callback for construct_qmax_pool against "
                      << m.get_match_root()->get_name();
 
-        auto max_pool_m = std::static_pointer_cast<ngraph::op::MaxPool>(m.get_match_root());
+        auto max_pool_m = m.get_match_root_as<ngraph::op::MaxPool>();
+        NGRAPH_CHECK(max_pool_m,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::MaxPool`");
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(max_pool_m->get_argument(0));
 
         auto qmax_pool_n =
@@ -2223,7 +2252,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         NGRAPH_DEBUG << "In a callback for construct_qconcat against "
                      << m.get_match_root()->get_name();
 
-        auto concat_m = std::static_pointer_cast<ngraph::op::Concat>(m.get_match_root());
+        auto concat_m = m.get_match_root_as<ngraph::op::Concat>();
+        NGRAPH_CHECK(
+            concat_m, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Concat`");
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(concat_m->get_argument(0));
         NodeVector new_args;
         for (auto arg : concat_m->get_arguments())
@@ -2283,7 +2314,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()
         NGRAPH_DEBUG << "In a callback for construct_dq_q against "
                      << m.get_match_root()->get_name();
 
-        auto q_m = std::static_pointer_cast<ngraph::op::Quantize>(m.get_match_root());
+        auto q_m = m.get_match_root_as<ngraph::op::Quantize>();
+        NGRAPH_CHECK(
+            q_m, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Quantize`");
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(q_m->get_argument(0));
         if (!(ngraph::is_zero(q_m->get_argument(2)) && ngraph::is_zero(dq_m->get_argument(2))))
         {
@@ -2527,7 +2560,11 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
         NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto qdot = std::static_pointer_cast<ngraph::op::QuantizedDot>(m.get_match_root());
+        auto qdot = m.get_match_root_as<ngraph::op::QuantizedDot>();
+        NGRAPH_CHECK(qdot,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::QuantizedDot`");
         auto input_0 = pattern_map[input0];
         auto input_1 = pattern_map[input1];
         auto input_0_scale = pattern_map[input0_scale];

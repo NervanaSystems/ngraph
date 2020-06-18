@@ -390,7 +390,9 @@ void pass::CoreFusion::construct_folded_batch_norm()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto m_bn = static_pointer_cast<op::BatchNormInference>(m.get_match_root());
+        auto m_bn = m.get_match_root_as<op::BatchNormInference>();
+        NGRAPH_CHECK(
+            m_bn, "match root node ", *m.get_match_root(), " not of type `op::BatchNormInference`");
         auto m_conv = static_pointer_cast<op::Convolution>(m_bn->get_argument(2));
 
         if (m_conv->get_users().size() > 1)
@@ -619,7 +621,9 @@ void pass::CoreFusion::construct_reshape_broadcast()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto broadcast_m = static_pointer_cast<op::Broadcast>(m.get_match_root());
+        auto broadcast_m = m.get_match_root_as<op::Broadcast>();
+        NGRAPH_CHECK(
+            broadcast_m, "match root node ", *m.get_match_root(), " not of type `op::Broadcast`");
         auto reshape1_m = static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
         auto input_m = m.get_pattern_value_map()[input];
 
@@ -880,7 +884,9 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto reshape2_m = static_pointer_cast<op::Reshape>(m.get_match_root());
+        auto reshape2_m = m.get_match_root_as<op::Reshape>();
+        NGRAPH_CHECK(
+            reshape2_m, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
         auto softmax_m = static_pointer_cast<op::Softmax>(reshape2_m->get_argument(0));
         auto reshape1_m = static_pointer_cast<op::Reshape>(softmax_m->get_argument(0));
         auto input_m = m.get_pattern_map()[input];
