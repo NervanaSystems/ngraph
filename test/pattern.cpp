@@ -512,7 +512,7 @@ TEST(pattern, previous_matches)
 {
     using ngraph::pattern::Matcher;
     Shape shape{};
-    Matcher::PatternMap previous_matches;
+    Matcher::PatternValueMap previous_matches;
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto pattern = std::make_shared<pattern::op::Label>(b);
