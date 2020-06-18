@@ -200,6 +200,7 @@ sources = [
     "pyngraph/ops/util/op_annotations.cpp",
     "pyngraph/ops/util/regmodule_pyngraph_op_util.cpp",
     "pyngraph/ops/util/unary_elementwise_arithmetic.cpp",
+    "pyngraph/output.cpp",
     "pyngraph/passes/manager.cpp",
     "pyngraph/passes/regmodule_pyngraph_passes.cpp",
     "pyngraph/partial_shape.cpp",
