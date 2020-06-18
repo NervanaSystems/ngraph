@@ -23,6 +23,7 @@
 #include "ngraph/op/multiply.hpp" // ngraph::op::Multiply
 #include "ngraph/op/subtract.hpp" // ngraph::op::Subtract
 #include "pyngraph/node.hpp"
+#include "pyngraph/output.hpp"
 
 namespace py = pybind11;
 
@@ -77,6 +78,8 @@ void regclass_pyngraph_Node(py::module m)
     node.def("get_type_name", &ngraph::Node::get_type_name);
     node.def("get_argument", &ngraph::Node::get_argument);
     node.def("get_unique_name", &ngraph::Node::get_name);
+    node.def("output",
+             (ngraph::Output<ngraph::Node>(ngraph::Node::*)(size_t)) & ngraph::Node::output);
 
     node.def_property("name", &ngraph::Node::get_friendly_name, &ngraph::Node::set_friendly_name);
 }
