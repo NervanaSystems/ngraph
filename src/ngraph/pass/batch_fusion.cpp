@@ -142,8 +142,8 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     }
 
     // TF-flavoured group convolution needs channels re-arranged
-    // MKLDNN requires group slicing to be done on OC
-    // MKLDNN [4,2,-]
+    // DNNL requires group slicing to be done on OC
+    // DNNL [4,2,-]
     // ordering w00 w01 w10 w11 w20 w21 w30 w31 produces g00 g01 g10 g11
     // whereas
     // TF    [2,4,-]

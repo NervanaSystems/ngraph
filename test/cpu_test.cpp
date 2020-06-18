@@ -41,7 +41,7 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/serializer.hpp"
@@ -184,7 +184,7 @@ TEST(cpu_test, abc_tbb)
 }
 #endif // NGRAPH_TBB_ENABLE
 
-TEST(cpu_test, mkldnn_layouts)
+TEST(cpu_test, dnnl_layouts)
 {
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -645,7 +645,7 @@ TEST(cpu_test, post_layout_reshape_convertlayout)
     compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
 }
 
-TEST(cpu_test, mkldnn_layouts_eltwise)
+TEST(cpu_test, dnnl_layouts_eltwise)
 {
     Shape input_shape{3, 11, 14, 14};
     Shape filter_shape{5, 11, 2, 2};
@@ -1345,17 +1345,17 @@ TEST(cpu_test, conv_test_winograd)
 {
     // clang-format off
     // This test checks for the cpu specific graph pass handling for conv_winograd implementation.
-    // On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
+    // On SKX with DNNL version >= v0.18.0, dnnl_verbose should match the following
     //
-    // mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
-    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
-    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
-    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
-    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
-    // mkldnn_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
-    // mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
-    // mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
-    // mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
+    // dnnl_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
+    // dnnl_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
+    // dnnl_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
+    // dnnl_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
+    // dnnl_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
+    // dnnl_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
+    // dnnl_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
+    // dnnl_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
+    // dnnl_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
     // clang-format on
     auto make_function = []() -> std::shared_ptr<Function> {
         auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
@@ -2130,7 +2130,7 @@ TEST(cpu_test, tensor_copy_from_different_layout)
 
 TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
 {
-    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    if (!runtime::cpu::dnnl_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
@@ -2165,7 +2165,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
 
 TEST(cpu_test, MLIR_DISABLE_TEST(convolution_simple_bf16))
 {
-    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    if (!runtime::cpu::dnnl_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";

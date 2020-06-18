@@ -16,8 +16,8 @@
 
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 
 using namespace std;
@@ -42,15 +42,15 @@ namespace ngraph
 
                 AxisSet axes = lrn->get_reduction_axes();
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto lrn_desc = mkldnn_emitter->get_lrn_forward_desc(node);
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                    auto lrn_desc = dnnl_emitter->get_lrn_forward_desc(node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(lrn_forward, lrn_desc);
 
                     // LRN needs 3 primitives: input, result, and lrn_forward.
-                    auto lrn_index = mkldnn_emitter->reserve_primitive_space(3);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(lrn_index);
+                    auto lrn_index = dnnl_emitter->reserve_primitive_space(3);
+                    auto& deps = dnnl_emitter->get_primitive_deps(lrn_index);
 
                     functor = [&,
                                lrn_desc,
@@ -61,20 +61,20 @@ namespace ngraph
                                                  CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_lrn_forward(ctx->mkldnn_memories,
-                                                              ctx->mkldnn_primitives,
-                                                              ctx->mkldnn_scratchpad_mds,
-                                                              lrn_desc,
-                                                              deps,
-                                                              lrn_index);
+                            dnnl_emitter->build_lrn_forward(ctx->dnnl_memories,
+                                                            ctx->dnnl_primitives,
+                                                            ctx->dnnl_scratchpad_mds,
+                                                            lrn_desc,
+                                                            deps,
+                                                            lrn_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, lrn_index, deps, cpu::mkldnn_utils::OpType::LRN, scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
+                            ctx, lrn_index, deps, cpu::dnnl_utils::OpType::LRN, scratchpad_size);
                     };
                 }
                 else

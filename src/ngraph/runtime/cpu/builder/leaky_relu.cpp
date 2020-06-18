@@ -16,9 +16,9 @@
 
 #include "ngraph/runtime/cpu/op/leaky_relu.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/kernel/relu.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -40,15 +40,15 @@ namespace ngraph
 
                 auto alpha = static_cast<const ngraph::op::CPULeakyRelu*>(node)->get_alpha();
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto leaky_relu_desc = mkldnn_emitter->get_leaky_relu_desc(node);
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                    auto leaky_relu_desc = dnnl_emitter->get_leaky_relu_desc(node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, leaky_relu_desc);
 
                     // CPULeakyRelu needs 3 primitives: input, result, and eltwise_forward.
-                    auto leaky_relu_index = mkldnn_emitter->reserve_primitive_space(3);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(leaky_relu_index);
+                    auto leaky_relu_index = dnnl_emitter->reserve_primitive_space(3);
+                    auto& deps = dnnl_emitter->get_primitive_deps(leaky_relu_index);
 
                     auto functor = [&,
                                     leaky_relu_desc,
@@ -59,24 +59,23 @@ namespace ngraph
                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_leaky_relu(ctx->mkldnn_memories,
-                                                             ctx->mkldnn_primitives,
-                                                             ctx->mkldnn_scratchpad_mds,
-                                                             leaky_relu_desc,
-                                                             deps,
-                                                             leaky_relu_index);
+                            dnnl_emitter->build_leaky_relu(ctx->dnnl_memories,
+                                                           ctx->dnnl_primitives,
+                                                           ctx->dnnl_scratchpad_mds,
+                                                           leaky_relu_desc,
+                                                           deps,
+                                                           leaky_relu_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[input_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx,
-                            leaky_relu_index,
-                            deps,
-                            cpu::mkldnn_utils::OpType::LEAKYRELU,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               leaky_relu_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::LEAKYRELU,
+                                                               scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

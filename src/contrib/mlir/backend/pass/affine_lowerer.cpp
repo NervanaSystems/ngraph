@@ -1580,7 +1580,7 @@ REWRITER(NGMaxPoolBackpropOp) {
   NGRAPH_CHECK(
       (srcShape.size() == 4 && resultShape.size() == 4) ||
           (srcShape.size() == 5 && resultShape.size() == 5),
-      "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+      "DNNL pooling operation is only supported for 3D and 5D tensors");
 
   opAttrs attrs;
   int32_t index = 0;
@@ -1838,7 +1838,7 @@ REWRITER(NGSoftMaxOp) {
   NGRAPH_CHECK(
       (lhsShape.size() == 2 && resultShape.size() == 2) ||
           (lhsShape.size() == 4 && resultShape.size() == 4),
-      "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
+      "DNNL Softmax operation is only supported for 2D and 4D tensors");
 
   auto axes = softmax.axes().getValue();
   opAttrs attrs;
@@ -1899,7 +1899,7 @@ REWRITER(NGConvBiasOp) {
       (imagesShape.size() == 3 && resultShape.size() == 3) ||
           (imagesShape.size() == 4 && resultShape.size() == 4) ||
           (imagesShape.size() == 5 && resultShape.size() == 5),
-      "MKLDNN conv operation is only supported for 3D, 4D, and 5D tensors");
+      "DNNL conv operation is only supported for 3D, 4D, and 5D tensors");
 
   opAttrs attrs;
   size_t index = 0;
@@ -2554,7 +2554,7 @@ void lowerPooling(Operation *op, ArrayRef<Value> operands,
   NGRAPH_CHECK(
       (lhsShape.size() == 4 && resultShape.size() == 4) ||
           (lhsShape.size() == 5 && resultShape.size() == 5),
-      "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+      "DNNL pooling operation is only supported for 3D and 5D tensors");
 
   auto int64Ty = rewriter.getIntegerType(64);
   OpType ty;
