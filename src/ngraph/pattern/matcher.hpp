@@ -149,8 +149,7 @@ public:
         return matched;
     }
 
-    bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
-    const NodeVector get_matched_nodes() { return as_node_vector(m_matched_list); }
+    bool is_contained_match(const OutputVector& exclusions = {}, bool ignore_unused = true);
     const OutputVector& get_matched_values() const { return m_matched_list; }
     OutputVector& get_matched_values() { return m_matched_list; }
     void reset() {}

@@ -101,8 +101,6 @@ namespace ngraph
 
     NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
-    NGRAPH_API
-    NodeVector as_node_vector(const OutputVector& values);
     /// Returns a ResultVector referencing values.
     ResultVector as_result_vector(const OutputVector& values);
 

@@ -764,16 +764,6 @@ OutputVector ngraph::as_output_vector(const NodeVector& args)
     return output_vector;
 }
 
-NodeVector ngraph::as_node_vector(const OutputVector& values)
-{
-    NodeVector node_vector;
-    for (auto& value : values)
-    {
-        node_vector.push_back(value.get_node_shared_ptr());
-    }
-    return node_vector;
-}
-
 ResultVector ngraph::as_result_vector(const OutputVector& values)
 {
     ResultVector result;

@@ -226,10 +226,18 @@ void MLIRSubgraphExtractionPass::build_subgraphs(
        it != m_id_to_graph.end(); it++) {
     MLIRSubgraph &sg = it->second;
     auto &nodes = sg.get_nodes();
-    NodeVector outputs = get_subgraph_outputs(
-        NodeVector(nodes.begin(), nodes.end()), {} /*exclusions*/,
-        false /* ignore unused */, false /* ignore output duplicates */);
-    sg.add_outputs(outputs);
+    OutputVector ov;
+    for (auto node : nodes) {
+      ov.push_back(node->output(0));
+    }
+    OutputVector outputs =
+        get_subgraph_outputs(ov, {} /*exclusions*/, false /* ignore unused */,
+                             false /* ignore output duplicates */);
+    NodeVector nv;
+    for (Output<Node> output : outputs) {
+      nv.push_back(output.get_node_shared_ptr());
+    }
+    sg.add_outputs(nv);
   }
 }
 
