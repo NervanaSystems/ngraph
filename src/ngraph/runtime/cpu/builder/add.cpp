@@ -19,8 +19,8 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/add.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -34,17 +34,17 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Add)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto sum_pd = mkldnn_emitter->get_elementwise_add_desc(node);
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                    auto sum_pd = dnnl_emitter->get_elementwise_add_desc(node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(sum, sum_pd);
 
                     // Add needs 4 primitives: input0, input1, result, and sum.
-                    size_t add_index = mkldnn_emitter->reserve_primitive_space(4);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(add_index);
+                    size_t add_index = dnnl_emitter->reserve_primitive_space(4);
+                    auto& deps = dnnl_emitter->get_primitive_deps(add_index);
 
                     auto arg0_buffer_index =
                         external_function->get_buffer_index(args[0].get_name());
@@ -62,22 +62,22 @@ namespace ngraph
                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_elementwise_add(ctx->mkldnn_memories,
-                                                                  ctx->mkldnn_primitives,
-                                                                  ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_elementwise_add(ctx->dnnl_memories,
+                                                                  ctx->dnnl_primitives,
+                                                                  ctx->dnnl_scratchpad_mds,
                                                                   sum_pd,
                                                                   deps,
                                                                   add_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, add_index, deps, cpu::mkldnn_utils::OpType::ADD, scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
+                            ctx, add_index, deps, cpu::dnnl_utils::OpType::ADD, scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

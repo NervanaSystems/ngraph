@@ -365,7 +365,7 @@ void MLIRSubgraphExtractionPass::sanity_check(std::shared_ptr<Function> func,
 // Check if convolution related nodes such as Convolution, ConvolutionBias,
 // ConvolutionRelu, ... can use callback.
 template <typename T>
-static bool can_use_mkldnn_conv_callback(ngraph::Node *node) {
+static bool can_use_dnnl_conv_callback(ngraph::Node *node) {
   auto convolution = static_cast<const T *>(node);
   auto arg0_rank = node->get_input_shape(0).size();
   auto dilation = convolution->get_data_dilation_strides();
@@ -374,7 +374,7 @@ static bool can_use_mkldnn_conv_callback(ngraph::Node *node) {
     return false;
   }
 
-  // MKLDNN doesnt support negative padding
+  // DNNL doesnt support negative padding
   auto pad_above = convolution->get_padding_above();
   if (std::any_of(pad_above.begin(), pad_above.end(),
                   [](size_t s) { return s < 0; })) {
@@ -451,11 +451,11 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(
     if (!getenv_bool("NGRAPH_MLIR_CALLBACK")) {
       return false;
     }
-    return can_use_mkldnn_conv_callback<ngraph::op::ConvolutionBias>(
+    return can_use_dnnl_conv_callback<ngraph::op::ConvolutionBias>(
         node.get());
   }
 
-  // MKLDNN only supports softmax across single axis
+  // DNNL only supports softmax across single axis
   if (auto softmax = as_type_ptr<ngraph::op::Softmax>(node)) {
     // Softmax is only supported through callback
     if (!getenv_bool("NGRAPH_MLIR_CALLBACK")) {

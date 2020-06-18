@@ -20,8 +20,8 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/batchnorm.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 
 using namespace std;
@@ -69,11 +69,11 @@ namespace ngraph
                 const float ops_alpha = -0.f; // relu negative slope
                 const float ops_beta = 0.f;
 
-                mkldnn::post_ops ops;
+                dnnl::post_ops ops;
                 if (append_relu)
                 {
                     ops.append_eltwise(
-                        ops_scale, mkldnn::algorithm::eltwise_relu, ops_alpha, ops_beta);
+                        ops_scale, dnnl::algorithm::eltwise_relu, ops_alpha, ops_beta);
                 }
 
                 if (training && args.size() == 3)
@@ -81,20 +81,20 @@ namespace ngraph
                     auto out1_buffer_index = external_function->get_buffer_index(out[1].get_name());
                     auto out2_buffer_index = external_function->get_buffer_index(out[2].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto batchnorm_desc =
-                        mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, true);
+                        dnnl_emitter->get_batchnorm_forward_desc<OP>(node, true);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
+                    auto weights_desc = dnnl_emitter->build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), dnnl::memory::FORMAT::nc);
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
-                    auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(6);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                    auto batchnorm_index = dnnl_emitter->reserve_primitive_space(6);
+                    auto& deps = dnnl_emitter->get_primitive_deps(batchnorm_index);
 
                     auto functor = [&,
                                     batchnorm_desc,
@@ -114,9 +114,9 @@ namespace ngraph
                                                        CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
-                                                                    ctx->mkldnn_primitives,
-                                                                    ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_batchnorm_forward(ctx->dnnl_memories,
+                                                                    ctx->dnnl_primitives,
+                                                                    ctx->dnnl_scratchpad_mds,
                                                                     batchnorm_desc,
                                                                     weights_desc,
                                                                     training,
@@ -131,21 +131,21 @@ namespace ngraph
                                ctx->buffer_data[arg1_buffer_index],
                                weight_sizes[1]);
 
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg2_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[1], stacked_weights.get());
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(ctx, deps[1], stacked_weights.get());
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[out2_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             batchnorm_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::BATCHNORM3ARGS,
+                            cpu::dnnl_utils::OpType::BATCHNORM3ARGS,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -157,21 +157,21 @@ namespace ngraph
                     auto arg4_buffer_index =
                         external_function->get_buffer_index(args[4].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto batchnorm_desc =
-                        mkldnn_emitter->get_batchnorm_forward_desc<OP>(node, false);
+                        dnnl_emitter->get_batchnorm_forward_desc<OP>(node, false);
 
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(batchnorm_forward, batchnorm_desc, ops);
 
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
+                    auto weights_desc = dnnl_emitter->build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), dnnl::memory::FORMAT::nc);
 
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
-                    auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(6);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                    auto batchnorm_index = dnnl_emitter->reserve_primitive_space(6);
+                    auto& deps = dnnl_emitter->get_primitive_deps(batchnorm_index);
 
                     auto functor = [&,
                                     batchnorm_desc,
@@ -191,9 +191,9 @@ namespace ngraph
                                                        CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_forward(ctx->mkldnn_memories,
-                                                                    ctx->mkldnn_primitives,
-                                                                    ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_batchnorm_forward(ctx->dnnl_memories,
+                                                                    ctx->dnnl_primitives,
+                                                                    ctx->dnnl_scratchpad_mds,
                                                                     batchnorm_desc,
                                                                     weights_desc,
                                                                     training,
@@ -208,21 +208,21 @@ namespace ngraph
                                ctx->buffer_data[arg1_buffer_index],
                                weight_sizes[1]);
 
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg2_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg3_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[arg4_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[3], stacked_weights.get());
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(ctx, deps[3], stacked_weights.get());
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             batchnorm_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::BATCHNORM5ARGS,
+                            cpu::dnnl_utils::OpType::BATCHNORM5ARGS,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -232,7 +232,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormTraining)
             {
-                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                if (!dnnl_utils::use_dnnl_kernel(node))
                 {
                     const ngraph::op::BatchNormTraining* batchnorm =
                         static_cast<const ngraph::op::BatchNormTraining*>(node);
@@ -346,7 +346,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormInference)
             {
-                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                if (!dnnl_utils::use_dnnl_kernel(node))
                 {
                     const ngraph::op::BatchNormInference* batchnorm =
                         static_cast<const ngraph::op::BatchNormInference*>(node);
@@ -407,7 +407,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingBackprop)
             {
-                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                if (!dnnl_utils::use_dnnl_kernel(node))
                 {
                     const ngraph::op::BatchNormTrainingBackprop* batchnorm =
                         static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
@@ -509,19 +509,19 @@ namespace ngraph
                         new uint8_t[weight_sizes[0] + weight_sizes[1]],
                         std::default_delete<uint8_t[]>());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto batchnorm_desc = mkldnn_emitter->get_batchnorm_backward_desc(node);
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                    auto batchnorm_desc = dnnl_emitter->get_batchnorm_backward_desc(node);
                     auto weights_shape = Shape{2, args[0].get_size()};
-                    auto weights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
-                    auto dweights_desc = mkldnn_emitter->build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::FORMAT::nc);
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
+                    auto weights_desc = dnnl_emitter->build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), dnnl::memory::FORMAT::nc);
+                    auto dweights_desc = dnnl_emitter->build_memory_descriptor(
+                        weights_shape, args[0].get_element_type(), dnnl::memory::FORMAT::nc);
+                    auto input_desc = dnnl_utils::get_input_dnnl_md(node, 2);
 
                     // batchnorm backward needs 8 primitives: weights, input, mean, variance,
                     // dinput, dweights, and batch_normalization_backward.
-                    auto batchnorm_index = mkldnn_emitter->reserve_primitive_space(8);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(batchnorm_index);
+                    auto batchnorm_index = dnnl_emitter->reserve_primitive_space(8);
+                    auto& deps = dnnl_emitter->get_primitive_deps(batchnorm_index);
 
                     const ngraph::op::BatchNormTrainingBackprop* batchnorm =
                         static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
@@ -552,9 +552,9 @@ namespace ngraph
                                                        CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_batchnorm_backward(ctx->mkldnn_memories,
-                                                                     ctx->mkldnn_primitives,
-                                                                     ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_batchnorm_backward(ctx->dnnl_memories,
+                                                                     ctx->dnnl_primitives,
+                                                                     ctx->dnnl_scratchpad_mds,
                                                                      batchnorm_desc,
                                                                      input_desc,
                                                                      weights_desc,
@@ -570,24 +570,24 @@ namespace ngraph
                                ctx->buffer_data[arg1_buffer_index],
                                weight_sizes[1]);
 
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[0], stacked_weights.get());
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(ctx, deps[0], stacked_weights.get());
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg2_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[arg3_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[arg4_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[arg5_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[5], ctx->buffer_data[out0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(ctx, deps[6], stacked_dweights.get());
+                        cpu::dnnl_utils::set_memory_ptr(ctx, deps[6], stacked_dweights.get());
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             batchnorm_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::BATCHNORMBACKPROP,
+                            cpu::dnnl_utils::OpType::BATCHNORMBACKPROP,
                             scratchpad_size);
 
                         memcpy(ctx->buffer_data[out1_buffer_index],
@@ -604,9 +604,9 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingRelu)
             {
-                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                if (!dnnl_utils::use_dnnl_kernel(node))
                 {
-                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D DNNL kernel.");
                 }
                 build_batch_norm<ngraph::op::BatchNormTrainingRelu>(
                     external_function, node, args, out, true, true);
@@ -615,9 +615,9 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::BatchNormInferenceRelu)
             {
-                if (!mkldnn_utils::use_mkldnn_kernel(node))
+                if (!dnnl_utils::use_dnnl_kernel(node))
                 {
-                    throw ngraph_error("BatchNormRelu is only supported with 4-D MKLDNN kernel.");
+                    throw ngraph_error("BatchNormRelu is only supported with 4-D DNNL kernel.");
                 }
                 build_batch_norm<ngraph::op::BatchNormInferenceRelu>(
                     external_function, node, args, out, true, false);

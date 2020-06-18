@@ -16,44 +16,44 @@
 
 include(ExternalProject)
 
-# Includes blas 3.8.0 in mkldnn
-set(NGRAPH_MKLDNN_SHORT_VERSION 1)
-set(NGRAPH_MKLDNN_FULL_VERSION 1.5.0.0)
-set(NGRAPH_MKLDNN_MKLML_ASSET_VERSION "v0.21")
-set(NGRAPH_MKLDNN_VERSION "v1.5")
-set(NGRAPH_MKLDNN_MKLML_VERSION "2019.0.5.20190502")
-set(NGRAPH_MKLDNN_MKLML_WIN32_VERSION "2020.0.20190813")
-set(NGRAPH_MKLDNN_GIT_TAG "v1.5")
+# Includes blas 3.8.0 in dnnl
+set(NGRAPH_DNNL_SHORT_VERSION 1)
+set(NGRAPH_DNNL_FULL_VERSION 1.5.0.0)
+set(NGRAPH_DNNL_MKLML_ASSET_VERSION "v0.21")
+set(NGRAPH_DNNL_VERSION "v1.5")
+set(NGRAPH_DNNL_MKLML_VERSION "2019.0.5.20190502")
+set(NGRAPH_DNNL_MKLML_WIN32_VERSION "2020.0.20190813")
+set(NGRAPH_DNNL_GIT_TAG "v1.5")
 
 #------------------------------------------------------------------------------
 # Fetch and install MKL-DNN
 #------------------------------------------------------------------------------
 
-set(MKLDNN_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl${CMAKE_SHARED_LIBRARY_SUFFIX})
+set(DNNL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl${CMAKE_SHARED_LIBRARY_SUFFIX})
 if (LINUX)
     set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml_intel${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(MKLDNN_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_MKLDNN_SHORT_VERSION})
-    set(MKLDNN_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_MKLDNN_FULL_VERSION})
+    set(DNNL_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_DNNL_SHORT_VERSION})
+    set(DNNL_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl${CMAKE_SHARED_LIBRARY_SUFFIX}.${NGRAPH_DNNL_FULL_VERSION})
 elseif (APPLE)
     set(MKLML_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}mklml${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(OMP_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}iomp5${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(MKLDNN_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl.${NGRAPH_MKLDNN_SHORT_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
-    set(MKLDNN_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl.${NGRAPH_MKLDNN_FULL_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(DNNL_SHORT_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl.${NGRAPH_DNNL_SHORT_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
+    set(DNNL_FULL_LIB ${CMAKE_SHARED_LIBRARY_PREFIX}dnnl.${NGRAPH_DNNL_FULL_VERSION}${CMAKE_SHARED_LIBRARY_SUFFIX})
 elseif (WIN32)
-    set(MKLDNN_IMPLIB dnnl${CMAKE_STATIC_LIBRARY_SUFFIX})
+    set(DNNL_IMPLIB dnnl${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(MKLML_LIB mklml${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(MKLML_IMPLIB mklml${CMAKE_STATIC_LIBRARY_SUFFIX})
     set(OMP_LIB libiomp5md${CMAKE_SHARED_LIBRARY_SUFFIX})
     set(OMP_IMPLIB libiomp5md${CMAKE_STATIC_LIBRARY_SUFFIX})
 endif()
 
-if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
+if(DNNL_INCLUDE_DIR AND DNNL_LIB_DIR)
     if(NOT LINUX AND NOT WIN32)
         message(FATAL_ERROR "Unsupported platform for prebuilt mkl-dnn!")
     endif()
     if(NOT MKLML_LIB_DIR)
-        set(MKLML_LIB_DIR ${MKLDNN_LIB_DIR})
+        set(MKLML_LIB_DIR ${DNNL_LIB_DIR})
     endif()
 
     if(WIN32)
@@ -72,27 +72,27 @@ if(MKLDNN_INCLUDE_DIR AND MKLDNN_LIB_DIR)
     endif()
 
     if(WIN32)
-        add_library(libmkldnn STATIC IMPORTED)
-        set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_IMPLIB})
-        set_target_properties(libmkldnn PROPERTIES
+        add_library(libdnnl STATIC IMPORTED)
+        set_property(TARGET libdnnl PROPERTY IMPORTED_LOCATION ${DNNL_LIB_DIR}/${DNNL_IMPLIB})
+        set_target_properties(libdnnl PROPERTIES
             IMPORTED_LINK_INTERFACE_LIBRARIES "${MKLML_LIB_DIR}/${MKLML_IMPLIB};${MKLML_LIB_DIR}/${OMP_IMPLIB}")
     else()
-        add_library(libmkldnn SHARED IMPORTED)
-        set_property(TARGET libmkldnn PROPERTY IMPORTED_LOCATION ${MKLDNN_LIB_DIR}/${MKLDNN_LIB})
-        set_target_properties(libmkldnn PROPERTIES
+        add_library(libdnnl SHARED IMPORTED)
+        set_property(TARGET libdnnl PROPERTY IMPORTED_LOCATION ${DNNL_LIB_DIR}/${DNNL_LIB})
+        set_target_properties(libdnnl PROPERTIES
             IMPORTED_LINK_INTERFACE_LIBRARIES "${MKLML_LIB_DIR}/${MKLML_LIB};${MKLML_LIB_DIR}/${OMP_LIB}")
     endif()
-    set_target_properties(libmkldnn PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${MKLDNN_INCLUDE_DIR})
+    set_target_properties(libdnnl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${DNNL_INCLUDE_DIR})
 
-    install(FILES ${MKLDNN_LIB_DIR}/${MKLDNN_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
+    install(FILES ${DNNL_LIB_DIR}/${DNNL_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
     return()
 endif()
 
-# This section sets up MKL as an external project to be used later by MKLDNN
+# This section sets up MKL as an external project to be used later by DNNL
 
-set(MKLURLROOT "https://github.com/oneapi-src/oneDNN/releases/download/${NGRAPH_MKLDNN_MKLML_ASSET_VERSION}/")
-set(MKLVERSION ${NGRAPH_MKLDNN_MKLML_VERSION})
-set(MKLWIN32VERSION ${NGRAPH_MKLDNN_MKLML_WIN32_VERSION})
+set(MKLURLROOT "https://github.com/oneapi-src/oneDNN/releases/download/${NGRAPH_DNNL_MKLML_ASSET_VERSION}/")
+set(MKLVERSION ${NGRAPH_DNNL_MKLML_VERSION})
+set(MKLWIN32VERSION ${NGRAPH_DNNL_MKLML_WIN32_VERSION})
 if (LINUX)
     set(MKLPACKAGE "mklml_lnx_${MKLVERSION}.tgz")
     set(MKL_SHA1_HASH 6ab490f0b358124338d04ee9383c3cbc536969d8)
@@ -109,13 +109,13 @@ set(MKLURL ${MKLURLROOT}${MKLPACKAGE})
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     if(APPLE)
         if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 8.0 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 8.0)
-            set(MKLDNN_FLAG "-Wno-stringop-truncation -Wno-stringop-overflow")
+            set(DNNL_FLAG "-Wno-stringop-truncation -Wno-stringop-overflow")
         endif()
     elseif(LINUX)
         if(CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.8.2)
             #pragma GCC diagnostic ignored does not work on GCC used for manylinux1
-            set(MKLDNN_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
-            set(MKLDNN_FLAG "${MKLDNN_FLAG} -Wno-unused-result -Wno-unused-value")
+            set(DNNL_FLAG "-Wno-error=strict-overflow -Wno-error=unused-result -Wno-error=array-bounds")
+            set(DNNL_FLAG "${DNNL_FLAG} -Wno-unused-result -Wno-unused-value")
         endif()
     endif()
 endif()
@@ -135,9 +135,9 @@ ExternalProject_Add(
                      ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
 )
 
-set(MKLDNN_DEPENDS ext_mkl)
+set(DNNL_DEPENDS ext_mkl)
 ExternalProject_Get_Property(ext_mkl source_dir)
-set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src/external/mkl)
+set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/dnnl/src/external/mkl)
 set(MKL_SOURCE_DIR ${source_dir})
 
 ExternalProject_Add_Step(
@@ -186,25 +186,25 @@ else()
         ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
 endif()
 
-set(MKLDNN_GIT_REPO_URL https://github.com/oneapi-src/oneDNN)
-set(MKLDNN_GIT_TAG ${NGRAPH_MKLDNN_GIT_TAG})
-set(MKLDNN_PATCH_FILE onednn.patch)
-set(MKLDNN_LIBS ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_LIB})
+set(DNNL_GIT_REPO_URL https://github.com/oneapi-src/oneDNN)
+set(DNNL_GIT_TAG ${NGRAPH_DNNL_GIT_TAG})
+set(DNNL_PATCH_FILE onednn.patch)
+set(DNNL_LIBS ${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/${DNNL_LIB})
 
 # Revert prior changes to make incremental build work.
-set(MKLDNN_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/mkldnn/src && git reset HEAD --hard)
+set(DNNL_PATCH_REVERT_COMMAND cd ${EXTERNAL_PROJECTS_ROOT}/dnnl/src && git reset HEAD --hard)
 
 if (WIN32)
     ExternalProject_Add(
-        ext_mkldnn
-        PREFIX mkldnn
-        DEPENDS ${MKLDNN_DEPENDS}
-        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-        GIT_TAG ${MKLDNN_GIT_TAG}
+        ext_dnnl
+        PREFIX dnnl
+        DEPENDS ${DNNL_DEPENDS}
+        GIT_REPOSITORY ${DNNL_GIT_REPO_URL}
+        GIT_TAG ${DNNL_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
-        PATCH_COMMAND ${MKLDNN_PATCH_REVERT_COMMAND}
-        COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
+        PATCH_COMMAND ${DNNL_PATCH_REVERT_COMMAND}
+        COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/${DNNL_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -212,31 +212,31 @@ if (WIN32)
             ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DDNNL_BUILD_TESTS=FALSE
             -DDNNL_BUILD_EXAMPLES=FALSE
-            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
+            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/dnnl
             -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DDNNL_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
+        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/tmp"
+        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/stamp"
+        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/download"
+        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/src"
+        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/build"
+        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl"
         EXCLUDE_FROM_ALL TRUE
         )
 else()
     if(LINUX)
-        set(MKLDNN_RPATH "-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
+        set(DNNL_RPATH "-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
     endif()
     ExternalProject_Add(
-        ext_mkldnn
-        PREFIX mkldnn
-        DEPENDS ${MKLDNN_DEPENDS}
-        GIT_REPOSITORY ${MKLDNN_GIT_REPO_URL}
-        GIT_TAG ${MKLDNN_GIT_TAG}
+        ext_dnnl
+        PREFIX dnnl
+        DEPENDS ${DNNL_DEPENDS}
+        GIT_REPOSITORY ${DNNL_GIT_REPO_URL}
+        GIT_TAG ${DNNL_GIT_TAG}
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
-        PATCH_COMMAND ${MKLDNN_PATCH_REVERT_COMMAND}
-        COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${MKLDNN_PATCH_FILE}
+        PATCH_COMMAND ${DNNL_PATCH_REVERT_COMMAND}
+        COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${DNNL_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -244,77 +244,77 @@ else()
             ${NGRAPH_FORWARD_CMAKE_ARGS}
             -DDNNL_BUILD_TESTS=FALSE
             -DDNNL_BUILD_EXAMPLES=FALSE
-            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/mkldnn
-            ${MKLDNN_RPATH}
+            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/dnnl
+            ${DNNL_RPATH}
             -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DDNNL_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
-            "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${MKLDNN_FLAG}"
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/mkldnn"
+            "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${DNNL_FLAG}"
+        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/tmp"
+        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/stamp"
+        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/download"
+        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/src"
+        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/build"
+        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl"
         EXCLUDE_FROM_ALL TRUE
-        BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+        BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
         )
 endif()
 
 if(WIN32)
     ExternalProject_Add_Step(
-        ext_mkldnn
-        CopyMKLDNN
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/bin/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
-        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        ext_dnnl
+        CopyDNNL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/bin/${DNNL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
+        COMMENT "Copy dnnl runtime libraries to ngraph build directory."
         DEPENDEES install
         )
 
     ExternalProject_Add_Step(
-        ext_mkldnn
-        CopyMKLDNNIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/${MKLDNN_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
-        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        ext_dnnl
+        CopyDNNLIMP
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/${DNNL_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${DNNL_IMPLIB}
+        COMMENT "Copy dnnl runtime libraries to ngraph build directory."
         DEPENDEES install
         )
 else()
     ExternalProject_Add_Step(
-        ext_mkldnn
-        CopyMKLDNN
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
-        COMMENT "Copy mkldnn runtime libraries to ngraph build directory."
+        ext_dnnl
+        CopyDNNL
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/${CMAKE_INSTALL_LIBDIR}/${DNNL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
+        COMMENT "Copy dnnl runtime libraries to ngraph build directory."
         DEPENDEES install
         )
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         ExternalProject_Add_Step(
-            ext_mkldnn
-            CopyMKLDNNEXTRA
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_SHORT_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_SHORT_LIB}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/mkldnn/${CMAKE_INSTALL_LIBDIR}/${MKLDNN_FULL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_FULL_LIB}
-            COMMENT "Copy extra mkldnn runtime libraries to ngraph build directory."
+            ext_dnnl
+            CopyDNNLEXTRA
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/${CMAKE_INSTALL_LIBDIR}/${DNNL_SHORT_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_SHORT_LIB}
+            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/${CMAKE_INSTALL_LIBDIR}/${DNNL_FULL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_FULL_LIB}
+            COMMENT "Copy extra dnnl runtime libraries to ngraph build directory."
             DEPENDEES install
            )
     endif()
 endif()
 
 ExternalProject_Add_Step(
-    ext_mkldnn
+    ext_dnnl
     PrepareMKL
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${MKL_SOURCE_DIR} ${MKL_ROOT}
     DEPENDEES download
     DEPENDERS configure
     )
 
-add_library(libmkldnn INTERFACE)
-add_dependencies(libmkldnn ext_mkldnn)
-target_include_directories(libmkldnn SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/mkldnn/include)
+add_library(libdnnl INTERFACE)
+add_dependencies(libdnnl ext_dnnl)
+target_include_directories(libdnnl SYSTEM INTERFACE ${EXTERNAL_PROJECTS_ROOT}/dnnl/include)
 if (WIN32)
-    target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLDNN_IMPLIB}
+    target_link_libraries(libdnnl INTERFACE
+        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${DNNL_IMPLIB}
         libmkl
     )
 else()
-    target_link_libraries(libmkldnn INTERFACE
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLDNN_LIB}
+    target_link_libraries(libdnnl INTERFACE
+        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
         libmkl
     )
 endif()
@@ -326,8 +326,8 @@ if(WIN32)
             ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${MKLML_IMPLIB}
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
             ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${OMP_IMPLIB}
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_LIB}
-            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${MKLDNN_IMPLIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${DNNL_LIB}
+            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${DNNL_IMPLIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
@@ -337,7 +337,7 @@ else()
         FILES
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLML_LIB}
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${DNNL_LIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
         OPTIONAL
@@ -345,8 +345,8 @@ else()
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         install(
             FILES
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_SHORT_LIB}
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLDNN_FULL_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${DNNL_SHORT_LIB}
+            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${DNNL_FULL_LIB}
             DESTINATION
                 ${NGRAPH_INSTALL_LIB}
             OPTIONAL

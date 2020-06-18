@@ -58,7 +58,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 using namespace ngraph;
 
@@ -84,11 +84,11 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             bool in_place_concat = true;
-            auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
+            auto output_md = dnnl_utils::get_output_dnnl_md(n.get(), 0);
             for (size_t i = 0; i < n->get_input_size(); i++)
             {
-                auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), i);
-                if (!mkldnn_utils::compare_mkldnn_md_formats(output_md, input_md))
+                auto input_md = dnnl_utils::get_input_dnnl_md(n.get(), i);
+                if (!dnnl_utils::compare_dnnl_md_formats(output_md, input_md))
                 {
                     NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
                                     "output format, no in place concat";
@@ -110,9 +110,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                 NGRAPH_CHECK(shape_size(input.get_shape()) != 0);
 
                 // check if input layout is padded
-                auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), index);
+                auto input_md = dnnl_utils::get_input_dnnl_md(n.get(), index);
                 index++;
-                if (mkldnn_utils::is_mkldnn_padded_layout(input_md, axis_list))
+                if (dnnl_utils::is_dnnl_padded_layout(input_md, axis_list))
                 {
                     NGRAPH_DEBUG
                         << "cpu_memory_optimization: padded input layout, no in place concat";
@@ -273,9 +273,9 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             // check if input and output formats are the same
-            auto output_md = mkldnn_utils::get_output_mkldnn_md(n.get(), 0);
-            auto input_md = mkldnn_utils::get_input_mkldnn_md(n.get(), 0);
-            if (!mkldnn_utils::compare_mkldnn_md_formats(output_md, input_md))
+            auto output_md = dnnl_utils::get_output_dnnl_md(n.get(), 0);
+            auto input_md = dnnl_utils::get_input_dnnl_md(n.get(), 0);
+            if (!dnnl_utils::compare_dnnl_md_formats(output_md, input_md))
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: input format is different from "
                                 "output format, no in place slice";
@@ -283,8 +283,8 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             }
 
             const auto& dtype = slice->get_input_element_type(0);
-            if (runtime::cpu::mkldnn_utils::get_mkldnn_data_type(dtype) ==
-                mkldnn::memory::data_type::DATA_UNDEF)
+            if (runtime::cpu::dnnl_utils::get_dnnl_data_type(dtype) ==
+                dnnl::memory::data_type::DATA_UNDEF)
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: "
                              << slice->get_input_element_type(0).c_type_string()
@@ -295,13 +295,13 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             // If input layout is in non-native layout, we need more complicated checks for
             // slice contiguity. Bail out for now.
             const descriptor::Tensor& input_tensor = slice->get_input_tensor(0);
-            auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+            auto native_md = dnnl_utils::create_blocked_dnnl_md(
                 in_shape,
                 input_tensor.get_tensor_layout()->get_strides(),
                 slice->get_input_element_type(0));
-            if (!mkldnn_utils::compare_mkldnn_mds(input_md, native_md))
+            if (!dnnl_utils::compare_dnnl_mds(input_md, native_md))
             {
-                NGRAPH_DEBUG << "cpu_memory_optimization: Non-native layout for MKLDNN slice input";
+                NGRAPH_DEBUG << "cpu_memory_optimization: Non-native layout for DNNL slice input";
                 continue;
             }
 

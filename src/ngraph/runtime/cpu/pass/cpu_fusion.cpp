@@ -69,7 +69,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -345,7 +345,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         auto bn_node = std::make_shared<ngraph::op::BatchNormTraining>(
             epsilon, pattern_map[gamma_label], pattern_map[beta_label], pattern_map[input]);
 
-        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_node.get()))
+        if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(bn_node.get()))
         {
             return false;
         }
@@ -390,9 +390,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
             bcast_m = as_type_ptr<op::Broadcast>(m.get_match_root()->get_argument(0));
         }
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv_m.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::Convolution>(conv_m.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -606,7 +606,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto pattern_map = m.get_pattern_map();
         auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
             m.get_match_root()->get_input_node_shared_ptr(0));
-        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
+        if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(m_bn.get()))
         {
             return false;
         }
@@ -666,7 +666,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
         {
-            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(bn_inference.get()))
             {
                 return false;
             }
@@ -804,7 +804,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
         {
-            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(bn_inference.get()))
             {
                 return false;
             }
@@ -854,9 +854,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         auto conv =
             std::static_pointer_cast<ngraph::op::Convolution>(m.get_match_root()->get_argument(0));
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::Convolution>(conv.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -906,7 +906,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
             return false;
         }
 
-        // ConvolutionBias created only if it can run with MKLDNN.
+        // ConvolutionBias created only if it can run with DNNL.
         // No further checks needed.
         auto conv_relu =
             std::make_shared<ngraph::op::ConvolutionBias>(conv->get_argument(0),
@@ -957,9 +957,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv_m.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::Convolution>(conv_m.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -1015,7 +1015,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
             return false;
         }
 
-        // ConvolutionAdd created only if it can run with MKLDNN.
+        // ConvolutionAdd created only if it can run with DNNL.
         // No further checks needed.
         auto conv_n =
             std::make_shared<ngraph::op::ConvolutionAdd>(conv_m->get_argument(0),
@@ -1068,10 +1068,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::ConvolutionBias>(
                 conv_m.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -1216,7 +1216,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
             }
         }
 
-        // ConvolutionBiasAdd created only if it can run with MKLDNN.
+        // ConvolutionBiasAdd created only if it can run with DNNL.
         // No further checks needed.
         auto conv_n =
             std::make_shared<ngraph::op::ConvolutionBiasAdd>(conv_m->get_argument(0),
@@ -2091,10 +2091,10 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
 
         if (!with_bias)
         {
-            if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::QuantizedConvolution>(
+            if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::QuantizedConvolution>(
                     dq_m->get_argument(0).get()))
             {
-                NGRAPH_DEBUG << "Quantized Convolution not supported by MKLDNN";
+                NGRAPH_DEBUG << "Quantized Convolution not supported by DNNL";
                 return false;
             }
         }
@@ -2529,7 +2529,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
 
 // Convert a QuantizedDot which takes [m,n]*[n,k] to
 // QuantizedMatmul which reorders input1 and does [m,n]*[k,n]
-// which is what mkldnn wants
+// which is what dnnl wants
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
 {
     Shape shape_input0{2, 3};

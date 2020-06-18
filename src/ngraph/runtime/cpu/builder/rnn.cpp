@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
 
 using namespace std;
@@ -32,10 +32,10 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::Rnn)
             {
-                if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (!runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     throw ngraph_error(
-                        "Rnn is supported only through MKLDNN and doesnt have reference "
+                        "Rnn is supported only through DNNL and doesnt have reference "
                         "INTERPRETER implementation");
                 }
 
@@ -49,7 +49,7 @@ namespace ngraph
                     external_function->get_buffer_index(out[0].get_name());
                 auto dst_iter_buffer_index = external_function->get_buffer_index(out[1].get_name());
 
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
                 if (rnn_op->is_type(ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn))
                 {
@@ -64,14 +64,14 @@ namespace ngraph
                     // bias,
                     // dst_layer, dst_iter, workspace, and rnn_forward.
                     // It needs a new workspace.
-                    auto rnn_index = mkldnn_emitter->reserve_primitive_space(
+                    auto rnn_index = dnnl_emitter->reserve_primitive_space(
                         9, false /* fwd and bwd */, true /* new workspace */);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+                    auto& deps = dnnl_emitter->get_primitive_deps(rnn_index);
                     auto vanilla_rnn_desc =
-                        mkldnn_emitter->get_vanilla_rnn_forward_desc<ngraph::op::Rnn>(
+                        dnnl_emitter->get_vanilla_rnn_forward_desc<ngraph::op::Rnn>(
                             node, args, out);
                     size_t scratchpad_size =
-                        mkldnn_emitter->query_scratchpad_vanilla_rnn_forward(vanilla_rnn_desc);
+                        dnnl_emitter->query_scratchpad_vanilla_rnn_forward(vanilla_rnn_desc);
 
                     auto functor = [&,
                                     vanilla_rnn_desc,
@@ -86,35 +86,35 @@ namespace ngraph
                                                            CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_vanilla_rnn_forward(ctx->mkldnn_memories,
-                                                                      ctx->mkldnn_primitives,
-                                                                      ctx->mkldnn_scratchpad_mds,
-                                                                      ctx->mkldnn_workspaces,
+                            dnnl_emitter->build_vanilla_rnn_forward(ctx->dnnl_memories,
+                                                                      ctx->dnnl_primitives,
+                                                                      ctx->dnnl_scratchpad_mds,
+                                                                      ctx->dnnl_workspaces,
                                                                       vanilla_rnn_desc,
                                                                       deps,
                                                                       rnn_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[src_layer_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[src_iter_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[weights_layer_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[weights_iter_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[bias_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[5], ctx->buffer_data[dst_layer_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[6], ctx->buffer_data[dst_iter_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[7], ctx->mkldnn_workspaces[deps[8]]);
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::set_memory_ptr(
+                            ctx, deps[7], ctx->dnnl_workspaces[deps[8]]);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             rnn_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::VANILLA_RNN,
+                            cpu::dnnl_utils::OpType::VANILLA_RNN,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -136,12 +136,12 @@ namespace ngraph
                     // weights_iter, bias,
                     // dst_layer, dst_iter, dst_iter_c, workspace, and lstm_forward.
                     // It needs a new workspace.
-                    auto rnn_index = mkldnn_emitter->reserve_primitive_space(
+                    auto rnn_index = dnnl_emitter->reserve_primitive_space(
                         11, false /* fwd and bwd */, true /* new workspace */);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(rnn_index);
+                    auto& deps = dnnl_emitter->get_primitive_deps(rnn_index);
                     auto rnn_desc =
-                        mkldnn_emitter->get_rnn_forward_desc<ngraph::op::Rnn>(node, args, out);
-                    size_t scratchpad_size = mkldnn_emitter->query_scratchpad_rnn_forward(rnn_desc);
+                        dnnl_emitter->get_rnn_forward_desc<ngraph::op::Rnn>(node, args, out);
+                    size_t scratchpad_size = dnnl_emitter->query_scratchpad_rnn_forward(rnn_desc);
 
                     auto functor = [&,
                                     rnn_desc,
@@ -159,37 +159,37 @@ namespace ngraph
                                                              CPUExecutionContext* ectx) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_rnn_forward(ctx->mkldnn_memories,
-                                                              ctx->mkldnn_primitives,
-                                                              ctx->mkldnn_scratchpad_mds,
-                                                              ctx->mkldnn_workspaces,
+                            dnnl_emitter->build_rnn_forward(ctx->dnnl_memories,
+                                                              ctx->dnnl_primitives,
+                                                              ctx->dnnl_scratchpad_mds,
+                                                              ctx->dnnl_workspaces,
                                                               rnn_desc,
                                                               deps,
                                                               rnn_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[src_layer_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[src_iter_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[src_iter_c_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[weights_layer_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[4], ctx->buffer_data[weights_iter_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[5], ctx->buffer_data[bias_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[6], ctx->buffer_data[dst_layer_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[7], ctx->buffer_data[dst_iter_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[8], ctx->buffer_data[dst_iter_c_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
-                            ctx, deps[9], ctx->mkldnn_workspaces[deps[10]]);
+                        cpu::dnnl_utils::set_memory_ptr(
+                            ctx, deps[9], ctx->dnnl_workspaces[deps[10]]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx, rnn_index, deps, cpu::mkldnn_utils::OpType::RNN, scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
+                            ctx, rnn_index, deps, cpu::dnnl_utils::OpType::RNN, scratchpad_size);
                     };
                     functors.emplace_back(functor);
                 }

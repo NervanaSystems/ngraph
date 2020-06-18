@@ -17,8 +17,8 @@
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/kernel/sigmoid_multiply.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 
 using namespace std;
@@ -41,13 +41,13 @@ namespace ngraph
                 auto input_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto sigmoid_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, false);
+                auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                auto sigmoid_desc = dnnl_emitter->get_sigmoid_forward_desc(node, false);
                 size_t scratchpad_size = QUERY_SCRATCHPAD(eltwise_forward, sigmoid_desc);
 
                 // Sigmoid needs 3 primitives: input, result, and eltwise_forward.
-                auto sigmoid_index = mkldnn_emitter->reserve_primitive_space(3);
-                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                auto sigmoid_index = dnnl_emitter->reserve_primitive_space(3);
+                auto& deps = dnnl_emitter->get_primitive_deps(sigmoid_index);
 
                 auto functor = [&,
                                 sigmoid_desc,
@@ -58,22 +58,22 @@ namespace ngraph
                                                   CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_sigmoid_forward(ctx->mkldnn_memories,
-                                                              ctx->mkldnn_primitives,
-                                                              ctx->mkldnn_scratchpad_mds,
+                        dnnl_emitter->build_sigmoid_forward(ctx->dnnl_memories,
+                                                              ctx->dnnl_primitives,
+                                                              ctx->dnnl_scratchpad_mds,
                                                               sigmoid_desc,
                                                               deps,
                                                               sigmoid_index);
                     }
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx,
+                    cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
                                                                sigmoid_index,
                                                                deps,
-                                                               cpu::mkldnn_utils::OpType::SIGMOID,
+                                                               cpu::dnnl_utils::OpType::SIGMOID,
                                                                scratchpad_size);
                 };
                 functors.emplace_back(functor);
@@ -92,15 +92,15 @@ namespace ngraph
                 auto delta_shape = args[1].get_shape();
                 auto out_shape = out[0].get_shape();
 
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                auto fwd_desc = mkldnn_emitter->get_sigmoid_forward_desc(node, true);
-                auto bwd_desc = mkldnn_emitter->get_sigmoid_backward_desc(node);
+                auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                auto fwd_desc = dnnl_emitter->get_sigmoid_forward_desc(node, true);
+                auto bwd_desc = dnnl_emitter->get_sigmoid_backward_desc(node);
                 size_t scratchpad_size =
                     QUERY_SCRATCHPAD_2ARGS(eltwise_backward, fwd_desc, bwd_desc);
 
                 // SigmoidBackprop needs 4 primitives: input, delta, result, and eltwise_backward.
-                size_t sigmoid_index = mkldnn_emitter->reserve_primitive_space(4);
-                auto& deps = mkldnn_emitter->get_primitive_deps(sigmoid_index);
+                size_t sigmoid_index = dnnl_emitter->reserve_primitive_space(4);
+                auto& deps = dnnl_emitter->get_primitive_deps(sigmoid_index);
 
                 auto functor = [&,
                                 bwd_desc,
@@ -113,26 +113,26 @@ namespace ngraph
                                                   CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_sigmoid_backward(ctx->mkldnn_memories,
-                                                               ctx->mkldnn_primitives,
-                                                               ctx->mkldnn_scratchpad_mds,
+                        dnnl_emitter->build_sigmoid_backward(ctx->dnnl_memories,
+                                                               ctx->dnnl_primitives,
+                                                               ctx->dnnl_scratchpad_mds,
                                                                bwd_desc,
                                                                fwd_desc,
                                                                deps,
                                                                sigmoid_index);
                     }
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[2], ctx->buffer_data[out_buffer_index]);
 
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                    cpu::dnnl_utils::dnnl_invoke_primitive(
                         ctx,
                         sigmoid_index,
                         deps,
-                        cpu::mkldnn_utils::OpType::SIGMOIDBACKPROP,
+                        cpu::dnnl_utils::OpType::SIGMOIDBACKPROP,
                         scratchpad_size);
                 };
                 functors.emplace_back(functor);

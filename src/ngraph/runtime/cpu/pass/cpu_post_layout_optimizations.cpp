@@ -34,7 +34,7 @@
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
@@ -139,8 +139,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
         auto m_cvt_lt = m.get_match_root();
         auto m_slice = m_cvt_lt->get_argument(0);
         auto slice_ptr = static_cast<const ngraph::op::Slice*>(m_slice.get());
-        // do the fusion if slice has 1 user and uses mkldnn kernel.
-        if (!runtime::cpu::mkldnn_utils::use_mkldnn_kernel(slice_ptr) ||
+        // do the fusion if slice has 1 user and uses dnnl kernel.
+        if (!runtime::cpu::dnnl_utils::use_dnnl_kernel(slice_ptr) ||
             m_slice->get_users().size() != 1)
         {
             return false;
@@ -158,11 +158,11 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
                                                                  slice_ptr->get_upper_bounds(),
                                                                  slice_ptr->get_strides());
             auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-            op_annotations->set_mkldnn_op(true);
+            op_annotations->set_dnnl_op(true);
             new_slice->set_op_annotations(op_annotations);
             auto tv = new_slice->get_output_tensor_ptr(0);
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-            layout->set_mkldnn_md(mkldnn_utils::get_output_mkldnn_md(m_cvt_lt.get(), 0));
+            layout->set_dnnl_md(dnnl_utils::get_output_dnnl_md(m_cvt_lt.get(), 0));
             tv->set_tensor_layout(layout);
             ngraph::replace_node(m_cvt_lt, new_slice);
         }
@@ -176,7 +176,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
 }
 
 // Reshape(transpose) + ConvertLayout
-// MKLDNN has more efficient ConvertLayout kernels for named/non-padded formats
+// DNNL has more efficient ConvertLayout kernels for named/non-padded formats
 // If a transpose is converting a padded format into a generic padded/blocked format, it is better
 // to ConvertLayout first and then do the transpose
 // E.g.,
@@ -225,9 +225,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             return false;
         }
 
-        auto reshape_m_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(reshape_m.get(), 0);
-        if (reshape_m_md.data.FORMAT_KIND != mkldnn_blocked ||
-            !runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(
+        auto reshape_m_md = runtime::cpu::dnnl_utils::get_output_dnnl_md(reshape_m.get(), 0);
+        if (reshape_m_md.data.FORMAT_KIND != dnnl_blocked ||
+            !runtime::cpu::dnnl_utils::is_dnnl_padded_layout(
                 reshape_m_md, ngraph::get_default_order(reshape_m->get_output_shape(0))))
         {
             NGRAPH_DEBUG << "ReshapeConvertLayout: Reshape is not creating a blocked/padded layout";
@@ -235,7 +235,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         }
 
         // Rotate output layout to the pre-transposed order
-        auto out_md = runtime::cpu::mkldnn_utils::get_output_mkldnn_md(cvt_lt_m.get(), 0);
+        auto out_md = runtime::cpu::dnnl_utils::get_output_dnnl_md(cvt_lt_m.get(), 0);
         auto reshape_order = reshape_m->get_input_order();
         // Get the inverse of the original transpose order
         // E.g., [0, 3, 1, 2] -> [0, 2, 3, 1]
@@ -245,10 +245,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             inverse_order.push_back(std::find(reshape_order.begin(), reshape_order.end(), i) -
                                     reshape_order.begin());
         }
-        auto rotated_md = runtime::cpu::mkldnn_utils::rotate_blocked_md(out_md, inverse_order);
+        auto rotated_md = runtime::cpu::dnnl_utils::rotate_blocked_md(out_md, inverse_order);
         auto rotated_lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(
             *reshape_m->get_argument(0)->get_output_tensor_ptr(0));
-        rotated_lt_desc->set_mkldnn_md(rotated_md);
+        rotated_lt_desc->set_dnnl_md(rotated_md);
 
         auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_m->input_value(0),
                                                                           rotated_lt_desc);
@@ -258,13 +258,13 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
             cvt_lt_n, reshape_order, cvt_lt_m->get_output_shape(0));
         auto reshape_n_layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
             *reshape_n->get_output_tensor_ptr(0));
-        reshape_n_layout->set_mkldnn_md(out_md);
+        reshape_n_layout->set_dnnl_md(out_md);
         reshape_n->get_output_tensor_ptr(0)->set_tensor_layout(reshape_n_layout);
         reshape_n->set_op_annotations(reshape_m->get_op_annotations());
 
         ngraph::replace_node(cvt_lt_m, reshape_n);
         NGRAPH_DEBUG << "ReshapeConvertLayout: Reordering reshape and convertlayout for faster "
-                        "MKLDNN kernels";
+                        "DNNL kernels";
 
         return true;
     };
@@ -279,32 +279,32 @@ template <typename T>
 static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
     const shared_ptr<op::Constant>& input,
     const shared_ptr<runtime::cpu::op::ConvertLayout>& convertlayout,
-    mkldnn::memory::desc& input_desc,
-    mkldnn::memory::desc& result_desc)
+    dnnl::memory::desc& input_desc,
+    dnnl::memory::desc& result_desc)
 {
     std::vector<T> result_vec(convertlayout->get_output_tensor(0).size() /
                               input->get_output_element_type(0).size());
 
-    bool input_format_is_nchw = runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
-        input_desc.data, mkldnn::memory::format_tag::nchw);
-    if (input_format_is_nchw && runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
-                                    result_desc.data, mkldnn::memory::format_tag::goihw))
+    bool input_format_is_nchw = runtime::cpu::dnnl_utils::dnnl_md_matches_format_tag(
+        input_desc.data, dnnl::memory::format_tag::nchw);
+    if (input_format_is_nchw && runtime::cpu::dnnl_utils::dnnl_md_matches_format_tag(
+                                    result_desc.data, dnnl::memory::format_tag::goihw))
     {
         // becomes a copy
         input_desc = result_desc;
     }
-    else if ((input_format_is_nchw || runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
-                                          input_desc.data, mkldnn::memory::format_tag::nhwc)) &&
-             (runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(
-                  result_desc.data, mkldnn::memory::format_tag::OIhw4i16o4i) &&
+    else if ((input_format_is_nchw || runtime::cpu::dnnl_utils::dnnl_md_matches_format_tag(
+                                          input_desc.data, dnnl::memory::format_tag::nhwc)) &&
+             (runtime::cpu::dnnl_utils::dnnl_md_matches_format_tag(
+                  result_desc.data, dnnl::memory::format_tag::OIhw4i16o4i) &&
               // check if compensation is conv_s8s8(1U)
               result_desc.data.extra.flags & 0x1U))
     {
         auto arg0_shape = input->get_output_shape(0);
-        input_desc = mkldnn::memory::desc(
-            mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_output_element_type(0)),
-            mkldnn::memory::format_tag::oihw);
+        input_desc = dnnl::memory::desc(
+            dnnl::memory::dims(arg0_shape.begin(), arg0_shape.end()),
+            runtime::cpu::dnnl_utils::get_dnnl_data_type(input->get_output_element_type(0)),
+            dnnl::memory::format_tag::oihw);
     }
     else if (input_format_is_nchw && input_desc.data.ndims == 4 && result_desc.data.ndims == 5 &&
              convertlayout->get_users().size() == 1)
@@ -323,29 +323,29 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         {
             throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
         }
-        input_desc = mkldnn::memory::desc(
-            mkldnn::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
-            runtime::cpu::mkldnn_utils::get_mkldnn_data_type(input->get_output_element_type(0)),
-            mkldnn::memory::format_tag::goihw);
+        input_desc = dnnl::memory::desc(
+            dnnl::memory::dims(weights_shape_groups.begin(), weights_shape_groups.end()),
+            runtime::cpu::dnnl_utils::get_dnnl_data_type(input->get_output_element_type(0)),
+            dnnl::memory::format_tag::goihw);
     }
 
-    // build mkldnn primitive and execute
-    mkldnn::memory in{input_desc,
+    // build dnnl primitive and execute
+    dnnl::memory in{input_desc,
                       runtime::cpu::executor::global_cpu_engine,
                       const_cast<void*>(input->get_data_ptr())};
-    mkldnn::memory out{result_desc, runtime::cpu::executor::global_cpu_engine, result_vec.data()};
-    mkldnn::reorder reorder{in, out};
+    dnnl::memory out{result_desc, runtime::cpu::executor::global_cpu_engine, result_vec.data()};
+    dnnl::reorder reorder{in, out};
 
-    std::unordered_map<int, mkldnn::memory> exec_args = {{MKLDNN_ARG_SRC, in},
-                                                         {MKLDNN_ARG_DST, out}};
+    std::unordered_map<int, dnnl::memory> exec_args = {{DNNL_ARG_SRC, in},
+                                                         {DNNL_ARG_DST, out}};
 
-    mkldnn::stream s(runtime::cpu::executor::global_cpu_engine);
+    dnnl::stream s(runtime::cpu::executor::global_cpu_engine);
     try
     {
         reorder.execute(s, exec_args);
         s.wait();
     }
-    catch (const mkldnn::error& e)
+    catch (const dnnl::error& e)
     {
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
@@ -363,9 +363,9 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
         if (is_type<runtime::cpu::op::ConvertLayout>(n))
         {
             auto m_convertlayout = static_pointer_cast<runtime::cpu::op::ConvertLayout>(n);
-            auto output_md = mkldnn_utils::get_output_mkldnn_md(m_convertlayout.get(), 0);
+            auto output_md = dnnl_utils::get_output_dnnl_md(m_convertlayout.get(), 0);
             // do not do constant folding if the output is padded data layout
-            if (mkldnn_utils::is_mkldnn_padded_layout(
+            if (dnnl_utils::is_dnnl_padded_layout(
                     output_md, ngraph::get_default_order(m_convertlayout->get_output_shape(0))))
             {
                 continue;
@@ -375,7 +375,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
             if (is_type<ngraph::op::Constant>(arg))
             {
                 auto m_input = static_pointer_cast<ngraph::op::Constant>(arg);
-                auto input_md = mkldnn_utils::get_input_mkldnn_md(m_convertlayout.get(), 0);
+                auto input_md = dnnl_utils::get_input_dnnl_md(m_convertlayout.get(), 0);
 
                 std::shared_ptr<ngraph::op::Constant> replacement;
 
@@ -451,7 +451,7 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
 
                 auto tv = replacement->get_output_tensor_ptr(0);
                 auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-                layout->set_mkldnn_md(output_md);
+                layout->set_dnnl_md(output_md);
                 tv->set_tensor_layout(layout);
                 replace_node(n, replacement);
                 replace = true;
