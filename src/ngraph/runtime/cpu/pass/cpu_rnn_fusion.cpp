@@ -182,7 +182,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
-        auto lstmcell_op = as_type_ptr<op::LSTMCell>(m.get_match_root());
+        auto lstmcell_op = m.get_match_root_as<op::LSTMCell>();
+        NGRAPH_CHECK(
+            lstmcell_op, "match root node ", *m.get_match_root(), " not of type `op::LSTMCell`");
         auto src_iter =
             std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
 
@@ -969,7 +971,6 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
-        NGRAPH_INFO << "In callback";
         auto pattern_map = m.get_pattern_map();
         auto rnn_ltor_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_left_to_right]);
         auto rnn_rtol_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_right_to_left]);

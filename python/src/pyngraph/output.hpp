@@ -14,27 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <deque>
-#include <sstream>
+#pragma once
 
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/util.hpp"
+#include <pybind11/pybind11.h>
 
-using namespace std;
-using namespace ngraph;
+namespace py = pybind11;
 
-std::string ngraph::placement_to_string(Placement placement)
-{
-    switch (placement)
-    {
-    case Placement::DEFAULT: return "DEFAULT";
-    case Placement::INTERPRETER: return "INTERPRETER";
-    case Placement::CPU: return "CPU";
-    case Placement::GPU: return "GPU";
-    case Placement::NNP: return "NNP";
-    }
-    throw runtime_error("unhandled placement type");
-}
+void regclass_pyngraph_Output(py::module m);

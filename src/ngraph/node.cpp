@@ -29,7 +29,6 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/placement.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -290,12 +289,12 @@ void Node::set_friendly_name(const string& name)
     m_friendly_name = name;
 }
 
-Placement Node::get_placement() const
+int32_t Node::get_placement() const
 {
     return m_placement;
 }
 
-void Node::set_placement(Placement placement)
+void Node::set_placement(int32_t placement)
 {
     m_placement = placement;
 }

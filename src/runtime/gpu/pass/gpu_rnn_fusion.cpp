@@ -265,8 +265,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1);
         }
         else if (pattern_map[hidden_ht]->get_arguments().size() &&
-                 pattern_map[ct_1]->get_arguments().at(0)->get_instance_id() ==
-                     pattern_map[hidden_ht]->get_arguments().at(0)->get_instance_id())
+                 pattern_map[ct_1]->get_argument(0)->get_instance_id() ==
+                     pattern_map[hidden_ht]->get_argument(0)->get_instance_id())
         // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
         // it will be misclassified as input data xt
         {
