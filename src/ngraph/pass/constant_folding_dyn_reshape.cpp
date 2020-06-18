@@ -108,7 +108,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
     // output.
     auto constant_reshape_v1_callback = [constant_data_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_reshape_v1_callback against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 

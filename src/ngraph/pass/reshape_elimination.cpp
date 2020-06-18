@@ -45,7 +45,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_value_map();
         auto gop = pattern_map[op];
 
@@ -85,7 +85,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_reshapex2_pattern against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto gop = m.get_pattern_value_map()[op];
@@ -113,7 +113,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
                 NGRAPH_DEBUG << "Operand shape doesn't match the shape of the second reshape!";
                 NGRAPH_DEBUG << "gop " << gop.get_node()->get_name()
                              << "shape = " << vector_to_string(gop.get_shape());
-                NGRAPH_DEBUG << "match_root " << m.get_match_value().get_node()->get_name()
+                NGRAPH_DEBUG << "match_root " << m.get_match_root()->get_name()
                              << "shape = " << vector_to_string(m.get_match_value().get_shape());
                 return false;
             }
@@ -160,7 +160,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto mtranspose = m.get_match_root_as<op::Reshape>();
         NGRAPH_CHECK(

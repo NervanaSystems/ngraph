@@ -72,19 +72,19 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
             return false;
         }
 
         if (m.get_match_root()->get_output_size() != pattern_map[input]->get_output_size())
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "input= " << pattern_map[input]->get_name() << "size dont match!";
             return false;
         }
@@ -186,14 +186,14 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                      bias_h2h,
                      ct_1](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         NGRAPH_DEBUG << "In Lstm fprop call back";
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
             return false;
         }
@@ -592,7 +592,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
-                     << "matched_node: " << m.get_match_value().get_node()->get_name();
+                     << "matched_node: " << m.get_match_root()->get_name();
         return true;
 
     };
@@ -692,7 +692,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << "In Recurrent multi layer RNN fusion callback ";
         NGRAPH_DEBUG << "Number of RNN's Matched: " << number_of_rnn_cell_matched;
-        NGRAPH_DEBUG << "matched_root: " << m.get_match_value().get_node()->get_name();
+        NGRAPH_DEBUG << "matched_root: " << m.get_match_root()->get_name();
         NGRAPH_DEBUG << "src_layer_node: " << src_nodes[0]->get_name();
 
         //  we can fuse across different RNN layers only if SLC == DLC

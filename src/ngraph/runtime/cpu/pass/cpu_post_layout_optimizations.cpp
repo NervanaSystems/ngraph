@@ -59,7 +59,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
 
     auto callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_weight against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto m_cvt_lt = m.get_match_value().get_node()->get_argument(1);
         auto m_reshape_conv = m_cvt_lt->get_argument(0);
@@ -134,7 +134,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
 
     auto callback = [param](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_slice_converLayout against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto m_cvt_lt = m.get_match_value();
         auto m_slice = m_cvt_lt.get_node()->get_argument(0);
@@ -197,7 +197,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_reshape_converLayout against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto cvt_lt_m = m.get_match_root_as<runtime::cpu::op::ConvertLayout>();
         NGRAPH_CHECK(cvt_lt_m,

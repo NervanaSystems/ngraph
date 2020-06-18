@@ -179,7 +179,7 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
                                                 updates_label,
                                                 axis_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_scatter_elem_updt_callback against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 

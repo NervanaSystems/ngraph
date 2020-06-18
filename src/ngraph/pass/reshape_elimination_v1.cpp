@@ -39,7 +39,7 @@ void pass::ReshapeEliminationV1::construct_identity_reshape_pattern()
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pvm = m.get_pattern_value_map();
         auto gop = pvm[op];
 

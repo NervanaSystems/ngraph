@@ -118,7 +118,7 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
 
     auto constant_logical_reduction_callback = [constant_data_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_logical_reduction_callback against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 

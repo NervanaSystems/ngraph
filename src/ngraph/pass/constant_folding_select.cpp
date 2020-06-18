@@ -67,7 +67,7 @@ void pass::ConstantFolding::construct_constant_select()
 
     auto constant_select_callback = [selection_label, t_label, f_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_select_callback against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 

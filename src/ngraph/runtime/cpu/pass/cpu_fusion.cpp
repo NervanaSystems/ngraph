@@ -156,7 +156,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
 
     auto callback = [W, x](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_matmulbias_pattern against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto mpattern = m.get_match_root(); // add
         auto m_matmul = ngraph::pattern::Matcher::unique_match<ngraph::op::MatmulBias>(mpattern);
@@ -203,7 +203,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmul()
 
     auto callback = [W, x](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_matmul_pattern against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -309,7 +309,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     auto callback = [variance_label, mean_label, input, eps_label, gamma_label, beta_label](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_fprop_bn pattern against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         // TODO - add assert's based on the matched node
         auto pattern_map = m.get_pattern_map();
@@ -375,7 +375,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto conv_m =
@@ -411,7 +411,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
         auto bias_shape = bias->get_output_shape(0);
         if (bias_shape.size() > 1)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";
             auto order = ngraph::get_default_order(bias_shape);
             auto bias_reshape = std::make_shared<ngraph::op::Reshape>(
@@ -449,7 +449,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
 
     auto callback = [data_batch, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_conv_bias_bprop against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
@@ -473,7 +473,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                     if (bias_shape.size() > 1)
                     {
                         NGRAPH_DEBUG
-                            << "mpattern = " << m.get_match_value().get_node()->get_name()
+                            << "mpattern = " << m.get_match_root()->get_name()
                             << "conv_bias bias shape != 1, requires reshape to match filter count.";
                         auto order = ngraph::get_default_order(bias_shape);
                         auto bias_reshape = std::make_shared<ngraph::op::Reshape>(
@@ -494,7 +494,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_bprop()
                             conv_bprop->get_data_dilation_strides_forward());
                     auto out0 = conv_bias_bprop->output(0);
                     auto out1 = conv_bias_bprop->output(1);
-                    NGRAPH_DEBUG << "Replacing " << m.get_match_value().get_node()->get_name()
+                    NGRAPH_DEBUG << "Replacing " << m.get_match_root()->get_name()
                                  << "with ConvolutionBiasBackpropFiltersBias";
                     m.get_match_value().replace(out0);
                     NGRAPH_DEBUG << "Replacing bias and adding it as a second o/p of "
@@ -576,7 +576,7 @@ void ngraph::runtime::cpu::pass::CPUPreFusion::construct_maxpool_relu_switch()
 
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_maxpool_relu_switch against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         return switch_nodes(m.get_match_value().get_node()->get_argument(0), m.get_match_root());
     };
@@ -601,7 +601,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
 
     auto callback = [input, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pvm = m.get_pattern_value_map();
         auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
@@ -652,7 +652,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
 
     auto callback = [input, mean, var, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_batch_norm_relu against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pvm = m.get_pattern_value_map();
 
@@ -763,7 +763,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
                      broadcast2_label](pattern::Matcher& m) {
         NGRAPH_DEBUG
             << "In callback for construct_batch_norm_infer_relu_with_multi_add against node = "
-            << m.get_match_value().get_node()->get_name();
+            << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
@@ -848,7 +848,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto conv = std::static_pointer_cast<ngraph::op::Convolution>(
             m.get_match_value().get_node()->get_argument(0));
@@ -894,7 +894,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto conv = std::static_pointer_cast<ngraph::op::ConvolutionBias>(
             m.get_match_value().get_node()->get_argument(0));
@@ -943,7 +943,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_add against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto add_m = m.get_match_root();
         auto conv_m = as_type_ptr<ngraph::op::Convolution>(add_m->get_argument(1));
@@ -1003,7 +1003,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_add_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto conv_m = std::static_pointer_cast<ngraph::op::ConvolutionAdd>(
             m.get_match_value().get_node()->get_argument(0));
@@ -1053,7 +1053,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto add_m = m.get_match_root();
         auto conv_m = as_type_ptr<ngraph::op::ConvolutionBias>(add_m->get_argument(1));
@@ -1125,7 +1125,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 
     auto callback = [x, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1194,7 +1194,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto conv_m = std::static_pointer_cast<ngraph::op::ConvolutionBiasAdd>(
             m.get_match_value().get_node()->get_argument(0));
@@ -1252,12 +1252,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 
     auto callback = [sigmoid_0, sigmoid_1](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
             return false;
         }
@@ -1309,7 +1309,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
 
     auto callback = [input, alpha](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_leaky_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
         if (!is_type<ngraph::op::Constant>(pattern_map[alpha]))
@@ -1370,11 +1370,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
 
     auto callback = [relu_input, alpha](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bounded_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_value().get_node()->get_name()
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
             return false;
         }
@@ -1435,7 +1435,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
 
     auto callback = [input, filters, bias, mean, var, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for folded batch norm against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pvm = m.get_pattern_value_map();
 
         auto m_bn = m.get_match_root_as<ngraph::op::BatchNormInference>();
@@ -1518,7 +1518,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
 
     auto callback = [input, filters, bias, conv_label, A_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for conv affine folding against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1663,7 +1663,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
     auto callback = [input, filters, conv_label, mean, var, gamma, beta](pattern::Matcher& m) {
 
         NGRAPH_DEBUG << "In callback for groupconv BatchNorm folding against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1772,7 +1772,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
     auto callback = [input, filters, bias, num, conv_label, prelu](pattern::Matcher& m) {
 
         NGRAPH_DEBUG << "In callback for GroupConvBias + Relu folding against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto conv_m =
@@ -1831,7 +1831,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
     auto callback = [data_label, filters, out_delta, conv_label, mean, var, gamma, beta](
         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for deconv affine folding against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1926,7 +1926,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
 
     auto callback = [data_label, filters, out_delta, deconvb_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for deconvbias+relu against node = "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         auto deconvb_m =
@@ -1972,8 +1972,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
         input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
 
     auto callback = [input, update_input, slice_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for update_slice = "
-                     << m.get_match_value().get_node()->get_name();
+        NGRAPH_DEBUG << "In callback for update_slice = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
         auto slice_m = std::static_pointer_cast<ngraph::op::Slice>(pattern_map[slice_label]);
@@ -2066,7 +2065,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
 
     auto callback = [with_bias](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconv_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(
             m.get_match_value().get_node()->get_argument(0));
@@ -2158,7 +2157,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qavg_pool against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto avg_pool_m = m.get_match_root_as<ngraph::op::AvgPool>();
         NGRAPH_CHECK(avg_pool_m,
@@ -2200,7 +2199,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qmax_pool against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto max_pool_m = m.get_match_root_as<ngraph::op::MaxPool>();
         NGRAPH_CHECK(max_pool_m,
@@ -2245,7 +2244,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconcat against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto concat_m = m.get_match_root_as<ngraph::op::Concat>();
         NGRAPH_CHECK(
@@ -2307,7 +2306,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_dq_q()
 
     auto callback = [input](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dq_q against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
 
         auto q_m = m.get_match_root_as<ngraph::op::Quantize>();
         NGRAPH_CHECK(
@@ -2392,7 +2391,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
 
     auto callback = [dq_l_label, dq_r_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_qconvb_dq_add_relu against "
-                     << m.get_match_value().get_node()->get_name();
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto add_m = as_type_ptr<ngraph::op::Add>(m.get_match_value().get_node()->get_argument(0));
         auto dq_l_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_l_label]);
@@ -2552,8 +2551,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
                                                             AxisSet{});
     auto callback = [input0, input1, input0_scale, input1_scale, output_scale](
         pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for Qdot against node = "
-                     << m.get_match_value().get_node()->get_name();
+        NGRAPH_DEBUG << "In callback for Qdot against node = " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
