@@ -88,17 +88,17 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
                      << m.get_match_value().get_node()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto gop = pattern_map[op];
+        auto gop = m.get_pattern_value_map()[op];
 
         auto r2 = m.get_match_root_as<op::Reshape>();
         NGRAPH_CHECK(r2, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
         auto r1 = static_pointer_cast<op::Reshape>(r2->get_argument(0));
 
-        if (gop->get_output_shape(0) != m.get_match_value().get_shape())
+        if (gop.get_shape() != m.get_match_value().get_shape())
         {
             // First reshape transposes and second reshape only changes shape
             // Replace with a transpose that changes shape
-            if (apply_permutation(gop->get_output_shape(0), r1->get_input_order()) ==
+            if (apply_permutation(gop.get_shape(), r1->get_input_order()) ==
                     r2->get_output_shape(0) &&
                 r2->get_input_order() == get_default_order(r1->get_output_shape(0)) &&
                 r1->get_users().size() == 1)
@@ -111,8 +111,8 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
             else
             {
                 NGRAPH_DEBUG << "Operand shape doesn't match the shape of the second reshape!";
-                NGRAPH_DEBUG << "gop " << gop->get_name()
-                             << "shape = " << vector_to_string(gop->get_output_shape(0));
+                NGRAPH_DEBUG << "gop " << gop.get_node()->get_name()
+                             << "shape = " << vector_to_string(gop.get_shape());
                 NGRAPH_DEBUG << "match_root " << m.get_match_value().get_node()->get_name()
                              << "shape = " << vector_to_string(m.get_match_value().get_shape());
                 return false;
@@ -121,7 +121,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 
         // Check for sequence of reshapes/transposes that cancel out.
         auto do_r2 = get_default_order(r1->get_output_shape(0));
-        auto do_r1 = get_default_order(gop->get_output_shape(0));
+        auto do_r1 = get_default_order(gop.get_shape());
 
         NGRAPH_DEBUG << "r1's i/o = " << vector_to_string(r1->get_input_order())
                      << "do_r1 = " << vector_to_string(do_r1);
@@ -131,7 +131,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
         if (r1->get_input_order() == do_r1 && r2->get_input_order() == do_r2)
         {
             NGRAPH_DEBUG << "Two reshapes were removed!";
-            m.get_match_value().replace(gop->output(0));
+            m.get_match_value().replace(gop);
             return true;
         }
 
@@ -140,7 +140,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
         if (perm2 == do_r1)
         {
             NGRAPH_DEBUG << "Two transposes were removed!";
-            m.get_match_value().replace(gop->output(0));
+            m.get_match_value().replace(gop);
             return true;
         }
 
