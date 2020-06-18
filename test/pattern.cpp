@@ -641,9 +641,10 @@ public:
 
             auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
 
-            auto is_iconst_zero = [](std::shared_ptr<Node> n) {
+            auto is_iconst_zero = [](Output<Node> n) {
                 bool result = ngraph::is_zero(n);
-                NGRAPH_DEBUG << n->get_name() << " is " << (result ? " a zero " : " not a zero");
+                NGRAPH_DEBUG << n.get_node()->get_name() << " is "
+                             << (result ? " a zero " : " not a zero");
                 return ngraph::is_zero(n);
             };
 
@@ -660,8 +661,8 @@ public:
             // matches are added in reverse order (i.e. the first match is the topmost node)
             auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
             NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
-                         << arg->get_name();
-            ngraph::replace_node(rm.get_match_root(), arg);
+                         << arg.get_node()->get_name();
+            rm.get_match_value().replace(arg);
             return true;
         };
 
