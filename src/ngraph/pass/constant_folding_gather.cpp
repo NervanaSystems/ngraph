@@ -46,18 +46,26 @@ void pass::ConstantFolding::construct_constant_gather_with_subgraph()
 
         // only along axis=0
         if (axis->cast_vector<int64_t>()[0] != 0 || concat->get_axis() != 0)
+        {
             return false;
+        }
         // only single indices are accepted
         const auto indices_shape = indices->get_output_shape(0);
         if (indices_shape.size() > 1 || (indices_shape.size() == 1 && indices_shape[0] > 1))
+        {
             return false;
+        }
         // concat inputs are 1D and their count is equal to Concat output shape
         if (concat->get_output_partial_shape(0).is_dynamic())
+        {
             return false;
+        }
         const auto concat_inputs = concat->inputs();
         // concat inputs must be single elements
         if (concat_inputs.size() != shape_size(concat->get_output_shape(0)))
+        {
             return false;
+        }
 
         const int64_t rank = concat->get_output_shape(0)[0];
         const int64_t raw_index = indices->cast_vector<int64_t>()[0];
