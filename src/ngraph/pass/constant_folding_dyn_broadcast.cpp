@@ -66,7 +66,11 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
             static_pointer_cast<op::Constant>(pattern_map[constant_shape_label]);
         auto constant_axes_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_axes_label]);
-        auto dyn_broadcast_match = static_pointer_cast<op::DynBroadcast>(m.get_match_root());
+        auto dyn_broadcast_match = m.get_match_root_as<op::DynBroadcast>();
+        NGRAPH_CHECK(dyn_broadcast_match,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::DynBroadcast`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dyn_broadcast_match));
 

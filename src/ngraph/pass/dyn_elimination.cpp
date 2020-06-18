@@ -165,7 +165,9 @@ void pass::DynElimination::construct_dyn_slice()
         auto begins_arg = static_pointer_cast<op::Constant>(pattern_map[begins_arg_label]);
         auto ends_arg = static_pointer_cast<op::Constant>(pattern_map[ends_arg_label]);
         auto strides_arg = static_pointer_cast<op::Constant>(pattern_map[strides_arg_label]);
-        auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
+        auto dyn_slice = m.get_match_root_as<op::DynSlice>();
+        NGRAPH_CHECK(
+            dyn_slice, "match root node ", *m.get_match_root(), " not of type `op::DynSlice`");
 
         if (data_arg->get_output_partial_shape(0).is_dynamic() ||
             begins_arg->get_output_element_type(0) != element::i64 ||
@@ -244,7 +246,11 @@ void pass::DynElimination::construct_dyn_replace_slice()
         auto begins_arg = static_pointer_cast<op::Constant>(pattern_map[begins_arg_label]);
         auto ends_arg = static_pointer_cast<op::Constant>(pattern_map[ends_arg_label]);
         auto strides_arg = static_pointer_cast<op::Constant>(pattern_map[strides_arg_label]);
-        auto dyn_replace_slice = static_pointer_cast<op::DynReplaceSlice>(m.get_match_root());
+        auto dyn_replace_slice = m.get_match_root_as<op::DynReplaceSlice>();
+        NGRAPH_CHECK(dyn_replace_slice,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::DynReplaceSlice`");
 
         if (data_arg->get_output_partial_shape(0).is_dynamic() ||
             replacement_arg->get_output_partial_shape(0).is_dynamic() ||
@@ -330,7 +336,9 @@ void pass::DynElimination::construct_range()
 
         auto start_arg = static_pointer_cast<op::Constant>(pattern_map[start_arg_label]);
         auto step_arg = static_pointer_cast<op::Constant>(pattern_map[step_arg_label]);
-        auto range_node = static_pointer_cast<op::Range>(m.get_match_root());
+        auto range_node = m.get_match_root_as<op::Range>();
+        NGRAPH_CHECK(
+            range_node, "match root node ", *m.get_match_root(), " not of type `op::Range`");
 
         NGRAPH_CHECK(start_arg->get_output_partial_shape(0).rank().compatible(0) &&
                      step_arg->get_output_partial_shape(0).rank().compatible(0));
