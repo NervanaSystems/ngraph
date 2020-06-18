@@ -71,6 +71,11 @@ namespace ngraph
                         const NodeVector& subgraph_params = {});
 
     NGRAPH_API
+    void traverse_nodes(const OutputVector& subgraph_results,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        const OutputVector& subgraph_params = {});
+
+    NGRAPH_API
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool,

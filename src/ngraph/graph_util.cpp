@@ -61,6 +61,23 @@ void ngraph::traverse_nodes(const Function* p, std::function<void(std::shared_pt
     traverse_nodes(nodes, f);
 }
 
+void ngraph::traverse_nodes(const OutputVector& subgraph_results,
+                            std::function<void(std::shared_ptr<Node>)> f,
+                            const OutputVector& subgraph_params)
+{
+    NodeVector results;
+    NodeVector params;
+    for (Output<Node> output : subgraph_results)
+    {
+        results.push_back(output.get_node_shared_ptr());
+    }
+    for (Output<Node> output : subgraph_params)
+    {
+        params.push_back(output.get_node_shared_ptr());
+    }
+    traverse_nodes(results, f, params);
+}
+
 void ngraph::traverse_nodes(const NodeVector& subgraph_results,
                             std::function<void(std::shared_ptr<Node>)> f,
                             const NodeVector& subgraph_params)
