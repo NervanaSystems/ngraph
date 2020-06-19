@@ -204,6 +204,7 @@ namespace ngraph
         else
         {
             std::stringstream ss;
+            ss.precision(std::numeric_limits<T>::digits10);
             ss << value;
             rc = ss.str();
         }
