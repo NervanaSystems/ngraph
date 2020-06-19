@@ -110,7 +110,6 @@ namespace ngraph
 
                 graph.mutable_node()->erase(graph.node().begin());
 
-                // Save graph to file
                 ONNX_NAMESPACE::ModelProto model;
                 auto* graph_ptr = model.mutable_graph();
                 *graph_ptr = graph;

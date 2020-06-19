@@ -41,46 +41,55 @@ namespace ngraph
                     new_node->clear_input();
                     new_node->clear_output();
 
+                    std::vector<std::shared_ptr<ngraph::Node>> orginal_inputs =
+                        node.get_ng_inputs();
+                    std::vector<std::shared_ptr<ngraph::Node>> helper_inputs;
+
                     // Add input to node and graph
-                    auto input = node.get_ng_inputs().at(0);
-                    new_node->add_input(input->get_name());
-                    ONNX_NAMESPACE::ValueInfoProto* proto_input = graph.add_input();
-                    proto_input->set_name(input->get_name());
-                    auto input_type = input->get_element_type();
-                    auto input_shape = input->get_output_shape(0);
-                    *proto_input->mutable_type() = common::get_proto_type(input_type, input_shape);
+                    for (auto input : orginal_inputs)
+                    {
+                        new_node->add_input(input->get_name());
+                        ONNX_NAMESPACE::ValueInfoProto* proto_input = graph.add_input();
+                        proto_input->set_name(input->get_name());
+                        auto input_type = input->get_element_type();
+                        auto input_shape = input->get_output_shape(0);
+                        *proto_input->mutable_type() =
+                            common::get_proto_type(input_type, input_shape);
+                    }
                     // Warning: Consider PartialShape
 
                     // Add outputs to node
                     for (auto output : node.get_output_names())
                     {
                         new_node->add_output(output);
+
+                        // Add outputs to graph
+                        ONNX_NAMESPACE::ValueInfoProto* y = graph.add_output();
+                        y->set_name(output);
                     }
 
-                    // Add outputs to graph
-                    // This part is secific for each func op
-                    ONNX_NAMESPACE::ValueInfoProto* y = graph.add_output();
-                    y->set_name(node.get_output_names()[0]);
-                    *y->mutable_type() = common::get_proto_type(element::Type_t::u8, input_shape);
-
-                    ONNX_NAMESPACE::ValueInfoProto* y_scale = graph.add_output();
-                    y_scale->set_name(node.get_output_names()[1]);
-                    *y_scale->mutable_type() = common::get_proto_type(input_type, Shape(1));
-
-                    ONNX_NAMESPACE::ValueInfoProto* y_zero_point = graph.add_output();
-                    y_zero_point->set_name(node.get_output_names()[2]);
-                    *y_zero_point->mutable_type() =
-                        common::get_proto_type(element::Type_t::u8, Shape(1));
-
+                    // Swap input from helping nGrpah function with one from original function
                     std::vector<std::shared_ptr<ngraph::Node>> nodes =
                         common::get_extanded_function(new_node, graph, 11);
+
+                    for (int i = nodes.size() - 1; i >= 0; --i)
+                    {
+                        if (nodes.at(i)->is_parameter())
+                        {
+                            helper_inputs.push_back(nodes.at(i));
+                        }
+                    }
+
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
                         for (auto& input : nodes.at(i)->inputs())
                         {
-                            if (input.get_shape() == node.get_ng_inputs().at(0)->get_shape())
+                            for (int i = 0; i < helper_inputs.size(); ++i) // Func neeeded
                             {
-                                input.replace_source_output(node.get_ng_inputs().at(0));
+                                if (input.get_source_output() == helper_inputs.at(i))
+                                {
+                                    input.replace_source_output(orginal_inputs.at(i));
+                                }
                             }
                         }
                     }
