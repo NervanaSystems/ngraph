@@ -49,4 +49,4 @@ def test_matmul(shape_a, shape_b, transpose_a, transpose_b):
         right_input = np.transpose(right_input)
 
     expected = np.matmul(left_input, right_input)
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, 1e-04, 1e-07)
