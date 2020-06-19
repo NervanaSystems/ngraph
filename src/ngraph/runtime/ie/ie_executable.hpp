@@ -45,9 +45,10 @@ namespace ngraph
                 std::string m_device;
                 std::map<std::string, int> m_map_cnnparam_to_tfidx; // which CNN param maps to which index of the TF input tensor
                 std::map<std::string, int> m_map_cnnresult_to_tfidx; // which CNN result maps to which index of the TF output tensor
-                std::map<std::string, void*> m_map_cnnconstresult_to_node;
+                std::map<std::string, void*> m_map_cnnconstresult_to_ngnodeptr;
                 std::map<std::string, std::string> m_nongraph_const_outputs; // (input-const, output-result)
                 std::map<std::string, std::string> m_map_result_to_ngnode; // (result, from) e.g. Result_353->Constant_673, Result_350->ngraph_output_1
+                std::map<std::string, void*> m_map_result_to_ngnodeptr; // same as above one
             };
         }
     }

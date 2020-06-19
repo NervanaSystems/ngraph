@@ -88,6 +88,7 @@ namespace
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     : m_device{device}
 {
+#if 0
     const auto& opset = get_opset1();
     pass::Manager passes;
     // passes.register_pass<pass::LikeReplacement>();
@@ -100,6 +101,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     // passes.register_pass<pass::GetOutputElementElimination>();
     passes.register_pass<pass::Opset1Upgrade>();
     passes.run_passes(func);
+
 
     for (const auto& node : func->get_ops())
     {
@@ -117,6 +119,8 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
             }
         }
     }
+#endif
+
 
 #ifdef NGRAPH_DEBUG_ENABLE
     cout << "Nodes in test: ";
@@ -137,61 +141,45 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
         serialize(name + ".json", func);
     }
 
-    // Bani
-    // Eliminate Constant nodes that are directly connected to an Output/Result node
-    for (const auto& node : m_network.getFunction()->get_ops()) {
-        //std::cout << "    trying fn(name) = " << node->get_friendly_name() << "(" << node->get_name() << ", " << node->get_type_name() << ")\n";
-        if (node->is_constant()) {
-            //std::cout << "    node is_constant, fn(name) = " << node->get_friendly_name() << "(" << node->get_name() << ", " << node->get_type_name() << ")\n";
-            auto outputs = node->outputs(); // std::vector<Output<Node>>
-            if(outputs.size() == 1) {
-                auto const& outHndl = outputs[0];
-                auto const& targetInputHndls = outHndl.get_target_inputs(); // std::set<Input<Node>> get_target_inputs()
-                //std::cout << "        node's outHndl.get_target_inputs().size() = " << targetInputHndls.size() << "  ==>> "; for (auto x : targetInputHndls) { std::cout << x.get_node()->get_friendly_name() << " (" << x.get_node()->get_name() << " / " << x.get_node()->get_type_name() << "), "; } std::cout << "\n";
-                // TODO: put a check: if we get size > 1, it's Ok as long as all the target inputs have same friendly_name (but diff actual name)
-                if(targetInputHndls.size() > 0) {
-                    auto const& outNode = targetInputHndls.begin()->get_node();
-                    //std::cout << "        node's outputs.size() == ?, fn(name) = " << outNode->get_friendly_name() << "(" << outNode->get_name() << ", " << outNode->get_type_name() << ")\n";
-                    if(outNode->is_output()) {
-                        // (input-const, output-result) e.g. Constant_675->Result_352, ngraph_output_1->Result_350
-                        m_nongraph_const_outputs.insert(std::pair<std::string, std::string>(node->get_friendly_name(), outNode->get_friendly_name()));
-                    }
-                }
-            }
-        }
-    }
-    //BANI_DBG: cout << "\nAfter m_nongraph_const_outputs ==> "; for (auto const& pair : m_nongraph_const_outputs) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
-    // Example: Constant_673->Result_353, Constant_675->Result_352, ngraph_output_1->Result_350, ngraph_output_2->Result_351, 
-    // ngraph_output_6->Result_355, ngraph_output_7->Result_356, ngraph_output_8->Result_357, ngraph_output_9->Result_358,
-
 #if 1
     // We need to save the mapping from CNN network's Result nodes to the original NG-function's result-contributing nodes
-    for(auto aNodeShPtr : m_results) {
-        m_map_result_to_ngnode.insert(std::pair<std::string, std::string>(aNodeShPtr->get_friendly_name(), "UNKNOWN"));
-    }
-    for (const auto& node : m_network.getFunction()->get_ops()) {
-        //BANI_DBG: std::cout << "    trying fn(name) = " << node->get_friendly_name() << "(" << node->get_name() << ", " << node->get_type_name() << ")\n";
-        auto outputs = node->outputs(); // std::vector<Output<Node>>
-        if(outputs.size() == 1) {
-            auto const& outHndl = outputs[0];
-            auto const& targetInputHndls = outHndl.get_target_inputs(); // std::set<Input<Node>> get_target_inputs()
-            //std::cout << "        node's outHndl.get_target_inputs().size() = " << targetInputHndls.size() << "  ==>> "; for (auto x : targetInputHndls) { std::cout << x.get_node()->get_friendly_name() << " (" << x.get_node()->get_name() << " / " << x.get_node()->get_type_name() << "), "; } std::cout << "\n";
-            // TODO: put a check: if we get size > 1, it's Ok as long as all the target inputs have same friendly_name (but diff actual name)
-            if(targetInputHndls.size() > 0) {
-                auto const& outNode = targetInputHndls.begin()->get_node();
-                //std::cout << "        node's outputs.size() == ?, fn(name) = " << outNode->get_friendly_name() << "(" << outNode->get_name() << ", " << outNode->get_type_name() << ")\n";
-                if(m_map_result_to_ngnode.count(outNode->get_friendly_name()) == 0) {
-                    continue; // we are not interested, as it is not a Result_ node
-                }
-                if(outNode->is_output()) {
-                    // (result, from) e.g. Result_353->Constant_673, Result_350->ngraph_output_1
-                    m_map_result_to_ngnode.erase(outNode->get_friendly_name());
-                    m_map_result_to_ngnode.insert(std::pair<std::string, std::string>(outNode->get_friendly_name(), node->get_friendly_name()));
-                }
+    // m_map_result_to_ngnode e.g. (result, from) e.g. Result_353->Constant_673, Result_350->ngraph_output_1
+    // Also...
+    // OPV/IE CNN doesn't handle Constant nodes that are directly connected to an Output/Result node, save in m_nongraph_const_outputs
+    // (input-const, output-result) e.g. Constant_675->Result_352, ngraph_output_1->Result_350
+    for (const auto& ng_result_node : m_results) { // Note: order of m_results matches with ngfunc's outputs' order, and TF-output-tensors
+        const auto& ng_result_name = ng_result_node->get_name(); // Result_353 or Result_350
+        // Find within the related NGFUNC, the parent/contributing node which feeds to this cnn_result_name
+        const auto& cnn_result_node = ng_result_node->input(0).get_source_output().get_node();
+        const auto& cnn_result_name = cnn_result_node->get_friendly_name(); //  e.g. Constant_675 or ngraph_output_1 // Don't use get_name()!!
+        //BANI_DBG: std::cout << " IE_Executable cnn --> ng_result : " << cnn_result_name << " --> " << ng_result_name << "\n";
+        m_map_result_to_ngnode.insert(std::pair<std::string, std::string>(ng_result_name, cnn_result_name));
+        if(cnn_result_node->is_constant()) {
+            // (input-const, output-result) e.g. Constant_675->Result_352, ngraph_output_1->Result_350
+            m_nongraph_const_outputs.insert(std::pair<std::string, std::string>(cnn_result_name, ng_result_name));
+            const ngraph::op::Constant* const_node = dynamic_cast<const ngraph::op::Constant*>(&(*cnn_result_node));
+            if(const_node) {
+                m_map_cnnconstresult_to_ngnodeptr.insert(std::pair<std::string, void*>(cnn_result_name, (void*)const_node));
+            } else {
+                THROW_IE_EXCEPTION << "\n!!! Cannot dynamic_cast<const ngraph::op::Constant*>, const-node = " << cnn_result_name << " !!!\n";
             }
         }
     }
-    //BANI_DBG: cout << "\nAfter m_map_result_to_ngnode ==> "; for (auto const& pair : m_map_result_to_ngnode) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    //BANI_DBG: 
+    // Example: Result_353->Constant_673, Result_350->ngraph_output_1, ...
+    //BANI_DBG: std::cout << "\n*** m_results " << m_results.size() << " ==> "; for (auto& op : m_results) { std::cout << op->get_name() << ", "; } std::cout << "\n";
+    std::cout << "\n*** m_map_result_to_ngnode " << m_map_result_to_ngnode.size() << " ==> "; for (auto const& pair : m_map_result_to_ngnode) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    //BANI_DBG: 
+    std::cout << "\n*** m_nongraph_const_outputs " << m_nongraph_const_outputs.size() << " ==> "; for (auto const& pair : m_nongraph_const_outputs) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    // Example: Constant_673->Result_353,  ngraph_output_1->Result_350, ...
+
+    NGRAPH_CHECK(m_results.size()==m_map_result_to_ngnode.size(), "Mismatching number of result/output items");
+    for (auto& op : m_results) {
+        if(m_map_result_to_ngnode.count(op->get_name()) == 0) {
+            std::cout << "m_results ==> "; for (auto& op2 : m_results) { std::cout << op2->get_name() << ", "; } std::cout << "\n";
+            THROW_IE_EXCEPTION << "\n!!! m_results op " << op->get_name() << " not found in m_map_result_to_ngnode !!!\n";
+        }
+    }
 #endif
 
     // Bani
@@ -213,6 +201,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     //BANI_DBG: cout << "\nIE_Executable ctor, m_map_cnnparam_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnparam_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
 
 
+#if 1
     // Bani
     // Save the output index mappings from CNN's result name to TF tensor's output index
     // Example: same numbers of items in each (e.g. 10)
@@ -233,32 +222,9 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 
         m_map_cnnresult_to_tfidx.insert(std::pair<std::string, int>(output_name, idx));
 
-        if(m_nongraph_const_outputs.find(output_name) != m_nongraph_const_outputs.end()) {
-            // So, we will shortcut the Const value into the Result_ node
-            //BANI_DBG: std::cout << "    found Constant node in m_nongraph_const_outputs: " << output_name << "\n";
-            bool found = false;
-            for(const auto& node : m_network.getFunction()->get_ops()) {
-                if(node->get_friendly_name().compare(output_name) == 0) { // Example output_name: Constant_673
-                    if(node->is_constant()) {
-                        found = true;
-                        const ngraph::op::Constant* const_node = dynamic_cast<const ngraph::op::Constant*>(&(*node));
-                        if(const_node) {
-                            m_map_cnnconstresult_to_node.insert(std::pair<std::string, void*>(output_name, (void*)const_node));
-                        } else {
-                            THROW_IE_EXCEPTION << "\n!!! Cannot dynamic_cast<const ngraph::op::Constant*>, const-node = " << output_name << " !!!\n";
-                        }
-                        break;
-                    }
-                }
-            }
-            if(!found) {
-                THROW_IE_EXCEPTION << "\n!!! Cannot locate in m_network.getFunction(), const-node = " << output_name << " !!!\n";
-            }
-        }
-
         idx++;
     }
-
+#endif
 
 
     InferenceEngine::Core ie;
@@ -292,20 +258,21 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     size_t i = 0;
     for (const auto& it : input_info)
     {
-        //BANI_DBG: std::cout << "    runtime::ie::IE_Executable::call, input iterator = " << it.first << ", " << m_network.getFunction()->get_friendly_name() << "\n";
-        // Check which TF-tensor-input# this it.first matches with
-        if(m_map_cnnparam_to_tfidx.find(it.first) == m_map_cnnparam_to_tfidx.end()) {
-            THROW_IE_EXCEPTION << "\n!!! Cannot locate in m_map_cnnparam_to_tfidx, input/param = " << it.first << " !!!\n";
+        auto input_name = it.first;
+        //BANI_DBG: std::cout << "    runtime::ie::IE_Executable::call, input iterator = " << input_name << ", " << m_network.getFunction()->get_friendly_name() << "\n";
+        // Check which TF-tensor-input# this input_name matches with
+        if(m_map_cnnparam_to_tfidx.find(input_name) == m_map_cnnparam_to_tfidx.end()) {
+            THROW_IE_EXCEPTION << "\n!!! Cannot locate in m_map_cnnparam_to_tfidx, input/param = " << input_name << " !!!\n";
         }
-        int idx_tensor_input = m_map_cnnparam_to_tfidx.at(it.first);
+        int idx_tensor_input = m_map_cnnparam_to_tfidx.at(input_name);
         if(idx_tensor_input >= inputs.size()) {
-            THROW_IE_EXCEPTION << "\n!!! Bad idx_tensor_input for " << it.first << ", idx_tensor_input = " << idx_tensor_input << " !!!\n";
+            THROW_IE_EXCEPTION << "\n!!! Bad idx_tensor_input for " << input_name << ", idx_tensor_input = " << idx_tensor_input << " !!!\n";
         }
 
         shared_ptr<runtime::ie::IETensor> tv =
             //static_pointer_cast<runtime::ie::IETensor>(inputs[i]);
             static_pointer_cast<runtime::ie::IETensor>(inputs[idx_tensor_input]); // Bani
-        m_infer_req.SetBlob(it.first,
+        m_infer_req.SetBlob(input_name,
                             fill_blob(it.second->getTensorDesc().getDims(),
                                       tv->get_data_ptr(),
                                       tv->get_element_count(),
@@ -325,22 +292,24 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     }
 
     NGRAPH_CHECK(m_results.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results.size() ,")");
-    i = 0;
+
+    //TODO: Remove this following block after testing
+    if(m_map_cnnresult_to_tfidx.size() != outputs.size()) {
+        std::cout << "m_map_cnnresult_to_tfidx ==> "; for (auto const& pair : m_map_cnnresult_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+        std::cout << "m_results ==> "; for (auto& op : m_results) { std::cout << op->get_name() << ", "; } std::cout << "\n";
+        std::cout << "m_nongraph_const_outputs ==> "; for (auto const& pair : m_nongraph_const_outputs) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+        std::cout << "m_map_cnnconstresult_to_ngnodeptr ==> "; for (auto const& pair : m_map_cnnconstresult_to_ngnodeptr) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+        NGRAPH_CHECK(false, "Mismatching number of output items between tensors (", outputs.size(), ") and m_map_cnnresult_to_tfidx (", m_map_cnnresult_to_tfidx.size() ,")");
+    }
+
     for (const auto& it : output_info)
     {
-        //BANI_DBG: std::cout << "    runtime::ie::IE_Executable::call, output iterator = " << it.first << ", " << m_network.getFunction()->get_friendly_name() << "\n";
-        // Check which TF-tensor-output# this it.first matches with
-        if(m_map_cnnresult_to_tfidx.find(it.first) == m_map_cnnresult_to_tfidx.end()) {
-            NGRAPH_CHECK(false, "!!! Cannot locate in m_map_cnnresult_to_tfidx, output = ", it.first, " !!!");
-        }
-        int idx_tensor_output = m_map_cnnresult_to_tfidx.at(it.first);
-        if(idx_tensor_output >= outputs.size()) {
-            THROW_IE_EXCEPTION << "\n!!! Bad idx_tensor_output for " << it.first << ", idx_tensor_output = " << idx_tensor_output << " !!!\n";
-        }
-
+        auto output_name = it.first;
+        NGRAPH_CHECK(m_map_cnnresult_to_tfidx.count(output_name) == 1, "!!! Output ", output_name, " not found !!!");
+        int idx_tensor_output = m_map_cnnresult_to_tfidx.at(output_name);
         // Check if this is a Constant -> Result sceanrio, in which case we will just short-circuit the value
-        auto it2 = m_map_cnnconstresult_to_node.find(it.first);
-        if(it2 != m_map_cnnconstresult_to_node.end()) {
+        auto it2 = m_map_cnnconstresult_to_ngnodeptr.find(output_name);
+        if(it2 != m_map_cnnconstresult_to_ngnodeptr.end()) {
             const ngraph::op::Constant* const_node = (ngraph::op::Constant*)(it2->second);
             if(const_node) {
                 auto num_bytes = shape_size(const_node->get_shape()) * const_node->get_element_type().size();
@@ -349,18 +318,21 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
                 outputs[idx_tensor_output]->write(value, num_bytes);
                 continue;
             } else {
-                THROW_IE_EXCEPTION << "\n!!! Cannot get const_node = " << it.first << " !!!\n";
+                THROW_IE_EXCEPTION << "\n!!! Cannot get const_node = " << output_name << " !!!\n";
             }
         }
 
         shared_ptr<runtime::ie::IETensor> tv =
             static_pointer_cast<runtime::ie::IETensor>(outputs[idx_tensor_output]);
-        m_infer_req.SetBlob(it.first,
+        //BANI_DBG: 
+        std::cout << "\nCalling m_infer_req.SetBlob for output " << output_name << ", count=" << tv->get_element_count() << 
+        ", network precision=" << it.second->getTensorDesc().getPrecision().name() << 
+        ", tensor type=" << tv->get_element_type().get_type_name() << "\n";
+        m_infer_req.SetBlob(output_name,
                             fill_blob(it.second->getTensorDesc().getDims(),
                                       tv->get_data_ptr(),
                                       tv->get_element_count(),
                                       tv->get_element_type()));
-        i++;
     }
     timer.stop();
     auto time_prep_outputs = timer.get_milliseconds();
