@@ -251,7 +251,7 @@ void pass::CoreFusion::construct_relu()
         }
         auto mpattern = m.get_match_root();
 
-        auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
+        auto cg = make_shared<op::Relu>(pattern_map[val]);
         replace_node(m.get_match_root(), cg);
         return true;
     };
@@ -1285,12 +1285,12 @@ void pass::CoreFusion::construct_conv_bias()
             auto order = get_default_order(bias->get_output_shape(0));
             auto bias_reshape =
                 make_shared<op::Reshape>(bias, order, Shape{conv_m->get_input_shape(1)[0]});
-            auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias_reshape));
+            auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias_reshape);
             replace_node(m.get_match_root(), conv_bias);
         }
         else
         {
-            auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias));
+            auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias);
             replace_node(m.get_match_root(), conv_bias);
         }
         return true;
@@ -1339,7 +1339,7 @@ void pass::CoreFusion::construct_conv_bias_add()
             return false;
         }
 
-        auto conv_add = shared_ptr<Node>(new op::ConvolutionBiasAdd(conv_m, add_input_m, false));
+        auto conv_add = make_shared<op::ConvolutionBiasAdd>(conv_m, add_input_m, false);
         replace_node(m.get_match_root(), conv_add);
         return true;
     };
