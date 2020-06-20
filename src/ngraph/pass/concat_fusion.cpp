@@ -92,7 +92,7 @@ void pass::ConcatElimination::construct_concat_elimination()
 {
     auto op_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3});
     auto concat = std::make_shared<op::Concat>(NodeVector{op_label}, 0);
-    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
+    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, OutputVector{concat});
 
     auto callback = [op_label](pattern::Matcher& m) {
         NGRAPH_DEBUG
@@ -120,9 +120,9 @@ void pass::ConcatElimination::construct_concat_elimination()
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modify_graph = false;
-    auto has_multiple_inputs = [](std::shared_ptr<Node> n) {
-        auto input_size = n->get_input_size();
-        auto root = as_type_ptr<op::Concat>(n);
+    auto has_multiple_inputs = [](Output<Node> n) {
+        auto input_size = n.get_node()->get_input_size();
+        auto root = as_type<op::Concat>(n.get_node());
         return (root && input_size > 1);
     };
 

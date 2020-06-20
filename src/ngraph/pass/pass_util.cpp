@@ -20,10 +20,10 @@
 using namespace std;
 using namespace ngraph;
 
-std::function<bool(std::shared_ptr<Node>)> ngraph::pass::get_no_fan_out_function()
+std::function<bool(Output<Node>)> ngraph::pass::get_no_fan_out_function()
 {
-    auto ret_fun = [](std::shared_ptr<Node> n) {
-        auto users = n->get_users(true);
+    auto ret_fun = [](Output<Node> n) {
+        auto users = n.get_node()->get_users(true);
         std::set<std::shared_ptr<Node>> user_set(users.begin(), users.end());
         size_t num_unique_users = user_set.size();
         if (num_unique_users == 1)
@@ -32,7 +32,7 @@ std::function<bool(std::shared_ptr<Node>)> ngraph::pass::get_no_fan_out_function
         }
         else
         {
-            NGRAPH_DEBUG << n->get_name() << " has fan out\n";
+            NGRAPH_DEBUG << n.get_node()->get_name() << " has fan out\n";
             return false;
         }
     };
