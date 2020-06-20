@@ -223,8 +223,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
             throw ngraph_error("Lstm node doesnt have three outputs");
         }
 
-        auto dst_layer = m.get_match_root()->output(0);
-        auto dst_iter = m.get_match_root()->output(1);
+        auto dst_layer = m.get_match_value().get_node()->output(0);
+        auto dst_iter = m.get_match_value().get_node()->output(1);
         // dst_iter of lstm mkldnn output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
         // find the user's for {ht} and replace them with lstm output 2
@@ -260,7 +260,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -275,7 +275,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
         }
 
         auto sigmoid_node = std::make_shared<ngraph::op::Sigmoid>(pattern_map[input]);
-        ngraph::replace_node(m.get_match_root(), sigmoid_node);
+        m.get_match_value().replace(sigmoid_node->output(0));
         return true;
     };
 
@@ -366,7 +366,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         auto pattern_map = m.get_pattern_value_map();
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -478,7 +478,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                                        lstm_ct_output->output(0));
         }
         // find the user's for {ht} and replace them with lstm_goe_1
-        ngraph::replace_node(m.get_match_root(), lstm_ht_output);
+        m.get_match_value().replace(lstm_ht_output->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht, "LSTMFusion.Fprop");
@@ -1049,7 +1049,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         // if the shape doesnt match, we will logically reshape it to expaned_dims{tnc} from
         // squeezed_dims{t*n, c}
         Output<Node> layer_rnn_ht_reshape = rnn->output(0);
-        if (m.get_match_root()->get_output_shape(0) != rnn->get_output_shape(0))
+        if (m.get_match_value().get_shape() != rnn->get_output_shape(0))
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                                        rnn->output(0),
@@ -1059,8 +1059,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         }
 
         // we will check if the node being replaced is in Shape{n, t, c}, if so we will transpose
-        if (m.get_match_root()->get_output_shape(0) ==
-            Shape{batch_size, num_time_steps, feature_size})
+        if (m.get_match_value().get_shape() == Shape{batch_size, num_time_steps, feature_size})
         {
             layer_rnn_ht_reshape = std::make_shared<ngraph::op::Reshape>(
                                        layer_rnn_ht_reshape,
