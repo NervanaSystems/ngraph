@@ -82,7 +82,6 @@ namespace ngraph
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 std::shared_ptr<CPU_CallFrame> m_call_frame;
-                bool m_performance_counters_enabled = false;
             };
         }
     }

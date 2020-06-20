@@ -123,7 +123,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -169,7 +169,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -509,7 +509,7 @@ TEST(pattern, previous_matches)
 {
     using ngraph::pattern::Matcher;
     Shape shape{};
-    Matcher::PatternMap previous_matches;
+    Matcher::PatternValueMap previous_matches;
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto pattern = std::make_shared<pattern::op::Label>(b);

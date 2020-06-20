@@ -79,6 +79,7 @@ class NGRAPH_API ngraph::pattern::Matcher
 {
 public:
     using PatternMap = ngraph::pattern::PatternMap;
+    using PatternValueMap = ngraph::pattern::PatternValueMap;
 
     // Avoid implicit string construction from nullptr.
     Matcher(const std::shared_ptr<Node> pattern_node, std::nullptr_t name) = delete;
