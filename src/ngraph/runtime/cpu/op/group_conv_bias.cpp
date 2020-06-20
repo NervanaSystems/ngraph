@@ -176,18 +176,18 @@ shared_ptr<Node> op::GroupConvolutionBias::clone_with_new_inputs(const OutputVec
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return shared_ptr<Node>(new GroupConvolutionBias(new_args.at(0),
-                                                     new_args.at(1),
-                                                     new_args.at(2),
-                                                     get_window_movement_strides(),
-                                                     get_window_dilation_strides(),
-                                                     get_padding_below(),
-                                                     get_padding_above(),
-                                                     get_data_dilation_strides(),
-                                                     get_groups(),
-                                                     get_output_shape(0),
-                                                     m_with_relu,
-                                                     get_alpha()));
+    return make_shared<GroupConvolutionBias>(new_args.at(0),
+                                             new_args.at(1),
+                                             new_args.at(2),
+                                             get_window_movement_strides(),
+                                             get_window_dilation_strides(),
+                                             get_padding_below(),
+                                             get_padding_above(),
+                                             get_data_dilation_strides(),
+                                             get_groups(),
+                                             get_output_shape(0),
+                                             m_with_relu,
+                                             get_alpha());
 }
 
 void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,

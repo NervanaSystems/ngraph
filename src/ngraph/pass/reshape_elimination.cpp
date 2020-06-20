@@ -203,7 +203,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
             Shape{arg1->get_output_shape(0).at(1), arg1->get_output_shape(0).at(0)};
         auto reshape1 = make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
-        auto tdot = shared_ptr<Node>(new op::Dot(reshape1, reshape0));
+        auto tdot = make_shared<op::Dot>(reshape1, reshape0);
         replace_node(m.get_match_root(), tdot);
         return true;
     };
