@@ -519,7 +519,7 @@ unsigned getBufferSizeForOperand(mlir::Value value, int offset) {
 
   return bufferSize;
 }
-}
+} // namespace
 
 namespace mlir {
 MemoryAnalysis::MemoryAnalysis(Operation *op) {
@@ -528,4 +528,4 @@ MemoryAnalysis::MemoryAnalysis(Operation *op) {
   NGRAPH_CHECK(moduleOp != nullptr, "Expecting FuncOp for anaylsis");
   memoryAssignment.run(&moduleOp);
 }
-}
+} // namespace mlir

@@ -39,6 +39,7 @@ namespace ngraph
 
                 CUcontext GetContext() { return m_context; }
                 void SetContextCurrent() { cuCtxSetCurrent(m_context); }
+
             protected:
                 CUdevice m_device;
                 CUcontext m_context;

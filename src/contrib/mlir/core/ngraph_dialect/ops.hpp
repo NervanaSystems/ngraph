@@ -42,4 +42,4 @@ namespace mlir {
 #define GET_OP_CLASSES
 #include "ops.h.inc"
 #undef GET_OP_CLASSES
-}
+} // namespace mlir

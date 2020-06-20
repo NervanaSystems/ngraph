@@ -56,7 +56,6 @@
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
-#include "util/random.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;

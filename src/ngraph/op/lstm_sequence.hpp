@@ -150,6 +150,7 @@ namespace ngraph
                 std::int64_t get_hidden_size() const { return m_hidden_size; }
                 bool get_input_forget() const { return m_input_forget; }
                 LSTMWeightsFormat get_weights_format() const { return m_weights_format; }
+
             private:
                 ///
                 /// \brief      Gets the masked value according to sequence lenght in a batch.

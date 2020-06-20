@@ -60,6 +60,7 @@ namespace ngraph
 
                 int get_axis() const { return m_axis; }
                 size_t get_group() const { return m_group; }
+
             private:
                 /// \brief Generates a shape required to permute the data
                 ///

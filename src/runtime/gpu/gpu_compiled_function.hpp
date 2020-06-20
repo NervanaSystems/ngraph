@@ -34,8 +34,8 @@
 
 #define EMIT_ARGS                                                                                  \
     runtime::gpu::GPUCompiledFunction *compiled_function, const std::string &function_name,        \
-        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
-        const std::vector<runtime::gpu::GPUTensorWrapper> &out
+        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper>&args,                  \
+        const std::vector<runtime::gpu::GPUTensorWrapper>&out
 
 namespace ngraph
 {

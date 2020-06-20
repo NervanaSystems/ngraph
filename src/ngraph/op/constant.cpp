@@ -324,9 +324,7 @@ op::Constant::Constant(const Constant& other)
     constructor_validate_and_infer_types();
 }
 
-op::Constant::~Constant()
-{
-}
+op::Constant::~Constant() {}
 
 string op::Constant::convert_value_to_string(size_t index) const
 {
