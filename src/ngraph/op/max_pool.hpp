@@ -342,6 +342,7 @@ namespace ngraph
                 void set_pads_begin(const Shape& pads_begin) { m_pads_begin = pads_begin; }
                 const Shape& get_pads_end() const { return m_pads_end; }
                 void set_pads_end(const Shape& pads_end) { m_pads_end = pads_end; }
+
             protected:
                 Shape m_kernel;
                 Strides m_strides;

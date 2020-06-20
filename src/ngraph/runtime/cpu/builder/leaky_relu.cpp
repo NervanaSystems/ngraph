@@ -88,7 +88,7 @@ namespace ngraph
                         kernel, out[0].get_element_type(), runtime::cpu::kernel::leaky_relu)
 
                     auto functor = [&, kernel, alpha, count, input_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(ctx->buffer_data[input_buffer_index],
                                ctx->buffer_data[out_buffer_index],
                                alpha,

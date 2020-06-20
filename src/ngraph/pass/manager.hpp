@@ -63,6 +63,7 @@ public:
     /// each registered pass
     /// \param new_state Value "true" enables Validate pass run; "false", otherwise
     void set_per_pass_validation(bool new_state) { m_per_pass_validation = new_state; }
+
 private:
     template <typename T, class... Args>
     std::shared_ptr<T> push_pass(Args&&... args)

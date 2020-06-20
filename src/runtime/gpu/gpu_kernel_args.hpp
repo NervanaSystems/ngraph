@@ -83,6 +83,7 @@ namespace ngraph
                 //
                 std::string get_input_signature();
                 size_t get_size() { return m_argument_list.size(); }
+
             private:
                 //
                 // Cache the host argument for persistence, add it to the argument list,

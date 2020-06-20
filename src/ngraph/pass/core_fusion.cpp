@@ -132,7 +132,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
 
     auto callback = [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
                      << m.get_match_root()->get_name();
 
@@ -435,7 +435,6 @@ void pass::CoreFusion::construct_folded_batch_norm()
         m.get_match_value().replace(conv_bias->output(0));
 
         return true;
-
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
@@ -490,7 +489,6 @@ void pass::CoreFusion::construct_conv_affine_folding()
 
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
-
             if (bcast->get_input_shape(0).size() == 1 &&
                 bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
@@ -545,7 +543,6 @@ void pass::CoreFusion::construct_conv_affine_folding()
         m.get_match_value().replace(convbias_n->output(0));
 
         return true;
-
     };
 
     auto m = make_shared<pattern::Matcher>(add, "CoreFusion.ConvAffineFolding");
@@ -1002,7 +999,7 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, reshape_label, conv_filter, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1086,7 +1083,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, conv_filter, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1158,7 +1155,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, output_delta, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 

@@ -58,9 +58,7 @@ static string find_my_pathname()
 #endif
 }
 
-runtime::Backend::~Backend()
-{
-}
+runtime::Backend::~Backend() {}
 
 std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& /* op_name */,
                                                                ...)
@@ -124,9 +122,7 @@ bool runtime::Backend::is_supported_property(const Property /* prop */) const
     return false;
 }
 
-void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> /* exec */)
-{
-}
+void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> /* exec */) {}
 
 std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& /* input_stream */)
 {

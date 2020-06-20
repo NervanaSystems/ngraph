@@ -248,7 +248,6 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_
 {
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
-
         Shape scalarized_shape;
         for (size_t i = 0; i < input_shape.size(); i++)
         {

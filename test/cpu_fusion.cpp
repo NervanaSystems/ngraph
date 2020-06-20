@@ -3813,7 +3813,11 @@ TEST(cpu_fusion, DISABLED_lstm_cell)
 
         auto lstm_function = make_shared<Function>(OutputVector{ht, ct},
                                                    ParameterVector{
-                                                       X, H_t, C_t, W, R,
+                                                       X,
+                                                       H_t,
+                                                       C_t,
+                                                       W,
+                                                       R,
                                                    });
         return lstm_function;
     };

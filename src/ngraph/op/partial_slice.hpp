@@ -59,6 +59,7 @@ namespace ngraph
                 const std::vector<int64_t>& get_lower_bounds() const { return m_lower_bounds; }
                 const std::vector<int64_t>& get_upper_bounds() const { return m_upper_bounds; }
                 const AxisVector& get_decrease_axes() const { return m_decrease_axes; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -101,6 +102,7 @@ namespace ngraph
                 const AxisVector& get_axes() const { return m_axes; }
                 const std::vector<int64_t>& get_lower_bounds() const { return m_lower_bounds; }
                 const std::vector<int64_t>& get_upper_bounds() const { return m_upper_bounds; }
+
             private:
                 AxisVector m_axes;
                 std::vector<int64_t> m_lower_bounds;

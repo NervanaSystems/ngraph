@@ -117,7 +117,7 @@ namespace ngraph
                 }
 
                 auto functor = [&, kernel, element_count, arg_buffer_index, out_buffer_index](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                   CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     if (ctx->buffer_data[arg_buffer_index] != ctx->buffer_data[out_buffer_index])
                     {
                         kernel(ctx->buffer_data[arg_buffer_index],

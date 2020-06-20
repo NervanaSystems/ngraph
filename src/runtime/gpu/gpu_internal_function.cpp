@@ -379,9 +379,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
     }
 }
 
-void runtime::gpu::GPUInternalFunction::add_passes(ngraph::pass::Manager& pass_manager)
-{
-}
+void runtime::gpu::GPUInternalFunction::add_passes(ngraph::pass::Manager& pass_manager) {}
 
 void runtime::gpu::GPUInternalFunction::emit()
 {
