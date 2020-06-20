@@ -1288,12 +1288,12 @@ void pass::CoreFusion::construct_conv_bias()
             auto order = get_default_order(bias->get_output_shape(0));
             auto bias_reshape =
                 make_shared<op::Reshape>(bias, order, Shape{conv_m->get_input_shape(1)[0]});
-            auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias_reshape));
+            auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias_reshape);
             m.get_match_value().replace(conv_bias->output(0));
         }
         else
         {
-            auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias));
+            auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias);
             m.get_match_value().replace(conv_bias->output(0));
         }
         return true;
@@ -1341,7 +1341,7 @@ void pass::CoreFusion::construct_conv_bias_add()
             return false;
         }
 
-        auto conv_add = shared_ptr<Node>(new op::ConvolutionBiasAdd(conv_m, add_input_m, false));
+        auto conv_add = make_shared<op::ConvolutionBiasAdd>(conv_m, add_input_m, false);
         m.get_match_value().replace(conv_add->output(0));
         return true;
     };

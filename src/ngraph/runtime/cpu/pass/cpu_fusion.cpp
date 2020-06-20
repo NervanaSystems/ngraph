@@ -416,13 +416,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
             auto order = ngraph::get_default_order(bias_shape);
             auto bias_reshape = std::make_shared<ngraph::op::Reshape>(
                 bias, order, Shape{conv_m->get_input_shape(1)[0]});
-            auto conv_bias =
-                std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias_reshape));
+            auto conv_bias = std::make_shared<ngraph::op::ConvolutionBias>(conv_m, bias_reshape);
             m.get_match_value().replace(conv_bias->output(0));
         }
         else
         {
-            auto conv_bias = std::shared_ptr<Node>(new ngraph::op::ConvolutionBias(conv_m, bias));
+            auto conv_bias = std::make_shared<ngraph::op::ConvolutionBias>(conv_m, bias);
             m.get_match_value().replace(conv_bias->output(0));
         }
         return true;
@@ -865,7 +864,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
             return false;
         }
 
-        auto conv_relu = std::shared_ptr<Node>(new ngraph::op::ConvolutionRelu(conv));
+        auto conv_relu = std::make_shared<ngraph::op::ConvolutionRelu>(conv);
         m.get_match_value().replace(conv_relu->output(0));
         return true;
     };
@@ -973,8 +972,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             return false;
         }
 
-        auto conv_add =
-            std::shared_ptr<Node>(new ngraph::op::ConvolutionAdd(conv_m, inplace_input, false));
+        auto conv_add = std::make_shared<ngraph::op::ConvolutionAdd>(conv_m, inplace_input, false);
         m.get_match_value().replace(conv_add->output(0));
         return true;
     };
@@ -1085,7 +1083,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
         }
 
         auto conv_add =
-            std::shared_ptr<Node>(new ngraph::op::ConvolutionBiasAdd(conv_m, inplace_input, false));
+            std::make_shared<ngraph::op::ConvolutionBiasAdd>(conv_m, inplace_input, false);
         m.get_match_value().replace(conv_add->output(0));
         return true;
     };
@@ -1401,8 +1399,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         NGRAPH_DEBUG << "relu_input: " << pattern_map[relu_input] << " min_val: "
                      << *(static_cast<float const*>(alpha_const_op->get_data_ptr()));
 
-        auto cg =
-            std::shared_ptr<Node>(new ngraph::op::BoundedRelu(pattern_map[relu_input], alpha_val));
+        auto cg = std::make_shared<ngraph::op::BoundedRelu>(pattern_map[relu_input], alpha_val);
         m.get_match_value().replace(cg->output(0));
         return true;
     };
