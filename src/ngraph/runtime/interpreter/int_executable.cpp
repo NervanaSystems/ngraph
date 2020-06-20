@@ -64,13 +64,13 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
-// #ifndef NGRAPH_JSON_DISABLE
-//     // To verify that the serializer and deserializer work correctly let's just run this
-//     // graph round-trip
-//     m_function = deserialize(serialize(function));
-// #else
+    // #ifndef NGRAPH_JSON_DISABLE
+    //     // To verify that the serializer and deserializer work correctly let's just run this
+    //     // graph round-trip
+    //     m_function = deserialize(serialize(function));
+    // #else
     m_function = clone_function(*function);
-// #endif
+    // #endif
 
     auto is_supported = [](const Node& node) {
         bool retval = false;
