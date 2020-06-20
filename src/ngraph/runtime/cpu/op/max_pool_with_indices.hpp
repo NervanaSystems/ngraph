@@ -86,6 +86,7 @@ namespace ngraph
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Shape& get_padding_below() const { return m_padding_below; }
             const Shape& get_padding_above() const { return m_padding_above; }
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;

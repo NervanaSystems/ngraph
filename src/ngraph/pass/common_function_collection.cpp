@@ -30,9 +30,7 @@ pass::CommonFunctionCollection::CommonFunctionCollection(function<string(Node&, 
 {
 }
 
-pass::CommonFunctionCollection::~CommonFunctionCollection()
-{
-}
+pass::CommonFunctionCollection::~CommonFunctionCollection() {}
 
 bool pass::CommonFunctionCollection::run_on_module(vector<shared_ptr<Function>>& functions)
 {

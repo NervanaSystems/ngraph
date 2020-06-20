@@ -44,6 +44,7 @@ namespace ngraph
         virtual ~UniformRNGState() override {}
         std::mt19937& get_generator() { return m_generator; }
         std::uniform_real_distribution<double>& get_distribution() { return m_distribution; }
+
     private:
         std::mt19937 m_generator;
         std::uniform_real_distribution<double> m_distribution;

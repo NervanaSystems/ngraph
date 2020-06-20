@@ -230,7 +230,7 @@ namespace ngraph
             };
         }
         using v0::ConvolutionBias;
-        using v0::ConvolutionBiasBackpropFiltersBias;
         using v0::ConvolutionBiasAdd;
+        using v0::ConvolutionBiasBackpropFiltersBias;
     }
 }

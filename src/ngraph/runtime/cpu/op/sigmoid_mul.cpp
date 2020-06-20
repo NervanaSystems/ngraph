@@ -69,9 +69,9 @@ op::SigmoidMultiply::SigmoidMultiply(const Output<Node>& input_0,
     }
     if (input_0.get_shape() != input_1.get_shape())
     {
-        throw ngraph_error("SigmoidMultiply input shape mismatch: " +
-                           vector_to_string(input_0.get_shape()) + " != " +
-                           vector_to_string(input_1.get_shape()));
+        throw ngraph_error(
+            "SigmoidMultiply input shape mismatch: " + vector_to_string(input_0.get_shape()) +
+            " != " + vector_to_string(input_1.get_shape()));
     }
 
     m_input_type[0] = input_0_type;
