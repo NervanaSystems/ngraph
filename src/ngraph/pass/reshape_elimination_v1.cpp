@@ -40,22 +40,21 @@ void pass::ReshapeEliminationV1::construct_identity_reshape_pattern()
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
                      << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-        auto gop = pattern_map[op];
+        auto pvm = m.get_pattern_value_map();
+        auto gop = pvm[op];
 
         auto r1 = m.get_match_root_as<op::v1::Reshape>();
         NGRAPH_CHECK(r1, "match root node ", *m.get_match_root(), " not of type `op::v1::Reshape`");
 
-        if (gop->get_output_partial_shape(0).is_dynamic() ||
-            r1->get_output_partial_shape(0).is_dynamic() ||
-            gop->get_output_shape(0) != r1->get_output_shape(0))
+        if (gop.get_partial_shape().is_dynamic() || r1->get_output_partial_shape(0).is_dynamic() ||
+            gop.get_shape() != r1->get_output_shape(0))
         {
             NGRAPH_DEBUG << "Not a no-op; Shapes are different!";
             return false;
         }
 
-        gop->set_friendly_name(r1->get_friendly_name());
-        replace_node(r1, gop);
+        gop.get_node()->set_friendly_name(r1->get_friendly_name());
+        r1->output(0).replace(gop);
         return true;
     };
 

@@ -197,7 +197,7 @@ void pass::ConstantFolding::construct_constant_one_hot()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
     auto one_hot_matcher =

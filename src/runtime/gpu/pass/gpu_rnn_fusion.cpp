@@ -75,7 +75,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -90,7 +90,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
         }
 
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
-        ngraph::replace_node(m.get_match_root(), sigmoid_node);
+        m.get_match_value().replace(sigmoid_node->output(0));
         return true;
     };
 
@@ -191,7 +191,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         auto pattern_map = m.get_pattern_map();
         NGRAPH_DEBUG << "In Lstm fprop call back";
 
-        if (m.get_match_root()->get_output_element_type(0) != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -265,8 +265,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1);
         }
         else if (pattern_map[hidden_ht]->get_arguments().size() &&
-                 pattern_map[ct_1]->get_arguments().at(0)->get_instance_id() ==
-                     pattern_map[hidden_ht]->get_arguments().at(0)->get_instance_id())
+                 pattern_map[ct_1]->get_argument(0)->get_instance_id() ==
+                     pattern_map[hidden_ht]->get_argument(0)->get_instance_id())
         // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
         // it will be misclassified as input data xt
         {
