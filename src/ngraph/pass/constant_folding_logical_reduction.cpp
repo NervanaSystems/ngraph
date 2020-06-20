@@ -40,8 +40,8 @@ static Shape get_shape_no_keep_dims(const AxisSet& reduction_axes, const Shape& 
     return shape_no_keep_dims;
 }
 
-static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
-                                                                shared_ptr<Node> reduction_node)
+static Output<Node> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
+                                                    shared_ptr<Node> reduction_node)
 {
     runtime::AlignedBuffer buffer(shape_size(reduction_node->get_output_shape(0)) * sizeof(char));
     char* data_ptr = buffer.get_ptr<char>();
@@ -92,8 +92,10 @@ static shared_ptr<op::Constant> fold_constant_logical_reduction(shared_ptr<op::C
                      "matched in construct_constant_logical_reduction");
     }
 
-    return make_shared<op::Constant>(
-        reduction_node->get_output_element_type(0), reduction_node->get_output_shape(0), data_ptr);
+    return make_shared<op::Constant>(reduction_node->get_output_element_type(0),
+                                     reduction_node->get_output_shape(0),
+                                     data_ptr)
+        ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_logical_reduction()
@@ -121,12 +123,12 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
-        auto reduction_match = m.get_match_root();
+        Output<Node> reduction_match = m.get_match_value();
 
-        NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match));
+        NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match.get_node_shared_ptr()));
 
-        replace_node(reduction_match,
-                     fold_constant_logical_reduction(constant_match, reduction_match));
+        reduction_match.replace(
+            fold_constant_logical_reduction(constant_match, reduction_match.get_node_shared_ptr()));
         return true;
     };
 
