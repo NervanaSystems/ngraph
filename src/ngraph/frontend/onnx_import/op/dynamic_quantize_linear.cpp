@@ -80,8 +80,15 @@ namespace ngraph
                         }
                     }
 
+                    std::vector<std::string> output_op_names;
+
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
+                        if (nodes.at(i)->is_output())
+                        {
+                            output_op_names.push_back(
+                                nodes.at(i)->get_input_node_ptr(0)->get_name());
+                        }
                         for (auto& input : nodes.at(i)->inputs())
                         {
                             for (int i = 0; i < helper_inputs.size(); ++i) // Func neeeded
@@ -93,8 +100,19 @@ namespace ngraph
                             }
                         }
                     }
-                    // Quantze, Divde, Convert
-                    return NodeVector{nodes.at(23), nodes.at(10), nodes.at(16)};
+
+                    NodeVector final_nodes;
+                    for (int i = nodes.size() - 1; i >= 0; --i)
+                    {
+                        for (auto name : output_op_names)
+                        {
+                            if (name == nodes.at(i)->get_name())
+                            {
+                                final_nodes.push_back(nodes.at(i));
+                            }
+                        }
+                    }
+                    return final_nodes;
                 }
             } // namespace set_1
 
