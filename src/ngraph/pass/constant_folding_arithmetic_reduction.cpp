@@ -118,7 +118,7 @@ static Output<Node> fold_constant_arithmetic_reduction_helper(shared_ptr<op::Con
 static Output<Node> fold_constant_arithmetic_reduction(shared_ptr<op::Constant> constant,
                                                        shared_ptr<Node> reduction_node)
 {
-    auto& input_element_type = constant->get_output_element_type(0);
+    auto input_element_type = constant->get_output_element_type(0);
 
     switch (input_element_type)
     {

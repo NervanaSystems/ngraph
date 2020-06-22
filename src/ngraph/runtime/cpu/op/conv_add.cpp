@@ -77,9 +77,9 @@ op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 
     auto& data_batch_shape = data_batch.get_shape();
-    auto& data_batch_et = data_batch.get_element_type();
+    auto data_batch_et = data_batch.get_element_type();
     auto& filters_shape = filters.get_shape();
-    auto& filters_et = filters.get_element_type();
+    auto filters_et = filters.get_element_type();
 
     //
     // Make sure data batch and filter element types match.

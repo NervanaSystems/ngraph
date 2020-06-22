@@ -136,7 +136,7 @@ const std::string& element::Type::c_type_string() const
     return get_type_info_map().at(m_type).m_cname;
 }
 
-bool element::Type::operator==(element::Type other) const
+bool element::Type::operator==(const Type& other) const
 {
     return m_type == other.m_type;
 }
@@ -238,7 +238,7 @@ namespace ngraph
     }
 }
 
-std::ostream& element::operator<<(std::ostream& out, element::Type obj)
+std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
 {
     return out << obj.get_type_name();
 }

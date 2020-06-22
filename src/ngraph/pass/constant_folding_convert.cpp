@@ -98,7 +98,7 @@ Output<Node> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
 static Output<Node> fold_constant_convert(shared_ptr<op::Constant> constant,
                                           element::Type output_element_type)
 {
-    auto& input_element_type = constant->get_output_element_type(0);
+    auto input_element_type = constant->get_output_element_type(0);
 
     if (input_element_type == output_element_type)
     {

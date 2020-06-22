@@ -43,7 +43,7 @@ void op::CropAndResize::validate_and_infer_types()
     NODE_VALIDATION_CHECK(
         this, m_resize_method != ResizeMethod::unspecified, "Resize method not specified");
     auto image = input_value(0);
-    auto& image_et = image.get_element_type();
+    auto image_et = image.get_element_type();
 
     // Will override if we can determine the shape
     set_output_type(0, image_et, {});
@@ -91,7 +91,7 @@ void op::CropAndResize::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this, crop_size_rank.get_length() == 1, "crop_size must be a vector");
     NODE_VALIDATION_CHECK(
         this, crop_size_shape[0].get_length() == 2, "crop_size must be a vector of length 2");
-    auto& crop_size_et = crop_size.get_element_type();
+    auto crop_size_et = crop_size.get_element_type();
     NODE_VALIDATION_CHECK(this, crop_size_et.is_integral(), "crops_size must be integral");
     auto crop_size_node = crop_size.get_node_shared_ptr();
     NODE_VALIDATION_CHECK(this, crop_size_node->is_constant(), "crop_size must be a constant");

@@ -181,7 +181,7 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const Out
 
     auto x = input_value(0);
     auto y = input_value(1);
-    auto& y_element_type = y.get_element_type();
+    auto y_element_type = y.get_element_type();
     auto y_shape = y.get_shape();
 
     auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});

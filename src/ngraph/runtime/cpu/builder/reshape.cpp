@@ -48,7 +48,7 @@ namespace ngraph
 
                 result_shape = reshape->get_output_shape(0);
                 auto result_rank = result_shape.size();
-                auto& result_element_type = reshape->get_output_element_type(0);
+                auto result_element_type = reshape->get_output_element_type(0);
 
                 input_order = reshape->get_input_order();
 

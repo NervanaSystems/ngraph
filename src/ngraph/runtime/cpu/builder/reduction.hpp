@@ -26,7 +26,7 @@
     auto arg_rank = arg_shape.size();                                                              \
                                                                                                    \
     auto result_shape = out[0].get_shape();                                                        \
-    auto& result_element_type = out[0].get_element_type();                                         \
+    auto result_element_type = out[0].get_element_type();                                          \
                                                                                                    \
     auto reduction_axes = op->get_reduction_axes();                                                \
                                                                                                    \

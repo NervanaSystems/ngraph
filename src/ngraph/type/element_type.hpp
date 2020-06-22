@@ -184,7 +184,7 @@ namespace ngraph
         NGRAPH_API Type from<ngraph::float16>();
 
         NGRAPH_API
-        std::ostream& operator<<(std::ostream& out, ngraph::element::Type obj);
+        std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
     }
 
     template <>
