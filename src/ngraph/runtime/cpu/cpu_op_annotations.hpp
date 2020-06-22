@@ -34,6 +34,7 @@ namespace ngraph
                 CPUOpAnnotations() {}
                 bool is_mkldnn_op() { return m_mkldnn_op; }
                 void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
+
             private:
                 bool m_mkldnn_op = false;
             };

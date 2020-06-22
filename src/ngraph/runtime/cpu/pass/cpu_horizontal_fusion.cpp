@@ -19,8 +19,8 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/avg_pool.hpp"
 #include "ngraph/op/concat.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -105,7 +105,11 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         NGRAPH_DEBUG << "conv_horizontal_fusion: In a callback for conv horizontal fusion for "
                      << m.get_match_root()->get_name();
 
-        auto conv_bias_root = std::static_pointer_cast<op::ConvolutionBias>(m.get_match_root());
+        auto conv_bias_root = m.get_match_root_as<op::ConvolutionBias>();
+        NGRAPH_CHECK(conv_bias_root,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::ConvolutionBias`");
 
         // check if the node has been replaced
         if (conv_bias_root->get_users().empty())

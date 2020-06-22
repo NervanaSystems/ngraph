@@ -22,12 +22,12 @@ using namespace std;
 using namespace ngraph;
 
 template <class REAL, class QUANT>
-shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constant,
-                                                shared_ptr<op::Quantize> quant,
-                                                shared_ptr<op::Constant> scale,
-                                                shared_ptr<op::Constant> offset)
+Output<Node> fold_constant_quantize(shared_ptr<op::Constant> constant,
+                                    shared_ptr<op::Quantize> quant,
+                                    shared_ptr<op::Constant> scale,
+                                    shared_ptr<op::Constant> offset)
 {
-    const Shape& out_shape = constant->get_shape();
+    const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(QUANT));
     QUANT* data_ptr = buffer.get_ptr<QUANT>();
 
@@ -35,12 +35,13 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
                                               scale->get_vector<REAL>().data(),
                                               offset->get_vector<QUANT>().data(),
                                               data_ptr,
-                                              constant->get_shape(),
-                                              scale->get_shape(),
+                                              constant->get_output_shape(0),
+                                              scale->get_output_shape(0),
                                               quant->get_axes(),
                                               quant->get_round_mode());
 
-    return make_shared<op::Constant>(quant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(quant->get_output_element_type(0), out_shape, data_ptr)
+        ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_quantize()
@@ -70,24 +71,22 @@ void pass::ConstantFolding::construct_constant_quantize()
         auto scale = static_pointer_cast<op::Constant>(quant_match->get_input_node_shared_ptr(1));
         auto offset = static_pointer_cast<op::Constant>(quant_match->get_input_node_shared_ptr(2));
 
-        auto type = quant_match->get_element_type();
+        auto type = quant_match->get_output_element_type(0);
 
-        if (constant_match->get_element_type() != element::f32)
+        if (constant_match->get_output_element_type(0) != element::f32)
         {
             return false;
         }
 
         if (type == element::u8)
         {
-            replace_node(
-                m.get_match_root(),
+            m.get_match_value().replace(
                 fold_constant_quantize<float, uint8_t>(constant_match, quantize_op, scale, offset));
             return true;
         }
         else if (type == element::i8)
         {
-            replace_node(
-                m.get_match_root(),
+            m.get_match_value().replace(
                 fold_constant_quantize<float, int8_t>(constant_match, quantize_op, scale, offset));
             return true;
         }

@@ -121,7 +121,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_float32_bf16)
 
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto convert = make_shared<op::Convert>(A, element::bf16);
-    auto f = make_shared<Function>(NodeVector{convert}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{convert}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -144,7 +144,7 @@ NGRAPH_TEST(${BACKEND_NAME}, convert_bf16_float32)
 
     auto A = make_shared<op::Parameter>(element::bf16, shape_a);
     auto convert = make_shared<op::Convert>(A, element::f32);
-    auto f = make_shared<Function>(NodeVector{convert}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{convert}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::bf16, shape_a);

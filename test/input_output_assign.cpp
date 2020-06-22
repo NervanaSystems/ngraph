@@ -31,7 +31,7 @@ TEST(input_output, param_tensor)
 
     ASSERT_EQ(param->get_output_size(), 1);
     ASSERT_EQ(et, param->get_element_type());
-    ASSERT_EQ(shape, param->get_shape());
+    ASSERT_EQ(shape, param->get_output_shape(0));
 }
 
 TEST(input_output, simple_output)

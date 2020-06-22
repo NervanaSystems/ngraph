@@ -50,7 +50,7 @@ namespace ngraph
             for (auto param : indep_params)
             {
                 Shape s = y_shape;
-                auto param_shape = param->get_shape();
+                auto param_shape = param->get_output_shape(0);
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
                 results.push_back(backend->create_tensor<T>(s));
             }

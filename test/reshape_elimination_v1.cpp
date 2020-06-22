@@ -46,7 +46,7 @@ TEST(reshape_elimination_v1, reshape_elimination_v1)
         auto pattern = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{8, 16, 2, 3});
         auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, zero);
         auto abs = std::make_shared<op::Abs>(reshape_v1);
-        return std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg});
+        return std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg});
     };
 
     auto func = generate_func(false);
@@ -70,7 +70,7 @@ TEST(reshape_elimination_v1, reshape_elimination_v1_dynamic)
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
     auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
     auto abs = std::make_shared<op::Abs>(reshape_v1);
-    auto f = std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg, pattern});
+    auto f = std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg, pattern});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeEliminationV1>();
     pass_manager.run_passes(f);

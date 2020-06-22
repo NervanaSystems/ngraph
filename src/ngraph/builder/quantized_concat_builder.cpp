@@ -31,7 +31,7 @@ namespace ngraph
                                                 const NodeVector& maxs)
         {
             quantization_utils::check_concat(args, mins, maxs);
-            auto quant_type = args[0]->get_element_type();
+            auto quant_type = args[0]->get_output_element_type(0);
 
             // output scale
             auto min = make_shared<op::Min>(make_shared<op::Concat>(mins, 0), ngraph::AxisSet{0});
@@ -41,12 +41,12 @@ namespace ngraph
             NodeVector rescaled_args(args.size());
             for (size_t i = 0; i < args.size(); ++i)
             {
-                auto q_type = args[i]->get_element_type();
+                auto q_type = args[i]->get_output_element_type(0);
                 auto in_scale = make_shared<ngraph::op::Reshape>(
                     quantization_utils::get_scale(mins[i], maxs[i], q_type),
                     AxisVector{0},
                     Shape{});
-                auto zero = make_constant(q_type, in_scale->get_shape(), 0);
+                auto zero = make_constant(q_type, in_scale->get_output_shape(0), 0);
 
                 rescaled_args[i] =
                     make_shared<op::Dequantize>(args[i], in_scale, zero, element::f32, AxisSet{});

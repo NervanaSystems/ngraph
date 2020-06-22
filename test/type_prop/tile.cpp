@@ -26,8 +26,8 @@ TEST(type_prop, tile)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8, 10});
     auto param1 = op::Constant::create(element::i64, Shape{3}, {3, 4, 1});
     auto top = make_shared<op::Tile>(param0, param1);
-    ASSERT_EQ(top->get_element_type(), element::f32);
-    ASSERT_EQ(top->get_shape(), (Shape{18, 32, 10}));
+    ASSERT_EQ(top->get_output_element_type(0), element::f32);
+    ASSERT_EQ(top->get_output_shape(0), (Shape{18, 32, 10}));
 }
 
 TEST(type_prop, tile_small_data_rank)
@@ -35,8 +35,8 @@ TEST(type_prop, tile_small_data_rank)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{8, 10});
     auto param1 = op::Constant::create(element::i64, Shape{3}, {3, 4, 1});
     auto top = make_shared<op::Tile>(param0, param1);
-    ASSERT_EQ(top->get_element_type(), element::f32);
-    ASSERT_EQ(top->get_shape(), (Shape{3, 32, 10}));
+    ASSERT_EQ(top->get_output_element_type(0), element::f32);
+    ASSERT_EQ(top->get_output_shape(0), (Shape{3, 32, 10}));
 }
 
 TEST(type_prop, tile_few_repeats)
@@ -44,6 +44,6 @@ TEST(type_prop, tile_few_repeats)
     auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 8, 10});
     auto param1 = op::Constant::create(element::i64, Shape{2}, {4, 1});
     auto top = make_shared<op::Tile>(param0, param1);
-    ASSERT_EQ(top->get_element_type(), element::f32);
-    ASSERT_EQ(top->get_shape(), (Shape{6, 32, 10}));
+    ASSERT_EQ(top->get_output_element_type(0), element::f32);
+    ASSERT_EQ(top->get_output_shape(0), (Shape{6, 32, 10}));
 }

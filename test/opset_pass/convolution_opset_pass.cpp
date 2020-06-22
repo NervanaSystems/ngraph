@@ -202,7 +202,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
     EXPECT_EQ(group_conv_backprop_v1_node->get_dilations(), dilations);
     EXPECT_EQ(group_conv_backprop_v1_node->get_pads_begin(), padding_begin);
     EXPECT_EQ(group_conv_backprop_v1_node->get_pads_end(), padding_end);
-    EXPECT_EQ(node->get_output_shape(0), (data_batch_shape->get_shape()));
+    EXPECT_EQ(node->get_output_shape(0), (data_batch_shape->get_output_shape(0)));
     EXPECT_EQ(group_conv_backprop_v1_node->get_auto_pad(), op::PadType::EXPLICIT);
     EXPECT_EQ(group_conv_backprop_v1_node->get_output_padding(), (CoordinateDiff{0}));
 }

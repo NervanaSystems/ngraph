@@ -25,12 +25,11 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/softmax_crossentropy.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/max.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -45,6 +44,7 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/softmax.hpp"
+#include "ngraph/op/softmax_crossentropy.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
@@ -82,12 +82,12 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_fprop against "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto input_to_normalize = pattern_map[param_1];
         auto labels = pattern_map[param_2];
         auto softmax_crossentropy =
             std::make_shared<ngraph::op::SoftmaxCrossEntropy>(input_to_normalize, labels, true);
-        ngraph::replace_node(m.get_match_root(), softmax_crossentropy);
+        m.get_match_value().replace(softmax_crossentropy->output(0));
 
         return true;
     };
@@ -132,11 +132,11 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
 
     auto callback = [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto input = pattern_map[input_x];
         auto labels = pattern_map[labels_y];
         auto delta = pattern_map[delta_label];
@@ -144,7 +144,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
 
         auto sm_ce_bprop =
             std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(delta, softmax, labels, true);
-        ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
+        m.get_match_value().replace(sm_ce_bprop->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(multiply, "CoreFusion.SoftmaxCrossEntropyBprop");
@@ -176,7 +176,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     auto not_equal = std::make_shared<ngraph::op::NotEqual>(labels_y, mask_label);
     auto convert = std::make_shared<ngraph::op::Convert>(not_equal, element::f64);
     auto reshape = std::make_shared<ngraph::op::Reshape>(
-        convert, AxisVector{0, 1}, Shape{convert->get_shape().at(0)});
+        convert, AxisVector{0, 1}, Shape{convert->get_output_shape(0).at(0)});
     auto broadcast_mask =
         std::make_shared<ngraph::op::Broadcast>(reshape, Shape{41, 37}, AxisSet{1});
 
@@ -211,18 +211,18 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
             << "In a callback for construct_softmax_cross_entropy_bprop_with_ignore_mask against "
             << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto input = pattern_map[input_x];
         auto labels = pattern_map[labels_y];
         auto delta = pattern_map[delta_label];
         auto softmax = pattern_map[softmax_label];
 
         auto mask_constant_op =
-            std::static_pointer_cast<ngraph::op::Constant>(pattern_map[mask_label]);
+            std::static_pointer_cast<ngraph::op::Constant>(m.get_pattern_map()[mask_label]);
         auto ignore_index = *(static_cast<size_t const*>(mask_constant_op->get_data_ptr()));
         auto sm_ce_bprop = std::make_shared<ngraph::op::SoftmaxCrossEntropyBackprop>(
             delta, softmax, labels, false, ignore_index);
-        ngraph::replace_node(m.get_match_root(), sm_ce_bprop);
+        m.get_match_value().replace(sm_ce_bprop->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(multiply, "CoreFusion.SoftmaxCrossEntropyBprop");
@@ -243,7 +243,7 @@ void pass::CoreFusion::construct_relu()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto mzero = m.get_pattern_map()[zero];
+        auto mzero = pattern_map[zero];
         if (!is_zero(mzero))
         {
             NGRAPH_DEBUG << "zero constant = " << mzero->get_name() << " not equal to 0\n";
@@ -251,8 +251,8 @@ void pass::CoreFusion::construct_relu()
         }
         auto mpattern = m.get_match_root();
 
-        auto cg = shared_ptr<Node>(new op::Relu(pattern_map[val]));
-        replace_node(m.get_match_root(), cg);
+        auto cg = shared_ptr<Node>(new op::Relu(m.get_pattern_value_map()[val]));
+        m.get_match_value().replace(cg->output(0));
         return true;
     };
 
@@ -280,7 +280,7 @@ void pass::CoreFusion::construct_sigmoid()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        if (m.get_match_root()->get_element_type() != element::f32)
+        if (m.get_match_value().get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
@@ -299,8 +299,8 @@ void pass::CoreFusion::construct_sigmoid()
             NGRAPH_DEBUG << "Node not constant or not 1";
             return false;
         }
-        auto sigmoid_node = make_shared<op::Sigmoid>(pattern_map[input]);
-        replace_node(m.get_match_root(), sigmoid_node);
+        auto sigmoid_node = make_shared<op::Sigmoid>(m.get_pattern_value_map()[input]);
+        m.get_match_value().replace(sigmoid_node->output(0));
         return true;
     };
 
@@ -336,22 +336,23 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto callback = [input, delta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bprop_sigmoid pattern against "
                      << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
-        if (m.get_match_root()->get_element_type() != element::f32)
+        auto pattern_map = m.get_pattern_value_map();
+        if (m.get_match_value().get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << " type is not float!";
             return false;
         }
 
-        if (m.get_match_root()->get_shape().size() != pattern_map[input]->get_shape().size())
+        if (m.get_match_value().get_shape().size() != pattern_map[input].get_shape().size())
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << "input= " << pattern_map[input]->get_name() << "size dont match!";
+                         << "input= " << m.get_pattern_map()[input]->get_name()
+                         << "size dont match!";
             return false;
         }
         auto dsigmoid = make_shared<op::SigmoidBackprop>(pattern_map[input], pattern_map[delta]);
-        replace_node(m.get_match_root(), dsigmoid);
+        m.get_match_value().replace(dsigmoid->output(0));
         return true;
     };
 
@@ -387,9 +388,11 @@ void pass::CoreFusion::construct_folded_batch_norm()
     auto callback = [input, filters, mean, var, gamma, beta](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for folded batch norm against node = "
                      << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
 
-        auto m_bn = static_pointer_cast<op::BatchNormInference>(m.get_match_root());
+        auto m_bn = m.get_match_root_as<op::BatchNormInference>();
+        NGRAPH_CHECK(
+            m_bn, "match root node ", *m.get_match_root(), " not of type `op::BatchNormInference`");
         auto m_conv = static_pointer_cast<op::Convolution>(m_bn->get_argument(2));
 
         if (m_conv->get_users().size() > 1)
@@ -397,7 +400,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
             return false;
         }
 
-        if (m_conv->get_shape().size() != 4)
+        if (m_conv->get_output_shape(0).size() != 4)
         {
             return false;
         }
@@ -408,7 +411,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
         auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
         auto var_eps = make_shared<op::Add>(
             pattern_map[var],
-            make_shared<op::Broadcast>(bn_eps, pattern_map[var]->get_shape(), AxisSet{0}));
+            make_shared<op::Broadcast>(bn_eps, pattern_map[var].get_shape(), AxisSet{0}));
         auto sqrt_var_eps = make_shared<op::Sqrt>(var_eps);
 
         auto mean_gamma = make_shared<op::Multiply>(pattern_map[mean], pattern_map[gamma]);
@@ -418,7 +421,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
         auto new_weights = make_shared<op::Multiply>(
             pattern_map[filters],
             make_shared<op::Broadcast>(
-                weight_scaling, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
+                weight_scaling, pattern_map[filters].get_shape(), AxisSet{1, 2, 3}));
 
         auto conv = make_shared<op::Convolution>(pattern_map[input],
                                                  new_weights,
@@ -427,12 +430,11 @@ void pass::CoreFusion::construct_folded_batch_norm()
                                                  m_conv->get_padding_below(),
                                                  m_conv->get_padding_above(),
                                                  m_conv->get_data_dilation_strides());
-        auto conv_bias =
-            conv + make_shared<op::Broadcast>(new_biases, conv->get_shape(), AxisSet{0, 2, 3});
-        replace_node(m.get_match_root(), conv_bias);
+        auto conv_bias = conv + make_shared<op::Broadcast>(
+                                    new_biases, conv->get_output_shape(0), AxisSet{0, 2, 3});
+        m.get_match_value().replace(conv_bias->output(0));
 
         return true;
-
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
@@ -468,6 +470,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
         NGRAPH_DEBUG << "In callback for conv affine folding against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
+        auto pvm = m.get_pattern_value_map();
 
         auto conv_m = static_pointer_cast<op::Convolution>(pattern_map[conv_label]);
 
@@ -476,7 +479,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
             return false;
         }
 
-        if (conv_m->get_shape().size() != 4)
+        if (conv_m->get_output_shape(0).size() != 4)
         {
             return false;
         }
@@ -486,7 +489,6 @@ void pass::CoreFusion::construct_conv_affine_folding()
 
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
-
             if (bcast->get_input_shape(0).size() == 1 &&
                 bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
@@ -527,10 +529,10 @@ void pass::CoreFusion::construct_conv_affine_folding()
         // new biases = Bc_m
 
         auto filters_n = make_shared<op::Multiply>(
-            pattern_map[filters],
-            make_shared<op::Broadcast>(Ac_m, pattern_map[filters]->get_shape(), AxisSet{1, 2, 3}));
+            pvm[filters],
+            make_shared<op::Broadcast>(Ac_m, pvm[filters].get_shape(), AxisSet{1, 2, 3}));
 
-        auto conv_n = make_shared<op::Convolution>(pattern_map[input],
+        auto conv_n = make_shared<op::Convolution>(pvm[input],
                                                    filters_n,
                                                    conv_m->get_window_movement_strides(),
                                                    conv_m->get_window_dilation_strides(),
@@ -538,10 +540,9 @@ void pass::CoreFusion::construct_conv_affine_folding()
                                                    conv_m->get_padding_above(),
                                                    conv_m->get_data_dilation_strides());
         auto convbias_n = conv_n + B_m;
-        replace_node(m.get_match_root(), convbias_n);
+        m.get_match_value().replace(convbias_n->output(0));
 
         return true;
-
     };
 
     auto m = make_shared<pattern::Matcher>(add, "CoreFusion.ConvAffineFolding");
@@ -574,7 +575,7 @@ static shared_ptr<Node> reduce_broadcast(shared_ptr<Node> broadcast)
     const size_t H = 2;
     const size_t W = 3;
     auto matched_broadcast_w1 = static_pointer_cast<op::Broadcast>(broadcast);
-    Shape shape_w1{matched_broadcast_w1->get_shape()};
+    Shape shape_w1{matched_broadcast_w1->get_output_shape(0)};
     shape_w1[H] /= 2;
     shape_w1[W] /= 2;
     auto new_broadcast_w1 =
@@ -618,8 +619,9 @@ void pass::CoreFusion::construct_reshape_broadcast()
         NGRAPH_DEBUG << "In a callback for construct_reshape_broadcast against "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
-        auto broadcast_m = static_pointer_cast<op::Broadcast>(m.get_match_root());
+        auto broadcast_m = m.get_match_root_as<op::Broadcast>();
+        NGRAPH_CHECK(
+            broadcast_m, "match root node ", *m.get_match_root(), " not of type `op::Broadcast`");
         auto reshape1_m = static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
         auto input_m = m.get_pattern_value_map()[input];
 
@@ -635,12 +637,12 @@ void pass::CoreFusion::construct_reshape_broadcast()
         // We are going to support the most common case where broadcast doesn't add 1-dimensions
         // since it's also very simple to implement
         size_t dim_one_count = 0;
-        for (auto d : reshape1_m->get_shape())
+        for (auto d : reshape1_m->get_output_shape(0))
         {
             if (d != 1 && d != dim)
             {
                 NGRAPH_DEBUG << "Input is reshaped in a way we can't directly broadcast ( shape = "
-                             << vector_to_string(reshape1_m->get_shape()) << ")";
+                             << vector_to_string(reshape1_m->get_output_shape(0)) << ")";
                 return false;
             }
 
@@ -651,7 +653,7 @@ void pass::CoreFusion::construct_reshape_broadcast()
         }
 
         AxisSet new_axes = broadcast_m->get_broadcast_axes();
-        auto broadcast_shape = broadcast_m->get_shape();
+        auto broadcast_shape = broadcast_m->get_output_shape(0);
         for (size_t i = 0; i < broadcast_shape.size(); i++)
         {
             if (broadcast_shape[i] == 1)
@@ -668,8 +670,8 @@ void pass::CoreFusion::construct_reshape_broadcast()
         }
 
         auto new_broadcast =
-            make_shared<op::Broadcast>(input_m, broadcast_m->get_shape(), new_axes);
-        replace_node(m.get_match_root(), new_broadcast);
+            make_shared<op::Broadcast>(input_m, broadcast_m->get_output_shape(0), new_axes);
+        m.get_match_value().replace(new_broadcast->output(0));
         return true;
     };
 
@@ -708,7 +710,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto add_w1 = make_shared<op::Add>(conv_stride1_label, broadcast_w1_label);
 
     auto eltwise_arg_label =
-        make_shared<pattern::op::Label>(element::f32, conv_stride1->get_shape());
+        make_shared<pattern::op::Label>(element::f32, conv_stride1->get_output_shape(0));
     auto add_two_convs = make_shared<op::Add>(add_w1, eltwise_arg_label);
 
     auto relu_two_convs = make_shared<op::Relu>(add_two_convs);
@@ -778,13 +780,14 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                 return false;
             }
             auto sconv = static_pointer_cast<op::Convolution>(sc);
-            sparse_shape_index = shape_to_index(sconv->get_shape());
+            sparse_shape_index = shape_to_index(sconv->get_output_shape(0));
             if (sparse_shape_index == 0)
             {
                 NGRAPH_DEBUG << "Unsupported shape of " << sconv->get_name();
                 return false;
             }
-            if (!are_img_dims_equal(sconv->get_shape(), supported_shapes[sparse_shape_index]) ||
+            if (!are_img_dims_equal(sconv->get_output_shape(0),
+                                    supported_shapes[sparse_shape_index]) ||
                 !are_img_dims_equal(sconv->get_input_shape(1), shape_1) ||
                 sconv->get_window_movement_strides() != stride_2 || !is_trivial_convolution(sconv))
             {
@@ -800,7 +803,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
 
         auto m_conv_stride1 = static_pointer_cast<op::Convolution>(pattern_map[conv_stride1_label]);
 
-        if (!are_img_dims_equal(m_conv_stride1->get_shape(), supported_shapes[full_shape_index]) ||
+        if (!are_img_dims_equal(m_conv_stride1->get_output_shape(0),
+                                supported_shapes[full_shape_index]) ||
             !are_img_dims_equal(m_conv_stride1->get_input_shape(1), win_size_1) ||
             m_conv_stride1->get_window_movement_strides() != stride_1 ||
             !is_trivial_convolution(m_conv_stride1))
@@ -814,7 +818,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
 
         auto m_conv_stride3 = static_pointer_cast<op::Convolution>(pattern_map[conv_stride3_label]);
 
-        if (!are_img_dims_equal(m_conv_stride3->get_shape(), supported_shapes[full_shape_index]) ||
+        if (!are_img_dims_equal(m_conv_stride3->get_output_shape(0),
+                                supported_shapes[full_shape_index]) ||
             !are_img_dims_equal(m_conv_stride3->get_input_shape(1), shape_3) ||
             m_conv_stride3->get_window_movement_strides() != stride_1 ||
             !is_trivial_convolution(m_conv_stride3, true))
@@ -843,8 +848,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         auto new_add_conv28s1 =
             make_shared<op::Add>(conv_28w1s1, reduce_broadcast(pattern_map[broadcast_w1_label]));
 
-        auto maxpool =
-            make_shared<op::MaxPool>(pattern_map[eltwise_arg_label], Shape{1, 1}, stride_2);
+        auto maxpool = make_shared<op::MaxPool>(
+            m.get_pattern_value_map()[eltwise_arg_label], Shape{1, 1}, stride_2);
         auto new_add_two_convs = make_shared<op::Add>(new_add_conv28s1, maxpool);
         auto new_relu_two_convs = make_shared<op::Relu>(new_add_two_convs);
 
@@ -877,10 +882,12 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        auto reshape2_m = static_pointer_cast<op::Reshape>(m.get_match_root());
+        auto reshape2_m = m.get_match_root_as<op::Reshape>();
+        NGRAPH_CHECK(
+            reshape2_m, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
         auto softmax_m = static_pointer_cast<op::Softmax>(reshape2_m->get_argument(0));
         auto reshape1_m = static_pointer_cast<op::Reshape>(softmax_m->get_argument(0));
-        auto input_m = m.get_pattern_map()[input];
+        auto input_m = m.get_pattern_value_map()[input];
 
         if (!reshape2_m->get_is_transpose() || !reshape1_m->get_is_transpose())
         {
@@ -888,7 +895,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
             return false;
         }
 
-        if (input_m->get_shape() != reshape2_m->get_shape())
+        if (input_m.get_shape() != reshape2_m->get_output_shape(0))
         {
             NGRAPH_DEBUG << "input and reshape2's shape are different";
             return false;
@@ -902,7 +909,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
         }
 
         auto new_softmax = make_shared<op::Softmax>(input_m, new_axes);
-        replace_node(m.get_match_root(), new_softmax);
+        m.get_match_value().replace(new_softmax->output(0));
         return true;
     };
 
@@ -911,7 +918,7 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
 }
 
 static bool
-    zero_padded_conv_consistency_check(const std::shared_ptr<ngraph::Node>& match_root,
+    zero_padded_conv_consistency_check(const Output<ngraph::Node>& match_root,
                                        const std::shared_ptr<ngraph::op::Constant>& pad_value_op,
                                        const std::shared_ptr<ngraph::Node>& pad_input,
                                        const std::shared_ptr<ngraph::op::Pad>& matched_pad,
@@ -921,7 +928,7 @@ static bool
                                        size_t channel_index)
 {
     // Only match float32 convolutions
-    if (match_root->get_element_type() != ngraph::element::f32)
+    if (match_root.get_element_type() != ngraph::element::f32)
     {
         return false;
     }
@@ -933,7 +940,7 @@ static bool
     }
 
     // Only match 4D tensors
-    if (pad_input->get_shape().size() != 4)
+    if (pad_input->get_output_shape(0).size() != 4)
     {
         return false;
     }
@@ -992,8 +999,9 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, reshape_label, conv_filter, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
+        auto pvm = m.get_pattern_value_map();
 
         auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
@@ -1009,14 +1017,14 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
 
         const auto& input_order = matched_reshape->get_input_order();
         auto hoisted_reshape_output_shape =
-            ngraph::apply_permutation<Shape>(pattern_map[pad_input]->get_shape(), input_order);
+            ngraph::apply_permutation<Shape>(pvm[pad_input].get_shape(), input_order);
 
         auto hoisted_reshape = std::make_shared<ngraph::op::Reshape>(
-            pattern_map[pad_input],
+            pvm[pad_input],
             input_order,
             Shape(hoisted_reshape_output_shape.begin(), hoisted_reshape_output_shape.end()));
 
-        if (!zero_padded_conv_consistency_check(m.get_match_root(),
+        if (!zero_padded_conv_consistency_check(m.get_match_value(),
                                                 pad_value_op,
                                                 pattern_map[pad_input],
                                                 matched_pad,
@@ -1039,14 +1047,14 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
 
         auto zero_padded_conv =
             std::make_shared<ngraph::op::Convolution>(hoisted_reshape,
-                                                      pattern_map[conv_filter],
+                                                      pvm[conv_filter],
                                                       matched_conv->get_window_movement_strides(),
                                                       matched_conv->get_window_dilation_strides(),
                                                       padding_below,
                                                       padding_above,
                                                       matched_conv->get_data_dilation_strides());
 
-        ngraph::replace_node(m.get_match_root(), zero_padded_conv);
+        m.get_match_value().replace(zero_padded_conv->output(0));
         return true;
     };
 
@@ -1075,8 +1083,9 @@ void pass::CoreFusion::construct_zero_padded_conv()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, conv_filter, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
+        auto pvm = m.get_pattern_value_map();
 
         auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
@@ -1089,7 +1098,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
             std::static_pointer_cast<ngraph::op::Convolution>(pattern_map[conv_label]);
         const auto& matched_pad = std::static_pointer_cast<ngraph::op::Pad>(pattern_map[pad_label]);
 
-        if (!zero_padded_conv_consistency_check(m.get_match_root(),
+        if (!zero_padded_conv_consistency_check(m.get_match_value(),
                                                 pad_value_op,
                                                 pattern_map[pad_input],
                                                 matched_pad,
@@ -1109,15 +1118,15 @@ void pass::CoreFusion::construct_zero_padded_conv()
             static_cast<CoordinateDiff::value_type>(matched_pad->get_padding_above().at(3))};
 
         auto zero_padded_conv =
-            std::make_shared<ngraph::op::Convolution>(pattern_map[pad_input],
-                                                      pattern_map[conv_filter],
+            std::make_shared<ngraph::op::Convolution>(pvm[pad_input],
+                                                      pvm[conv_filter],
                                                       matched_conv->get_window_movement_strides(),
                                                       matched_conv->get_window_dilation_strides(),
                                                       padding_below,
                                                       padding_above,
                                                       matched_conv->get_data_dilation_strides());
 
-        ngraph::replace_node(m.get_match_root(), zero_padded_conv);
+        m.get_match_value().replace(zero_padded_conv->output(0));
         return true;
     };
 
@@ -1146,8 +1155,9 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
     auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, output_delta, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
+        auto pvm = m.get_pattern_value_map();
 
         auto pad_value_op = as_type_ptr<ngraph::op::Constant>(pattern_map[pad_value]);
         if (!pad_value_op)
@@ -1160,7 +1170,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
             pattern_map[conv_label]);
         const auto& matched_pad = std::static_pointer_cast<ngraph::op::Pad>(pattern_map[pad_label]);
 
-        if (!zero_padded_conv_consistency_check(m.get_match_root(),
+        if (!zero_padded_conv_consistency_check(m.get_match_value(),
                                                 pad_value_op,
                                                 pattern_map[pad_input],
                                                 matched_pad,
@@ -1181,16 +1191,16 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
 
         auto zero_padded_conv_backprop_filters =
             std::make_shared<ngraph::op::ConvolutionBackpropFilters>(
-                pattern_map[pad_input],
+                pvm[pad_input],
                 matched_conv->get_filters_shape(),
-                pattern_map[output_delta],
+                pvm[output_delta],
                 matched_conv->get_window_movement_strides_forward(),
                 matched_conv->get_window_dilation_strides_forward(),
                 padding_below,
                 padding_above,
                 matched_conv->get_data_dilation_strides_forward());
 
-        ngraph::replace_node(m.get_match_root(), zero_padded_conv_backprop_filters);
+        m.get_match_value().replace(zero_padded_conv_backprop_filters->output(0));
         return true;
     };
 
@@ -1212,7 +1222,7 @@ void pass::CoreFusion::construct_conv_bias()
         if (auto reshape = as_type_ptr<op::Reshape>(node))
         {
             auto ishape = reshape->get_input_shape(0);
-            auto oshape = reshape->get_shape();
+            auto oshape = reshape->get_output_shape(0);
             // Callback will check that broadcast happens along channel (1) dimension.
             // Reshape should not alter that
             if (!reshape->get_is_transpose() && ishape.size() > 1 && oshape.size() > 1 &&
@@ -1239,14 +1249,16 @@ void pass::CoreFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_root()->get_argument(0));
+        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_value().get_node()->get_argument(0));
 
         if (conv_m == nullptr)
         {
-            conv_m = static_pointer_cast<op::Convolution>(m.get_match_root()->get_argument(1));
+            conv_m = static_pointer_cast<op::Convolution>(
+                m.get_match_value().get_node()->get_argument(1));
         }
 
-        if (conv_m->get_shape().size() > 5 || conv_m->get_element_type() != element::f32)
+        if (conv_m->get_output_shape(0).size() > 5 ||
+            conv_m->get_output_element_type(0) != element::f32)
         {
             // Most backends are unlikely to efficiently support these convolutions. Skip fusion
             return false;
@@ -1256,29 +1268,30 @@ void pass::CoreFusion::construct_conv_bias()
         // Except for the 2nd axis (channel dimension), we should either be broadcasting
         // to it or the dimension size should be 1.
         auto bcast_axes = bcast_m->get_broadcast_axes();
-        for (size_t i = 0; i < bcast_m->get_shape().size(); i++)
+        for (size_t i = 0; i < bcast_m->get_output_shape(0).size(); i++)
         {
-            if (i != 1 && bcast_axes.find(i) == bcast_axes.end() && bcast_m->get_shape()[i] != 1)
+            if (i != 1 && bcast_axes.find(i) == bcast_axes.end() &&
+                bcast_m->get_output_shape(0)[i] != 1)
             {
                 return false;
             }
         }
 
         auto bias = bcast_m->get_argument(0);
-        if (bias->get_shape().size() > 1)
+        if (bias->get_output_shape(0).size() > 1)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";
-            auto order = get_default_order(bias->get_shape());
+            auto order = get_default_order(bias->get_output_shape(0));
             auto bias_reshape =
                 make_shared<op::Reshape>(bias, order, Shape{conv_m->get_input_shape(1)[0]});
-            auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias_reshape));
-            replace_node(m.get_match_root(), conv_bias);
+            auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias_reshape);
+            m.get_match_value().replace(conv_bias->output(0));
         }
         else
         {
-            auto conv_bias = shared_ptr<Node>(new op::ConvolutionBias(conv_m, bias));
-            replace_node(m.get_match_root(), conv_bias);
+            auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias);
+            m.get_match_value().replace(conv_bias->output(0));
         }
         return true;
     };
@@ -1302,7 +1315,7 @@ void pass::CoreFusion::construct_conv_bias_add()
                                                   CoordinateDiff{0, 0},
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
-    auto add_input = make_shared<pattern::op::Label>(element::f32, pconv->get_shape());
+    auto add_input = make_shared<pattern::op::Label>(element::f32, pconv->get_output_shape(0));
     auto padd = make_shared<op::Add>(add_input, pconv);
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
@@ -1310,7 +1323,6 @@ void pass::CoreFusion::construct_conv_bias_add()
                      << m.get_match_root()->get_name();
 
         auto add_m = m.get_match_root();
-        auto pattern_map = m.get_pattern_map();
         auto conv_m = as_type_ptr<op::ConvolutionBias>(add_m->get_argument(1));
         auto add_input_m = add_m->get_argument(0);
 
@@ -1326,8 +1338,8 @@ void pass::CoreFusion::construct_conv_bias_add()
             return false;
         }
 
-        auto conv_add = shared_ptr<Node>(new op::ConvolutionBiasAdd(conv_m, add_input_m, false));
-        replace_node(m.get_match_root(), conv_add);
+        auto conv_add = make_shared<op::ConvolutionBiasAdd>(conv_m, add_input_m, false);
+        m.get_match_value().replace(conv_add->output(0));
         return true;
     };
 

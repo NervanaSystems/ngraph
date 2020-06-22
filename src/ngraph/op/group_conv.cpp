@@ -37,7 +37,7 @@ constexpr NodeTypeInfo op::v1::GroupConvolution::type_info;
 
 shared_ptr<Node> op::v1::GroupConvolution::get_default_value() const
 {
-    return op::Constant::create(get_element_type(), get_shape(), {0});
+    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }
 
 op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
@@ -688,7 +688,7 @@ Shape op::v0::GroupConvolution::get_weights_dimensions() const
     Shape weights_shape_groups{weights_shape};
     // adjust output and channel given a number of groups
 
-    weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
+    weights_shape_groups.at(OC) = get_output_shape(0).at(OC_IN_OUTPUT) / get_groups();
     weights_shape_groups.at(IC) = data_shape.at(IC) / get_groups();
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
@@ -976,7 +976,7 @@ OutputVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
 
         auto sliced_conv =
             std::make_shared<op::ConvolutionBackpropFilters>(sliced_data,
-                                                             sliced_filters->get_shape(),
+                                                             sliced_filters->get_output_shape(0),
                                                              sliced_delta,
                                                              get_window_movement_strides(),
                                                              get_window_dilation_strides(),

@@ -33,7 +33,6 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -99,16 +98,16 @@ public:
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index =
-                m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.get_match_root()->get_argument(0) == pattern_map[pattern];
             auto const_node =
-                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
+                as_type_ptr<op::Constant>(m.get_match_root()->get_argument(const_node_index));
+            auto second_node = m.get_match_root()->get_argument(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
-                pattern_map[pattern]->get_shape() != const_node->get_shape())
+            if (pattern_map[pattern]->get_output_element_type(0) !=
+                    const_node->get_output_element_type(0) ||
+                pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
                 return false;
@@ -124,7 +123,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -145,16 +144,16 @@ public:
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index =
-                m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.get_match_root()->get_argument(0) == pattern_map[pattern];
             auto const_node =
-                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
+                as_type_ptr<op::Constant>(m.get_match_root()->get_argument(const_node_index));
+            auto second_node = m.get_match_root()->get_argument(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
-                pattern_map[pattern]->get_shape() != const_node->get_shape())
+            if (pattern_map[pattern]->get_output_element_type(0) !=
+                    const_node->get_output_element_type(0) ||
+                pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
                 return false;
@@ -170,7 +169,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -209,7 +208,7 @@ TEST(pattern, graph_rewrite)
         auto graph_a = a + iconst0;
         auto graph_b = b + iconst0;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
+        auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, graph_a, c, graph_b},
                                             ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
@@ -227,7 +226,7 @@ TEST(pattern, graph_rewrite)
         auto sum = (a + iconst0);
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_argument(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->output(0)
                         .get_target_inputs()
@@ -243,7 +242,7 @@ TEST(pattern, graph_rewrite)
         auto mul = (a * iconst1);
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_argument(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(mul->output(0)
                         .get_target_inputs()
@@ -258,7 +257,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(0), a);
+        ASSERT_EQ(graph->get_argument(0), a);
         ASSERT_EQ(graph->input_value(0), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(0))); // a's output feeds into graph's input
@@ -271,7 +270,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_argument(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
@@ -283,7 +282,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
+        ASSERT_EQ(graph->get_argument(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
@@ -510,7 +509,7 @@ TEST(pattern, previous_matches)
 {
     using ngraph::pattern::Matcher;
     Shape shape{};
-    Matcher::PatternMap previous_matches;
+    Matcher::PatternValueMap previous_matches;
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto pattern = std::make_shared<pattern::op::Label>(b);
@@ -696,7 +695,7 @@ TEST(pattern, recurrent_graph_rewrite)
 
         auto graph = abs_add_a3 * abs_add_b2;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, ParameterVector{a, b});
+        auto f = std::make_shared<Function>(ngraph::OutputVector{graph}, ParameterVector{a, b});
         pass_manager.run_passes(f);
 
         auto left_abs = graph->get_argument(0);

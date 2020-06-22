@@ -29,7 +29,6 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/placement.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -154,19 +153,6 @@ void Node::safe_delete(NodeVector& nodes, bool recurse)
     }
 }
 
-void Node::set_arguments(const NodeVector& arguments)
-{
-    OutputVector outputs;
-    for (auto arg : arguments)
-    {
-        for (auto& output : arg->outputs())
-        {
-            outputs.push_back(output);
-        }
-    }
-    set_arguments(outputs);
-}
-
 void Node::set_arguments(const OutputVector& arguments)
 {
     // Add this node as a user of each argument.
@@ -188,11 +174,6 @@ descriptor::Input& Node::get_input_descriptor(size_t position)
     return m_inputs.at(position);
 }
 
-const descriptor::Input& Node::get_input_descriptor(size_t position) const
-{
-    return m_inputs.at(position);
-}
-
 descriptor::Output& Node::get_output_descriptor(size_t position)
 {
     while (m_outputs.size() <= position)
@@ -202,11 +183,6 @@ descriptor::Output& Node::get_output_descriptor(size_t position)
             make_shared<descriptor::Tensor>(element::dynamic, PartialShape::dynamic(), this, i);
         m_outputs.emplace_back(this, i, tensor_descriptor);
     }
-    return m_outputs.at(position);
-}
-
-const descriptor::Output& Node::get_output_descriptor(size_t position) const
-{
     return m_outputs.at(position);
 }
 
@@ -247,9 +223,7 @@ void Node::set_output_size(size_t n)
     }
 }
 
-void Node::validate_and_infer_types()
-{
-}
+void Node::validate_and_infer_types() {}
 
 void Node::set_input_is_relevant_to_shape(size_t i, bool relevant)
 {
@@ -272,16 +246,6 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
 void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
 {
     get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
-}
-
-std::deque<descriptor::Output>& Node::get_output_descriptors()
-{
-    return m_outputs;
-}
-
-const std::deque<descriptor::Output>& Node::get_output_descriptors() const
-{
-    return m_outputs;
 }
 
 bool Node::is_output() const
@@ -325,12 +289,12 @@ void Node::set_friendly_name(const string& name)
     m_friendly_name = name;
 }
 
-Placement Node::get_placement() const
+int32_t Node::get_placement() const
 {
     return m_placement;
 }
 
-void Node::set_placement(Placement placement)
+void Node::set_placement(int32_t placement)
 {
     m_placement = placement;
 }
@@ -654,15 +618,6 @@ const element::Type& Node::get_output_element_type(size_t i) const
     return m_outputs[i].get_element_type();
 }
 
-const element::Type& Node::get_element_type() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error("get_element_type() must be called on a node with exactly one output.");
-    }
-    return get_output_element_type(0);
-}
-
 const Shape& Node::get_output_shape(size_t i) const
 {
     NGRAPH_CHECK(
@@ -677,33 +632,11 @@ const PartialShape& Node::get_output_partial_shape(size_t i) const
     return m_outputs[i].get_partial_shape();
 }
 
-const Shape& Node::get_shape() const
-{
-    if (get_output_size() != 1)
-    {
-        stringstream es;
-        es << "get_shape() must be called on a node with exactly one output (" << description()
-           << ")";
-        throw ngraph_error(es);
-    }
-    return get_output_shape(0);
-}
-
 shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr(size_t i) const
 {
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_ptr(size_t i)");
     return m_outputs[i].get_tensor_ptr();
-}
-
-shared_ptr<descriptor::Tensor> Node::get_output_tensor_ptr() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error(
-            "get_output_tensor_ptr() must be called on a node with exactly one output.");
-    }
-    return m_outputs[0].get_tensor_ptr();
 }
 
 const std::vector<descriptor::Input*>& Node::get_output_inputs(size_t i) const
@@ -744,15 +677,6 @@ const string& Node::get_output_tensor_name(size_t i) const
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_tensor_name(size_t i)");
     return m_outputs[i].get_tensor().get_name();
-}
-
-descriptor::Tensor& Node::get_output_tensor() const
-{
-    if (get_output_size() != 1)
-    {
-        throw ngraph_error("get_output_tensor() must be called on a node with exactly one output.");
-    }
-    return get_output_tensor(0);
 }
 
 size_t Node::get_input_size() const

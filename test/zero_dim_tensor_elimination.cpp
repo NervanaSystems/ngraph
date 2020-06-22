@@ -44,7 +44,7 @@ TEST(zero_dim_tensor_elimination, zero_sum)
     auto abs_node = std::make_shared<op::Abs>(A);
     auto sum_node = std::make_shared<op::Sum>(abs_node, AxisSet{0});
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{sum_node, constant}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{sum_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -60,7 +60,7 @@ TEST(zero_dim_tensor_elimination, zero_product)
     auto abs_node = std::make_shared<op::Abs>(A);
     auto product_node = std::make_shared<op::Product>(abs_node, AxisSet{0});
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{product_node, constant}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{product_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -76,7 +76,7 @@ TEST(zero_dim_tensor_elimination, zero_min)
     auto abs_node = std::make_shared<op::Abs>(A);
     auto min_node = std::make_shared<op::Min>(abs_node, AxisSet{0});
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{min_node, constant}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{min_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -92,7 +92,7 @@ TEST(zero_dim_tensor_elimination, zero_max)
     auto abs_node = std::make_shared<op::Abs>(A);
     auto max_node = std::make_shared<op::Max>(abs_node, AxisSet{0});
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{max_node, constant}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{max_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -111,7 +111,7 @@ TEST(zero_dim_tensor_elimination, zero_const_conv)
     auto abs_node = std::make_shared<op::Abs>(convolution);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
     auto f =
-        std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, weights});
+        std::make_shared<Function>(OutputVector{abs_node, constant}, ParameterVector{A, weights});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -129,7 +129,7 @@ TEST(zero_dim_tensor_elimination, zero_const_avg_pool)
         std::make_shared<op::AvgPool>(A, Shape{1}, Strides{1}, Shape{2}, Shape{2}, true);
     auto abs_node = std::make_shared<op::Abs>(avg_pool);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{abs_node, constant}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -147,7 +147,7 @@ TEST(zero_dim_tensor_elimination, zero_const_pad)
     auto pad = std::make_shared<op::Pad>(A, B, CoordinateDiff{2}, CoordinateDiff{2});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
+    auto f = std::make_shared<Function>(OutputVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -165,7 +165,7 @@ TEST(zero_dim_tensor_elimination, zero_const_slice)
     auto pad = std::make_shared<op::Pad>(A, B, CoordinateDiff{2}, CoordinateDiff{2});
     auto abs_node = std::make_shared<op::Abs>(pad);
     auto constant = std::make_shared<op::Constant>(element::i32, zero_shape, std::vector<string>{});
-    auto f = std::make_shared<Function>(NodeVector{abs_node, constant}, ParameterVector{A, B});
+    auto f = std::make_shared<Function>(OutputVector{abs_node, constant}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
@@ -180,28 +180,28 @@ TEST(zero_dim_tensor_elimination, zero_argmax)
 {
     auto A = std::make_shared<op::Parameter>(element::f32, Shape{0, 2, 3});
     auto argmax = make_shared<op::ArgMax>(A, 1, element::i32);
-    auto f = std::make_shared<Function>(NodeVector{argmax}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{argmax}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 1);
     pass_manager.run_passes(f);
     EXPECT_EQ(count_ops_of_type<op::ArgMax>(f), 0);
-    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+    EXPECT_EQ(f->get_results().at(0)->get_output_shape(0), (Shape{0, 3}));
 }
 
 TEST(zero_dim_tensor_elimination, zero_argmin)
 {
     auto A = std::make_shared<op::Parameter>(element::f32, Shape{0, 2, 3});
     auto argmin = make_shared<op::ArgMin>(A, 1, element::i32);
-    auto f = std::make_shared<Function>(NodeVector{argmin}, ParameterVector{A});
+    auto f = std::make_shared<Function>(OutputVector{argmin}, ParameterVector{A});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<ngraph::pass::ZeroDimTensorElimination>();
     EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 1);
     pass_manager.run_passes(f);
     EXPECT_EQ(count_ops_of_type<op::ArgMin>(f), 0);
-    EXPECT_EQ(f->get_results().at(0)->get_shape(), (Shape{0, 3}));
+    EXPECT_EQ(f->get_results().at(0)->get_output_shape(0), (Shape{0, 3}));
 }
 
 TEST(zero_dim_tensor_elimination, pass_property)

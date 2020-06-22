@@ -18,7 +18,6 @@
 #include <sstream>
 
 #include "ngraph/log.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
@@ -249,7 +248,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                         }
 
                         auto old_offset = output_tensor->get_pool_offset();
-                        offset += slice->get_element_type().size() * start;
+                        offset += slice->get_output_element_type(0).size() * start;
                         output_tensor->set_pool_offset(offset);
                         NGRAPH_DEBUG
                             << "cpu_memory_assignment: slice, change offset, old offset is "

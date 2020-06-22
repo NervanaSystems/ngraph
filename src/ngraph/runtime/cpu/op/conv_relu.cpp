@@ -35,7 +35,7 @@ op::ConvolutionRelu::ConvolutionRelu(const std::shared_ptr<op::Convolution>& con
     , m_data_dilation_strides(conv->get_data_dilation_strides())
 {
     constructor_validate_and_infer_types();
-    set_output_type(0, conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_output_element_type(0), conv->get_output_shape(0));
 }
 
 op::ConvolutionRelu::ConvolutionRelu(const Output<Node>& data_batch,
@@ -93,11 +93,11 @@ std::shared_ptr<Node> op::ConvolutionRelu::clone_with_new_inputs(const OutputVec
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::shared_ptr<Node>(new ConvolutionRelu(new_args.at(0),
-                                                     new_args.at(1),
-                                                     get_window_movement_strides(),
-                                                     get_window_dilation_strides(),
-                                                     get_padding_below(),
-                                                     get_padding_above(),
-                                                     get_data_dilation_strides()));
+    return std::make_shared<ConvolutionRelu>(new_args.at(0),
+                                             new_args.at(1),
+                                             get_window_movement_strides(),
+                                             get_window_dilation_strides(),
+                                             get_padding_below(),
+                                             get_padding_above(),
+                                             get_data_dilation_strides());
 }

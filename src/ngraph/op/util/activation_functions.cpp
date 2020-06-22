@@ -21,7 +21,7 @@
 
 #include "activation_functions.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/hard_sigmoid.hpp"
+#include "ngraph/op/hard_sigmoid.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
@@ -46,8 +46,10 @@ static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float /* alpha */, flo
 
 static shared_ptr<Node> hardsigmoid(const shared_ptr<Node>& arg, float alpha, float beta)
 {
-    const auto alpha_node = op::Constant::create<float>(arg->get_element_type(), Shape{}, {alpha});
-    const auto beta_node = op::Constant::create<float>(arg->get_element_type(), Shape{}, {beta});
+    const auto alpha_node =
+        op::Constant::create<float>(arg->get_output_element_type(0), Shape{}, {alpha});
+    const auto beta_node =
+        op::Constant::create<float>(arg->get_output_element_type(0), Shape{}, {beta});
 
     return make_shared<op::HardSigmoid>(arg, alpha_node, beta_node);
 }

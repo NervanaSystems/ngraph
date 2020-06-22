@@ -291,9 +291,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
             auto pnode = as_type_ptr<op::Parameter>(node);
-            if (pnode &&
-                std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
-                    cloned_bprop_inputs.end())
+            if (pnode && std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
+                             cloned_bprop_inputs.end())
             {
                 fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(Output<Node>(node)));
             }

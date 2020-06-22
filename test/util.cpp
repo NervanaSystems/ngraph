@@ -272,7 +272,7 @@ TEST(graph_util, clone_multiple_results)
     auto A_add_B = make_shared<op::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
 
-    auto f = make_shared<Function>(NodeVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
+    auto f = make_shared<Function>(OutputVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
 
     auto copy = clone_function(*f);
 }
@@ -353,7 +353,7 @@ TEST(util, test_fprop_cache)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto output = (A + B) * C + A;
 
-    auto f = make_shared<Function>(NodeVector{output}, ParameterVector{A, B, C});
+    auto f = make_shared<Function>(OutputVector{output}, ParameterVector{A, B, C});
 
     auto bf = autodiff::backprop_function(f);
 
@@ -551,7 +551,7 @@ TEST(graph, huge)
             n = make_shared<op::Negative>(n);
             weak_nodes.push_back(n);
         }
-        auto f = make_shared<Function>(NodeVector{n}, ParameterVector{param});
+        auto f = make_shared<Function>(OutputVector{n}, ParameterVector{param});
     }
 
     for (auto& weak_node : weak_nodes)
@@ -740,6 +740,58 @@ TEST(util, double_to_int_limits)
     EXPECT_TRUE(std::numeric_limits<uint16_t>::max() == double_to_int<uint16_t>(x, round_func));
     EXPECT_TRUE(std::numeric_limits<uint32_t>::max() == double_to_int<uint32_t>(x, round_func));
     EXPECT_TRUE(std::numeric_limits<uint64_t>::max() == double_to_int<uint64_t>(x, round_func));
+
+    auto ceil_func = [](double x) { return std::ceil(x); };
+
+    x = -std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::min() == double_to_int<int8_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::min() == double_to_int<int16_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::min() == double_to_int<int32_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::min() == double_to_int<int64_t>(x, ceil_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::min() == double_to_int<uint8_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::min() == double_to_int<uint16_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::min() == double_to_int<uint32_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::min() == double_to_int<uint64_t>(x, ceil_func));
+
+    x = std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::max() == double_to_int<int8_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::max() == double_to_int<int16_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::max() == double_to_int<int32_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::max() == double_to_int<int64_t>(x, ceil_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::max() == double_to_int<uint8_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::max() == double_to_int<uint16_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::max() == double_to_int<uint32_t>(x, ceil_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::max() == double_to_int<uint64_t>(x, ceil_func));
+
+    auto floor_func = [](double x) { return std::floor(x); };
+
+    x = -std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::min() == double_to_int<int8_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::min() == double_to_int<int16_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::min() == double_to_int<int32_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::min() == double_to_int<int64_t>(x, floor_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::min() == double_to_int<uint8_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::min() == double_to_int<uint16_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::min() == double_to_int<uint32_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::min() == double_to_int<uint64_t>(x, floor_func));
+
+    x = std::numeric_limits<double>::infinity();
+
+    EXPECT_TRUE(std::numeric_limits<int8_t>::max() == double_to_int<int8_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<int16_t>::max() == double_to_int<int16_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<int32_t>::max() == double_to_int<int32_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<int64_t>::max() == double_to_int<int64_t>(x, floor_func));
+
+    EXPECT_TRUE(std::numeric_limits<uint8_t>::max() == double_to_int<uint8_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<uint16_t>::max() == double_to_int<uint16_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<uint32_t>::max() == double_to_int<uint32_t>(x, floor_func));
+    EXPECT_TRUE(std::numeric_limits<uint64_t>::max() == double_to_int<uint64_t>(x, floor_func));
 }
 
 TEST(util, double_to_int_assert)

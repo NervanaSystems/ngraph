@@ -1,3 +1,8 @@
+
+################################################################################
+# CPU
+################################################################################
+
 CPU.shape_of_scalar
 CPU.shape_of_vector
 CPU.shape_of_matrix
@@ -20,16 +25,6 @@ CPU.onnx_top_k_opset_10
 # ONNX GatherND with int32
 CPU.onnx_model_gatherND_int32
 
-# RNN pattern fails after removing GOE
-CPU.fuse_rnn_across_layer_2layer_3timestep
-CPU.fuse_bi_directional_rnn
-CPU.bi_rnn_interpreter_vs_cpu
-CPU.fuse_lstm_cells
-CPU.fuse_2_layer_rnn
-CPU.fuse_1_layer_rnn
-CPU.rnn_fusion_1rnn_layer_3lstm_cell
-CPU.rnn_fusion_2rnn_layer_3lstm_cell
-
 #ONNX Flatten with dynamic reshape
 CPU.onnx_dyn_shapes_flatten_axis
 CPU.onnx_dyn_shapes_flatten_neg_axis
@@ -51,12 +46,66 @@ CPU.matmul_2x2x3_2x1x3_transpose_int64
 CPU.matmul_2x2x3_2x3x1_int64
 
 # no support for f16, bf16
-CPU.fused_clamp_float16
-CPU.fused_clamp_bfloat16
+CPU.clamp_float16
+CPU.clamp_bfloat16
 
 CPU.lstm_cell_no_bias_no_peepholes
 CPU.lstm_cell_zero_bias_peepholes_constant
 CPU.lstm_cell_fixed_no_bias_no_peepholes
+
+################################################################################
+# MLIR
+################################################################################
+
+CPU_MLIR.shape_of_scalar
+CPU_MLIR.shape_of_vector
+CPU_MLIR.shape_of_matrix
+CPU_MLIR.shape_of_5d
+CPU_MLIR.sum_stable_acc_double
+
+# failing in CI build but passing on local machine
+CPU_MLIR.max_3d_to_scalar_int32
+
+# Not implemented
+CPU_MLIR.send_recv
+CPU_MLIR.send_recv_ring
+CPU_MLIR.atanh
+CPU_MLIR.asinh
+CPU_MLIR.acosh
+
+# ONNX TopK with dynamic K
+CPU_MLIR.onnx_top_k_opset_10
+
+# ONNX GatherND with int32
+CPU_MLIR.onnx_model_gatherND_int32
+
+#ONNX Flatten with dynamic reshape
+CPU_MLIR.onnx_dyn_shapes_flatten_axis
+CPU_MLIR.onnx_dyn_shapes_flatten_neg_axis
+
+CPU_MLIR.onnx_dyn_shapes_flatten_axis
+CPU_MLIR.onnx_dyn_shapes_flatten_neg_axis
+
+# Need use evaluate, only applicable to INTERPRETER
+CPU_MLIR.non_zero
+CPU_MLIR.non_zero_all_1s
+CPU_MLIR.non_zero_all_0s
+
+CPU_MLIR.round_int64
+CPU_MLIR.floor_int64
+CPU_MLIR.ceiling_int64
+
+# Incorrect result from CPU, need check and fix 
+CPU_MLIR.matmul_2x2x3_2x1x3_transpose_int64
+CPU_MLIR.matmul_2x2x3_2x3x1_int64
+
+# no support for f16, bf16
+CPU_MLIR.clamp_float16
+CPU_MLIR.clamp_bfloat16
+
+CPU_MLIR.lstm_cell_no_bias_no_peepholes
+CPU_MLIR.lstm_cell_zero_bias_peepholes_constant
+CPU_MLIR.lstm_cell_fixed_no_bias_no_peepholes
 
 ################################################################################
 # CODEGEN
@@ -73,5 +122,5 @@ CPU_CODEGEN.topk_v1_invalid_k
 CPU_CODEGEN.non_zero
 CPU_CODEGEN.non_zero_all_0s
 CPU_CODEGEN.non_zero_all_1s
-CPU_CODEGEN.fused_clamp_float16
-CPU_CODEGEN.fused_clamp_bfloat16
+CPU_CODEGEN.clamp_float16
+CPU_CODEGEN.clamp_bfloat16

@@ -56,19 +56,6 @@ Function::Function(const OutputVector& results,
     init();
 }
 
-Function::Function(const NodeVector& results,
-                   const ParameterVector& parameters,
-                   const std::string& name)
-    : Lambda(as_output_vector(results), parameters)
-    , m_temporary_pool_size(0)
-    , m_instance_id(m_next_instance_id.fetch_add(1))
-    , m_name(name)
-    , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
-{
-    init();
-}
-
 Function::Function(const std::shared_ptr<Node>& result,
                    const ParameterVector& parameters,
                    const std::string& name)
@@ -194,12 +181,12 @@ size_t Function::get_output_size() const
 
 const element::Type& Function::get_output_element_type(size_t i) const
 {
-    return m_results.at(i)->get_element_type();
+    return m_results.at(i)->get_output_element_type(0);
 }
 
 const Shape& Function::get_output_shape(size_t i) const
 {
-    return m_results.at(i)->get_shape();
+    return m_results.at(i)->get_output_shape(0);
 }
 
 const PartialShape& Function::get_output_partial_shape(size_t i) const

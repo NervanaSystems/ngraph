@@ -30,14 +30,14 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
-#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/gelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
@@ -256,8 +256,9 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                    if (!data_dilated &&
+                        ((arg0_rank == 4 && arg1_rank == 4) ||
+                         (arg0_rank == 5 && arg1_rank == 5)) &&
                         (arg2_rank == 1) && node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -289,8 +290,9 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                    if (!data_dilated &&
+                        ((arg0_rank == 4 && arg1_rank == 4) ||
+                         (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);
@@ -315,8 +317,9 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                    if (!data_dilated &&
+                        ((arg0_rank == 4 && arg1_rank == 4) ||
+                         (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(node);

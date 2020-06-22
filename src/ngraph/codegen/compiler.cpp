@@ -101,9 +101,7 @@ codegen::Module::Module(std::unique_ptr<llvm::Module> module)
 {
 }
 
-codegen::Module::~Module()
-{
-}
+codegen::Module::~Module() {}
 
 std::unique_ptr<llvm::Module> codegen::Module::take_module()
 {

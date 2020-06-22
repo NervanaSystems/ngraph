@@ -16,7 +16,7 @@
 
 #include "ngraph/op/embedding_segments_sum.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 
 using namespace std;
 using namespace ngraph;

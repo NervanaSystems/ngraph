@@ -18,8 +18,8 @@
 
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset1.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset1.hpp"
+#include "ngraph/opset/opset3.hpp"
 
 #include "util/visitor.hpp"
 
@@ -104,6 +104,7 @@ namespace ngraph
         }
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Position>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         Position& m_ref;
     };
@@ -1356,8 +1357,8 @@ TEST(attributes, constant_op)
     auto g_k = as_type_ptr<op::v0::Constant>(builder.create());
     g_k->validate_and_infer_types();
     ASSERT_TRUE(g_k);
-    EXPECT_EQ(k->get_element_type(), g_k->get_element_type());
-    EXPECT_EQ(k->get_shape(), g_k->get_shape());
+    EXPECT_EQ(k->get_output_element_type(0), g_k->get_output_element_type(0));
+    EXPECT_EQ(k->get_output_shape(0), g_k->get_output_shape(0));
     vector<float> g_data = g_k->get_vector<float>();
     EXPECT_EQ(data, g_data);
 }

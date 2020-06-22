@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
-#include "ngraph/op/fused/conv_fused.hpp"
+#include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/mkldnn_invoke.hpp"

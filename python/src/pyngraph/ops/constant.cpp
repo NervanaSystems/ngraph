@@ -42,16 +42,16 @@ std::vector<ssize_t> _get_byte_strides(const ngraph::Shape& s)
 template <typename T>
 py::buffer_info _get_buffer_info(const ngraph::op::Constant& c)
 {
-    ngraph::Shape shape = c.get_shape();
+    ngraph::Shape shape = c.get_output_shape(0);
     return py::buffer_info(
-        const_cast<void*>(c.get_data_ptr()),               /* Pointer to buffer */
-        static_cast<ssize_t>(c.get_element_type().size()), /* Size of one scalar */
-        py::format_descriptor<T>::format(),                /* Python struct-style format
-                                                              descriptor */
-        static_cast<ssize_t>(shape.size()),                /* Number of dimensions */
-        std::vector<ssize_t>{shape.begin(), shape.end()},  /* Buffer dimensions */
-        _get_byte_strides<T>(shape)                        /* Strides (in bytes) for each index */
-        );
+        const_cast<void*>(c.get_data_ptr()),                       /* Pointer to buffer */
+        static_cast<ssize_t>(c.get_output_element_type(0).size()), /* Size of one scalar */
+        py::format_descriptor<T>::format(),                        /* Python struct-style format
+                                                                      descriptor */
+        static_cast<ssize_t>(shape.size()),                        /* Number of dimensions */
+        std::vector<ssize_t>{shape.begin(), shape.end()},          /* Buffer dimensions */
+        _get_byte_strides<T>(shape) /* Strides (in bytes) for each index */
+    );
 }
 
 void regclass_pyngraph_op_Constant(py::module m)
@@ -92,7 +92,7 @@ void regclass_pyngraph_op_Constant(py::module m)
     constant.def("get_value_strings", &ngraph::op::Constant::get_value_strings);
     // Provide buffer access
     constant.def_buffer([](const ngraph::op::Constant& self) -> py::buffer_info {
-        auto element_type = self.get_element_type();
+        auto element_type = self.get_output_element_type(0);
         if (element_type == ngraph::element::boolean)
         {
             return _get_buffer_info<char>(self);

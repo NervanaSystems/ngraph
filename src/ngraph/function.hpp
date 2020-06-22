@@ -36,10 +36,6 @@ namespace ngraph
     public:
         static constexpr DiscreteTypeInfo type_info{"Function", 0};
         const DiscreteTypeInfo& get_type_info() const { return type_info; }
-        Function(const NodeVector& results,
-                 const ParameterVector& parameters,
-                 const std::string& name = "");
-
         Function(const OutputVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -55,6 +51,7 @@ namespace ngraph
         void init();
 
         virtual ~Function() {}
+
     public:
         /// Return the number of outputs for this function.
         size_t get_output_size() const;

@@ -30,7 +30,7 @@
 #include "ngraph/op/experimental/quantized_conv_bias.hpp"
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
-#include "ngraph/op/fused/gelu.hpp"
+#include "ngraph/op/gelu.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -145,8 +145,6 @@ namespace ngraph
                     size_t& scratchpad_size,
                     std::ofstream& desc_file)
                 {
-                    const auto& out = node->get_output_descriptors();
-                    const auto& args = node->get_input_descriptors();
                     auto rnn_node = static_cast<const OP*>(node);
                     auto src_sequence_length_max =
                         static_cast<unsigned long>(rnn_node->get_src_sequence_length());
@@ -178,15 +176,16 @@ namespace ngraph
                         }
                     };
 
-                    if (out[0].get_shape().size() == 2 &&
-                        (out[0].get_shape()[1] != direction * feature_size))
+                    if (node->get_output_shape(0).size() == 2 &&
+                        (node->get_output_shape(0)[1] != direction * feature_size))
                     {
                         throw ngraph_error(
                             "input slc{ht} feature size is not equal to output dlc{ht} feature "
                             "size ");
                     }
 
-                    if (out[1].get_shape().size() == 2 && (out[1].get_shape()[1] != feature_size) &&
+                    if (node->get_output_shape(1).size() == 2 &&
+                        (node->get_output_shape(1)[1] != feature_size) &&
                         rnn_node->get_num_timesteps() != 1)
                     {
                         throw ngraph_error(
@@ -215,28 +214,40 @@ namespace ngraph
                     Shape dst_iter_c_tz{num_fused_layers, direction, batch, feature_size};
 
                     // We create the memory descriptors used by the user
-                    auto src_layer_md = mkldnn_emitter.build_memory_descriptor(
-                        src_layer_tz, args[0].get_element_type(), mkldnn::memory::format_tag::tnc);
-                    auto src_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        src_iter_tz, args[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
+                    auto src_layer_md =
+                        mkldnn_emitter.build_memory_descriptor(src_layer_tz,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::tnc);
+                    auto src_iter_md =
+                        mkldnn_emitter.build_memory_descriptor(src_iter_tz,
+                                                               node->get_input_element_type(1),
+                                                               mkldnn::memory::format_tag::ldnc);
                     auto src_iter_c_md =
                         mkldnn_emitter.build_memory_descriptor(src_iter_c_tz,
-                                                               args[1].get_element_type(),
+                                                               node->get_input_element_type(1),
                                                                mkldnn::memory::format_tag::ldnc);
                     auto wei_layer_md =
                         mkldnn_emitter.build_memory_descriptor(wei_layer_tz,
-                                                               args[2].get_element_type(),
+                                                               node->get_input_element_type(2),
                                                                mkldnn::memory::format_tag::ldigo);
-                    auto wei_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        wei_iter_tz, args[3].get_element_type(), mkldnn::memory::format_tag::ldigo);
+                    auto wei_iter_md =
+                        mkldnn_emitter.build_memory_descriptor(wei_iter_tz,
+                                                               node->get_input_element_type(3),
+                                                               mkldnn::memory::format_tag::ldigo);
                     auto bias_md = mkldnn_emitter.build_memory_descriptor(
-                        bias_tz, args[4].get_element_type(), mkldnn::memory::format_tag::ldgo);
-                    auto dst_layer_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_layer_tz, out[0].get_element_type(), mkldnn::memory::format_tag::tnc);
-                    auto dst_iter_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_iter_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
-                    auto dst_iter_c_md = mkldnn_emitter.build_memory_descriptor(
-                        dst_iter_c_tz, out[1].get_element_type(), mkldnn::memory::format_tag::ldnc);
+                        bias_tz, node->get_input_element_type(4), mkldnn::memory::format_tag::ldgo);
+                    auto dst_layer_md =
+                        mkldnn_emitter.build_memory_descriptor(dst_layer_tz,
+                                                               node->get_output_element_type(0),
+                                                               mkldnn::memory::format_tag::tnc);
+                    auto dst_iter_md =
+                        mkldnn_emitter.build_memory_descriptor(dst_iter_tz,
+                                                               node->get_output_element_type(1),
+                                                               mkldnn::memory::format_tag::ldnc);
+                    auto dst_iter_c_md =
+                        mkldnn_emitter.build_memory_descriptor(dst_iter_c_tz,
+                                                               node->get_output_element_type(1),
+                                                               mkldnn::memory::format_tag::ldnc);
 
                     // query scratchpad size
                     auto rnn_desc = mkldnn::lstm_forward::desc(mkldnn::prop_kind::forward_training,
@@ -279,24 +290,33 @@ namespace ngraph
                     writer << "\n// build lstm/rnn primitive descriptor\n";
                     writer << "auto rnn_desc = "
                               "mkldnn::lstm_forward::desc(mkldnn::prop_kind::forward_training, "
-                           << get_mkldnn_rnn_direction_string() << ", "
-                                                                   "*cg_ctx->mkldnn_descriptors["
-                           << desc_index << "], "
-                                            "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 2 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 3 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 4 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 5 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 6 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 7 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << get_mkldnn_rnn_direction_string()
+                           << ", "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 3
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 4
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 5
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 6
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 7
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 8 << "]);\n";
 
                     writer << "mkldnn::primitive_attr attr;\n";
@@ -366,8 +386,6 @@ namespace ngraph
                     const bool append_relu,
                     const bool training)
                 {
-                    const auto& args = node->get_input_descriptors();
-
                     // batchnorm forward needs 6 primitives: input, weights, result, mean,
                     // variance, and batch_normalization_forward.
                     index = mkldnn_emitter.reserve_primitive_space(6);
@@ -392,10 +410,12 @@ namespace ngraph
                     }
 
                     auto weights_shape =
-                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
+                        Shape{2, node->get_input_tensor(0).get_tensor_layout()->get_size()};
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
-                    auto weights_desc = mkldnn_emitter.build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
+                    auto weights_desc =
+                        mkldnn_emitter.build_memory_descriptor(weights_shape,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::nc);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
                     const float ops_scale = 1.f;
@@ -411,7 +431,7 @@ namespace ngraph
 
                     bool use_global_stats;
                     const mkldnn::memory::desc *mean_desc, *variance_desc;
-                    if (training && args.size() == 3)
+                    if (training && node->get_input_size() == 3)
                     {
                         mean_desc = &mkldnn_utils::get_output_mkldnn_md(node, 1);
                         variance_desc = &mkldnn_utils::get_output_mkldnn_md(node, 2);
@@ -563,21 +583,24 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     BatchNormTrainingBackprop)
                 {
-                    const auto& args = node->get_input_descriptors();
                     const auto* batchnorm = static_cast<const BatchNormTrainingBackprop*>(node);
                     auto eps = batchnorm->get_eps_value();
 
                     auto weights_shape =
-                        Shape{2, args[0].get_tensor().get_tensor_layout()->get_size()};
-                    auto weights_desc = mkldnn_emitter.build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
+                        Shape{2, node->get_input_tensor(0).get_tensor_layout()->get_size()};
+                    auto weights_desc =
+                        mkldnn_emitter.build_memory_descriptor(weights_shape,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::nc);
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 2);
                     auto mean_desc = mkldnn_utils::get_input_mkldnn_md(node, 3);
                     auto variance_desc = mkldnn_utils::get_input_mkldnn_md(node, 4);
                     auto delta_desc = mkldnn_utils::get_input_mkldnn_md(node, 5);
                     auto dinput_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
-                    auto dweights_desc = mkldnn_emitter.build_memory_descriptor(
-                        weights_shape, args[0].get_element_type(), mkldnn::memory::format_tag::nc);
+                    auto dweights_desc =
+                        mkldnn_emitter.build_memory_descriptor(weights_shape,
+                                                               node->get_input_element_type(0),
+                                                               mkldnn::memory::format_tag::nc);
 
                     // query scratchpad size
                     auto batchnorm_desc = mkldnn_emitter.get_batchnorm_backward_desc(node);
@@ -621,8 +644,9 @@ namespace ngraph
                               "mkldnn::batch_normalization_backward::desc(mkldnn::prop_kind::"
                               "backward, "
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 4 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 4
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "], " << eps
                            << ", "
                               "mkldnn::normalization_flags::use_scale_shift);\n";
@@ -775,9 +799,8 @@ namespace ngraph
                 template <>
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Slice)
                 {
-                    const auto& out = node->get_output_descriptors();
                     const Slice* slice = static_cast<const Slice*>(node);
-                    auto result_shape = out[0].get_shape();
+                    auto result_shape = node->get_output_shape(0);
                     auto lower_bounds = slice->get_lower_bounds();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
@@ -808,8 +831,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "mkldnn::reorder::primitive_desc("
                               "*cg_ctx->mkldnn_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->mkldnn_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->mkldnn_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -884,8 +908,9 @@ namespace ngraph
                               "mkldnn::convolution_forward::desc(mkldnn::prop_kind::forward,\n"
                               "mkldnn::algorithm::convolution_direct,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     if (mkldnn_emitter.has_bias<OP>())
                     {
@@ -1414,13 +1439,16 @@ namespace ngraph
                               "mkldnn::prop_kind::forward,\n"
                               "mkldnn::algorithm::deconvolution_direct,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "],\n"
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 0 << "],\n"
-                                                "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 2 << "],\n"
+                           << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 0
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2
+                           << "],\n"
 
-                                                "*cg_ctx->mkldnn_descriptors["
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 3 << "],\n";
 
                     WRITE_MKLDNN_DIMS(window_strides);
@@ -1484,8 +1512,9 @@ namespace ngraph
                               "inference,\n";
                     writer << "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
@@ -1641,8 +1670,9 @@ namespace ngraph
                               "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
                               "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
@@ -1791,8 +1821,9 @@ namespace ngraph
                               "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
                               "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 2 << "],\n"
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
@@ -1803,8 +1834,9 @@ namespace ngraph
                               "mkldnn::pooling_backward::desc(\n"
                               "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 2 << "],\n"
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
@@ -1894,8 +1926,9 @@ namespace ngraph
                               "mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_training,\n"
                               "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "],\n"
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
@@ -1906,8 +1939,9 @@ namespace ngraph
                               "mkldnn::pooling_backward::desc(\n"
                               "mkldnn::algorithm::pooling_max,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "],\n"
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "],\n";
                     WRITE_MKLDNN_DIMS(window_strides);
                     WRITE_MKLDNN_DIMS(window_shape);
@@ -1942,7 +1976,6 @@ namespace ngraph
                 void MKLDNNPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(
                     ngraph::runtime::cpu::op::ConvertLayout)
                 {
-                    const auto& args = node->get_input_descriptors();
                     auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
                     auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
 
@@ -1963,10 +1996,10 @@ namespace ngraph
                               // check if compensation is conv_s8s8(1U)
                               result_desc.data.extra.flags & 0x1U))
                     {
-                        auto arg0_shape = args[0].get_shape();
+                        auto arg0_shape = node->get_input_shape(0);
                         input_desc = mkldnn::memory::desc(
                             mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0)),
                             mkldnn::memory::format_tag::oihw);
                     }
                     else if (input_format_is_nchw && input_desc.data.ndims == 4 &&
@@ -1991,7 +2024,7 @@ namespace ngraph
                         input_desc = mkldnn::memory::desc(
                             mkldnn::memory::dims(weights_shape_groups.begin(),
                                                  weights_shape_groups.end()),
-                            mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
+                            mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(0)),
                             mkldnn::memory::format_tag::goihw);
                     }
 
@@ -2017,8 +2050,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "mkldnn::reorder::primitive_desc("
                               "*cg_ctx->mkldnn_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->mkldnn_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->mkldnn_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
 
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
@@ -2063,8 +2097,9 @@ namespace ngraph
                     writer << "auto bwd_desc = "
                               "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_relu, "
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 2 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 2
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], negative_slope);\n";
 
                     writer << "mkldnn::primitive_attr attr;\n";
@@ -2311,8 +2346,9 @@ namespace ngraph
                     writer << "auto bwd_desc = "
                               "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_gelu, "
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], 0, 0);\n";
 
                     writer << "mkldnn::primitive_attr attr;\n";
@@ -2417,8 +2453,9 @@ namespace ngraph
                     writer << "auto bwd_desc = "
                               "mkldnn::eltwise_backward::desc(mkldnn::algorithm::eltwise_logistic, "
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index + 1 << "], "
-                                                "*cg_ctx->mkldnn_descriptors["
+                           << desc_index + 1
+                           << "], "
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index << "], 0, 0);\n";
 
                     writer << "mkldnn::primitive_attr attr;\n";
@@ -2524,8 +2561,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "mkldnn::reorder::primitive_desc("
                               "*cg_ctx->mkldnn_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->mkldnn_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->mkldnn_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::reorder(reorder_pd);\n";
@@ -2564,8 +2602,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "mkldnn::reorder::primitive_desc("
                               "*cg_ctx->mkldnn_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->mkldnn_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->mkldnn_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
                     writer << "cg_ctx->mkldnn_primitives[" << std::to_string(index)
                            << "] = new mkldnn::reorder(reorder_pd);\n";
@@ -2635,8 +2674,9 @@ namespace ngraph
                     writer << "auto ip_desc = "
                               "mkldnn::inner_product_forward::desc(mkldnn::prop_kind::forward,\n"
                               "*cg_ctx->mkldnn_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->mkldnn_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->mkldnn_descriptors["
                            << desc_index + 1 << "],\n";
                     if (has_bias)
                     {

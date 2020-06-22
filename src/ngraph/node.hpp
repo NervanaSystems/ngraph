@@ -42,7 +42,6 @@
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/output_vector.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
 
@@ -118,20 +117,21 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-/// \brief Used in evaluator switch statement so that the case type and evaluate call
-/// are guaranteed to have the types match.
-///
-/// Use this in an evaluate_*() function like this
-///    switch (arg0->get_element_type())
-///    {
-///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
-///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
-///
-/// Each TYPE_CASE statement expands like this:
-///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out, broadcast_spec)
-///
-/// \note Don't forget to put a break after each statement or it will fall through and generate
-/// a runtime error.
+    /// \brief Used in evaluator switch statement so that the case type and evaluate call
+    /// are guaranteed to have the types match.
+    ///
+    /// Use this in an evaluate_*() function like this
+    ///    switch (arg0->get_element_type())
+    ///    {
+    ///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
+    ///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
+    ///
+    /// Each TYPE_CASE statement expands like this:
+    ///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out,
+    ///   broadcast_spec)
+    ///
+    /// \note Don't forget to put a break after each statement or it will fall through and generate
+    /// a runtime error.
 
 #define TYPE_CASE(a)                                                                               \
     case element::Type_t::a: rc = evaluate<element::Type_t::a>
@@ -228,8 +228,6 @@ namespace ngraph
         virtual const type_info_t& get_type_info() const = 0;
         const char* get_type_name() const { return get_type_info().name; }
         /// Sets/replaces the arguments with new arguments.
-        void set_arguments(const NodeVector& arguments);
-        /// Sets/replaces the arguments with new arguments.
         void set_arguments(const OutputVector& arguments);
         /// Sets/replaces the arguments with new arguments.
         void set_argument(size_t position, const Output<Node>& argument);
@@ -315,21 +313,6 @@ namespace ngraph
         /// \returns The stream os
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
-        std::deque<descriptor::Input>& get_input_descriptors()
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        const std::deque<descriptor::Input>& get_input_descriptors() const
-            NGRAPH_DEPRECATED("use inputs() instead")
-        {
-            return m_inputs;
-        }
-        std::deque<descriptor::Output>& get_output_descriptors()
-            NGRAPH_DEPRECATED("use outputs() instead");
-        const std::deque<descriptor::Output>& get_output_descriptors() const
-            NGRAPH_DEPRECATED("use outputs() instead");
-
         /// Get control dependencies registered on the node
         const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
 
@@ -363,12 +346,6 @@ namespace ngraph
         /// Returns the element type for output i
         const element::Type& get_output_element_type(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its element type
-        // TODO: deprecate in favor of node->get_output_element_type(0) with a suitable check in
-        // the calling code, or updates to the calling code if it is making an invalid assumption
-        // of only one output.
-        const element::Type& get_element_type() const;
-
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
 
@@ -390,12 +367,6 @@ namespace ngraph
         /// Throws no default
         size_t no_default_index() const;
 
-        /// Checks that there is exactly one output and returns its shape
-        // TODO: deprecate in favor of node->get_output_shape(0) with a suitable check in the
-        // calling code, or updates to the calling code if it is making an invalid assumption of
-        // only one output.
-        const Shape& get_shape() const;
-
         /// Returns the tensor for output or input i
         descriptor::Tensor& get_output_tensor(size_t i) const;
         descriptor::Tensor& get_input_tensor(size_t i) const;
@@ -403,21 +374,11 @@ namespace ngraph
         /// Returns the tensor name for output i
         const std::string& get_output_tensor_name(size_t i) const;
 
-        /// Checks that there is exactly one output and returns its tensor.
-        descriptor::Tensor& get_output_tensor() const NGRAPH_DEPRECATED(
-            "use node->get_output_tensor(0) instead; insert a check that the node has only one "
-            "output, or update calling code not to assume only one output");
-
         /// Returns the tensor of output i
         // TODO: Investigate whether this really needs to be shared_ptr. If so, we'll need a
         // replacement in Output.
         std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr(size_t i) const
             NGRAPH_DEPRECATED("use &node->output(i).get_tensor() instead");
-
-        /// Checks that there is exactly one output and returns its tensor.
-        std::shared_ptr<descriptor::Tensor> get_output_tensor_ptr() const NGRAPH_DEPRECATED(
-            "use &node->output(i).get_tensor() instead; insert a check that the node has only one "
-            "output, or update calling code not to assume only one output");
 
         /// Returns the set of inputs using output i
         const std::vector<descriptor::Input*>& get_output_inputs(size_t i) const
@@ -466,11 +427,14 @@ namespace ngraph
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
-        /// Get device placement
-        Placement get_placement() const;
-
-        /// Set device placement
-        void set_placement(Placement placement);
+        /// \brief Node placement is an arbitrary value used by a backend to describe where a Node
+        /// is to be executed. If a backend is a hybrid of, as an example, a CPU and a GPU then
+        /// it might use the value 0 to be the CPU and 1 to be the GPU. The value is not used by
+        /// ngraph core and is only intended as backend metadata.
+        /// The placement value -1 is defined to mean "default placement"
+        int32_t get_placement() const;
+        void set_placement(int32_t placement);
+        static constexpr int32_t default_placement = -1;
 
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
@@ -514,7 +478,7 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
         /// \return Version of this node
-        virtual size_t get_version() const { return get_type_info().version; }
+        virtual size_t get_version() const final { return get_type_info().version; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
@@ -568,12 +532,10 @@ namespace ngraph
 
         virtual bool match_node(pattern::Matcher* matcher, const Output<Node>& graph_value);
 
+    private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
-        const descriptor::Input& get_input_descriptor(size_t position) const;
-        const descriptor::Output& get_output_descriptor(size_t position) const;
 
-    private:
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
         std::string m_node_type;
@@ -586,7 +548,7 @@ namespace ngraph
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
-        Placement m_placement = Placement::DEFAULT;
+        int32_t m_placement = default_placement;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
@@ -644,6 +606,7 @@ namespace ngraph
         bool visit_attributes(AttributeVisitor& visitor) override;
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         std::shared_ptr<Node>& m_ref;
     };
@@ -658,6 +621,7 @@ namespace ngraph
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         NodeVector& m_ref;
     };

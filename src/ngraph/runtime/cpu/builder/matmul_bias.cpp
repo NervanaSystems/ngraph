@@ -16,8 +16,8 @@
 
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 
+#include "ngraph/op/batch_mat_mul_transpose.hpp"
 #include "ngraph/op/experimental/batch_mat_mul.hpp"
-#include "ngraph/op/fused/batch_mat_mul_transpose.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 
@@ -44,7 +44,7 @@ namespace ngraph
 
                 const auto& arg0_shape = mm->get_a_shape();
                 const auto& arg1_shape = mm->get_b_shape();
-                const auto& arg2_shape = node->get_shape();
+                const auto& arg2_shape = node->get_output_shape(0);
                 const auto element_type = mm->get_input_element_type(0);
                 NGRAPH_CHECK(element_type == element::f32 || element_type == element::f64,
                              "MatmulBias element type not supported");

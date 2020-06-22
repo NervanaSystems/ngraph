@@ -86,7 +86,7 @@ namespace ngraph
                     Shape arg_shape = args[0].get_shape();
                     Shape axes_shape = args[1].get_shape();
 
-                    auto element_type = lrn->get_element_type();
+                    auto element_type = lrn->get_output_element_type(0);
                     if (element_type == element::f32)
                     {
                         functor = [&,

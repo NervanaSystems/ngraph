@@ -147,8 +147,8 @@ TEST(type_prop, nms_output_shape_2)
     const auto nms = make_shared<op::v1::NonMaxSuppression>(
         boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
 
-    ASSERT_EQ(nms->get_element_type(), element::i64);
-    ASSERT_EQ(nms->get_shape(), (Shape{3, 3}));
+    ASSERT_EQ(nms->get_output_element_type(0), element::i64);
+    ASSERT_EQ(nms->get_output_shape(0), (Shape{3, 3}));
 }
 
 TEST(type_prop, nms_output_shape_3)
@@ -162,8 +162,8 @@ TEST(type_prop, nms_output_shape_3)
     const auto nms = make_shared<op::v1::NonMaxSuppression>(
         boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
 
-    ASSERT_EQ(nms->get_element_type(), element::i64);
-    ASSERT_EQ(nms->get_shape(), (Shape{1, 3}));
+    ASSERT_EQ(nms->get_output_element_type(0), element::i64);
+    ASSERT_EQ(nms->get_output_shape(0), (Shape{1, 3}));
 }
 
 TEST(type_prop, nms_dynamic_boxes_and_scores)
@@ -177,7 +177,7 @@ TEST(type_prop, nms_dynamic_boxes_and_scores)
     const auto nms = make_shared<op::v1::NonMaxSuppression>(
         boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
 
-    ASSERT_EQ(nms->get_element_type(), element::i64);
+    ASSERT_EQ(nms->get_output_element_type(0), element::i64);
     ASSERT_TRUE(
         nms->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 3}));
 }
@@ -308,8 +308,8 @@ TEST(type_prop, nms_v3_output_shape_2)
     const auto nms = make_shared<op::v3::NonMaxSuppression>(
         boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
 
-    ASSERT_EQ(nms->get_element_type(), element::i64);
-    ASSERT_EQ(nms->get_shape(), (Shape{3, 3}));
+    ASSERT_EQ(nms->get_output_element_type(0), element::i64);
+    ASSERT_EQ(nms->get_output_shape(0), (Shape{3, 3}));
 }
 
 TEST(type_prop, nms_v3_output_shape_3)
@@ -323,8 +323,8 @@ TEST(type_prop, nms_v3_output_shape_3)
     const auto nms = make_shared<op::v3::NonMaxSuppression>(
         boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
 
-    ASSERT_EQ(nms->get_element_type(), element::i64);
-    ASSERT_EQ(nms->get_shape(), (Shape{1, 3}));
+    ASSERT_EQ(nms->get_output_element_type(0), element::i64);
+    ASSERT_EQ(nms->get_output_shape(0), (Shape{1, 3}));
 }
 
 TEST(type_prop, nms_v3_output_shape_i32)
@@ -345,8 +345,8 @@ TEST(type_prop, nms_v3_output_shape_i32)
                                                true,
                                                element::i32);
 
-    ASSERT_EQ(nms->get_element_type(), element::i32);
-    ASSERT_EQ(nms->get_shape(), (Shape{1, 3}));
+    ASSERT_EQ(nms->get_output_element_type(0), element::i32);
+    ASSERT_EQ(nms->get_output_shape(0), (Shape{1, 3}));
 }
 
 TEST(type_prop, nms_v3_dynamic_boxes_and_scores)
@@ -360,7 +360,7 @@ TEST(type_prop, nms_v3_dynamic_boxes_and_scores)
     const auto nms = make_shared<op::v3::NonMaxSuppression>(
         boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold);
 
-    ASSERT_EQ(nms->get_element_type(), element::i64);
+    ASSERT_EQ(nms->get_output_element_type(0), element::i64);
     ASSERT_TRUE(
         nms->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 3}));
 }

@@ -147,7 +147,7 @@ namespace ngraph
                 NGRAPH_CHECK(m_output_index < results.size(),
                              "All function results already have expected outputs.");
 
-                auto function_output_type = results.at(m_output_index)->get_element_type();
+                auto function_output_type = results.at(m_output_index)->get_output_element_type(0);
 
                 const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
                 NGRAPH_CHECK(
@@ -166,7 +166,7 @@ namespace ngraph
             template <typename T>
             void add_expected_output(const std::vector<T>& values)
             {
-                auto shape = m_function->get_results().at(m_output_index)->get_shape();
+                auto shape = m_function->get_results().at(m_output_index)->get_output_shape(0);
                 add_expected_output<T>(shape, values);
             }
 
