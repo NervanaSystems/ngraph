@@ -206,7 +206,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
         for (auto& node : f->get_ops())
         {
-            if (node->description() == "Result")
+            if (is_type<op::v0::Result>(node))
             {
                 height_maps[node.get()] = HeightMap({node.get()});
             }
@@ -280,7 +280,7 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
         if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
-            auto color = (arg->description() == "Parameter" ? "blue" : "black");
+            auto color = (is_type<op::v0::Parameter>(arg) ? "blue" : "black");
             m_ss << "    " << clone_name << "[shape=\"box\" style=\"dashed,filled\" color=\""
                  << color << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
             m_ss << "    " << clone_name << " -> " << node->get_name()
