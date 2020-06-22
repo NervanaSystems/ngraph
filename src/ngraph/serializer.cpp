@@ -54,7 +54,7 @@ namespace
 #define VSUF1(NAME) NAME##_v1
 #define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
-#include "ngraph/op/op_version_tbl.hpp"
+#include "op_version_tbl.hpp"
 #undef NGRAPH_OP
         UnknownOp
     };
@@ -69,7 +69,7 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(NAME, VERSION)                                                                   \
     {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
-#include "ngraph/op/op_version_tbl.hpp"
+#include "op_version_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -1274,8 +1274,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], args[3], resize_method, extrapolation_value);
             break;
         }
-        case OP_TYPEID::CompiledKernel: { break;
-        }
+        // case OP_TYPEID::CompiledKernel: { break;
+        // }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
         case OP_TYPEID::DeformableConvolution_v1:
@@ -2902,8 +2902,8 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::CTCGreedyDecoder: { break;
     }
-    case OP_TYPEID::CompiledKernel: { break;
-    }
+    // case OP_TYPEID::CompiledKernel: { break;
+    // }
     case OP_TYPEID::DetectionOutput: { break;
     }
     case OP_TYPEID::PSROIPooling: { break;

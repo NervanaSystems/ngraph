@@ -14,33 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <mutex>
-
-#include "ngraph/factory.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/ops.hpp"
-
-using namespace std;
-
-namespace ngraph
-{
-    template class NGRAPH_API FactoryRegistry<Node>;
-
-    template <>
-    FactoryRegistry<Node>& FactoryRegistry<Node>::get()
-    {
-        static FactoryRegistry<Node> registry;
-        static mutex init_guard;
-        if (registry.m_factory_map.size() == 0)
-        {
-            lock_guard<mutex> guard(init_guard);
-            if (registry.m_factory_map.size() == 0)
-            {
-#define NGRAPH_OP(NAME, VERSION) registry.register_factory<ngraph::op::v##VERSION::NAME>();
-#include "op_version_tbl.hpp"
-#undef NGRAPH_OP
-            }
-        }
-        return registry;
-    }
-}
+NGRAPH_OP(Acosh, ngraph::op::v3)
+NGRAPH_OP(Asinh, ngraph::op::v3)
+NGRAPH_OP(Atanh, ngraph::op::v3)
+NGRAPH_OP(Interpolate, ngraph::op::v3)

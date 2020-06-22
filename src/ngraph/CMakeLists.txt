@@ -701,6 +701,23 @@ set(SRC ${SRC}
     runtime/dynamic/dynamic_tensor.hpp
 )
 
+# generate the op_version_tbl.hpp file used by the Node Factory
+file(GLOB OPSETS opset/opset*_tbl.hpp)
+set(ALL_OPS)
+foreach(OPSET ${OPSETS})
+    message(STATUS "reading ${OPSET}")
+    file(STRINGS ${OPSET} CONTENTS)
+    list(TRANSFORM CONTENTS REPLACE "( |)//.*" "")
+    list(TRANSFORM CONTENTS REPLACE "#.*" "")
+    list(TRANSFORM CONTENTS REPLACE "ngraph::op::v" "")
+    list(APPEND ALL_OPS ${CONTENTS})
+endforeach()
+list(REMOVE_DUPLICATES ALL_OPS)
+list(SORT ALL_OPS)
+string(REPLACE ";" "\n" NEW_CONTENTS "${ALL_OPS}")
+file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp)
+file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp ${NEW_CONTENTS})
+
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp)
 else()
@@ -714,6 +731,8 @@ if (NGRAPH_STATIC_LIB_ENABLE)
 else()
     add_library(ngraph SHARED ${SRC})
 endif()
+
+target_include_directories(ngraph PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 set_target_properties(ngraph PROPERTIES
                       CXX_VISIBILITY_PRESET hidden

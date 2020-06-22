@@ -23,6 +23,7 @@
 #include "ngraph/attribute_adapter.hpp"
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/log.hpp"
 
 namespace ngraph
 {
@@ -45,6 +46,7 @@ namespace ngraph
         void register_factory(const typename BASE_TYPE::type_info_t& type_info, Factory factory)
         {
             std::lock_guard<std::mutex> guard(get_registry_mutex());
+            NGRAPH_INFO << type_info.name << ":" << type_info.version;
             m_factory_map[type_info] = factory;
         }
 
