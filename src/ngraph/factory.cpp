@@ -37,7 +37,7 @@ namespace ngraph
             lock_guard<mutex> guard(init_guard);
             if (registry.m_factory_map.size() == 0)
             {
-#define NGRAPH_OP(NAME, NAMESPACE, VERSION) registry.register_factory<NAMESPACE::NAME>();
+#define NGRAPH_OP(NAME, VERSION) registry.register_factory<ngraph::op::v##VERSION::NAME>();
 #include "ngraph/op/op_version_tbl.hpp"
 #undef NGRAPH_OP
             }
