@@ -2574,13 +2574,9 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
 json JSONSerializer::serialize_node(const Node& n)
 {
     const NodeTypeInfo& type_info = n.get_type_info();
-    json jtype_info = json::object();
-    jtype_info["name"] = type_info.name;
-    jtype_info["version"] = type_info.version;
     json node;
-    node["type_info"] = jtype_info;
     node["name"] = n.get_name();
-    auto op_version = n.get_version();
+    auto op_version = type_info.version;
     node["op_version"] = op_version;
 
     if (n.get_name() != n.get_friendly_name())
