@@ -61,6 +61,7 @@ public:
     void add_header_search_path(const std::string& path);
     std::unique_ptr<ngraph::codegen::Module> compile(const std::string& source);
     std::unique_ptr<clang::CodeGenAction>& get_compiler_action() { return m_compiler_action; }
+
 private:
     std::unique_ptr<clang::CodeGenAction> m_compiler_action;
     std::shared_ptr<CompilerCore> m_compiler_core;

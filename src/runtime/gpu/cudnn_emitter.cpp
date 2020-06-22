@@ -1192,12 +1192,9 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::gpu::Rnn* node)
         switch (mode)
         {
         case CUDNN_RNN_RELU:
-        case CUDNN_RNN_TANH:
-            return 2; // 1 input + 1 recurrent input
-        case CUDNN_GRU:
-            return 6; // 3 input + 3 recurrent input
-        case CUDNN_LSTM:
-            return 8; // 4 input + 4 recurrent input
+        case CUDNN_RNN_TANH: return 2; // 1 input + 1 recurrent input
+        case CUDNN_GRU: return 6;      // 3 input + 3 recurrent input
+        case CUDNN_LSTM: return 8;     // 4 input + 4 recurrent input
         default: throw std::runtime_error("Encountered unsupported CUDNN RNN mode");
         }
     }();
@@ -1346,7 +1343,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution(const std::string& dtype,
 
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-        void** inputs, void** outputs) {
+                                      void** inputs, void** outputs) {
         void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
         CUDNN_SAFE_CALL(cudnnConvolutionForward(*m_ctx->cudnn_handle,
                                                 alpha,
@@ -1433,7 +1430,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_data(
 
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-        void** inputs, void** outputs) {
+                                      void** inputs, void** outputs) {
         void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
         CUDNN_SAFE_CALL(cudnnConvolutionBackwardData(*m_ctx->cudnn_handle,
                                                      alpha,
@@ -1519,7 +1516,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
 
     std::unique_ptr<gpu::primitive> conv;
     conv.reset(new gpu::primitive{[=, &conv_desc, &tensor_desc_0, &filter_desc, &tensor_desc_1](
-        void** inputs, void** outputs) {
+                                      void** inputs, void** outputs) {
         void* workspace_ptr = runtime::gpu::invoke_memory_primitive(m_ctx, workspace_idx);
         CUDNN_SAFE_CALL(cudnnConvolutionBackwardFilter(*m_ctx->cudnn_handle,
                                                        alpha,
@@ -1578,9 +1575,7 @@ size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_
     auto& input_desc = tensor_descriptor_from_shape(input_shape, data_type, tensor_format);
     auto& output_desc = tensor_descriptor_from_shape(output_shape, data_type, tensor_format);
 
-    if (input_shape.size() == 3)
-    {
-    }
+    if (input_shape.size() == 3) {}
     else if (input_shape.size() == 4)
     {
         CUDNN_SAFE_CALL(cudnnSetPooling2dDescriptor(desc,

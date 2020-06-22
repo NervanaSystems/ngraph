@@ -1368,7 +1368,6 @@ TEST(cpu_test, conv_test_winograd)
                                                  CoordinateDiff{1, 1},
                                                  Strides{1, 1});
         return make_shared<Function>(conv, ParameterVector{input, filter});
-
     };
     auto backend = runtime::Backend::create("CPU");
     auto cpu_f = make_function();
@@ -1399,7 +1398,6 @@ TEST(cpu_test, conv_negative_padding)
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
         return make_shared<Function>(conv1, ParameterVector{A, B});
-
     };
     compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
 }

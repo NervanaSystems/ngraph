@@ -135,7 +135,6 @@ namespace ngraph
                 Pad() = default;
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
@@ -150,6 +149,7 @@ namespace ngraph
                 /// \return The padding mode.
                 PadMode get_pad_mode() const { return m_pad_mode; }
                 void set_pad_mode(PadMode pad_mode) { m_pad_mode = pad_mode; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

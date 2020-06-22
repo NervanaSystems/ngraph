@@ -290,24 +290,33 @@ namespace ngraph
                     writer << "\n// build lstm/rnn primitive descriptor\n";
                     writer << "auto rnn_desc = "
                               "dnnl::lstm_forward::desc(dnnl::prop_kind::forward_training, "
-                           << get_dnnl_rnn_direction_string() << ", "
-                                                                 "*cg_ctx->dnnl_descriptors["
-                           << desc_index << "], "
-                                            "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 1 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 2 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 3 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 4 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 5 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 6 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 7 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
+                           << get_dnnl_rnn_direction_string()
+                           << ", "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 1
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 2
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 3
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 4
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 5
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 6
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 7
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 8 << "]);\n";
 
                     writer << "dnnl::primitive_attr attr;\n";
@@ -635,8 +644,9 @@ namespace ngraph
                               "dnnl::batch_normalization_backward::desc(dnnl::prop_kind::"
                               "backward, "
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 4 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 4
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "], " << eps
                            << ", "
                               "dnnl::normalization_flags::use_scale_shift);\n";
@@ -821,8 +831,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "dnnl::reorder::primitive_desc("
                               "*cg_ctx->dnnl_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->dnnl_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->dnnl_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
 
                     writer << "cg_ctx->dnnl_primitives[" << std::to_string(index)
@@ -896,8 +907,9 @@ namespace ngraph
                               "dnnl::convolution_forward::desc(dnnl::prop_kind::forward,\n"
                               "dnnl::algorithm::convolution_direct,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->dnnl_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "],\n";
                     if (dnnl_emitter.has_bias<OP>())
                     {
@@ -1423,13 +1435,16 @@ namespace ngraph
                               "dnnl::prop_kind::forward,\n"
                               "dnnl::algorithm::deconvolution_direct,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 1 << "],\n"
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 0 << "],\n"
-                                                "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 2 << "],\n"
+                           << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 0
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 2
+                           << "],\n"
 
-                                                "*cg_ctx->dnnl_descriptors["
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 3 << "],\n";
 
                     WRITE_DNNL_DIMS(window_strides);
@@ -1491,8 +1506,9 @@ namespace ngraph
                               "inference,\n";
                     writer << "dnnl::algorithm::pooling_max,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->dnnl_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_DNNL_DIMS(window_strides);
                     WRITE_DNNL_DIMS(window_shape);
@@ -1645,8 +1661,9 @@ namespace ngraph
                               "dnnl::pooling_forward::desc(dnnl::prop_kind::forward_training,\n"
                               "dnnl::algorithm::pooling_max,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->dnnl_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_DNNL_DIMS(window_strides);
                     WRITE_DNNL_DIMS(window_shape);
@@ -1792,8 +1809,9 @@ namespace ngraph
                               "dnnl::pooling_forward::desc(dnnl::prop_kind::forward_training,\n"
                               "dnnl::algorithm::pooling_max,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 2 << "],\n"
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 2
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_DNNL_DIMS(window_strides);
                     WRITE_DNNL_DIMS(window_shape);
@@ -1804,8 +1822,9 @@ namespace ngraph
                               "dnnl::pooling_backward::desc(\n"
                               "dnnl::algorithm::pooling_max,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 2 << "],\n"
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 2
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "],\n";
                     WRITE_DNNL_DIMS(window_strides);
                     WRITE_DNNL_DIMS(window_shape);
@@ -1895,8 +1914,9 @@ namespace ngraph
                               "dnnl::pooling_forward::desc(dnnl::prop_kind::forward_training,\n"
                               "dnnl::algorithm::pooling_max,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 1 << "],\n"
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index << "],\n";
                     WRITE_DNNL_DIMS(window_strides);
                     WRITE_DNNL_DIMS(window_shape);
@@ -1907,8 +1927,9 @@ namespace ngraph
                               "dnnl::pooling_backward::desc(\n"
                               "dnnl::algorithm::pooling_max,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 1 << "],\n"
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 1
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index << "],\n";
                     WRITE_DNNL_DIMS(window_strides);
                     WRITE_DNNL_DIMS(window_shape);
@@ -2017,8 +2038,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "dnnl::reorder::primitive_desc("
                               "*cg_ctx->dnnl_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->dnnl_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->dnnl_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
 
                     writer << "cg_ctx->dnnl_primitives[" << std::to_string(index)
@@ -2063,8 +2085,9 @@ namespace ngraph
                     writer << "auto bwd_desc = "
                               "dnnl::eltwise_backward::desc(dnnl::algorithm::eltwise_relu, "
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 2 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 2
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index << "], negative_slope);\n";
 
                     writer << "dnnl::primitive_attr attr;\n";
@@ -2310,8 +2333,9 @@ namespace ngraph
                     writer << "auto bwd_desc = "
                               "dnnl::eltwise_backward::desc(dnnl::algorithm::eltwise_gelu, "
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 1 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 1
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index << "], 0, 0);\n";
 
                     writer << "dnnl::primitive_attr attr;\n";
@@ -2415,8 +2439,9 @@ namespace ngraph
                     writer << "auto bwd_desc = "
                               "dnnl::eltwise_backward::desc(dnnl::algorithm::eltwise_logistic, "
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index + 1 << "], "
-                                                "*cg_ctx->dnnl_descriptors["
+                           << desc_index + 1
+                           << "], "
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index << "], 0, 0);\n";
 
                     writer << "dnnl::primitive_attr attr;\n";
@@ -2522,8 +2547,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "dnnl::reorder::primitive_desc("
                               "*cg_ctx->dnnl_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->dnnl_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->dnnl_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
                     writer << "cg_ctx->dnnl_primitives[" << std::to_string(index)
                            << "] = new dnnl::reorder(reorder_pd);\n";
@@ -2562,8 +2588,9 @@ namespace ngraph
                     writer << "auto reorder_pd = "
                               "dnnl::reorder::primitive_desc("
                               "*cg_ctx->dnnl_memories["
-                           << std::to_string(deps[0]) << "]"
-                                                         ", *cg_ctx->dnnl_memories["
+                           << std::to_string(deps[0])
+                           << "]"
+                              ", *cg_ctx->dnnl_memories["
                            << std::to_string(deps[1]) << "], attr);\n";
                     writer << "cg_ctx->dnnl_primitives[" << std::to_string(index)
                            << "] = new dnnl::reorder(reorder_pd);\n";
@@ -2632,8 +2659,9 @@ namespace ngraph
                     writer << "auto ip_desc = "
                               "dnnl::inner_product_forward::desc(dnnl::prop_kind::forward,\n"
                               "*cg_ctx->dnnl_descriptors["
-                           << desc_index << "],\n"
-                                            "*cg_ctx->dnnl_descriptors["
+                           << desc_index
+                           << "],\n"
+                              "*cg_ctx->dnnl_descriptors["
                            << desc_index + 1 << "],\n";
                     if (has_bias)
                     {

@@ -29,6 +29,7 @@ namespace ngraph
         {
         public:
             virtual bool is_op() const override { return true; }
+
         protected:
             Op()
                 : Node()

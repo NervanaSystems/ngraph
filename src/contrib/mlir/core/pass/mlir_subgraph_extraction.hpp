@@ -86,8 +86,8 @@ public:
   /// Get sub-graph by ID
   MLIRSubgraph &get_subgraph(int id) {
     auto it = m_id_to_graph.find(id);
-    NGRAPH_CHECK(it != m_id_to_graph.end(), "Cannot find subgraph with ID: ",
-                 id);
+    NGRAPH_CHECK(it != m_id_to_graph.end(),
+                 "Cannot find subgraph with ID: ", id);
     return it->second;
   }
   /// Stores a sub-graph in the map
@@ -113,5 +113,5 @@ private:
   // Mutex over sub-graph IDs
   std::mutex m_subgraph_mutex;
 };
-}
-}
+} // namespace pass
+} // namespace ngraph

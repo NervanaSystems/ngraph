@@ -500,12 +500,15 @@ size_t DNNLEmitter::build_quantized_inner_product_forward(const dnnl::memory::de
     size_t result_index = build_memory(result_desc);
 
     // dnnl inner_product
-    ip_index = insert_primitive(new dnnl::inner_product_forward(
-        {{
-             dnnl::prop_kind::forward_scoring, input_data_desc, weights_desc, result_desc,
-         },
-         ip_attr,
-         executor::global_cpu_engine}));
+    ip_index =
+        insert_primitive(new dnnl::inner_product_forward({{
+                                                              dnnl::prop_kind::forward_scoring,
+                                                              input_data_desc,
+                                                              weights_desc,
+                                                              result_desc,
+                                                          },
+                                                          ip_attr,
+                                                          executor::global_cpu_engine}));
     m_primitive_deps[ip_index] = {input_data_index, weights_index, result_index};
     return ip_index;
 }

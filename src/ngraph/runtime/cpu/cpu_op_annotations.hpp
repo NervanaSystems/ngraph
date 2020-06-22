@@ -34,6 +34,7 @@ namespace ngraph
                 CPUOpAnnotations() {}
                 bool is_dnnl_op() { return m_dnnl_op; }
                 void set_dnnl_op(bool val) { m_dnnl_op = val; }
+
             private:
                 bool m_dnnl_op = false;
             };

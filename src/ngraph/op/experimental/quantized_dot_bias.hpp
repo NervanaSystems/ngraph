@@ -52,6 +52,7 @@ namespace ngraph
                 }
                 bool with_relu() const { return m_with_relu; }
                 bool requantize() const { return m_requantize; }
+
             protected:
                 bool m_requantize;
                 bool m_with_relu;

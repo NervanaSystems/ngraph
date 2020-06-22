@@ -117,20 +117,21 @@ namespace ngraph
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-/// \brief Used in evaluator switch statement so that the case type and evaluate call
-/// are guaranteed to have the types match.
-///
-/// Use this in an evaluate_*() function like this
-///    switch (arg0->get_element_type())
-///    {
-///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
-///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
-///
-/// Each TYPE_CASE statement expands like this:
-///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out, broadcast_spec)
-///
-/// \note Don't forget to put a break after each statement or it will fall through and generate
-/// a runtime error.
+    /// \brief Used in evaluator switch statement so that the case type and evaluate call
+    /// are guaranteed to have the types match.
+    ///
+    /// Use this in an evaluate_*() function like this
+    ///    switch (arg0->get_element_type())
+    ///    {
+    ///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
+    ///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
+    ///
+    /// Each TYPE_CASE statement expands like this:
+    ///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out,
+    ///   broadcast_spec)
+    ///
+    /// \note Don't forget to put a break after each statement or it will fall through and generate
+    /// a runtime error.
 
 #define TYPE_CASE(a)                                                                               \
     case element::Type_t::a: rc = evaluate<element::Type_t::a>
@@ -477,7 +478,7 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
         /// \return Version of this node
-        virtual size_t get_version() const { return get_type_info().version; }
+        virtual size_t get_version() const final { return get_type_info().version; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
@@ -605,6 +606,7 @@ namespace ngraph
         bool visit_attributes(AttributeVisitor& visitor) override;
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         std::shared_ptr<Node>& m_ref;
     };
@@ -619,6 +621,7 @@ namespace ngraph
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         NodeVector& m_ref;
     };

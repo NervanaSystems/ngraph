@@ -40,9 +40,7 @@ runtime::ExecutableCache::ExecutableCache()
     m_list = {};
 }
 
-runtime::ExecutableCache::~ExecutableCache()
-{
-}
+runtime::ExecutableCache::~ExecutableCache() {}
 
 void runtime::ExecutableCache::convert_shape_to_string(const vector<int>& shape, ostringstream& key)
 {

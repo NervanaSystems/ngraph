@@ -61,7 +61,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         NGRAPH_DEBUG << "In a callback for construct_weight against "
                      << m.get_match_root()->get_name();
 
-        auto m_cvt_lt = m.get_match_root()->get_argument(1);
+        auto m_cvt_lt = m.get_match_value().get_node()->get_argument(1);
         auto m_reshape_conv = m_cvt_lt->get_argument(0);
 
         std::shared_ptr<Node> m_conv_bprop;
@@ -136,8 +136,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
         NGRAPH_DEBUG << "In a callback for construct_slice_converLayout against "
                      << m.get_match_root()->get_name();
 
-        auto m_cvt_lt = m.get_match_root();
-        auto m_slice = m_cvt_lt->get_argument(0);
+        auto m_cvt_lt = m.get_match_value();
+        auto m_slice = m_cvt_lt.get_node()->get_argument(0);
         auto slice_ptr = static_cast<const ngraph::op::Slice*>(m_slice.get());
         // do the fusion if slice has 1 user and uses dnnl kernel.
         if (!runtime::cpu::dnnl_utils::use_dnnl_kernel(slice_ptr) ||
@@ -162,9 +162,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
             new_slice->set_op_annotations(op_annotations);
             auto tv = new_slice->get_output_tensor_ptr(0);
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-            layout->set_dnnl_md(dnnl_utils::get_output_dnnl_md(m_cvt_lt.get(), 0));
-            tv->set_tensor_layout(layout);
-            ngraph::replace_node(m_cvt_lt, new_slice);
+            layout->set_dnnl_md(dnnl_utils::get_output_dnnl_md(m_cvt_lt.get_node(), 0))
+                tv->set_tensor_layout(layout);
+            m_cvt_lt.replace(new_slice->output(0));
         }
 
         return true;

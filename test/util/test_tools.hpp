@@ -83,6 +83,7 @@ public:
         ngraph::set_remove_goe(false);
     }
     ~DisableRemoveGOE() { ngraph::set_remove_goe(m_saved_remove_goe); }
+
 private:
     bool m_saved_remove_goe;
 };

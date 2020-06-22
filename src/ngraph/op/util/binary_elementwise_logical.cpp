@@ -20,9 +20,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::util::BinaryElementwiseLogical::BinaryElementwiseLogical()
-{
-}
+op::util::BinaryElementwiseLogical::BinaryElementwiseLogical() {}
 
 op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const Output<Node>& arg0,
                                                              const Output<Node>& arg1,

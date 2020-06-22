@@ -185,7 +185,8 @@ namespace ngraph
                         4, false /* fwd and bwd */, true /* new workspace */);
                     auto& bdeps = dnnl_emitter->get_primitive_deps(bwd_pool_index);
                     auto functor_bprop = [&, bwd_pool_index, delta_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                                             CPURuntimeContext* ctx,
+                                             CPUExecutionContext* /* ectx */) {
                         cpu::dnnl_utils::set_memory_ptr(
                             ctx, bdeps[0], ctx->buffer_data[delta_buffer_index]);
                         cpu::dnnl_utils::set_memory_ptr(

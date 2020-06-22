@@ -79,6 +79,7 @@ class NGRAPH_API ngraph::pattern::Matcher
 {
 public:
     using PatternMap = ngraph::pattern::PatternMap;
+    using PatternValueMap = ngraph::pattern::PatternValueMap;
 
     // Avoid implicit string construction from nullptr.
     Matcher(const std::shared_ptr<Node> pattern_node, std::nullptr_t name) = delete;
@@ -275,6 +276,7 @@ public:
 
     std::shared_ptr<Node> get_match_root() { return m_match_root.get_node_shared_ptr(); }
     Output<Node> get_match_value() { return m_match_root; }
+
 private:
     std::set<std::shared_ptr<Node>>
         as_node_set(const std::set<std::shared_ptr<op::Label>>& label_set);

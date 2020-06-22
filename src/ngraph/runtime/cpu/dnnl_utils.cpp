@@ -748,8 +748,9 @@ memory::desc runtime::cpu::dnnl_utils::try_get_named_md(const dnnl_memory_desc_t
         return memory::desc(named_md);
     };
 
-    auto compare_named_md = [&](
-        const dnnl_memory_desc_t& blk, const dnnl_format_tag_t format, const memory::desc& out) {
+    auto compare_named_md = [&](const dnnl_memory_desc_t& blk,
+                                const dnnl_format_tag_t format,
+                                const memory::desc& out) {
         try
         {
             auto named_md = get_named_md(blk, format);

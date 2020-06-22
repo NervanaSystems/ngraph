@@ -97,7 +97,7 @@ namespace ngraph
                                              runtime::cpu::kernel::softmax_all);
 
                         auto functor = [&, kernel, arg_shape, arg_buffer_index, out_buffer_index](
-                            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                           CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                             kernel(ctx->buffer_data[arg_buffer_index],
                                    ctx->buffer_data[out_buffer_index],
                                    arg_shape,
@@ -198,7 +198,7 @@ namespace ngraph
                 SELECT_KERNEL(
                     kernel, args[0].get_element_type(), runtime::cpu::kernel::ref_softmax);
                 auto functor = [&, kernel, arg_shape, axes, arg_buffer_index, out_buffer_index](
-                    CPURuntimeContext* ctx, CPUExecutionContext* /*ectx*/) {
+                                   CPURuntimeContext* ctx, CPUExecutionContext* /*ectx*/) {
                     kernel(ctx->buffer_data[arg_buffer_index],
                            ctx->buffer_data[out_buffer_index],
                            arg_shape,

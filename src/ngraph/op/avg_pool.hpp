@@ -278,7 +278,6 @@ namespace ngraph
                         bool exclude_pad,
                         op::RoundingType rounding_type);
 
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
@@ -334,7 +333,6 @@ namespace ngraph
                                 const Shape& kernel,
                                 bool exclude_pad);
 
-                size_t get_version() const override { return 1; }
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
 

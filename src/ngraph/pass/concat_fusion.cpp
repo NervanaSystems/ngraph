@@ -98,14 +98,14 @@ void pass::ConcatElimination::construct_concat_elimination()
         NGRAPH_DEBUG
             << "concat_elimination: In callback for construct_concat_elimination against node = "
             << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto op = pattern_map[op_label];
 
         auto root = m.get_match_root_as<op::Concat>();
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
             NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
-            replace_node(m.get_match_root(), op);
+            m.get_match_value().replace(op);
 
             return true;
         }
@@ -248,7 +248,6 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_
 {
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
-
         Shape scalarized_shape;
         for (size_t i = 0; i < input_shape.size(); i++)
         {

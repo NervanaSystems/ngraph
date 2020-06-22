@@ -256,8 +256,9 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                    if (!data_dilated &&
+                        ((arg0_rank == 4 && arg1_rank == 4) ||
+                         (arg0_rank == 5 && arg1_rank == 5)) &&
                         (arg2_rank == 1) && node->get_input_element_type(0) == element::f32)
                     {
                         auto op_annotations =
@@ -289,8 +290,9 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                    if (!data_dilated &&
+                        ((arg0_rank == 4 && arg1_rank == 4) ||
+                         (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::dnnl_utils::assign_dnnl_kernel(node);
@@ -315,8 +317,9 @@ namespace ngraph
                         data_dilated = data_dilated || (s != 1);
                     }
 
-                    if (!data_dilated && ((arg0_rank == 4 && arg1_rank == 4) ||
-                                          (arg0_rank == 5 && arg1_rank == 5)) &&
+                    if (!data_dilated &&
+                        ((arg0_rank == 4 && arg1_rank == 4) ||
+                         (arg0_rank == 5 && arg1_rank == 5)) &&
                         node->get_input_element_type(0) == element::f32)
                     {
                         runtime::cpu::dnnl_utils::assign_dnnl_kernel(node);

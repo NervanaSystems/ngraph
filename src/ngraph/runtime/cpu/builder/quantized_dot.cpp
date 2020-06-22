@@ -167,7 +167,6 @@ namespace ngraph
                                     arg7_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
                                                        CPUExecutionContext* /* ectx */) {
-
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out0_buffer_index],
@@ -209,7 +208,6 @@ namespace ngraph
                                     arg7_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
                                                        CPUExecutionContext* /* ectx */) {
-
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out0_buffer_index],
@@ -251,7 +249,6 @@ namespace ngraph
                                     arg7_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
                                                        CPUExecutionContext* /* ectx */) {
-
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[arg1_buffer_index],
                                ctx->buffer_data[out0_buffer_index],
