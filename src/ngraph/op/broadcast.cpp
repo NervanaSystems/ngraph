@@ -182,6 +182,7 @@ shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& ne
 
 bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
+    BroadcastBase::visit_attributes(visitor);
     visitor.on_attribute("broadcast_spec", m_mode);
     return true;
 }
@@ -260,6 +261,7 @@ shared_ptr<Node> op::v1::Broadcast::clone_with_new_inputs(const OutputVector& ne
 
 bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
+    BroadcastBase::visit_attributes(visitor);
     visitor.on_attribute("broadcast_spec", m_broadcast_spec);
     return true;
 }

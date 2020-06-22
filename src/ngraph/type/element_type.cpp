@@ -93,23 +93,23 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
     return s_type_info_map;
 };
 
-std::vector<const element::Type*> element::Type::get_known_types()
+const std::vector<element::Type>& element::Type::get_known_types()
 {
-    std::vector<const element::Type*> rc = {&element::dynamic,
-                                            &element::boolean,
-                                            &element::bf16,
-                                            &element::f16,
-                                            &element::f32,
-                                            &element::f64,
-                                            &element::i8,
-                                            &element::i16,
-                                            &element::i32,
-                                            &element::i64,
-                                            &element::u1,
-                                            &element::u8,
-                                            &element::u16,
-                                            &element::u32,
-                                            &element::u64};
+    static std::vector<element::Type> rc = {element::dynamic,
+                                            element::boolean,
+                                            element::bf16,
+                                            element::f16,
+                                            element::f32,
+                                            element::f64,
+                                            element::i8,
+                                            element::i16,
+                                            element::i32,
+                                            element::i64,
+                                            element::u1,
+                                            element::u8,
+                                            element::u16,
+                                            element::u32,
+                                            element::u64};
     return rc;
 }
 
