@@ -38,14 +38,8 @@ class NGRAPH_API ngraph::pattern::op::Skip : public Pattern
 public:
     static constexpr NodeTypeInfo type_info{"patternSkip", 0};
     const NodeTypeInfo& get_type_info() const override;
-    Skip(const Output<Node>& arg, ValuePredicate pred)
+    Skip(const Output<Node>& arg, ValuePredicate pred = nullptr)
         : Pattern({arg}, pred)
-    {
-        set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
-    }
-
-    Skip(const Output<Node>& arg, NodePredicate pred = nullptr)
-        : Pattern({arg}, as_value_predicate(pred))
     {
         set_output_type(0, arg.get_element_type(), arg.get_partial_shape());
     }
