@@ -248,7 +248,7 @@ bool element::Type::compatible(element::Type t) const
     return (is_dynamic() || t.is_dynamic() || *this == t);
 }
 
-bool element::Type::merge(element::Type dst, element::Type t1, element::Type t2)
+bool element::Type::merge(element::Type& dst, element::Type t1, element::Type t2)
 {
     if (t1.is_dynamic())
     {
