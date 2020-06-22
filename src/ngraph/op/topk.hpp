@@ -163,7 +163,6 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                virtual size_t get_version() const override { return 1; }
                 /// \brief Returns axis value after normalization
                 /// \note If input rank required to normalization is dynamic, the exception is
                 /// thrown

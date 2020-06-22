@@ -96,6 +96,8 @@ namespace ngraph
                                                 const Shape& target_shape);
 
                 Shape get_target_shape(const HostTensorPtr& input1);
+
+                bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
     }
