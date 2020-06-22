@@ -2881,7 +2881,11 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         else
         {
-            node["value"] = tmp->get_value_strings();
+            if(shape_size(tmp->get_shape()) > 100 * 1024) {
+                node["value"] = std::string("LARGE CONST WITH > 100K ELEMENTS");
+            } else {
+                node["value"] = tmp->get_value_strings();
+            }
         }
         node["shape"] = tmp->get_shape();
         node["element_type"] = write_element_type(tmp->get_element_type());

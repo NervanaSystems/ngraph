@@ -42,6 +42,7 @@ namespace ngraph
             private:
                 InferenceEngine::CNNNetwork m_network;
                 InferenceEngine::InferRequest m_infer_req;
+                ngraph::ResultVector m_results_orig;
                 std::string m_device;
                 std::map<std::string, int> m_map_cnnparam_to_tfidx; // which CNN param maps to which index of the TF input tensor
                 std::map<std::string, int> m_map_cnnresult_to_tfidx; // which CNN result maps to which index of the TF output tensor

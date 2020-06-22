@@ -131,15 +131,8 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     cout << endl;
 #endif
 
-    m_network = InferenceEngine::CNNNetwork(func);
     set_parameters_and_results(*func);
-
-    if (getenv_bool("NGRAPH_IE_DUMP_GRAPHS"))
-    {
-        auto& name = m_network.getName();
-        m_network.serialize(name + ".xml", name + ".bin");
-        serialize(name + ".json", func);
-    }
+    m_results_orig = m_results;
 
 #if 1
     // We need to save the mapping from CNN network's Result nodes to the original NG-function's result-contributing nodes
@@ -182,6 +175,37 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     }
 #endif
 
+    shared_ptr<Function> func2 = func;
+#if 1
+    // Let's don't send disconnected Const -> Result nodes to IE
+    if(m_nongraph_const_outputs.size() > 0) {
+    vector<shared_ptr<ngraph::Node>> ng_result_list2; // (func->get_results().size() - m_nongraph_const_outputs.size());
+    for (auto& opresult : func->get_results()) {
+        const auto& ng_result_name = opresult->get_name();
+        if(m_map_result_to_ngnode.count(ng_result_name) == 1) {
+            const auto& cnn_result_name = m_map_result_to_ngnode.at(ng_result_name);
+            if(m_nongraph_const_outputs.count(cnn_result_name) == 1) {
+                continue;
+            }
+        }
+        ng_result_list2.push_back(opresult);
+    }
+    func2 = make_shared<ngraph::Function>(ng_result_list2, func->get_parameters());
+    func2->set_friendly_name(func->get_friendly_name());
+    }
+#endif
+
+    m_network = InferenceEngine::CNNNetwork(func2);
+    set_parameters_and_results(*func2); // update again
+
+    if (getenv_bool("NGRAPH_IE_DUMP_GRAPHS"))
+    {
+        auto& name = m_network.getName();
+        m_network.serialize(name + ".xml", name + ".bin");
+        serialize(name + ".json", func2);
+    }
+
+
     // Bani
     // Save the input index mappings from CNN's param name to TF/NGraph's input index
     for (const auto& node : m_network.getFunction()->get_ops()) { // node is a shared_ptr of Node
@@ -198,7 +222,8 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
             }
         }
     }
-    //BANI_DBG: cout << "\nIE_Executable ctor, m_map_cnnparam_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnparam_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable ctor, m_map_cnnparam_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnparam_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
 
 
 #if 1
@@ -232,11 +257,17 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
     //  Create infer request
     m_infer_req = exe_network.CreateInferRequest();
+
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable ctor END " << m_network.getFunction()->get_friendly_name() << "\n";
 }
 
 bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                       const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable::call BEGIN\n";
+
     // Example from ng func (the param vectors are in this order for outputs and inputs respectively):
     //     outs(10) = Add_359(*), Constant_673, Constant_675, ngraph_output_0(*), ngraph_output_1, ngraph_output_2, ngraph_output_6, ngraph_output_7, ngraph_output_8, ngraph_output_9,
     //         The ones with * are actual dynamic computed results/outs from the IE/CNN
@@ -282,6 +313,8 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     timer.stop();
     auto time_prep_inputs = timer.get_milliseconds();
 
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable::call INPUT SetBlob Done\n";
 
     //  Prepare output blobs
     timer.start();
@@ -291,36 +324,42 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
         THROW_IE_EXCEPTION << "Function outputs number differ from number of given outputs";
     }
 
+    //NGRAPH_CHECK(m_results_orig.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results_orig.size() ,")");
     NGRAPH_CHECK(m_results.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results.size() ,")");
 
+    #if 0
     //TODO: Remove this following block after testing
     if(m_map_cnnresult_to_tfidx.size() != outputs.size()) {
         std::cout << "m_map_cnnresult_to_tfidx ==> "; for (auto const& pair : m_map_cnnresult_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
         std::cout << "m_results ==> "; for (auto& op : m_results) { std::cout << op->get_name() << ", "; } std::cout << "\n";
+        std::cout << "m_results_orig ==> "; for (auto& op : m_results_orig) { std::cout << op->get_name() << ", "; } std::cout << "\n";
         std::cout << "m_nongraph_const_outputs ==> "; for (auto const& pair : m_nongraph_const_outputs) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
         std::cout << "m_map_cnnconstresult_to_ngnodeptr ==> "; for (auto const& pair : m_map_cnnconstresult_to_ngnodeptr) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
         NGRAPH_CHECK(false, "Mismatching number of output items between tensors (", outputs.size(), ") and m_map_cnnresult_to_tfidx (", m_map_cnnresult_to_tfidx.size() ,")");
     }
+    #endif
 
     for (const auto& it : output_info)
     {
         auto output_name = it.first;
+        #if 1
         NGRAPH_CHECK(m_map_cnnresult_to_tfidx.count(output_name) == 1, "!!! Output ", output_name, " not found !!!");
         int idx_tensor_output = m_map_cnnresult_to_tfidx.at(output_name);
         // Check if this is a Constant -> Result sceanrio, in which case we will just short-circuit the value
-        auto it2 = m_map_cnnconstresult_to_ngnodeptr.find(output_name);
-        if(it2 != m_map_cnnconstresult_to_ngnodeptr.end()) {
-            const ngraph::op::Constant* const_node = (ngraph::op::Constant*)(it2->second);
-            if(const_node) {
-                auto num_bytes = shape_size(const_node->get_shape()) * const_node->get_element_type().size();
-                //BANI_DBG: std::cout << "    shortcut data from Const node to TF Output, num_bytes=" << num_bytes << "\n";
-                const void* value = const_node->get_data_ptr();
-                outputs[idx_tensor_output]->write(value, num_bytes);
-                continue;
-            } else {
-                THROW_IE_EXCEPTION << "\n!!! Cannot get const_node = " << output_name << " !!!\n";
-            }
-        }
+        // auto it2 = m_map_cnnconstresult_to_ngnodeptr.find(output_name);
+        // if(it2 != m_map_cnnconstresult_to_ngnodeptr.end()) {
+        //     const ngraph::op::Constant* const_node = (ngraph::op::Constant*)(it2->second);
+        //     if(const_node) {
+        //         auto num_bytes = shape_size(const_node->get_shape()) * const_node->get_element_type().size();
+        //         //BANI_DBG: std::cout << "    shortcut data from Const node to TF Output, num_bytes=" << num_bytes << "\n";
+        //         const void* value = const_node->get_data_ptr();
+        //         outputs[idx_tensor_output]->write(value, num_bytes);
+        //         continue;
+        //     } else {
+        //         THROW_IE_EXCEPTION << "\n!!! Cannot get const_node = " << output_name << " !!!\n";
+        //     }
+        // }
+        #endif
 
         shared_ptr<runtime::ie::IETensor> tv =
             static_pointer_cast<runtime::ie::IETensor>(outputs[idx_tensor_output]);
@@ -337,7 +376,12 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     timer.stop();
     auto time_prep_outputs = timer.get_milliseconds();
 
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable::call OUTPUT SetBlob Done\n";
+
     timer.start();
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable::call INPUT Infer() started...\n";
     m_infer_req.Infer();
     timer.stop();
     auto time_infer = timer.get_milliseconds();
