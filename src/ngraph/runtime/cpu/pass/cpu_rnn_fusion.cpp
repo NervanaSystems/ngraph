@@ -84,8 +84,9 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
         std::make_shared<ngraph::op::Concat>(NodeVector{src_layer_label, src_iter_label}, 0);
     auto weights = std::make_shared<pattern::op::Label>(element::f32, Shape{34, 2});
     auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{64, 2});
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return ((is_type<ngraph::op::Broadcast>(n)) || (is_type<ngraph::op::Reshape>(n)));
+    auto broadcast_pred = [](Output<Node> n) {
+        return ((is_type<ngraph::op::Broadcast>(n.get_node())) ||
+                (is_type<ngraph::op::Reshape>(n.get_node())));
     };
     auto dot = std::make_shared<ngraph::op::Dot>(concat, weights);
     auto add = std::make_shared<ngraph::op::Add>(
@@ -323,8 +324,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     auto ht_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
 
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return ((is_type<ngraph::op::Broadcast>(n)) || (is_type<ngraph::op::Reshape>(n)));
+    auto broadcast_pred = [](Output<Node> n) {
+        return ((is_type<ngraph::op::Broadcast>(n.get_node())) ||
+                (is_type<ngraph::op::Reshape>(n.get_node())));
     };
 
     // Fused MatMuls
@@ -352,7 +354,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     // construct (c_t) cell state
     auto ct = std::make_shared<ngraph::op::Add>(std::make_shared<ngraph::op::Multiply>(ft, ct_1),
                                                 std::make_shared<ngraph::op::Multiply>(it, gt));
-    auto ct_label = std::make_shared<pattern::op::Label>(ct, nullptr, NodeVector{ct});
+    auto ct_label = std::make_shared<pattern::op::Label>(ct, nullptr, OutputVector{ct});
 
     // construct (h_t)
     auto ht =
@@ -499,21 +501,21 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_weights_layer = std::make_shared<ngraph::op::Reshape>(
         lstm_weights_layer_shared, AxisVector{1, 0}, Shape{100, 400});
     auto lstm_weights_layer_label = std::make_shared<pattern::op::Label>(
-        lstm_weights_layer, nullptr, NodeVector{lstm_weights_layer});
+        lstm_weights_layer, nullptr, OutputVector{lstm_weights_layer});
 
     auto lstm_weights_iter_shared = std::make_shared<pattern::op::Label>(
         element::f32, Shape{400, 100}, pattern::has_class<ngraph::op::Parameter>());
     auto lstm_weights_iter = std::make_shared<ngraph::op::Reshape>(
         lstm_weights_iter_shared, AxisVector{1, 0}, Shape{100, 400});
     auto lstm_weights_iter_label = std::make_shared<pattern::op::Label>(
-        lstm_weights_iter, nullptr, NodeVector{lstm_weights_iter});
+        lstm_weights_iter, nullptr, OutputVector{lstm_weights_iter});
 
     auto lstm_bias_layer_shared = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto lstm_bias_iter_shared = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto lstm_bias =
         std::make_shared<ngraph::op::Add>(lstm_bias_layer_shared, lstm_bias_iter_shared);
     auto lstm_bias_label =
-        std::make_shared<pattern::op::Label>(lstm_bias, nullptr, NodeVector{lstm_bias});
+        std::make_shared<pattern::op::Label>(lstm_bias, nullptr, OutputVector{lstm_bias});
     ngraph::runtime::cpu::rnn_utils::rnntype ref_rnn_type =
         ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
@@ -527,7 +529,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_goe = std::make_shared<ngraph::op::GetOutputElement>(lstm, 2);
     // We cannot attach labels to multi-output nodes, so we attach a label to the goe instead
     auto lstm_goe_label =
-        std::make_shared<pattern::op::Label>(lstm_goe, nullptr, NodeVector{lstm_goe});
+        std::make_shared<pattern::op::Label>(lstm_goe, nullptr, OutputVector{lstm_goe});
 
     auto callback = [lstm_goe_label,
                      lstm_src_layer,
@@ -766,7 +768,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     auto rnn_goe0 = std::make_shared<ngraph::op::GetOutputElement>(ref_rnn_node, 0);
 
     auto rnn_goe0_label =
-        std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, NodeVector{rnn_goe0});
+        std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, OutputVector{rnn_goe0});
 
     auto callback = [rnn_src_layer,
                      rnn_src_iter,
@@ -945,7 +947,7 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
     auto rnn_right_to_left = std::make_shared<pattern::op::Label>(
         element::f32, Shape{1, 256}, pattern::has_class<ngraph::op::Rnn>());
 
-    auto reshape_pred = [](std::shared_ptr<Node> n) { return (is_type<ngraph::op::Reshape>(n)); };
+    auto reshape_pred = [](Output<Node> n) { return (is_type<ngraph::op::Reshape>(n.get_node())); };
     auto rnn_left_to_right_goe0 =
         std::make_shared<ngraph::op::GetOutputElement>(rnn_left_to_right, 0);
     auto rnn_right_to_left_goe0 =
@@ -960,14 +962,14 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
     auto rnn_ltor_goe0_reshape_tnc =
         std::make_shared<pattern::op::Skip>(rnn_ltor_goe0_reshape_ntc, reshape_pred);
 
-    auto reverse_seq_predicate = [](std::shared_ptr<Node> node) {
+    auto reverse_seq_predicate = [](Output<Node> node) {
         return pattern::has_class<ngraph::op::ReverseSequence>()(node) ||
                pattern::has_class<ngraph::op::Reverse>()(node);
     };
     auto skip_reverse_seq =
         std::make_shared<pattern::op::Skip>(rnn_rtol_goe0_reshape_tnc, reverse_seq_predicate);
     auto concat = std::make_shared<ngraph::op::Concat>(
-        NodeVector{rnn_ltor_goe0_reshape_tnc, skip_reverse_seq}, 0);
+        OutputVector{rnn_ltor_goe0_reshape_tnc, skip_reverse_seq}, 0);
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
