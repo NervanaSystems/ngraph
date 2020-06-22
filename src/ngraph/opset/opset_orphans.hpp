@@ -20,7 +20,7 @@
 
 namespace ngraph
 {
-    namespace opset4
+    namespace opset_orphans
     {
 #define NGRAPH_OP(a, b) using b::a;
 #include "ngraph/opset/opset4_tbl.hpp"

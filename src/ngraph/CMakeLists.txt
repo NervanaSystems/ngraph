@@ -702,21 +702,23 @@ set(SRC ${SRC}
 )
 
 # generate the op_version_tbl.hpp file used by the Node Factory
-file(GLOB OPSETS opset/opset*_tbl.hpp)
-set(ALL_OPS)
-foreach(OPSET ${OPSETS})
-    message(STATUS "reading ${OPSET}")
-    file(STRINGS ${OPSET} CONTENTS)
-    list(TRANSFORM CONTENTS REPLACE "( |)//.*" "")
-    list(TRANSFORM CONTENTS REPLACE "#.*" "")
-    list(TRANSFORM CONTENTS REPLACE "ngraph::op::v" "")
-    list(APPEND ALL_OPS ${CONTENTS})
-endforeach()
-list(REMOVE_DUPLICATES ALL_OPS)
-list(SORT ALL_OPS)
-string(REPLACE ";" "\n" NEW_CONTENTS "${ALL_OPS}")
-file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp)
-file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp ${NEW_CONTENTS})
+set(OPSETS
+    opset/opset0_tbl.hpp
+    opset/opset1_tbl.hpp
+    opset/opset2_tbl.hpp
+    opset/opset3_tbl.hpp
+    opset/opset_orphans_tbl.hpp
+)
+add_custom_target(
+    OP_VERSION_TBL
+    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp
+    DEPENDS ${OPSETS}
+    COMMAND ${CMAKE_COMMAND}
+        -D OPSETS="${OPSETS}"
+        -D CURRENT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -Wno-dev
+        -P ${CMAKE_MODULE_PATH}gen_op_version.cmake
+)
 
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC serializer.cpp serializer.hpp)
@@ -733,6 +735,7 @@ else()
 endif()
 
 target_include_directories(ngraph PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+add_dependencies(ngraph OP_VERSION_TBL)
 
 set_target_properties(ngraph PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
