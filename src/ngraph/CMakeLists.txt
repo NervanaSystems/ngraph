@@ -709,15 +709,20 @@ set(OPSETS
     opset/opset3_tbl.hpp
     opset/opset_orphans_tbl.hpp
 )
-add_custom_target(
-    OP_VERSION_TBL
-    BYPRODUCTS ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp
+set(OP_VERSION_TBL_PATH ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp)
+add_custom_command(
+    OUTPUT ${OP_VERSION_TBL_PATH}
     DEPENDS ${OPSETS}
     COMMAND ${CMAKE_COMMAND}
         -D OPSETS="${OPSETS}"
         -D CURRENT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
         -Wno-dev
         -P ${CMAKE_MODULE_PATH}gen_op_version.cmake
+)
+add_custom_target(
+    get_op_version_table
+    ALL
+    DEPENDS ${OP_VERSION_TBL_PATH}
 )
 
 if(NGRAPH_JSON_ENABLE)
@@ -735,7 +740,6 @@ else()
 endif()
 
 target_include_directories(ngraph PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-add_dependencies(ngraph OP_VERSION_TBL)
 
 set_target_properties(ngraph PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
