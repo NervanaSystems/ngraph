@@ -14,20 +14,19 @@
 # limitations under the License.
 # ******************************************************************************
 
-include(ExternalProject)
-
-set(MLIR_LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
+set(LLVM_REPO_URL https://github.com/llvm/llvm-project.git)
 
 # Change these commit IDs to move to latest stable versions
-set(MLIR_LLVM_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
+#set(LLVM_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
+set(LLVM_COMMIT_ID 663860f63e73518fc09e55a4a68b03f8027eafc8)
 
 # If prebuilt path is given check if it is already populated with
 # correct with a build with commit id and cmake config files
 # otherwise build commit id and install to prebuilt path
 set(BUILD_MLIR TRUE)
 
-if(${MLIR_LLVM_PREBUILT_PATH})
-    set(VCSREVISION "${MLIR_LLVM_PREBUILT_PATH}/include/llvm/Support/VCSRevision.h")
+if(${LLVM_PREBUILT_PATH})
+    set(VCSREVISION "${LLVM_PREBUILT_PATH}/include/llvm/Support/VCSRevision.h")
     if(EXISTS "${VCSREVISION}")
         file(READ "${VCSREVISION}" REVISION_FILE)
         string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
