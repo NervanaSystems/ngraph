@@ -162,8 +162,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
             new_slice->set_op_annotations(op_annotations);
             auto tv = new_slice->get_output_tensor_ptr(0);
             auto layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(*tv);
-            layout->set_dnnl_md(dnnl_utils::get_output_dnnl_md(m_cvt_lt.get_node(), 0))
-                tv->set_tensor_layout(layout);
+            layout->set_dnnl_md(dnnl_utils::get_output_dnnl_md(m_cvt_lt.get_node(), 0));
+            tv->set_tensor_layout(layout);
             m_cvt_lt.replace(new_slice->output(0));
         }
 
