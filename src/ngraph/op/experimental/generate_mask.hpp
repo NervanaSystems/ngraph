@@ -99,7 +99,6 @@ namespace ngraph
                              double prob,
                              bool use_seed = false);
 
-                size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 

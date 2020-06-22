@@ -513,3 +513,9 @@ bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
 
     return evaluate_broadcast(inputs[0], outputs[0], pair_broadcast_axes, result_shape.to_shape());
 }
+
+bool op::util::BroadcastBase::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("broadcast_mode", m_mode);
+    return true;
+}

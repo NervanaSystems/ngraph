@@ -11,3 +11,5 @@ GCPU.onnx_top_k_opset_10
 non_zero
 non_zero_all_1s
 non_zero_all_0s
+
+unhandled_op

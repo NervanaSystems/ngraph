@@ -44,7 +44,7 @@ def test_reduction_ops(ng_api_helper, numpy_function, reduction_axes):
 
     expected = numpy_function(input_data, axis=tuple(reduction_axes))
     result = run_op_node([input_data, reduction_axes], ng_api_helper)
-    assert np.allclose(result, expected)
+    assert np.allclose(result, expected, 1e-04, 1e-07)
 
 
 @pytest.mark.parametrize(

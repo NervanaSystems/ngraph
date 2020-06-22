@@ -2075,3 +2075,13 @@ std::string runtime::gpu::GPU_Emitter::emit_v3_Broadcast(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
+
+std::string runtime::gpu::GPU_Emitter::emit_v3_TopK(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
+
+std::string runtime::gpu::GPU_Emitter::emit_v1_OneHot(EMIT_ARGS)
+{
+    throw unsupported_op("Unsupported op '" + node->description() + "'");
+}
