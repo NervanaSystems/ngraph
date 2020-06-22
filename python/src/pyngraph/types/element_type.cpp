@@ -40,7 +40,7 @@ void regclass_pyngraph_Type(py::module m)
     type.attr("u32") = ngraph::element::u32;
     type.attr("u64") = ngraph::element::u64;
 
-    type.def("__repr__", [](ngraph::element::Type self) {
+    type.def("__repr__", [](const ngraph::element::Type& self) {
         std::string bitwidth = std::to_string(self.bitwidth());
         if (self.is_signed())
         {
@@ -50,7 +50,7 @@ void regclass_pyngraph_Type(py::module m)
     });
 
     type.def("__eq__",
-             [](ngraph::element::Type a, ngraph::element::Type b) { return a == b; },
+             [](const ngraph::element::Type& a, const ngraph::element::Type& b) { return a == b; },
              py::is_operator());
 
     type.def_property_readonly("bitwidth", &ngraph::element::Type::bitwidth);
