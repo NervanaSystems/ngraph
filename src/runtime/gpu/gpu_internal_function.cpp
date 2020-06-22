@@ -258,7 +258,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             {
                 shared_ptr<descriptor::Tensor> tv = param->get_output_tensor_ptr(i);
 
-                const element::Type& et = tv->get_element_type();
+                element::Type et = tv->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(inputs[" << arg_index << "]))";

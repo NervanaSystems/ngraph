@@ -96,7 +96,7 @@ vector<string> runtime::Backend::get_registered_devices()
 }
 
 std::shared_ptr<ngraph::runtime::Tensor>
-    runtime::Backend::create_dynamic_tensor(const ngraph::element::Type& /* element_type */,
+    runtime::Backend::create_dynamic_tensor(ngraph::element::Type /* element_type */,
                                             const PartialShape& /* shape */)
 {
     throw std::invalid_argument("This backend does not support dynamic tensors");

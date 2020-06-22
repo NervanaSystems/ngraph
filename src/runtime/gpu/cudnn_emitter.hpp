@@ -133,7 +133,7 @@ namespace ngraph
                                        const double beta);
 
                 size_t build_pooling(const cudnnPoolingMode_t& pool_op,
-                                     const element::Type& dtype,
+                                     element::Type dtype,
                                      const Prop& direction,
                                      const ngraph::Shape& input_shape,
                                      const ngraph::Shape& output_shape,
@@ -172,7 +172,7 @@ namespace ngraph
                 void* get_data_by_type(cudnnDataType_t data_type, double value);
 
                 cudnnDataType_t get_cudnn_datatype(std::string dtype);
-                cudnnDataType_t get_cudnn_datatype(const element::Type& dtype);
+                cudnnDataType_t get_cudnn_datatype(element::Type dtype);
 
                 cudnnTensorDescriptor_t&
                     tensor_descriptor_from_shape(const Shape& shape,

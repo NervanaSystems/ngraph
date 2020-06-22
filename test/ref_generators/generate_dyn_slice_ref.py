@@ -404,7 +404,7 @@ static string s_manifest = "${MANIFEST}";
 namespace
 {
     template <typename T>
-    void check_failure(const element::Type& input_element_type,
+    void check_failure(element::Type input_element_type,
                     const Shape& input_shape,
                     const std::vector<int64_t>& lb_values,
                     const std::vector<int64_t>& ub_values,
@@ -460,7 +460,7 @@ namespace
     }
 
     template <typename T>
-    void check_success(const element::Type& input_element_type,
+    void check_success(element::Type input_element_type,
                     const Shape& input_shape,
                     const std::vector<int64_t>& lb_values,
                     const std::vector<int64_t>& ub_values,

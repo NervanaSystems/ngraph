@@ -38,7 +38,7 @@ namespace ngraph
                                                      const Output<Node>& max_filter,
                                                      const Output<Node>& min_output,
                                                      const Output<Node>& max_output,
-                                                     const ngraph::element::Type& output_type,
+                                                     ngraph::element::Type output_type,
                                                      const ngraph::AxisSet& input_axes,
                                                      const ngraph::AxisSet& filter_axes,
                                                      const ngraph::AxisSet& output_axes)

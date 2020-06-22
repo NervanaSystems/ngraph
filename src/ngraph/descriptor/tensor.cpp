@@ -21,7 +21,7 @@
 using namespace ngraph;
 using namespace std;
 
-descriptor::Tensor::Tensor(const element::Type& element_type,
+descriptor::Tensor::Tensor(element::Type element_type,
                            const PartialShape& pshape,
                            const std::string& name)
     : m_element_type(element_type)
@@ -31,7 +31,7 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 {
 }
 
-descriptor::Tensor::Tensor(const element::Type& element_type,
+descriptor::Tensor::Tensor(element::Type element_type,
                            const PartialShape& pshape,
                            Node* node,
                            size_t node_output_number)
@@ -43,14 +43,13 @@ descriptor::Tensor::Tensor(const element::Type& element_type,
 {
 }
 
-void descriptor::Tensor::set_tensor_type(const element::Type& element_type,
-                                         const PartialShape& pshape)
+void descriptor::Tensor::set_tensor_type(element::Type element_type, const PartialShape& pshape)
 {
     set_element_type(element_type);
     set_partial_shape(pshape);
 }
 
-void descriptor::Tensor::set_element_type(const element::Type& element_type)
+void descriptor::Tensor::set_element_type(element::Type element_type)
 {
     m_element_type = element_type;
 }

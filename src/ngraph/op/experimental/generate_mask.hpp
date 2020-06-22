@@ -41,7 +41,7 @@ namespace ngraph
                 /// probability and training/inference mode
                 GenerateMask(const Output<Node>& training,
                              const Shape& shape,
-                             const element::Type& element_type,
+                             element::Type element_type,
                              uint64_t seed,
                              double prob,
                              bool use_seed = false);
@@ -49,11 +49,8 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                const element::Type& get_element_type() const { return m_element_type; }
-                void set_element_type(const element::Type& element_type)
-                {
-                    m_element_type = element_type;
-                }
+                element::Type get_element_type() const { return m_element_type; }
+                void set_element_type(element::Type element_type) { m_element_type = element_type; }
                 /// Deprecated accessor for transitional attributes
                 const Shape& get_mask_shape() const { return m_shape; }
                 /// \brief Returns the probability of a trial generating 1 (i.e. an element being
@@ -97,7 +94,7 @@ namespace ngraph
                 /// probability and training/inference mode
                 GenerateMask(const Output<Node>& training,
                              const Output<Node>& shape,
-                             const element::Type& element_type,
+                             element::Type element_type,
                              uint64_t seed,
                              double prob,
                              bool use_seed = false);
@@ -106,11 +103,8 @@ namespace ngraph
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                const element::Type& get_element_type() const { return m_element_type; }
-                void set_element_type(const element::Type& element_type)
-                {
-                    m_element_type = element_type;
-                }
+                element::Type get_element_type() const { return m_element_type; }
+                void set_element_type(element::Type element_type) { m_element_type = element_type; }
                 /// Deprecated accessor for transitional attributes
                 const Shape get_mask_shape() const;
                 /// \brief Returns the probability of a trial generating 1 (i.e. an element being

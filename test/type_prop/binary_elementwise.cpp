@@ -217,7 +217,7 @@ TEST(type_prop, xor_bad_arguments)
 }
 
 template <typename T>
-void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastSpec& autob)
+void test_binary_eltwise_numpy(element::Type et, const op::AutoBroadcastSpec& autob)
 {
     auto param1 = make_shared<op::Parameter>(et, Shape{1, 3, 6});
     auto param2 = make_shared<op::Parameter>(et, Shape{3, 1});

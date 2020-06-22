@@ -59,7 +59,7 @@ static const mkldnn_version_t* get_mkldnn_version()
 
 // for both versions
 const std::string&
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(ngraph::element::Type type)
 {
     auto it = get_mkldnn_data_type_string_map().find(type);
     if (it == get_mkldnn_data_type_string_map().end() || it->second.empty())
@@ -71,7 +71,7 @@ const std::string&
 }
 
 mkldnn::memory::data_type
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
+    runtime::cpu::mkldnn_utils::get_mkldnn_data_type(ngraph::element::Type type)
 {
     auto it = get_mkldnn_data_type_map().find(type);
     if (it == get_mkldnn_data_type_map().end())

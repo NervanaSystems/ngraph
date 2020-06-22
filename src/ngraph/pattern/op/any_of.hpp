@@ -44,7 +44,7 @@ public:
     const NodeTypeInfo& get_type_info() const override;
     /// \brief creates a AnyOf node containing a sub-pattern described by \sa type and
     ///        \sa shape.
-    AnyOf(const element::Type& type,
+    AnyOf(element::Type type,
           const PartialShape& s,
           ValuePredicate pred,
           const OutputVector& wrapped_values)
@@ -56,7 +56,7 @@ public:
         }
         set_output_type(0, type, s);
     }
-    AnyOf(const element::Type& type,
+    AnyOf(element::Type type,
           const PartialShape& s,
           NodePredicate pred,
           const NodeVector& wrapped_values)

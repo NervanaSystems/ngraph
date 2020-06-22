@@ -1196,7 +1196,7 @@ namespace ngraph
                                             mkldnn::memory::format_tag fmt_tag) const;
                 mkldnn::memory::desc
                     build_memory_descriptor(const Shape& shape,
-                                            const ngraph::element::Type& et,
+                                            ngraph::element::Type et,
                                             mkldnn::memory::format_tag fmt_tag) const;
                 size_t build_memory(const mkldnn::memory::desc& desc);
                 void build_memory(const mkldnn::memory::desc& desc, size_t index);

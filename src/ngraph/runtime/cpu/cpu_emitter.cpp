@@ -4674,7 +4674,7 @@ namespace ngraph
                 auto arg_shape = args[0].get_shape();
                 auto arg_rank = arg_shape.size();
                 auto out_shape = out[0].get_shape();
-                const element::Type& et = args[0].get_element_type();
+                element::Type et = args[0].get_element_type();
 
                 if (arg_rank == 0)
                 {
@@ -4759,7 +4759,7 @@ std::string runtime::cpu::CPU_Emitter::emit_vector(const runtime::cpu::TensorWra
 {
     stringstream ss;
 
-    const element::Type& et = tvi.get_element_type();
+    element::Type et = tvi.get_element_type();
     ss << "EigenVector<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
        << ", " << eigen_vector_format(tvi) << ")";
     return ss.str();
@@ -4770,7 +4770,7 @@ string runtime::cpu::CPU_Emitter::emit_array1d(const runtime::cpu::TensorWrapper
 {
     stringstream ss;
 
-    const element::Type& et = tvi.get_element_type();
+    element::Type et = tvi.get_element_type();
     ss << "EigenArray1d<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
        << ", " << eigen_vector_format(tvi) << ")";
     return ss.str();
@@ -4781,7 +4781,7 @@ string runtime::cpu::CPU_Emitter::emit_matrix(const runtime::cpu::TensorWrapper&
 {
     stringstream ss;
 
-    const element::Type& et = tvi.get_element_type();
+    element::Type et = tvi.get_element_type();
     ss << "EigenMatrix<" << et.c_type_string() << ">" << format_name(name) << "(" << tvi.get_name()
        << ", " << eigen_matrix_format(tvi.get_shape(), tvi.get_strides()) << ")";
     return ss.str();

@@ -159,7 +159,7 @@ cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(std::string dtype
     return p->second;
 }
 
-cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(const element::Type& dtype)
+cudnnDataType_t runtime::gpu::CUDNNEmitter::get_cudnn_datatype(element::Type dtype)
 {
     return get_cudnn_datatype(dtype.c_type_string());
 }
@@ -1538,7 +1538,7 @@ size_t runtime::gpu::CUDNNEmitter::build_convolution_backward_filter(
 }
 
 size_t runtime::gpu::CUDNNEmitter::build_pooling(const cudnnPoolingMode_t& pool_op,
-                                                 const element::Type& dtype,
+                                                 element::Type dtype,
                                                  const Prop& direction,
                                                  const Shape& input_shape,
                                                  const Shape& output_shape,

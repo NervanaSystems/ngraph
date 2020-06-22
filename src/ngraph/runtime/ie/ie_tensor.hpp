@@ -32,9 +32,8 @@ namespace ngraph
             class IETensor : public ngraph::runtime::Tensor
             {
             public:
-                IE_BACKEND_API IETensor(const ngraph::element::Type& element_type,
-                                        const Shape& shape);
-                IE_BACKEND_API IETensor(const ngraph::element::Type& element_type,
+                IE_BACKEND_API IETensor(ngraph::element::Type element_type, const Shape& shape);
+                IE_BACKEND_API IETensor(ngraph::element::Type element_type,
                                         const PartialShape& shape);
 
                 ///

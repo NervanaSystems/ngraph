@@ -41,7 +41,7 @@ namespace ngraph
 
             std::shared_ptr<Node> get_scale(const Output<Node>& input_min_range,
                                             const Output<Node>& input_max_range,
-                                            const ngraph::element::Type& quant_type,
+                                            ngraph::element::Type quant_type,
                                             bool bump_by_eps = false);
 
             std::shared_ptr<Node> get_bias_scale(Output<Node> min_input,
@@ -60,8 +60,8 @@ namespace ngraph
                                                 Output<Node> max_filter,
                                                 Output<Node> min_freezed_output,
                                                 Output<Node> max_freezed_output,
-                                                const ngraph::element::Type& input_type,
-                                                const ngraph::element::Type& output_type,
+                                                ngraph::element::Type input_type,
+                                                ngraph::element::Type output_type,
                                                 const bool requantize = true);
 
             void check_concat(const NodeVector& args,

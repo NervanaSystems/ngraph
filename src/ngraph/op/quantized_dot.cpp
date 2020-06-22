@@ -34,7 +34,7 @@ op::QuantizedDot::QuantizedDot(const Output<Node>& input0,
                                const Output<Node>& input1_zero_point,
                                const Output<Node>& output_scale,
                                const Output<Node>& output_zero_point,
-                               const element::Type& output_type,
+                               element::Type output_type,
                                const AxisSet& input0_axes,
                                const AxisSet& input1_axes,
                                const AxisSet& output_axes)

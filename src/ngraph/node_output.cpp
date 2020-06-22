@@ -71,7 +71,7 @@ namespace ngraph
     {
         return m_node->m_outputs.at(m_index).get_tensor_ptr();
     }
-    const element::Type& Output<Node>::get_element_type() const
+    element::Type Output<Node>::get_element_type() const
     {
         return m_node->get_output_element_type(m_index);
     }
@@ -169,7 +169,7 @@ namespace ngraph
     {
         return m_node->m_outputs.at(m_index).get_tensor_ptr();
     }
-    const element::Type& Output<const Node>::get_element_type() const
+    element::Type Output<const Node>::get_element_type() const
     {
         return m_node->get_output_element_type(m_index);
     }

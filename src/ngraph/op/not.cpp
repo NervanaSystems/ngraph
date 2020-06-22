@@ -40,7 +40,7 @@ bool ngraph::op::v1::LogicalNot::visit_attributes(AttributeVisitor& visitor)
 void op::v1::LogicalNot::validate_and_infer_types()
 {
     auto args_et_pshape = validate_and_infer_elementwise_args();
-    element::Type& args_et = std::get<0>(args_et_pshape);
+    element::Type args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
     set_output_type(0, args_et, args_pshape);
@@ -119,7 +119,7 @@ op::v0::Not::Not(const Output<Node>& arg)
 void op::v0::Not::validate_and_infer_types()
 {
     auto args_et_pshape = validate_and_infer_elementwise_args();
-    element::Type& args_et = std::get<0>(args_et_pshape);
+    element::Type args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
     set_output_type(0, args_et, args_pshape);

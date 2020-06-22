@@ -18,8 +18,8 @@ using namespace ngraph;
 //------------------------------------------------------------------------------
 
 template <typename OpV0, typename OpV1>
-void test_type_prop_opset0_downgrade_pass(const element::Type& output_type,
-                                          const element::Type& input_type = element::f32,
+void test_type_prop_opset0_downgrade_pass(element::Type output_type,
+                                          element::Type input_type = element::f32,
                                           const string node_name = "")
 {
     auto A = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});
@@ -57,8 +57,8 @@ void test_opset0_comparison_downgrade_pass()
 }
 
 template <typename OpV0, typename OpV1>
-void test_type_prop_opset1_upgrade_pass(const element::Type& output_type,
-                                        const element::Type& input_type = element::f32,
+void test_type_prop_opset1_upgrade_pass(element::Type output_type,
+                                        element::Type input_type = element::f32,
                                         const string node_name = "")
 {
     auto A = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});

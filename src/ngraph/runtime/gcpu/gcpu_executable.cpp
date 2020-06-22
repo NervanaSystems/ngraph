@@ -113,7 +113,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
             if (it == tensor_map.end())
             {
                 const Shape& shape = op->get_output_shape(i);
-                const element::Type& type = op->get_output_element_type(i);
+                element::Type type = op->get_output_element_type(i);
                 string name = op->output(i).get_tensor().get_name();
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tensor, host_tensor});
@@ -177,7 +177,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     return true;
 }
 
-void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
+void runtime::gcpu::GCPUExecutable::generate_calls(element::Type type,
                                                    const Node& op,
                                                    const vector<shared_ptr<HostTensor>>& out,
                                                    const vector<shared_ptr<HostTensor>>& in)

@@ -55,7 +55,7 @@ Strides runtime::gpu::GPUTensorWrapper::get_strides() const
     return m_tensor->get_tensor_layout()->get_strides();
 }
 
-const element::Type& runtime::gpu::GPUTensorWrapper::get_element_type() const
+element::Type runtime::gpu::GPUTensorWrapper::get_element_type() const
 {
     return m_tensor->get_tensor_layout()->get_element_type();
 }

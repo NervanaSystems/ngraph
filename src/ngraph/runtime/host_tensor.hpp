@@ -41,12 +41,12 @@ namespace ngraph
 class NGRAPH_API ngraph::runtime::HostTensor : public ngraph::runtime::Tensor
 {
 public:
-    HostTensor(const element::Type& element_type,
+    HostTensor(element::Type element_type,
                const Shape& shape,
                void* memory_pointer,
                const std::string& name = "");
-    HostTensor(const element::Type& element_type, const Shape& shape, const std::string& name = "");
-    HostTensor(const element::Type& element_type,
+    HostTensor(element::Type element_type, const Shape& shape, const std::string& name = "");
+    HostTensor(element::Type element_type,
                const PartialShape& partial_shape,
                const std::string& name = "");
     HostTensor(const std::string& name = "");
@@ -98,7 +98,7 @@ public:
     bool get_is_allocated() const;
     /// \brief Set the element type. Must be compatible with the current element type.
     /// \param element_type The element type
-    void set_element_type(const element::Type& element_type);
+    void set_element_type(element::Type element_type);
     /// \brief Set the actual shape of the tensor compatibly with the partial shape.
     /// \param shape The shape being set
     void set_shape(const Shape& shape);
@@ -120,7 +120,7 @@ public:
     void set_broadcast(const op::AutoBroadcastSpec& autob,
                        const HostTensorPtr& arg0,
                        const HostTensorPtr& arg1,
-                       const element::Type& element_type);
+                       element::Type element_type);
 
 private:
     void allocate_buffer();

@@ -28,7 +28,7 @@ using namespace std;
 
 static const size_t alignment = 64;
 
-runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
+runtime::HostTensor::HostTensor(ngraph::element::Type element_type,
                                 const Shape& shape,
                                 void* memory_pointer,
                                 const string& name)
@@ -41,14 +41,14 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
     }
 }
 
-runtime::HostTensor::HostTensor(const element::Type& element_type,
+runtime::HostTensor::HostTensor(element::Type element_type,
                                 const Shape& shape,
                                 const std::string& name)
     : HostTensor(element_type, shape, nullptr, name)
 {
 }
 
-runtime::HostTensor::HostTensor(const element::Type& element_type,
+runtime::HostTensor::HostTensor(element::Type element_type,
                                 const PartialShape& partial_shape,
                                 const std::string& name)
     : runtime::Tensor(
@@ -177,7 +177,7 @@ bool runtime::HostTensor::get_is_allocated() const
     return m_aligned_buffer_pool != nullptr;
 }
 
-void runtime::HostTensor::set_element_type(const element::Type& element_type)
+void runtime::HostTensor::set_element_type(element::Type element_type)
 {
     NGRAPH_CHECK(get_element_type().is_dynamic() || get_element_type() == element_type,
                  "Can not change a static element type");
@@ -213,7 +213,7 @@ void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
 void runtime::HostTensor::set_broadcast(const op::AutoBroadcastSpec& autob,
                                         const HostTensorPtr& arg0,
                                         const HostTensorPtr& arg1,
-                                        const element::Type& element_type)
+                                        element::Type element_type)
 {
     set_element_type(element_type);
 

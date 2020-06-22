@@ -241,7 +241,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     return true;
 }
 
-void runtime::interpreter::INTExecutable::generate_calls(const element::Type& type,
+void runtime::interpreter::INTExecutable::generate_calls(element::Type type,
                                                          const Node& op,
                                                          const vector<shared_ptr<HostTensor>>& out,
                                                          const vector<shared_ptr<HostTensor>>& in)
@@ -292,7 +292,7 @@ void runtime::interpreter::INTExecutable::perform_nan_check(
     size_t arg_number = 1;
     for (const shared_ptr<HostTensor>& tensor : tensors)
     {
-        const element::Type& type = tensor->get_element_type();
+        element::Type type = tensor->get_element_type();
         if (type == element::f32)
         {
             const float* data = tensor->get_data_ptr<float>();

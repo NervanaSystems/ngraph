@@ -564,7 +564,7 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
         new_node->output(0)); // Remove [0] (again), add [8], remove [1], add [9]
 }
 
-std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const Shape& shape)
+std::shared_ptr<Node> ngraph::make_zero(element::Type element_type, const Shape& shape)
 {
     std::shared_ptr<Node> zero = op::Constant::create(element_type, Shape{}, {0.0});
     if (shape.size() > 0)
@@ -580,7 +580,7 @@ std::shared_ptr<Node> ngraph::make_zero(const element::Type& element_type, const
 }
 
 std::shared_ptr<Node> ngraph::make_constant_from_string(std::string val,
-                                                        const element::Type& element_type,
+                                                        element::Type element_type,
                                                         const Shape& shape)
 {
     auto cvals = std::vector<std::string>(shape_size(shape), val);

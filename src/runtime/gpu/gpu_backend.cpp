@@ -106,14 +106,15 @@ shared_ptr<runtime::Tensor> runtime::gpu::GPUBackend::create_tensor()
     throw runtime_error("GPU backend does not support dynamic tensors");
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::gpu::GPUBackend::create_tensor(const element::Type& element_type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::gpu::GPUBackend::create_tensor(element::Type element_type,
+                                                                    const Shape& shape)
 {
     return make_shared<runtime::gpu::GPUTensor>(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::gpu::GPUBackend::create_tensor(
-    const element::Type& element_type, const Shape& shape, void* memory_pointer)
+shared_ptr<runtime::Tensor> runtime::gpu::GPUBackend::create_tensor(element::Type element_type,
+                                                                    const Shape& shape,
+                                                                    void* memory_pointer)
 {
     if (memory_pointer != nullptr && !is_device_pointer(memory_pointer))
     {

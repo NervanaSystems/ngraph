@@ -86,7 +86,7 @@ namespace ngraph
         /// \return A shared point to the tensor ptr for this output.
         std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const;
         /// \return The element type of the output referred to by this output handle.
-        const element::Type& get_element_type() const;
+        element::Type get_element_type() const;
         /// \return The shape of the output referred to by this output handle.
         const Shape& get_shape() const;
         /// \return The partial shape of the output referred to by this output handle.
@@ -164,7 +164,7 @@ namespace ngraph
         /// \return A shared point to the tensor ptr for this output.
         std::shared_ptr<descriptor::Tensor> get_tensor_ptr() const;
         /// \return The element type of the output referred to by this output handle.
-        const element::Type& get_element_type() const;
+        element::Type get_element_type() const;
         /// \return The shape of the output referred to by this output handle.
         const Shape& get_shape() const;
         /// \return The partial shape of the output referred to by this output handle.

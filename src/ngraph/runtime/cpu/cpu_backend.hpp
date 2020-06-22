@@ -51,13 +51,12 @@ namespace ngraph
                 std::shared_ptr<ngraph::runtime::Tensor> create_tensor() override;
 
                 std::shared_ptr<ngraph::runtime::Tensor>
-                    create_tensor(const ngraph::element::Type& element_type,
+                    create_tensor(ngraph::element::Type element_type,
                                   const Shape& shape,
                                   void* memory_pointer) override;
 
                 std::shared_ptr<ngraph::runtime::Tensor>
-                    create_tensor(const ngraph::element::Type& element_type,
-                                  const Shape& shape) override;
+                    create_tensor(ngraph::element::Type element_type, const Shape& shape) override;
 
                 std::shared_ptr<ngraph::runtime::Executable>
                     compile(std::shared_ptr<Function> func,

@@ -24,7 +24,7 @@ using namespace ngraph;
 
 constexpr NodeTypeInfo op::Parameter::type_info;
 
-op::Parameter::Parameter(const element::Type& element_type,
+op::Parameter::Parameter(element::Type element_type,
                          const PartialShape& pshape,
                          const bool cacheable)
     : m_cacheable(cacheable)

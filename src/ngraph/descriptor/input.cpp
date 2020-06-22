@@ -117,7 +117,7 @@ const PartialShape& descriptor::Input::get_partial_shape() const
     return m_output->get_partial_shape();
 }
 
-const element::Type& descriptor::Input::get_element_type() const
+element::Type descriptor::Input::get_element_type() const
 {
     return m_output->get_element_type();
 }

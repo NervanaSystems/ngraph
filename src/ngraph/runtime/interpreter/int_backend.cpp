@@ -47,14 +47,15 @@ shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
     return make_shared<runtime::HostTensor>();
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::interpreter::INTBackend::create_tensor(const element::Type& type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(element::Type type,
+                                                                            const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(
-    const element::Type& type, const Shape& shape, void* memory_pointer)
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor(element::Type type,
+                                                                            const Shape& shape,
+                                                                            void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }

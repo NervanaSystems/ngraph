@@ -29,7 +29,7 @@ static string s_manifest = "${MANIFEST}";
 namespace
 {
     template <typename T>
-    void check_strided_slice_success(const element::Type& input_element_type,
+    void check_strided_slice_success(element::Type input_element_type,
                                      const Shape& input_shape,
                                      const std::vector<int64_t>& begin_values,
                                      const std::vector<int64_t>& end_values,
@@ -90,7 +90,7 @@ namespace
     }
 
     template <typename T>
-    void check_strided_slice_stride_optional_success(const element::Type& input_element_type,
+    void check_strided_slice_stride_optional_success(element::Type input_element_type,
                                                      const Shape& input_shape,
                                                      const std::vector<int64_t>& begin_values,
                                                      const std::vector<int64_t>& end_values,

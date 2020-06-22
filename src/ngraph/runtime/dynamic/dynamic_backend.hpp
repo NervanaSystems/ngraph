@@ -57,11 +57,11 @@ public:
     std::shared_ptr<Tensor> create_tensor() override;
 
     std::shared_ptr<Tensor>
-        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+        create_tensor(element::Type type, const Shape& shape, void* memory_pointer) override;
 
-    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+    std::shared_ptr<Tensor> create_tensor(element::Type type, const Shape& shape) override;
 
-    std::shared_ptr<Tensor> create_dynamic_tensor(const element::Type& type,
+    std::shared_ptr<Tensor> create_dynamic_tensor(element::Type type,
                                                   const PartialShape& shape) override;
 
     bool supports_dynamic_tensors() override { return true; }

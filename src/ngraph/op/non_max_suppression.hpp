@@ -132,7 +132,7 @@ namespace ngraph
                                   const Output<Node>& score_threshold,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
                                   const bool sort_result_descending = true,
-                                  const ngraph::element::Type& output_type = ngraph::element::i64);
+                                  ngraph::element::Type output_type = ngraph::element::i64);
 
                 /// \brief Constructs a NonMaxSuppression operation with default values for the last
                 ///        3 inputs
@@ -147,7 +147,7 @@ namespace ngraph
                                   const Output<Node>& scores,
                                   const BoxEncodingType box_encoding = BoxEncodingType::CORNER,
                                   const bool sort_result_descending = true,
-                                  const ngraph::element::Type& output_type = ngraph::element::i64);
+                                  ngraph::element::Type output_type = ngraph::element::i64);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -167,10 +167,7 @@ namespace ngraph
                 }
 
                 element::Type get_output_type() const { return m_output_type; }
-                void set_output_type(const element::Type& output_type)
-                {
-                    m_output_type = output_type;
-                }
+                void set_output_type(element::Type output_type) { m_output_type = output_type; }
                 using Node::set_output_type;
 
             protected:

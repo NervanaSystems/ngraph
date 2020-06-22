@@ -35,9 +35,9 @@
 using namespace ngraph;
 using namespace std;
 using json = nlohmann::json;
-using const_data_callback_t = shared_ptr<Node>(const string&, const element::Type&, const Shape&);
+using const_data_callback_t = shared_ptr<Node>(const string&, element::Type, const Shape&);
 
-static json write_element_type(const ngraph::element::Type& n);
+static json write_element_type(ngraph::element::Type n);
 static element::Type read_element_type(json j);
 static json write_partial_shape(const PartialShape& s);
 static PartialShape read_partial_shape(json j);
@@ -373,7 +373,7 @@ static op::PadMode read_pad_mode(json node_js)
                                         : op::PadMode::CONSTANT;
 }
 
-static json write_element_type(const ngraph::element::Type& n)
+static json write_element_type(ngraph::element::Type n)
 {
     json j;
     j = n.c_type_string();
@@ -490,7 +490,7 @@ shared_ptr<ngraph::Function> ngraph::deserialize(istream& in)
             json js = json::parse(jstr);
             JSONDeserializer deserializer;
             deserializer.set_const_data_callback(
-                [&](const string& const_name, const element::Type& et, const Shape& shape) {
+                [&](const string& const_name, element::Type et, const Shape& shape) {
                     shared_ptr<Node> const_node;
                     for (const cpio::FileInfo& info : file_info)
                     {

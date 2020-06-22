@@ -34,9 +34,8 @@ namespace ngraph
             class CPUTensor : public ngraph::runtime::Tensor
             {
             public:
-                CPU_BACKEND_API CPUTensor(const ngraph::element::Type& element_type,
-                                          const Shape& shape);
-                CPU_BACKEND_API CPUTensor(const ngraph::element::Type& element_type,
+                CPU_BACKEND_API CPUTensor(ngraph::element::Type element_type, const Shape& shape);
+                CPU_BACKEND_API CPUTensor(ngraph::element::Type element_type,
                                           const Shape& shape,
                                           void* memory_pointer);
                 CPU_BACKEND_API virtual ~CPUTensor() override;

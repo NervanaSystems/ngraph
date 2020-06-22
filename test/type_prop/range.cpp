@@ -350,7 +350,7 @@ struct RangeParams
 };
 
 template <typename T>
-void run_range_test(const element::Type& et, const RangeParams& params)
+void run_range_test(element::Type et, const RangeParams& params)
 {
     auto start =
         make_shared<op::Constant>(et, Shape{}, std::vector<T>{static_cast<T>(params.start)});

@@ -27,7 +27,7 @@ namespace ngraph
 
     Node* Input<Node>::get_node() const { return m_node; }
     size_t Input<Node>::get_index() const { return m_index; }
-    const element::Type& Input<Node>::get_element_type() const
+    element::Type Input<Node>::get_element_type() const
     {
         return m_node->get_input_element_type(m_index);
     }
@@ -96,7 +96,7 @@ namespace ngraph
 
     const Node* Input<const Node>::get_node() const { return m_node; }
     size_t Input<const Node>::get_index() const { return m_index; }
-    const element::Type& Input<const Node>::get_element_type() const
+    element::Type Input<const Node>::get_element_type() const
     {
         return m_node->get_input_element_type(m_index);
     }

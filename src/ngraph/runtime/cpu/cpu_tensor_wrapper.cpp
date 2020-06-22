@@ -43,7 +43,7 @@ Strides runtime::cpu::TensorWrapper::get_strides() const
     return m_tensor->get_tensor_layout()->get_strides();
 }
 
-const element::Type& runtime::cpu::TensorWrapper::get_element_type() const
+element::Type runtime::cpu::TensorWrapper::get_element_type() const
 {
     return m_tensor->get_tensor_layout()->get_element_type();
 }

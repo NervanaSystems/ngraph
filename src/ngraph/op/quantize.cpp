@@ -25,7 +25,7 @@ constexpr NodeTypeInfo op::Quantize::type_info;
 op::Quantize::Quantize(const Output<Node>& input,
                        const Output<Node>& scale,
                        const Output<Node>& zero_point,
-                       const element::Type& type,
+                       element::Type type,
                        const AxisSet& axes,
                        RoundMode round_mode)
 

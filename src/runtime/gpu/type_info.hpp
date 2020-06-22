@@ -44,7 +44,7 @@ namespace ngraph
                 virtual void* max_ptr() = 0;
 
                 using TypeDispatch = std::unordered_map<std::string, std::shared_ptr<TypeInfo>>;
-                static const std::shared_ptr<TypeInfo>& Get(const element::Type& type)
+                static const std::shared_ptr<TypeInfo>& Get(element::Type type)
                 {
                     return dispatcher.at(type.c_type_string());
                 }

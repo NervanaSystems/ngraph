@@ -41,20 +41,18 @@ namespace ngraph
             Tensor& operator=(const Tensor&) = delete;
 
         public:
-            Tensor(const element::Type& element_type,
-                   const PartialShape& pshape,
-                   const std::string& name);
-            Tensor(const element::Type& element_type,
+            Tensor(element::Type element_type, const PartialShape& pshape, const std::string& name);
+            Tensor(element::Type element_type,
                    const PartialShape& pshape,
                    Node* node,
                    size_t node_output_number);
 
             const std::string& get_name() const;
-            void set_tensor_type(const element::Type& element_type, const PartialShape& pshape);
-            void set_element_type(const element::Type& elemenet_type);
+            void set_tensor_type(element::Type element_type, const PartialShape& pshape);
+            void set_element_type(element::Type elemenet_type);
             void set_partial_shape(const PartialShape& partial_shape);
 
-            const element::Type& get_element_type() const { return m_element_type; }
+            element::Type get_element_type() const { return m_element_type; }
             const Shape& get_shape() const;
             const PartialShape& get_partial_shape() const { return m_partial_shape; }
             const std::shared_ptr<layout::TensorLayout>& get_tensor_layout() const

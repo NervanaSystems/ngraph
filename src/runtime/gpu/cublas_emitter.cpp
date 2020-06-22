@@ -27,7 +27,7 @@ runtime::gpu::CUBLASEmitter::CUBLASEmitter(GPUPrimitiveEmitter* emitter, GPURunt
     m_ctx = ctx;
 }
 
-size_t runtime::gpu::CUBLASEmitter::build_dot(const element::Type& dtype,
+size_t runtime::gpu::CUBLASEmitter::build_dot(element::Type dtype,
                                               const Shape& arg0_shape,
                                               const Shape& arg1_shape,
                                               const Shape& out_shape,

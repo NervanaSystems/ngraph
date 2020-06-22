@@ -243,7 +243,7 @@ void Node::set_input_is_relevant_to_value(size_t i, bool relevant)
     m_inputs[i].m_is_relevant_to_value = relevant;
 }
 
-void Node::set_output_type(size_t i, const element::Type& element_type, const PartialShape& pshape)
+void Node::set_output_type(size_t i, element::Type element_type, const PartialShape& pshape)
 {
     get_output_descriptor(i).get_tensor_ptr()->set_tensor_type(element_type, pshape);
 }
@@ -611,7 +611,7 @@ size_t Node::get_output_size() const
     return m_outputs.size();
 }
 
-const element::Type& Node::get_output_element_type(size_t i) const
+element::Type Node::get_output_element_type(size_t i) const
 {
     NGRAPH_CHECK(
         i < m_outputs.size(), "index '", i, "' out of range in get_output_element_type(size_t i)");
@@ -684,7 +684,7 @@ size_t Node::get_input_size() const
     return m_inputs.size();
 }
 
-const element::Type& Node::get_input_element_type(size_t i) const
+element::Type Node::get_input_element_type(size_t i) const
 {
     NGRAPH_CHECK(
         i < m_inputs.size(), "index '", i, "' out of range in get_input_element_type(size_t i)");
@@ -843,7 +843,7 @@ std::tuple<element::Type, PartialShape>
 void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec& autob)
 {
     auto args_et_pshape = validate_and_infer_elementwise_args(autob);
-    element::Type& args_et = std::get<0>(args_et_pshape);
+    element::Type args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
     NODE_VALIDATION_CHECK(this,
@@ -858,7 +858,7 @@ void Node::validate_and_infer_elementwise_arithmetic(const op::AutoBroadcastSpec
 void Node::validate_and_infer_elementwise_logical(const op::AutoBroadcastSpec& autob)
 {
     auto args_et_pshape = validate_and_infer_elementwise_args(autob);
-    element::Type& args_et = std::get<0>(args_et_pshape);
+    element::Type args_et = std::get<0>(args_et_pshape);
     PartialShape& args_pshape = std::get<1>(args_et_pshape);
 
     NODE_VALIDATION_CHECK(

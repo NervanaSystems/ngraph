@@ -305,7 +305,7 @@ void pass::DynElimination::construct_dyn_replace_slice()
 }
 
 template <typename T>
-std::shared_ptr<op::Constant> make_range_replacement(const element::Type& et,
+std::shared_ptr<op::Constant> make_range_replacement(element::Type et,
                                                      const Shape& shape,
                                                      const std::shared_ptr<op::Constant>& start_arg,
                                                      const std::shared_ptr<op::Constant>& step_arg)

@@ -104,7 +104,7 @@ namespace ngraph
             /// \brief Checks whether this element type is merge-compatible with `t`.
             /// \param t The element type to compare this element type to.
             /// \return `true` if this element type is compatible with `t`, else `false`.
-            bool compatible(const element::Type& t) const;
+            bool compatible(element::Type t) const;
 
             /// \brief Merges two element types t1 and t2, writing the result into dst and
             ///        returning true if successful, else returning false.
@@ -124,7 +124,7 @@ namespace ngraph
             ///
             ///           merge(dst,t1,t2) where t1, t2 both static and unequal
             ///              does nothing to dst, and returns false
-            static bool merge(element::Type& dst, const element::Type& t1, const element::Type& t2);
+            static bool merge(element::Type dst, element::Type t1, element::Type t2);
 
             // \brief This allows switch(element_type)
             operator Type_t() const { return m_type; }
@@ -184,7 +184,7 @@ namespace ngraph
         NGRAPH_API Type from<ngraph::float16>();
 
         NGRAPH_API
-        std::ostream& operator<<(std::ostream& out, const ngraph::element::Type& obj);
+        std::ostream& operator<<(std::ostream& out, ngraph::element::Type obj);
     }
 
     template <>
@@ -205,7 +205,7 @@ namespace ngraph
     class NGRAPH_API AttributeAdapter<element::Type> : public ValueAccessor<std::string>
     {
     public:
-        AttributeAdapter(element::Type& value)
+        AttributeAdapter(element::Type value)
             : m_ref(value)
         {
         }
@@ -217,7 +217,7 @@ namespace ngraph
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
 
     protected:
-        element::Type& m_ref;
+        element::Type m_ref;
     };
 
     /// \brief Return the number of bytes in the compile-time representation of the element type.

@@ -37,7 +37,7 @@ namespace ngraph
     {
         namespace common
         {
-            const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
+            ngraph::element::Type get_ngraph_element_type(std::int64_t onnx_type);
 
             /// \brief      Return a monotonic sequence.
             ///
@@ -89,10 +89,8 @@ namespace ngraph
             ///
             /// \return A Constant node representing shifted identity matrix.
             template <typename T = double>
-            std::shared_ptr<default_opset::Constant>
-                shifted_square_identity(const Shape output_shape,
-                                        const element::Type& output_type,
-                                        const std::int64_t shift)
+            std::shared_ptr<default_opset::Constant> shifted_square_identity(
+                const Shape output_shape, element::Type output_type, const std::int64_t shift)
             {
                 std::vector<T> identity_matrix(shape_size(output_shape), T{0});
                 std::int64_t rows = output_shape[0];
@@ -122,7 +120,7 @@ namespace ngraph
             /// \return A Constant node representing identity matrix with shape (n, n).
             template <typename T = double>
             std::shared_ptr<default_opset::Constant> square_identity(const size_t n,
-                                                                     const element::Type& type)
+                                                                     element::Type type)
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }

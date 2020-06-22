@@ -57,7 +57,7 @@ namespace ngraph
                 /// \param arg Node that produces the input tensor.
                 /// \param output_type produce indices. Currently, only int64 or int32 are
                 ///                           supported
-                NonZero(const Output<Node>& arg, const element::Type& output_type);
+                NonZero(const Output<Node>& arg, element::Type output_type);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;

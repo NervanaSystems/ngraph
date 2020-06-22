@@ -20,7 +20,7 @@ using namespace std;
 using namespace ngraph;
 
 runtime::dynamic::DynamicTensor::DynamicTensor(
-    const element::Type& element_type,
+    element::Type element_type,
     const PartialShape& shape,
     const std::shared_ptr<runtime::Backend>& wrapped_backend)
     : Tensor(make_shared<descriptor::Tensor>(element_type, shape, "wrapped_dynamic"))
@@ -50,7 +50,7 @@ size_t runtime::dynamic::DynamicTensor::get_element_count() const
     return shape_size(m_wrapped_tensor->get_shape());
 }
 
-const element::Type& runtime::dynamic::DynamicTensor::get_element_type() const
+element::Type runtime::dynamic::DynamicTensor::get_element_type() const
 {
     if (m_wrapped_tensor == nullptr)
     {
@@ -100,8 +100,7 @@ void runtime::dynamic::DynamicTensor::release_storage()
     m_wrapped_tensor = nullptr;
 }
 
-void runtime::dynamic::DynamicTensor::make_storage(const element::Type& element_type,
-                                                   const Shape& shape)
+void runtime::dynamic::DynamicTensor::make_storage(element::Type element_type, const Shape& shape)
 {
     NGRAPH_CHECK(element_type.is_static(), "make_storage requires a static element type");
     NGRAPH_CHECK(get_element_type().is_dynamic() || get_element_type() == element_type,

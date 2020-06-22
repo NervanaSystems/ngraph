@@ -1680,7 +1680,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training_4d)
     NodeVector goes;
 
     auto make_graph = [&input_shape, &channel_shape, &eps, &goes] {
-        const element::Type& et = element::f32;
+        element::Type et = element::f32;
         auto input = make_shared<op::Parameter>(et, input_shape);
         auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);
@@ -1718,7 +1718,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batch_norm_training_3d)
     NodeVector goes;
 
     auto make_graph = [&input_shape, &channel_shape, &eps, &goes] {
-        const element::Type& et = element::f32;
+        element::Type et = element::f32;
         auto input = make_shared<op::Parameter>(et, input_shape);
         auto gamma = make_shared<op::Parameter>(et, channel_shape);
         auto beta = make_shared<op::Parameter>(et, channel_shape);

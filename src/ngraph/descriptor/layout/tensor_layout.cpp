@@ -26,7 +26,7 @@ descriptor::layout::TensorLayout::TensorLayout(const descriptor::Tensor& tensor)
 {
 }
 
-const element::Type& descriptor::layout::TensorLayout::get_element_type() const
+element::Type descriptor::layout::TensorLayout::get_element_type() const
 {
     return m_element_type;
 }

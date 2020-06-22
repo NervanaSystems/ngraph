@@ -66,8 +66,7 @@ bool runtime::ie::IE_Backend::is_supported_property(const Property) const
 }
 
 shared_ptr<runtime::Tensor>
-    runtime::ie::IE_Backend::create_dynamic_tensor(const element::Type& type,
-                                                   const PartialShape& shape)
+    runtime::ie::IE_Backend::create_dynamic_tensor(element::Type type, const PartialShape& shape)
 {
     return make_shared<IETensor>(type, shape);
 }
@@ -77,14 +76,15 @@ shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor()
     throw runtime_error("IE_Backend::create_tensor() not supported");
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::ie::IE_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor(element::Type element_type,
+                                                                   const Shape& shape)
 {
     return make_shared<IETensor>(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor(
-    const element::Type& element_type, const Shape& shape, void* data)
+shared_ptr<runtime::Tensor> runtime::ie::IE_Backend::create_tensor(element::Type element_type,
+                                                                   const Shape& shape,
+                                                                   void* data)
 {
     shared_ptr<runtime::Tensor> tensor = make_shared<IETensor>(element_type, shape);
     tensor->write(data, shape_size(shape) * element_type.size());

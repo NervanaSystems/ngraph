@@ -136,7 +136,7 @@ const std::string& element::Type::c_type_string() const
     return get_type_info_map().at(m_type).m_cname;
 }
 
-bool element::Type::operator==(const element::Type& other) const
+bool element::Type::operator==(element::Type other) const
 {
     return m_type == other.m_type;
 }
@@ -238,17 +238,17 @@ namespace ngraph
     }
 }
 
-std::ostream& element::operator<<(std::ostream& out, const element::Type& obj)
+std::ostream& element::operator<<(std::ostream& out, element::Type obj)
 {
     return out << obj.get_type_name();
 }
 
-bool element::Type::compatible(const element::Type& t) const
+bool element::Type::compatible(element::Type t) const
 {
     return (is_dynamic() || t.is_dynamic() || *this == t);
 }
 
-bool element::Type::merge(element::Type& dst, const element::Type& t1, const element::Type& t2)
+bool element::Type::merge(element::Type dst, element::Type t1, element::Type t2)
 {
     if (t1.is_dynamic())
     {

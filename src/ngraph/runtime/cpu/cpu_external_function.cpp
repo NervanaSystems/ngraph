@@ -835,7 +835,7 @@ using namespace ngraph;
             // process all tensors in the set containing the output tensor of the parameter
             for (auto& ele_t : tensor_set)
             {
-                const element::Type& et = ele_t->get_element_type();
+                element::Type et = ele_t->get_element_type();
                 string type = et.c_type_string();
                 stringstream ss;
                 ss << "(((" << type << "*)(inputs[" << arg_index << "])) + "
@@ -875,7 +875,7 @@ using namespace ngraph;
         // process all tensors in the set containing the output tensor of the result
         for (auto& ele_t : tensor_set)
         {
-            const element::Type& et = ele_t->get_element_type();
+            element::Type et = ele_t->get_element_type();
             string type = et.c_type_string();
             stringstream ss;
             ss << "(((" << type << "*)(outputs[" << i << "])) + "

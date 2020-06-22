@@ -36,7 +36,7 @@ op::QuantizedConvolution::QuantizedConvolution(const Output<Node>& input,
                                                const Output<Node>& filter_zero_point,
                                                const Output<Node>& output_scale,
                                                const Output<Node>& output_zero_point,
-                                               const element::Type& output_type,
+                                               element::Type output_type,
                                                const AxisSet& input_axes,
                                                const AxisSet& filter_axes,
                                                const AxisSet& output_axes)

@@ -402,7 +402,7 @@
 #define U64_SELECT(S, ...)
 #endif
 
-static inline bool is_optimized_et(const ngraph::element::Type& et)
+static inline bool is_optimized_et(ngraph::element::Type et)
 {
     if ((et == ngraph::element::boolean && BOOLEAN_EN) || (et == ngraph::element::f32 && F32_EN) ||
         (et == ngraph::element::f64 && F64_EN) || (et == ngraph::element::i8 && I8_EN) ||

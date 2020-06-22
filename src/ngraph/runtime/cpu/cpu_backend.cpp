@@ -94,14 +94,15 @@ shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor()
     throw runtime_error("CPU backend does not support dynamic tensors");
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::cpu::CPU_Backend::create_tensor(const element::Type& element_type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(element::Type element_type,
+                                                                     const Shape& shape)
 {
     return make_shared<runtime::cpu::CPUTensor>(element_type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(
-    const element::Type& element_type, const Shape& shape, void* memory_pointer)
+shared_ptr<runtime::Tensor> runtime::cpu::CPU_Backend::create_tensor(element::Type element_type,
+                                                                     const Shape& shape,
+                                                                     void* memory_pointer)
 {
     return make_shared<runtime::cpu::CPUTensor>(element_type, shape, memory_pointer);
 }

@@ -24,7 +24,7 @@ constexpr NodeTypeInfo op::v0::GenerateMask::type_info;
 
 op::v0::GenerateMask::GenerateMask(const Output<Node>& training,
                                    const Shape& shape,
-                                   const element::Type& element_type,
+                                   element::Type element_type,
                                    uint64_t seed,
                                    double prob,
                                    bool use_seed)
@@ -71,7 +71,7 @@ constexpr NodeTypeInfo op::v1::GenerateMask::type_info;
 
 op::v1::GenerateMask::GenerateMask(const Output<Node>& training,
                                    const Output<Node>& shape,
-                                   const element::Type& element_type,
+                                   element::Type element_type,
                                    uint64_t seed,
                                    double prob,
                                    bool use_seed)

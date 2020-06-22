@@ -38,7 +38,7 @@ op::v3::NonZero::NonZero(const Output<Node>& arg, const std::string& output_type
     constructor_validate_and_infer_types();
 }
 
-op::v3::NonZero::NonZero(const Output<Node>& arg, const element::Type& output_type)
+op::v3::NonZero::NonZero(const Output<Node>& arg, element::Type output_type)
     : Op({arg})
     , m_output_type(output_type)
 {

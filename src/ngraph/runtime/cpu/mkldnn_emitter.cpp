@@ -537,7 +537,7 @@ mkldnn::memory::desc
 }
 
 mkldnn::memory::desc MKLDNNEmitter::build_memory_descriptor(const ngraph::Shape& shape,
-                                                            const ngraph::element::Type& et,
+                                                            ngraph::element::Type et,
                                                             mkldnn::memory::format_tag fmt) const
 {
     return mkldnn::memory::desc(mkldnn::memory::dims(shape.begin(), shape.end()),

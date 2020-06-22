@@ -60,7 +60,7 @@ namespace ngraph
             const PartialShape& get_partial_shape() const;
 
             /// \return the element type of the output
-            const element::Type& get_element_type() const;
+            element::Type get_element_type() const;
 
             Output(const Output&) = default;
             Output(Output&&) = default;

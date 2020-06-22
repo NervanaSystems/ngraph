@@ -37,19 +37,19 @@ namespace ngraph
                 ///
                 /// \param arg          Node that produces the input tensor.
                 /// \param destination_type  Element type for the output tensor.
-                Convert(const Output<Node>& arg, const ngraph::element::Type& destination_type);
+                Convert(const Output<Node>& arg, ngraph::element::Type destination_type);
 
                 void validate_and_infer_types() override;
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
-                const element::Type& get_destination_type() const { return m_destination_type; }
-                void set_destination_type(const element::Type& destination_type)
+                element::Type get_destination_type() const { return m_destination_type; }
+                void set_destination_type(element::Type destination_type)
                 {
                     m_destination_type = destination_type;
                 }
-                const element::Type& get_convert_element_type() const { return m_destination_type; }
-                void set_convert_element_type(const element::Type& destination_type)
+                element::Type get_convert_element_type() const { return m_destination_type; }
+                void set_convert_element_type(element::Type destination_type)
                 {
                     m_destination_type = destination_type;
                 }

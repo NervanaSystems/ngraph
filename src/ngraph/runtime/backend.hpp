@@ -73,7 +73,7 @@ public:
     /// \param shape The shape of the tensor
     /// \returns shared_ptr to a new backend-specific tensor
     virtual std::shared_ptr<ngraph::runtime::Tensor>
-        create_tensor(const ngraph::element::Type& element_type, const Shape& shape) = 0;
+        create_tensor(ngraph::element::Type element_type, const Shape& shape) = 0;
 
     /// \brief Create a tensor specific to this backend
     /// \param element_type The type of the tensor element
@@ -83,7 +83,7 @@ public:
     ///     responsibility of the caller.
     /// \returns shared_ptr to a new backend-specific tensor
     virtual std::shared_ptr<ngraph::runtime::Tensor> create_tensor(
-        const ngraph::element::Type& element_type, const Shape& shape, void* memory_pointer) = 0;
+        ngraph::element::Type element_type, const Shape& shape, void* memory_pointer) = 0;
 
     /// \brief Create a tensor of C type T specific to this backend
     /// \param shape The shape of the tensor
@@ -101,7 +101,7 @@ public:
     /// \returns shared_ptr to a new backend-specific tensor
     /// \throws std::invalid_argument if the backend does not support dynamic tensors
     virtual std::shared_ptr<ngraph::runtime::Tensor>
-        create_dynamic_tensor(const ngraph::element::Type& element_type, const PartialShape& shape);
+        create_dynamic_tensor(ngraph::element::Type element_type, const PartialShape& shape);
 
     /// \returns `true` if this backend supports dynamic tensors, else `false`.
     virtual bool supports_dynamic_tensors() { return false; }

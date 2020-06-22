@@ -57,7 +57,7 @@ public:
     ///                                                   nullptr,
     ///                                                   OutputVector{add});
     /// \endcode
-    Label(const element::Type& type,
+    Label(element::Type type,
           const PartialShape& s,
           const ValuePredicate pred,
           const OutputVector& wrapped_values)
@@ -66,22 +66,22 @@ public:
         set_output_type(0, type, s);
     }
 
-    Label(const element::Type& type, const PartialShape& s)
+    Label(element::Type type, const PartialShape& s)
         : Label(type, s, [](const Output<Node>&) { return true; }, OutputVector())
     {
     }
 
-    Label(const element::Type& type, const PartialShape& s, ValuePredicate pred)
+    Label(element::Type type, const PartialShape& s, ValuePredicate pred)
         : Label(type, s, pred, OutputVector{})
     {
     }
 
-    Label(const element::Type& type, const PartialShape& s, NodePredicate pred)
+    Label(element::Type type, const PartialShape& s, NodePredicate pred)
         : Label(type, s, as_value_predicate(pred), OutputVector{})
     {
     }
 
-    Label(const element::Type& type,
+    Label(element::Type type,
           const PartialShape& s,
           const NodePredicate pred,
           const NodeVector& wrapped_values)

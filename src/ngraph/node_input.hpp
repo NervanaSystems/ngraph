@@ -50,7 +50,7 @@ namespace ngraph
         /// \return The index of the input referred to by this input handle.
         size_t get_index() const;
         /// \return The element type of the input referred to by this input handle.
-        const element::Type& get_element_type() const;
+        element::Type get_element_type() const;
         /// \return The shape of the input referred to by this input handle.
         const Shape& get_shape() const;
         /// \return The partial shape of the input referred to by this input handle.
@@ -97,7 +97,7 @@ namespace ngraph
         /// \return The index of the input referred to by this input handle.
         size_t get_index() const;
         /// \return The element type of the input referred to by this input handle.
-        const element::Type& get_element_type() const;
+        element::Type get_element_type() const;
         /// \return The shape of the input referred to by this input handle.
         const Shape& get_shape() const;
         /// \return The partial shape of the input referred to by this input handle.

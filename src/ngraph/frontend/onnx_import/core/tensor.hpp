@@ -432,7 +432,7 @@ namespace ngraph
                 return static_cast<Type>(m_tensor_proto->data_type());
             }
 
-            const element::Type& get_ng_type() const
+            element::Type get_ng_type() const
             {
                 if (!m_tensor_proto->has_data_type())
                 {
@@ -505,7 +505,7 @@ namespace ngraph
 
         private:
             template <typename T>
-            std::shared_ptr<ngraph::op::Constant> make_ng_constant(const element::Type& type) const
+            std::shared_ptr<ngraph::op::Constant> make_ng_constant(element::Type type) const
             {
                 auto constant =
                     std::make_shared<ngraph::op::Constant>(type, m_shape, get_data<T>());

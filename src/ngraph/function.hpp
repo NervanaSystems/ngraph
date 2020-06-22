@@ -62,7 +62,7 @@ namespace ngraph
         Output<Node> output(size_t i) const;
 
         /// Return the element type of output i
-        const element::Type& get_output_element_type(size_t i) const;
+        element::Type get_output_element_type(size_t i) const;
 
         /// Return the shape of element i
         const Shape& get_output_shape(size_t i) const;

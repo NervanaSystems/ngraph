@@ -31,7 +31,7 @@ namespace
     InferenceEngine::Blob::Ptr fill_blob(InferenceEngine::SizeVector shape,
                                          const void* data,
                                          size_t data_size,
-                                         const element::Type& elem_type)
+                                         element::Type elem_type)
     {
         InferenceEngine::Layout layout;
         switch (shape.size())

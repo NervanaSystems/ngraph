@@ -50,7 +50,7 @@ namespace ngraph
                 /// \param sort SortType for sorting results, default - value
                 TopK(const Output<Node>& arg,
                      size_t top_k_axis,
-                     const element::Type& index_element_type,
+                     element::Type index_element_type,
                      size_t k = 0,
                      bool compute_max = true,
                      SortType sort = SortType::value);
@@ -66,7 +66,7 @@ namespace ngraph
                 TopK(const Output<Node>& arg,
                      const Output<Node>& k,
                      size_t top_k_axis,
-                     const element::Type& index_element_type,
+                     element::Type index_element_type,
                      bool compute_max = true,
                      SortType sort = SortType::value);
 
@@ -82,7 +82,7 @@ namespace ngraph
                 TopK(const Output<Node>& arg,
                      const Output<Node>& k,
                      const Output<Node>& top_k_axis,
-                     const element::Type& index_element_type,
+                     element::Type index_element_type,
                      bool compute_max = true,
                      SortType sort = SortType::none);
 
@@ -148,14 +148,14 @@ namespace ngraph
                      const int64_t axis,
                      const std::string& mode,
                      const std::string& sort,
-                     const element::Type& index_element_type = element::i32);
+                     element::Type index_element_type = element::i32);
 
                 TopK(const Output<Node>& data,
                      const Output<Node>& k,
                      const int64_t axis,
                      const Mode mode,
                      const SortType sort,
-                     const element::Type& index_element_type = element::i32);
+                     element::Type index_element_type = element::i32);
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
@@ -176,7 +176,7 @@ namespace ngraph
                 SortType get_sort_type() const { return m_sort; }
                 void set_sort_type(const SortType sort) { m_sort = sort; }
                 element::Type get_index_element_type() const { return m_index_element_type; }
-                void set_index_element_type(const element::Type& index_element_type)
+                void set_index_element_type(element::Type index_element_type)
                 {
                     m_index_element_type = index_element_type;
                 }
@@ -201,7 +201,7 @@ namespace ngraph
                                                const OutputVector& deltas) override;
 
                 virtual size_t read_k_from_constant_node(const std::shared_ptr<Node>& node,
-                                                         const element::Type& k_element_type) const;
+                                                         element::Type k_element_type) const;
 
                 template <typename T>
                 size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
@@ -240,14 +240,14 @@ namespace ngraph
                      const int64_t axis,
                      const std::string& mode,
                      const std::string& sort,
-                     const element::Type& index_element_type = element::i32);
+                     element::Type index_element_type = element::i32);
 
                 TopK(const Output<Node>& data,
                      const Output<Node>& k,
                      const int64_t axis,
                      const Mode mode,
                      const SortType sort,
-                     const element::Type& index_element_type = element::i32);
+                     element::Type index_element_type = element::i32);
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
@@ -259,7 +259,7 @@ namespace ngraph
             protected:
                 virtual size_t
                     read_k_from_constant_node(const std::shared_ptr<Node>& node,
-                                              const element::Type& k_element_type) const override;
+                                              element::Type k_element_type) const override;
             };
         }
 

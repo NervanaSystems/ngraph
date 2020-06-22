@@ -33,7 +33,7 @@ constexpr NodeTypeInfo op::v0::TopK::type_info;
 
 op::v0::TopK::TopK(const Output<Node>& arg,
                    size_t top_k_axis,
-                   const element::Type& index_element_type,
+                   element::Type index_element_type,
                    size_t k,
                    bool compute_max,
                    SortType sort)
@@ -52,7 +52,7 @@ op::v0::TopK::TopK(const Output<Node>& arg,
 op::v0::TopK::TopK(const Output<Node>& arg,
                    const Output<Node>& k,
                    size_t top_k_axis,
-                   const element::Type& index_element_type,
+                   element::Type index_element_type,
                    bool compute_max,
                    SortType sort)
     : Op({arg, k})
@@ -68,7 +68,7 @@ op::v0::TopK::TopK(const Output<Node>& arg,
 op::v0::TopK::TopK(const Output<Node>& arg,
                    const Output<Node>& k,
                    const Output<Node>& top_k_axis,
-                   const element::Type& index_element_type,
+                   element::Type index_element_type,
                    bool compute_max,
                    SortType sort)
     : Op({arg, k, top_k_axis})
@@ -451,7 +451,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const int64_t axis,
                    const std::string& mode,
                    const std::string& sort,
-                   const element::Type& index_element_type)
+                   element::Type index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
     , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
@@ -467,7 +467,7 @@ op::v1::TopK::TopK(const Output<Node>& data,
                    const int64_t axis,
                    const Mode mode,
                    const SortType sort,
-                   const element::Type& index_element_type)
+                   element::Type index_element_type)
     : Op{{data, k}}
     , m_axis{axis}
     , m_normalized_axis{UNKNOWN_NORMALIZED_AXIS}
@@ -589,7 +589,7 @@ uint64_t op::v1::TopK::get_axis() const
 }
 
 size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
-                                               const element::Type& k_element_type) const
+                                               element::Type k_element_type) const
 {
     NODE_VALIDATION_CHECK(this,
                           k_element_type == element::i8 || k_element_type == element::i32 ||
@@ -732,7 +732,7 @@ op::v3::TopK::TopK(const Output<Node>& data,
                    const int64_t axis,
                    const std::string& mode,
                    const std::string& sort,
-                   const element::Type& index_element_type)
+                   element::Type index_element_type)
     : op::v1::TopK{data, k, axis, mode, sort, index_element_type}
 {
     constructor_validate_and_infer_types();
@@ -743,7 +743,7 @@ op::v3::TopK::TopK(const Output<Node>& data,
                    const int64_t axis,
                    const Mode mode,
                    const SortType sort,
-                   const element::Type& index_element_type)
+                   element::Type index_element_type)
     : op::v1::TopK{data, k, axis, mode, sort, index_element_type}
 {
     constructor_validate_and_infer_types();
@@ -768,7 +768,7 @@ void op::v3::TopK::validate_and_infer_types()
 }
 
 size_t op::v3::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
-                                               const element::Type& k_element_type) const
+                                               element::Type k_element_type) const
 {
     const auto k_constant = as_type_ptr<op::Constant>(node);
 

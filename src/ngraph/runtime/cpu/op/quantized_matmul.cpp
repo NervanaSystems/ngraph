@@ -29,7 +29,7 @@ constexpr NodeTypeInfo op::QuantizedMatmul::type_info;
 op::QuantizedMatmul::QuantizedMatmul(const Output<Node>& data,
                                      const Output<Node>& weights,
                                      const Output<Node>& scale,
-                                     const element::Type& output_type)
+                                     element::Type output_type)
     : Op({data, weights, scale})
     , m_output_type(output_type)
 {

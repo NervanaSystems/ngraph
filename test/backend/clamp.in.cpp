@@ -50,7 +50,7 @@ namespace
 {
     template <typename T>
     ::testing::AssertionResult clamp_test(const string& backend,
-                                          const element::Type& type,
+                                          element::Type type,
                                           const PartialShape& dynamic_shape,
                                           const Shape& static_shape,
                                           const std::vector<T>& input,

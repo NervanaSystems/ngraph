@@ -176,7 +176,7 @@ protected:
     static void perform_nan_check(const std::vector<std::shared_ptr<HostTensor>>&,
                                   const Node* op = nullptr);
 
-    virtual void generate_calls(const element::Type& type,
+    virtual void generate_calls(element::Type type,
                                 const Node& op,
                                 const std::vector<std::shared_ptr<HostTensor>>& outputs,
                                 const std::vector<std::shared_ptr<HostTensor>>& inputs);

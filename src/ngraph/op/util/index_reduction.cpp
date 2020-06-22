@@ -26,7 +26,7 @@ op::util::IndexReduction::IndexReduction() {}
 
 op::util::IndexReduction::IndexReduction(const Output<Node>& arg,
                                          uint64_t axis,
-                                         const element::Type& index_element_type)
+                                         element::Type index_element_type)
     : Op({arg})
 {
     set_reduction_axis(axis);
@@ -45,7 +45,7 @@ element::Type op::util::IndexReduction::get_index_element_type() const
 {
     return m_index_element_type;
 }
-void op::util::IndexReduction::set_index_element_type(const element::Type& index_element_type)
+void op::util::IndexReduction::set_index_element_type(element::Type index_element_type)
 {
     m_index_element_type = index_element_type;
 }

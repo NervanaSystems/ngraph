@@ -59,35 +59,27 @@ void regclass_pyngraph_op_Constant(py::module m)
     py::class_<ngraph::op::Constant, std::shared_ptr<ngraph::op::Constant>, ngraph::Node> constant(
         m, "Constant", py::buffer_protocol());
     constant.doc() = "ngraph.impl.op.Constant wraps ngraph::op::Constant";
+    constant.def(py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<char>&>());
     constant.def(
-        py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<char>&>());
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<float>&>());
     constant.def(
-        py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<float>&>());
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<double>&>());
     constant.def(
-        py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<double>&>());
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<int8_t>&>());
     constant.def(
-        py::init<const ngraph::element::Type&, const ngraph::Shape&, const std::vector<int8_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<int16_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<int32_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<int64_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<uint8_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<uint16_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<uint32_t>&>());
-    constant.def(py::init<const ngraph::element::Type&,
-                          const ngraph::Shape&,
-                          const std::vector<uint64_t>&>());
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<int16_t>&>());
+    constant.def(
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<int32_t>&>());
+    constant.def(
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<int64_t>&>());
+    constant.def(
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<uint8_t>&>());
+    constant.def(
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<uint16_t>&>());
+    constant.def(
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<uint32_t>&>());
+    constant.def(
+        py::init<ngraph::element::Type, const ngraph::Shape&, const std::vector<uint64_t>&>());
 
     constant.def("get_value_strings", &ngraph::op::Constant::get_value_strings);
     // Provide buffer access

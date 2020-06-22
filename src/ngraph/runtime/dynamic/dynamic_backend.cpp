@@ -31,20 +31,21 @@ shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor()
     return m_wrapped_backend->create_tensor();
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::dynamic::DynamicBackend::create_tensor(const element::Type& type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor(element::Type type,
+                                                                            const Shape& shape)
 {
     return m_wrapped_backend->create_tensor(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor(
-    const element::Type& type, const Shape& shape, void* memory_pointer)
+shared_ptr<runtime::Tensor> runtime::dynamic::DynamicBackend::create_tensor(element::Type type,
+                                                                            const Shape& shape,
+                                                                            void* memory_pointer)
 {
     return m_wrapped_backend->create_tensor(type, shape, memory_pointer);
 }
 
 std::shared_ptr<runtime::Tensor>
-    runtime::dynamic::DynamicBackend::create_dynamic_tensor(const element::Type& type,
+    runtime::dynamic::DynamicBackend::create_dynamic_tensor(element::Type type,
                                                             const PartialShape& shape)
 {
     return make_shared<DynamicTensor>(type, shape, m_wrapped_backend);

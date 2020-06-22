@@ -79,7 +79,7 @@ namespace ngraph
 
                 TensorTracerAttributes(const size_t size,
                                        const ngraph::Shape& shape,
-                                       const element::Type& type)
+                                       element::Type type)
                     : m_number_of_elements(size)
                     , m_t_shape(shape)
                     , m_type_of_element(type)

@@ -27,14 +27,14 @@
 using namespace ngraph;
 using namespace std;
 
-runtime::ie::IETensor::IETensor(const element::Type& element_type, const PartialShape& shape)
+runtime::ie::IETensor::IETensor(element::Type element_type, const PartialShape& shape)
     : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, ""))
 {
     m_descriptor->set_tensor_layout(
         make_shared<descriptor::layout::DenseTensorLayout>(*m_descriptor));
 }
 
-runtime::ie::IETensor::IETensor(const element::Type& element_type, const Shape& shape)
+runtime::ie::IETensor::IETensor(element::Type element_type, const Shape& shape)
     : runtime::Tensor(make_shared<descriptor::Tensor>(element_type, shape, ""))
     , m_data(shape_size(shape) * element_type.size())
 {

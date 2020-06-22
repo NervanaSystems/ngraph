@@ -74,8 +74,8 @@ namespace ngraph
                 mkldnn::memory::FORMAT
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 mkldnn::memory::FORMAT CreateNativeDataFormat(const Shape& shape);
-                const std::string& get_mkldnn_data_type_string(const ngraph::element::Type& type);
-                mkldnn::memory::data_type get_mkldnn_data_type(const ngraph::element::Type& type);
+                const std::string& get_mkldnn_data_type_string(ngraph::element::Type type);
+                mkldnn::memory::data_type get_mkldnn_data_type(ngraph::element::Type type);
                 const std::string& get_mkldnn_format_string(mkldnn::memory::FORMAT fmt);
 
                 const mkldnn::memory::desc& get_input_mkldnn_md(const Node* node, size_t index);

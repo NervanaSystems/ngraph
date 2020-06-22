@@ -73,7 +73,7 @@ public:
 
 private:
     int get_alignment() const { return 64; }
-    void generate_calls(const element::Type& type,
+    void generate_calls(element::Type type,
                         const Node& op,
                         const std::vector<std::shared_ptr<HostTensor>>& outputs,
                         const std::vector<std::shared_ptr<HostTensor>>& inputs) override;

@@ -293,9 +293,7 @@ namespace ngraph
         void set_input_is_relevant_to_value(size_t i, bool relevant = true);
 
         // TODO(amprocte): should this be protected?
-        void set_output_type(size_t i,
-                             const element::Type& element_type,
-                             const PartialShape& pshape);
+        void set_output_type(size_t i, element::Type element_type, const PartialShape& pshape);
 
         virtual bool is_parameter() const { return false; }
         virtual bool is_output() const;
@@ -344,7 +342,7 @@ namespace ngraph
         size_t get_output_size() const;
 
         /// Returns the element type for output i
-        const element::Type& get_output_element_type(size_t i) const;
+        element::Type get_output_element_type(size_t i) const;
 
         /// Returns the shape for output i
         const Shape& get_output_shape(size_t i) const;
@@ -391,7 +389,7 @@ namespace ngraph
 
         /// Returns the element type of input i
         // TODO: deprecate in favor of node->get_input_element_type(i)
-        const element::Type& get_input_element_type(size_t i) const;
+        element::Type get_input_element_type(size_t i) const;
 
         /// Returns the shape of input i
         // TODO: deprecate in favor of node->get_input_shape(i)

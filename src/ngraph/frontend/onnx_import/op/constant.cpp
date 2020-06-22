@@ -31,7 +31,7 @@ namespace ngraph
                 {
                     template <typename T>
                     inline std::shared_ptr<default_opset::Constant>
-                        __make_ng_constant(const element::Type& type, const Tensor& tensor)
+                        __make_ng_constant(element::Type type, const Tensor& tensor)
                     {
                         return std::make_shared<default_opset::Constant>(
                             type, tensor.get_shape(), tensor.get_data<T>());

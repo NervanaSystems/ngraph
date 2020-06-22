@@ -53,7 +53,7 @@ namespace ngraph
                 /// \param values A vector of literals for initializing the tensor constant. The
                 ///               size of values must match the size of the shape.
                 template <typename T>
-                Constant(const element::Type& type, Shape shape, const std::vector<T>& values)
+                Constant(element::Type type, Shape shape, const std::vector<T>& values)
                     : Constant(type, shape)
                 {
                     NODE_VALIDATION_CHECK(
@@ -81,7 +81,7 @@ namespace ngraph
                 }
 
                 /// \brief Create unitialized constant
-                Constant(const element::Type& type, const Shape& shape);
+                Constant(element::Type type, const Shape& shape);
                 /// \brief Constructs a uniform tensor constant.
                 ///
                 /// \param type The element type of the tensor constant.
@@ -90,7 +90,7 @@ namespace ngraph
                 ///               value is broadcast to the specified shape.
                 template <class T,
                           class = typename std::enable_if<std::is_fundamental<T>::value>::type>
-                Constant(const element::Type& type, Shape shape, T value)
+                Constant(element::Type type, Shape shape, T value)
                     : Constant(type, shape)
                 {
                     auto size = shape_size(m_shape);
@@ -222,16 +222,14 @@ namespace ngraph
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.
                 /// \param values A list of string values to use as the constant data.
-                Constant(const element::Type& type,
-                         Shape shape,
-                         const std::vector<std::string>& values);
+                Constant(element::Type type, Shape shape, const std::vector<std::string>& values);
 
                 /// \brief Constructs a tensor constant with the supplied data
                 ///
                 /// \param type The element type of the tensor constant.
                 /// \param shape The shape of the tensor constant.
                 /// \param data A void* to constant data.
-                Constant(const element::Type& type, const Shape& shape, const void* data);
+                Constant(element::Type type, const Shape& shape, const void* data);
 
                 Constant(const Constant& other);
                 Constant& operator=(const Constant&) = delete;
@@ -292,7 +290,7 @@ namespace ngraph
                 /// \param values A vector of values to use as the constant data.
                 template <typename T>
                 static std::shared_ptr<op::v0::Constant>
-                    create(const element::Type& type, Shape shape, const std::vector<T> values)
+                    create(element::Type type, Shape shape, const std::vector<T> values)
                 {
                     auto result = std::make_shared<op::v0::Constant>(type, shape, values);
                     result->validate_and_infer_types();
@@ -306,7 +304,7 @@ namespace ngraph
                 /// \param values An initializer_list of values to use as the constant data.
                 template <typename T>
                 static std::shared_ptr<op::v0::Constant>
-                    create(const element::Type& type, Shape shape, std::initializer_list<T> values)
+                    create(element::Type type, Shape shape, std::initializer_list<T> values)
                 {
                     auto result =
                         std::make_shared<op::v0::Constant>(type, shape, std::vector<T>{values});
@@ -493,7 +491,7 @@ namespace ngraph
                 }
 
                 template <typename T>
-                void write_to_buffer(const element::Type& target_type,
+                void write_to_buffer(element::Type target_type,
                                      const Shape& /* target_shape */,
                                      const std::vector<T>& source,
                                      void* target,

@@ -25,7 +25,7 @@ constexpr NodeTypeInfo op::Dequantize::type_info;
 op::Dequantize::Dequantize(const Output<Node>& input,
                            const Output<Node>& scale,
                            const Output<Node>& zero_point,
-                           const element::Type& type,
+                           element::Type type,
                            const AxisSet& axes)
 
     : Op({input, scale, zero_point})

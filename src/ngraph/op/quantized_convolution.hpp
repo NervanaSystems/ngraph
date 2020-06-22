@@ -62,7 +62,7 @@ namespace ngraph
                                      const Output<Node>& filter_zero_point,
                                      const Output<Node>& output_scale,
                                      const Output<Node>& output_zero_point,
-                                     const ngraph::element::Type& output_type,
+                                     ngraph::element::Type output_type,
                                      const ngraph::AxisSet& input_axes = ngraph::AxisSet{},
                                      const ngraph::AxisSet& filter_axes = ngraph::AxisSet{},
                                      const ngraph::AxisSet& output_axes = ngraph::AxisSet{});
@@ -82,7 +82,7 @@ namespace ngraph
                 const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
                 std::shared_ptr<Node> get_filters() { return get_argument(1); }
                 std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
-                const ngraph::element::Type& get_output_type() const { return m_output_type; }
+                ngraph::element::Type get_output_type() const { return m_output_type; }
                 const ngraph::AxisSet& get_input_axes() const { return m_input_axes; }
                 const ngraph::AxisSet& get_filter_axes() const { return m_filter_axes; }
                 const ngraph::AxisSet& get_output_axes() const { return m_output_axes; }

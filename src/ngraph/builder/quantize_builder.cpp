@@ -28,7 +28,7 @@ namespace ngraph
         shared_ptr<Node> QuantizeBuilder(const Output<Node>& input,
                                          const Output<Node>& min,
                                          const Output<Node>& max,
-                                         const ngraph::element::Type& quant_type,
+                                         ngraph::element::Type quant_type,
                                          const ngraph::AxisSet& axes,
                                          op::Quantize::RoundMode round_mode)
         {

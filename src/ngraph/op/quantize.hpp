@@ -90,7 +90,7 @@ namespace ngraph
                 Quantize(const Output<Node>& input,
                          const Output<Node>& scale,
                          const Output<Node>& zero_point,
-                         const ngraph::element::Type& type,
+                         ngraph::element::Type type,
                          const ngraph::AxisSet& axes,
                          RoundMode round_mode);
 

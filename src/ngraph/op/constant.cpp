@@ -55,9 +55,7 @@ op::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
 
-op::Constant::Constant(const element::Type& type,
-                       Shape shape,
-                       const std::vector<std::string>& values)
+op::Constant::Constant(element::Type type, Shape shape, const std::vector<std::string>& values)
     : Constant(type, shape)
 {
     NODE_VALIDATION_CHECK(this,
@@ -292,7 +290,7 @@ op::Constant::Constant(const element::Type& type,
     }
 }
 
-op::Constant::Constant(const element::Type& type, const Shape& shape)
+op::Constant::Constant(element::Type type, const Shape& shape)
     : m_element_type(type)
     , m_shape(shape)
 {
@@ -307,7 +305,7 @@ void* op::Constant::allocate_buffer()
     return get_data_ptr_nc();
 }
 
-op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
+op::Constant::Constant(element::Type type, const Shape& shape, const void* data)
     : Constant(type, shape)
 {
     size_t size = ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
@@ -667,7 +665,7 @@ namespace ngraph
         namespace v0
         {
             template <>
-            void Constant::write_to_buffer<string>(const element::Type& /* target_type */,
+            void Constant::write_to_buffer<string>(element::Type /* target_type */,
                                                    const Shape& /* target_shape */,
                                                    const vector<string>& /* source */,
                                                    void* /* target */,

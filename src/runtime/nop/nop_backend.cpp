@@ -44,13 +44,13 @@ shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor()
     return make_shared<runtime::HostTensor>();
 }
 
-shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
+shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(element::Type type,
                                                                     const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape, "external");
 }
 
-shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(const element::Type& type,
+shared_ptr<runtime::Tensor> runtime::nop::NOPBackend::create_tensor(element::Type type,
                                                                     const Shape& shape,
                                                                     void* memory_pointer)
 {

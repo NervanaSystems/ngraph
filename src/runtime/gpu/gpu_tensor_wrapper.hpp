@@ -48,7 +48,7 @@ public:
     size_t get_size() const;
     const Shape& get_shape() const;
     Strides get_strides() const;
-    const element::Type& get_element_type() const;
+    element::Type get_element_type() const;
     const std::string& get_name() const;
     const std::string& get_type() const;
     const std::pair<TensorRole, size_t>& get_offset() const;

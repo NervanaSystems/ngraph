@@ -236,7 +236,7 @@ op::v3::NonMaxSuppression::NonMaxSuppression(
     const Output<Node>& score_threshold,
     const op::v3::NonMaxSuppression::BoxEncodingType box_encoding,
     const bool sort_result_descending,
-    const element::Type& output_type)
+    element::Type output_type)
     : Op({boxes, scores, max_output_boxes_per_class, iou_threshold, score_threshold})
     , m_box_encoding{box_encoding}
     , m_sort_result_descending{sort_result_descending}
@@ -250,7 +250,7 @@ op::v3::NonMaxSuppression::NonMaxSuppression(
     const Output<Node>& scores,
     const op::v3::NonMaxSuppression::BoxEncodingType box_encoding,
     const bool sort_result_descending,
-    const element::Type& output_type)
+    element::Type output_type)
     : Op({boxes,
           scores,
           op::Constant::create(element::i64, Shape{}, {0}),

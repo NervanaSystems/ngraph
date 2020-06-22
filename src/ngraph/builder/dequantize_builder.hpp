@@ -30,7 +30,7 @@ namespace ngraph
         std::shared_ptr<Node> DequantizeBuilder(const Output<Node>& input,
                                                 const Output<Node>& min,
                                                 const Output<Node>& max,
-                                                const ngraph::element::Type& real_type,
+                                                ngraph::element::Type real_type,
                                                 const ngraph::AxisSet& axes);
     }
 }

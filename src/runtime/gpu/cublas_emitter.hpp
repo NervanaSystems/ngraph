@@ -35,7 +35,7 @@ namespace ngraph
                 friend class GPUPrimitiveEmitter;
 
             public:
-                size_t build_dot(const element::Type& dtype,
+                size_t build_dot(element::Type dtype,
                                  const Shape& arg0_shape,
                                  const Shape& arg1_shape,
                                  const Shape& out_shape,

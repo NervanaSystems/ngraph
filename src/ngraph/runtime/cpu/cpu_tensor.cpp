@@ -34,7 +34,7 @@ using namespace std;
 // TODO(jmenon): Refactor all the alignment specifications into
 // a single place and allow lower or no alignment when possible
 
-runtime::cpu::CPUTensor::CPUTensor(const ngraph::element::Type& element_type,
+runtime::cpu::CPUTensor::CPUTensor(ngraph::element::Type element_type,
                                    const Shape& shape,
                                    void* memory_pointer)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, ""))
@@ -72,7 +72,7 @@ runtime::cpu::CPUTensor::CPUTensor(const ngraph::element::Type& element_type,
     }
 }
 
-runtime::cpu::CPUTensor::CPUTensor(const ngraph::element::Type& element_type, const Shape& shape)
+runtime::cpu::CPUTensor::CPUTensor(ngraph::element::Type element_type, const Shape& shape)
     : CPUTensor(element_type, shape, nullptr)
 {
 }
