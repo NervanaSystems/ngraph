@@ -53,11 +53,11 @@ void regclass_pyngraph_runtime_Backend(py::module m)
     backend.def_static("get_registered_devices", &ngraph::runtime::Backend::get_registered_devices);
     backend.def("create_tensor",
                 (std::shared_ptr<ngraph::runtime::Tensor>(ngraph::runtime::Backend::*)(
-                    ngraph::element::Type, const ngraph::Shape&)) &
+                    const ngraph::element::Type&, const ngraph::Shape&)) &
                     ngraph::runtime::Backend::create_tensor);
     backend.def("create_dynamic_tensor",
                 (std::shared_ptr<ngraph::runtime::Tensor>(ngraph::runtime::Backend::*)(
-                    ngraph::element::Type, const ngraph::PartialShape&)) &
+                    const ngraph::element::Type&, const ngraph::PartialShape&)) &
                     ngraph::runtime::Backend::create_dynamic_tensor);
     backend.def("compile", &compile);
 }
