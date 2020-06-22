@@ -76,6 +76,7 @@ namespace ngraph
                     auto functor = [&,
                                     vanilla_rnn_desc,
                                     rnn_index,
+                                    scratchpad_size,
                                     src_layer_buffer_index,
                                     src_iter_buffer_index,
                                     weights_layer_buffer_index,
