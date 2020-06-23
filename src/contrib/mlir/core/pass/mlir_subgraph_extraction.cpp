@@ -257,7 +257,7 @@ output_to_node(ngraph::Output<ngraph::Node> output) {
                                                           output.get_index());
   }
 }
-}
+} // namespace
 
 ngraph::NodeVector
 MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func) {
