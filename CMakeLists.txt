@@ -641,7 +641,7 @@ if (NGRAPH_MLIR_ENABLE)
     include(cmake/external_mlir.cmake)
 endif()
 
-if(NGRAPH_CPU_CODEGEN_ENABLE)
+if(NGRAPH_CODEGEN_ENABLE)
     if (NOT MSVC)
         include(cmake/external_llvm.cmake)
     else()
