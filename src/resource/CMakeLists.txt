@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(NOT NGRAPH_CPU_CODEGEN_ENABLE)
+if(NOT NGRAPH_CODEGEN_ENABLE)
     return()
 endif()
 
