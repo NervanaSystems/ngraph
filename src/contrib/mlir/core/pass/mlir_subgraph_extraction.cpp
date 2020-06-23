@@ -241,24 +241,6 @@ void MLIRSubgraphExtractionPass::build_subgraphs(
   }
 }
 
-namespace {
-std::shared_ptr<ngraph::Node>
-output_to_node(ngraph::Output<ngraph::Node> output) {
-  std::shared_ptr<ngraph::Node> node = output.get_node_shared_ptr();
-  if (output.get_index() == 0 && output.get_node()->get_output_size() == 1) {
-    return node;
-  } else {
-    for (auto in : output.get_target_inputs()) {
-      if (ngraph::is_type<ngraph::op::GetOutputElement>(in.get_node())) {
-        return in.get_node()->shared_from_this();
-      }
-    }
-    return std::make_shared<ngraph::op::GetOutputElement>(node,
-                                                          output.get_index());
-  }
-}
-} // namespace
-
 ngraph::NodeVector
 MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func) {
   NodeVector ck_nodes;
@@ -327,8 +309,7 @@ MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Function> func) {
     if (ck->get_output_size() > 1) {
       for (auto &old_output : ck->outputs()) {
         auto inputs = old_output.get_target_inputs();
-        auto goe_node = output_to_node(old_output);
-        auto new_output = goe_node->output(0);
+        auto new_output = old_output;
         for (auto &input : inputs) {
           input.replace_source_output(new_output);
         }
