@@ -457,7 +457,7 @@ TEST(core_fusion, conv_bias_add)
 }
 
 // TODO: Enable once fusion is moved to core
-TEST(core_fusion, conv_bias_bprop)
+TEST(core_fusion, DISABLED_conv_bias_bprop)
 {
     auto gen_f = [](bool with_fused_op) {
         auto data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
