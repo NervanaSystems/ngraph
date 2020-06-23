@@ -102,8 +102,8 @@ if(NEED_TO_BUILD_LLVM)
     execute_process(COMMAND "${CMAKE_COMMAND}" --install .
         WORKING_DIRECTORY "${llvm_BINARY_DIR}")
 
-    set(Clang_ROOT ${LLVM_ROOT})
-    find_package(Clang REQUIRED CONFIG)
+    find_package(Clang REQUIRED CONFIG
+        HINTS ${LLVM_ROOT}/lib/cmake/clang NO_DEFAULT_PATH)
 endif()
 
 message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
