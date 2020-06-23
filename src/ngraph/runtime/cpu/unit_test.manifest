@@ -124,6 +124,11 @@ CPU_MLIR.cpu_test_convolution_simple_bf16
 CPU_MLIR.core_fusion_softmax_crossentropy
 CPU_MLIR.core_fusion_crossentropy
 CPU_MLIR.gather_2d_negative_and_positive_indices_no_axis_2d_input
+CPU_MLIR.debugger_add_breakpoint
+CPU_MLIR.debugger_stepping
+CPU_MLIR.debugger_delete_breakpoint
+CPU_MLIR.debugger_while_stepping
+CPU_MLIR.debugger_resume
 
 ################################################################################
 # CODEGEN

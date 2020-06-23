@@ -55,7 +55,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_add_breakpoint)
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -92,7 +92,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_stepping)
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -130,7 +130,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_delete_breakpoint)
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -171,7 +171,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_while_stepping)
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -208,7 +208,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_resume)
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -245,7 +245,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tracer_basic)
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -283,7 +283,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tracer_count_tracepoint)
 
     auto f = make_shared<Function>(add, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -324,7 +324,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tracer_conditional_tracepoint)
 
     auto f = make_shared<Function>(add, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
