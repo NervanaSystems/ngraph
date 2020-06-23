@@ -643,7 +643,6 @@ endif()
 
 if(NGRAPH_CODEGEN_ENABLE)
     if (NOT MSVC)
-        set(LLVM_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm  CACHE STRING "Path to LLVM installation.")
         include(cmake/external_llvm.cmake)
     else()
         message(FATAL_ERROR "CODEGEN is not supported on Windows!")

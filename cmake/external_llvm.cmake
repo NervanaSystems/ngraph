@@ -14,6 +14,13 @@
 # limitations under the License.
 # ******************************************************************************
 
+set(LLVM_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm CACHE STRING "Path to LLVM installation.")
+if("${LLVM_ROOT}" STREQUAL "${EXTERNAL_PROJECTS_ROOT}/llvm")
+    set(NGRAPH_OVERWRITE_LLVM_ROOT_ENABLE ON CACHE BOOL "Overwrite contents in LLVM_ROOT if version does not match.")
+else()
+    set(NGRAPH_OVERWRITE_LLVM_ROOT_ENABLE OFF CACHE BOOL "Overwrite contents in LLVM_ROOT if version does not match.")
+endif()
+
 # Try to find system or user provide Clang first and use it if available
 # Clang Config does not support version so find LLVM first
 # To install Clang 9 system wide On Ubuntu 18.04
@@ -21,17 +28,21 @@
 # For non-system clang, provide LLVM_ROOT by passing
 # -DLLVM_ROOT=<CMAKE_INSTALL_PREFIX that was used for build or top level directory of unpacked LLVM release from github>
 # When you configure CMake
-set(BUILD_LLVM ON)
+set(NEED_TO_BUILD_LLVM TRUE)
 find_package(LLVM 9 CONFIG)
 if(LLVM_FOUND)
     find_package(Clang CONFIG
         HINTS ${LLVM_DIR}/../lib/cmake/clang ${LLVM_DIR}/../clang NO_DEFAULT_PATH)
     if(Clang_FOUND)
-        set(BUILD_LLVM OFF)
+        set(NEED_TO_BUILD_LLVM FALSE)
     endif()
 endif()
 
-if(BUILD_LLVM)
+if(NEED_TO_BUILD_LLVM)
+    if(NOT NGRAPH_OVERWRITE_LLVM_ROOT_ENABLE)
+        message(FATAL_ERROR "nGraph is not allowed overwrite contents at LLVM_ROOT: ${LLVM_ROOT} "
+            "Set NGRAPH_OVERWRITE_LLVM_ROOT_ENABLE to ON if you would like to overwrite.")
+    endif()
     include(FetchContent)
     message(STATUS "LLVM: Building LLVM from source")
 
