@@ -37,7 +37,6 @@ if(BUILD_LLVM)
 
     set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
     set(LLVM_GIT_TAG llvmorg-9.0.1)
-    set(LLVM_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm)
 
     FetchContent_Declare(
         llvm
