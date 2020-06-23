@@ -109,7 +109,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto softmax_axes = ngraph::op::Constant::create(element::i64, Shape{1}, {1});
     auto softmax = std::make_shared<ngraph::op::Softmax>(maximum, softmax_axes);
     auto softmax_label =
-        std::make_shared<pattern::op::Label>(softmax, nullptr, NodeVector{softmax});
+        std::make_shared<pattern::op::Label>(softmax, nullptr, OutputVector{softmax});
 
     // Cross Entropy Bprop
     auto delta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
@@ -132,7 +132,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
 
     auto callback = [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_softmax_cross_entropy_bprop against "
                      << m.get_match_root()->get_name();
 
@@ -165,7 +165,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     auto softmax_axes = ngraph::op::Constant::create(element::i64, Shape{1}, {1});
     auto softmax = std::make_shared<ngraph::op::Softmax>(maximum, softmax_axes);
     auto softmax_label =
-        std::make_shared<pattern::op::Label>(softmax, nullptr, NodeVector{softmax});
+        std::make_shared<pattern::op::Label>(softmax, nullptr, OutputVector{softmax});
 
     // labels
     auto labels_y = std::make_shared<pattern::op::Label>(
@@ -233,7 +233,7 @@ void pass::CoreFusion::construct_relu()
 {
     auto iconst0 = construct_constant_node(0);
     auto val = make_shared<pattern::op::Label>(iconst0);
-    auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
+    auto zero = make_shared<pattern::op::Label>(iconst0, nullptr, OutputVector{iconst0});
 
     auto skip_broadcast = make_shared<pattern::op::Skip>(zero, pattern::has_class<op::Broadcast>());
     auto max = make_shared<op::Maximum>(skip_broadcast, val);
@@ -435,7 +435,6 @@ void pass::CoreFusion::construct_folded_batch_norm()
         m.get_match_value().replace(conv_bias->output(0));
 
         return true;
-
     };
 
     auto m = std::make_shared<ngraph::pattern::Matcher>(bn, "CoreFusion.FoldedBatchNorm");
@@ -456,14 +455,14 @@ void pass::CoreFusion::construct_conv_affine_folding()
                                              CoordinateDiff{0, 0},
                                              CoordinateDiff{0, 0},
                                              Strides{1, 1});
-    auto conv_label = make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto Ac = make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto A = make_shared<op::Broadcast>(Ac, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
-    auto A_label = make_shared<pattern::op::Label>(A, nullptr, NodeVector{A});
+    auto A_label = make_shared<pattern::op::Label>(A, nullptr, OutputVector{A});
     auto Bc = make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto B = make_shared<op::Broadcast>(Bc, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
-    auto B_label = make_shared<pattern::op::Label>(B, nullptr, NodeVector{B});
+    auto B_label = make_shared<pattern::op::Label>(B, nullptr, OutputVector{B});
     auto multiply = make_shared<op::Multiply>(conv_label, A_label);
     auto add = make_shared<op::Add>(multiply, B_label);
 
@@ -490,7 +489,6 @@ void pass::CoreFusion::construct_conv_affine_folding()
 
         // Check if values are being broadcast along channel (2nd) dimension
         auto is_channel_bcast = [](const shared_ptr<op::Broadcast>& bcast) {
-
             if (bcast->get_input_shape(0).size() == 1 &&
                 bcast->get_broadcast_axes() == AxisSet{0, 2, 3})
             {
@@ -545,7 +543,6 @@ void pass::CoreFusion::construct_conv_affine_folding()
         m.get_match_value().replace(convbias_n->output(0));
 
         return true;
-
     };
 
     auto m = make_shared<pattern::Matcher>(add, "CoreFusion.ConvAffineFolding");
@@ -697,7 +694,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto conv_stride3 = make_shared<op::Convolution>(data_stride3, weights_stride3);
 
     auto conv_stride3_label =
-        make_shared<pattern::op::Label>(conv_stride3, nullptr, NodeVector{conv_stride3});
+        make_shared<pattern::op::Label>(conv_stride3, nullptr, OutputVector{conv_stride3});
 
     auto broadcast_w3_label = make_shared<pattern::op::Label>(conv_stride3_label, is_bc);
     auto add_w3 = make_shared<op::Add>(conv_stride3_label, broadcast_w3_label);
@@ -706,7 +703,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto weights_stride1 = make_shared<pattern::op::Label>(element::f32, win_size_1);
     auto conv_stride1 = make_shared<op::Convolution>(relu_w3, weights_stride1);
     auto conv_stride1_label =
-        make_shared<pattern::op::Label>(conv_stride1, nullptr, NodeVector{conv_stride1});
+        make_shared<pattern::op::Label>(conv_stride1, nullptr, OutputVector{conv_stride1});
     auto broadcast_w1_label = make_shared<pattern::op::Label>(conv_stride1_label, is_bc);
     auto add_w1 = make_shared<op::Add>(conv_stride1_label, broadcast_w1_label);
 
@@ -717,7 +714,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto relu_two_convs = make_shared<op::Relu>(add_two_convs);
 
     auto eltwise_label =
-        make_shared<pattern::op::Label>(relu_two_convs, nullptr, NodeVector{relu_two_convs});
+        make_shared<pattern::op::Label>(relu_two_convs, nullptr, OutputVector{relu_two_convs});
 
     auto weights_eltwise = make_shared<pattern::op::Label>(element::f32, win_size_1);
     auto eltwise_conv = make_shared<op::Convolution>(eltwise_label, weights_eltwise);
@@ -981,12 +978,12 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto pad =
         std::make_shared<ngraph::op::Pad>(pad_input, pad_value, CoordinateDiff{}, CoordinateDiff{});
-    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
+    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, OutputVector{pad});
 
     auto reshape =
         std::make_shared<ngraph::op::Reshape>(pad_label, AxisVector{}, Shape{1, 1, 1, 1});
     auto reshape_label =
-        std::make_shared<pattern::op::Label>(reshape, nullptr, NodeVector{reshape});
+        std::make_shared<pattern::op::Label>(reshape, nullptr, OutputVector{reshape});
 
     auto conv_filter = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
 
@@ -997,10 +994,10 @@ void pass::CoreFusion::construct_zero_padded_reshaped_conv()
                                                           CoordinateDiff{1, 1},
                                                           CoordinateDiff{1, 1},
                                                           Strides{1, 1});
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, reshape_label, conv_filter, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1070,7 +1067,7 @@ void pass::CoreFusion::construct_zero_padded_conv()
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto pad = std::make_shared<ngraph::op::Pad>(
         pad_input, pad_value, CoordinateDiff{0, 0, 0, 0}, CoordinateDiff{0, 0, 0, 0});
-    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
+    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, OutputVector{pad});
 
     auto conv_filter = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
 
@@ -1081,10 +1078,10 @@ void pass::CoreFusion::construct_zero_padded_conv()
                                                           CoordinateDiff{1, 1},
                                                           CoordinateDiff{1, 1},
                                                           Strides{1, 1});
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, conv_filter, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1141,7 +1138,7 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
     auto pad_value = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto pad = std::make_shared<ngraph::op::Pad>(
         pad_input, pad_value, CoordinateDiff{0, 0, 0, 0}, CoordinateDiff{0, 0, 0, 0});
-    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, NodeVector{pad});
+    auto pad_label = std::make_shared<pattern::op::Label>(pad, nullptr, OutputVector{pad});
 
     auto output_delta = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
 
@@ -1153,10 +1150,10 @@ void pass::CoreFusion::construct_zero_padded_conv_backprop_filters()
                                                                          CoordinateDiff{1, 1},
                                                                          CoordinateDiff{1, 1},
                                                                          Strides{1, 1});
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto callback = [pad_input, pad_value, pad_label, output_delta, conv_label](
-        pattern::Matcher& m) {
+                        pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
@@ -1218,9 +1215,9 @@ void pass::CoreFusion::construct_conv_bias()
     auto pbias = make_shared<pattern::op::Label>(element::f32, Shape{});
 
     auto pbcast = make_shared<op::Broadcast>(pbias, shape, AxisSet{0, 1, 2, 3});
-    auto pbcast_label = make_shared<pattern::op::Label>(pbcast, nullptr, NodeVector{pbcast});
-    auto reshape_pred = [](shared_ptr<Node> node) -> bool {
-        if (auto reshape = as_type_ptr<op::Reshape>(node))
+    auto pbcast_label = make_shared<pattern::op::Label>(pbcast, nullptr, OutputVector{pbcast});
+    auto reshape_pred = [](Output<Node> node) -> bool {
+        if (auto reshape = as_type_ptr<op::Reshape>(node.get_node_shared_ptr()))
         {
             auto ishape = reshape->get_input_shape(0);
             auto oshape = reshape->get_output_shape(0);

@@ -33,7 +33,6 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -67,7 +66,7 @@ static std::shared_ptr<pattern::op::Label> construct_variance_graph()
     auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
     auto variance = std::make_shared<op::Divide>(xmu, N);
     auto variance_label =
-        std::make_shared<pattern::op::Label>(variance, nullptr, NodeVector{variance});
+        std::make_shared<pattern::op::Label>(variance, nullptr, OutputVector{variance});
 
     return variance_label;
 }
@@ -79,7 +78,7 @@ static std::shared_ptr<pattern::op::Label> construct_mean_graph()
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
     auto mean = std::make_shared<op::Divide>(sum_input1, N);
-    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, NodeVector{mean});
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, OutputVector{mean});
     return mean_label;
 }
 
@@ -303,7 +302,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(any, abs));
     ASSERT_EQ(n.get_matched_values(), (OutputVector{abs, a}));
 
-    auto false_pred = [](std::shared_ptr<Node> /* no */) { return false; };
+    auto false_pred = [](Output<Node>) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
     ASSERT_EQ(n.get_matched_values(), (OutputVector{a, a}));
@@ -319,36 +318,37 @@ TEST(pattern, matcher)
 
     auto b = make_shared<op::Parameter>(element::i32, shape);
 
-    auto is_bea = [](std::shared_ptr<Node> node) -> bool {
-        return node->is_binary_elementwise_arithmetic();
+    auto is_bea = [](Output<Node> node) -> bool {
+        return node.get_node()->is_binary_elementwise_arithmetic();
     };
-    auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
+    auto bea = std::make_shared<pattern::op::Any>(a, is_bea, OutputVector{a, b});
     auto add_ab = a + b;
     ASSERT_TRUE(n.match(bea, add_ab));
     ASSERT_EQ(n.get_matched_values(), (OutputVector{add_ab, a, b}));
     ASSERT_TRUE(n.match(bea, b + a));
 
-    auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, NodeVector{a, b});
+    auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, OutputVector{a, b});
     ASSERT_FALSE(n.match(bea_false, a + b));
 
     auto add_abs_b = abs + b;
-    auto bea_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs});
+    auto bea_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, OutputVector{abs});
     ASSERT_TRUE(n.match(bea_any_of, add_abs_b));
 
     auto add_b_abs = b + abs;
     ASSERT_TRUE(n.match(bea_any_of, add_b_abs));
 
     auto bea_any_of_label =
-        std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea_any_of});
+        std::make_shared<pattern::op::Label>(a, nullptr, OutputVector{bea_any_of});
     ASSERT_TRUE(n.match(bea_any_of_label, add_b_abs));
     ASSERT_EQ(n.get_pattern_map()[bea_any_of_label], add_b_abs);
 
-    auto abs_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{abs});
-    auto bea_label_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs_label});
+    auto abs_label = std::make_shared<pattern::op::Label>(a, nullptr, OutputVector{abs});
+    auto bea_label_any_of =
+        std::make_shared<pattern::op::AnyOf>(a, is_bea, OutputVector{abs_label});
     ASSERT_TRUE(n.match(bea_label_any_of, add_b_abs));
     ASSERT_EQ(n.get_pattern_map()[abs_label], abs);
 
-    auto bea_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea});
+    auto bea_label = std::make_shared<pattern::op::Label>(a, nullptr, OutputVector{bea});
     auto ab = a + b;
     ASSERT_TRUE(n.match(bea_label, ab));
     ASSERT_EQ(n.get_pattern_map()[bea_label], ab);
@@ -395,7 +395,7 @@ TEST(pattern, matcher)
 
     // Subgraph labels
     auto add = a + b;
-    auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
+    auto label = std::make_shared<pattern::op::Label>(add, nullptr, OutputVector{add});
     ASSERT_TRUE(n.match(label, add));
     ASSERT_EQ(n.get_pattern_map()[label], add);
     ASSERT_EQ(n.get_matched_values(), (OutputVector{add, add, a, b}));
@@ -418,7 +418,7 @@ TEST(pattern, matcher)
     // Correlations
     auto label1 = std::make_shared<pattern::op::Label>(a);
     auto tmp = label1 + b;
-    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, NodeVector{tmp});
+    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, OutputVector{tmp});
     auto sub_label1 = label1 - label2;
     auto sub_add = a - add;
     ASSERT_TRUE(n.match(sub_label1, sub_add));
@@ -581,7 +581,8 @@ TEST(pattern, recurrent_pattern)
 
     // Multiple labels in a reccuring pattern
     auto iconst1 = construct_constant_node(1);
-    auto iconst_label = std::make_shared<pattern::op::Label>(iconst1, nullptr, NodeVector{iconst1});
+    auto iconst_label =
+        std::make_shared<pattern::op::Label>(iconst1, nullptr, OutputVector{iconst1});
     auto add2_2 = iconst1 + add1;
     auto add3_2 = iconst0 + add2_2;
     auto padd2 = iconst_label + rpattern;
@@ -629,7 +630,7 @@ public:
         Shape shape{};
         auto iconst0 = construct_constant_node(0);
         auto iconst_label =
-            std::make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
+            std::make_shared<pattern::op::Label>(iconst0, nullptr, OutputVector{iconst0});
         auto rpattern = std::make_shared<pattern::op::Label>(element::i32, shape);
         auto padd = iconst_label + rpattern;
 
@@ -718,14 +719,12 @@ TEST(pattern, label_on_skip)
     auto iconst = ngraph::make_zero(element::i32, Shape{});
     auto label = std::make_shared<pattern::op::Label>(iconst);
     auto const_label =
-        std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, NodeVector{iconst});
+        std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, OutputVector{iconst});
 
-    auto bcst_pred = [](std::shared_ptr<Node> n) {
-        return as_type_ptr<op::Broadcast>(n) != nullptr;
-    };
+    auto bcst_pred = [](Output<Node> n) { return as_type<op::Broadcast>(n.get_node()) != nullptr; };
 
     auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
-    auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
+    auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, OutputVector{bcst});
     auto matcher = std::make_shared<pattern::Matcher>(
         std::make_shared<op::Multiply>(label, bcst_label), "label_on_skip");
 

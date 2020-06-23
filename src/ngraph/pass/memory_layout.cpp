@@ -18,7 +18,6 @@
 #include <sstream>
 
 #include "ngraph/log.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/slice.hpp"

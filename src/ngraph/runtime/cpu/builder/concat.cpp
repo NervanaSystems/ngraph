@@ -88,7 +88,6 @@ namespace ngraph
                                     }
                                     offset += arg_sizes[i];
                                 }
-
                             };
 
                         functors.emplace_back(functor);

@@ -91,9 +91,7 @@ runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
 {
 }
 
-runtime::gpu::GPUCompiledFunction::~GPUCompiledFunction()
-{
-}
+runtime::gpu::GPUCompiledFunction::~GPUCompiledFunction() {}
 
 std::vector<std::string> get_case_variants(std::vector<std::string> cases)
 {

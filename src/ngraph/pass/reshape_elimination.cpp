@@ -153,7 +153,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
     // dot(A,B).T = dot (B.T, A.T)
-    auto dot_pred = [](shared_ptr<Node> n) { return is_type<op::Dot>(n); };
+    auto dot_pred = [](Output<Node> n) { return is_type<op::Dot>(n.get_node()); };
 
     auto pdot = make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
@@ -220,7 +220,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
     auto reshape_label =
-        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), NodeVector{reshape});
+        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), OutputVector{reshape});
 
     auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "

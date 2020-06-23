@@ -2226,7 +2226,8 @@ size_t
     std::stringstream kernel_name;
     kernel_name << "ew_collective"
                 << "_" << op << "_" << join(dtypes, "_") << "_" << reduce_op << "_r"
-                << tensor_shape.size() << "_rt" << join(reduced_tensors, "_")
+                << tensor_shape.size() << "_rt"
+                << join(reduced_tensors, "_")
                 // multi-output op
                 << "_mo" << int(save_elementwise);
 

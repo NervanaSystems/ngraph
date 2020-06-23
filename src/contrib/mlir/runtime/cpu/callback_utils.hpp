@@ -124,6 +124,6 @@ union opAttrs {
   poolAttrs<3> poolAttrs3d;
   gemmAttrs gemmAttrs2d;
 };
-}
-}
-}
+} // namespace ngmlir
+} // namespace runtime
+} // namespace ngraph

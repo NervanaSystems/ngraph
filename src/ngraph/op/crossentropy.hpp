@@ -55,6 +55,7 @@ namespace ngraph
 
                 bool get_soft_label() const { return m_soft_label; }
                 int64_t get_ignore_index() const { return m_ignore_index; }
+
             private:
                 bool m_soft_label;
                 int64_t m_ignore_index;
@@ -91,6 +92,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool get_soft_label() const { return m_soft_label; }
                 int64_t get_ignore_index() const { return m_ignore_index; }
+
             private:
                 bool m_soft_label;
                 int64_t m_ignore_index;

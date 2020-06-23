@@ -683,10 +683,9 @@ CoordinateDiff op::v1::ConvolutionBackpropFilters::compute_backward_in_pad_above
     for (size_t i = 0; i < spatial_dim_count; i++)
     {
         backward_in_pad_above[i] =
-            in_pad_above[i] -
-            (in_pad_below[i] + (static_cast<ptrdiff_t>(in_shape[i + 2]) - 1) + in_pad_above[i] -
-             (filter_shape[i + 2] - 1) * filter_dilation[i]) %
-                stride[i];
+            in_pad_above[i] - (in_pad_below[i] + (static_cast<ptrdiff_t>(in_shape[i + 2]) - 1) +
+                               in_pad_above[i] - (filter_shape[i + 2] - 1) * filter_dilation[i]) %
+                                  stride[i];
     }
     return backward_in_pad_above;
 }

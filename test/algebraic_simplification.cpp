@@ -925,7 +925,10 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
 
             check_usecase(PartialShape{Dimension::dynamic(), 20, 1, 1},
                           vector<int64_t>{
-                              0, 2, 3, 1,
+                              0,
+                              2,
+                              3,
+                              1,
                           },
                           i32,
                           multiout,

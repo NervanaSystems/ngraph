@@ -66,8 +66,8 @@ static void validate_groupconvbias_shapes(const Shape& input_shape,
         throw ngraph_error(
             "Mismatch between GroupConvolutionBias output and filter channels: "
             " data channels=" +
-            std::to_string(output_shape[OUTPUT_C]) + ", filter channels= " +
-            std::to_string(filters_shape[FILTER_OC]));
+            std::to_string(output_shape[OUTPUT_C]) +
+            ", filter channels= " + std::to_string(filters_shape[FILTER_OC]));
     }
 
     if (output_shape[OUTPUT_C] % groups != 0)

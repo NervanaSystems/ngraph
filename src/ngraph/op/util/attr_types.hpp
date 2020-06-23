@@ -366,6 +366,7 @@ namespace ngraph
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::AutoBroadcastSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         op::AutoBroadcastSpec& m_ref;
     };
@@ -417,6 +418,7 @@ namespace ngraph
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<op::BroadcastModeSpec>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         op::BroadcastModeSpec& m_ref;
     };

@@ -158,7 +158,7 @@ void pass::DynElimination::construct_dyn_slice()
                                                    AxisSet{},
                                                    AxisSet{});
     auto dyn_slice_callback = [data_arg_label, begins_arg_label, ends_arg_label, strides_arg_label](
-        pattern::Matcher& m) {
+                                  pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
         auto data_arg = m.get_pattern_value_map()[data_arg_label];

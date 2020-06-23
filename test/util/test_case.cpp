@@ -75,8 +75,8 @@ ngraph::test::NgraphTestCase::NgraphTestCase(const std::shared_ptr<Function>& fu
 
         if (expected_shape != result_shape)
         {
-            return ::testing::AssertionFailure() << "result_shape " << result_shape
-                                                 << " != expected_shape " << expected_shape;
+            return ::testing::AssertionFailure()
+                   << "result_shape " << result_shape << " != expected_shape " << expected_shape;
         }
 
         if (m_value_comparators.count(element_type) == 0)

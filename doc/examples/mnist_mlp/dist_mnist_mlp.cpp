@@ -270,15 +270,16 @@ int main(int argc, char* argv[])
         if (train_loader.get_epoch() != last_epoch)
         {
             last_epoch = train_loader.get_epoch();
-            std::cout << "Test accuracy: " << test_accuracy(test_loader,
-                                                            inference_exec,
-                                                            t_X,
-                                                            t_Y,
-                                                            t_softmax,
-                                                            t_W0,
-                                                            t_b0,
-                                                            t_W1,
-                                                            t_b1)
+            std::cout << "Test accuracy: "
+                      << test_accuracy(test_loader,
+                                       inference_exec,
+                                       t_X,
+                                       t_Y,
+                                       t_softmax,
+                                       t_W0,
+                                       t_b0,
+                                       t_W1,
+                                       t_b1)
                       << std::endl;
         }
     }

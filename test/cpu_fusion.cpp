@@ -110,8 +110,8 @@ TEST(cpu_fusion, gemm_pattern)
     auto W = std::make_shared<pattern::op::Label>(A);
     auto x = std::make_shared<pattern::op::Label>(B);
 
-    auto reshape_pred = [](std::shared_ptr<Node> n) {
-        return static_cast<bool>(as_type_ptr<op::Reshape>(n));
+    auto reshape_pred = [](Output<Node> n) {
+        return static_cast<bool>(as_type<op::Reshape>(n.get_node()));
     };
 
     auto skip_w = std::make_shared<pattern::op::Skip>(W, reshape_pred);
@@ -1128,7 +1128,7 @@ shared_ptr<Function> gen_deconv(const bool add_goe)
                                                               CoordinateDiff{0, 0},
                                                               CoordinateDiff{0, 0},
                                                               Strides{1, 1});
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto mean = std::make_shared<op::Parameter>(element::f32, bias_shape);
     auto var = std::make_shared<op::Parameter>(element::f32, bias_shape);
@@ -3810,7 +3810,11 @@ TEST(cpu_fusion, DISABLED_lstm_cell)
 
         auto lstm_function = make_shared<Function>(OutputVector{ht, ct},
                                                    ParameterVector{
-                                                       X, H_t, C_t, W, R,
+                                                       X,
+                                                       H_t,
+                                                       C_t,
+                                                       W,
+                                                       R,
                                                    });
         return lstm_function;
     };
