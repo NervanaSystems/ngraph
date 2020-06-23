@@ -23,7 +23,7 @@ set(LLVM_COMMIT_ID 663860f63e73518fc09e55a4a68b03f8027eafc8)
 # If prebuilt path is given check if it is already populated with
 # correct with a build with commit id and cmake config files
 # otherwise build commit id and install to prebuilt path
-set(BUILD_MLIR TRUE)
+set(BUILD_LLVM TRUE)
 
 if(${LLVM_PREBUILT_PATH})
     set(VCSREVISION "${LLVM_PREBUILT_PATH}/include/llvm/Support/VCSRevision.h")
@@ -35,7 +35,7 @@ if(${LLVM_PREBUILT_PATH})
         string(TOLOWER ${COMMIT_ID} COMMIT_ID)
         if(LONG_REV STREQUAL COMMIT_ID)
             message(STATUS "SHA1 HASH Matches.")
-            set(BUILD_MLIR FALSE)
+            set(BUILD_LLVM FALSE)
         endif()
     endif()
 endif()
@@ -61,31 +61,35 @@ set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 # the prebuilt mlir
 if (NOT NGRAPH_USE_PREBUILT_MLIR)
     FetchContent_Declare(
-        ext_mlir
-        GIT_REPOSITORY ${MLIR_LLVM_REPO_URL}
-        GIT_TAG        ${MLIR_LLVM_COMMIT_ID}
+        ext_llvm
+        GIT_REPOSITORY ${LLVM_REPO_URL}
+        GIT_TAG        ${LLVM_COMMIT_ID}
     )
-    FetchContent_GetProperties(ext_mlir)
-    if(NOT ext_mlir_POPULATED)
-        FetchContent_Populate(ext_mlir)
-        #add_subdirectory(${ext_mlir_SOURCE_DIR} ${ext_mlir_BINARY_DIR})
+    FetchContent_GetProperties(ext_llvm)
+    if(NOT ext_llvm_POPULATED)
+        FetchContent_Populate(ext_llvm)
+        #add_subdirectory(${ext_llvm_SOURCE_DIR} ${ext_llvm_BINARY_DIR})
     endif()
-    set(MLIR_LLVM_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
+
+    # set llvm build options
+    set(LLVM_CMAKE_ARGS ${NGRAPH_FORWARD_CMAKE_ARGS}
                    -DLLVM_ENABLE_RTTI=ON
                    -DLLVM_ENABLE_PROJECTS:STRING=mlir
                    -DLLVM_BUILD_EXAMPLES=ON
                    -DLLVM_TARGETS_TO_BUILD=host)
+
+    # configure llvm
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}" .
                     -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
                     -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
                     ${MLIR_LLVM_CMAKE_ARGS}
                     -DCMAKE_CXX_FLAGS:STRING=${CMAKE_ORIGINAL_CXX_FLAGS}
-                    ${ext_mlir_SOURCE_DIR}/llvm
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+                    ${ext_llvm_SOURCE_DIR}/llvm
+                    WORKING_DIRECTORY "${ext_llvm_BINARY_DIR}")
 
-    # Clone and build llvm + mlir.
+    # build llvm.
     execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-                    WORKING_DIRECTORY "${MLIR_PROJECT_ROOT}")
+        WORKING_DIRECTORY "${ext_llvm_BINARY_DIR}")
 endif()
 
 # Enable modules for LLVM.
