@@ -321,7 +321,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     shared_ptr<Function> func = ngraph::deserialize(ss);
 
     // Collect set of results to run two back ends with intermediate results set as outputs
-    NodeVector new_results;
+    OutputVector new_results;
     for (auto n : func->get_ordered_ops())
     {
         // Don't include op::Results otherwise Function c-tor will complain
@@ -402,14 +402,14 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     ref_results.reserve(new_results.size());
     bk_results.reserve(new_results.size());
 
-    for (shared_ptr<Node>& out : new_results)
+    for (Output<Node>& out : new_results)
     {
         auto ref_result =
-            ref->create_tensor(out->get_output_element_type(0), out->get_output_shape(0));
+            ref->create_tensor(out.get_element_type(), out.get_shape());
         ref_results.push_back(ref_result);
         arg_to_ref_result[out.get()] = ref_result;
         auto bk_result =
-            backend->create_tensor(out->get_output_element_type(0), out->get_output_shape(0));
+            backend->create_tensor(out.get_element_type(), out.get_shape());
         bk_results.push_back(bk_result);
     }
 

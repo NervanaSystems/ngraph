@@ -465,10 +465,6 @@ if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/numpy.in.cpp)
 endif()
 
-if (NGRAPH_CPU_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/graph_comparison.in.cpp)
-endif()
-
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
