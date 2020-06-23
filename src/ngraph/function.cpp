@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -231,7 +232,7 @@ size_t Function::get_graph_size() const
     for (auto node : get_ops())
     {
         total_size += sizeof(*node);
-        if (node->description() == "Constant")
+        if (is_type<op::v0::Constant>(node))
         {
             const Shape& shape = node->get_output_shape(0);
             size_t const_size = node->get_output_element_type(0).size();
