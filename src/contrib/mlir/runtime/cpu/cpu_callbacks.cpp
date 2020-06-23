@@ -134,7 +134,7 @@ static void convertOutputLayout(dnnl::memory &reorderIn,
 }
 
 static dnnl::algorithm getConvAlgo() {
-#if defined(NGRAPH_ENABLE_CPU_CONV_AUTO)
+#if defined(NGRAPH_CPU_CONV_AUTO_ENABLE)
   return dnnl::algorithm::convolution_auto;
 #else
   return dnnl::algorithm::convolution_direct;

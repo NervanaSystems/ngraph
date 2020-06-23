@@ -227,7 +227,7 @@ dnnl::algorithm runtime::cpu::dnnl_utils::get_deconv_algo()
 
 dnnl::algorithm runtime::cpu::dnnl_utils::get_conv_algo()
 {
-#if defined(NGRAPH_ENABLE_CPU_CONV_AUTO) && defined(DNNL_VERSION_MAJOR) &&                         \
+#if defined(NGRAPH_CPU_CONV_AUTO_ENABLE) && defined(DNNL_VERSION_MAJOR) &&                         \
     defined(DNNL_VERSION_MINOR) && defined(DNNL_VERSION_PATCH)
     auto dnnl_version = get_dnnl_version();
     if ((dnnl_version->major == 0 && dnnl_version->minor >= 18 && dnnl_version->patch >= 0) ||
