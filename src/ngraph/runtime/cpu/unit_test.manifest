@@ -116,6 +116,15 @@ CPU_MLIR.cpu_fusion_fuse_dropout
 CPU_MLIR.cpu_fusion_fuse_leaky_relu
 CPU_MLIR.cpu_quant_fusion_qconcat
 
+CPU_MLIR.cpu_test_trivial_in_place_relu_fail
+CPU_MLIR.cpu_test_reshape_layout_optimizations1
+CPU_MLIR.cpu_test_reshape_layout_optimizations2
+CPU_MLIR.cpu_test_reshape_layout_optimizations3
+CPU_MLIR.cpu_test_convolution_simple_bf16
+CPU_MLIR.core_fusion_softmax_crossentropy
+CPU_MLIR.core_fusion_crossentropy
+CPU_MLIR.gather_2d_negative_and_positive_indices_no_axis_2d_input
+
 ################################################################################
 # CODEGEN
 ################################################################################
@@ -136,3 +145,35 @@ CPU_CODEGEN.clamp_bfloat16
 
 CPU_CODEGEN.cpu_fusion_fuse_dropout
 CPU_CODEGEN.cpu_fusion_vanilla_rnn_cpu_vs_inter
+CPU_CODEGEN.cpu_test_abc_tbb
+CPU_CODEGEN.cpu_test_thread_safe_calls_convolution_2d_2items
+CPU_CODEGEN.cpu_test_constant_convertlayout
+CPU_CODEGEN.cpu_test_conv_test_winograd
+CPU_CODEGEN.cpu_test_conv_negative_padding
+CPU_CODEGEN.cpu_test_gauss_error_function_erf_float32
+CPU_CODEGEN.cpu_test_gauss_error_function_erf_int32
+CPU_CODEGEN.cpu_test_max_pool_with_indices_2d_2channel_2image
+CPU_CODEGEN.cpu_test_max_pool_with_indices_bprop_2d_2channel_2image
+CPU_CODEGEN.cpu_test_max_pool_bprop_2d_2channel_2image
+CPU_CODEGEN.cpu_test_avg_pool_bprop_2d_2channel_2image
+CPU_CODEGEN.cpu_test_tile_1d_with_zero_repeats
+CPU_CODEGEN.cpu_test_tile_1d
+CPU_CODEGEN.cpu_test_tile_2d_with_zero_repeats
+CPU_CODEGEN.cpu_test_tile_2d_1axis
+CPU_CODEGEN.cpu_test_tile_2d_2axes
+CPU_CODEGEN.cpu_test_tile_3d
+CPU_CODEGEN.cpu_test_scatter_add_1d_indices_in_place
+CPU_CODEGEN.cpu_test_scatter_add_1d_indices_no_in_place
+CPU_CODEGEN.cpu_test_tensor_copy_from_same_rotated_layouts
+CPU_CODEGEN.cpu_test_tensor_copy_from_different_layout
+CPU_CODEGEN.cpu_test_max_pool_bf16
+CPU_CODEGEN.cpu_test_convolution_simple_bf16
+CPU_CODEGEN.cpu_test_create_tensor_2_input
+CPU_CODEGEN.cpu_test_create_tensor_2_output
+CPU_CODEGEN.cpu_test_tensorview_custom_mem
+CPU_CODEGEN.cpu_test_one_hot_scalar_oob_in_3
+CPU_CODEGEN.debugger_add_breakpoint
+CPU_CODEGEN.debugger_stepping
+CPU_CODEGEN.debugger_delete_breakpoint
+CPU_CODEGEN.debugger_while_stepping
+CPU_CODEGEN.debugger_resume

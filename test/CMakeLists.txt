@@ -60,6 +60,7 @@ set(SRC
     convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
+    core_fusion.cpp
     cpio.cpp
     cse.cpp
     dyn_elimination.cpp
@@ -283,8 +284,8 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
+    list(APPEND SRC builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp)
     if (NGRAPH_CPU_CODEGEN_ENABLE)
         list(APPEND SRC cpu_codegen.cpp)
         set(ACTIVE_CPU_BACKEND_LIST ${ACTIVE_CPU_BACKEND_LIST} "CPU:CODEGEN")
@@ -513,10 +514,16 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
 # These configured tests are for the CPU backend and its variants
+set(CPU_MULTI_SRC
+    cpu_fusion.in.cpp
+    cpu_core_fusion.in.cpp
+    cpu_debugger.in.cpp
+    cpu_test.in.cpp
+)
 foreach(BACKEND_NAME ${ACTIVE_CPU_BACKEND_LIST})
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
     string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
-    foreach(TEST_SRC cpu_fusion.in.cpp)
+    foreach(TEST_SRC ${CPU_MULTI_SRC})
         string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
         configure_file(${TEST_SRC} ${TARGET_NAME})
