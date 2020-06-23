@@ -2248,7 +2248,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         NodeVector new_args;
         for (auto arg : concat_m->get_arguments())
         {
-            if (arg->description() != "Dequantize")
+            if (!is_type<op::v0::Dequantize>(arg))
             {
                 return false;
             }
@@ -2366,9 +2366,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         qconvb_label, dq_scale1, dq_zp1, element::f32, AxisSet{});
     auto dq_l_label = std::make_shared<pattern::op::Label>(dq_l, nullptr, OutputVector{dq_l});
     auto skipr_l = std::make_shared<pattern::op::Skip>(
-        dq_l_label, [](Output<Node> n) { return n.get_node()->description() == "Reshape"; });
+        dq_l_label, [](Output<Node> n) { return is_type<op::v0::Reshape>(n.get_node()); });
     auto skipb_l = std::make_shared<pattern::op::Skip>(
-        skipr_l, [](Output<Node> n) { return n.get_node()->description() == "Broadcast"; });
+        skipr_l, [](Output<Node> n) { return is_type<op::v0::Broadcast>(n.get_node()); });
 
     // Right Graph
     auto summand = std::make_shared<pattern::op::Label>(element::i8, qconvb->get_output_shape(0));
@@ -2376,9 +2376,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         summand, dq_scale2, dq_zp2, element::f32, AxisSet{});
     auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, OutputVector{dq_r});
     auto skipr_r = std::make_shared<pattern::op::Skip>(
-        dq_r_label, [](Output<Node> n) { return n.get_node()->description() == "Reshape"; });
+        dq_r_label, [](Output<Node> n) { return is_type<op::v0::Reshape>(n.get_node()); });
     auto skipb_r = std::make_shared<pattern::op::Skip>(
-        skipr_r, [](Output<Node> n) { return n.get_node()->description() == "Broadcast"; });
+        skipr_r, [](Output<Node> n) { return is_type<op::v0::Broadcast>(n.get_node()); });
 
     // Add left + right
     auto add = skipb_l + skipb_r;
@@ -2393,7 +2393,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         auto dq_r_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_r_label]);
 
         // both left and right are QuantizedConvolutionBias
-        if (dq_r_m->get_argument(0)->description() == "QuantizedConvolutionBias")
+        if (is_type<op::v0::QuantizedConvolutionBias>(dq_r_m->get_argument(0)))
         {
             for (auto user : m.get_match_root()->get_users())
             {
