@@ -56,25 +56,11 @@ public:
         }
         set_output_type(0, type, s);
     }
-    AnyOf(element::Type type,
-          const PartialShape& s,
-          NodePredicate pred,
-          const NodeVector& wrapped_values)
-        : AnyOf(type,
-                s,
-                [pred](const Output<Node>& value) { return pred(value.as_single_output_node()); },
-                as_output_vector(wrapped_values))
-    {
-    }
 
     /// \brief creates a AnyOf node containing a sub-pattern described by the type and
     ///        shape of \sa node.
     AnyOf(const Output<Node>& node, ValuePredicate pred, const OutputVector& wrapped_values)
         : AnyOf(node.get_element_type(), node.get_partial_shape(), pred, wrapped_values)
-    {
-    }
-    AnyOf(std::shared_ptr<Node> node, NodePredicate pred, const NodeVector& wrapped_values)
-        : AnyOf(node, as_value_predicate(pred), as_output_vector(wrapped_values))
     {
     }
     bool match_value(Matcher* matcher,

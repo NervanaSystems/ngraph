@@ -80,7 +80,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         weights_label, Coordinate{0, 0, 0}, Coordinate{2, 2, 3}, Strides{1, 1, 1});
 
     auto slice_weights_label =
-        std::make_shared<pattern::op::Label>(slice_weights, nullptr, NodeVector{slice_weights});
+        std::make_shared<pattern::op::Label>(slice_weights, nullptr, OutputVector{slice_weights});
     auto conv = std::make_shared<op::Convolution>(slice_data, slice_weights_label);
     auto matcher = std::make_shared<pattern::Matcher>(conv);
 

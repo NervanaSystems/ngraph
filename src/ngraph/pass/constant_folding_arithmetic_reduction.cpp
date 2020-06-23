@@ -170,7 +170,7 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
         element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
     auto constant_axes_label =
         make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
-    auto is_supported_reduction = [](std::shared_ptr<Node> n) {
+    auto is_supported_reduction = [](Output<Node> n) {
         return (pattern::has_class<op::Max>()(n) || pattern::has_class<op::Min>()(n) ||
                 pattern::has_class<op::Product>()(n) || pattern::has_class<op::Sum>()(n) ||
                 pattern::has_class<op::v1::ReduceMax>()(n) ||
@@ -183,7 +183,7 @@ void pass::ConstantFolding::construct_constant_arithmetic_reduction()
         std::make_shared<pattern::op::Any>(element::i32,
                                            Shape{2},
                                            is_supported_reduction,
-                                           NodeVector{constant_data_label, constant_axes_label});
+                                           OutputVector{constant_data_label, constant_axes_label});
 
     auto constant_arithmetic_reduction_callback = [constant_data_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_arithmetic_reduction_callback against node = "
