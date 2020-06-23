@@ -66,7 +66,7 @@ if(NEED_TO_BUILD_LLVM)
     if(NGRAPH_CPU_CODEGEN_ENABLE)
         set(LLVM_GIT_TAG llvmorg-9.0.1)
         set(LLVM_CMAKE_ARGS
-            -DLLVM_ENABLE_PROJECTS:STRING=clang$<SEMICOLON>openmp
+            -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp
             -DLLVM_INCLUDE_DOCS=OFF
             -DLLVM_INCLUDE_TESTS=OFF
             -DLLVM_INCLUDE_GO_TESTS=OFF
