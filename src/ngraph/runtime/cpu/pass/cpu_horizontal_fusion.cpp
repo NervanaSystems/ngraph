@@ -81,8 +81,8 @@ bool has_same_attributes(const std::shared_ptr<ngraph::op::ConvolutionBias> conv
 
 void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion()
 {
-    auto has_multiple_users = [](std::shared_ptr<Node> n) {
-        auto inputs = n->get_output_inputs(0);
+    auto has_multiple_users = [](Output<Node> n) {
+        auto inputs = n.get_node()->get_output_inputs(0);
         return inputs.size() > 1;
     };
 
