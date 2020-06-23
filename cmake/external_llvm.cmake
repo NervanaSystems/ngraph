@@ -18,41 +18,82 @@
 # Clang Config does not support version so find LLVM first
 # To install Clang 9 system wide On Ubuntu 18.04
 # sudo apt-get install clang-9 libclang-9-dev
-# For user installed clang, provide path to LLVMConfig.cmake by passing
-# -DCMAKE_PREFIX_PATH=<path to dir with LLVMConfig.cmake>
+# For non-system clang, provide LLVM_ROOT by passing
+# -DLLVM_ROOT=<CMAKE_INSTALL_PREFIX that was used for build or top level directory of unpacked LLVM release from github>
 # When you configure CMake
+set(BUILD_LLVM ON)
 find_package(LLVM 9 CONFIG)
 if(LLVM_FOUND)
     find_package(Clang CONFIG
         HINTS ${LLVM_DIR}/../lib/cmake/clang ${LLVM_DIR}/../clang NO_DEFAULT_PATH)
+    if(Clang_FOUND)
+        set(BUILD_LLVM OFF)
+    endif()
 endif()
 
-if(NOT Clang_FOUND)
-    set(LLVM_PROJECT_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm-project)
-    set(LLVM_INSTALL_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm)
+if(BUILD_LLVM)
+    include(FetchContent)
+    message(STATUS "LLVM: Building LLVM from source")
 
-    configure_file(${CMAKE_SOURCE_DIR}/cmake/llvm_fetch.cmake.in ${LLVM_PROJECT_ROOT}/CMakeLists.txt @ONLY)
+    set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
+    set(LLVM_GIT_TAG llvmorg-9.0.1)
+    set(LLVM_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm)
+
+    FetchContent_Declare(
+        llvm
+        GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
+        GIT_TAG ${LLVM_GIT_TAG}
+        GIT_SHALLOW 1
+        )
+
+    FetchContent_GetProperties(llvm)
+    if(NOT llvm_POPULATED)
+        FetchContent_Populate(llvm)
+    endif()
 
     execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
         -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
         -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
-        .
-        WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
+        ${NGRAPH_FORWARD_CMAKE_ARGS}
+        -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
+        -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp
+        -DLLVM_INCLUDE_DOCS=OFF
+        -DLLVM_INCLUDE_TESTS=OFF
+        -DLLVM_INCLUDE_GO_TESTS=OFF
+        -DLLVM_INCLUDE_EXAMPLES=OFF
+        -DLLVM_INCLUDE_BENCHMARKS=OFF
+        -DLLVM_BUILD_TOOLS=OFF
+        -DLLVM_BUILD_UTILS=OFF
+        -DLLVM_BUILD_RUNTIMES=OFF
+        -DLLVM_BUILD_RUNTIME=OFF
+        -DLLVM_TARGETS_TO_BUILD=X86
+        -DLLVM_ENABLE_BINDINGS=OFF
+        -DLLVM_ENABLE_TERMINFO=OFF
+        -DLLVM_ENABLE_ZLIB=OFF
+        -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=ON
+        -DLLVM_ENABLE_WARNINGS=OFF
+        -DLLVM_ENABLE_PEDANTIC=OFF
+        -DLIBOMP_OMPT_SUPPORT=OFF
+        -DCLANG_ENABLE_ARCMT=OFF
+        -DCLANG_ENABLE_STATIC_ANALYZER=OFF
+        ${llvm_SOURCE_DIR}/llvm
+        WORKING_DIRECTORY "${llvm_BINARY_DIR}")
 
     # clone and build llvm
     include(ProcessorCount)
     ProcessorCount(N)
     if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
         execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
-            WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
+            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
     else()
         execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${LLVM_PROJECT_ROOT}")
+            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
     endif()
+    execute_process(COMMAND "${CMAKE_COMMAND}" --install .
+        WORKING_DIRECTORY "${llvm_BINARY_DIR}")
 
-    message(STATUS "LLVM_INSTALL_ROOT: ${LLVM_INSTALL_ROOT}")
-    find_package(Clang REQUIRED CONFIG
-        HINTS ${LLVM_INSTALL_ROOT}/lib/cmake/clang NO_DEFAULT_PATH)
+    set(Clang_ROOT ${LLVM_ROOT})
+    find_package(Clang REQUIRED CONFIG)
 endif()
 
 message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
