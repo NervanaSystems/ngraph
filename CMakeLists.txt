@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 3.11)
+cmake_minimum_required (VERSION 3.12)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -51,6 +51,9 @@ message(STATUS "NGRAPH_API_VERSION ${NGRAPH_API_VERSION}")
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
+
+# Enable <PackageName>_ROOT for CMake 3.12+
+cmake_policy(SET CMP0074 NEW)
 
 if (APPLE)
     # Enable MACOS_RPATH by default.
@@ -637,7 +640,7 @@ if (NGRAPH_MLIR_ENABLE)
     include(cmake/external_mlir.cmake)
 endif()
 
-if(NGRAPH_CODEGEN_ENABLE)
+if(NGRAPH_CPU_CODEGEN_ENABLE)
     if (NOT MSVC)
         include(cmake/external_llvm.cmake)
     else()
