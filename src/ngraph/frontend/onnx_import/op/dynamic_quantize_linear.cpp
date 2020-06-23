@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <algorithm>
 #include <memory>
 
 #include "dynamic_quantize_linear.hpp"
@@ -72,24 +73,23 @@ namespace ngraph
                     std::vector<std::shared_ptr<ngraph::Node>> nodes =
                         common::get_extanded_function(new_node, graph, 11);
 
-                    for (int i = nodes.size() - 1; i >= 0; --i)
+                    std::vector<std::string> output_op_names;
+
+                    for (auto node : nodes)
                     {
-                        if (nodes.at(i)->is_parameter())
+                        if (node->is_parameter())
                         {
-                            helper_inputs.push_back(nodes.at(i));
+                            helper_inputs.push_back(node);
+                        }
+                        else if (node->is_output())
+                        {
+                            output_op_names.push_back(node->get_input_node_ptr(0)->get_name());
                         }
                     }
 
-                    std::vector<std::string> output_op_names;
-
-                    for (int i = nodes.size() - 1; i >= 0; --i)
+                    for (auto node : nodes)
                     {
-                        if (nodes.at(i)->is_output())
-                        {
-                            output_op_names.push_back(
-                                nodes.at(i)->get_input_node_ptr(0)->get_name());
-                        }
-                        for (auto& input : nodes.at(i)->inputs())
+                        for (auto& input : node->inputs())
                         {
                             for (int i = 0; i < helper_inputs.size(); ++i) // Func neeeded
                             {
@@ -104,12 +104,12 @@ namespace ngraph
                     NodeVector final_nodes;
                     for (int i = nodes.size() - 1; i >= 0; --i)
                     {
-                        for (auto name : output_op_names)
+                        auto result = std::find(output_op_names.begin(),
+                                                output_op_names.end(),
+                                                nodes.at(i)->get_name());
+                        if (result != output_op_names.end())
                         {
-                            if (name == nodes.at(i)->get_name())
-                            {
-                                final_nodes.push_back(nodes.at(i));
-                            }
+                            final_nodes.push_back(nodes.at(i));
                         }
                     }
                     return final_nodes;
