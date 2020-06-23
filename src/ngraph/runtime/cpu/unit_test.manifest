@@ -53,6 +53,8 @@ CPU.lstm_cell_no_bias_no_peepholes
 CPU.lstm_cell_zero_bias_peepholes_constant
 CPU.lstm_cell_fixed_no_bias_no_peepholes
 
+CPU.cpu_fusion_fuse_dropout
+
 ################################################################################
 # MLIR
 ################################################################################
@@ -107,6 +109,13 @@ CPU_MLIR.lstm_cell_no_bias_no_peepholes
 CPU_MLIR.lstm_cell_zero_bias_peepholes_constant
 CPU_MLIR.lstm_cell_fixed_no_bias_no_peepholes
 
+CPU_MLIR.cpu_fusion_batchnorm_multiply_add_relu
+CPU_MLIR.cpu_fusion_batchnorm_fprop_relu_b1c2h2w2
+CPU_MLIR.cpu_fusion_fuse_bounded_relu_inter_vs_cpu
+CPU_MLIR.cpu_fusion_fuse_dropout
+CPU_MLIR.cpu_fusion_fuse_leaky_relu
+CPU_MLIR.cpu_quant_fusion_qconcat
+
 ################################################################################
 # CODEGEN
 ################################################################################
@@ -124,3 +133,6 @@ CPU_CODEGEN.non_zero_all_0s
 CPU_CODEGEN.non_zero_all_1s
 CPU_CODEGEN.clamp_float16
 CPU_CODEGEN.clamp_bfloat16
+
+CPU_CODEGEN.cpu_fusion_fuse_dropout
+CPU_CODEGEN.cpu_fusion_vanilla_rnn_cpu_vs_inter
