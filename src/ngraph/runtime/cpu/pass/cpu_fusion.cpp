@@ -2225,7 +2225,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
 {
     Shape shape{2, 2, 1, 1};
-    NodeVector inputs;
+    OutputVector inputs;
     NodeVector concats;
     // Pattern matcher looks for concats with exact number of inputs
     inputs.push_back(std::make_shared<pattern::op::Label>(element::f32, shape));
@@ -2244,7 +2244,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         NGRAPH_CHECK(
             concat_m, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Concat`");
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(concat_m->get_argument(0));
-        NodeVector new_args;
+        OutputVector new_args;
         for (auto arg : concat_m->get_arguments())
         {
             if (!is_type<op::v0::Dequantize>(arg))
