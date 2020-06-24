@@ -123,11 +123,11 @@ void pattern::Matcher::capture(const set<Node*>& static_nodes)
     }
 }
 
-bool pattern::Matcher::is_contained_match(const NodeVector& exclusions, bool ignore_unused)
+bool pattern::Matcher::is_contained_match(const OutputVector& exclusions, bool ignore_unused)
 {
     if (exclusions.empty())
     {
-        NodeVector label_exclusions;
+        OutputVector label_exclusions;
         for (auto entry : m_pattern_map)
         {
             // leaf label
@@ -136,11 +136,11 @@ bool pattern::Matcher::is_contained_match(const NodeVector& exclusions, bool ign
                 label_exclusions.push_back(entry.second.get_node_shared_ptr());
             }
         }
-        return get_subgraph_outputs(get_matched_nodes(), label_exclusions, ignore_unused).size() <
+        return get_subgraph_outputs(get_matched_values(), label_exclusions, ignore_unused).size() <
                2;
     }
 
-    return get_subgraph_outputs(get_matched_nodes(), exclusions).size() < 2;
+    return get_subgraph_outputs(get_matched_values(), exclusions).size() < 2;
 }
 
 bool pattern::Matcher::match_value(const Output<Node>& pattern_value,

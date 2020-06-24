@@ -61,7 +61,6 @@ namespace ngraph
     {
         return m_node->get_output_as_single_output_node(m_index);
     }
-
     size_t Output<Node>::get_index() const { return m_index; }
     descriptor::Tensor& Output<Node>::get_tensor() const
     {

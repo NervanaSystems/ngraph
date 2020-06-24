@@ -264,9 +264,9 @@ namespace ngraph
             const auto ng_inputs = onnx_node.get_ng_inputs();
 
             ngraph::traverse_nodes(
-                as_node_vector(ng_node_vector),
+                ng_node_vector,
                 [&tag](std::shared_ptr<ngraph::Node> ng_node) { ng_node->add_provenance_tag(tag); },
-                as_node_vector(ng_inputs));
+                ng_inputs);
         }
     }
 }
