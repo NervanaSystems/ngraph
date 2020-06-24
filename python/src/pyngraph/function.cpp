@@ -19,6 +19,7 @@
 
 #include "ngraph/function.hpp"     // ngraph::Function
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
+#include "ngraph/output_vector.hpp"
 #include "pyngraph/function.hpp"
 
 namespace py = pybind11;
