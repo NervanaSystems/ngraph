@@ -156,6 +156,7 @@ option(NGRAPH_UB_SANITIZER_ENABLE "Compiles and links with Undefined Behavior Sa
 if (NGRAPH_CPU_CODEGEN_ENABLE)
     message(STATUS "NGRAPH_CPU_ENABLE Backend enabled because the NGRAPH_CPU_CODEGEN_ENABLE is enabled")
     set(NGRAPH_CPU_ENABLE TRUE)
+    set(NGRAPH_CODEGEN_ENABLE TRUE)
 endif()
 
 if (NGRAPH_STATIC_LIB_ENABLE)
