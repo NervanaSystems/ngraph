@@ -62,7 +62,7 @@ namespace ngraph
 class NGRAPH_API ngraph::pattern::op::Pattern : public Node
 {
 public:
-    /// \brief \p a base class for \sa Skip and \sa Label
+    /// \brief \p a base class for all patterns
     ///
     Pattern(const OutputVector& patterns, ValuePredicate pred)
         : Node(patterns)

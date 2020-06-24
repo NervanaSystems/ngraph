@@ -57,7 +57,7 @@
 
 #define STR(X) #X
 #define CHECK_RANK(X, RANK)                                                                        \
-    if (X->get_output_shape(0).size() != RANK)                                                     \
+    if (X.get_shape().size() != RANK)                                                              \
     {                                                                                              \
         NGRAPH_DEBUG << STR(X) << " does not have rank " << RANK;                                  \
         return false;                                                                              \
@@ -71,6 +71,39 @@
     }
 
 using namespace ngraph;
+
+namespace
+{
+    std::shared_ptr<Node> output_to_node(Output<Node> output)
+    {
+        std::shared_ptr<Node> node = output.get_node_shared_ptr();
+        if (output.get_index() == 0 && output.get_node()->get_output_size() == 1)
+        {
+            return node;
+        }
+        else
+        {
+            for (auto in : output.get_target_inputs())
+            {
+                if (is_type<op::GetOutputElement>(in.get_node()))
+                {
+                    return in.get_node()->shared_from_this();
+                }
+            }
+            return std::make_shared<op::GetOutputElement>(node, output.get_index());
+        }
+    }
+
+    NodeVector get_output_elements(const std::shared_ptr<Node>& mon)
+    {
+        NodeVector goes(mon->get_output_size());
+        for (auto o : mon->outputs())
+        {
+            goes.at(o.get_index()) = output_to_node(o);
+        }
+        return goes;
+    }
+}
 
 void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
 {
@@ -572,7 +605,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         const size_t lstm_n_gates = 4;
         const size_t batch_size = rnn_src_layer->get_output_shape(0)[0] / sequence_len;
-        const size_t src_iter_feature_size = rnn_weights_iter->get_output_shape(0)[0];
+        const size_t src_iter_feature_size = rnn_weights_iter.get_shape()[0];
         const size_t num_cell_states = 2;
         const size_t direction = 1;
         const size_t num_fused_rnn_layers = 1;
@@ -580,11 +613,11 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
         NGRAPH_DEBUG << "src_layer: " << join(rnn_src_layer->get_output_shape(0));
-        NGRAPH_DEBUG << "src_iter: " << join(rnn_src_iter->get_output_shape(0));
-        NGRAPH_DEBUG << "src_iter_c: " << join(rnn_src_iter_c->get_output_shape(0));
-        NGRAPH_DEBUG << "weights_layer: " << join(rnn_weights_layer->get_output_shape(0));
-        NGRAPH_DEBUG << "weights_iter: " << join(rnn_weights_iter->get_output_shape(0));
-        NGRAPH_DEBUG << "bias: " << join(rnn_bias->get_output_shape(0));
+        NGRAPH_DEBUG << "src_iter: " << join(rnn_src_iter.get_shape());
+        NGRAPH_DEBUG << "src_iter_c: " << join(rnn_src_iter_c.get_shape());
+        NGRAPH_DEBUG << "weights_layer: " << join(rnn_weights_layer.get_shape());
+        NGRAPH_DEBUG << "weights_iter: " << join(rnn_weights_iter.get_shape());
+        NGRAPH_DEBUG << "bias: " << join(rnn_bias.get_shape());
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
 
@@ -598,14 +631,14 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             return false;
         };
 
-        if (!check_const_input(rnn_src_iter->get_argument(0)) ||
-            !check_const_input(rnn_src_iter_c->get_argument(0)))
+        if (!check_const_input(rnn_src_iter.get_node()->get_argument(0)) ||
+            !check_const_input(rnn_src_iter_c.get_node()->get_argument(0)))
         {
             NGRAPH_DEBUG << "Non const input for RNN state initializer";
             return false;
         }
 
-        CHECK_RANK(rnn_src_layer, 2);
+        CHECK_RANK(rnn_src_layer->output(0), 2);
         CHECK_RANK(rnn_src_iter, 2);
         CHECK_RANK(rnn_src_iter_c, 2);
         CHECK_RANK(rnn_weights_layer, 2);
@@ -613,8 +646,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         CHECK_RANK(rnn_bias, 1);
 
         if (rnn_src_layer->get_output_element_type(0) != element::f32 ||
-            rnn_src_iter->get_output_element_type(0) != element::f32 ||
-            rnn_src_iter_c->get_output_element_type(0) != element::f32)
+            rnn_src_iter.get_element_type() != element::f32 ||
+            rnn_src_iter_c.get_element_type() != element::f32)
         {
             NGRAPH_DEBUG << "input tensor type and input recurrent state tensor are not float32";
             return false;
@@ -657,7 +690,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t i = 0; i < sequence_len; i++)
         {
             // lstm's will be the user of lstm_ct
-            for (auto user : lstm_cts[i]->get_users())
+            for (auto user : lstm_cts[i].get_node()->get_users())
             {
                 if (is_type<ngraph::op::Lstm>(user))
                 {
@@ -671,7 +704,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // LSTM in the same layer)
         for (size_t index = 0; index < sequence_len; index++)
         {
-            auto goe_nodes = ngraph::op::get_output_elements(lstm_nodes[index]);
+            auto goe_nodes = get_output_elements(lstm_nodes[index]);
 
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
@@ -706,7 +739,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         // replace last LSTM dst_iter_c with RNN dst iter_c for last LSTM dst_iter_c's users
-        auto last_lstm_ct_goe = ngraph::op::get_output_elements(lstm_nodes[sequence_len - 1])[2];
+        auto last_lstm_ct_goe = get_output_elements(lstm_nodes[sequence_len - 1])[2];
         if (last_lstm_ct_goe)
         {
             replace_collapse_node_user(last_lstm_ct_goe, rnn_ct_goe->output(0));
@@ -728,7 +761,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     this->add_matcher(m, callback);
 }
 
-static std::shared_ptr<Node> stack_rnn_inputs(NodeVector rnn_input_nodes)
+static std::shared_ptr<Node> stack_rnn_inputs(OutputVector rnn_input_nodes)
 {
     std::reverse(rnn_input_nodes.begin(), rnn_input_nodes.end());
     return std::make_shared<ngraph::op::Concat>(rnn_input_nodes, 0);
@@ -792,7 +825,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::vector<std::shared_ptr<ngraph::op::Rnn>> rnn_nodes;
         for (auto rnn_goe : m.get_bound_nodes_for_pattern(rnn_goe0_label))
         {
-            if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe->get_arguments()[0]))
+            if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
             {
                 rnn_nodes.push_back(rnn_op);
             }
@@ -847,7 +880,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto mrnn_weights_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_weights_iter));
         auto mrnn_bias = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_bias));
 
-        NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer->get_output_shape(0));
+        NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer.get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(mrnn_src_iter->get_output_shape(0));
         NGRAPH_DEBUG << "src_iter_c: " << join(mrnn_src_iter_c->get_output_shape(0));
         NGRAPH_DEBUG << "weights_layer: " << join(mrnn_weights_layer->get_output_shape(0));
@@ -857,8 +890,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_DEBUG << "batch_size: " << batch_size;
         NGRAPH_DEBUG << "src iter feature_size: " << src_iter_feature_size;
 
-        if ((mrnn_src_layer->get_output_shape(0)[0] / batch_size) !=
-            rnn_nodes[0]->get_num_timesteps())
+        if ((mrnn_src_layer.get_shape()[0] / batch_size) != rnn_nodes[0]->get_num_timesteps())
         {
             throw ngraph_error(
                 " input symbols for the layer fused RNN op, should be captured only for the first "
@@ -901,7 +933,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // i.e {RNN7, RNN6, RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
-            auto goe_nodes = ngraph::op::get_output_elements(rnn_nodes[index]);
+            auto goe_nodes = get_output_elements(rnn_nodes[index]);
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
             if (goe_nodes.size() != 3)

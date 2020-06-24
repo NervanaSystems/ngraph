@@ -66,7 +66,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 {
     for (auto n : function->get_ordered_ops())
     {
-        if (n->description() == "Concat")
+        if (is_type<op::v0::Concat>(n))
         {
             auto concat = std::static_pointer_cast<ngraph::op::Concat>(n);
             auto shape = concat->get_input_shape(0);
@@ -132,7 +132,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
                 NGRAPH_CHECK(arg->get_output_size() == 1);
 
-                if (arg->description() != "Concat")
+                if (!is_type<op::v0::Concat>(arg))
                 {
                     if (arg->is_op())
                     {
@@ -156,7 +156,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     for (Input<Node> output_input : output.get_target_inputs())
                     {
                         auto user = output_input.get_node();
-                        if (user->description() == "Concat")
+                        if (is_type<op::v0::Concat>(user))
                         {
                             concat_count++;
                             if (concat_count == 2)
@@ -227,7 +227,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
 
     for (auto n : function->get_ordered_ops())
     {
-        if (n->description() == "Slice")
+        if (is_type<op::v0::Slice>(n))
         {
             auto slice = std::static_pointer_cast<ngraph::op::Slice>(n);
             auto in_shape = slice->get_input_shape(0);

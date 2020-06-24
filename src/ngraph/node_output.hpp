@@ -39,6 +39,7 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
+        friend class Node;
         void eliminate_goe() NGRAPH_DEPRECATED("Remove when GetOrderedOutput is removed");
 
     public:
@@ -75,9 +76,6 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         std::shared_ptr<Node> get_node_shared_ptr() const;
-        /// \return A useable shared pointer to this output. If index 0, the node,
-        /// otherwise find or create a GOE.
-        std::shared_ptr<Node> as_single_output_node() const NGRAPH_DEPRECATED("Transitional.");
 
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const;
@@ -113,6 +111,8 @@ namespace ngraph
         bool operator>=(const Output& other) const;
 
     private:
+        std::shared_ptr<Node> as_single_output_node() const;
+
         std::shared_ptr<Node> m_node;
         size_t m_index{0};
     };

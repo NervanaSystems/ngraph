@@ -26,7 +26,7 @@ bool pass::ConstantToBroadcast::run_on_node(shared_ptr<Node> node)
 {
     const size_t minimum_size_of_interest = 32;
     bool modified = false;
-    if (node->description() == "Constant")
+    if (is_type<op::v0::Constant>(node))
     {
         auto constant = static_pointer_cast<op::Constant>(node);
         size_t size = shape_size(constant->get_output_shape(0));
