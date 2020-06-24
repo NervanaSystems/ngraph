@@ -772,7 +772,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_conv_horizontal_fusion)
                                       bias2, conv2->get_output_shape(0), AxisSet{0, 2, 3});
         auto relu2 = std::make_shared<op::Relu>(conv_bias2);
 
-        auto concat = std::make_shared<op::Concat>(OutputVector{relu1, relu2}, 1);
+        auto concat = std::make_shared<op::Concat>(NodeVector{relu1, relu2}, 1);
         auto f = make_shared<Function>(OutputVector{concat},
                                        ParameterVector{A, weights1, bias1, weights2, bias2});
         return f;

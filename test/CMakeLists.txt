@@ -60,6 +60,7 @@ set(SRC
     convert_u1_to_string.cpp
     coordinate.cpp
     copy.cpp
+    core_fusion.cpp
     cpio.cpp
     cse.cpp
     dyn_elimination.cpp
@@ -283,16 +284,17 @@ if (NGRAPH_INTERPRETER_ENABLE)
 endif()
 
 if (NGRAPH_CPU_ENABLE)
-    list(APPEND SRC core_fusion.cpp builder_quantization.cpp)
-    list(APPEND SRC backend_performance.cpp cpu_fusion.cpp cpu_test.cpp cpu_debugger.cpp cpu_debug_tracer.cpp)
+    list(APPEND SRC builder_quantization.cpp)
+    list(APPEND SRC backend_performance.cpp)
     if (NGRAPH_CPU_CODEGEN_ENABLE)
         list(APPEND SRC cpu_codegen.cpp)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "CPU:CODEGEN")
+        set(ACTIVE_CPU_BACKEND_LIST ${ACTIVE_CPU_BACKEND_LIST} "CPU:CODEGEN")
     endif()
     if (NGRAPH_MLIR_ENABLE)
-        set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "CPU:MLIR")
+        set(ACTIVE_CPU_BACKEND_LIST ${ACTIVE_CPU_BACKEND_LIST} "CPU:MLIR")
     endif()
-    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} CPU)
+    set(ACTIVE_CPU_BACKEND_LIST ${ACTIVE_CPU_BACKEND_LIST} CPU)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} ${ACTIVE_CPU_BACKEND_LIST})
 endif()
 
 if(NGRAPH_GPU_ENABLE)
@@ -510,6 +512,25 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
     endforeach()
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
+endforeach()
+# These configured tests are for the CPU backend and its variants
+set(CPU_MULTI_SRC
+    cpu_fusion.in.cpp
+    cpu_core_fusion.in.cpp
+    cpu_debugger.in.cpp
+    cpu_test.in.cpp
+)
+foreach(BACKEND_NAME ${ACTIVE_CPU_BACKEND_LIST})
+    string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    string(REGEX REPLACE ":.*" "" BACKEND_DIR ${BACKEND_DIR})
+    set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
+    string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
+    foreach(TEST_SRC ${CPU_MULTI_SRC})
+        string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
+        string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
+        configure_file(${TEST_SRC} ${TARGET_NAME})
+        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
+    endforeach()
 endforeach()
 
 add_executable(unit-test ${SRC})
