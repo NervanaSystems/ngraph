@@ -28,7 +28,7 @@ namespace ngraph
         // The first output is equivalent to what MaxPool produces
         // The second one contains the indices of the maximum numbers
         // for each window in input (arg)
-        // These indices are used by MKLDNN for a back propagation pass
+        // These indices are used by DNNL for a back propagation pass
         class MaxPoolWithIndices : public Op
         {
         public:
@@ -65,7 +65,7 @@ namespace ngraph
         };
 
         // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
-        // pass the indices directly to MKLDNN to avoid max indices recomputation
+        // pass the indices directly to DNNL to avoid max indices recomputation
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:

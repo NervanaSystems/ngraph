@@ -69,7 +69,7 @@
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -88,7 +88,7 @@
 #include "ngraph/util.hpp"
 
 static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
-                           std::shared_ptr<ngraph::Node> arg,
+                           ngraph::Output<ngraph::Node> arg,
                            bool& transpose_w,
                            ngraph::Shape& shape_w)
 {
@@ -96,10 +96,9 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
 
     if (!r_w)
     {
-        if (arg->get_output_shape(0).size() != 2)
+        if (arg.get_shape().size() != 2)
         {
-            NGRAPH_DEBUG << arg->get_name() << " 's rank != 2 "
-                         << ngraph::vector_to_string(arg->get_output_shape(0));
+            NGRAPH_DEBUG << arg << " 's rank != 2 " << ngraph::vector_to_string(arg.get_shape());
             return false;
         }
         return true; // nth to do; reshape isn't a reshape
@@ -113,7 +112,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
     }
 
     auto io = r_w->get_input_order();
-    if (r_w->get_output_shape(0).size() != arg->get_output_shape(0).size()) // reshape
+    if (r_w->get_output_shape(0).size() != arg.get_shape().size()) // reshape
     {
         auto dio = ngraph::get_default_order(io);
         if (io != dio) // we can't reshape and transpose at the same time
@@ -121,7 +120,7 @@ static bool init_cblas_arg(std::shared_ptr<ngraph::Node> reshape,
             NGRAPH_DEBUG << "Reshape for " << reshape->get_name() << " is not in default order "
                          << ngraph::vector_to_string(io);
             NGRAPH_DEBUG << "r_w shape = " << ngraph::vector_to_string(r_w->get_output_shape(0));
-            NGRAPH_DEBUG << "arg shape = " << ngraph::vector_to_string(arg->get_output_shape(0));
+            NGRAPH_DEBUG << "arg shape = " << ngraph::vector_to_string(arg.get_shape());
             return false;
         }
 
@@ -161,10 +160,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_matmulbias()
         auto mpattern = m.get_match_root(); // add
         auto m_matmul = ngraph::pattern::Matcher::unique_match<ngraph::op::MatmulBias>(mpattern);
         auto m_broadcast = ngraph::pattern::Matcher::unique_match<ngraph::op::Broadcast>(mpattern);
-        auto m_bias = m_broadcast->get_argument(0);
+        auto m_bias = m_broadcast->input_value(0);
         auto pvm = m.get_pattern_value_map();
 
-        NGRAPH_CHECK(mpattern->get_output_element_type(0) != element::f64 || m_bias == nullptr,
+        NGRAPH_CHECK(mpattern->get_output_element_type(0) != element::f64,
                      "Bias in DP MatMulBias is not supported yet");
 
         auto mmb = std::make_shared<ngraph::op::MatmulBias>(pvm[W],
@@ -268,14 +267,14 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     auto xmu = std::make_shared<ngraph::op::Subtract>(sum_squared_input, avg_input_sum_sq);
     auto variance = std::make_shared<ngraph::op::Divide>(xmu, N);
     auto variance_label =
-        std::make_shared<pattern::op::Label>(variance, nullptr, NodeVector{variance});
+        std::make_shared<pattern::op::Label>(variance, nullptr, OutputVector{variance});
     auto variance_with_broadcast =
         std::make_shared<ngraph::op::Broadcast>(variance_label, Shape{2, 3}, AxisSet{0});
 
     // construct mean
     auto sum_input1 = std::make_shared<ngraph::op::Sum>(input, AxisSet{0});
     auto mean = std::make_shared<ngraph::op::Divide>(sum_input1, N);
-    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, NodeVector{mean});
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, OutputVector{mean});
     auto mean_with_broadcast =
         std::make_shared<ngraph::op::Broadcast>(mean_label, Shape{2, 3}, AxisSet{0});
     auto input_diff_mean = std::make_shared<ngraph::op::Subtract>(input, mean_with_broadcast);
@@ -342,7 +341,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
         auto bn_node = std::make_shared<ngraph::op::BatchNormTraining>(
             epsilon, pvm[gamma_label], pvm[beta_label], pvm[input]);
 
-        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_node.get()))
+        if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(bn_node.get()))
         {
             return false;
         }
@@ -389,9 +388,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias()
             bcast_m = as_type_ptr<op::Broadcast>(m.get_match_value().get_node()->get_argument(0));
         }
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv_m.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::Convolution>(conv_m.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -605,7 +604,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu()
         auto pvm = m.get_pattern_value_map();
         auto m_bn = std::static_pointer_cast<ngraph::op::BatchNormTraining>(
             m.get_match_root()->get_input_node_shared_ptr(0));
-        if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(m_bn.get()))
+        if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(m_bn.get()))
         {
             return false;
         }
@@ -641,12 +640,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
     auto gamma = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
-    auto bn_pred = [](std::shared_ptr<Node> node) {
+    auto bn_pred = [](Output<Node> node) {
         return pattern::has_class<ngraph::op::BatchNormInference>()(node) ||
                pattern::has_class<ngraph::op::BatchNormTraining>()(node);
     };
     auto bn = std::make_shared<pattern::op::Any>(
-        input, bn_pred, NodeVector{gamma, beta, input, mean, var});
+        input, bn_pred, OutputVector{gamma, beta, input, mean, var});
     auto prelu = std::make_shared<ngraph::op::Relu>(bn);
 
     auto callback = [input, mean, var, gamma, beta](pattern::Matcher& m) {
@@ -665,7 +664,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_relu_global_sta
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
         {
-            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(bn_inference.get()))
             {
                 return false;
             }
@@ -730,22 +729,22 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
     auto beta = std::make_shared<pattern::op::Label>(element::f32, beta_shape);
     double eps = 0.001;
     auto bn = std::make_shared<ngraph::op::BatchNormInference>(eps, gamma, beta, input, mean, var);
-    auto bn_label = std::make_shared<pattern::op::Label>(bn, nullptr, NodeVector{bn});
+    auto bn_label = std::make_shared<pattern::op::Label>(bn, nullptr, OutputVector{bn});
 
     auto broadcast1_input = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto broadcast1 =
         std::make_shared<ngraph::op::Broadcast>(broadcast1_input, input_shape, AxisSet{0, 2, 3});
     auto broadcast1_label =
-        std::make_shared<pattern::op::Label>(broadcast1, nullptr, NodeVector{broadcast1});
+        std::make_shared<pattern::op::Label>(broadcast1, nullptr, OutputVector{broadcast1});
     auto multiply = std::make_shared<ngraph::op::Multiply>(bn_label, broadcast1_label);
     auto multi_label =
-        std::make_shared<pattern::op::Label>(multiply, nullptr, NodeVector{multiply});
+        std::make_shared<pattern::op::Label>(multiply, nullptr, OutputVector{multiply});
 
     auto broadcast2_input = std::make_shared<pattern::op::Label>(element::f32, gamma_shape);
     auto broadcast2 =
         std::make_shared<ngraph::op::Broadcast>(broadcast2_input, input_shape, AxisSet{0, 2, 3});
     auto broadcast2_label =
-        std::make_shared<pattern::op::Label>(broadcast2, nullptr, NodeVector{broadcast2});
+        std::make_shared<pattern::op::Label>(broadcast2, nullptr, OutputVector{broadcast2});
     auto add = std::make_shared<ngraph::op::Add>(multi_label, broadcast2_label);
     auto prelu = std::make_shared<ngraph::op::Relu>(add);
 
@@ -802,7 +801,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
         {
-            if (!mkldnn_utils::can_use_mkldnn_batchnorm_fprop(bn_inference.get()))
+            if (!dnnl_utils::can_use_dnnl_batchnorm_fprop(bn_inference.get()))
             {
                 return false;
             }
@@ -852,9 +851,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_relu()
         auto conv = std::static_pointer_cast<ngraph::op::Convolution>(
             m.get_match_value().get_node()->get_argument(0));
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::Convolution>(conv.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -904,7 +903,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
             return false;
         }
 
-        // ConvolutionBias created only if it can run with MKLDNN.
+        // ConvolutionBias created only if it can run with DNNL.
         // No further checks needed.
         auto conv_relu =
             std::make_shared<ngraph::op::ConvolutionBias>(conv->get_argument(0),
@@ -954,9 +953,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::Convolution>(conv_m.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::Convolution>(conv_m.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -1011,7 +1010,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
             return false;
         }
 
-        // ConvolutionAdd created only if it can run with MKLDNN.
+        // ConvolutionAdd created only if it can run with DNNL.
         // No further checks needed.
         auto conv_n =
             std::make_shared<ngraph::op::ConvolutionAdd>(conv_m->get_argument(0),
@@ -1063,10 +1062,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             inplace_input = add_m->get_argument(1);
         }
 
-        if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::ConvolutionBias>(
-                conv_m.get()))
+        if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::ConvolutionBias>(conv_m.get()))
         {
-            NGRAPH_DEBUG << "Convolution not supported by MKLDNN";
+            NGRAPH_DEBUG << "Convolution not supported by DNNL";
             return false;
         }
 
@@ -1096,7 +1094,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
 {
     Shape shape{1, 1, 2, 2};
     auto x = std::make_shared<pattern::op::Label>(element::f32, shape);
-    auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, NodeVector{x});
+    auto x_label = std::make_shared<pattern::op::Label>(x, nullptr, OutputVector{x});
 
     uint64_t seed = 1234;
     auto seed_label = std::make_shared<pattern::op::Label>(element::u64, Shape{0});
@@ -1115,7 +1113,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto genmask = std::make_shared<op::GenerateMask>(
         const1_label, x->get_output_shape(0), x->get_output_element_type(0), seed, value, use_seed);
     auto genmask_label =
-        std::make_shared<pattern::op::Label>(genmask, nullptr, NodeVector{genmask});
+        std::make_shared<pattern::op::Label>(genmask, nullptr, OutputVector{genmask});
 
     auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label);
 
@@ -1212,7 +1210,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
             }
         }
 
-        // ConvolutionBiasAdd created only if it can run with MKLDNN.
+        // ConvolutionBiasAdd created only if it can run with DNNL.
         // No further checks needed.
         auto conv_n =
             std::make_shared<ngraph::op::ConvolutionBiasAdd>(conv_m->get_argument(0),
@@ -1236,13 +1234,16 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
 void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
 {
     // Construct predicate to match sigmoid and tanh
-    auto sigmoid_pred = [](std::shared_ptr<Node> n) {
-        return (is_type<ngraph::op::Sigmoid>(n)) || (is_type<ngraph::op::Tanh>(n));
+    auto sigmoid_pred = [](Output<Node> n) {
+        return (is_type<ngraph::op::Sigmoid>(n.get_node())) ||
+               (is_type<ngraph::op::Tanh>(n.get_node()));
     };
     // Construct predicate to match other valid nodes
-    auto other_pred = [](std::shared_ptr<Node> n) {
-        return (is_type<ngraph::op::Sigmoid>(n)) || (is_type<ngraph::op::Tanh>(n)) ||
-               (is_type<ngraph::op::Add>(n)) || (is_type<ngraph::op::Broadcast>(n));
+    auto other_pred = [](Output<Node> n) {
+        return (is_type<ngraph::op::Sigmoid>(n.get_node())) ||
+               (is_type<ngraph::op::Tanh>(n.get_node())) ||
+               (is_type<ngraph::op::Add>(n.get_node())) ||
+               (is_type<ngraph::op::Broadcast>(n.get_node()));
     };
     auto sigmoid_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, other_pred);
@@ -1298,8 +1299,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto iconst1 = ngraph::op::Constant::create(element::f32, Shape{}, {1});
     auto alpha = std::make_shared<pattern::op::Label>(iconst1);
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return (is_type<ngraph::op::Broadcast>(n));
+    auto broadcast_pred = [](Output<Node> n) {
+        return (is_type<ngraph::op::Broadcast>(n.get_node()));
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
     auto leaky_relu = std::make_shared<ngraph::op::Maximum>(
@@ -1360,8 +1361,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
     auto relu = std::make_shared<ngraph::op::Relu>(relu_input);
     auto iconst1 = ngraph::op::Constant::create(element::f32, Shape{}, {1});
     auto alpha = std::make_shared<pattern::op::Label>(iconst1);
-    auto broadcast_pred = [](std::shared_ptr<Node> n) {
-        return (is_type<ngraph::op::Broadcast>(n));
+    auto broadcast_pred = [](Output<Node> n) {
+        return (is_type<ngraph::op::Broadcast>(n.get_node()));
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
     auto min = std::make_shared<ngraph::op::Minimum>(relu, skip_broadcast);
@@ -1505,11 +1506,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
                                                               CoordinateDiff{0, 0},
                                                               CoordinateDiff{0, 0},
                                                               Strides{1, 1});
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto Ac = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto A = std::make_shared<ngraph::op::Broadcast>(Ac, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
-    auto A_label = std::make_shared<pattern::op::Label>(A, nullptr, NodeVector{A});
+    auto A_label = std::make_shared<pattern::op::Label>(A, nullptr, OutputVector{A});
     auto multiply = std::make_shared<ngraph::op::Multiply>(conv_label, A_label);
 
     auto callback = [input, filters, bias, conv_label, A_label](pattern::Matcher& m) {
@@ -1645,7 +1646,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
                                                                CoordinateDiff{0, 0},
                                                                Strides{1, 1},
                                                                32);
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
     auto var = std::make_shared<pattern::op::Label>(element::f32, Shape{32});
@@ -1758,7 +1759,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::
                                                                    shape_r,
                                                                    false,
                                                                    1.0);
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     // GroupConv + BatchNorm + Relu -> GroupConvBias
     auto prelu = std::make_shared<ngraph::op::Relu>(conv_label);
@@ -1812,7 +1813,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
                                                               CoordinateDiff{0, 0},
                                                               CoordinateDiff{0, 0},
                                                               Strides{1, 1});
-    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, NodeVector{conv});
+    auto conv_label = std::make_shared<pattern::op::Label>(conv, nullptr, OutputVector{conv});
 
     auto mean = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
     auto var = std::make_shared<pattern::op::Label>(element::f32, Shape{512});
@@ -1914,7 +1915,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
                                                            Strides{1, 1},
                                                            false);
     auto deconvb_label =
-        std::make_shared<pattern::op::Label>(deconvb, nullptr, NodeVector{deconvb});
+        std::make_shared<pattern::op::Label>(deconvb, nullptr, OutputVector{deconvb});
     auto prelu = std::make_shared<op::Relu>(deconvb_label);
 
     auto callback = [data_label, filters, out_delta, deconvb_label](pattern::Matcher& m) {
@@ -1958,7 +1959,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
     auto input = std::make_shared<pattern::op::Label>(element::f32, shape_a);
     auto slice =
         std::make_shared<ngraph::op::Slice>(input, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
-    auto slice_label = std::make_shared<pattern::op::Label>(slice, nullptr, NodeVector{slice});
+    auto slice_label = std::make_shared<pattern::op::Label>(slice, nullptr, OutputVector{slice});
     auto update_input = std::make_shared<pattern::op::Label>(element::f32, shape_b);
     auto update = std::make_shared<ngraph::op::Add>(update_input, slice_label);
     auto replace_slice = std::make_shared<ngraph::op::ReplaceSlice>(
@@ -2077,10 +2078,10 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
 
         if (!with_bias)
         {
-            if (!runtime::cpu::mkldnn_utils::can_use_mkldnn_conv<ngraph::op::QuantizedConvolution>(
+            if (!runtime::cpu::dnnl_utils::can_use_dnnl_conv<ngraph::op::QuantizedConvolution>(
                     dq_m->get_argument(0).get()))
             {
-                NGRAPH_DEBUG << "Quantized Convolution not supported by MKLDNN";
+                NGRAPH_DEBUG << "Quantized Convolution not supported by DNNL";
                 return false;
             }
         }
@@ -2246,7 +2247,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         NodeVector new_args;
         for (auto arg : concat_m->get_arguments())
         {
-            if (arg->description() != "Dequantize")
+            if (!is_type<op::v0::Dequantize>(arg))
             {
                 return false;
             }
@@ -2359,24 +2360,24 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
                                                                          Strides{1, 1},
                                                                          requantization_scale,
                                                                          false);
-    auto qconvb_label = std::make_shared<pattern::op::Label>(qconvb, nullptr, NodeVector{qconvb});
+    auto qconvb_label = std::make_shared<pattern::op::Label>(qconvb, nullptr, OutputVector{qconvb});
     auto dq_l = std::make_shared<ngraph::op::Dequantize>(
         qconvb_label, dq_scale1, dq_zp1, element::f32, AxisSet{});
-    auto dq_l_label = std::make_shared<pattern::op::Label>(dq_l, nullptr, NodeVector{dq_l});
+    auto dq_l_label = std::make_shared<pattern::op::Label>(dq_l, nullptr, OutputVector{dq_l});
     auto skipr_l = std::make_shared<pattern::op::Skip>(
-        dq_l_label, [](std::shared_ptr<Node> n) { return n->description() == "Reshape"; });
+        dq_l_label, [](Output<Node> n) { return is_type<op::v0::Reshape>(n.get_node()); });
     auto skipb_l = std::make_shared<pattern::op::Skip>(
-        skipr_l, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
+        skipr_l, [](Output<Node> n) { return is_type<op::v0::Broadcast>(n.get_node()); });
 
     // Right Graph
     auto summand = std::make_shared<pattern::op::Label>(element::i8, qconvb->get_output_shape(0));
     auto dq_r = std::make_shared<ngraph::op::Dequantize>(
         summand, dq_scale2, dq_zp2, element::f32, AxisSet{});
-    auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, NodeVector{dq_r});
+    auto dq_r_label = std::make_shared<pattern::op::Label>(dq_r, nullptr, OutputVector{dq_r});
     auto skipr_r = std::make_shared<pattern::op::Skip>(
-        dq_r_label, [](std::shared_ptr<Node> n) { return n->description() == "Reshape"; });
+        dq_r_label, [](Output<Node> n) { return is_type<op::v0::Reshape>(n.get_node()); });
     auto skipb_r = std::make_shared<pattern::op::Skip>(
-        skipr_r, [](std::shared_ptr<Node> n) { return n->description() == "Broadcast"; });
+        skipr_r, [](Output<Node> n) { return is_type<op::v0::Broadcast>(n.get_node()); });
 
     // Add left + right
     auto add = skipb_l + skipb_r;
@@ -2391,7 +2392,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         auto dq_r_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_r_label]);
 
         // both left and right are QuantizedConvolutionBias
-        if (dq_r_m->get_argument(0)->description() == "QuantizedConvolutionBias")
+        if (is_type<op::v0::QuantizedConvolutionBias>(dq_r_m->get_argument(0)))
         {
             for (auto user : m.get_match_root()->get_users())
             {
@@ -2515,7 +2516,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
 
 // Convert a QuantizedDot which takes [m,n]*[n,k] to
 // QuantizedMatmul which reorders input1 and does [m,n]*[k,n]
-// which is what mkldnn wants
+// which is what dnnl wants
 void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_quantized_matmul()
 {
     Shape shape_input0{2, 3};

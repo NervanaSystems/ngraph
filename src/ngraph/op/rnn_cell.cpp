@@ -184,7 +184,7 @@ OutputVector op::RNNCell::decompose_op() const
     // Ht-1*(R^T)
     auto Ht_R = std::make_shared<op::Dot>(H_t, builder::transpose(R));
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb
-    auto i_t = add(Xt_W, add(Ht_R, bias));
+    auto i_t = add(Xt_W, add(Ht_R, bias))->output(0);
 
     // f(Xt*(Wi^T) + Ht-1*(Ri^T) + Wbi + Rbi)
     i_t = m_activation_f(clip(i_t));

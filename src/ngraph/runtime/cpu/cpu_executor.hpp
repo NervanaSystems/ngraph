@@ -19,7 +19,7 @@
 #include <functional>
 #include <thread>
 
-#include <mkldnn.hpp>
+#include <dnnl.hpp>
 
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
@@ -38,7 +38,7 @@ namespace ngraph
         {
             namespace executor
             {
-                extern mkldnn::engine global_cpu_engine;
+                extern dnnl::engine global_cpu_engine;
 
                 // CPUExecutor owns the resources for executing a graph.
                 class CPUExecutor

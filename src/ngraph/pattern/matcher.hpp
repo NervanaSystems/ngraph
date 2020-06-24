@@ -150,13 +150,11 @@ public:
         return matched;
     }
 
-    bool is_contained_match(const NodeVector& exclusions = {}, bool ignore_unused = true);
-    const NodeVector get_matched_nodes() { return as_node_vector(m_matched_list); }
+    bool is_contained_match(const OutputVector& exclusions = {}, bool ignore_unused = true);
     const OutputVector& get_matched_values() const { return m_matched_list; }
     OutputVector& get_matched_values() { return m_matched_list; }
     void reset() {}
     const std::string& get_name() { return m_name; }
-    std::shared_ptr<Node> get_pattern() { return m_pattern_node.as_single_output_node(); }
     Output<Node> get_pattern_value() { return m_pattern_node; }
     std::shared_ptr<Node> get_match_root();
     template <typename T>
@@ -250,14 +248,14 @@ public:
 
     /// \brief Returns a vector of bound nodes for a given label (used in a pattern
     /// describing an individual cell
-    NodeVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const
+    OutputVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const
     {
         if (m_matches.count(pattern) == 0)
         {
             throw ngraph_error("No bound nodes for a given label");
         }
 
-        return as_node_vector(m_matches.at(pattern));
+        return m_matches.at(pattern);
     }
 
     size_t get_number_of_recurrent_matches() const

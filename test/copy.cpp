@@ -351,7 +351,7 @@ TEST(copy, sum)
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
 
     auto node = make_shared<op::Sum>(arg0, axes);
-    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape), node->get_argument(1)};
+    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape), node->input_value(1)};
     auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Sum>(new_node);
     ASSERT_NE(node_cast, nullptr);

@@ -153,7 +153,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
     // dot(A,B).T = dot (B.T, A.T)
-    auto dot_pred = [](shared_ptr<Node> n) { return is_type<op::Dot>(n); };
+    auto dot_pred = [](Output<Node> n) { return is_type<op::Dot>(n.get_node()); };
 
     auto pdot = make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
     auto preshape = make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
@@ -220,7 +220,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
     auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
     auto reshape_label =
-        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), NodeVector{reshape});
+        make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), OutputVector{reshape});
 
     auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
@@ -232,12 +232,12 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         std::reverse(std::begin(reshape_node_vector), std::end(reshape_node_vector));
 
         auto first_bound_reshape_op = reshape_node_vector.front();
-        auto driver_op = first_bound_reshape_op->get_argument(0);
+        auto driver_op = first_bound_reshape_op.get_node()->get_argument(0);
         auto last_bound_reshape_op = reshape_node_vector.back();
 
         // Need to check if the user of the last bound op is a reshape since the last reshape is
         // allowed to have fan-out but the matcher will discard any reshape if it has fan-out
-        auto user_of_last_bound_reshape_op = last_bound_reshape_op->get_users(true)[0];
+        auto user_of_last_bound_reshape_op = last_bound_reshape_op.get_node()->get_users(true)[0];
         if (is_type<op::Reshape>(user_of_last_bound_reshape_op))
         {
             reshape_node_vector.push_back(user_of_last_bound_reshape_op);
@@ -253,11 +253,11 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         // The complete reshape node vector may not contain contiguous reshapes that can be
         // fused. Only the subset of reshapes with a reshape(any axis order) followed by reshapes
         // with default axis order can be fused. Creating such subpatterns here:
-        std::vector<NodeVector> sub_patterns{NodeVector{first_bound_reshape_op}};
+        std::vector<OutputVector> sub_patterns{OutputVector{first_bound_reshape_op}};
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
         {
-            auto r = as_type_ptr<op::Reshape>(*it);
+            auto r = as_type_ptr<op::Reshape>(it->get_node_shared_ptr());
 
             // Check that the input to r is the last reshape stored in the
             // subpattern vector
@@ -271,13 +271,13 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             auto default_order_r = get_default_order(r->get_input_shape(0));
             if (r->get_input_order() == default_order_r)
             {
-                sub_patterns.back().push_back(r);
+                sub_patterns.back().push_back(*it);
             }
             else
             {
                 NGRAPH_DEBUG << r->get_name() << "does not have default axis order. "
                              << "It might be part of a different subpattern";
-                sub_patterns.push_back(NodeVector{r});
+                sub_patterns.push_back(OutputVector{r});
             }
         }
 
@@ -292,9 +292,10 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
                 continue;
             }
 
-            auto first_reshape = as_type_ptr<op::Reshape>(sub_pattern.front());
+            auto first_reshape =
+                as_type_ptr<op::Reshape>(sub_pattern.front().get_node_shared_ptr());
             auto input_to_first_reshape = first_reshape->get_argument(0);
-            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back());
+            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back().get_node_shared_ptr());
 
             auto new_input_order = first_reshape->get_input_order();
             auto new_out_shape = last_reshape->get_output_shape(0);

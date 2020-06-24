@@ -29,29 +29,27 @@
 using namespace std;
 using namespace ngraph;
 
-static shared_ptr<Node> sigmoid(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
+static Output<Node> sigmoid(const Output<Node>& arg, float /* alpha */, float /* beta */)
 {
-    return make_shared<op::Sigmoid>(arg);
+    return make_shared<op::Sigmoid>(arg)->output(0);
 }
 
-static shared_ptr<Node> tanh(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
+static Output<Node> tanh(const Output<Node>& arg, float /* alpha */, float /* beta */)
 {
-    return make_shared<op::Tanh>(arg);
+    return make_shared<op::Tanh>(arg)->output(0);
 }
 
-static shared_ptr<Node> relu(const shared_ptr<Node>& arg, float /* alpha */, float /* beta */)
+static Output<Node> relu(const Output<Node>& arg, float /* alpha */, float /* beta */)
 {
-    return make_shared<op::Relu>(arg);
+    return make_shared<op::Relu>(arg)->output(0);
 }
 
-static shared_ptr<Node> hardsigmoid(const shared_ptr<Node>& arg, float alpha, float beta)
+static Output<Node> hardsigmoid(const Output<Node>& arg, float alpha, float beta)
 {
-    const auto alpha_node =
-        op::Constant::create<float>(arg->get_output_element_type(0), Shape{}, {alpha});
-    const auto beta_node =
-        op::Constant::create<float>(arg->get_output_element_type(0), Shape{}, {beta});
+    const auto alpha_node = op::Constant::create<float>(arg.get_element_type(), Shape{}, {alpha});
+    const auto beta_node = op::Constant::create<float>(arg.get_element_type(), Shape{}, {beta});
 
-    return make_shared<op::HardSigmoid>(arg, alpha_node, beta_node);
+    return make_shared<op::HardSigmoid>(arg, alpha_node, beta_node)->output(0);
 }
 
 op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha, float beta)
@@ -71,7 +69,7 @@ op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f)
 {
 }
 
-shared_ptr<Node> op::util::ActivationFunction::operator()(const shared_ptr<Node>& arg) const
+Output<Node> op::util::ActivationFunction::operator()(const Output<Node>& arg) const
 {
     return m_function(arg, m_alpha, m_beta);
 }
