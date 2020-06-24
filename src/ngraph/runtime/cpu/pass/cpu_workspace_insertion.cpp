@@ -96,9 +96,12 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::run_on_function(std::shared_ptr<
 
 bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 {
-    auto data = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(0));
-    auto delta = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(1));
-    auto max_pool = std::static_pointer_cast<pattern::op::Label>(m.get_pattern()->get_argument(2));
+    auto data = std::static_pointer_cast<pattern::op::Label>(
+        m.get_pattern_value().get_node()->get_argument(0));
+    auto delta = std::static_pointer_cast<pattern::op::Label>(
+        m.get_pattern_value().get_node()->get_argument(1));
+    auto max_pool = std::static_pointer_cast<pattern::op::Label>(
+        m.get_pattern_value().get_node()->get_argument(2));
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                  << m.get_match_root()->get_name();
 
@@ -114,7 +117,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         m_max_pool_bprop->get_window_shape().size() != 2 ||
         m_max_pool_bprop->get_input_element_type(0) != element::f32)
     {
-        NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";
+        NGRAPH_DEBUG << "DNNL doesn't support inputs of given shape type";
         return false;
     }
 

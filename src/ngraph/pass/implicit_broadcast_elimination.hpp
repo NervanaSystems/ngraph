@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace pass
     {
-        NodeVector explicit_broadcast(std::shared_ptr<Node>& node);
+        OutputVector explicit_broadcast(std::shared_ptr<Node>& node);
         class ImplicitBroadcastElimination;
     }
 }

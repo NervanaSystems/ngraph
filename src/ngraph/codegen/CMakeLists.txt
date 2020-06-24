@@ -39,10 +39,10 @@ endif()
 get_filename_component(CLANG_INTRIN_INCLUDE_DIR ${LLVM_INCLUDE_DIRS}/../lib/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/include ABSOLUTE)
 
 if(NGRAPH_CPU_ENABLE)
-    get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(DNNL_INCLUDE_DIR libdnnl INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
     list(APPEND HEADER_SEARCH_DEFINES EIGEN_HEADERS_PATH="${EIGEN_INCLUDE_DIR}")
-    list(APPEND HEADER_SEARCH_DEFINES MKLDNN_HEADERS_PATH="${MKLDNN_INCLUDE_DIR}")
+    list(APPEND HEADER_SEARCH_DEFINES DNNL_HEADERS_PATH="${DNNL_INCLUDE_DIR}")
 endif()
 
 list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INTRIN_INCLUDE_DIR}")
@@ -74,7 +74,7 @@ add_custom_target(header_resource
     BYPRODUCTS
 )
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(header_resource ext_eigen libmkldnn)
+    add_dependencies(header_resource ext_eigen libdnnl)
 endif()
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)
@@ -84,7 +84,7 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 endif()
 add_dependencies(codegen header_resource)
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(codegen libmkldnn libeigen)
+    add_dependencies(codegen libdnnl libeigen)
     if(LINUX)
         # --exclude-libs=ALL prevents symbols from statically-linked libraries (LLVM, in this case)
         # from being automatically exported

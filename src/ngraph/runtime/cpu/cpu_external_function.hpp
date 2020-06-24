@@ -44,7 +44,7 @@
 #include "ngraph/runtime/cpu/cpu_execution_mode.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor_wrapper.hpp"
-#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
+#include "ngraph/runtime/cpu/dnnl_emitter.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
 #include "ngraph/state/state.hpp"
 #include "ngraph/util.hpp"
@@ -129,12 +129,12 @@ namespace ngraph
                     return m_memory_buffer_sizes;
                 }
                 const std::vector<OpAttributes>& get_op_attrs() const { return m_op_attrs; }
-                const std::unique_ptr<MKLDNNEmitter>& get_mkldnn_emitter() const
+                const std::unique_ptr<DNNLEmitter>& get_dnnl_emitter() const
                 {
-                    return m_mkldnn_emitter;
+                    return m_dnnl_emitter;
                 }
 
-                // Return the tuple including the string to create mkldnn primitive, the deps, the
+                // Return the tuple including the string to create dnnl primitive, the deps, the
                 // index and
                 // the scratchpad size in CODEGEN
                 const std::tuple<std::string, std::vector<size_t>, size_t, size_t>&
@@ -270,7 +270,7 @@ namespace ngraph
                 std::vector<size_t> m_memory_buffer_sizes;
                 std::vector<OpAttributes> m_op_attrs;
 
-                std::unique_ptr<MKLDNNEmitter> m_mkldnn_emitter;
+                std::unique_ptr<DNNLEmitter> m_dnnl_emitter;
 
                 std::string m_function_name;
 
@@ -321,11 +321,11 @@ namespace ngraph
                 bool m_is_built;
                 std::vector<runtime::PerformanceCounter> m_perf_counters;
 
-                /// Map each node with mkldnn implementation to its mkldnn primitive creating
-                /// string, deps, mkldnn primitive index, and mkldnn scratchpad size.
+                /// Map each node with dnnl implementation to its dnnl primitive creating
+                /// string, deps, dnnl primitive index, and dnnl scratchpad size.
                 std::map<const Node*, std::tuple<std::string, std::vector<size_t>, size_t, size_t>>
                     m_node_primitive_string_deps_index_size_map;
-                /// Name of the file to store descriptors for mkldnn_primitives
+                /// Name of the file to store descriptors for dnnl_primitives
                 const std::string m_desc_filename = "desc_file";
                 EXECUTION_MODE m_execution_mode;
             };

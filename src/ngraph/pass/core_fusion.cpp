@@ -512,13 +512,13 @@ void pass::CoreFusion::construct_conv_affine_folding()
         auto get_bcast_input = [](const shared_ptr<op::Broadcast>& bcast) {
             if (bcast->get_input_shape(0).size() == 1)
             {
-                return bcast->get_argument(0);
+                return bcast->input_value(0);
             }
             if (bcast->get_input_shape(0).size() == 2)
             {
                 Shape bshape{bcast->get_input_shape(0)[1]};
-                return static_pointer_cast<Node>(
-                    make_shared<op::Reshape>(bcast->get_argument(0), AxisVector{0, 1}, bshape));
+                return make_shared<op::Reshape>(bcast->input_value(0), AxisVector{0, 1}, bshape)
+                    ->output(0);
             }
             throw ngraph_error("Unexpected shape for bcast input");
         };
@@ -578,10 +578,8 @@ static shared_ptr<Node> reduce_broadcast(shared_ptr<Node> broadcast)
     Shape shape_w1{matched_broadcast_w1->get_output_shape(0)};
     shape_w1[H] /= 2;
     shape_w1[W] /= 2;
-    auto new_broadcast_w1 =
-        std::make_shared<op::Broadcast>(matched_broadcast_w1->get_argument(0),
-                                        shape_w1,
-                                        matched_broadcast_w1->get_broadcast_axes());
+    auto new_broadcast_w1 = std::make_shared<op::Broadcast>(
+        matched_broadcast_w1->input_value(0), shape_w1, matched_broadcast_w1->get_broadcast_axes());
     return move(new_broadcast_w1);
 }
 

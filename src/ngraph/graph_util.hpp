@@ -71,6 +71,11 @@ namespace ngraph
                         const NodeVector& subgraph_params = {});
 
     NGRAPH_API
+    void traverse_nodes(const OutputVector& subgraph_results,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        const OutputVector& subgraph_params = {});
+
+    NGRAPH_API
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         bool,
@@ -439,10 +444,10 @@ namespace ngraph
     bool is_zero(const Output<Node>& reduce_constant);
 
     NGRAPH_API
-    NodeVector get_subgraph_outputs(const NodeVector& nodes,
-                                    const NodeVector& exclusions,
-                                    bool ignore_unused = false,
-                                    bool ignore_output_duplicates = true);
+    OutputVector get_subgraph_outputs(const OutputVector& nodes,
+                                      const OutputVector& exclusions,
+                                      bool ignore_unused = false,
+                                      bool ignore_output_duplicates = true);
 
     // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
     // node or a node that belongs to args

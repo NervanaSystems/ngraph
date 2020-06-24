@@ -16,9 +16,9 @@
 
 #include "ngraph/op/concat.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/kernel/concat.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -95,22 +95,21 @@ namespace ngraph
                     }
                 }
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto concat_pd =
-                        mkldnn_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                    auto concat_pd = dnnl_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(concat, concat_pd);
 
-                    std::vector<mkldnn::memory::desc> inputs_data_desc;
+                    std::vector<dnnl::memory::desc> inputs_data_desc;
                     for (size_t i = 0; i < nargs; i++)
                     {
-                        inputs_data_desc.push_back(mkldnn_utils::get_input_mkldnn_md(node, i));
+                        inputs_data_desc.push_back(dnnl_utils::get_input_dnnl_md(node, i));
                     }
                     // Concat needs number of inputs plus 2 primitives; those two are for result and
                     // concat.
-                    auto concat_index = mkldnn_emitter->reserve_primitive_space(nargs + 2);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(concat_index);
+                    auto concat_index = dnnl_emitter->reserve_primitive_space(nargs + 2);
+                    auto& deps = dnnl_emitter->get_primitive_deps(concat_index);
 
                     auto functor = [&,
                                     concat_pd,
@@ -123,28 +122,27 @@ namespace ngraph
                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_concat(ctx->mkldnn_memories,
-                                                         ctx->mkldnn_primitives,
-                                                         ctx->mkldnn_scratchpad_mds,
-                                                         concat_pd,
-                                                         inputs_data_desc,
-                                                         deps,
-                                                         concat_index);
+                            dnnl_emitter->build_concat(ctx->dnnl_memories,
+                                                       ctx->dnnl_primitives,
+                                                       ctx->dnnl_scratchpad_mds,
+                                                       concat_pd,
+                                                       inputs_data_desc,
+                                                       deps,
+                                                       concat_index);
                         }
                         for (size_t i = 0; i < nargs; i++)
                         {
-                            cpu::mkldnn_utils::set_memory_ptr(
+                            cpu::dnnl_utils::set_memory_ptr(
                                 ctx, deps[i], ctx->buffer_data[arg_buffer_indices[i]]);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[nargs], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                            ctx,
-                            concat_index,
-                            deps,
-                            cpu::mkldnn_utils::OpType::CONCAT,
-                            scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               concat_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::CONCAT,
+                                                               scratchpad_size);
                     };
 
                     functors.emplace_back(functor);
