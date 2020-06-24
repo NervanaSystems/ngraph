@@ -584,7 +584,7 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
-    target_link_libraries(unit-test PRIVATE libmkldnn)
+    target_link_libraries(unit-test PRIVATE libdnnl)
     target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
@@ -629,7 +629,7 @@ if (NOT NGRAPH_IE_ENABLE)
     # If all the runtime libraries are installed into one location, that will make life easier.
     if (MSVC)
         add_custom_target(unit-test-check
-            COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/mkldnn/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+            COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
             COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
             DEPENDS unit-test
         )

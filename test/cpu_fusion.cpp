@@ -292,7 +292,7 @@ TEST(cpu_fusion, fuse_conv_relu)
     ASSERT_GT(cb, 0);
 }
 
-// ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
+// ConvolutionBiasAdd relies on an in-place fused DNNL kernel.
 // Need to ensure that it is fused only when in-place buffer allocation is feasible
 shared_ptr<Function> gen_conv_bias_add(bool param_input, bool result_output)
 {
@@ -331,7 +331,7 @@ TEST(cpu_fusion, fuse_conv_bias_add)
     ASSERT_EQ(count_ops_of_type<op::ConvolutionBiasAdd>(func_nofuse2), 1);
 }
 
-// ConvolutionAdd relies on an in-place fused MKLDNN kernel.
+// ConvolutionAdd relies on an in-place fused DNNL kernel.
 // Need to ensure that it is fused only when in-place buffer allocation is feasible
 shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
 {
@@ -683,7 +683,7 @@ TEST(cpu_fusion, fuse_bi_directional_rnn)
     auto rev_seq_ops = get_ops_of_type<op::Reverse>(func);
     auto rnn_ops = get_ops_of_type<op::Rnn>(func);
     EXPECT_EQ(rev_seq_ops.size(), 0);
-    // fuse two bi-directional rnn layers in to one MKLDNN Op
+    // fuse two bi-directional rnn layers in to one DNNL Op
     EXPECT_EQ(rnn_ops.size(), 1);
 }
 

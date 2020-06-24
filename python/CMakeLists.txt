@@ -46,5 +46,5 @@ endif()
 
 add_custom_target(python_wheel DEPENDS ngraph ${CMAKE_CURRENT_BINARY_DIR}/dist/)
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(python_wheel libmkldnn)
+    add_dependencies(python_wheel libdnnl)
 endif()

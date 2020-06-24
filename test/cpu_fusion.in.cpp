@@ -807,7 +807,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_conv_horizontal_fusion)
 
 namespace
 {
-    // ConvolutionBiasAdd relies on an in-place fused MKLDNN kernel.
+    // ConvolutionBiasAdd relies on an in-place fused DNNL kernel.
     // Need to ensure that it is fused only when in-place buffer allocation is feasible
     shared_ptr<Function> gen_conv_bias_add(bool param_input, bool result_output)
     {
@@ -846,7 +846,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_conv_bias_add)
 
 namespace
 {
-    // ConvolutionAdd relies on an in-place fused MKLDNN kernel.
+    // ConvolutionAdd relies on an in-place fused DNNL kernel.
     // Need to ensure that it is fused only when in-place buffer allocation is feasible
     shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
     {
@@ -2154,9 +2154,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_fuse_leaky_relu)
     EXPECT_EQ(0, count_ops_of_type<op::CPULeakyRelu>(no_fuse1));
     EXPECT_EQ(0, count_ops_of_type<op::CPULeakyRelu>(no_fuse2));
 
-    // non-mkldnn kernel
+    // non-dnnl kernel
     auto cpu_f1 = make_function(Shape{1, 2, 3}, std::vector<float>(6, 0.1f));
-    // mkldnn kernel
+    // dnnl kernel
     auto cpu_f2 = make_function(Shape{2, 3}, std::vector<float>(6, 0.1f));
 
     vector<vector<float>> args;

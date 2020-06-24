@@ -50,7 +50,7 @@
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/or.hpp"
 #include "ngraph/pattern/op/skip.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/lstm.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"
@@ -228,7 +228,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 
         // We need to reorder W, R and bias to IFCO gate order.
         // Note: ie.: ONNX runtime provides W, R and bias in the gate order [IOFC] but
-        // MKLDNN computes LSTM kernel in the [IFCO] order.
+        // DNNL computes LSTM kernel in the [IFCO] order.
         if (lstmcell_op->get_weights_format() != op::LSTMWeightsFormat::IFCO)
         {
             W_ifco = lstmcell_op->convert_node_format(W_ifco);
@@ -259,7 +259,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
 
         auto dst_layer = m.get_match_value().get_node()->output(0);
         auto dst_iter = m.get_match_value().get_node()->output(1);
-        // dst_iter of lstm mkldnn output holds the results of both recurrent state
+        // dst_iter of lstm dnnl output holds the results of both recurrent state
         // tensor outputs. we need to slice the ct.
         // find the user's for {ht} and replace them with lstm output 2
         dst_iter.replace(lstm_node->output(2));
@@ -423,7 +423,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // TODO: (Pruthvi) temporary workaround for GNMT slow down
         // this checks avoids fusing of LSTM cells if its a part of decoder, we
-        // will remove this once mkldnn optimizes individual LSTM cell or once
+        // will remove this once dnnl optimizes individual LSTM cell or once
         // we have decoder pattern for GNMT.
         if (!(is_type<ngraph::op::Broadcast>(cell_state.get_node_shared_ptr()) &&
               is_type<ngraph::op::Constant>(
@@ -468,7 +468,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 
         if (hidden_state.get_shape() != cell_state.get_shape())
         {
-            NGRAPH_DEBUG << "Lstm MKLDNN kernel requires recurrent output hidden states to match ";
+            NGRAPH_DEBUG << "Lstm DNNL kernel requires recurrent output hidden states to match ";
             return false;
         }
 

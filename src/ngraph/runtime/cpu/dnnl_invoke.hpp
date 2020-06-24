@@ -26,7 +26,7 @@ namespace ngraph
         {
             struct CPURuntimeContext;
 
-            namespace mkldnn_utils
+            namespace dnnl_utils
             {
                 enum class OpType
                 {
@@ -82,11 +82,11 @@ namespace ngraph
                     SOFTMAX
                 };
                 extern "C" void set_memory_ptr(CPURuntimeContext* ctx, size_t index, void* ptr);
-                extern "C" void mkldnn_invoke_primitive(CPURuntimeContext* ctx,
-                                                        size_t primitive_index,
-                                                        std::vector<size_t>& deps,
-                                                        OpType type,
-                                                        size_t scratchpad_size = 0);
+                extern "C" void dnnl_invoke_primitive(CPURuntimeContext* ctx,
+                                                      size_t primitive_index,
+                                                      std::vector<size_t>& deps,
+                                                      OpType type,
+                                                      size_t scratchpad_size = 0);
             }
         }
     }
