@@ -29,22 +29,21 @@ void regclass_pyngraph_Function(py::module m)
 {
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
     function.doc() = "ngraph.impl.Function wraps ngraph::Function";
-    function.def(py::init([](const std::vector<std::shared_ptr<ngraph::Node>>& outputs,
-                             const std::vector<std::shared_ptr<ngraph::op::Parameter>>& in,
-                             const std::string& name) {
-        ngraph::OutputVector ov;
-        for (std::shared_ptr<ngraph::Node> output : outputs)
-        {
-            ov.push_back(output->output(0));
-        }
-        return std::make_shared<ngraph::Function>(ov, in, name);
-    }));
+    function.def(
+        py::init([](const NodeVector& outputs, const ParameterVector& in, const std::string& name) {
+            ngraph::OutputVector ov;
+            for (std::shared_ptr<ngraph::Node> output : outputs)
+            {
+                ov.push_back(output->output(0));
+            }
+            return std::make_shared<ngraph::Function>(ov, in, name);
+        }));
     function.def(py::init<const std::vector<ngraph::Output<ngraph::Node>>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const ParameterVector&,
                           const std::string&>());
 
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const ParameterVector&,
                           const std::string&>());
     function.def("get_output_size", &ngraph::Function::get_output_size);
     function.def("get_ops", &ngraph::Function::get_ops);

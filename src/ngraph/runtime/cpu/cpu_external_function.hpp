@@ -233,7 +233,7 @@ namespace ngraph
                 // Because we are directly accessing the constant data stored in the
                 // Constant ops we need to keep a list of shared_ptr to each Constant
                 // so they don't get freed before we are done with them
-                std::vector<std::shared_ptr<Node>> m_active_constants;
+                NodeVector m_active_constants;
 #endif
                 static bool is_codegen(const ngraph::pass::PassConfig& pc);
                 std::unordered_set<descriptor::Tensor*>&

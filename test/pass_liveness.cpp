@@ -45,7 +45,7 @@ TEST(liveness, constant)
     pass_manager.run_passes(f);
 
     auto tmp = f->get_ordered_ops();
-    vector<shared_ptr<Node>> sorted{tmp.begin(), tmp.end()};
+    NodeVector sorted{tmp.begin(), tmp.end()};
     ASSERT_EQ(3, sorted.size());
     EXPECT_EQ(0, sorted[0]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[0]->liveness_free_list.size());

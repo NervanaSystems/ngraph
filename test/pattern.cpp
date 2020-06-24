@@ -186,9 +186,7 @@ public:
     }
 };
 
-static void run_passes(pass::Manager& pass_manager,
-                       shared_ptr<Node> graph,
-                       std::vector<shared_ptr<op::Parameter>> parms)
+static void run_passes(pass::Manager& pass_manager, shared_ptr<Node> graph, ParameterVector parms)
 {
     auto func = make_shared<Function>(graph, ParameterVector{parms});
     pass_manager.run_passes(func);

@@ -302,8 +302,7 @@ bool ngraph::is_post_dominated(Node* X, Node* Y)
     return true;
 }
 
-std::vector<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map)
+NodeVector ngraph::clone_nodes(const NodeVector& nodes, NodeMap& node_map)
 {
     // for each node in topological order
     auto sorted_nodes = topological_sort(nodes);
@@ -318,7 +317,7 @@ std::vector<std::shared_ptr<ngraph::Node>>
                 Output<Node> output = input.get_source_output();
                 cloned_args.push_back(output.for_node(node_map.at(output.get_node())));
             }
-            std::vector<std::shared_ptr<Node>> cloned_dependencies;
+            NodeVector cloned_dependencies;
             for (auto& dependency : node->get_control_dependencies())
             {
                 shared_ptr<Node>& dependent = node_map.at(dependency.get());
@@ -347,7 +346,7 @@ std::vector<std::shared_ptr<ngraph::Node>>
 
     // create and return vector of cloned nodes
     // order matches input vector (not necessarily topological)
-    std::vector<std::shared_ptr<ngraph::Node>> cloned_nodes;
+    NodeVector cloned_nodes;
     for (auto node : nodes)
     {
         cloned_nodes.push_back(node_map.at(node.get()));
@@ -355,9 +354,8 @@ std::vector<std::shared_ptr<ngraph::Node>>
     return cloned_nodes;
 }
 
-std::list<std::shared_ptr<ngraph::Node>>
-    ngraph::clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
-                        RawNodeOutputMap& output_map)
+std::list<std::shared_ptr<ngraph::Node>> ngraph::clone_nodes(const NodeVector& nodes,
+                                                             RawNodeOutputMap& output_map)
 {
     // for each node in topological order
     auto sorted_nodes = topological_sort(nodes);
@@ -442,7 +440,7 @@ std::shared_ptr<ngraph::Function> ngraph::clone_function(const ngraph::Function&
         }
         cloned_results.push_back(result);
     }
-    std::vector<std::shared_ptr<op::Parameter>> cloned_params;
+    ParameterVector cloned_params;
     for (auto param : func.get_parameters())
     {
         cloned_params.push_back(as_type_ptr<op::Parameter>(node_map.at(param.get())));
@@ -499,7 +497,7 @@ pair<shared_ptr<op::Result>, shared_ptr<op::Parameter>>
                  "one input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
-    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    OutputVector src_outputs = get_outputs_to(*src_node, *dst_node);
     NGRAPH_CHECK(src_outputs.size() == 1,
                  "insert_result_parameter_split encountered more than "
                  "one output between the source and destination nodes");
@@ -570,7 +568,7 @@ void ngraph::insert_new_node_between(const shared_ptr<Node>& src_node,
                  "input between the source and destination nodes");
     auto& dst_input = dst_inputs[0];
 
-    std::vector<Output<Node>> src_outputs = get_outputs_to(*src_node, *dst_node);
+    OutputVector src_outputs = get_outputs_to(*src_node, *dst_node);
     NGRAPH_CHECK(src_outputs.size() == 1,
                  "insert_new_node_between encountered more than one "
                  "output between the source and destination nodes");
@@ -778,9 +776,9 @@ std::vector<Input<Node>> ngraph::get_inputs_from(Node& src, Node& dst)
     return result;
 }
 
-std::vector<Output<Node>> ngraph::get_outputs_to(Node& src, Node& dst)
+OutputVector ngraph::get_outputs_to(Node& src, Node& dst)
 {
-    std::vector<Output<Node>> result;
+    OutputVector result;
 
     for (auto& output : src.outputs())
     {

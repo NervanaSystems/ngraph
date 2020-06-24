@@ -770,7 +770,7 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
 
 ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_parameters)
 {
-    std::vector<std::shared_ptr<op::Parameter>> params;
+    ParameterVector params;
     for (auto& param_ref : json_parameters)
     {
         params.push_back(as_type_ptr<op::Parameter>(deserialize_node_reference(param_ref)));

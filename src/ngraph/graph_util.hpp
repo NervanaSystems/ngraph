@@ -269,11 +269,11 @@ namespace ngraph
 
     /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
-    std::vector<std::shared_ptr<Node>> topological_sort(T root_nodes)
+    NodeVector topological_sort(T root_nodes)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
-        std::vector<std::shared_ptr<Node>> result;
+        NodeVector result;
 
         for (auto& node : root_nodes)
         {
@@ -321,12 +321,12 @@ namespace ngraph
 
     /// Topological sort of just nodes
     template <typename T>
-    std::vector<std::shared_ptr<Node>> subgraph_topological_sort(T nodes)
+    NodeVector subgraph_topological_sort(T nodes)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
         std::unordered_set<Node*> nodes_to_emit;
-        std::vector<std::shared_ptr<Node>> result;
+        NodeVector result;
 
         for (auto& node : nodes)
         {
@@ -400,16 +400,14 @@ namespace ngraph
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
     NGRAPH_API
-    std::vector<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+    NodeVector clone_nodes(const NodeVector& nodes, NodeMap& node_map);
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
     NGRAPH_API
-    std::list<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
-                    RawNodeOutputMap& node_map);
+    std::list<std::shared_ptr<ngraph::Node>> clone_nodes(const NodeVector& nodes,
+                                                         RawNodeOutputMap& node_map);
 
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -493,7 +491,7 @@ namespace ngraph
     /// \return A vector containing a handle for each output of src that is connected to an input
     ///         of `dst`.
     NGRAPH_API
-    std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
+    OutputVector get_outputs_to(Node& src, Node& dst);
 
     /// Checks the func for graph cycles starting from results going backwards, then from parameters
     /// going forward.

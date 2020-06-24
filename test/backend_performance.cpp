@@ -73,7 +73,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
 
     for (std::string backend_name : backend_names)
     {
-        vector<std::shared_ptr<op::Parameter>> params(n_arrays);
+        ParameterVector params(n_arrays);
         vector<std::shared_ptr<Node>> params_as_nodes(n_arrays);
         for (size_t i = 0; i < n_arrays; i++)
         {
