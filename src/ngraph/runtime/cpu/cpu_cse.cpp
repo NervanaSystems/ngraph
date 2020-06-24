@@ -19,10 +19,10 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 
-using namespace mkldnn;
+using namespace dnnl;
 using namespace ngraph;
 using namespace std;
 
@@ -46,8 +46,8 @@ static bool cse_convertlayout(std::shared_ptr<Node> a, std::shared_ptr<Node> b)
     auto a_layout_desc = get_tensor_layout(a);
     auto b_layout_desc = get_tensor_layout(b);
     bool is_args_same = (ar_a->get_argument(0) == ar_b->get_argument(0));
-    bool is_output_mem_desc_same = runtime::cpu::mkldnn_utils::compare_mkldnn_mds(
-        a_layout_desc->get_mkldnn_md(), b_layout_desc->get_mkldnn_md());
+    bool is_output_mem_desc_same = runtime::cpu::dnnl_utils::compare_dnnl_mds(
+        a_layout_desc->get_dnnl_md(), b_layout_desc->get_dnnl_md());
 
     return is_args_same && is_output_mem_desc_same;
 }

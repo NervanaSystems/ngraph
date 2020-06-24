@@ -117,7 +117,7 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
         m_max_pool_bprop->get_window_shape().size() != 2 ||
         m_max_pool_bprop->get_input_element_type(0) != element::f32)
     {
-        NGRAPH_DEBUG << "MKLDNN doesn't support inputs of given shape type";
+        NGRAPH_DEBUG << "DNNL doesn't support inputs of given shape type";
         return false;
     }
 
