@@ -433,15 +433,12 @@ TEST(cpu_fusion, max_pool_with_indices)
         pass_manager.run_passes(df);
     }
 
-    auto maxpool_goe_output =
-        as_type_ptr<op::GetOutputElement>(f->get_results().at(0)->get_argument(0));
-    ASSERT_TRUE(maxpool_goe_output);
-    EXPECT_EQ(maxpool_goe_output->get_n(), 0);
+    size_t index = f->get_results().at(0)->input(0).get_source_output().get_index();
+    EXPECT_EQ(index, 0);
+
     auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
-    auto maxpool_goe_indices =
-        as_type_ptr<op::GetOutputElement>(maxpool_with_indices->get_argument(2));
-    ASSERT_TRUE(maxpool_goe_indices);
-    EXPECT_EQ(maxpool_goe_indices->get_n(), 1);
+    index = maxpool_with_indices->input(2).get_source_output().get_index();
+    EXPECT_EQ(index, 1);
 }
 
 static std::shared_ptr<ngraph::Function> make_forward_function()

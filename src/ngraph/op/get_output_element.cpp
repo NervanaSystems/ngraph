@@ -66,13 +66,3 @@ void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints,
 
     adjoints.add_delta(input_value(0), delta);
 }
-
-NodeVector op::get_output_elements(const shared_ptr<Node>& mon)
-{
-    NodeVector goes(mon->get_output_size());
-    for (auto o : mon->outputs())
-    {
-        goes.at(o.get_index()) = o.as_single_output_node();
-    }
-    return goes;
-}

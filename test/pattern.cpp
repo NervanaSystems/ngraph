@@ -295,26 +295,26 @@ TEST(pattern, matcher)
     auto a = make_shared<op::Parameter>(element::i32, shape);
     TestMatcher n;
     ASSERT_TRUE(n.match(a, a));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{a}));
 
     auto abs = make_shared<op::Abs>(a);
     auto any = std::make_shared<pattern::op::Skip>(a);
     ASSERT_TRUE(n.match(any, abs));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{abs, a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{abs, a}));
 
     auto false_pred = [](Output<Node>) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a, a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{a, a}));
 
     auto pattern = std::make_shared<pattern::op::Label>(a);
     ASSERT_TRUE(n.match(pattern, a));
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{a}));
 
     auto pattern_false = std::make_shared<pattern::op::Label>(a, false_pred);
     ASSERT_FALSE(n.match(pattern_false, a));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{}));
 
     auto b = make_shared<op::Parameter>(element::i32, shape);
 
@@ -324,7 +324,7 @@ TEST(pattern, matcher)
     auto bea = std::make_shared<pattern::op::Any>(a, is_bea, OutputVector{a, b});
     auto add_ab = a + b;
     ASSERT_TRUE(n.match(bea, add_ab));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_ab, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_ab, a, b}));
     ASSERT_TRUE(n.match(bea, b + a));
 
     auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, OutputVector{a, b});
@@ -357,33 +357,33 @@ TEST(pattern, matcher)
     ASSERT_FALSE(n.match(d, b));
 
     ASSERT_FALSE(n.match(abs + b, b + b));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{}));
 
     auto add_absb = abs + b;
     ASSERT_TRUE(n.match(any + b, add_absb));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_absb, abs, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_absb, abs, a, b}));
 
     ASSERT_TRUE(n.match(pattern + b, add_absb));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_absb, abs, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_absb, abs, b}));
 
     ASSERT_TRUE(n.match(b + pattern, add_absb));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_absb, abs, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_absb, abs, b}));
 
     auto c = make_shared<op::Parameter>(element::i32, shape);
     auto mul_add_absb = c * (add_absb);
     ASSERT_TRUE(n.match(c * (b + pattern), mul_add_absb));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_add_absb, c, add_absb, abs, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{mul_add_absb, c, add_absb, abs, b}));
 
     ASSERT_TRUE(n.match(c * (any + b), mul_add_absb)); // nested any
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_add_absb, c, add_absb, abs, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{mul_add_absb, c, add_absb, abs, a, b}));
     ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c)); // permutations w/ any
     auto mul_c_add_ab = c * add_ab;
     ASSERT_TRUE(n.match(c * (any_false + b), c * (a + b)));  // nested any
     ASSERT_TRUE(n.match(c * (any_false + b), mul_c_add_ab)); // permutations w/ any_false
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_c_add_ab, c, add_ab, a, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{mul_c_add_ab, c, add_ab, a, a, b}));
 
     auto iconst1_0 = construct_constant_node(1);
     auto iconst1_1 = construct_constant_node(1);
@@ -398,7 +398,7 @@ TEST(pattern, matcher)
     auto label = std::make_shared<pattern::op::Label>(add, nullptr, OutputVector{add});
     ASSERT_TRUE(n.match(label, add));
     ASSERT_EQ(n.get_pattern_map()[label], add);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add, add, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add, add, a, b}));
 
     ASSERT_FALSE(n.match(label, a - b));
 
@@ -424,7 +424,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(sub_label1, sub_add));
     ASSERT_EQ(n.get_pattern_map()[label1], a);
     ASSERT_EQ(n.get_pattern_map()[label2], add);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{sub_add, a, add, add, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{sub_add, a, add, add, a, b}));
 
     ASSERT_FALSE(n.match(sub_label1, add - a));
 
@@ -445,7 +445,7 @@ TEST(pattern, matcher)
         auto pattern = star + star;
         branch->set_destination(pattern);
         ASSERT_TRUE(n.match(pattern, ((a + b) + (b + a) + a)));
-        ASSERT_EQ(n.get_matched_nodes().size(), 4);
+        ASSERT_EQ(n.get_matched_values().size(), 4);
     }
 
     // strict mode
@@ -640,9 +640,10 @@ public:
 
             auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
 
-            auto is_iconst_zero = [](std::shared_ptr<Node> n) {
+            auto is_iconst_zero = [](Output<Node> n) {
                 bool result = ngraph::is_zero(n);
-                NGRAPH_DEBUG << n->get_name() << " is " << (result ? " a zero " : " not a zero");
+                NGRAPH_DEBUG << n.get_node()->get_name() << " is "
+                             << (result ? " a zero " : " not a zero");
                 return ngraph::is_zero(n);
             };
 
@@ -659,8 +660,8 @@ public:
             // matches are added in reverse order (i.e. the first match is the topmost node)
             auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
             NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
-                         << arg->get_name();
-            ngraph::replace_node(rm.get_match_root(), arg);
+                         << arg.get_node()->get_name();
+            rm.get_match_value().replace(arg);
             return true;
         };
 

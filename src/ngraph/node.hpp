@@ -99,18 +99,8 @@ namespace ngraph
     NGRAPH_API
     std::string node_validation_failure_loc_string(const Node* node);
 
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-    NGRAPH_API
-    const NodeVector& check_single_output_args(const NodeVector& args);
-
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-
     NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
-    NGRAPH_API
-    NodeVector as_node_vector(const OutputVector& values);
     /// Returns a ResultVector referencing values.
     ResultVector as_result_vector(const OutputVector& values);
 
@@ -352,11 +342,6 @@ namespace ngraph
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
 
-        /// Second argument is ignored
-        /// Returns the node if i=0 and the node has 1 output, otherwise a GetOutputElement
-        /// If the node is a GetOutputElement, applies to the underlying node
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
-
         /// Return the output to use when converting to an Output<Node> with no index specified.
         /// Throws when not supported.
         Output<const Node> get_default_output() const;
@@ -535,6 +520,7 @@ namespace ngraph
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
+        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         std::vector<Node*> m_control_dependents;
         std::vector<std::shared_ptr<Node>> m_control_dependencies;
