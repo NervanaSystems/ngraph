@@ -522,6 +522,7 @@ set(CPU_MULTI_SRC
 )
 foreach(BACKEND_NAME ${ACTIVE_CPU_BACKEND_LIST})
     string(TOLOWER ${BACKEND_NAME} BACKEND_DIR)
+    string(REGEX REPLACE ":.*" "" BACKEND_DIR ${BACKEND_DIR})
     set(MANIFEST ${PROJECT_SOURCE_DIR}/src/ngraph/runtime/${BACKEND_DIR}/unit_test.manifest)
     string(REGEX REPLACE "([a-z0-9]+):(.*)" "\\1" BACKEND_DIR ${BACKEND_DIR})
     foreach(TEST_SRC ${CPU_MULTI_SRC})
