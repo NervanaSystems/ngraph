@@ -36,12 +36,6 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 
-#ifdef NGRAPH_MLIR_ENABLE
-#define MLIR_DISABLE_TEST(name) DISABLED_##name
-#else
-#define MLIR_DISABLE_TEST(name) name
-#endif
-
 namespace ngraph
 {
     class Node;
