@@ -24,7 +24,7 @@ endif()
 
 set(NEED_TO_BUILD_LLVM TRUE)
 
-# TODO: File is getting to big. Refactor
+# TODO: File is getting too big. Refactor
 if(NGRAPH_USE_PREBUILT_LLVM)
     message(STATUS "LLVM: Using prebuilt LLVM")
     # Override default LLVM binaries
