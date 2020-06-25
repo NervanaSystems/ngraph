@@ -1274,8 +1274,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], args[3], resize_method, extrapolation_value);
             break;
         }
-        // case OP_TYPEID::CompiledKernel: { break;
-        // }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
         case OP_TYPEID::DeformableConvolution_v1:
@@ -2902,8 +2900,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::CTCGreedyDecoder: { break;
     }
-    // case OP_TYPEID::CompiledKernel: { break;
-    // }
     case OP_TYPEID::DetectionOutput: { break;
     }
     case OP_TYPEID::PSROIPooling: { break;
