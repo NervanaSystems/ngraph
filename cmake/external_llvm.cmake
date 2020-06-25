@@ -25,7 +25,7 @@ endif()
 set(NEED_TO_BUILD_LLVM TRUE)
 
 # TODO: File is getting too big. Refactor
-if(NGRAPH_USE_PREBUILT_LLVM)
+if(NGRAPH_CODEGEN_ENABLE AND NGRAPH_USE_PREBUILT_LLVM)
     message(STATUS "LLVM: Using prebuilt LLVM")
     # Override default LLVM binaries
     if(NOT DEFINED LLVM_TARBALL_URL)
@@ -87,7 +87,7 @@ if(NGRAPH_CODEGEN_ENABLE)
     endif()
 elseif(NGRAPH_MLIR_ENABLE)
     if(NGRAPH_USE_PREBUILT_MLIR)
-        set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH})
+        set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH}/build)
     endif()
     # TODO: remove this file after CI is updated.
     include(cmake/external_mlir.cmake)
