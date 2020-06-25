@@ -981,17 +981,13 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
         element::f32, Shape{1, 256}, pattern::has_class<ngraph::op::Rnn>());
 
     auto reshape_pred = [](Output<Node> n) { return (is_type<ngraph::op::Reshape>(n.get_node())); };
-    auto rnn_left_to_right_goe0 =
-        std::make_shared<ngraph::op::GetOutputElement>(rnn_left_to_right, 0);
-    auto rnn_right_to_left_goe0 =
-        std::make_shared<ngraph::op::GetOutputElement>(rnn_right_to_left, 0);
 
     auto rnn_rtol_goe0_reshape_ntc =
-        std::make_shared<pattern::op::Skip>(rnn_right_to_left_goe0, reshape_pred);
+        std::make_shared<pattern::op::Skip>(rnn_right_to_left->output(0), reshape_pred);
     auto rnn_rtol_goe0_reshape_tnc =
         std::make_shared<pattern::op::Skip>(rnn_rtol_goe0_reshape_ntc, reshape_pred);
     auto rnn_ltor_goe0_reshape_ntc =
-        std::make_shared<pattern::op::Skip>(rnn_left_to_right_goe0, reshape_pred);
+        std::make_shared<pattern::op::Skip>(rnn_left_to_right->output(0), reshape_pred);
     auto rnn_ltor_goe0_reshape_tnc =
         std::make_shared<pattern::op::Skip>(rnn_ltor_goe0_reshape_ntc, reshape_pred);
 
