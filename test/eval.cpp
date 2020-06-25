@@ -1277,7 +1277,7 @@ void test_eval(shared_ptr<Function> fun,
 TEST(eval, eval_transpose)
 {
     auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    vector<shared_ptr<op::Parameter>> axes;
+    ParameterVector axes;
     axes.push_back(make_shared<op::Parameter>(element::i8, PartialShape{Dimension::dynamic()}));
     axes.push_back(make_shared<op::Parameter>(element::i16, PartialShape{Dimension::dynamic()}));
     axes.push_back(make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()}));

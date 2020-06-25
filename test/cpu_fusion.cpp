@@ -456,7 +456,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
     make_backward_function(std::shared_ptr<ngraph::Function> f)
 {
     // get parameters
-    std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters = f->get_parameters();
+    ParameterVector back_parameters = f->get_parameters();
 
     ngraph::OutputVector adjoints;
     ngraph::OutputVector outputs;
@@ -480,7 +480,7 @@ static std::pair<std::shared_ptr<ngraph::Function>, OutputVector>
               [&adjoint](const std::shared_ptr<Node>& X) { return adjoint.backprop_output(X); });
 
     // create the backward function
-    std::vector<std::shared_ptr<ngraph::op::Parameter>> param_adjoints;
+    ParameterVector param_adjoints;
     for (auto n : adjoints)
         param_adjoints.push_back(as_type_ptr<ngraph::op::Parameter>(n.get_node_shared_ptr()));
     back_parameters.insert(back_parameters.begin(), param_adjoints.begin(), param_adjoints.end());
@@ -525,8 +525,8 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
 
     combined_outputs.insert(combined_outputs.end(), dYdXs.begin(), dYdXs.end());
 
-    std::vector<std::shared_ptr<ngraph::op::Parameter>> combined_parameters = f->get_parameters();
-    std::vector<std::shared_ptr<ngraph::op::Parameter>> back_parameters = bf->get_parameters();
+    ParameterVector combined_parameters = f->get_parameters();
+    ParameterVector back_parameters = bf->get_parameters();
 
     combined_parameters.insert(
         combined_parameters.end(), back_parameters.begin(), back_parameters.end());

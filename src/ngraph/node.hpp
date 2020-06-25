@@ -304,7 +304,7 @@ namespace ngraph
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
         /// Get control dependencies registered on the node
-        const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
+        const NodeVector& get_control_dependencies() const;
 
         /// Get nodes dependent on this node
         const std::vector<Node*>& get_control_dependents() const;
@@ -405,9 +405,8 @@ namespace ngraph
 
         std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
 
-        std::shared_ptr<Node> copy_with_new_inputs(
-            const OutputVector& inputs,
-            const std::vector<std::shared_ptr<Node>>& control_dependencies) const;
+        std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& inputs,
+                                                   const NodeVector& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
@@ -475,11 +474,11 @@ namespace ngraph
         std::vector<Input<const Node>> inputs() const;
 
         /// \return A vector containing the values for each input
-        std::vector<Output<Node>> input_values() const;
+        OutputVector input_values() const;
 
         /// \return A vector containing a handle for each of this node's outputs, in order.
         // TODO: Rename to get_outputs()?
-        std::vector<Output<Node>> outputs();
+        OutputVector outputs();
 
         /// \return A vector containing a handle for each of this node's outputs, in order.
         std::vector<Output<const Node>> outputs() const;
@@ -523,7 +522,7 @@ namespace ngraph
         std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         std::vector<Node*> m_control_dependents;
-        std::vector<std::shared_ptr<Node>> m_control_dependencies;
+        NodeVector m_control_dependencies;
         std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;

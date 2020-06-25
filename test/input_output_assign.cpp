@@ -41,7 +41,7 @@ TEST(input_output, simple_output)
     auto add = make_shared<op::Add>(param_0, param_1);
 
     // Sort the ops
-    vector<shared_ptr<Node>> nodes;
+    NodeVector nodes;
     nodes.push_back(param_0);
     nodes.push_back(param_1);
     nodes.push_back(add);

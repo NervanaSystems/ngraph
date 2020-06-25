@@ -82,7 +82,7 @@ private:
     bool m_saved_remove_goe;
 };
 
-bool validate_list(const std::vector<std::shared_ptr<ngraph::Node>>& nodes);
+bool validate_list(const ngraph::NodeVector& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 #ifndef NGRAPH_JSON_DISABLE
 std::shared_ptr<ngraph::Function> make_function_from_file(const std::string& file_name);

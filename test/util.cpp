@@ -192,7 +192,7 @@ public:
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
-    std::vector<std::shared_ptr<ngraph::Node>> nodes;
+    NodeVector nodes;
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C}, "f");
 
@@ -205,9 +205,7 @@ public:
         nodes.push_back(C);
     }
 
-    bool CompareNodeVector(const std::vector<std::shared_ptr<ngraph::Node>>& orig,
-                           const std::vector<std::shared_ptr<ngraph::Node>>& clone,
-                           const NodeMap& nm)
+    bool CompareNodeVector(const NodeVector& orig, const NodeVector& clone, const NodeMap& nm)
     {
         if (orig.size() != clone.size())
         {
@@ -373,7 +371,7 @@ TEST(graph_util, test_subgraph_topological_sort)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
-    std::vector<std::shared_ptr<Node>> expected{A, add, mul};
+    NodeVector expected{A, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -391,7 +389,7 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D});
-    std::vector<std::shared_ptr<Node>> expected{A, D, add, mul};
+    NodeVector expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -701,11 +699,10 @@ TEST(util, topological_sort_replace)
     auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
     bool custom_sorter_used = false;
 
-    f->set_topological_sort(
-        [&custom_sorter_used](const std::vector<std::shared_ptr<Node>>& root_nodes) {
-            custom_sorter_used = true;
-            return topological_sort(root_nodes);
-        });
+    f->set_topological_sort([&custom_sorter_used](const NodeVector& root_nodes) {
+        custom_sorter_used = true;
+        return topological_sort(root_nodes);
+    });
 
     // Need to now call topological sort but don't care about the results
     f->get_ordered_ops();

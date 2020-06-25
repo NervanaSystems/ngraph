@@ -217,7 +217,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
     // and aren't inputs to bprop
-    vector<Output<Node>> bprop_inputs;
+    OutputVector bprop_inputs;
     for (auto param : bprop->get_parameters())
     {
         bprop_inputs.push_back(param);
