@@ -72,6 +72,8 @@
 
 using namespace ngraph;
 
+#define NGRAPH_DEBUG NGRAPH_INFO
+
 namespace
 {
     std::shared_ptr<Node> output_to_node(Output<Node> output)
@@ -324,6 +326,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
                                        const Output<Node>& new_output)
 {
+    NGRAPH_INFO << *collapsed_node;
     for (auto node : collapsed_node->get_users(true))
     {
         NGRAPH_DEBUG << "node_name: " << node->get_name();
