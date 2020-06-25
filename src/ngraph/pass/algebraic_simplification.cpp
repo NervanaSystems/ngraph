@@ -539,7 +539,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
     }
     else
     {
-        NodeVector concat_inputs;
+        OutputVector concat_inputs;
         if (axis > 0)
         {
             std::vector<int64_t> vi(axis);

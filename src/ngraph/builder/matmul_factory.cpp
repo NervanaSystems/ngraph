@@ -119,7 +119,7 @@ OutputVector builder::MatmulFactory::make_matmul_op()
     {
         groups = right.get_shape().at(0);
     }
-    NodeVector small_dots(groups);
+    OutputVector small_dots(groups);
 
     for (size_t g = 0; g < groups; ++g)
     {

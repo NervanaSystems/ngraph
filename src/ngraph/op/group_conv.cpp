@@ -479,7 +479,7 @@ OutputVector op::v1::GroupConvolutionBackpropData::decompose_op() const
 {
     auto data = input_value(0);
     auto filters = input_value(1);
-    NodeVector conv_groups;
+    OutputVector conv_groups;
 
     auto groups = filters.get_shape()[0];
     // slice data
@@ -733,7 +733,7 @@ OutputVector op::v0::GroupConvolution::decompose_op() const
     // and concat results after computation.
     // reference:
     // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
-    NodeVector convolution_nodes;
+    OutputVector convolution_nodes;
 
     // slice data
     auto sliced_data = builder::split(data, get_groups(), 1);
@@ -845,7 +845,7 @@ OutputVector op::v0::GroupConvolutionBackpropData::decompose_op() const
     auto output_delta = input_value(2);
     auto data_shape = get_input_shape(0);
 
-    NodeVector sliced_inputs;
+    OutputVector sliced_inputs;
 
     auto groups = get_groups();
     // slice data shape
@@ -948,7 +948,7 @@ OutputVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
     auto filters_shape = get_input_shape(1);
     auto delta_shape = get_input_shape(2);
 
-    NodeVector sliced_inputs;
+    OutputVector sliced_inputs;
 
     for (size_t i = 0; i < get_groups(); ++i)
     {
