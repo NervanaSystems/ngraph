@@ -821,7 +821,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             return false;
         }
 
-        auto rnn_goe0_bounded_nodes = m.get_bound_nodes_for_pattern(rnn_label);
+        auto rnn_bounded_nodes = m.get_bound_nodes_for_pattern(rnn_label);
 
         std::vector<std::shared_ptr<ngraph::op::Rnn>> rnn_nodes;
         for (auto rnn_goe : m.get_bound_nodes_for_pattern(rnn_label))
@@ -982,23 +982,23 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
     auto reshape_pred = [](Output<Node> n) { return (is_type<ngraph::op::Reshape>(n.get_node())); };
 
-    auto rnn_rtol_goe0_reshape_ntc =
+    auto rnn_rtol_reshape_ntc =
         std::make_shared<pattern::op::Skip>(rnn_right_to_left->output(0), reshape_pred);
-    auto rnn_rtol_goe0_reshape_tnc =
-        std::make_shared<pattern::op::Skip>(rnn_rtol_goe0_reshape_ntc, reshape_pred);
-    auto rnn_ltor_goe0_reshape_ntc =
+    auto rnn_rtol_reshape_tnc =
+        std::make_shared<pattern::op::Skip>(rnn_rtol_reshape_ntc, reshape_pred);
+    auto rnn_ltor_reshape_ntc =
         std::make_shared<pattern::op::Skip>(rnn_left_to_right->output(0), reshape_pred);
-    auto rnn_ltor_goe0_reshape_tnc =
-        std::make_shared<pattern::op::Skip>(rnn_ltor_goe0_reshape_ntc, reshape_pred);
+    auto rnn_ltor_reshape_tnc =
+        std::make_shared<pattern::op::Skip>(rnn_ltor_reshape_ntc, reshape_pred);
 
     auto reverse_seq_predicate = [](Output<Node> node) {
         return pattern::has_class<ngraph::op::ReverseSequence>()(node) ||
                pattern::has_class<ngraph::op::Reverse>()(node);
     };
     auto skip_reverse_seq =
-        std::make_shared<pattern::op::Skip>(rnn_rtol_goe0_reshape_tnc, reverse_seq_predicate);
+        std::make_shared<pattern::op::Skip>(rnn_rtol_reshape_tnc, reverse_seq_predicate);
     auto concat = std::make_shared<ngraph::op::Concat>(
-        OutputVector{rnn_ltor_goe0_reshape_tnc, skip_reverse_seq}, 0);
+        OutputVector{rnn_ltor_reshape_tnc, skip_reverse_seq}, 0);
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
