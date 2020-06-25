@@ -563,11 +563,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    auto lstm_goe_label =
-        std::make_shared<pattern::op::Label>(lstm->output(2), nullptr, lstm->outputs());
 
-    auto callback = [lstm_goe_label,
-                     lstm_src_layer,
+    auto callback = [lstm_src_layer,
                      lstm_ht,
                      lstm_ct,
                      lstm_weights_layer_label,
