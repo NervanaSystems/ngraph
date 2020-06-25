@@ -130,7 +130,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_dyn_shapes_scalar_initializers_shape_check)
     {
         if (as_type_ptr<default_opset::Constant>(ng_node))
         {
-            EXPECT_EQ(ng_node->get_shape(), Shape{});
+            EXPECT_EQ(ng_node->get_output_shape(0), Shape{});
         }
     }
 }

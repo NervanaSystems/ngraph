@@ -18,9 +18,9 @@
 
 #include "ngraph/op/slice.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/kernel/slice.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -88,17 +88,17 @@ namespace ngraph
                     }
                 }
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
-                    auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                    auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
+                    auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
+                    auto result_desc = dnnl_utils::get_output_dnnl_md(node, 0);
                     size_t scratchpad_size = QUERY_SCRATCHPAD_4ARGS(
                         slice, input_desc, result_desc, lower_bounds, out_shape);
 
                     // Slice needs 3 primitives: input, result, and reorder.
-                    auto slice_index = mkldnn_emitter->reserve_primitive_space(3);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(slice_index);
+                    auto slice_index = dnnl_emitter->reserve_primitive_space(3);
+                    auto& deps = dnnl_emitter->get_primitive_deps(slice_index);
 
                     auto functor = [&,
                                     input_desc,
@@ -112,26 +112,26 @@ namespace ngraph
                                                       CPUExecutionContext* /* ectx */) {
                         if (ctx->first_iteration)
                         {
-                            mkldnn_emitter->build_slice(ctx->mkldnn_memories,
-                                                        ctx->mkldnn_primitives,
-                                                        ctx->mkldnn_scratchpad_mds,
-                                                        input_desc,
-                                                        result_desc,
-                                                        lower_bounds,
-                                                        out_shape,
-                                                        deps,
-                                                        slice_index);
+                            dnnl_emitter->build_slice(ctx->dnnl_memories,
+                                                      ctx->dnnl_primitives,
+                                                      ctx->dnnl_scratchpad_mds,
+                                                      input_desc,
+                                                      result_desc,
+                                                      lower_bounds,
+                                                      out_shape,
+                                                      deps,
+                                                      slice_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(ctx,
-                                                                   slice_index,
-                                                                   deps,
-                                                                   cpu::mkldnn_utils::OpType::SLICE,
-                                                                   scratchpad_size);
+                        cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                               slice_index,
+                                                               deps,
+                                                               cpu::dnnl_utils::OpType::SLICE,
+                                                               scratchpad_size);
                     };
 
                     functors.emplace_back(functor);

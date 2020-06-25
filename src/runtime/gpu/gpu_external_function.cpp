@@ -158,9 +158,7 @@ runtime::gpu::GPUExternalFunction::GPUExternalFunction(
 {
 }
 
-runtime::gpu::GPUExternalFunction::~GPUExternalFunction()
-{
-}
+runtime::gpu::GPUExternalFunction::~GPUExternalFunction() {}
 
 std::string runtime::gpu::GPUExternalFunction::add_to_runtime(
     size_t primitive_index,
@@ -222,7 +220,8 @@ const string& runtime::gpu::GPUExternalFunction::get_pch_header_source()
 const string& runtime::gpu::GPUExternalFunction::get_header_source()
 {
     static string s_header_source =
-        get_pch_header_source() + R"(
+        get_pch_header_source() +
+        R"(
 using namespace ngraph;
 using namespace ngraph::runtime;
 using namespace std;
@@ -410,7 +409,7 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
         set<string> output_names;
         for (shared_ptr<Node> op : current_function->get_results())
         {
-            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
+            shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr(0);
             output_names.insert(tv->get_name());
         }
         set<descriptor::Tensor*> constants;
@@ -456,7 +455,7 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
             for (size_t i = 0; i < current_function->get_output_size(); ++i)
             {
                 shared_ptr<Node> op = current_function->get_output_op(i);
-                shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr();
+                shared_ptr<descriptor::Tensor> tv = op->get_output_tensor_ptr(0);
                 string type = tv->get_element_type().c_type_string();
                 stringstream ss;
                 ss << "((" << type << "*)(outputs[" << i << "]))";

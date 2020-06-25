@@ -35,7 +35,7 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         make_shared<op::v1::VariadicSplit>(data_label, axis_label, lengths_label);
 
     auto constant_variadic_split_callback = [this, data_label, axis_label, lengths_label](
-        pattern::Matcher& m) {
+                                                pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_variadic_split_callback against node = "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
@@ -43,7 +43,11 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         const auto axis_node = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
         const auto lengths_node = static_pointer_cast<op::Constant>(pattern_map[lengths_label]);
-        const auto variadic_split = static_pointer_cast<op::v1::VariadicSplit>(m.get_match_root());
+        const auto variadic_split = m.get_match_root_as<op::v1::VariadicSplit>();
+        NGRAPH_CHECK(variadic_split,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::v1::VariadicSplit`");
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
         const auto norm_axis_val = ngraph::normalize_axis(
@@ -68,7 +72,7 @@ void pass::ConstantFolding::construct_constant_variadic_split()
         if (negative_one > 0)
         {
             split_lengths[negative_one] =
-                static_cast<size_t>(data_node->get_shape()[norm_axis_val]) - sum_of_splits;
+                static_cast<size_t>(data_node->get_output_shape(0)[norm_axis_val]) - sum_of_splits;
         }
 
         const auto slices = builder::split(

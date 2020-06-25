@@ -148,7 +148,7 @@ TEST(nop_elimination, reshape_elimination_v1)
         auto reshape_v1_org = std::make_shared<op::v1::Reshape>(arg, pattern_org, zero);
         auto reshape_v1 = std::make_shared<op::v1::Reshape>(reshape_v1_org, pattern, zero);
         auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
-        return std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg});
+        return std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg});
     };
 
     auto func = generate_func(false);
@@ -172,7 +172,7 @@ TEST(nop_elimination, reshape_elimination_v1_dynamic)
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
     auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
     auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
-    auto f = std::make_shared<Function>(NodeVector{abs}, ParameterVector{arg, pattern});
+    auto f = std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg, pattern});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::NopElimination>();
     pass_manager.run_passes(f);
@@ -184,7 +184,7 @@ TEST(nop_elimination, concat_elimination_single_node)
     int64_t a = 0;
     auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto f =
-        make_shared<Function>(make_shared<op::v0::Concat>(NodeVector{A}, a), ParameterVector{A});
+        make_shared<Function>(make_shared<op::v0::Concat>(OutputVector{A}, a), ParameterVector{A});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::Validate>();
@@ -198,7 +198,7 @@ TEST(nop_elimination, concat_elimination_single_input)
 {
     int64_t a = 0;
     auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto B = make_shared<op::v0::Concat>(NodeVector{A}, a);
+    auto B = make_shared<op::v0::Concat>(OutputVector{A}, a);
     auto f = make_shared<Function>(make_shared<op::v0::Abs>(B), ParameterVector{A});
 
     pass::Manager pass_manager;
@@ -213,7 +213,7 @@ TEST(nop_elimination, concat_elimination_single_input_dynamic)
 {
     int64_t a = 0;
     auto A = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 3});
-    auto B = make_shared<op::v0::Concat>(NodeVector{A}, a);
+    auto B = make_shared<op::v0::Concat>(OutputVector{A}, a);
     auto f = make_shared<Function>(make_shared<op::v0::Abs>(B), ParameterVector{A});
 
     pass::Manager pass_manager;

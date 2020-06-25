@@ -172,7 +172,7 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     // C_t     - Cell state vector at current time step.
     // h_list  - The list of hidden states at all processed time steps.
 
-    NodeVector h_list;
+    OutputVector h_list;
     shared_ptr<Node> X = input_value(0).get_node_shared_ptr();
     shared_ptr<Node> H_t = prepare_input(input_value(1), is_reverse);
     shared_ptr<Node> C_t = prepare_input(input_value(2), is_reverse);
@@ -187,7 +187,7 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
         X = make_shared<op::ReverseSequence>(X, seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
     }
 
-    OutputVector in_seqs = builder::split(X, X->get_shape().at(0));
+    OutputVector in_seqs = builder::split(X, X->get_output_shape(0).at(0));
 
     for (auto& in_x : in_seqs)
     {

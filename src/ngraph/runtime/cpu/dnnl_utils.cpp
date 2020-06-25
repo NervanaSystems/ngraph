@@ -35,23 +35,23 @@
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/type/element_type.hpp"
 
-#include "mkldnn_utils.hpp"
+#include "dnnl_utils.hpp"
 
-using namespace mkldnn;
+using namespace dnnl;
 using namespace ngraph;
 using namespace std;
 
-#if defined(MKLDNN_VERSION_MAJOR) && defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
+#if defined(DNNL_VERSION_MAJOR) && defined(DNNL_VERSION_MINOR) && defined(DNNL_VERSION_PATCH)
 /** Intel(R) MKL-DNN Version type */
 /* typedef struct {
     int    major;
     int    minor;
     int    patch;
     const char *hash;
-} mkldnn_version_t; */
-static const mkldnn_version_t* get_mkldnn_version()
+} dnnl_version_t; */
+static const dnnl_version_t* get_dnnl_version()
 {
-    return mkldnn_version();
+    return dnnl_version();
 }
 #endif
 
@@ -59,66 +59,64 @@ static const mkldnn_version_t* get_mkldnn_version()
 
 // for both versions
 const std::string&
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string(const ngraph::element::Type& type)
+    runtime::cpu::dnnl_utils::get_dnnl_data_type_string(const ngraph::element::Type& type)
 {
-    auto it = get_mkldnn_data_type_string_map().find(type);
-    if (it == get_mkldnn_data_type_string_map().end() || it->second.empty())
+    auto it = get_dnnl_data_type_string_map().find(type);
+    if (it == get_dnnl_data_type_string_map().end() || it->second.empty())
     {
-        throw ngraph_error("No MKLDNN data type exists for the given element type" +
+        throw ngraph_error("No DNNL data type exists for the given element type" +
                            type.c_type_string());
     }
     return it->second;
 }
 
-mkldnn::memory::data_type
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type(const ngraph::element::Type& type)
+dnnl::memory::data_type
+    runtime::cpu::dnnl_utils::get_dnnl_data_type(const ngraph::element::Type& type)
 {
-    auto it = get_mkldnn_data_type_map().find(type);
-    if (it == get_mkldnn_data_type_map().end())
+    auto it = get_dnnl_data_type_map().find(type);
+    if (it == get_dnnl_data_type_map().end())
     {
-        throw ngraph_error("No MKLDNN data type exists for the given element type" +
+        throw ngraph_error("No DNNL data type exists for the given element type" +
                            type.c_type_string());
     }
     return it->second;
 }
 
-const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_input_mkldnn_md(const Node* node,
-                                                                            size_t index)
+const dnnl::memory::desc& runtime::cpu::dnnl_utils::get_input_dnnl_md(const Node* node,
+                                                                      size_t index)
 {
     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
-        node->get_input_descriptors()[index].get_output().get_tensor_ptr()->get_tensor_layout());
-    return cpu_tvl->get_mkldnn_md();
+        node->get_input_tensor(index).get_tensor_layout());
+    return cpu_tvl->get_dnnl_md();
 }
 
-const mkldnn::memory::desc& runtime::cpu::mkldnn_utils::get_output_mkldnn_md(const Node* node,
-                                                                             size_t index)
+const dnnl::memory::desc& runtime::cpu::dnnl_utils::get_output_dnnl_md(const Node* node,
+                                                                       size_t index)
 {
     auto tvl = node->get_output_tensor_ptr(index)->get_tensor_layout();
-    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_mkldnn_md();
+    return dynamic_cast<runtime::cpu::LayoutDescriptor&>(*tvl).get_dnnl_md();
 }
 
-bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const ngraph::element::Type type)
+bool runtime::cpu::dnnl_utils::can_create_dnnl_md(const ngraph::element::Type type)
 {
-    auto it = get_mkldnn_data_type_map().find(type);
-    if (it == get_mkldnn_data_type_map().end() ||
-        it->second == mkldnn::memory::data_type::DATA_UNDEF)
+    auto it = get_dnnl_data_type_map().find(type);
+    if (it == get_dnnl_data_type_map().end() || it->second == dnnl::memory::data_type::DATA_UNDEF)
     {
         return false;
     }
     return true;
 }
 
-bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
-                                                      const Strides& /* strides */,
-                                                      const ngraph::element::Type type)
+bool runtime::cpu::dnnl_utils::can_create_dnnl_md(const Shape& dims,
+                                                  const Strides& /* strides */,
+                                                  const ngraph::element::Type type)
 {
-    auto it = get_mkldnn_data_type_map().find(type);
+    auto it = get_dnnl_data_type_map().find(type);
     if (dims.size() == 0)
     {
         return false;
     }
-    if (it == get_mkldnn_data_type_map().end() ||
-        it->second == mkldnn::memory::data_type::DATA_UNDEF)
+    if (it == get_dnnl_data_type_map().end() || it->second == dnnl::memory::data_type::DATA_UNDEF)
     {
         return false;
     }
@@ -133,7 +131,7 @@ bool runtime::cpu::mkldnn_utils::can_create_mkldnn_md(const Shape& dims,
     return true;
 }
 
-bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVector& perm)
+bool runtime::cpu::dnnl_utils::is_perm_sorted(const Strides& a, const AxisVector& perm)
 {
     for (size_t i = 0; i < a.size() - 1; i++)
     {
@@ -143,31 +141,30 @@ bool runtime::cpu::mkldnn_utils::is_perm_sorted(const Strides& a, const AxisVect
     return true;
 }
 
-mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
+dnnl::memory::desc runtime::cpu::dnnl_utils::create_blocked_dnnl_md(
     const Shape& dims, const Strides& strides, const ngraph::element::Type type)
 {
     if (dims.size() > TENSOR_MAX_DIMS || strides.size() > TENSOR_MAX_DIMS)
     {
-        throw ngraph_error("In create_blocked_mkldnn_md: Dimensions (dims, stride): (" +
+        throw ngraph_error("In create_blocked_dnnl_md: Dimensions (dims, stride): (" +
                            std::to_string(dims.size()) + ", " + std::to_string(strides.size()) +
-                           ") exceed maximum supported by MKLDNN " +
-                           std::to_string(TENSOR_MAX_DIMS));
+                           ") exceed maximum supported by DNNL " + std::to_string(TENSOR_MAX_DIMS));
     }
 
     if (dims.size() != strides.size())
     {
-        throw ngraph_error("In create_blocked_mkldnn_md: Rank mismatch between shape and strides " +
+        throw ngraph_error("In create_blocked_dnnl_md: Rank mismatch between shape and strides " +
                            std::to_string(dims.size()) + " " + std::to_string(strides.size()));
     }
 
     memory::dims dim(dims.begin(), dims.end());
     memory::dims stride(strides.begin(), strides.end());
-    memory::data_type dtype = get_mkldnn_data_type(type);
+    memory::data_type dtype = get_dnnl_data_type(type);
 
-    return create_blocked_mkldnn_md_helper(dim, strides, stride, dtype);
+    return create_blocked_dnnl_md_helper(dim, strides, stride, dtype);
 }
 
-bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::FORMAT fmt)
+bool runtime::cpu::dnnl_utils::is_dnnl_filter_format(dnnl::memory::FORMAT fmt)
 {
     if (get_filter_formats().find(fmt) != get_filter_formats().end())
     {
@@ -176,7 +173,7 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_filter_format(mkldnn::memory::FORMAT 
     return false;
 }
 
-bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::FORMAT fmt)
+bool runtime::cpu::dnnl_utils::is_dnnl_blocked_data_format(dnnl::memory::FORMAT fmt)
 {
     if (fmt == memory::FORMAT::nChw8c || fmt == memory::FORMAT::nChw16c)
     {
@@ -185,28 +182,28 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_blocked_data_format(mkldnn::memory::F
     return false;
 }
 
-bool runtime::cpu::mkldnn_utils::use_mkldnn_kernel(const ngraph::Node* node)
+bool runtime::cpu::dnnl_utils::use_dnnl_kernel(const ngraph::Node* node)
 {
     if (auto* op_node = dynamic_cast<const ngraph::op::Op*>(node))
     {
         auto op_annotations = op_node->get_op_annotations();
         return (op_annotations &&
                 static_pointer_cast<ngraph::runtime::cpu::CPUOpAnnotations>(op_annotations)
-                    ->is_mkldnn_op());
+                    ->is_dnnl_op());
     }
 
     return false;
 }
 
-void runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(Node* node)
+void runtime::cpu::dnnl_utils::assign_dnnl_kernel(Node* node)
 {
     auto ngraph_op = static_cast<ngraph::op::Op*>(node);
     auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-    op_annotations->set_mkldnn_op(true);
+    op_annotations->set_dnnl_op(true);
     ngraph_op->set_op_annotations(op_annotations);
 }
 
-bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::Node* node)
+bool runtime::cpu::dnnl_utils::can_use_dnnl_batchnorm_fprop(const ngraph::Node* node)
 {
     auto input_rank = node->get_input_shape(2).size();
     auto input_element_type = node->get_input_element_type(2);
@@ -221,28 +218,28 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_fprop(const ngraph::No
     }
 }
 
-mkldnn::algorithm runtime::cpu::mkldnn_utils::get_deconv_algo()
+dnnl::algorithm runtime::cpu::dnnl_utils::get_deconv_algo()
 {
     // Note: there is no deconvolution_auto, so for now will return direct
     // TODO:
-    return mkldnn::algorithm::deconvolution_direct;
+    return dnnl::algorithm::deconvolution_direct;
 }
 
-mkldnn::algorithm runtime::cpu::mkldnn_utils::get_conv_algo()
+dnnl::algorithm runtime::cpu::dnnl_utils::get_conv_algo()
 {
-#if defined(NGRAPH_ENABLE_CPU_CONV_AUTO) && defined(MKLDNN_VERSION_MAJOR) &&                       \
-    defined(MKLDNN_VERSION_MINOR) && defined(MKLDNN_VERSION_PATCH)
-    auto mkldnn_version = get_mkldnn_version();
-    if ((mkldnn_version->major == 0 && mkldnn_version->minor >= 18 && mkldnn_version->patch >= 0) ||
-        mkldnn_version->major >= 1)
+#if defined(NGRAPH_CPU_CONV_AUTO_ENABLE) && defined(DNNL_VERSION_MAJOR) &&                         \
+    defined(DNNL_VERSION_MINOR) && defined(DNNL_VERSION_PATCH)
+    auto dnnl_version = get_dnnl_version();
+    if ((dnnl_version->major == 0 && dnnl_version->minor >= 18 && dnnl_version->patch >= 0) ||
+        dnnl_version->major >= 1)
     {
-        return mkldnn::algorithm::convolution_auto;
+        return dnnl::algorithm::convolution_auto;
     }
 #endif
-    return mkldnn::algorithm::convolution_direct;
+    return dnnl::algorithm::convolution_direct;
 }
 
-bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::Node* node)
+bool runtime::cpu::dnnl_utils::can_use_dnnl_batchnorm_bprop(const ngraph::Node* node)
 {
     auto input_rank = node->get_input_shape(2).size();
     auto input_element_type = node->get_input_element_type(2);
@@ -260,65 +257,65 @@ bool runtime::cpu::mkldnn_utils::can_use_mkldnn_batchnorm_bprop(const ngraph::No
     }
 }
 
-std::map<element::Type, const mkldnn::memory::data_type>&
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_map()
+std::map<element::Type, const dnnl::memory::data_type>&
+    runtime::cpu::dnnl_utils::get_dnnl_data_type_map()
 {
-    // Mapping from POD types to MKLDNN data types
-    static std::map<element::Type, const mkldnn::memory::data_type> s_mkldnn_data_type_map = {
-        {element::boolean, mkldnn::memory::data_type::s8},
-        {element::bf16, mkldnn::memory::data_type::bf16},
-        {element::f16, mkldnn::memory::data_type::f16},
-        {element::f32, mkldnn::memory::data_type::f32},
-        {element::f64, mkldnn::memory::data_type::undef},
-        {element::i8, mkldnn::memory::data_type::s8},
-        {element::i16, mkldnn::memory::data_type::undef},
-        {element::i32, mkldnn::memory::data_type::s32},
-        {element::i64, mkldnn::memory::data_type::undef},
-        {element::u8, mkldnn::memory::data_type::u8},
-        {element::u16, mkldnn::memory::data_type::undef},
-        {element::u32, mkldnn::memory::data_type::undef},
-        {element::u64, mkldnn::memory::data_type::undef},
+    // Mapping from POD types to DNNL data types
+    static std::map<element::Type, const dnnl::memory::data_type> s_dnnl_data_type_map = {
+        {element::boolean, dnnl::memory::data_type::s8},
+        {element::bf16, dnnl::memory::data_type::bf16},
+        {element::f16, dnnl::memory::data_type::f16},
+        {element::f32, dnnl::memory::data_type::f32},
+        {element::f64, dnnl::memory::data_type::undef},
+        {element::i8, dnnl::memory::data_type::s8},
+        {element::i16, dnnl::memory::data_type::undef},
+        {element::i32, dnnl::memory::data_type::s32},
+        {element::i64, dnnl::memory::data_type::undef},
+        {element::u8, dnnl::memory::data_type::u8},
+        {element::u16, dnnl::memory::data_type::undef},
+        {element::u32, dnnl::memory::data_type::undef},
+        {element::u64, dnnl::memory::data_type::undef},
     };
-    return s_mkldnn_data_type_map;
+    return s_dnnl_data_type_map;
 }
 
 std::map<element::Type, const std::string>&
-    runtime::cpu::mkldnn_utils::get_mkldnn_data_type_string_map()
+    runtime::cpu::dnnl_utils::get_dnnl_data_type_string_map()
 {
-    static std::map<element::Type, const std::string> s_mkldnn_data_type_string_map{
-        {element::boolean, "mkldnn::memory::data_type::s8"},
-        {element::bf16, "mkldnn::memory::data_type::bf16"},
-        {element::f16, "mkldnn::memory::data_type::f16"},
-        {element::f32, "mkldnn::memory::data_type::f32"},
-        {element::f64, "mkldnn::memory::data_type::undef"},
-        {element::i8, "mkldnn::memory::data_type::s8"},
-        {element::i16, "mkldnn::memory::data_type::undef"},
-        {element::i32, "mkldnn::memory::data_type::s32"},
-        {element::i64, "mkldnn::memory::data_type::undef"},
-        {element::u8, "mkldnn::memory::data_type::u8"},
-        {element::u16, "mkldnn::memory::data_type::undef"},
-        {element::u32, "mkldnn::memory::data_type::undef"},
-        {element::u64, "mkldnn::memory::data_type::undef"}};
-    return s_mkldnn_data_type_string_map;
+    static std::map<element::Type, const std::string> s_dnnl_data_type_string_map{
+        {element::boolean, "dnnl::memory::data_type::s8"},
+        {element::bf16, "dnnl::memory::data_type::bf16"},
+        {element::f16, "dnnl::memory::data_type::f16"},
+        {element::f32, "dnnl::memory::data_type::f32"},
+        {element::f64, "dnnl::memory::data_type::undef"},
+        {element::i8, "dnnl::memory::data_type::s8"},
+        {element::i16, "dnnl::memory::data_type::undef"},
+        {element::i32, "dnnl::memory::data_type::s32"},
+        {element::i64, "dnnl::memory::data_type::undef"},
+        {element::u8, "dnnl::memory::data_type::u8"},
+        {element::u16, "dnnl::memory::data_type::undef"},
+        {element::u32, "dnnl::memory::data_type::undef"},
+        {element::u64, "dnnl::memory::data_type::undef"}};
+    return s_dnnl_data_type_string_map;
 }
 
 std::map<memory::format_kind, const std::string>&
-    runtime::cpu::mkldnn_utils::get_mkldnn_format_kind_string_map()
+    runtime::cpu::dnnl_utils::get_dnnl_format_kind_string_map()
 {
-    static std::map<memory::format_kind, const std::string> s_mkldnn_format_kind_string_map{
+    static std::map<memory::format_kind, const std::string> s_dnnl_format_kind_string_map{
         {memory::format_kind::undef, "memory::format_kind::undef"},
         {memory::format_kind::any, "memory::format_kind::any"},
         {memory::format_kind::blocked, "memory::format_kind::blocked"},
         {memory::format_kind::wino, "memory::format_kind::wino"},
         {memory::format_kind::packed, "memory::format_kind::packed"},
     };
-    return s_mkldnn_format_kind_string_map;
+    return s_dnnl_format_kind_string_map;
 }
 
 std::map<memory::format_tag, const std::string>&
-    runtime::cpu::mkldnn_utils::get_mkldnn_format_string_map()
+    runtime::cpu::dnnl_utils::get_dnnl_format_string_map()
 {
-    static std::map<memory::format_tag, const std::string> s_mkldnn_format_tag_string_map{
+    static std::map<memory::format_tag, const std::string> s_dnnl_format_tag_string_map{
         {memory::format_tag::undef, "memory::format_tag::undef"},
         {memory::format_tag::any, "memory::format_tag::any"},
         // Plain formats
@@ -609,10 +606,10 @@ std::map<memory::format_tag, const std::string>&
         {memory::format_tag::gOIdhw8o8i, "memory::format_tag::gOIdhw8o8i"},
         {memory::format_tag::Goidhw16g, "memory::format_tag::Goidhw16g"},
     };
-    return s_mkldnn_format_tag_string_map;
+    return s_dnnl_format_tag_string_map;
 }
 
-std::set<memory::format_tag>& runtime::cpu::mkldnn_utils::get_filter_formats()
+std::set<memory::format_tag>& runtime::cpu::dnnl_utils::get_filter_formats()
 {
     static std::set<memory::format_tag> s_filter_format_tags{
         memory::format_tag::oihw,
@@ -640,60 +637,60 @@ std::set<memory::format_tag>& runtime::cpu::mkldnn_utils::get_filter_formats()
     return s_filter_format_tags;
 }
 
-mkldnn::memory::format_tag runtime::cpu::mkldnn_utils::CreateNativeDataFormat(
+dnnl::memory::format_tag runtime::cpu::dnnl_utils::CreateNativeDataFormat(
     const ngraph::runtime::cpu::LayoutDescriptor& layout)
 {
     return CreateNativeDataFormat(layout.get_shape());
 }
 
-mkldnn::memory::format_tag runtime::cpu::mkldnn_utils::CreateNativeDataFormat(const Shape& shape)
+dnnl::memory::format_tag runtime::cpu::dnnl_utils::CreateNativeDataFormat(const Shape& shape)
 {
     switch (shape.size())
     {
-    case 1: return mkldnn::memory::format_tag::x;
-    case 2: return mkldnn::memory::format_tag::nc;
-    case 4: return mkldnn::memory::format_tag::nchw;
-    case 5: return mkldnn::memory::format_tag::ncdhw;
-    default: return mkldnn::memory::format_tag::undef;
+    case 1: return dnnl::memory::format_tag::x;
+    case 2: return dnnl::memory::format_tag::nc;
+    case 4: return dnnl::memory::format_tag::nchw;
+    case 5: return dnnl::memory::format_tag::ncdhw;
+    default: return dnnl::memory::format_tag::undef;
     }
 }
 
-const std::string& runtime::cpu::mkldnn_utils::get_mkldnn_format_string(memory::format_tag fmt)
+const std::string& runtime::cpu::dnnl_utils::get_dnnl_format_string(memory::format_tag fmt)
 {
-    auto it = get_mkldnn_format_string_map().find(fmt);
-    if (it == get_mkldnn_format_string_map().end())
-        throw ngraph_error("No MKLDNN format_tag exists for the given format_tag type " /* +
+    auto it = get_dnnl_format_string_map().find(fmt);
+    if (it == get_dnnl_format_string_map().end())
+        throw ngraph_error("No DNNL format_tag exists for the given format_tag type " /* +
                            std::to_string(fmt)*/);
     return it->second;
 }
 
 const std::string&
-    runtime::cpu::mkldnn_utils::get_mkldnn_format_kind_string(memory::format_kind fmt_kind)
+    runtime::cpu::dnnl_utils::get_dnnl_format_kind_string(memory::format_kind fmt_kind)
 {
-    auto it = get_mkldnn_format_kind_string_map().find(fmt_kind);
-    if (it == get_mkldnn_format_kind_string_map().end())
-        throw ngraph_error("No MKLDNN format_kind exists for the given format_kind type " /*+
+    auto it = get_dnnl_format_kind_string_map().find(fmt_kind);
+    if (it == get_dnnl_format_kind_string_map().end())
+        throw ngraph_error("No DNNL format_kind exists for the given format_kind type " /*+
                            std::to_string(fmt_kind)*/);
     return it->second;
 }
 
-mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
+dnnl::memory::desc runtime::cpu::dnnl_utils::create_default_dnnl_md(
     const Node* node,
     size_t index,
     bool output = false,
-    mkldnn::memory::format_tag format_tag = mkldnn::memory::format_tag::any)
+    dnnl::memory::format_tag format_tag = dnnl::memory::format_tag::any)
 {
     Shape shape;
-    mkldnn::memory::data_type et;
+    dnnl::memory::data_type et;
     if (output)
     {
         shape = node->get_output_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(index));
+        et = runtime::cpu::dnnl_utils::get_dnnl_data_type(node->get_output_element_type(index));
     }
     else
     {
         shape = node->get_input_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
+        et = runtime::cpu::dnnl_utils::get_dnnl_data_type(node->get_input_element_type(index));
     }
 
     if (shape == Shape{})
@@ -703,20 +700,20 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md(
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, format_tag);
 }
 
-mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md_with_strides(
-    const Node* node, size_t index, mkldnn::memory::dims& strides, bool output = false)
+dnnl::memory::desc runtime::cpu::dnnl_utils::create_default_dnnl_md_with_strides(
+    const Node* node, size_t index, dnnl::memory::dims& strides, bool output = false)
 {
     Shape shape;
-    mkldnn::memory::data_type et;
+    dnnl::memory::data_type et;
     if (output)
     {
         shape = node->get_output_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_output_element_type(index));
+        et = runtime::cpu::dnnl_utils::get_dnnl_data_type(node->get_output_element_type(index));
     }
     else
     {
         shape = node->get_input_shape(index);
-        et = runtime::cpu::mkldnn_utils::get_mkldnn_data_type(node->get_input_element_type(index));
+        et = runtime::cpu::dnnl_utils::get_dnnl_data_type(node->get_input_element_type(index));
     }
 
     if (shape == Shape{})
@@ -726,43 +723,43 @@ mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_default_mkldnn_md_with_s
     return memory::desc(memory::dims(shape.begin(), shape.end()), et, strides);
 }
 
-mkldnn::memory::desc runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md_helper(
-    const mkldnn::memory::dims& dim,
-    const Strides& strides,
-    const mkldnn::memory::dims& stride,
-    const mkldnn::memory::data_type dtype)
+dnnl::memory::desc
+    runtime::cpu::dnnl_utils::create_blocked_dnnl_md_helper(const dnnl::memory::dims& dim,
+                                                            const Strides& strides,
+                                                            const dnnl::memory::dims& stride,
+                                                            const dnnl::memory::data_type dtype)
 {
     return memory::desc(dim, dtype, stride);
 }
 
-// MKLDNN kernel selection sometimes relies on named layouts like "mkldnn_nchw"
+// DNNL kernel selection sometimes relies on named layouts like "dnnl_nchw"
 // Try and convert a blocked layout into a named layout
-memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_desc_t& md)
+memory::desc runtime::cpu::dnnl_utils::try_get_named_md(const dnnl_memory_desc_t& md)
 {
     auto out_md = memory::desc(md);
 
-    auto get_named_md = [](const mkldnn_memory_desc_t& blk, const mkldnn_format_tag_t format) {
-        mkldnn_memory_desc_t named_md;
+    auto get_named_md = [](const dnnl_memory_desc_t& blk, const dnnl_format_tag_t format) {
+        dnnl_memory_desc_t named_md;
         // Could throw an exception if named `format` is not compatible with `md.dims`
         error::wrap_c_api(
-            mkldnn_memory_desc_init_by_tag(&named_md, blk.ndims, blk.dims, blk.data_type, format),
+            dnnl_memory_desc_init_by_tag(&named_md, blk.ndims, blk.dims, blk.data_type, format),
             "");
 
         return memory::desc(named_md);
     };
 
-    auto compare_named_md = [&](const mkldnn_memory_desc_t& blk,
-                                const mkldnn_format_tag_t format,
+    auto compare_named_md = [&](const dnnl_memory_desc_t& blk,
+                                const dnnl_format_tag_t format,
                                 const memory::desc& out) {
         try
         {
             auto named_md = get_named_md(blk, format);
-            if (compare_mkldnn_mds(named_md, out))
+            if (compare_dnnl_mds(named_md, out))
             {
                 return true;
             }
         }
-        catch (const mkldnn::error&)
+        catch (const dnnl::error&)
         {
             // Cannot create the named descriptor compatible with `in` desc
             return false;
@@ -775,34 +772,34 @@ memory::desc runtime::cpu::mkldnn_utils::try_get_named_md(const mkldnn_memory_de
         return get_named_md(md, X);
     switch (md.ndims)
     {
-    case 1: CANONICALIZE_MD(mkldnn_x); break;
-    case 2: CANONICALIZE_MD(mkldnn_nc); break;
+    case 1: CANONICALIZE_MD(dnnl_x); break;
+    case 2: CANONICALIZE_MD(dnnl_nc); break;
     case 3:
-        CANONICALIZE_MD(mkldnn_tnc);
-        CANONICALIZE_MD(mkldnn_ntc);
+        CANONICALIZE_MD(dnnl_tnc);
+        CANONICALIZE_MD(dnnl_ntc);
         break;
     case 4:
-        CANONICALIZE_MD(mkldnn_nchw);
-        CANONICALIZE_MD(mkldnn_nhwc);
-        CANONICALIZE_MD(mkldnn_nChw8c);
-        CANONICALIZE_MD(mkldnn_nChw16c);
+        CANONICALIZE_MD(dnnl_nchw);
+        CANONICALIZE_MD(dnnl_nhwc);
+        CANONICALIZE_MD(dnnl_nChw8c);
+        CANONICALIZE_MD(dnnl_nChw16c);
         break;
     case 5:
-        CANONICALIZE_MD(mkldnn_ncdhw);
-        CANONICALIZE_MD(mkldnn_ndhwc);
-        CANONICALIZE_MD(mkldnn_nCdhw16c);
+        CANONICALIZE_MD(dnnl_ncdhw);
+        CANONICALIZE_MD(dnnl_ndhwc);
+        CANONICALIZE_MD(dnnl_nCdhw16c);
         break;
     default:;
     }
     return out_md;
 }
 
-memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& in,
-                                                           const AxisVector& axis_order)
+memory::desc runtime::cpu::dnnl_utils::rotate_blocked_md(const memory::desc& in,
+                                                         const AxisVector& axis_order)
 {
-    mkldnn_memory_desc_t md;
+    dnnl_memory_desc_t md;
     md.ndims = in.data.ndims;
-    md.format_kind = mkldnn_blocked;
+    md.format_kind = dnnl_blocked;
     md.data_type = in.data.data_type;
     md.format_desc.blocking.inner_nblks = in.data.format_desc.blocking.inner_nblks;
 
@@ -834,8 +831,8 @@ memory::desc runtime::cpu::mkldnn_utils::rotate_blocked_md(const memory::desc& i
     return try_get_named_md(md);
 }
 
-memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& in,
-                                                            AxisVector& axis_list)
+memory::desc runtime::cpu::dnnl_utils::squeeze_blocked_md(const memory::desc& in,
+                                                          AxisVector& axis_list)
 {
     if (in.data.ndims <= axis_list.size())
     {
@@ -851,9 +848,9 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
         }
     }
 
-    mkldnn_memory_desc_t md;
+    dnnl_memory_desc_t md;
     md.ndims = in.data.ndims - static_cast<int>(axis_list.size());
-    md.format_kind = mkldnn_blocked;
+    md.format_kind = dnnl_blocked;
     md.data_type = in.data.data_type;
     md.format_desc.blocking.inner_nblks = in.data.format_desc.blocking.inner_nblks;
 
@@ -907,12 +904,12 @@ memory::desc runtime::cpu::mkldnn_utils::squeeze_blocked_md(const memory::desc& 
     return try_get_named_md(md);
 }
 
-memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& in,
-                                                           AxisVector& axis_list)
+memory::desc runtime::cpu::dnnl_utils::expand_blocked_md(const memory::desc& in,
+                                                         AxisVector& axis_list)
 {
-    mkldnn_memory_desc_t md;
+    dnnl_memory_desc_t md;
     md.ndims = in.data.ndims + static_cast<int>(axis_list.size());
-    md.format_kind = mkldnn_blocked;
+    md.format_kind = dnnl_blocked;
     md.data_type = in.data.data_type;
     md.format_desc.blocking.inner_nblks = in.data.format_desc.blocking.inner_nblks;
 
@@ -971,25 +968,25 @@ memory::desc runtime::cpu::mkldnn_utils::expand_blocked_md(const memory::desc& i
     return try_get_named_md(md);
 }
 
-bool runtime::cpu::mkldnn_utils::compare_mkldnn_formats(mkldnn::memory::format_tag lhs,
-                                                        mkldnn::memory::format_tag rhs)
+bool runtime::cpu::dnnl_utils::compare_dnnl_formats(dnnl::memory::format_tag lhs,
+                                                    dnnl::memory::format_tag rhs)
 {
     return lhs == rhs;
 }
 
-bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& lhs,
-                                                    const mkldnn::memory::desc& rhs)
+bool runtime::cpu::dnnl_utils::compare_dnnl_mds(const dnnl::memory::desc& lhs,
+                                                const dnnl::memory::desc& rhs)
 {
-    mkldnn_memory_desc_t md1 = lhs.data, md2 = rhs.data;
+    dnnl_memory_desc_t md1 = lhs.data, md2 = rhs.data;
 
     if (md1.format_kind != md2.format_kind)
     {
         return false;
     }
 
-    if (md1.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
+    if (md1.format_kind != static_cast<dnnl_format_kind_t>(dnnl::memory::format_kind::blocked))
     {
-        // mkldnn not implemented yet
+        // dnnl not implemented yet
         return false;
     }
 
@@ -1003,17 +1000,17 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& 
     auto blk1 = md1.format_desc.blocking;
     auto blk2 = md2.format_desc.blocking;
 
-    if (md1.ndims != md2.ndims || !compare_mkldnn_dims(md1.dims, md2.dims, md1.ndims) ||
-        !compare_mkldnn_dims(md1.padded_dims, md2.padded_dims, md1.ndims) ||
-        !compare_mkldnn_dims(md1.padded_offsets, md2.padded_offsets, md1.ndims) ||
-        !compare_mkldnn_dims(blk1.strides, blk2.strides, md1.ndims))
+    if (md1.ndims != md2.ndims || !compare_dnnl_dims(md1.dims, md2.dims, md1.ndims) ||
+        !compare_dnnl_dims(md1.padded_dims, md2.padded_dims, md1.ndims) ||
+        !compare_dnnl_dims(md1.padded_offsets, md2.padded_offsets, md1.ndims) ||
+        !compare_dnnl_dims(blk1.strides, blk2.strides, md1.ndims))
     {
         return false;
     }
 
     if (blk1.inner_nblks != blk2.inner_nblks ||
-        !compare_mkldnn_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
-        !compare_mkldnn_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
+        !compare_dnnl_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
+        !compare_dnnl_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
     {
         return false;
     }
@@ -1021,9 +1018,9 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_mds(const mkldnn::memory::desc& 
     return true;
 }
 
-bool inline runtime::cpu::mkldnn_utils::compare_mkldnn_dims(mkldnn_dims_t& arr1,
-                                                            mkldnn_dims_t& arr2,
-                                                            size_t size)
+bool inline runtime::cpu::dnnl_utils::compare_dnnl_dims(dnnl_dims_t& arr1,
+                                                        dnnl_dims_t& arr2,
+                                                        size_t size)
 {
     for (auto i = 0; i < size; i++)
     {
@@ -1035,9 +1032,9 @@ bool inline runtime::cpu::mkldnn_utils::compare_mkldnn_dims(mkldnn_dims_t& arr1,
     return true;
 }
 
-bool runtime::cpu::mkldnn_utils::compare_mkldnn_strides_order(mkldnn_dims_t& strides1,
-                                                              mkldnn_dims_t& strides2,
-                                                              size_t size)
+bool runtime::cpu::dnnl_utils::compare_dnnl_strides_order(dnnl_dims_t& strides1,
+                                                          dnnl_dims_t& strides2,
+                                                          size_t size)
 {
     std::vector<size_t> indices1(size, 0), indices2(size, 0);
     for (size_t i = 0; i < size; i++)
@@ -1062,19 +1059,19 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_strides_order(mkldnn_dims_t& str
     return true;
 }
 
-bool runtime::cpu::mkldnn_utils::compare_mkldnn_md_formats(const mkldnn::memory::desc& lhs,
-                                                           const mkldnn::memory::desc& rhs)
+bool runtime::cpu::dnnl_utils::compare_dnnl_md_formats(const dnnl::memory::desc& lhs,
+                                                       const dnnl::memory::desc& rhs)
 {
-    mkldnn_memory_desc_t md1 = lhs.data, md2 = rhs.data;
+    dnnl_memory_desc_t md1 = lhs.data, md2 = rhs.data;
 
     if (md1.format_kind != md2.format_kind)
     {
         return false;
     }
 
-    if (md1.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
+    if (md1.format_kind != static_cast<dnnl_format_kind_t>(dnnl::memory::format_kind::blocked))
     {
-        // mkldnn not implemented yet
+        // dnnl not implemented yet
         return false;
     }
 
@@ -1087,57 +1084,57 @@ bool runtime::cpu::mkldnn_utils::compare_mkldnn_md_formats(const mkldnn::memory:
     auto blk2 = md2.format_desc.blocking;
 
     if (blk1.inner_nblks != blk2.inner_nblks ||
-        !compare_mkldnn_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
-        !compare_mkldnn_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
+        !compare_dnnl_dims(blk1.inner_blks, blk2.inner_blks, blk1.inner_nblks) ||
+        !compare_dnnl_dims(blk1.inner_idxs, blk2.inner_idxs, blk1.inner_nblks))
     {
         return false;
     }
 
-    return compare_mkldnn_strides_order(blk1.strides, blk2.strides, md1.ndims);
+    return compare_dnnl_strides_order(blk1.strides, blk2.strides, md1.ndims);
 }
 
-bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(const mkldnn::memory::desc& desc,
-                                                              const mkldnn::memory::format_tag& fmt)
+bool runtime::cpu::dnnl_utils::dnnl_md_matches_format_tag(const dnnl::memory::desc& desc,
+                                                          const dnnl::memory::format_tag& fmt)
 {
-    auto format_tag_to_kind = [](mkldnn::memory::format_tag tag) {
-        if (tag == mkldnn::memory::format_tag::undef)
+    auto format_tag_to_kind = [](dnnl::memory::format_tag tag) {
+        if (tag == dnnl::memory::format_tag::undef)
         {
-            return mkldnn::memory::format_kind::undef;
+            return dnnl::memory::format_kind::undef;
         }
-        else if (tag == mkldnn::memory::format_tag::any)
+        else if (tag == dnnl::memory::format_tag::any)
         {
-            return mkldnn::memory::format_kind::any;
+            return dnnl::memory::format_kind::any;
         }
         else
         {
-            return mkldnn::memory::format_kind::blocked;
+            return dnnl::memory::format_kind::blocked;
         }
     };
 
-    mkldnn_memory_desc_t md = desc.data;
-    if (md.format_kind != static_cast<mkldnn_format_kind_t>(format_tag_to_kind(fmt)))
+    dnnl_memory_desc_t md = desc.data;
+    if (md.format_kind != static_cast<dnnl_format_kind_t>(format_tag_to_kind(fmt)))
     {
         return false;
     }
 
-    mkldnn_memory_desc_t named_md;
+    dnnl_memory_desc_t named_md;
     try
     {
         // Could throw an exception if named `format` is not compatible with `md.dims`
         error::wrap_c_api(
-            mkldnn_memory_desc_init_by_tag(
-                &named_md, md.ndims, md.dims, md.data_type, static_cast<mkldnn_format_tag_t>(fmt)),
+            dnnl_memory_desc_init_by_tag(
+                &named_md, md.ndims, md.dims, md.data_type, static_cast<dnnl_format_tag_t>(fmt)),
             "");
     }
-    catch (const mkldnn::error&)
+    catch (const dnnl::error&)
     {
         // Cannot create the named descriptor compatible with `md` desc
         return false;
     }
 
-    if (md.format_kind != static_cast<mkldnn_format_kind_t>(mkldnn::memory::format_kind::blocked))
+    if (md.format_kind != static_cast<dnnl_format_kind_t>(dnnl::memory::format_kind::blocked))
     {
-        // mkldnn not implemented yet
+        // dnnl not implemented yet
         return false;
     }
 
@@ -1145,9 +1142,9 @@ bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(const mkldnn::memo
     auto named_blk = named_md.format_desc.blocking;
 
     if (blk.inner_nblks != named_blk.inner_nblks ||
-        !compare_mkldnn_dims(blk.inner_blks, named_blk.inner_blks, blk.inner_nblks) ||
-        !compare_mkldnn_dims(blk.inner_idxs, named_blk.inner_idxs, blk.inner_nblks) ||
-        !compare_mkldnn_dims(blk.strides, named_blk.strides, md.ndims))
+        !compare_dnnl_dims(blk.inner_blks, named_blk.inner_blks, blk.inner_nblks) ||
+        !compare_dnnl_dims(blk.inner_idxs, named_blk.inner_idxs, blk.inner_nblks) ||
+        !compare_dnnl_dims(blk.strides, named_blk.strides, md.ndims))
     {
         return false;
     }
@@ -1155,8 +1152,8 @@ bool runtime::cpu::mkldnn_utils::mkldnn_md_matches_format_tag(const mkldnn::memo
     return true;
 }
 
-bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::desc& in,
-                                                         const AxisVector& axis_list)
+bool runtime::cpu::dnnl_utils::is_dnnl_padded_layout(const dnnl::memory::desc& in,
+                                                     const AxisVector& axis_list)
 {
     for (size_t i = 0; i < in.data.ndims; i++)
     {
@@ -1177,8 +1174,7 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_padded_layout(const mkldnn::memory::d
     return false;
 }
 
-bool runtime::cpu::mkldnn_utils::is_mkldnn_desc_blocked_data_format(
-    const mkldnn::memory::desc& desc)
+bool runtime::cpu::dnnl_utils::is_dnnl_desc_blocked_data_format(const dnnl::memory::desc& desc)
 {
     auto blk = desc.data.format_desc.blocking;
 // TODO for v0.x, we just check if nChw8c or nChw16c, should we do the same here?
@@ -1201,33 +1197,33 @@ bool runtime::cpu::mkldnn_utils::is_mkldnn_desc_blocked_data_format(
     return blk.inner_nblks != 0;
 }
 
-bool runtime::cpu::mkldnn_utils::is_bf16_supported()
+bool runtime::cpu::dnnl_utils::is_bf16_supported()
 {
     try
     {
-        mkldnn::memory::dims input_dims{1, 1, 3, 5};
-        mkldnn::memory::dims input_strides{15, 15, 5, 1};
-        mkldnn::memory::dims window_shape{2, 3};
-        mkldnn::memory::dims window_movement_strides{1, 1};
-        mkldnn::memory::dims padding_below{0, 0};
-        mkldnn::memory::dims padding_above{0, 0};
-        mkldnn::memory::dims result_dims{1, 1, 2, 3};
+        dnnl::memory::dims input_dims{1, 1, 3, 5};
+        dnnl::memory::dims input_strides{15, 15, 5, 1};
+        dnnl::memory::dims window_shape{2, 3};
+        dnnl::memory::dims window_movement_strides{1, 1};
+        dnnl::memory::dims padding_below{0, 0};
+        dnnl::memory::dims padding_above{0, 0};
+        dnnl::memory::dims result_dims{1, 1, 2, 3};
         auto input_desc =
-            mkldnn::memory::desc(input_dims, mkldnn::memory::data_type::bf16, input_strides);
-        auto result_desc = mkldnn::memory::desc(
-            result_dims, mkldnn::memory::data_type::bf16, mkldnn::memory::format_tag::any);
-        auto maxpool_desc = mkldnn::pooling_forward::desc(mkldnn::prop_kind::forward_inference,
-                                                          mkldnn::algorithm::pooling_max,
-                                                          input_desc,
-                                                          result_desc,
-                                                          window_movement_strides,
-                                                          window_shape,
-                                                          padding_below,
-                                                          padding_above);
-        mkldnn::engine cpu_engine(mkldnn::engine::kind::cpu, 0);
-        auto maxpool_prim_desc = mkldnn::pooling_forward::primitive_desc(maxpool_desc, cpu_engine);
+            dnnl::memory::desc(input_dims, dnnl::memory::data_type::bf16, input_strides);
+        auto result_desc = dnnl::memory::desc(
+            result_dims, dnnl::memory::data_type::bf16, dnnl::memory::format_tag::any);
+        auto maxpool_desc = dnnl::pooling_forward::desc(dnnl::prop_kind::forward_inference,
+                                                        dnnl::algorithm::pooling_max,
+                                                        input_desc,
+                                                        result_desc,
+                                                        window_movement_strides,
+                                                        window_shape,
+                                                        padding_below,
+                                                        padding_above);
+        dnnl::engine cpu_engine(dnnl::engine::kind::cpu, 0);
+        auto maxpool_prim_desc = dnnl::pooling_forward::primitive_desc(maxpool_desc, cpu_engine);
     }
-    catch (const mkldnn::error& e)
+    catch (const dnnl::error& e)
     {
         return false;
     }

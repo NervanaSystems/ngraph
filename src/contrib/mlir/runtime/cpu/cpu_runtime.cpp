@@ -36,9 +36,9 @@
 #include <mlir/ExecutionEngine/OptUtils.h>
 #include <mlir/IR/Function.h>
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;

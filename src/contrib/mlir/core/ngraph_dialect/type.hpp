@@ -173,4 +173,4 @@ public:
     return kind == NGTypeKind::NG_TENSOR_TYPE_ID;
   }
 };
-}
+} // namespace mlir

@@ -54,7 +54,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
 {
     constructor_validate_and_infer_types();
     util::validate_conv_shapes(this, conv->get_input_shape(0), conv->get_input_shape(1));
-    set_output_type(0, conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_output_element_type(0), conv->get_output_shape(0));
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
@@ -121,13 +121,13 @@ std::shared_ptr<Node> op::ConvolutionAdd::clone_with_new_inputs(const OutputVect
                           new_args.size(),
                           ").");
 
-    return std::shared_ptr<Node>(new ConvolutionAdd(new_args.at(0),
-                                                    new_args.at(1),
-                                                    new_args.at(2),
-                                                    get_window_movement_strides(),
-                                                    get_window_dilation_strides(),
-                                                    get_padding_below(),
-                                                    get_padding_above(),
-                                                    get_data_dilation_strides(),
-                                                    m_with_relu));
+    return std::make_shared<ConvolutionAdd>(new_args.at(0),
+                                            new_args.at(1),
+                                            new_args.at(2),
+                                            get_window_movement_strides(),
+                                            get_window_dilation_strides(),
+                                            get_padding_below(),
+                                            get_padding_above(),
+                                            get_data_dilation_strides(),
+                                            m_with_relu);
 }

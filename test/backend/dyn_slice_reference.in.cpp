@@ -71,7 +71,7 @@ namespace
         auto slice = std::make_shared<op::DynSlice>(
             arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
 
-        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+        auto f = std::make_shared<Function>(OutputVector{slice}, ParameterVector{arg, lb, ub, strides});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
         auto ex = backend->compile(f);
@@ -129,7 +129,7 @@ namespace
         auto slice = std::make_shared<op::DynSlice>(
             arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
 
-        auto f = std::make_shared<Function>(NodeVector{slice}, ParameterVector{arg, lb, ub, strides});
+        auto f = std::make_shared<Function>(OutputVector{slice}, ParameterVector{arg, lb, ub, strides});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
         auto ex = backend->compile(f);

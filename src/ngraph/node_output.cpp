@@ -61,7 +61,6 @@ namespace ngraph
     {
         return m_node->get_output_as_single_output_node(m_index);
     }
-
     size_t Output<Node>::get_index() const { return m_index; }
     descriptor::Tensor& Output<Node>::get_tensor() const
     {
@@ -103,11 +102,7 @@ namespace ngraph
     {
         for (auto& input : get_target_inputs())
         {
-            // GOEs are used as handles in passes
-            if (!is_type<op::GetOutputElement>(input.get_node()))
-            {
-                input.replace_source_output(replacement);
-            }
+            input.replace_source_output(replacement);
         }
     }
 
@@ -225,15 +220,15 @@ namespace ngraph
 
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
+        return output.get_node()->write_description(out, 0)
+               << "[" << output.get_index() << "]:" << output.get_element_type()
+               << output.get_partial_shape();
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
     {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
+        return output.get_node()->write_description(out, 0)
+               << "[" << output.get_index() << "]:" << output.get_element_type()
+               << output.get_partial_shape();
     }
 }

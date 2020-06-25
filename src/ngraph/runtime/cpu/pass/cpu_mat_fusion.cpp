@@ -66,7 +66,7 @@ static std::shared_ptr<Node> construct_data_pattern(std::shared_ptr<pattern::op:
         std::make_shared<op::Reshape>(data_slice, AxisVector{0, 1, 2}, Shape{2, 4});
     auto W = std::make_shared<pattern::op::Label>(element::f32, Shape{4, 1});
     auto dot = std::make_shared<op::Dot>(reshape_slice, W);
-    auto broadcast = std::make_shared<pattern::op::Label>(element::f32, dot->get_shape());
+    auto broadcast = std::make_shared<pattern::op::Label>(element::f32, dot->get_output_shape(0));
     return dot + broadcast;
 }
 
@@ -75,7 +75,7 @@ static std::shared_ptr<Node>
 {
     auto X = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 4});
     auto dot = std::make_shared<op::Dot>(X, weights_reshape);
-    auto broadcast = std::make_shared<pattern::op::Label>(element::f32, dot->get_shape());
+    auto broadcast = std::make_shared<pattern::op::Label>(element::f32, dot->get_output_shape(0));
     return dot + broadcast;
 }
 
@@ -134,7 +134,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
     // this DS will be used to hold the matched attributes from matcher_v2
     std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_pattern;
-    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, NodeVector>
+    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, OutputVector>
         map_weights_bias_to_data;
     //--------------------------------------------------------
 
@@ -232,7 +232,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                              << "nodes";
                 return;
             }
-            auto& w_shape = weights->get_shape();
+            auto& w_shape = weights->get_output_shape(0);
             if (w_shape.size() != 2)
             {
                 NGRAPH_DEBUG << "weights shape for linear transformation of input is not 2D";
@@ -243,7 +243,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             // we will not fuse if the batch_size are not same across all inputs of time step
             for (auto& node : data_param_nodes)
             {
-                if (shape_size(data_param_nodes[0]->get_shape()) != shape_size(node->get_shape()))
+                if (shape_size(data_param_nodes[0].get_shape()) != shape_size(node.get_shape()))
                 {
                     return;
                 }
@@ -251,8 +251,8 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             // now concat the parameter hashed to the same weights
             auto concated_data = std::make_shared<op::Concat>(data_param_nodes, 0);
 
-            auto& data_shape = concated_data->get_shape();
-            auto data_order = ngraph::get_default_order(concated_data->get_shape());
+            auto& data_shape = concated_data->get_output_shape(0);
+            auto data_order = ngraph::get_default_order(concated_data->get_output_shape(0));
 
             // insert reshape on the concated data to make it 2D, if its 3D
             std::shared_ptr<Node> input_reshape_node = nullptr;
@@ -267,12 +267,12 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 weights, AxisVector{1, 0}, Shape{w_shape[1], w_shape[0]});
             auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
             auto bias_broadcast_node =
-                std::make_shared<op::Broadcast>(bias, new_dot->get_shape(), AxisSet{0});
+                std::make_shared<op::Broadcast>(bias, new_dot->get_output_shape(0), AxisSet{0});
             auto new_add_bias = std::make_shared<op::Add>(new_dot, bias_broadcast_node);
 
             // now slice the new_add and feed the corrosponding root nodes
-            auto batch_size = new_add_bias->get_shape()[0] / data_param_nodes.size();
-            auto shape_axis_1 = new_add_bias->get_shape()[1];
+            auto batch_size = new_add_bias->get_output_shape(0)[0] / data_param_nodes.size();
+            auto shape_axis_1 = new_add_bias->get_output_shape(0)[1];
             size_t start_index = 0;
             size_t end_index = batch_size;
             for (auto& matched_root_node : map_weights_to_pattern[weights])
@@ -280,11 +280,11 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 std::shared_ptr<Node> slice_node = std::make_shared<op::Slice>(
                     new_add_bias, Coordinate{start_index, 0}, Coordinate{end_index, shape_axis_1});
 
-                if (matched_root_node->get_shape().size() != 2)
+                if (matched_root_node->get_output_shape(0).size() != 2)
                 {
-                    NGRAPH_CHECK(matched_root_node->get_shape().size() == 3);
+                    NGRAPH_CHECK(matched_root_node->get_output_shape(0).size() == 3);
                     slice_node = std::make_shared<op::Reshape>(
-                        slice_node, AxisVector{0, 1}, matched_root_node->get_shape());
+                        slice_node, AxisVector{0, 1}, matched_root_node->get_output_shape(0));
                 }
                 start_index += batch_size;
                 end_index += batch_size;
@@ -297,7 +297,6 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     };
 
     auto callback_matcher_v1 = [&]() -> void {
-
         // Expecting input data shape D=[x, y, z], weights W=[u, v], bias B = [w]
         // where y is the time step. We are computing R=dot(D,W)=[x,y,v]. We can reshape D to
         // D'=[x*y, z], then we have dot(D',W), result
@@ -325,7 +324,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             // we fuse all the data slices captured in the pattern to make bigger GEMM call
             auto fuse_data_slices = [&]() {
-                NodeVector data_slices;
+                OutputVector data_slices;
                 for (auto& op : op_nodes)
                 {
                     auto data_node = op_seg_map.at(op).at(Type::DATA);
@@ -336,7 +335,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto data_node = op_nodes.size() > 1 ? fuse_data_slices() : params.at(Type::DATA);
             auto weights_node = params.at(Type::WEIGHTS);
             auto bias_node = params.at(Type::BIAS);
-            auto& data_shape = data_node->get_shape();
+            auto& data_shape = data_node->get_output_shape(0);
 
             // construct new op nodes
             auto data_reshape_node =
@@ -348,12 +347,12 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto weights_reshape_node =
                 old_weights_reshape_node->copy_with_new_inputs({weights_node});
             auto dot_node = std::make_shared<op::Dot>(data_reshape_node, weights_reshape_node);
-            const auto& dot_shape = dot_node->get_shape();
+            const auto& dot_shape = dot_node->get_output_shape(0);
 
             auto bias_broadcast_node =
                 std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
             auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
-            const auto& add_shape = add_node->get_shape();
+            const auto& add_shape = add_node->get_output_shape(0);
 
             size_t num_timesteps = op_nodes.size();
             size_t batch_size = add_shape[0] / num_timesteps;

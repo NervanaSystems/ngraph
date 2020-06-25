@@ -52,7 +52,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data, true, false);
-    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
     vector<float> data_vector(shape_size(data_shape));
@@ -72,7 +72,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data, false, false);
-    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
     vector<float> data_vector(shape_size(data_shape));
@@ -92,7 +92,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data);
-    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
     vector<float> data_vector(shape_size(data_shape));
@@ -121,7 +121,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
 
     auto mvn_func = make_shared<op::MVN>(data, false);
-    auto function = make_shared<Function>(NodeVector{mvn_func}, ParameterVector{data});
+    auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
     vector<float> data_vector(shape_size(data_shape));

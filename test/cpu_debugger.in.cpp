@@ -34,13 +34,16 @@
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/util.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
 
+static string s_manifest = "${MANIFEST}";
+
 // These tests are for DEX mode only.
-TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
+NGRAPH_TEST(${BACKEND_NAME}, debugger_add_breakpoint)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -52,7 +55,7 @@ TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -77,7 +80,7 @@ TEST(debugger, MLIR_DISABLE_TEST(add_breakpoint))
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, MLIR_DISABLE_TEST(stepping))
+NGRAPH_TEST(${BACKEND_NAME}, debugger_stepping)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -89,7 +92,7 @@ TEST(debugger, MLIR_DISABLE_TEST(stepping))
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -115,7 +118,7 @@ TEST(debugger, MLIR_DISABLE_TEST(stepping))
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
+NGRAPH_TEST(${BACKEND_NAME}, debugger_delete_breakpoint)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -127,7 +130,7 @@ TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -156,7 +159,7 @@ TEST(debugger, MLIR_DISABLE_TEST(delete_breakpoint))
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
+NGRAPH_TEST(${BACKEND_NAME}, debugger_while_stepping)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -168,7 +171,7 @@ TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -186,16 +189,14 @@ TEST(debugger, MLIR_DISABLE_TEST(while_stepping))
 
     dbg.call({result}, {a, b});
     dbg.add_breakpoint(add);
-    while (dbg.step())
-    {
-    }
+    while (dbg.step()) {}
 
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(add)), -777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(absn)), 777);
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(debugger, MLIR_DISABLE_TEST(resume))
+NGRAPH_TEST(${BACKEND_NAME}, debugger_resume)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -207,7 +208,7 @@ TEST(debugger, MLIR_DISABLE_TEST(resume))
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -232,7 +233,7 @@ TEST(debugger, MLIR_DISABLE_TEST(resume))
     ASSERT_EQ(*static_cast<int*>(dbg.inspect(neg)), -777);
 }
 
-TEST(tracer, MLIR_DISABLE_TEST(basic))
+NGRAPH_TEST(${BACKEND_NAME}, tracer_basic)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -244,7 +245,7 @@ TEST(tracer, MLIR_DISABLE_TEST(basic))
 
     auto f = make_shared<Function>(neg, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -272,7 +273,7 @@ TEST(tracer, MLIR_DISABLE_TEST(basic))
     dbg.call({result}, {a, b});
 }
 
-TEST(tracer, MLIR_DISABLE_TEST(count_tracepoint))
+NGRAPH_TEST(${BACKEND_NAME}, tracer_count_tracepoint)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -282,7 +283,7 @@ TEST(tracer, MLIR_DISABLE_TEST(count_tracepoint))
 
     auto f = make_shared<Function>(add, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);
@@ -313,7 +314,7 @@ TEST(tracer, MLIR_DISABLE_TEST(count_tracepoint))
     }
 }
 
-TEST(tracer, MLIR_DISABLE_TEST(conditional_tracepoint))
+NGRAPH_TEST(${BACKEND_NAME}, tracer_conditional_tracepoint)
 {
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -323,7 +324,7 @@ TEST(tracer, MLIR_DISABLE_TEST(conditional_tracepoint))
 
     auto f = make_shared<Function>(add, ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::i32, shape);
     shared_ptr<runtime::Tensor> b = backend->create_tensor(element::i32, shape);

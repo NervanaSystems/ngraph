@@ -59,7 +59,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
     const auto quantize =
         make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
     const auto function = make_shared<Function>(
-        NodeVector{quantize},
+        OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -102,7 +102,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip)
     const auto quantize =
         make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
     const auto function = make_shared<Function>(
-        NodeVector{quantize},
+        OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -142,7 +142,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
     auto quantize =
         make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
     auto function = make_shared<Function>(
-        NodeVector{quantize},
+        OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
@@ -191,7 +191,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd)
                                       levels,
                                       op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     auto function = make_shared<Function>(
-        NodeVector{quantize},
+        OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 

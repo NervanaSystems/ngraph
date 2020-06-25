@@ -80,7 +80,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
         weights_label, Coordinate{0, 0, 0}, Coordinate{2, 2, 3}, Strides{1, 1, 1});
 
     auto slice_weights_label =
-        std::make_shared<pattern::op::Label>(slice_weights, nullptr, NodeVector{slice_weights});
+        std::make_shared<pattern::op::Label>(slice_weights, nullptr, OutputVector{slice_weights});
     auto conv = std::make_shared<op::Convolution>(slice_data, slice_weights_label);
     auto matcher = std::make_shared<pattern::Matcher>(conv);
 
@@ -92,7 +92,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     auto concat = std::static_pointer_cast<op::Concat>(n);
     std::shared_ptr<op::Convolution> sconv;
 
-    NodeVector slices;
+    OutputVector slices;
 
     const size_t CHANNEL = 1;
     if (concat->get_concatenation_axis() != CHANNEL)
@@ -135,15 +135,15 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
 
         const size_t IC = 1;
         auto slice = pattern_map[slice_weights_label];
-        if (weights->get_shape().at(IC) != slice->get_shape().at(IC))
+        if (weights->get_output_shape(0).at(IC) != slice->get_output_shape(0).at(IC))
         {
             slices.push_back(slice);
         }
     }
 
     // TF-flavoured group convolution needs channels re-arranged
-    // MKLDNN requires group slicing to be done on OC
-    // MKLDNN [4,2,-]
+    // DNNL requires group slicing to be done on OC
+    // DNNL [4,2,-]
     // ordering w00 w01 w10 w11 w20 w21 w30 w31 produces g00 g01 g10 g11
     // whereas
     // TF    [2,4,-]

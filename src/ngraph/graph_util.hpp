@@ -29,7 +29,6 @@
 #include "ngraph/check.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
 
 namespace ngraph
 {
@@ -70,6 +69,11 @@ namespace ngraph
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         const NodeVector& subgraph_params = {});
+
+    NGRAPH_API
+    void traverse_nodes(const OutputVector& subgraph_results,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        const OutputVector& subgraph_params = {});
 
     NGRAPH_API
     void traverse_nodes(const NodeVector& subgraph_results,
@@ -418,10 +422,6 @@ namespace ngraph
     NGRAPH_API
     std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
 
-    // Assert that nodes in the function is colocated and return that placement
-    NGRAPH_API
-    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
-
     NGRAPH_API
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::v0::Parameter>>
         insert_result_parameter_split(const std::shared_ptr<Node>& src_node,
@@ -444,10 +444,10 @@ namespace ngraph
     bool is_zero(const Output<Node>& reduce_constant);
 
     NGRAPH_API
-    NodeVector get_subgraph_outputs(const NodeVector& nodes,
-                                    const NodeVector& exclusions,
-                                    bool ignore_unused = false,
-                                    bool ignore_output_duplicates = true);
+    OutputVector get_subgraph_outputs(const OutputVector& nodes,
+                                      const OutputVector& exclusions,
+                                      bool ignore_unused = false,
+                                      bool ignore_output_duplicates = true);
 
     // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
     // node or a node that belongs to args

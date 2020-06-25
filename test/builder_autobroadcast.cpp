@@ -26,11 +26,6 @@ shared_ptr<op::Parameter> getParamFromShape(const Shape& shape)
     return make_shared<op::Parameter>(element::f32, shape);
 }
 
-inline const Shape& getShapeFromParam(const Output<Node>& node)
-{
-    return node.get_shape();
-}
-
 // input shapes are equal so AutoBroadcast does nothing
 TEST(autobroadcast, no_broadcast_equal)
 {
@@ -43,10 +38,10 @@ TEST(autobroadcast, no_broadcast_equal)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
+    EXPECT_EQ(ab_lhs.get_shape(), s2345);
 
     EXPECT_EQ(ab_rhs, rhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s2345);
+    EXPECT_EQ(ab_rhs.get_shape(), s2345);
 }
 
 // input shapes are incompatable
@@ -76,10 +71,10 @@ TEST(autobroadcast, normal_broadcast_2d)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_NE(ab_lhs, lhs);
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s23);
+    EXPECT_EQ(ab_lhs.get_shape(), s23);
 
     EXPECT_EQ(ab_rhs, rhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s23);
+    EXPECT_EQ(ab_rhs.get_shape(), s23);
 }
 
 // basic broadcast test
@@ -97,10 +92,10 @@ TEST(autobroadcast, normal_broadcast_3d)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_NE(ab_lhs, lhs);
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s234);
+    EXPECT_EQ(ab_lhs.get_shape(), s234);
 
     EXPECT_EQ(ab_rhs, rhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s234);
+    EXPECT_EQ(ab_rhs.get_shape(), s234);
 }
 
 // basic broadcast test
@@ -118,10 +113,10 @@ TEST(autobroadcast, normal_broadcast_4d)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_NE(ab_lhs, lhs);
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
+    EXPECT_EQ(ab_lhs.get_shape(), s2345);
 
     EXPECT_EQ(ab_rhs, rhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s2345);
+    EXPECT_EQ(ab_rhs.get_shape(), s2345);
 }
 
 // basic reshape and broadcast test
@@ -139,10 +134,10 @@ TEST(autobroadcast, reshape_1x_broadcast)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
+    EXPECT_EQ(ab_lhs.get_shape(), s2345);
 
     EXPECT_NE(ab_rhs, rhs);
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s2345);
+    EXPECT_EQ(ab_rhs.get_shape(), s2345);
 }
 
 // same as above, but additionally
@@ -162,10 +157,10 @@ TEST(autobroadcast, reshape_2x_broadcast)
     Shape s2345{2, 3, 4, 5};
 
     EXPECT_NE(ab_lhs, lhs);
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s2345);
+    EXPECT_EQ(ab_lhs.get_shape(), s2345);
 
     EXPECT_NE(ab_rhs, rhs);
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s2345);
+    EXPECT_EQ(ab_rhs.get_shape(), s2345);
 }
 
 // matching singular dimension on axis 2
@@ -184,10 +179,10 @@ TEST(autobroadcast, broadcast_with_dim1)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s2315);
+    EXPECT_EQ(ab_lhs.get_shape(), s2315);
 
     EXPECT_NE(ab_rhs, rhs);
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s2315);
+    EXPECT_EQ(ab_rhs.get_shape(), s2315);
 }
 
 // reshape only test
@@ -204,10 +199,10 @@ TEST(autobroadcast, broadcast_with_leading_dim1)
     const Output<Node> ab_rhs = shaped.second;
 
     EXPECT_EQ(ab_lhs, lhs); // no change
-    EXPECT_EQ(getShapeFromParam(ab_lhs), s1345);
+    EXPECT_EQ(ab_lhs.get_shape(), s1345);
 
     EXPECT_NE(ab_rhs, rhs);
-    EXPECT_EQ(getShapeFromParam(ab_rhs), s1345);
+    EXPECT_EQ(ab_rhs.get_shape(), s1345);
 }
 
 TEST(autobroadcast, make_node_2_args)

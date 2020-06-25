@@ -66,9 +66,9 @@ static llvm::cl::opt<bool> clEnableNgKernelLibFusion(
     llvm::cl::desc(
         "Enable the ngraph pass that fuses ops to use kernel library"));
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;

@@ -75,6 +75,7 @@ namespace ngraph
             }
             virtual operator HostTensorPtr&() { NGRAPH_CHECK(false, "Invalid type access"); }
             uint64_t get_index() { return m_index; }
+
         protected:
             uint64_t m_index{0};
         };
@@ -89,6 +90,7 @@ namespace ngraph
                 m_index = index;
             }
             operator T&() override { return m_value; }
+
         protected:
             T m_value;
         };
@@ -373,6 +375,7 @@ namespace ngraph
             }
             AttributeVisitor& get_node_saver() { return m_serializer; }
             AttributeVisitor& get_node_loader() { return *this; }
+
         protected:
             Node::type_info_t m_node_type_info;
             SerializeAttributeVisitor m_serializer;

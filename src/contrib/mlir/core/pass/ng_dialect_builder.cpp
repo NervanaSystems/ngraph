@@ -33,9 +33,9 @@
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
@@ -134,7 +134,7 @@ private:
   TensorToInfoMap m_tensorToValueMap;
   static const MLIRCompOpMap &getOpDispatcher();
 };
-}
+} // namespace
 
 NgDialectConversionPass::NgDialectConversionPass(
     const NgDialectConversionPass &obj)
@@ -172,7 +172,7 @@ void NgDialectConversionPass::runOnOperation() {
     auto argId = p.second;
     auto argValue = function.getArgument(argId);
     m_tensorToValueMap.insert(
-        TensorToInfo(paramNode->get_output_tensor_ptr().get(), {argValue}));
+        TensorToInfo(paramNode->get_output_tensor_ptr(0).get(), {argValue}));
     i++;
   }
 
@@ -267,7 +267,7 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type &type) {
 }
 
 mlir::Type NgDialectConversionPass::getMlirType(const ngraph::Node *node) {
-  descriptor::Tensor *outTensor = node->get_output_tensor_ptr().get();
+  descriptor::Tensor *outTensor = node->get_output_tensor_ptr(0).get();
   return getMlirType(outTensor);
 }
 

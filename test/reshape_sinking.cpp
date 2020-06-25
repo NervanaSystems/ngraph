@@ -57,7 +57,7 @@ TEST(reshape_sinking, edge_splitting)
     auto absn = make_shared<op::Abs>(reshape);
     auto absn2 = make_shared<op::Abs>(absn);
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
-    auto func = make_shared<Function>(NodeVector{absn2, sum}, ParameterVector{a});
+    auto func = make_shared<Function>(OutputVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
     // size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::ReshapeSinking>();
@@ -67,7 +67,7 @@ TEST(reshape_sinking, edge_splitting)
     ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
     auto new_reshape = as_type_ptr<op::Reshape>(func->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
-    ASSERT_EQ(new_reshape->get_shape(), shape_nchw);
+    ASSERT_EQ(new_reshape->get_output_shape(0), shape_nchw);
 }
 
 TEST(reshape_sinking, broadcast_swimming)
@@ -94,7 +94,7 @@ TEST(reshape_sinking, broadcast_swimming)
     auto add = bias_broadcast + conv_reshape;
     auto relu = make_shared<op::Relu>(add);
 
-    auto func = make_shared<Function>(NodeVector{relu}, ParameterVector{bias, input, weights});
+    auto func = make_shared<Function>(OutputVector{relu}, ParameterVector{bias, input, weights});
     pass::Manager pass_manager;
 
     pass_manager.register_pass<pass::ReshapeSinking>();
@@ -102,7 +102,7 @@ TEST(reshape_sinking, broadcast_swimming)
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     pass_manager.run_passes(func);
 
-    ASSERT_EQ(add->get_shape(), conv_nchw);
+    ASSERT_EQ(add->get_output_shape(0), conv_nchw);
     ASSERT_EQ(add->get_input_shape(0), conv_nchw);
     ASSERT_EQ(add->get_argument(1), conv);
 }
@@ -218,7 +218,8 @@ TEST(reshape_sinking, concat)
                                              Strides{1, 1});
     auto reshape_conv =
         make_shared<op::Reshape>(conv, AxisVector{0, 2, 3, 1}, Shape{1, 3, 3, 1}); /* nhwc */
-    auto broadcast = make_shared<op::Broadcast>(C, reshape_conv->get_shape(), AxisSet{0, 1, 2});
+    auto broadcast =
+        make_shared<op::Broadcast>(C, reshape_conv->get_output_shape(0), AxisSet{0, 1, 2});
     auto add = broadcast + reshape_conv;
 
     auto B1_ = op::Constant::create(element::f32, shape_w, {3});
@@ -236,10 +237,11 @@ TEST(reshape_sinking, concat)
                                               CoordinateDiff{0, 0},
                                               Strides{1, 1});
     auto reshape_conv1 = make_shared<op::Reshape>(conv1, AxisVector{0, 2, 3, 1}, Shape{1, 3, 3, 1});
-    auto broadcast1 = make_shared<op::Broadcast>(C1, reshape_conv->get_shape(), AxisSet{0, 1, 2});
+    auto broadcast1 =
+        make_shared<op::Broadcast>(C1, reshape_conv->get_output_shape(0), AxisSet{0, 1, 2});
     auto add1 = broadcast1 + reshape_conv1;
 
-    auto concat = make_shared<op::Concat>(NodeVector{add, add1}, 3);
+    auto concat = make_shared<op::Concat>(OutputVector{add, add1}, 3);
     auto relu = make_shared<op::Relu>(concat);
     auto reshape_relu =
         make_shared<op::Reshape>(relu, AxisVector{0, 3, 1, 2}, Shape{1, 2, 3, 3}); /* nchw */

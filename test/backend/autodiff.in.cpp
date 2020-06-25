@@ -342,7 +342,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
         auto window_movement_strides = Strides{2, 2};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -366,7 +365,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numer
         auto window_movement_strides = Strides{1, 1};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -392,7 +390,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_paddi
         auto avgpool = make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding, padding, false);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -582,7 +579,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_vector)
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
         auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
-        return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
+        return make_shared<Function>(make_shared<op::Concat>(OutputVector{X0, X1, X2}, 0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(
@@ -605,7 +602,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_0)
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
         auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
-        return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
+        return make_shared<Function>(make_shared<op::Concat>(OutputVector{X0, X1, X2}, 0),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(
@@ -628,7 +625,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_1)
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
         auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
-        return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 1),
+        return make_shared<Function>(make_shared<op::Concat>(OutputVector{X0, X1, X2}, 1),
                                      std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
     };
     EXPECT_TRUE(

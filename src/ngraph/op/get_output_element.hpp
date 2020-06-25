@@ -22,9 +22,6 @@ namespace ngraph
 {
     namespace op
     {
-        NGRAPH_API
-        NodeVector get_output_elements(const std::shared_ptr<Node>& mon);
-
         namespace v0
         {
             /// \brief Operation to get an output from a node.
@@ -58,15 +55,5 @@ namespace ngraph
             };
         }
         using v0::GetOutputElement;
-    }
-
-    inline std::shared_ptr<Node> get_output_element(const Output<Node>& output)
-    {
-        return output.get_node_shared_ptr()->get_output_as_single_output_node(output.get_index());
-    }
-
-    inline std::shared_ptr<Node> get_output_element(const std::shared_ptr<Node> node, size_t i = 0)
-    {
-        return node->get_output_as_single_output_node(i);
     }
 }

@@ -76,19 +76,6 @@ public:
     {
     }
 
-    Label(const element::Type& type, const PartialShape& s, NodePredicate pred)
-        : Label(type, s, as_value_predicate(pred), OutputVector{})
-    {
-    }
-
-    Label(const element::Type& type,
-          const PartialShape& s,
-          const NodePredicate pred,
-          const NodeVector& wrapped_values)
-        : Label(type, s, as_value_predicate(pred), as_output_vector(wrapped_values))
-    {
-    }
-
     /// \brief creates a Label node containing a sub-pattern described by the type and
     ///        shape of \sa node.
     ///
@@ -110,13 +97,6 @@ public:
     {
     }
 
-    Label(const Output<Node>& value, const NodePredicate pred)
-        : Label(value.get_element_type(),
-                value.get_partial_shape(),
-                as_value_predicate(pred),
-                OutputVector{})
-    {
-    }
     Label(const Output<Node>& value)
         : Label(value.get_element_type(),
                 value.get_partial_shape(),
@@ -124,14 +104,6 @@ public:
                 OutputVector{})
     {
     }
-    Label(const Output<Node>& node, const NodePredicate pred, const NodeVector& wrapped_values)
-        : Label(node.get_element_type(),
-                node.get_partial_shape(),
-                as_value_predicate(pred),
-                as_output_vector(wrapped_values))
-    {
-    }
-
     bool match_value(Matcher* matcher,
                      const Output<Node>& pattern_value,
                      const Output<Node>& graph_value) override;

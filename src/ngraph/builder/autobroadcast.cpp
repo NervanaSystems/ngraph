@@ -139,7 +139,7 @@ namespace ngraph
                                                      const Shape& output_shape,
                                                      const Shape& source_shape)
         {
-            shared_ptr<Node> broadcasted_node = value.as_single_output_node();
+            shared_ptr<Node> broadcasted_node = value.get_node_shared_ptr();
             // If node already has the required shape, return original node
             if (output_shape == value.get_shape())
             {
@@ -200,7 +200,7 @@ namespace ngraph
             // If node already has the required shape, return original node
             if (output_shape == value_shape)
             {
-                return value.as_single_output_node();
+                return value.get_node_shared_ptr();
             }
 
             if (axis == -1)
@@ -249,8 +249,7 @@ namespace ngraph
             // Handle the trivial case...
             if (arg1_in_shape == arg2_in_shape)
             {
-                return make_pair(args.first.as_single_output_node(),
-                                 args.second.as_single_output_node());
+                return args;
             }
 
             OutputVector bcasted_outputs = numpy_broadcast_outputs({args.first, args.second});

@@ -77,6 +77,7 @@ namespace ngraph
                 int get_src_iter_feature_size() const { return m_src_iter_feature_size; }
                 int get_direction() const { return m_direction; }
                 int get_num_fused_layers() const { return m_num_fused_layers; }
+
             private:
                 int m_num_timesteps;
                 int m_num_gates_per_cell;

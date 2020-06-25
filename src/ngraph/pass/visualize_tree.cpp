@@ -153,12 +153,27 @@ private:
     std::unordered_map<Node*, int64_t> m_heights;
 };
 
-static std::string label_edge(const std::shared_ptr<Node>& /* src */,
+static std::string label_edge(const std::shared_ptr<Node>& src,
                               const std::shared_ptr<Node>& dst,
                               size_t arg_index,
                               int64_t jump_distance)
 {
     std::stringstream ss;
+    if (src->get_output_size() > 1)
+    {
+        for (Output<Node> output : src->outputs())
+        {
+            for (Input<Node> input : output.get_target_inputs())
+            {
+                if (input.get_node() == dst.get())
+                {
+                    stringstream label;
+                    label << "[label=\" " << output.get_index() << " \"]";
+                    ss << label.str();
+                }
+            }
+        }
+    }
     if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
     {
         size_t output = 0;
@@ -166,18 +181,18 @@ static std::string label_edge(const std::shared_ptr<Node>& /* src */,
         {
             output = goe->get_as_output().get_index();
         }
-        stringstream label_edge;
-        label_edge << "[label=\" " << output << " -> " << arg_index << " \"]";
-        ss << label_edge.str();
+        stringstream label;
+        label << "[label=\" " << output << " -> " << arg_index << " \"]";
+        ss << label.str();
     }
 
     else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
-            stringstream label_edge;
-            label_edge << "[label=\"jump=" << jump_distance << "\"]";
-            ss << label_edge.str();
+            stringstream label;
+            label << "[label=\"jump=" << jump_distance << "\"]";
+            ss << label.str();
         }
     }
     return ss.str();
@@ -191,7 +206,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
         for (auto& node : f->get_ops())
         {
-            if (node->description() == "Result")
+            if (is_type<op::v0::Result>(node))
             {
                 height_maps[node.get()] = HeightMap({node.get()});
             }
@@ -221,7 +236,6 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         size_t fake_node_ctr = 0;
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-
             if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
             {
                 // print sub-graph
@@ -266,7 +280,7 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
         if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
-            auto color = (arg->description() == "Parameter" ? "blue" : "black");
+            auto color = (is_type<op::v0::Parameter>(arg) ? "blue" : "black");
             m_ss << "    " << clone_name << "[shape=\"box\" style=\"dashed,filled\" color=\""
                  << color << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
             m_ss << "    " << clone_name << " -> " << node->get_name()
@@ -279,11 +293,13 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
             m_ss << add_attributes(node);
             auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
             auto send_node_name = "SEND_" + to_string(fake_node_ctr);
-            m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                "fillcolor=\"#ffcccc\" label=\"Receive["
+            m_ss << "    " << recv_node_name
+                 << "[shape=\"box\" style=\"solid,filled\" "
+                    "fillcolor=\"#ffcccc\" label=\"Receive["
                  << arg->get_name() << "]\"]\n";
-            m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                "fillcolor=\"#ccffcc\" label=\"Send["
+            m_ss << "    " << send_node_name
+                 << "[shape=\"box\" style=\"solid,filled\" "
+                    "fillcolor=\"#ccffcc\" label=\"Send["
                  << node->get_name() << "]\"]\n";
             m_ss << "    " << arg->get_name() << " -> " << send_node_name
                  << label_edge(arg, node, arg_index, jump_distance) << "\n";

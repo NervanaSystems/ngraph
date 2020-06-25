@@ -29,42 +29,49 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_call_frame.hpp"
 #include "ngraph/runtime/cpu/cpu_debug_tracer.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-static void set_env_vars(const string& trace_log, const string& bin_log)
+static string s_manifest = "${MANIFEST}";
+
+namespace
 {
-    set_environment("NGRAPH_CPU_DEBUG_TRACER", "1", 1);
-    set_environment("NGRAPH_CPU_TRACER_LOG", trace_log.c_str(), 1);
-    set_environment("NGRAPH_CPU_BIN_TRACER_LOG", bin_log.c_str(), 1);
+    static void set_env_vars(const string& trace_log, const string& bin_log)
+    {
+        set_environment("NGRAPH_CPU_DEBUG_TRACER", "1", 1);
+        set_environment("NGRAPH_CPU_TRACER_LOG", trace_log.c_str(), 1);
+        set_environment("NGRAPH_CPU_BIN_TRACER_LOG", bin_log.c_str(), 1);
+    }
+
+    static void unset_env_vars()
+    {
+        unset_environment("NGRAPH_CPU_DEBUG_TRACER");
+        unset_environment("NGRAPH_CPU_TRACER_LOG");
+        unset_environment("NGRAPH_CPU_BIN_TRACER_LOG");
+    }
+
+    static void
+        open_logs(ifstream& meta, ifstream& bin, const string& trace_log, const string& bin_log)
+    {
+        meta.open(trace_log);
+        bin.open(bin_log, std::ios::binary);
+
+        ASSERT_TRUE(meta.is_open());
+        ASSERT_TRUE(bin.is_open());
+    }
 }
 
-static void unset_env_vars()
-{
-    unset_environment("NGRAPH_CPU_DEBUG_TRACER");
-    unset_environment("NGRAPH_CPU_TRACER_LOG");
-    unset_environment("NGRAPH_CPU_BIN_TRACER_LOG");
-}
-
-static void open_logs(ifstream& meta, ifstream& bin, const string& trace_log, const string& bin_log)
-{
-    meta.open(trace_log);
-    bin.open(bin_log, std::ios::binary);
-
-    ASSERT_TRUE(meta.is_open());
-    ASSERT_TRUE(bin.is_open());
-}
-
-TEST(cpu_debug_tracer, MLIR_DISABLE_TEST(check_flow_with_external_function))
+NGRAPH_TEST(${BACKEND}, cpu_debug_tracer, check_flow_with_external_function)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
-    shared_ptr<runtime::Backend> backend = runtime::Backend::create("CPU");
+    shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);

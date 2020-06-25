@@ -41,13 +41,6 @@ namespace ngraph
                 /// stacked.
                 Stack(const OutputVector& args, int64_t axis);
 
-                /// \brief Constructs a stack operation.
-                ///
-                /// \param args The nodes producing the input tensors.
-                /// \param axis The axis in the result array along which the input arrays are
-                /// stacked.
-                Stack(const NodeVector& args, int64_t axis);
-
                 void generate_adjoints(autodiff::Adjoints& adjoints,
                                        const OutputVector& deltas) override;
 
@@ -61,6 +54,7 @@ namespace ngraph
                 /// \return The stack axis
                 int64_t get_axis() const { return m_axis; }
                 void set_axis(int64_t axis) { m_axis = axis; }
+
             private:
                 int64_t m_axis;
             };

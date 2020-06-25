@@ -101,9 +101,7 @@ codegen::Module::Module(std::unique_ptr<llvm::Module> module)
 {
 }
 
-codegen::Module::~Module()
-{
-}
+codegen::Module::~Module() {}
 
 std::unique_ptr<llvm::Module> codegen::Module::take_module()
 {
@@ -428,8 +426,8 @@ void codegen::CompilerCore::configure_search_path()
 #ifdef EIGEN_HEADERS_PATH
     add_header_search_path(EIGEN_HEADERS_PATH);
 #endif
-#ifdef MKLDNN_HEADERS_PATH
-    add_header_search_path(MKLDNN_HEADERS_PATH);
+#ifdef DNNL_HEADERS_PATH
+    add_header_search_path(DNNL_HEADERS_PATH);
 #endif
 #ifdef TBB_HEADERS_PATH
     add_header_search_path(TBB_HEADERS_PATH);

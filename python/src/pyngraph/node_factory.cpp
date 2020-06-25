@@ -267,7 +267,7 @@ namespace
 
             DictAttributeDeserializer visitor(attributes);
 
-            op_node->set_arguments(arguments);
+            op_node->set_arguments(as_output_vector(arguments));
             op_node->visit_attributes(visitor);
             op_node->constructor_validate_and_infer_types();
 

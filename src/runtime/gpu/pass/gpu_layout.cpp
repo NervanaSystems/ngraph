@@ -38,6 +38,36 @@ namespace ngraph
         {
             namespace pass
             {
+                std::shared_ptr<Node> output_to_node(Output<Node> output)
+                {
+                    std::shared_ptr<Node> node = output.get_node_shared_ptr();
+                    if (output.get_index() == 0 && output.get_node()->get_output_size() == 1)
+                    {
+                        return node;
+                    }
+                    else
+                    {
+                        for (auto in : output.get_target_inputs())
+                        {
+                            if (is_type<op::GetOutputElement>(in.get_node()))
+                            {
+                                return in.get_node()->shared_from_this();
+                            }
+                        }
+                        return std::make_shared<op::GetOutputElement>(node, output.get_index());
+                    }
+                }
+
+                NodeVector get_output_elements(const shared_ptr<Node>& mon)
+                {
+                    NodeVector goes(mon->get_output_size());
+                    for (auto o : mon->outputs())
+                    {
+                        goes.at(o.get_index()) = output_to_node(o);
+                    }
+                    return goes;
+                }
+
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
@@ -117,7 +147,7 @@ namespace ngraph
                             pre_reshape, axis_order, pre_2d_reshape_out);
                         insert_new_node_between(parent_node, topk, pre_reshape);
                         insert_new_node_between(pre_reshape, topk, pre_2d_reshape);
-                        NodeVector goes = op::get_output_elements(topk);
+                        NodeVector goes = get_output_elements(topk);
                         auto new_topk =
                             make_shared<ngraph::op::TopK>(pre_2d_reshape,
                                                           1,
@@ -166,8 +196,7 @@ namespace ngraph
                                 {
                                     auto new_reshape = make_shared<ngraph::op::Reshape>(
                                         parent, axis_vector, out_shape);
-                                    node->get_input_descriptors().at(i).replace_output(
-                                        new_reshape->get_output_descriptors().at(0));
+                                    node->input(i).replace_source_output(new_reshape->output(0));
                                     reshapes.push_back(new_reshape);
                                 }
                             }

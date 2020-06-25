@@ -206,5 +206,5 @@ void op::Dot::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector
 
 shared_ptr<Node> op::Dot::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }

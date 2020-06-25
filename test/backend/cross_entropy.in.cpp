@@ -52,7 +52,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_soft_labels)
     auto input = make_shared<op::Parameter>(element::f32, tensor_shape);
     auto labels = make_shared<op::Parameter>(element::i32, Shape{2, 4});
     auto cross_entropy = make_shared<op::CrossEntropy>(input, labels, true);
-    auto f0 = make_shared<Function>(NodeVector{cross_entropy}, ParameterVector{input, labels});
+    auto f0 = make_shared<Function>(OutputVector{cross_entropy}, ParameterVector{input, labels});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
@@ -74,7 +74,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cross_entropy_with_one_hot)
     auto input = make_shared<op::Parameter>(element::f32, tensor_shape);
     auto labels = make_shared<op::Parameter>(element::i32, Shape{2, 1});
     auto cross_entropy = make_shared<op::CrossEntropy>(input, labels, false);
-    auto f0 = make_shared<Function>(NodeVector{cross_entropy}, ParameterVector{input, labels});
+    auto f0 = make_shared<Function>(OutputVector{cross_entropy}, ParameterVector{input, labels});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
