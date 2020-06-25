@@ -477,7 +477,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
     auto dummy_correct_shape =
         make_shared<pattern::op::Label>(arg_reshape->get_output_element_type(0), input_shape);
 
-    NodeVector new_args;
+    OutputVector new_args;
     new_args.push_back(dummy_correct_shape);
 
     for (size_t i = 1; i < n->get_input_size(); i++)
@@ -502,7 +502,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
     // put back the original arguments
     for (size_t i = 0; i < new_concat->get_input_size(); i++)
     {
-        ngraph::replace_node(new_args.at(i), n->get_argument(i));
+        new_args.at(i).replace(n->get_argument(i)->output(0));
     }
     NGRAPH_DEBUG << "Replacing " << n->get_name() << " with " << new_concat->get_name();
     ngraph::replace_node(n, new_concat);

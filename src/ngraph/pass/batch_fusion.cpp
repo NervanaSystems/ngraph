@@ -92,7 +92,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     auto concat = std::static_pointer_cast<op::Concat>(n);
     std::shared_ptr<op::Convolution> sconv;
 
-    NodeVector slices;
+    OutputVector slices;
 
     const size_t CHANNEL = 1;
     if (concat->get_concatenation_axis() != CHANNEL)

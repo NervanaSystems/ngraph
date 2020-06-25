@@ -134,7 +134,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
     // this DS will be used to hold the matched attributes from matcher_v2
     std::map<std::shared_ptr<Node>, NodeVector> map_weights_to_pattern;
-    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, NodeVector>
+    std::map<std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>, OutputVector>
         map_weights_bias_to_data;
     //--------------------------------------------------------
 
@@ -243,8 +243,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             // we will not fuse if the batch_size are not same across all inputs of time step
             for (auto& node : data_param_nodes)
             {
-                if (shape_size(data_param_nodes[0]->get_output_shape(0)) !=
-                    shape_size(node->get_output_shape(0)))
+                if (shape_size(data_param_nodes[0].get_shape()) != shape_size(node.get_shape()))
                 {
                     return;
                 }
@@ -325,7 +324,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             // we fuse all the data slices captured in the pattern to make bigger GEMM call
             auto fuse_data_slices = [&]() {
-                NodeVector data_slices;
+                OutputVector data_slices;
                 for (auto& op : op_nodes)
                 {
                     auto data_node = op_seg_map.at(op).at(Type::DATA);

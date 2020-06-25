@@ -235,10 +235,10 @@ TYPED_TEST_P(BroadcastTests, broadcast_target_shape_as_concat_with_constants)
     auto target_shape_constant_3 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
     auto target_shape_constant_4 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
     std::int64_t axis = 0;
-    std::vector<std::shared_ptr<Node>> args{target_shape_constant_1,
-                                            target_shape_constant_2,
-                                            target_shape_constant_3,
-                                            target_shape_constant_4};
+    OutputVector args{target_shape_constant_1,
+                      target_shape_constant_2,
+                      target_shape_constant_3,
+                      target_shape_constant_4};
     auto target_shape = make_shared<op::Concat>(args, axis);
     auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
     auto bc = make_shared<TypeParam>(param, target_shape, axes_mapping, "NONE");
@@ -256,10 +256,10 @@ TYPED_TEST_P(BroadcastTests, broadcast_target_shape_as_concat_with_node)
     auto target_shape_constant_3 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
     auto target_shape_constant_4 = op::Constant::create<int64_t>(element::i64, Shape{1}, {50});
     std::int64_t axis = 0;
-    std::vector<std::shared_ptr<Node>> args{target_shape_constant_1,
-                                            target_shape_constant_2,
-                                            target_shape_constant_3,
-                                            target_shape_constant_4};
+    OutputVector args{target_shape_constant_1,
+                      target_shape_constant_2,
+                      target_shape_constant_3,
+                      target_shape_constant_4};
     auto target_shape = make_shared<op::Concat>(args, axis);
     auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{1}, {1});
     auto bc = make_shared<TypeParam>(param, target_shape, axes_mapping, "NONE");

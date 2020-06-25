@@ -81,7 +81,7 @@ OutputVector op::BatchMatMulTranspose::decompose_op() const
                                            : reshape_slice);
         }
     }
-    NodeVector concat_inputs;
+    OutputVector concat_inputs;
     for (size_t i = 0; i < num_batches; i++)
     {
         auto dot = std::make_shared<op::Dot>(dot_inputs[i], dot_inputs[i + num_batches]);

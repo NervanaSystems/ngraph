@@ -840,7 +840,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_concat_after_in_plac
     auto B = make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 4});
     auto D = make_shared<op::Slice>(B, Coordinate{1, 0}, Coordinate{2, 4});
     auto E = make_shared<op::Slice>(A, Coordinate{2, 0}, Coordinate{3, 4});
-    auto r = make_shared<op::Concat>(NodeVector{B, D, E}, 0);
+    auto r = make_shared<op::Concat>(OutputVector{B, D, E}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -868,7 +868,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_slice_after_in_place
     auto D = make_shared<op::Parameter>(element::f32, shape);
     auto add2 = make_shared<op::Add>(C, D);
     auto subtract = make_shared<op::Subtract>(C, A);
-    auto concat = make_shared<op::Concat>(NodeVector{add1, add2, subtract}, 0);
+    auto concat = make_shared<op::Concat>(OutputVector{add1, add2, subtract}, 0);
     Shape shape_r{2, 1};
     auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
     auto f = make_shared<Function>(slice, ParameterVector{A, B, C, D});
