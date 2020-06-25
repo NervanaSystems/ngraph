@@ -89,7 +89,7 @@ elseif(NGRAPH_MLIR_ENABLE)
     if(NGRAPH_USE_PREBUILT_MLIR)
         set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH})
     endif()
-    set(MLIR_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
+    set(MLIR_LLVM_COMMIT_ID 3c5dd5863c34ecd51e9d2a49929877d8151dea39)
     set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
     if(EXISTS "${VCSREVISION}")
         message(STATUS "LLVM_Revision found.")
@@ -138,7 +138,7 @@ if(NEED_TO_BUILD_LLVM)
             -DCLANG_ENABLE_STATIC_ANALYZER=OFF)
         set(LLVM_GIT_SHALLOW 1)
     elseif(NGRAPH_MLIR_ENABLE)
-        set(LLVM_GIT_TAG ${MLIR_COMMIT_ID})
+        set(LLVM_GIT_TAG ${MLIR_LLVM_COMMIT_ID})
         set(LLVM_CMAKE_ARGS
             -DLLVM_ENABLE_RTTI=ON
             -DLLVM_ENABLE_PROJECTS:STRING=mlir
