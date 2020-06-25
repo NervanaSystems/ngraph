@@ -572,7 +572,7 @@ TEST(batch_fusion, group_convolution_fusion)
                                                    CoordinateDiff{0, 0},
                                                    Strides{1, 1});
 
-    auto concat = make_shared<op::Concat>(NodeVector{conv_lower, conv_upper}, 1);
+    auto concat = make_shared<op::Concat>(OutputVector{conv_lower, conv_upper}, 1);
 
     auto f = make_shared<Function>(OutputVector{concat}, ParameterVector{A, B});
     pass::Manager pass_manager;

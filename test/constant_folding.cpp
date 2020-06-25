@@ -1460,7 +1460,7 @@ TEST(constant_folding, const_concat)
     auto constant0 =
         op::Constant::create(element::i32, Shape{2, 3}, vector<int32_t>{1, 2, 3, 4, 5, 6});
     auto constant1 = op::Constant::create(element::i32, Shape{2, 1}, vector<int32_t>{7, 8});
-    auto concat = make_shared<op::Concat>(NodeVector{constant0, constant1}, 1);
+    auto concat = make_shared<op::Concat>(OutputVector{constant0, constant1}, 1);
     auto f = make_shared<Function>(concat, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -1866,7 +1866,7 @@ TEST(constant_folding, const_gather_v1_subgraph)
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B_const, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B_const, C}, axis);
 
     const vector<int64_t> indices{1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
@@ -1897,7 +1897,7 @@ TEST(constant_folding, const_gather_v1_subgraph_neg_axis)
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C_const}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C_const}, axis);
 
     const vector<int64_t> indices{-1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
@@ -1927,7 +1927,7 @@ TEST(constant_folding, const_gather_v1_subgraph_no_constant_input)
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C}, axis);
 
     const vector<int64_t> indices{1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
@@ -1950,7 +1950,7 @@ TEST(constant_folding, const_gather_v1_subgraph_no_constant_input_scalar)
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C}, axis);
 
     const vector<int64_t> indices{1};
     const auto indices_const = op::Constant::create(element::i64, {}, indices);
@@ -1974,7 +1974,7 @@ TEST(constant_folding, const_gather_v1_subgraph_skip_if_non_zero_axis)
     const int64_t axis = 1;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C}, axis);
 
     const vector<int64_t> indices{1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
@@ -1997,7 +1997,7 @@ TEST(constant_folding, const_gather_v1_subgraph_skip_if_non_single_indices)
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C}, axis);
 
     const vector<int64_t> indices{0, 1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
@@ -2020,7 +2020,7 @@ TEST(constant_folding, const_gather_v1_subgraph_skip_if_concat_output_shape_dyna
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C}, axis);
 
     const vector<int64_t> indices{1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);
@@ -2043,7 +2043,7 @@ TEST(constant_folding, const_gather_v1_subgraph_skip_if_not_single_input)
     const int64_t axis = 0;
     const auto axis_const = op::Constant::create(element::i64, {}, {axis});
 
-    const auto concat = make_shared<op::Concat>(NodeVector{A, B, C}, axis);
+    const auto concat = make_shared<op::Concat>(OutputVector{A, B, C}, axis);
 
     const vector<int64_t> indices{1};
     const auto indices_const = op::Constant::create(element::i64, {indices.size()}, indices);

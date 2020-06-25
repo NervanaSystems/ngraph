@@ -1239,7 +1239,7 @@ TEST(eval, evaluate_dynamic_concat)
 {
     auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto arg2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto concat = make_shared<op::v0::Concat>(NodeVector{arg1, arg2}, 1);
+    auto concat = make_shared<op::v0::Concat>(OutputVector{arg1, arg2}, 1);
     auto fun = make_shared<Function>(OutputVector{concat}, ParameterVector{arg1, arg2});
     auto result_tensor = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result_tensor},
