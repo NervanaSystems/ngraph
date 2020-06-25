@@ -801,10 +801,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                           ref_num_of_rnn_fused_layer,
                                                           ref_rnn_type);
 
-    auto rnn_goe0 = std::make_shared<ngraph::op::GetOutputElement>(ref_rnn_node, 0);
-
-    auto rnn_goe0_label =
-        std::make_shared<pattern::op::Label>(rnn_goe0, nullptr, OutputVector{rnn_goe0});
+    auto rnn_label =
+        std::make_shared<pattern::op::Label>(ref_rnn_node->output(0), nullptr, ref_rnn_node->outputs());
 
     auto callback = [rnn_src_layer,
                      rnn_src_iter,
@@ -812,7 +810,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                      rnn_weights_layer,
                      rnn_weights_iter,
                      rnn_bias,
-                     rnn_goe0_label](pattern::RecurrentMatcher& m) {
+                     rnn_label](pattern::RecurrentMatcher& m) {
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against "
                      << m.get_match_root()->get_name();
@@ -823,10 +821,10 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             return false;
         }
 
-        auto rnn_goe0_bounded_nodes = m.get_bound_nodes_for_pattern(rnn_goe0_label);
+        auto rnn_goe0_bounded_nodes = m.get_bound_nodes_for_pattern(rnn_label);
 
         std::vector<std::shared_ptr<ngraph::op::Rnn>> rnn_nodes;
-        for (auto rnn_goe : m.get_bound_nodes_for_pattern(rnn_goe0_label))
+        for (auto rnn_goe : m.get_bound_nodes_for_pattern(rnn_label))
         {
             if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
             {
@@ -971,7 +969,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     std::set<std::shared_ptr<pattern::op::Label>> empty_correlated_matches;
     auto m = std::make_shared<pattern::RecurrentMatcher>(
-        rnn_goe0_label, rnn_src_layer, empty_correlated_matches);
+        rnn_label, rnn_src_layer, empty_correlated_matches);
     this->add_matcher(m, callback);
 }
 
