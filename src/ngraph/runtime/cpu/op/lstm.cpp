@@ -58,6 +58,7 @@ op::Lstm::Lstm(const Output<Node>& src_layer,
     , m_num_fused_layers(1)
     , m_rnntype(rnn_type)
 {
+    NGRAPH_INFO;
     constructor_validate_and_infer_types();
 
     if (src_layer.get_shape().size() != weights_layer.get_shape().size())

@@ -211,13 +211,7 @@ public:
     RecurrentMatcher(const Output<Node>& initial_pattern,
                      const Output<Node>& pattern,
                      const std::shared_ptr<Node>& rpattern,
-                     const std::set<std::shared_ptr<Node>>& correlated_patterns)
-        : m_initial_pattern(initial_pattern)
-        , m_pattern(pattern)
-        , m_recurrent_pattern(rpattern)
-        , m_correlated_patterns(correlated_patterns)
-    {
-    }
+                     const std::set<std::shared_ptr<Node>>& correlated_patterns);
 
     /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
     ///        repeating patterns (e.g. RNN, LSTM, GRU cells)
@@ -229,10 +223,7 @@ public:
     ///                            across all cells
     RecurrentMatcher(const Output<Node>& pattern,
                      const std::shared_ptr<Node>& rpattern,
-                     const std::set<std::shared_ptr<Node>>& correlated_patterns)
-        : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
-    {
-    }
+                     const std::set<std::shared_ptr<Node>>& correlated_patterns);
 
     RecurrentMatcher(const Output<Node>& initial_pattern,
                      const Output<Node>& pattern,
@@ -241,32 +232,13 @@ public:
 
     RecurrentMatcher(const Output<Node>& pattern,
                      const std::shared_ptr<Node>& rpattern,
-                     const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
-        : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
-    {
-    }
+                     const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
 
     /// \brief Returns a vector of bound nodes for a given label (used in a pattern
     /// describing an individual cell
-    OutputVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const
-    {
-        if (m_matches.count(pattern) == 0)
-        {
-            throw ngraph_error("No bound nodes for a given label");
-        }
+    OutputVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const;
 
-        return m_matches.at(pattern);
-    }
-
-    size_t get_number_of_recurrent_matches() const
-    {
-        if (m_matches.size() == 0)
-        {
-            return 0;
-        }
-
-        return (*m_matches.begin()).second.size();
-    }
+    size_t get_number_of_recurrent_matches() const;
 
     size_t get_number_of_bound_labels() const { return m_matches.size(); }
     /// \brief Tries to match a pattern for an individual cell to a given \p graph
@@ -278,6 +250,7 @@ public:
 private:
     std::set<std::shared_ptr<Node>>
         as_node_set(const std::set<std::shared_ptr<op::Label>>& label_set);
+    Output<Node> make_node_output(const std::shared_ptr<Node>& node);
 
     Output<Node> m_initial_pattern;
     Output<Node> m_pattern;

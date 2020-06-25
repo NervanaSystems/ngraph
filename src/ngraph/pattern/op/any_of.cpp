@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/pattern/op/any_of.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
@@ -36,6 +37,7 @@ bool pattern::op::AnyOf::match_value(Matcher* matcher,
                for (auto arg : graph_value.get_node_shared_ptr()->input_values())
                {
                    auto saved = matcher->start_match();
+                   NGRAPH_INFO;
                    if (matcher->match_value(input_value(0), arg))
                    {
                        return saved.finish(true);
