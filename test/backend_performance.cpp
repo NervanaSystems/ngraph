@@ -74,7 +74,7 @@ TEST(benchmark, concat_32x1x200_axis1_6)
     for (std::string backend_name : backend_names)
     {
         ParameterVector params(n_arrays);
-        Outputvector params_as_nodes(n_arrays);
+        OutputVector params_as_nodes(n_arrays);
         for (size_t i = 0; i < n_arrays; i++)
         {
             auto param = make_shared<op::Parameter>(element::f32, shape_of_each_array);
