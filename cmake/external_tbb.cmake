@@ -22,6 +22,8 @@ if(NOT NGRAPH_TBB_ENABLE)
     return()
 endif()
 
+cmake_policy(SET CMP0074 NEW)
+
 set(TBB_GIT_REPO_URL https://github.com/oneapi-src/oneTBB.git)
 set(NGRAPH_TBB_VERSION "2019_U3")
 set(NGRAPH_TBB_SUB_VERSION "tbb2019_20181203oss")

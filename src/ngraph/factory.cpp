@@ -37,7 +37,7 @@ namespace ngraph
             if (registry.m_factory_map.size() == 0)
             {
 #define NGRAPH_OP(NAME, VERSION) registry.register_factory<ngraph::op::v##VERSION::NAME>();
-#include "op_version_tbl.hpp"
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
             }
         }

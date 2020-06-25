@@ -720,7 +720,7 @@ add_custom_command(
         -P ${CMAKE_MODULE_PATH}gen_op_version.cmake
 )
 add_custom_target(
-    get_op_version_table
+    gen_op_version_table
     ALL
     DEPENDS ${OP_VERSION_TBL_PATH}
 )
@@ -738,8 +738,6 @@ if (NGRAPH_STATIC_LIB_ENABLE)
 else()
     add_library(ngraph SHARED ${SRC})
 endif()
-
-target_include_directories(ngraph PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 set_target_properties(ngraph PROPERTIES
                       CXX_VISIBILITY_PRESET hidden
@@ -787,6 +785,7 @@ if(NGRAPH_JSON_ENABLE)
     target_link_libraries(ngraph PRIVATE libjson)
 endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
+add_dependencies(ngraph gen_op_version_table)
 
 if (LINUX)
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -810,6 +809,7 @@ endif()
 
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>)
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
 add_library(ngraph::ngraph ALIAS ngraph)

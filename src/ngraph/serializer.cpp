@@ -54,7 +54,7 @@ namespace
 #define VSUF1(NAME) NAME##_v1
 #define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
-#include "op_version_tbl.hpp"
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
         UnknownOp
     };
@@ -69,7 +69,7 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
 #define NGRAPH_OP(NAME, VERSION)                                                                   \
     {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
-#include "op_version_tbl.hpp"
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;

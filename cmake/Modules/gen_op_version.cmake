@@ -1,4 +1,4 @@
-cmake_policy(SET CMP0007 NEW)
+cmake_policy(SET CMP0074 NEW)
 
 # Make the string OPSETS into a list by replacing spaces with semicolons
 string(REPLACE " " ";" OPSETS "${OPSETS}")
@@ -14,5 +14,4 @@ endforeach()
 list(REMOVE_DUPLICATES ALL_OPS)
 list(SORT ALL_OPS)
 string(REPLACE ";" "\n" NEW_CONTENTS "${ALL_OPS}")
-file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp)
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp ${NEW_CONTENTS})
