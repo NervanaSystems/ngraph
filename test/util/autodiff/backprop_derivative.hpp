@@ -48,7 +48,7 @@ namespace ngraph
             get_autodiff(runtime::Backend* backend,
                          std::shared_ptr<Function>& df,
                          const std::vector<std::shared_ptr<runtime::Tensor>>& df_input_args,
-                         const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+                         const ParameterVector& indep_params)
         {
             // df/dX* = f'(c, ...)
             // using X* to denote all x "of interest" (represented by indep_params)
@@ -129,7 +129,7 @@ namespace ngraph
             backprop_derivative(runtime::Backend* backend,
                                 const std::shared_ptr<Function>& f,
                                 const std::vector<std::shared_ptr<runtime::Tensor>>& f_input_args,
-                                const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+                                const ParameterVector& indep_params)
         {
             // y = f(X)
             // using X (upper case) to denote all paramenters of f (represented by f_input_args)
@@ -142,7 +142,7 @@ namespace ngraph
             auto c_arg = backend->create_tensor<T>(y_shape);
 
             // df/dX*
-            std::vector<Output<Node>> df_output_params;
+            OutputVector df_output_params;
 
             Adjoints adjoints(OutputVector{f->output(0)}, OutputVector{c_param});
 
@@ -154,7 +154,7 @@ namespace ngraph
             }
 
             // (c, X)
-            std::vector<std::shared_ptr<op::Parameter>> df_input_params = f->get_parameters();
+            ParameterVector df_input_params = f->get_parameters();
             df_input_params.insert(df_input_params.begin(), c_param);
 
             // df/dX* = f'(c, X)

@@ -862,7 +862,7 @@ TEST(builder, scaled_quantize_concat_unsigned)
     auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_r{8, 2};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        NodeVector{A, B, C}, 0, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
+        OutputVector{A, B, C}, 0, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
     auto f = make_shared<Function>(OutputVector{QConcat},
                                    ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
@@ -911,7 +911,7 @@ TEST(builder, scaled_quantize_concat_signed)
     Shape shape_r{8, 2};
 
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        NodeVector{A, B, C}, 0, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
+        OutputVector{A, B, C}, 0, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
     auto f = make_shared<Function>(OutputVector{QConcat},
                                    ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
@@ -959,7 +959,7 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
     auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_r{2, 9};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        NodeVector{A, B, C}, 1, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
+        OutputVector{A, B, C}, 1, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
     auto f = make_shared<Function>(OutputVector{QConcat},
                                    ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");

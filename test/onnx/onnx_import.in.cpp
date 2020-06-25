@@ -100,7 +100,7 @@ NGRAPH_TEST(${BACKEND_NAME}, onnx_node_names_check)
         file_util::path_join(SERIALIZED_ZOO, "onnx/add_abc.prototxt"));
 
     // Filter out Add nodes from the function graph
-    std::vector<std::shared_ptr<Node>> additions;
+    NodeVector additions;
     auto ordered_ops = function->get_ordered_ops();
     std::copy_if(
         ordered_ops.begin(),

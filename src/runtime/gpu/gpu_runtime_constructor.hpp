@@ -39,8 +39,7 @@ namespace ngraph
             public:
                 using op_runtime_t =
                     std::function<void(GPUCallFrame& call_frame, GPURuntimeContext* ctx)>;
-                using op_order_t = std::unordered_map<std::shared_ptr<Function>,
-                                                      std::vector<std::shared_ptr<Node>>>;
+                using op_order_t = std::unordered_map<std::shared_ptr<Function>, NodeVector>;
 
                 GPURuntimeConstructor(const op_order_t& ordered_ops);
                 void add(const std::string& name, const op_runtime_t& step);

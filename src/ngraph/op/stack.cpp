@@ -34,11 +34,6 @@ op::Stack::Stack(const OutputVector& args, int64_t axis)
     constructor_validate_and_infer_types();
 }
 
-op::Stack::Stack(const NodeVector& args, int64_t axis)
-    : Stack(as_output_vector(args), axis)
-{
-}
-
 shared_ptr<Node> op::Stack::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return make_shared<Stack>(new_args, m_axis);
@@ -71,7 +66,7 @@ void op::Stack::pre_validate_and_infer_types()
 OutputVector op::Stack::decompose_op() const
 {
     auto axis = get_axis();
-    std::vector<std::shared_ptr<ngraph::Node>> args;
+    OutputVector args;
     PartialShape inputs_shape_scheme{PartialShape::dynamic()};
     for (size_t i = 0; i < get_input_size(); ++i)
     {

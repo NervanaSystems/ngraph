@@ -395,7 +395,7 @@ OutputVector op::v0::TensorIterator::decompose_op() const
 
 void op::v0::TensorIterator::revalidate_and_infer_types_for_body_ops()
 {
-    std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
+    std::stack<std::shared_ptr<Node>, NodeVector> nodes_to_do;
     std::unordered_set<std::shared_ptr<Node>> nodes_done;
 
     for (const auto& r : m_body->get_results())
@@ -447,7 +447,7 @@ void op::v0::TensorIterator::validate_and_infer_types()
                           get_output_size() == m_output_descriptions.size(),
                           "Number of outputs must be the same as number of output descriptions");
 
-    std::vector<std::shared_ptr<Node>> ends;
+    NodeVector ends;
 
     auto make_positive = [](int64_t value, uint64_t dim_size) -> int64_t {
         if (value < 0)

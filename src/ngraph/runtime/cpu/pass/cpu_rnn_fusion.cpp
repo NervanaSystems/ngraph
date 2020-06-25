@@ -114,7 +114,7 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 34});
     auto src_iter_label = std::make_shared<pattern::op::Label>(element::f32, Shape{32, 34});
     auto concat =
-        std::make_shared<ngraph::op::Concat>(NodeVector{src_layer_label, src_iter_label}, 0);
+        std::make_shared<ngraph::op::Concat>(OutputVector{src_layer_label, src_iter_label}, 0);
     auto weights = std::make_shared<pattern::op::Label>(element::f32, Shape{34, 2});
     auto bias_label = std::make_shared<pattern::op::Label>(element::f32, Shape{64, 2});
     auto broadcast_pred = [](Output<Node> n) {
@@ -219,8 +219,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto lstmcell_op = m.get_match_root_as<op::LSTMCell>();
         NGRAPH_CHECK(
             lstmcell_op, "match root node ", *m.get_match_root(), " not of type `op::LSTMCell`");
-        auto src_iter =
-            std::make_shared<ngraph::op::Concat>(NodeVector{pattern_map[H_t], pattern_map[C_t]}, 0);
+        auto src_iter = std::make_shared<ngraph::op::Concat>(
+            OutputVector{pattern_map[H_t], pattern_map[C_t]}, 0);
 
         auto W_ifco = lstmcell_op->get_argument(3);
         auto R_ifco = lstmcell_op->get_argument(4);
@@ -683,7 +683,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // find the lstm's nodes captured in PM
         auto lstm_cts = m.get_bound_nodes_for_pattern(lstm_ct);
         std::reverse(lstm_cts.begin(), lstm_cts.end());
-        std::vector<std::shared_ptr<ngraph::Node>> lstm_nodes;
+        NodeVector lstm_nodes;
 
         // we need to collect LSTM from GOE's, in order to deterministically determine
         // the individual time slice output ht.
@@ -1051,8 +1051,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
         auto construct_birnn_inputs = [&](int index) {
-            auto nodes =
-                NodeVector{rnn_ltor_node->get_argument(index), rnn_rtol_node->get_argument(index)};
+            auto nodes = OutputVector{rnn_ltor_node->get_argument(index),
+                                      rnn_rtol_node->get_argument(index)};
             return std::make_shared<ngraph::op::Concat>(nodes, 0);
         };
 

@@ -113,9 +113,8 @@ size_t Node::no_default_index() const
     NODE_VALIDATION_CHECK(this, false, "Default output not supported");
 }
 
-std::shared_ptr<Node>
-    Node::copy_with_new_inputs(const OutputVector& inputs,
-                               const std::vector<std::shared_ptr<Node>>& control_dependencies) const
+std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs,
+                                                 const NodeVector& control_dependencies) const
 {
     shared_ptr<Node> clone = clone_with_new_inputs(inputs);
     for (auto& cdep : control_dependencies)
@@ -481,7 +480,7 @@ NodeVector Node::get_arguments() const
     return result;
 }
 
-const std::vector<std::shared_ptr<Node>>& Node::get_control_dependencies() const
+const NodeVector& Node::get_control_dependencies() const
 {
     return m_control_dependencies;
 }
@@ -939,9 +938,9 @@ vector<Input<Node>> Node::inputs()
     return result;
 }
 
-vector<Output<Node>> Node::input_values() const
+OutputVector Node::input_values() const
 {
-    vector<Output<Node>> result;
+    OutputVector result;
 
     for (size_t i = 0; i < get_input_size(); i++)
     {
@@ -963,9 +962,9 @@ vector<Input<const Node>> Node::inputs() const
     return result;
 }
 
-vector<Output<Node>> Node::outputs()
+OutputVector Node::outputs()
 {
-    vector<Output<Node>> result;
+    OutputVector result;
 
     for (size_t i = 0; i < get_output_size(); i++)
     {
