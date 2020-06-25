@@ -772,7 +772,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_conv_horizontal_fusion)
                                       bias2, conv2->get_output_shape(0), AxisSet{0, 2, 3});
         auto relu2 = std::make_shared<op::Relu>(conv_bias2);
 
-        auto concat = std::make_shared<op::Concat>(NodeVector{relu1, relu2}, 1);
+        auto concat = std::make_shared<op::Concat>(OutputVector{relu1, relu2}, 1);
         auto f = make_shared<Function>(OutputVector{concat},
                                        ParameterVector{A, weights1, bias1, weights2, bias2});
         return f;
@@ -2423,7 +2423,7 @@ namespace
             return move(add_bias);
         };
 
-        NodeVector graph_nodes;
+        OutputVector graph_nodes;
         for (size_t i = 0; i < num_timesteps; i++)
         {
             graph_nodes.push_back(create_graph());
@@ -2672,7 +2672,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_quant_fusion_qconcat)
             return dq;
         };
 
-        NodeVector concat_inputs;
+        OutputVector concat_inputs;
         OutputVector concats;
         ParameterVector inputs;
         Shape shape_input{1, 2, 4, 4};

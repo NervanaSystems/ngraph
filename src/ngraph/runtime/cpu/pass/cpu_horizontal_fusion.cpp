@@ -119,9 +119,9 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         }
 
         // get weights and bias from each CBR and create Concat nodes
-        std::vector<std::shared_ptr<Node>> weights_nodes;
-        std::vector<std::shared_ptr<Node>> bias_nodes;
-        std::vector<std::shared_ptr<Node>> conv_bias_nodes;
+        OutputVector weights_nodes;
+        OutputVector bias_nodes;
+        OutputVector conv_bias_nodes;
 
         for (auto u : m.get_pattern_map()[data_conv]->get_users())
         {
@@ -177,7 +177,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         size_t index = 0;
         for (auto cb : conv_bias_nodes)
         {
-            auto slice_shape = cb->get_output_shape(0);
+            auto slice_shape = cb.get_shape();
             NGRAPH_DEBUG << "conv_horizontal_fusion: slice shape " << slice_shape << "\n";
             auto lower_bounds = Coordinate{0, index, 0, 0};
             index += slice_shape[1];
@@ -186,7 +186,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
             NGRAPH_DEBUG << "conv_horizontal_fusion: upper_bounds " << upper_bounds << "\n";
             auto slice =
                 std::make_shared<ngraph::op::Slice>(conv_bias_new, lower_bounds, upper_bounds);
-            ngraph::replace_node(cb, slice);
+            cb.replace(slice);
         }
 
         return true;

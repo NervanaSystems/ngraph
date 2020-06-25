@@ -119,7 +119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     auto dot1 = make_dot(dot_a_params, dot_b_params);
     auto dot2 = make_dot(dot_a_params, dot_b_params);
     auto dot3 = make_dot(dot_a_params, dot_b_params);
-    auto dot_concat = make_shared<op::Concat>(NodeVector{dot1, dot2, dot3}, 0);
+    auto dot_concat = make_shared<op::Concat>(OutputVector{dot1, dot2, dot3}, 0);
     ParameterVector dot_params(dot_a_params);
     dot_params.insert(dot_params.end(), dot_b_params.begin(), dot_b_params.end());
     auto ref_f = make_shared<Function>(dot_concat, dot_params);

@@ -40,12 +40,6 @@ namespace ngraph
                 /// \param axis The axis along which to concatenate the input tensors.
                 Concat(const OutputVector& args, int64_t axis);
 
-                /// \brief Constructs a concatenation operation.
-                ///
-                /// \param args               The nodes producing the input tensors.
-                /// \param axis The axis along which to concatenate the input tensors.
-                Concat(const NodeVector& args, int64_t axis);
-
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 

@@ -524,7 +524,7 @@ TEST(provenance, scaled_quantize_concat_unsigned)
     Ax->add_provenance_tag("in2");
     ngraph::Shape shape_r{2, 2};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        ngraph::NodeVector{A}, 0, ngraph::NodeVector{An}, ngraph::NodeVector{Ax});
+        ngraph::OutputVector{A}, 0, ngraph::OutputVector{An}, ngraph::OutputVector{Ax});
     auto f = make_shared<ngraph::Function>(ngraph::OutputVector{QConcat},
                                            ngraph::ParameterVector{A, An, Ax});
     QConcat->add_provenance_tag("hello");
