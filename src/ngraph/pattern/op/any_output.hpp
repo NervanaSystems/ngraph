@@ -38,7 +38,10 @@ public:
     const NodeTypeInfo& get_type_info() const override;
     /// \brief creates an AnyOutput node matching any output of a node
     /// \param node The node to match
-    AnyOutput(const std::shared_ptr<Node>& pattern);
+    AnyOutput(const std::shared_ptr<Node>& pattern)
+        : Pattern({pattern->output(0)})
+    {
+    }
 
     bool match_value(pattern::Matcher* matcher,
                      const Output<Node>& pattern_value,

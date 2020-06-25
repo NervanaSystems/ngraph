@@ -130,7 +130,8 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
     auto activation = std::make_shared<ngraph::op::Tanh>(add);
 
     auto callback = [src_layer_label, src_iter_label, weights, bias_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In construct_vanilla_rnn callback against " << *m.get_match_root();
+        NGRAPH_DEBUG << "In construct_vanilla_rnn callback against "
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_rnn;
@@ -215,7 +216,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                                        false);
 
     auto callback = [X, W, R, H_t, C_t](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In construct_onnx_lstmcell_fprop callback against " << *m.get_match_root();
+        NGRAPH_DEBUG << "In construct_onnx_lstmcell_fprop callback against "
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
@@ -293,7 +295,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In construct_sigmoid pattern callback against " << *m.get_match_root();
+        NGRAPH_DEBUG << "In construct_sigmoid pattern callback against "
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
 
@@ -400,13 +403,15 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
                         pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In construct_lstm_fprop callback against " << *m.get_match_root();
+        NGRAPH_DEBUG << "In construct_lstm_fprop callback against "
+                     << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_value_map();
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
-            NGRAPH_DEBUG << "mpattern type is not float!";
+            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                         << " type is not float!";
             return false;
         }
 
@@ -422,6 +427,18 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto src_layer = pattern_map[xt];
         auto hidden_state = pattern_map[ht_1];
         auto cell_state = pattern_map[ct_1];
+
+        // TODO: (Pruthvi) temporary workaround for GNMT slow down
+        // this checks avoids fusing of LSTM cells if its a part of decoder, we
+        // will remove this once dnnl optimizes individual LSTM cell or once
+        // we have decoder pattern for GNMT.
+        if (!(is_type<ngraph::op::Broadcast>(cell_state.get_node_shared_ptr()) &&
+              is_type<ngraph::op::Constant>(
+                  cell_state.get_node_shared_ptr()->input_value(0).get_node_shared_ptr())) &&
+            !(is_type<ngraph::op::GetOutputElement>(cell_state.get_node_shared_ptr())))
+        {
+            return false;
+        }
 
         auto swap_lstm_inputs = [&]() -> void {
             src_layer = pattern_map[ht_1];
@@ -491,27 +508,19 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-// #define GOE
-#ifdef GOE
-        auto lstm_ht_output =
-            std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1)->output(0);
-        auto lstm_ct_output =
-            std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2)->output(0);
-#else
-        auto lstm_ht_output = lstm_node->output(1);
-        auto lstm_ct_output = lstm_node->output(2);
-#endif
+        auto lstm_ht_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1);
+        auto lstm_ct_output = std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2);
 
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
-        NGRAPH_INFO << *pattern_map[ct_label].get_node();
         if (ngraph::is_used(pattern_map[ct_label].get_node_shared_ptr().get()))
         {
-            replace_collapse_node_user(pattern_map[ct_label].get_node_shared_ptr(), lstm_ct_output);
+            replace_collapse_node_user(pattern_map[ct_label].get_node_shared_ptr(),
+                                       lstm_ct_output->output(0));
         }
         // find the user's for {ht} and replace them with lstm_goe_1
-        m.get_match_value().replace(lstm_ht_output);
+        m.get_match_value().replace(lstm_ht_output->output(0));
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht, "LSTMFusion.Fprop");
@@ -557,7 +566,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    NGRAPH_INFO << lstm->outputs().size();
 
     auto callback = [lstm_src_layer,
                      lstm_ht,
@@ -565,7 +573,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                      lstm_weights_layer_label,
                      lstm_weights_iter_label,
                      lstm_bias_label](pattern::RecurrentMatcher& m) {
-        NGRAPH_DEBUG << "In construct_rnn_lstm_fprop callback against " << *m.get_match_root();
+        NGRAPH_DEBUG << "In construct_rnn_lstm_fprop callback against "
+                     << m.get_match_root()->get_name();
 
         auto concat_rnn_inputs_across_timestep =
             [&](std::shared_ptr<pattern::op::Label> input_label) -> std::shared_ptr<Node> {
@@ -740,7 +749,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
-                     << "matched_node: " << *m.get_match_root();
+                     << "matched_node: " << m.get_match_root()->get_name();
         return true;
     };
 
@@ -792,8 +801,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                           ref_num_of_rnn_fused_layer,
                                                           ref_rnn_type);
 
-    auto rnn_label = std::make_shared<pattern::op::Label>(
-        ref_rnn_node->output(0), nullptr, ref_rnn_node->outputs());
+    auto rnn_label =
+        std::make_shared<pattern::op::Label>(ref_rnn_node->output(0), nullptr, ref_rnn_node->outputs());
 
     auto callback = [rnn_src_layer,
                      rnn_src_iter,
@@ -804,7 +813,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                      rnn_label](pattern::RecurrentMatcher& m) {
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against "
-                     << *m.get_match_root();
+                     << m.get_match_root()->get_name();
         NGRAPH_DEBUG << " Number of RNN's Matched: " << number_of_rnn_cell_matched;
 
         if (number_of_rnn_cell_matched < 2)
@@ -993,7 +1002,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [rnn_left_to_right, rnn_right_to_left](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In construct_bidirectional_rnn callback against " << *m.get_match_root();
+        NGRAPH_DEBUG << "In construct_bidirectional_rnn callback against "
+                     << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
         auto rnn_ltor_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_left_to_right]);
         auto rnn_rtol_node = as_type_ptr<ngraph::op::Rnn>(pattern_map[rnn_right_to_left]);

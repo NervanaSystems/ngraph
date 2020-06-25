@@ -148,8 +148,6 @@ bool pattern::Matcher::match_value(const Output<Node>& pattern_value,
 {
     shared_ptr<Node> pattern_node = pattern_value.get_node_shared_ptr();
     shared_ptr<Node> graph_node = graph_value.get_node_shared_ptr();
-    NGRAPH_INFO << graph_value;
-    NGRAPH_INFO << pattern_value;
 
     // This env var allows one to specify node name patterns to abort pattern matching
     // at particular nodes. The upshot is that one can quickly zero in on an offending
@@ -165,19 +163,13 @@ bool pattern::Matcher::match_value(const Output<Node>& pattern_value,
             return false;
         }
     }
-    NGRAPH_INFO;
     bool rc = pattern_node->match_value(this, pattern_value, graph_value);
     if (!rc && is_type<ngraph::op::GetOutputElement>(graph_node))
     {
         // If the graph_node is a GetOutputElement and the match failed then try the
         // match against the GetOutputElement's input_value. This will recursively skip
         // GetOutputElements in the graph so the patterns do not need to contain them.
-        NGRAPH_INFO << "MATCH RETRY";
-        rc = match_value(pattern_value, graph_node->input_value(0));
-    }
-    if (rc)
-    {
-        NGRAPH_INFO << "MATCH " << graph_node->get_name();
+        rc = pattern_node->match_value(this, pattern_value, graph_node->input_value(0));
     }
     return rc;
 }
@@ -186,7 +178,6 @@ bool pattern::Matcher::match_permutation(const OutputVector& pattern_args, const
 {
     for (size_t i = 0; i < args.size(); i++)
     {
-        NGRAPH_INFO;
         if (!match_value(pattern_args.at(i), args.at(i)))
         {
             return false;
@@ -197,15 +188,15 @@ bool pattern::Matcher::match_permutation(const OutputVector& pattern_args, const
 
 bool pattern::Matcher::match_arguments(Node* pattern_node, const shared_ptr<Node>& graph_node)
 {
-    NGRAPH_INFO << "[MATCHER] Match arguments at " << *graph_node << " for pattern "
-                << *pattern_node;
+    NGRAPH_DEBUG << "[MATCHER] Match arguments at " << *graph_node << " for pattern "
+                 << *pattern_node;
 
     auto args = graph_node->input_values();
     auto pattern_args = pattern_node->input_values();
 
     if (args.size() != pattern_args.size())
     {
-        NGRAPH_INFO << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *pattern_node;
+        NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *pattern_node;
         return false;
     }
 
@@ -221,7 +212,6 @@ bool pattern::Matcher::match_arguments(Node* pattern_node, const shared_ptr<Node
             auto saved = start_match();
             if (match_permutation(pattern_args, args))
             {
-                NGRAPH_INFO;
                 return saved.finish(true);
             }
         } while (next_permutation(
@@ -231,11 +221,10 @@ bool pattern::Matcher::match_arguments(Node* pattern_node, const shared_ptr<Node
     }
     else
     {
-        NGRAPH_INFO;
         return match_permutation(pattern_args, args);
     }
 
-    NGRAPH_INFO << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *pattern_node;
+    NGRAPH_DEBUG << "[MATCHER] Aborting at " << *graph_node << " for pattern " << *pattern_node;
     return false;
 }
 
@@ -243,22 +232,12 @@ bool pattern::Matcher::match(const Output<Node>& graph_value)
 {
     // clear our state
     m_matched_list.clear();
-    NGRAPH_INFO << graph_value;
     return match(graph_value, PatternValueMap{});
 }
 
 bool pattern::Matcher::match(shared_ptr<Node> node)
 {
-    NGRAPH_INFO << *node;
-    for (Output<Node> output : node->outputs())
-    {
-        NGRAPH_INFO << output;
-        if (match(output))
-        {
-            return true;
-        }
-    }
-    return false;
+    return match(node->output(0));
 }
 
 bool pattern::Matcher::match(const Output<Node>& graph_value,
@@ -272,8 +251,6 @@ bool pattern::Matcher::match(const Output<Node>& graph_value,
     // insert previous matches
     m_pattern_map.insert(previous_matches.cbegin(), previous_matches.cend());
     auto saved = start_match();
-    NGRAPH_INFO << graph_value;
-    NGRAPH_INFO << m_pattern_node;
     bool is_match = saved.finish(match_value(m_pattern_node, graph_value));
     if (is_match)
     {
@@ -284,7 +261,6 @@ bool pattern::Matcher::match(const Output<Node>& graph_value,
 
 bool pattern::Matcher::match(const Output<Node>& graph_value, const PatternMap& previous_matches)
 {
-    NGRAPH_INFO;
     return match(graph_value, as_pattern_value_map(previous_matches));
 }
 
@@ -307,68 +283,6 @@ pattern::RecurrentMatcher::RecurrentMatcher(const Output<Node>& initial_pattern,
 {
 }
 
-pattern::RecurrentMatcher::RecurrentMatcher(
-    const Output<Node>& initial_pattern,
-    const Output<Node>& pattern,
-    const std::shared_ptr<Node>& rpattern,
-    const std::set<std::shared_ptr<Node>>& correlated_patterns)
-    : m_initial_pattern(initial_pattern)
-    , m_pattern(pattern)
-    , m_recurrent_pattern(rpattern)
-    , m_correlated_patterns(correlated_patterns)
-{
-    NGRAPH_INFO << initial_pattern;
-    NGRAPH_INFO << pattern;
-    NGRAPH_INFO << *rpattern;
-}
-
-/// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
-///        repeating patterns (e.g. RNN, LSTM, GRU cells)
-///
-/// \param pattern is a pattern sub graph describing an individual cell
-/// \param rpattern is a (recurring) label to denote which node the next match should
-///                 start at
-/// \param correlated_patterns is a set of labels whose bound nodes must remain the same
-///                            across all cells
-pattern::RecurrentMatcher::RecurrentMatcher(
-    const Output<Node>& pattern,
-    const std::shared_ptr<Node>& rpattern,
-    const std::set<std::shared_ptr<Node>>& correlated_patterns)
-    : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
-{
-}
-
-pattern::RecurrentMatcher::RecurrentMatcher(
-    const Output<Node>& pattern,
-    const std::shared_ptr<Node>& rpattern,
-    const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
-    : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
-{
-}
-
-/// \brief Returns a vector of bound nodes for a given label (used in a pattern
-/// describing an individual cell
-OutputVector pattern::RecurrentMatcher::get_bound_nodes_for_pattern(
-    const std::shared_ptr<Node>& pattern) const
-{
-    if (m_matches.count(pattern) == 0)
-    {
-        throw ngraph_error("No bound nodes for a given label");
-    }
-
-    return m_matches.at(pattern);
-}
-
-size_t pattern::RecurrentMatcher::get_number_of_recurrent_matches() const
-{
-    if (m_matches.size() == 0)
-    {
-        return 0;
-    }
-
-    return (*m_matches.begin()).second.size();
-}
-
 bool pattern::RecurrentMatcher::match(Output<Node> graph)
 {
     bool matched = false;
@@ -380,7 +294,6 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
     m_match_root = graph;
 
     // try to match one cell (i.e. pattern)
-    NGRAPH_INFO;
     while (m.match(graph, previous_matches))
     {
         matched = true;
@@ -402,7 +315,6 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
             previous_matches[cor_pat] = m.get_pattern_value_map()[cor_pat];
         }
         m = m_repeat;
-        NGRAPH_INFO;
     }
 
     if (!matched)
@@ -411,10 +323,4 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
     }
 
     return matched;
-}
-
-Output<Node> pattern::RecurrentMatcher::make_node_output(const shared_ptr<Node>& node)
-{
-    return node->get_output_size() == 1 ? node->output(0)
-                                        : make_shared<op::AnyOutput>(node)->output(0);
 }

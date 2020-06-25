@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/pattern/op/or.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
 using namespace std;
@@ -35,7 +34,6 @@ bool pattern::op::Or::match_value(Matcher* matcher,
     for (auto input_value : input_values())
     {
         auto saved = matcher->start_match();
-        NGRAPH_INFO;
         if (matcher->match_value(input_value, graph_value))
         {
             return saved.finish(true);

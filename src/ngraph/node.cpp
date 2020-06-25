@@ -23,7 +23,6 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -848,14 +847,11 @@ bool Node::match_value(pattern::Matcher* matcher,
                        const Output<Node>& pattern_value,
                        const Output<Node>& graph_value)
 {
-    NGRAPH_INFO << graph_value;
-    NGRAPH_INFO << pattern_value;
     if (pattern_value.get_index() != graph_value.get_index() ||
         (matcher->is_strict_mode() &&
          (!pattern_value.get_element_type().compatible(graph_value.get_element_type()) ||
           !pattern_value.get_partial_shape().compatible(graph_value.get_partial_shape()))))
     {
-        NGRAPH_INFO << "done";
         return false;
     }
     return match_node(matcher, graph_value);
@@ -863,17 +859,7 @@ bool Node::match_value(pattern::Matcher* matcher,
 
 bool Node::match_node(pattern::Matcher* matcher, const Output<Node>& graph_value)
 {
-    // NGRAPH_INFO << *graph_value.get_node();
-    // NGRAPH_INFO << *this;
     matcher->add_node(graph_value);
-    // if (graph_value.get_node_shared_ptr()->get_type_info() == get_type_info())
-    // {
-    //     NGRAPH_INFO << "types match";
-    //     if (matcher->match_arguments(this, graph_value.get_node_shared_ptr()))
-    //     {
-    //         NGRAPH_INFO << "args match";
-    //     }
-    // }
     return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
            matcher->match_arguments(this, graph_value.get_node_shared_ptr());
 }
