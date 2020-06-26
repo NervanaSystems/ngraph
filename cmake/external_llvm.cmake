@@ -115,7 +115,7 @@ if(NEED_TO_BUILD_LLVM)
     message(STATUS "LLVM: Building LLVM from source")
 
     set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
-    if(NGRAPH_CPU_CODEGEN_ENABLE)
+    if(NGRAPH_CODEGEN_ENABLE)
         set(LLVM_GIT_TAG llvmorg-9.0.1)
         set(LLVM_CMAKE_ARGS
             -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp

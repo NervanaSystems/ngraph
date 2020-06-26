@@ -172,7 +172,11 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
 endif()
 
-if (NGRAPH_MLIR_ENABLE AND NGRAPH_CPU_CODEGEN_ENABLE)
+if (NGRAPH_MLIR_ENABLE OR NGRAPH_CODEGEN_ENABLE)
+    set(NGRAPH_LLVM_ENABLE ON)
+endif()
+
+if (NGRAPH_MLIR_ENABLE AND NGRAPH_CODEGEN_ENABLE)
     #disable code-gen due to sym collision with LLVM
     message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON")
 endif()
@@ -638,11 +642,11 @@ if(NGRAPH_CPU_ENABLE)
     include(cmake/external_onednn.cmake)
 endif()
 
-if(NGRAPH_CODEGEN_ENABLE OR NGRAPH_MLIR_ENABLE)
+if(NGRAPH_LLVM_ENABLE)
     if (NOT MSVC)
         include(cmake/external_llvm.cmake)
     else()
-        message(FATAL_ERROR "CODEGEN/MLIR is not supported on Windows!")
+        message(FATAL_ERROR "LLVM is not supported on Windows!")
     endif()
 endif()
 
