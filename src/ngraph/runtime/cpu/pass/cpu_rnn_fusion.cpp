@@ -72,7 +72,7 @@
 
 using namespace ngraph;
 
-#define NGRAPH_DEBUG NGRAPH_INFO
+// #define NGRAPH_DEBUG NGRAPH_INFO
 
 namespace
 {
@@ -402,7 +402,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
                         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In construct_lstm_fprop callback against " << *m.get_match_root();
 
-        auto pattern_map = m.get_pattern_value_map();
+        auto pvm = m.get_pattern_value_map();
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
@@ -410,24 +410,24 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        CHECK_VALUE_RANK(pattern_map[xt], 2)
-        CHECK_VALUE_RANK(pattern_map[ht_1], 2)
-        CHECK_VALUE_RANK(pattern_map[w_i2h], 2)
-        CHECK_VALUE_RANK(pattern_map[w_h2h], 2)
-        CHECK_VALUE_RANK(pattern_map[bias_i2h], 1)
-        CHECK_VALUE_RANK(pattern_map[bias_h2h], 1)
+        CHECK_VALUE_RANK(pvm[xt], 2)
+        CHECK_VALUE_RANK(pvm[ht_1], 2)
+        CHECK_VALUE_RANK(pvm[w_i2h], 2)
+        CHECK_VALUE_RANK(pvm[w_h2h], 2)
+        CHECK_VALUE_RANK(pvm[bias_i2h], 1)
+        CHECK_VALUE_RANK(pvm[bias_h2h], 1)
 
-        auto weights_layer = pattern_map[w_i2h];
-        auto weights_iter = pattern_map[w_h2h];
-        auto src_layer = pattern_map[xt];
-        auto hidden_state = pattern_map[ht_1];
-        auto cell_state = pattern_map[ct_1];
+        auto weights_layer = pvm[w_i2h];
+        auto weights_iter = pvm[w_h2h];
+        auto src_layer = pvm[xt];
+        auto hidden_state = pvm[ht_1];
+        auto cell_state = pvm[ct_1];
 
         auto swap_lstm_inputs = [&]() -> void {
-            src_layer = pattern_map[ht_1];
-            hidden_state = pattern_map[xt];
-            weights_layer = pattern_map[w_h2h];
-            weights_iter = pattern_map[w_i2h];
+            src_layer = pvm[ht_1];
+            hidden_state = pvm[xt];
+            weights_layer = pvm[w_h2h];
+            weights_iter = pvm[w_i2h];
         };
 
         // LSTM kernel expects ht_1 and ct_1 to have the same shape but the
@@ -480,7 +480,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        auto bias = std::make_shared<ngraph::op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
+        auto bias = std::make_shared<ngraph::op::Add>(pvm[bias_i2h], pvm[bias_h2h]);
 
         if (src_layer.get_shape()[1] != slc || hidden_state.get_shape()[1] != sic ||
             cell_state.get_shape()[1] != sic)
@@ -491,7 +491,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-// #define GOE
+#define GOE
 #ifdef GOE
         auto lstm_ht_output =
             std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1)->output(0);
@@ -505,10 +505,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
-        NGRAPH_INFO << *pattern_map[ct_label].get_node();
-        if (ngraph::is_used(pattern_map[ct_label].get_node_shared_ptr().get()))
+        NGRAPH_INFO << *pvm[ct_label].get_node();
+        if (ngraph::is_used(pvm[ct_label].get_node_shared_ptr().get()))
         {
-            replace_collapse_node_user(pattern_map[ct_label].get_node_shared_ptr(), lstm_ct_output);
+            replace_collapse_node_user(pvm[ct_label].get_node_shared_ptr(), lstm_ct_output);
         }
         // find the user's for {ht} and replace them with lstm_goe_1
         m.get_match_value().replace(lstm_ht_output);
