@@ -222,7 +222,7 @@ namespace ngraph
     {
         if (is_type<op::GetOutputElement>(output.get_node()))
         {
-            return output.get_node()->write_description(out, 1)
+            return output.get_node()->write_description(out, 0)
                 << "[" << output.get_index() << "]:" << output.get_element_type()
                 << output.get_partial_shape();
         }

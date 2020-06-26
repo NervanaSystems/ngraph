@@ -525,6 +525,13 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             for (Input<Node> input : output.get_target_inputs())
             {
                 NGRAPH_INFO << "lstm output[" << index << "] " << input;
+                if (is_type<op::GetOutputElement>(input.get_node()))
+                {
+                    for (Input<Node> redirect : input.get_node()->output(0).get_target_inputs())
+                    {
+                        NGRAPH_INFO << "    redirect " << redirect;
+                    }
+                }
             }
             index++;
         }
