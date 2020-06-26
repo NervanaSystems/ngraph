@@ -491,7 +491,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-#define GOE
+// #define GOE
 #ifdef GOE
         auto lstm_ht_output =
             std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1)->output(0);
@@ -500,6 +500,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
 #else
         auto lstm_ht_output = lstm_node->output(1);
         auto lstm_ct_output = lstm_node->output(2);
+        // To keep the node numbers the same either way
+        std::make_shared<ngraph::op::Parameter>();
+        std::make_shared<ngraph::op::Parameter>();
+
 #endif
 
         // Now identify the nodes which consumes the output of LSTM nodes

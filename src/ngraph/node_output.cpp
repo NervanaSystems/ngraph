@@ -222,15 +222,17 @@ namespace ngraph
     {
         if (is_type<op::GetOutputElement>(output.get_node()))
         {
+            auto captured_output = output.get_node()->input(0).get_source_output();
             return output.get_node()->write_description(out, 0)
-                << "[" << output.get_index() << "]:" << output.get_element_type()
-                << output.get_partial_shape();
+                   << "(" << captured_output.get_node()->get_name() << "["
+                   << captured_output.get_index() << "]):" << output.get_element_type()
+                   << output.get_partial_shape();
         }
         else
         {
             return output.get_node()->write_description(out, 0)
-                << "[" << output.get_index() << "]:" << output.get_element_type()
-                << output.get_partial_shape();
+                   << "[" << output.get_index() << "]:" << output.get_element_type()
+                   << output.get_partial_shape();
         }
     }
 
