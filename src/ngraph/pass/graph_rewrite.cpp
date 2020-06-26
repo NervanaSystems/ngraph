@@ -170,10 +170,13 @@ void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
     add_handler(m->get_name(),
                 [m, callback](const std::shared_ptr<Node>& node) -> bool {
                     NGRAPH_DEBUG << "Running matcher " << m->get_name() << " on " << node;
-                    if (m->match(node->output(0)))
+                    for (Output<Node> output : node->outputs())
                     {
-                        NGRAPH_DEBUG << "Matcher " << m->get_name() << " matched " << node;
-                        return callback(*m.get());
+                        if (m->match(output))
+                        {
+                            NGRAPH_DEBUG << "Matcher " << m->get_name() << " matched " << node;
+                            return callback(*m.get());
+                        }
                     }
                     return false;
                 },
@@ -196,10 +199,13 @@ void pass::RecurrentGraphRewrite::add_matcher(
     add_handler("Reurrent matcher",
                 [m, callback](const std::shared_ptr<Node>& node) {
                     NGRAPH_DEBUG << "Running recurrent matcher on " << node;
-                    if (m->match(node->output(0)))
+                    for (Output<Node> output : node->outputs())
                     {
-                        NGRAPH_DEBUG << "Recurrent matcher matched " << m.get();
-                        return callback(*m.get());
+                        if (m->match(output))
+                        {
+                            NGRAPH_DEBUG << "Recurrent matcher " << m->get_name() << " matched " << node;
+                            return callback(*m.get());
+                        }
                     }
                     return false;
                 },
