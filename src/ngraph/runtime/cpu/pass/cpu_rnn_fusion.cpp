@@ -72,7 +72,7 @@
 
 using namespace ngraph;
 
-// #define NGRAPH_DEBUG NGRAPH_INFO
+#define NGRAPH_DEBUG NGRAPH_INFO
 
 namespace
 {
@@ -506,12 +506,28 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
         NGRAPH_INFO << *pvm[ct_label].get_node();
-        if (ngraph::is_used(pvm[ct_label].get_node_shared_ptr().get()))
+        if (ngraph::is_used(pvm[ct_label].get_node()))
         {
             replace_collapse_node_user(pvm[ct_label].get_node_shared_ptr(), lstm_ct_output);
         }
         // find the user's for {ht} and replace them with lstm_goe_1
         m.get_match_value().replace(lstm_ht_output);
+
+        NGRAPH_INFO << lstm_node->get_name();
+        int index = 0;
+        for (Output<Node> input : lstm_node->input_values())
+        {
+            NGRAPH_INFO << "lstm input[" << index++ << "] " << input;
+        }
+        index = 0;
+        for (Output<Node> output : lstm_node->outputs())
+        {
+            for (Input<Node> input : output.get_target_inputs())
+            {
+                NGRAPH_INFO << "lstm output[" << index << "] " << input;
+            }
+            index++;
+        }
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht, "LSTMFusion.Fprop");

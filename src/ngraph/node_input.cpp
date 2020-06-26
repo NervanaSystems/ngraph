@@ -16,6 +16,7 @@
 
 #include "ngraph/node_input.hpp"
 #include "ngraph/node.hpp"
+#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
@@ -152,15 +153,35 @@ namespace ngraph
     bool Input<const Node>::operator>=(const Input& other) const { return !(*this < other); }
     std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
     {
-        return input.get_node()->write_description(out, 0)
-               << ".input(" << input.get_index() << "):" << input.get_element_type()
-               << input.get_partial_shape();
+        if (is_type<op::GetOutputElement>(input.get_node()))
+        {
+            return input.get_node()->write_description(out, 0)
+                   << "(" << input.get_source_output().get_node()->get_name() << "["
+                   << input.get_source_output().get_index() << "]):" << input.get_element_type()
+                   << input.get_partial_shape();
+        }
+        else
+        {
+            return input.get_node()->write_description(out, 0)
+                   << ".input(" << input.get_index() << "):" << input.get_element_type()
+                   << input.get_partial_shape();
+        }
     }
 
     std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
     {
-        return input.get_node()->write_description(out, 0)
-               << ".input(" << input.get_index() << "):" << input.get_element_type()
-               << input.get_partial_shape();
+        if (is_type<op::GetOutputElement>(input.get_node()))
+        {
+            return input.get_node()->write_description(out, 0)
+                   << "(" << input.get_source_output().get_node()->get_name() << "["
+                   << input.get_source_output().get_index() << "]):" << input.get_element_type()
+                   << input.get_partial_shape();
+        }
+        else
+        {
+            return input.get_node()->write_description(out, 0)
+                   << ".input(" << input.get_index() << "):" << input.get_element_type()
+                   << input.get_partial_shape();
+        }
     }
 }

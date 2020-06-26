@@ -220,9 +220,18 @@ namespace ngraph
 
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
-        return output.get_node()->write_description(out, 0)
-               << "[" << output.get_index() << "]:" << output.get_element_type()
-               << output.get_partial_shape();
+        if (is_type<op::GetOutputElement>(output.get_node()))
+        {
+            return output.get_node()->write_description(out, 1)
+                << "[" << output.get_index() << "]:" << output.get_element_type()
+                << output.get_partial_shape();
+        }
+        else
+        {
+            return output.get_node()->write_description(out, 0)
+                << "[" << output.get_index() << "]:" << output.get_element_type()
+                << output.get_partial_shape();
+        }
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
