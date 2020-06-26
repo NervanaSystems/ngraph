@@ -203,7 +203,7 @@ void pass::RecurrentGraphRewrite::add_matcher(
                     {
                         if (m->match(output))
                         {
-                            NGRAPH_DEBUG << "Recurrent matcher " << m->get_name() << " matched " << node;
+                            NGRAPH_DEBUG << "Recurrent matcher matched " << node;
                             return callback(*m.get());
                         }
                     }
