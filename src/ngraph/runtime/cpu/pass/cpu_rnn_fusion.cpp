@@ -491,7 +491,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-// #define GOE
+#define GOE
 #ifdef GOE
         auto lstm_ht_output =
             std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1)->output(0);

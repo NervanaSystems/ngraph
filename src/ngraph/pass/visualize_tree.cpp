@@ -159,34 +159,20 @@ static std::string label_edge(const std::shared_ptr<Node>& src,
                               int64_t jump_distance)
 {
     std::stringstream ss;
-    if (src->get_output_size() > 1)
+    for (Output<Node> output : src->outputs())
     {
-        for (Output<Node> output : src->outputs())
+        for (Input<Node> input : output.get_target_inputs())
         {
-            for (Input<Node> input : output.get_target_inputs())
+            if (input.get_node() == dst.get())
             {
-                if (input.get_node() == dst.get())
-                {
-                    stringstream label;
-                    label << "[label=\" " << output.get_index() << " \"]";
-                    ss << label.str();
-                }
+                stringstream label;
+                label << "[label=\" " << output.get_index() << "-" << input.get_index() << " \"]";
+                ss << label.str();
             }
         }
     }
-    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
-    {
-        size_t output = 0;
-        if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
-        {
-            output = goe->get_as_output().get_index();
-        }
-        stringstream label;
-        label << "[label=\" " << output << " -> " << arg_index << " \"]";
-        ss << label.str();
-    }
 
-    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
