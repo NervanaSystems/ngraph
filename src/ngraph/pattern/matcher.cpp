@@ -237,7 +237,22 @@ bool pattern::Matcher::match(const Output<Node>& graph_value)
 
 bool pattern::Matcher::match(shared_ptr<Node> node)
 {
-    return match(node->output(0));
+    int index = 0;
+    bool match = false;
+    for (Output<Node> output : node->outputs())
+    {
+        if (this->match(output))
+        {
+            if (match)
+            {
+                NGRAPH_INFO << "****************** Multi-output node multi match";
+                throw runtime_error("Multi-output node multi match");
+            }
+            match = true;
+        }
+        index++;
+    }
+    return match;
 }
 
 bool pattern::Matcher::match(const Output<Node>& graph_value,

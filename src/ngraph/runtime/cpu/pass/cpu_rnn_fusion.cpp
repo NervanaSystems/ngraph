@@ -398,7 +398,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         std::make_shared<ngraph::op::Multiply>(ot, std::make_shared<ngraph::op::Tanh>(ct_label));
 
     // Define a call back that needs to called once the DFG matches the pattern
-    auto callback = [ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
+    auto callback = [this, ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
                         pattern::Matcher& m) {
         NGRAPH_DEBUG << "In construct_lstm_fprop callback against " << *m.get_match_root();
 
@@ -509,6 +509,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
+        graphviz("pre_fusion.pdf");
         NGRAPH_INFO << *pvm[ct_label].get_node();
         if (ngraph::is_used(pvm[ct_label].get_node()))
         {
@@ -516,6 +517,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         }
         // find the user's for {ht} and replace them with lstm_goe_1
         m.get_match_value().replace(lstm_ht_output);
+        graphviz("post_fusion.pdf");
 
         NGRAPH_INFO << lstm_node->get_name();
         int index = 0;
