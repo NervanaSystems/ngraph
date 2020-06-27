@@ -113,7 +113,7 @@ endif()
     message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
 
     add_library(libllvm INTERFACE)
-    target_include_directories(libllvm INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIR})
+    target_include_directories(libllvm INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
     target_link_libraries(libllvm INTERFACE clangHandleCXX clangHandleLLVM)
     # MLIR environment variables. Some of them are used by LIT tool.
 
