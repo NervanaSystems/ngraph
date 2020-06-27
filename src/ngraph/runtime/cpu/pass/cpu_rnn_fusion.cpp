@@ -320,20 +320,14 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     this->add_matcher(m, callback);
 }
 
-static void replace_collapse_node_user(std::shared_ptr<Node> collapsed_node,
+static void replace_collapse_node_user(const Output<Node>& collapsed_node,
                                        const Output<Node>& new_output)
 {
-    NGRAPH_INFO << *collapsed_node;
-    for (auto node : collapsed_node->get_users(true))
+    NGRAPH_INFO << collapsed_node;
+    for (Input<Node> input : collapsed_node.get_target_inputs())
     {
-        NGRAPH_DEBUG << "node_name: " << node->get_name();
-        for (size_t i = 0; i < node->get_input_size(); i++)
-        {
-            if (node->get_input_node_shared_ptr(i) == collapsed_node)
-            {
-                node->set_argument(i, new_output);
-            }
-        }
+        NGRAPH_DEBUG << "node_name: " << input.get_node()->get_name();
+        input.replace_source_output(new_output);
     }
 }
 
@@ -423,6 +417,12 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto hidden_state = pvm[ht_1];
         auto cell_state = pvm[ct_1];
 
+        NGRAPH_INFO << "cell_state " << cell_state;
+        NGRAPH_INFO << "hidden_state " << hidden_state;
+        NGRAPH_INFO << "cell_state ptr " << cell_state.get_node_shared_ptr()->get_input_node_ptr(0);
+        NGRAPH_INFO << "hidden_state ptr "
+                    << hidden_state.get_node_shared_ptr()->get_input_node_ptr(0);
+
         auto swap_lstm_inputs = [&]() -> void {
             src_layer = pvm[ht_1];
             hidden_state = pvm[xt];
@@ -454,6 +454,10 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             {
                 swap_lstm_inputs();
             }
+        }
+        else if (hidden_state.get_node() != cell_state.get_node())
+        {
+            swap_lstm_inputs();
         }
 
         if (hidden_state.get_shape() != cell_state.get_shape())
@@ -491,7 +495,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-#define GOE
+// #define GOE
 #ifdef GOE
         auto lstm_ht_output =
             std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1)->output(0);
@@ -509,15 +513,15 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
-        graphviz("pre_fusion.pdf");
+        graphviz(lstm_node->get_name() + "_pre_fusion.pdf");
         NGRAPH_INFO << *pvm[ct_label].get_node();
         if (ngraph::is_used(pvm[ct_label].get_node()))
         {
-            replace_collapse_node_user(pvm[ct_label].get_node_shared_ptr(), lstm_ct_output);
+            replace_collapse_node_user(pvm[ct_label], lstm_ct_output);
         }
         // find the user's for {ht} and replace them with lstm_goe_1
         m.get_match_value().replace(lstm_ht_output);
-        graphviz("post_fusion.pdf");
+        graphviz(lstm_node->get_name() + "_post_fusion.pdf");
 
         NGRAPH_INFO << lstm_node->get_name();
         int index = 0;
