@@ -231,6 +231,7 @@ public:
     size_t get_number_of_bound_labels() const { return m_matches.size(); }
     /// \brief Tries to match a pattern for an individual cell to a given \p graph
     bool match(Output<Node> graph);
+    bool match(std::shared_ptr<Node> graph);
 
     std::shared_ptr<Node> get_match_root() { return m_match_root.get_node_shared_ptr(); }
     Output<Node> get_match_value() { return m_match_root; }

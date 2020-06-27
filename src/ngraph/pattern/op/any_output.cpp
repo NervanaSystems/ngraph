@@ -30,14 +30,23 @@ const NodeTypeInfo& pattern::op::AnyOutput::get_type_info() const
 
 pattern::op::AnyOutput::AnyOutput(const std::shared_ptr<Node>& pattern)
     : Pattern({pattern->outputs()})
+    , m_node{pattern.get()}
 {
+    NGRAPH_INFO << *m_node;
 }
 
 bool pattern::op::AnyOutput::match_value(Matcher* matcher,
                                          const Output<Node>& pattern_value,
                                          const Output<Node>& graph_value)
 {
-    // NGRAPH_INFO << pattern_value;
-    // NGRAPH_INFO << graph_value;
+    NGRAPH_INFO << pattern_value;
+    NGRAPH_INFO << graph_value;
+    // for (Output<Node> output : input_values())
+    // {
+    //     if(m_node->match_value(matcher, output, graph_value))
+    //     {
+    //         NGRAPH_INFO << "MATCH " << output;
+    //     }
+    // }
     return input_value(0).get_node()->match_value(matcher, pattern_value, graph_value);
 }

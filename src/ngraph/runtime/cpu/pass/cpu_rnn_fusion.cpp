@@ -590,7 +590,15 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                    lstm_weights_iter_label,
                                                    lstm_bias_label,
                                                    ref_rnn_type);
-    NGRAPH_INFO << lstm->outputs().size();
+
+    auto m = std::make_shared<pattern::RecurrentMatcher>(
+        lstm->output(1),
+        lstm->output(2),
+        lstm_ct,
+        std::set<std::shared_ptr<pattern::op::Label>>{lstm_weights_layer_shared,
+                                                      lstm_weights_iter_shared,
+                                                      lstm_bias_layer_shared,
+                                                      lstm_bias_iter_shared});
 
     auto callback = [lstm_src_layer,
                      lstm_ht,
@@ -777,14 +785,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         return true;
     };
 
-    auto m = std::make_shared<pattern::RecurrentMatcher>(
-        lstm->output(1),
-        lstm->output(2),
-        lstm_ct,
-        std::set<std::shared_ptr<pattern::op::Label>>{lstm_weights_layer_shared,
-                                                      lstm_weights_iter_shared,
-                                                      lstm_bias_layer_shared,
-                                                      lstm_bias_iter_shared});
     this->add_matcher(m, callback);
 }
 
