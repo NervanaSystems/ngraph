@@ -35,10 +35,26 @@ pattern::MatcherState::MatcherState(Matcher* matcher)
 {
 }
 
-Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
+pattern::Matcher::Matcher() {}
+
+pattern::Matcher::Matcher(Output<Node>& pattern_node)
+    : m_pattern_node{pattern_node}
 {
-    return node->get_output_size() == 1 ? node->output(0)
-                                        : make_shared<op::AnyOutput>(node)->output(0);
+}
+
+pattern::Matcher::Matcher(Output<Node>& pattern_node, const std::string& name)
+    : m_pattern_node(pattern_node)
+    , m_name{name}
+{
+}
+
+pattern::Matcher::Matcher(const Output<Node>& pattern_node,
+                          const std::string& name,
+                          bool strict_mode)
+    : m_pattern_node(pattern_node)
+    , m_name(name)
+    , m_strict_mode(strict_mode)
+{
 }
 
 pattern::Matcher::Matcher(shared_ptr<Node> pattern_node)
@@ -75,6 +91,12 @@ pattern::MatcherState::~MatcherState()
 
         m_matcher->m_pattern_map = m_pattern_value_map;
     }
+}
+
+Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
+{
+    return node->get_output_size() == 1 ? node->output(0)
+                                        : make_shared<op::AnyOutput>(node)->output(0);
 }
 
 bool pattern::MatcherState::finish(bool is_successful)
@@ -290,6 +312,34 @@ set<shared_ptr<Node>>
     return result;
 }
 
+pattern::RecurrentMatcher::RecurrentMatcher(
+    const Output<Node>& initial_pattern,
+    const Output<Node>& pattern,
+    const std::shared_ptr<Node>& rpattern,
+    const std::set<std::shared_ptr<Node>>& correlated_patterns)
+    : m_initial_pattern(initial_pattern)
+    , m_pattern(pattern)
+    , m_recurrent_pattern(rpattern)
+    , m_correlated_patterns(correlated_patterns)
+{
+}
+
+pattern::RecurrentMatcher::RecurrentMatcher(
+    const Output<Node>& pattern,
+    const std::shared_ptr<Node>& rpattern,
+    const std::set<std::shared_ptr<Node>>& correlated_patterns)
+    : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
+{
+}
+
+pattern::RecurrentMatcher::RecurrentMatcher(
+    const Output<Node>& pattern,
+    const std::shared_ptr<Node>& rpattern,
+    const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
+    : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
+{
+}
+
 pattern::RecurrentMatcher::RecurrentMatcher(const Output<Node>& initial_pattern,
                                             const Output<Node>& pattern,
                                             const shared_ptr<Node>& rpattern,
@@ -338,4 +388,27 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
     }
 
     return matched;
+}
+
+/// \brief Returns a vector of bound nodes for a given label (used in a pattern
+/// describing an individual cell
+OutputVector pattern::RecurrentMatcher::get_bound_nodes_for_pattern(
+    const std::shared_ptr<Node>& pattern) const
+{
+    if (m_matches.count(pattern) == 0)
+    {
+        throw ngraph_error("No bound nodes for a given label");
+    }
+
+    return m_matches.at(pattern);
+}
+
+size_t pattern::RecurrentMatcher::get_number_of_recurrent_matches() const
+{
+    if (m_matches.size() == 0)
+    {
+        return 0;
+    }
+
+    return (*m_matches.begin()).second.size();
 }

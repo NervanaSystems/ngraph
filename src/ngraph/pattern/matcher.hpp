@@ -84,29 +84,17 @@ public:
     // Avoid implicit string construction from nullptr.
     Matcher(const std::shared_ptr<Node> pattern_node, std::nullptr_t name) = delete;
 
-    Matcher() {}
-    Matcher(Output<Node>& pattern_node)
-        : m_pattern_node{pattern_node}
-    {
-    }
+    Matcher();
+    Matcher(Output<Node>& pattern_node);
 
-    Matcher(Output<Node>& pattern_node, const std::string& name)
-        : m_pattern_node(pattern_node)
-        , m_name{name}
-    {
-    }
+    Matcher(Output<Node>& pattern_node, const std::string& name);
 
     /// \brief Constructs a Matcher object
     ///
     /// \param pattern_node is a pattern sub graph that will be matched against input graphs
     /// \param name is a string which is used for logging and disabling a matcher
     /// \param strict_mode forces a matcher to consider shapes and ET of nodes
-    Matcher(const Output<Node>& pattern_node, const std::string& name, bool strict_mode)
-        : m_pattern_node(pattern_node)
-        , m_name(name)
-        , m_strict_mode(strict_mode)
-    {
-    }
+    Matcher(const Output<Node>& pattern_node, const std::string& name, bool strict_mode);
 
     // Some matches should start on a node rather than an output. These three constructors
     // are transition until we work out the right way to do that.
@@ -211,13 +199,7 @@ public:
     RecurrentMatcher(const Output<Node>& initial_pattern,
                      const Output<Node>& pattern,
                      const std::shared_ptr<Node>& rpattern,
-                     const std::set<std::shared_ptr<Node>>& correlated_patterns)
-        : m_initial_pattern(initial_pattern)
-        , m_pattern(pattern)
-        , m_recurrent_pattern(rpattern)
-        , m_correlated_patterns(correlated_patterns)
-    {
-    }
+                     const std::set<std::shared_ptr<Node>>& correlated_patterns);
 
     /// \brief Constructs a RecurrentMatcher object. Reccurent Matchers are used to match
     ///        repeating patterns (e.g. RNN, LSTM, GRU cells)
@@ -229,10 +211,7 @@ public:
     ///                            across all cells
     RecurrentMatcher(const Output<Node>& pattern,
                      const std::shared_ptr<Node>& rpattern,
-                     const std::set<std::shared_ptr<Node>>& correlated_patterns)
-        : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
-    {
-    }
+                     const std::set<std::shared_ptr<Node>>& correlated_patterns);
 
     RecurrentMatcher(const Output<Node>& initial_pattern,
                      const Output<Node>& pattern,
@@ -241,32 +220,13 @@ public:
 
     RecurrentMatcher(const Output<Node>& pattern,
                      const std::shared_ptr<Node>& rpattern,
-                     const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
-        : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
-    {
-    }
+                     const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
 
     /// \brief Returns a vector of bound nodes for a given label (used in a pattern
     /// describing an individual cell
-    OutputVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const
-    {
-        if (m_matches.count(pattern) == 0)
-        {
-            throw ngraph_error("No bound nodes for a given label");
-        }
+    OutputVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const;
 
-        return m_matches.at(pattern);
-    }
-
-    size_t get_number_of_recurrent_matches() const
-    {
-        if (m_matches.size() == 0)
-        {
-            return 0;
-        }
-
-        return (*m_matches.begin()).second.size();
-    }
+    size_t get_number_of_recurrent_matches() const;
 
     size_t get_number_of_bound_labels() const { return m_matches.size(); }
     /// \brief Tries to match a pattern for an individual cell to a given \p graph
