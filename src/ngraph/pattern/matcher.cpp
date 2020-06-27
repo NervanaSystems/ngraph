@@ -35,6 +35,26 @@ pattern::MatcherState::MatcherState(Matcher* matcher)
 {
 }
 
+pattern::MatcherState::~MatcherState()
+{
+    if (m_restore)
+    {
+        if (!m_matcher->m_matched_list.empty())
+        {
+            m_matcher->m_matched_list.erase(m_matcher->m_matched_list.begin() + m_watermark,
+                                            m_matcher->m_matched_list.end());
+        }
+
+        if (!m_pattern_value_maps.empty())
+        {
+            m_matcher->m_pattern_value_maps.erase(m_pattern_value_maps.begin() + m_capture_size,
+                                                  m_pattern_value_maps.end());
+        }
+
+        m_matcher->m_pattern_map = m_pattern_value_map;
+    }
+}
+
 pattern::Matcher::Matcher() {}
 
 pattern::Matcher::Matcher(Output<Node>& pattern_node)
@@ -71,26 +91,6 @@ pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name)
 pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name, bool strict_mode)
     : Matcher(make_node_output(pattern_node), name, strict_mode)
 {
-}
-
-pattern::MatcherState::~MatcherState()
-{
-    if (m_restore)
-    {
-        if (!m_matcher->m_matched_list.empty())
-        {
-            m_matcher->m_matched_list.erase(m_matcher->m_matched_list.begin() + m_watermark,
-                                            m_matcher->m_matched_list.end());
-        }
-
-        if (!m_pattern_value_maps.empty())
-        {
-            m_matcher->m_pattern_value_maps.erase(m_pattern_value_maps.begin() + m_capture_size,
-                                                  m_pattern_value_maps.end());
-        }
-
-        m_matcher->m_pattern_map = m_pattern_value_map;
-    }
 }
 
 Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
