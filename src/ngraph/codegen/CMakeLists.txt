@@ -36,7 +36,7 @@ if(NOT WIN32)
 endif()
 
 # find_file(HEADER_1 cmath HINTS /usr/include/c++/7)
-get_filename_component(CLANG_INTRIN_INCLUDE_DIR ${LLVM_INCLUDE_DIRS}/../lib/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/include ABSOLUTE)
+get_filename_component(CLANG_INTRIN_INCLUDE_DIR "${LLVM_INCLUDE_DIRS}/../lib/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/include" ABSOLUTE)
 
 if(NGRAPH_CPU_ENABLE)
     get_target_property(DNNL_INCLUDE_DIR libdnnl INTERFACE_INCLUDE_DIRECTORIES)
