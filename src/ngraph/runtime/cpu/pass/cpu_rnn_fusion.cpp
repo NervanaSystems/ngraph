@@ -72,6 +72,7 @@
 
 using namespace ngraph;
 
+#undef NGRAPH_DEBUG
 #define NGRAPH_DEBUG NGRAPH_INFO
 
 namespace
