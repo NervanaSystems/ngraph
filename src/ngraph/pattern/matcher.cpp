@@ -259,7 +259,6 @@ bool pattern::Matcher::match(const Output<Node>& graph_value)
 
 bool pattern::Matcher::match(shared_ptr<Node> node)
 {
-    NGRAPH_INFO << "Matcher::match(Node)";
     int index = 0;
     bool match = false;
     for (Output<Node> output : node->outputs())
@@ -351,7 +350,6 @@ pattern::RecurrentMatcher::RecurrentMatcher(const Output<Node>& initial_pattern,
 
 bool pattern::RecurrentMatcher::match(std::shared_ptr<Node> graph)
 {
-    NGRAPH_INFO << "RecurrentMatcher::match(Node)";
     for (Output<Node> output : graph->outputs())
     {
         if (match(output))
@@ -364,7 +362,6 @@ bool pattern::RecurrentMatcher::match(std::shared_ptr<Node> graph)
 
 bool pattern::RecurrentMatcher::match(Output<Node> graph)
 {
-    NGRAPH_INFO << "RecurrentMatcher::match(Output<Node>)";
     bool matched = false;
     Matcher m_initial(m_initial_pattern);
     Matcher m_repeat(m_pattern);
@@ -374,10 +371,8 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
     m_match_root = graph;
 
     // try to match one cell (i.e. pattern)
-    NGRAPH_INFO << "COMPARE *********** " << graph;
     while (m.match(graph, previous_matches))
     {
-        NGRAPH_INFO << "MATCH ***********************************";
         matched = true;
         // move to the next cell
         graph = m.get_pattern_value_map()[m_recurrent_pattern];

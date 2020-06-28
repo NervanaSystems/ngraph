@@ -39,8 +39,6 @@ bool pattern::op::AnyOutput::match_value(Matcher* matcher,
                                          const Output<Node>& pattern_value,
                                          const Output<Node>& graph_value)
 {
-    NGRAPH_INFO << pattern_value;
-    NGRAPH_INFO << graph_value;
     // for (Output<Node> output : input_values())
     // {
     //     if(m_node->match_value(matcher, output, graph_value))

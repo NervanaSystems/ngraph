@@ -196,7 +196,6 @@ void pass::RecurrentGraphRewrite::add_matcher(
 {
     add_handler("Reurrent matcher",
                 [m, callback](const std::shared_ptr<Node>& node) {
-                    NGRAPH_INFO << "Running recurrent matcher on " << node;
                     if (m->match(node))
                     {
                         NGRAPH_INFO << "Recurrent matcher matched " << node;
