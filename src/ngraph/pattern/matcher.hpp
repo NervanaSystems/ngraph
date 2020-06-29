@@ -165,7 +165,6 @@ public:
     void capture(const std::set<Node*>& static_nodes);
 
     size_t get_number_of_recurrent_matches() const { return m_pattern_value_maps.size(); }
-    NodeVector get_bound_nodes_for_pattern(const Output<Node>& pattern) const;
     size_t get_number_of_bound_labels() const;
     /// \brief Try a match
     MatcherState start_match();
