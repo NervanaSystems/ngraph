@@ -729,6 +729,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                      direction,
                                                      num_fused_rnn_layers,
                                                      rnn_type);
+        NGRAPH_INFO << "New RNN " << *rnn;
+        graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
@@ -810,6 +812,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();
+        graphviz(rnn->get_name() + "_post_fusion.pdf");
         return true;
     };
 
@@ -856,7 +859,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     auto rnn_label = std::make_shared<pattern::op::Label>(
         ref_rnn_node->output(0), nullptr, ref_rnn_node->outputs());
 
-    auto callback = [rnn_src_layer,
+    auto callback = [this,
+                     rnn_src_layer,
                      rnn_src_iter,
                      rnn_src_iter_c,
                      rnn_weights_layer,
@@ -963,6 +967,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      rnn_direction,
                                                      num_fused_rnn_layers,
                                                      rnn_type);
+        NGRAPH_INFO << "New RNN " << *rnn;
+        graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         auto mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
         auto mrnn_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2);
@@ -986,6 +992,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // i.e {RNN7, RNN6, RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
+            NGRAPH_INFO << "LOOP " << *rnn_nodes[index];
             auto goe_nodes = get_output_elements(rnn_nodes[index]);
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
@@ -996,10 +1003,13 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
             // dst_layer of the RNN cell
             auto goe_0 = goe_nodes[0];
+            NGRAPH_INFO << goe_0;
             // dst_iter of the RNN cell
             auto goe_1 = goe_nodes[1];
+            NGRAPH_INFO << goe_1;
             // dst_iter_c of the RNN cell
             auto goe_2 = goe_nodes[2];
+            NGRAPH_INFO << goe_2;
 
             if (goe_2)
             {
@@ -1016,6 +1026,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 replace_collapse_node_user(goe_0, mrnn_ht->output(0));
             }
         }
+        graphviz(rnn->get_name() + "_post_fusion.pdf");
         return true;
     };
 
