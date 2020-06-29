@@ -753,7 +753,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t i = 0; i < sequence_len; i++)
         {
             // lstm's will be the user of lstm_ct
-            for (auto user : lstm_cts[i].get_node()->get_users())
+            for (auto user : lstm_cts[i].get_users())
             {
                 if (is_type<ngraph::op::Lstm>(user))
                 {
@@ -765,12 +765,9 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         // replace LSTM dst_iter with RNN dst_layer slice for LSTM dst_iter users (not including the
         // LSTM in the same layer)
-        graphviz(rnn->get_name() + "_pre_fusion.pdf");
         for (size_t index = 0; index < sequence_len; index++)
         {
             auto lstm = lstm_nodes[index];
-            NGRAPH_INFO << "lstm " << lstm;
-            // auto goe_nodes = get_output_elements(lstm);
 
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
@@ -781,24 +778,24 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
 
             // dst_iter of the lstm cell
-            auto goe_1 = lstm->output(1);
+            auto lstm1 = lstm->output(1);
             {
-                for (std::shared_ptr<Node> goe1_user : goe_1.get_users())
+                for (std::shared_ptr<Node> lstm1_user : lstm1.get_users())
                 {
                     // do not include LSTM in the same layer
-                    if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) ==
+                    if (std::find(lstm_nodes.begin(), lstm_nodes.end(), lstm1_user) ==
                         lstm_nodes.end())
                     {
-                        for (size_t i = 0; i < goe1_user->get_input_size(); i++)
+                        for (size_t i = 0; i < lstm1_user->get_input_size(); i++)
                         {
-                            if (goe1_user->input_value(i) == goe_1)
+                            if (lstm1_user->input_value(i) == lstm1)
                             {
-                                goe1_user->input(i).replace_source_output(
+                                lstm1_user->input(i).replace_source_output(
                                     ht_slice_per_timestep[index]->output(0));
                             }
                         }
                         NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
-                                     << " goe1_user " << goe1_user->get_name() << " ";
+                                     << " lstm1_user " << lstm1_user->get_name();
                     }
                 }
             }
@@ -810,7 +807,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         {
             replace_collapse_node_user(last_lstm_ct_goe, rnn_ct_goe->output(0));
         }
-        graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();

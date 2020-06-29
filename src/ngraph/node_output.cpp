@@ -15,10 +15,10 @@
 //*****************************************************************************
 
 #include "ngraph/node_output.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
-#include "ngraph/graph_util.hpp"
 
 namespace ngraph
 {
