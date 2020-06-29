@@ -989,8 +989,18 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         NGRAPH_INFO << "****** New RNN " << *rnn;
         graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
-        auto mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        auto mrnn_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2);
+        Output<Node> mrnn_ht;
+        Output<Node> mrnn_ct;
+// #define GOE
+#ifdef GOE
+        mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0)->output(0);
+        mrnn_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2)->output(0);
+#else
+        mrnn_ht = rnn->output(0);
+        mrnn_ct = rnn->output(2);
+        std::make_shared<ngraph::op::Parameter>();
+        std::make_shared<ngraph::op::Parameter>();
+#endif
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](const Output<Node>& rnn_ct_goe2, size_t layer) {
@@ -1013,23 +1023,23 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         {
             std::shared_ptr<Node> rnn_node = rnn_nodes[index];
             NGRAPH_INFO << "LOOP " << *rnn_nodes[index];
-            auto goe_nodes = get_output_elements(rnn_nodes[index]);
-            // if there is no GOE followed by the Lstm, their might be pattern match error
-            // we will return safely
-            if (goe_nodes.size() != 3)
-            {
-                throw ngraph_error("Expecting three outputs for each RNN node");
-            }
+            // auto goe_nodes = get_output_elements(rnn_nodes[index]);
+            // // if there is no GOE followed by the Lstm, their might be pattern match error
+            // // we will return safely
+            // if (goe_nodes.size() != 3)
+            // {
+            //     throw ngraph_error("Expecting three outputs for each RNN node");
+            // }
 
-            // dst_layer of the RNN cell
-            auto goe_0 = goe_nodes[0];
-            NGRAPH_INFO << goe_0;
-            // dst_iter of the RNN cell
-            auto goe_1 = goe_nodes[1];
-            NGRAPH_INFO << goe_1;
-            // dst_iter_c of the RNN cell
-            auto goe_2 = goe_nodes[2];
-            NGRAPH_INFO << goe_2;
+            // // dst_layer of the RNN cell
+            // auto goe_0 = goe_nodes[0];
+            // NGRAPH_INFO << goe_0;
+            // // dst_iter of the RNN cell
+            // auto goe_1 = goe_nodes[1];
+            // NGRAPH_INFO << goe_1;
+            // // dst_iter_c of the RNN cell
+            // auto goe_2 = goe_nodes[2];
+            // NGRAPH_INFO << goe_2;
 
             // if (goe_2)
             {
@@ -1050,7 +1060,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             {
                 // if(goe_0)
                 {
-                    replace_collapse_node_user(rnn_node->output(0), mrnn_ht->output(0));
+                    replace_collapse_node_user(rnn_node->output(0), mrnn_ht);
                 }
                 // else
                 // {
