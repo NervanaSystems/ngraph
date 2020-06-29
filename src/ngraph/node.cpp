@@ -732,14 +732,8 @@ NodeVector Node::get_users(bool check_is_used) const
     NodeVector result;
     for (auto output : outputs())
     {
-        for (auto input : output.get_target_inputs())
-        {
-            Node* input_node = input.get_node();
-            if (!check_is_used || is_used(input_node))
-            {
-                result.push_back(input_node->shared_from_this());
-            }
-        }
+        auto tmp = output.get_users(check_is_used);
+        result.insert(result.end(), tmp.begin(), tmp.end());
     }
     return result;
 }

@@ -402,9 +402,9 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
     return matched;
 }
 
-/// \brief Returns a vector of bound nodes for a given label (used in a pattern
+/// \brief Returns a vector of bound values for a given label (used in a pattern
 /// describing an individual cell
-OutputVector pattern::RecurrentMatcher::get_bound_nodes_for_pattern(
+OutputVector pattern::RecurrentMatcher::get_bound_values_for_pattern(
     const std::shared_ptr<Node>& pattern) const
 {
     if (m_matches.count(pattern) == 0)

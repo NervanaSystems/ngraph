@@ -601,7 +601,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                       lstm_bias_layer_shared,
                                                       lstm_bias_iter_shared});
 
-    auto callback = [lstm_src_layer,
+    auto callback = [this,
+                     lstm_src_layer,
                      lstm_ht,
                      lstm_ct,
                      lstm_weights_layer_label,
@@ -616,7 +617,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // RNN layer
             // in the order 0, 1, 2... t time slice
             {
-                auto node_labels = m.get_bound_nodes_for_pattern(input_label);
+                auto node_labels = m.get_bound_values_for_pattern(input_label);
                 std::reverse(node_labels.begin(), node_labels.end());
                 return std::make_shared<ngraph::op::Concat>(node_labels, 0);
             }
@@ -631,13 +632,13 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         auto rnn_src_layer = concat_rnn_inputs_across_timestep(lstm_src_layer);
         // pick src_iter from first lstm
-        auto rnn_src_iter = m.get_bound_nodes_for_pattern(lstm_ht)[sequence_len - 1];
+        auto rnn_src_iter = m.get_bound_values_for_pattern(lstm_ht)[sequence_len - 1];
         // pick src_iter_c from first lstm
-        auto rnn_src_iter_c = m.get_bound_nodes_for_pattern(lstm_ct)[sequence_len - 1];
+        auto rnn_src_iter_c = m.get_bound_values_for_pattern(lstm_ct)[sequence_len - 1];
         // weights and bias are shared across lstms. so pick any
-        auto rnn_weights_layer = m.get_bound_nodes_for_pattern(lstm_weights_layer_label)[0];
-        auto rnn_weights_iter = m.get_bound_nodes_for_pattern(lstm_weights_iter_label)[0];
-        auto rnn_bias = m.get_bound_nodes_for_pattern(lstm_bias_label)[0];
+        auto rnn_weights_layer = m.get_bound_values_for_pattern(lstm_weights_layer_label)[0];
+        auto rnn_weights_iter = m.get_bound_values_for_pattern(lstm_weights_iter_label)[0];
+        auto rnn_bias = m.get_bound_values_for_pattern(lstm_bias_label)[0];
 
         const size_t lstm_n_gates = 4;
         const size_t batch_size = rnn_src_layer->get_output_shape(0)[0] / sequence_len;
@@ -648,14 +649,40 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
-        NGRAPH_DEBUG << "src_layer: " << join(rnn_src_layer->get_output_shape(0));
-        NGRAPH_DEBUG << "src_iter: " << join(rnn_src_iter.get_shape());
-        NGRAPH_DEBUG << "src_iter_c: " << join(rnn_src_iter_c.get_shape());
-        NGRAPH_DEBUG << "weights_layer: " << join(rnn_weights_layer.get_shape());
-        NGRAPH_DEBUG << "weights_iter: " << join(rnn_weights_iter.get_shape());
-        NGRAPH_DEBUG << "bias: " << join(rnn_bias.get_shape());
+        NGRAPH_DEBUG << "src_layer shape: " << rnn_src_layer->get_output_shape(0);
+        NGRAPH_DEBUG << "src_iter shape: " << rnn_src_iter.get_shape();
+        NGRAPH_DEBUG << "src_iter_c shape: " << rnn_src_iter_c.get_shape();
+        NGRAPH_DEBUG << "weights_layer shape: " << rnn_weights_layer.get_shape();
+        NGRAPH_DEBUG << "weights_iter shape: " << rnn_weights_iter.get_shape();
+        NGRAPH_DEBUG << "bias shape: " << rnn_bias.get_shape();
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
+
+        NGRAPH_INFO << "rnn_src_iter:";
+        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_ht))
+        {
+            NGRAPH_INFO << "    " << output;
+        }
+        NGRAPH_INFO << "rnn_src_iter_c:";
+        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_ct))
+        {
+            NGRAPH_INFO << "    " << output;
+        }
+        NGRAPH_INFO << "rnn_weights_layer:";
+        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_weights_layer_label))
+        {
+            NGRAPH_INFO << "    " << output;
+        }
+        NGRAPH_INFO << "rnn_weights_iter:";
+        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_weights_iter_label))
+        {
+            NGRAPH_INFO << "    " << output;
+        }
+        NGRAPH_INFO << "rnn_bias:";
+        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_bias_label))
+        {
+            NGRAPH_INFO << "    " << output;
+        }
 
         auto check_const_input = [&](std::shared_ptr<Node> n) {
             if (is_type<ngraph::op::Constant>(n) ||
@@ -717,7 +744,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         // find the lstm's nodes captured in PM
-        auto lstm_cts = m.get_bound_nodes_for_pattern(lstm_ct);
+        auto lstm_cts = m.get_bound_values_for_pattern(lstm_ct);
         std::reverse(lstm_cts.begin(), lstm_cts.end());
         NodeVector lstm_nodes;
 
@@ -738,22 +765,25 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         // replace LSTM dst_iter with RNN dst_layer slice for LSTM dst_iter users (not including the
         // LSTM in the same layer)
+        graphviz(rnn->get_name() + "_pre_fusion.pdf");
         for (size_t index = 0; index < sequence_len; index++)
         {
-            auto goe_nodes = get_output_elements(lstm_nodes[index]);
+            auto lstm = lstm_nodes[index];
+            NGRAPH_INFO << "lstm " << lstm;
+            // auto goe_nodes = get_output_elements(lstm);
 
             // if there is no GOE followed by the Lstm, their might be pattern match error
             // we will return safely
-            if (goe_nodes.size() != 3)
+            if (!is_type<op::Lstm>(lstm))
             {
+                NGRAPH_INFO << "match cell is not LSTM";
                 return false;
             }
 
             // dst_iter of the lstm cell
-            auto goe_1 = goe_nodes[1];
-            if (goe_1)
+            auto goe_1 = lstm->output(1);
             {
-                for (std::shared_ptr<Node> goe1_user : goe_1->get_users())
+                for (std::shared_ptr<Node> goe1_user : goe_1.get_users())
                 {
                     // do not include LSTM in the same layer
                     if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe1_user) ==
@@ -761,7 +791,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                     {
                         for (size_t i = 0; i < goe1_user->get_input_size(); i++)
                         {
-                            if (goe1_user->get_argument(i) == goe_1)
+                            if (goe1_user->input_value(i) == goe_1)
                             {
                                 goe1_user->input(i).replace_source_output(
                                     ht_slice_per_timestep[index]->output(0));
@@ -780,6 +810,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         {
             replace_collapse_node_user(last_lstm_ct_goe, rnn_ct_goe->output(0));
         }
+        graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();
@@ -846,10 +877,10 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             return false;
         }
 
-        auto rnn_bounded_nodes = m.get_bound_nodes_for_pattern(rnn_label);
+        auto rnn_bounded_nodes = m.get_bound_values_for_pattern(rnn_label);
 
         std::vector<std::shared_ptr<ngraph::op::Rnn>> rnn_nodes;
-        for (auto rnn_goe : m.get_bound_nodes_for_pattern(rnn_label))
+        for (auto rnn_goe : m.get_bound_values_for_pattern(rnn_label))
         {
             if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
             {
@@ -898,13 +929,13 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // node, PM captures the RNN cell in the reverse order.
         // {RNN7, RNN6, RNN5.....RNN0}
         auto mrnn_src_layer =
-            m.get_bound_nodes_for_pattern(rnn_src_layer)[number_of_rnn_cell_matched - 1];
-        auto mrnn_src_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_src_iter));
-        auto mrnn_src_iter_c = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_src_iter_c));
+            m.get_bound_values_for_pattern(rnn_src_layer)[number_of_rnn_cell_matched - 1];
+        auto mrnn_src_iter = stack_rnn_inputs(m.get_bound_values_for_pattern(rnn_src_iter));
+        auto mrnn_src_iter_c = stack_rnn_inputs(m.get_bound_values_for_pattern(rnn_src_iter_c));
         auto mrnn_weights_layer =
-            stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_weights_layer));
-        auto mrnn_weights_iter = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_weights_iter));
-        auto mrnn_bias = stack_rnn_inputs(m.get_bound_nodes_for_pattern(rnn_bias));
+            stack_rnn_inputs(m.get_bound_values_for_pattern(rnn_weights_layer));
+        auto mrnn_weights_iter = stack_rnn_inputs(m.get_bound_values_for_pattern(rnn_weights_iter));
+        auto mrnn_bias = stack_rnn_inputs(m.get_bound_values_for_pattern(rnn_bias));
 
         NGRAPH_DEBUG << "src_layer: " << join(mrnn_src_layer.get_shape());
         NGRAPH_DEBUG << "src_iter: " << join(mrnn_src_iter->get_output_shape(0));

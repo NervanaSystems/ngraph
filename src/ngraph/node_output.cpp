@@ -18,6 +18,7 @@
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/graph_util.hpp"
 
 namespace ngraph
 {
@@ -132,6 +133,20 @@ namespace ngraph
         }
     }
 
+    NodeVector Output<Node>::get_users(bool check_is_used) const
+    {
+        NodeVector result;
+        for (auto input : get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
+        return result;
+    }
+
     Output<const Node>::Output(const Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)
@@ -216,6 +231,20 @@ namespace ngraph
                 m_index = value.get_index();
             }
         }
+    }
+
+    NodeVector Output<const Node>::get_users(bool check_is_used) const
+    {
+        NodeVector result;
+        for (auto input : get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
+        return result;
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)

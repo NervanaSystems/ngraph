@@ -572,7 +572,7 @@ TEST(pattern, recurrent_pattern)
     RecurrentMatcher rm(padd, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm.match(add3));
     ASSERT_EQ(rm.get_number_of_bound_labels(), 1);
-    auto recurrent_matches = rm.get_bound_nodes_for_pattern(rpattern);
+    auto recurrent_matches = rm.get_bound_values_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
@@ -587,11 +587,11 @@ TEST(pattern, recurrent_pattern)
     RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm2.match(add3_2));
     ASSERT_EQ(rm2.get_number_of_bound_labels(), 2);
-    recurrent_matches = rm2.get_bound_nodes_for_pattern(rpattern);
+    recurrent_matches = rm2.get_bound_values_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2_2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
-    auto iconst_matches = rm2.get_bound_nodes_for_pattern(iconst_label);
+    auto iconst_matches = rm2.get_bound_values_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
     ASSERT_EQ(iconst_matches.at(1), iconst1);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
@@ -602,7 +602,7 @@ TEST(pattern, recurrent_pattern)
     RecurrentMatcher rm3(padd2, rpattern, correlated_matches);
     ASSERT_TRUE(rm3.match(add3_2));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
-    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
+    iconst_matches = rm3.get_bound_values_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.size(), 1);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
 
@@ -610,11 +610,11 @@ TEST(pattern, recurrent_pattern)
     // testing if RecurrentMatcher can be reused for different nodes
     ASSERT_TRUE(rm3.match(add3));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
-    recurrent_matches = rm3.get_bound_nodes_for_pattern(rpattern);
+    recurrent_matches = rm3.get_bound_values_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
-    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
+    iconst_matches = rm3.get_bound_values_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
     ASSERT_EQ(iconst_matches.at(1), iconst0);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
@@ -636,7 +636,7 @@ public:
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
                          << rm.get_match_root()->get_name();
 
-            auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
+            auto iconst_matches = rm.get_bound_values_for_pattern(iconst_label);
 
             auto is_iconst_zero = [](Output<Node> n) {
                 bool result = ngraph::is_zero(n);
@@ -656,7 +656,7 @@ public:
             auto number_of_adds = rm.get_number_of_recurrent_matches();
             // replace the topmost add with the seed (i.e. the first parameter to add)
             // matches are added in reverse order (i.e. the first match is the topmost node)
-            auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
+            auto arg = rm.get_bound_values_for_pattern(rpattern).at(number_of_adds - 1);
             NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
                          << arg.get_node()->get_name();
             rm.get_match_value().replace(arg);

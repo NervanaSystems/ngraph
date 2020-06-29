@@ -22,6 +22,7 @@
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
+#include "ngraph/output_vector.hpp"
 
 namespace ngraph
 {
@@ -110,6 +111,8 @@ namespace ngraph
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
 
+        NodeVector get_users(bool check_is_used = false) const;
+
     private:
         std::shared_ptr<Node> as_single_output_node() const;
 
@@ -180,6 +183,8 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
+
+        NodeVector get_users(bool check_is_used = false) const;
 
     private:
         std::shared_ptr<const Node> m_node;

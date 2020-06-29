@@ -221,9 +221,9 @@ public:
                      const std::shared_ptr<Node>& rpattern,
                      const std::set<std::shared_ptr<op::Label>>& correlated_patterns);
 
-    /// \brief Returns a vector of bound nodes for a given label (used in a pattern
+    /// \brief Returns a vector of bound values for a given label (used in a pattern
     /// describing an individual cell
-    OutputVector get_bound_nodes_for_pattern(const std::shared_ptr<Node>& pattern) const;
+    OutputVector get_bound_values_for_pattern(const std::shared_ptr<Node>& pattern) const;
 
     size_t get_number_of_recurrent_matches() const;
 
