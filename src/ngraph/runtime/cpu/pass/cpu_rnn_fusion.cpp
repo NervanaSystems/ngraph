@@ -99,9 +99,11 @@ namespace
 
     NodeVector get_output_elements(const std::shared_ptr<Node>& mon)
     {
+        NGRAPH_INFO << "get_output_elements " << *mon;
         NodeVector goes(mon->get_output_size());
         for (auto o : mon->outputs())
         {
+            NGRAPH_INFO << "goe " << o.get_index();
             goes.at(o.get_index()) = output_to_node(o);
         }
         return goes;
@@ -508,7 +510,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // To keep the node numbers the same either way
         std::make_shared<ngraph::op::Parameter>();
         std::make_shared<ngraph::op::Parameter>();
-
 #endif
 
         // Now identify the nodes which consumes the output of LSTM nodes
@@ -729,18 +730,29 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                      direction,
                                                      num_fused_rnn_layers,
                                                      rnn_type);
-        NGRAPH_INFO << "New RNN " << *rnn;
+        NGRAPH_INFO << "****** New RNN " << *rnn;
         graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
-        auto rnn_hts_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
-        auto rnn_ct_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2);
+
+// #define GOE
+#ifdef GOE
+        auto rnn_hts_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0)->output(0);
+        auto rnn_ct_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2)->output(0);
+#else
+        std::make_shared<ngraph::op::Parameter>();
+        std::make_shared<ngraph::op::Parameter>();
+#endif
 
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
             ht_slice_per_timestep[i] = (std::make_shared<ngraph::op::Slice>(
+#ifdef GOE
                 rnn_hts_goe,
+#else
+                rnn->output(0),
+#endif
                 Coordinate{start_index, 0},
                 Coordinate{start_index + batch_size, src_iter_feature_size}));
         }
@@ -804,11 +816,13 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         // replace last LSTM dst_iter_c with RNN dst iter_c for last LSTM dst_iter_c's users
-        auto last_lstm_ct_goe = get_output_elements(lstm_nodes[sequence_len - 1])[2];
-        if (last_lstm_ct_goe)
-        {
-            replace_collapse_node_user(last_lstm_ct_goe, rnn_ct_goe->output(0));
-        }
+        NGRAPH_INFO << "goe " << *lstm_nodes[sequence_len - 1];
+        // auto last_lstm_ct_goe = get_output_elements(lstm_nodes[sequence_len - 1])[2];
+        // if (last_lstm_ct_goe)
+        // {
+        //     NGRAPH_INFO;
+        //     replace_collapse_node_user(last_lstm_ct_goe, lstm_nodes[sequence_len - 1]->output(2));
+        // }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();
@@ -870,7 +884,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
         NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against "
                      << *m.get_match_root();
-        NGRAPH_DEBUG << " Number of RNN's Matched: " << number_of_rnn_cell_matched;
+        NGRAPH_DEBUG << "Number of RNN's Matched: " << number_of_rnn_cell_matched;
 
         if (number_of_rnn_cell_matched < 2)
         {
@@ -882,8 +896,13 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::vector<std::shared_ptr<ngraph::op::Rnn>> rnn_nodes;
         for (auto rnn_goe : m.get_bound_values_for_pattern(rnn_label))
         {
-            if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
+            if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node_shared_ptr()))
             {
+                rnn_nodes.push_back(rnn_op);
+            }
+            else if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
+            {
+                // This is a hack to support GOE on output of RNN
                 rnn_nodes.push_back(rnn_op);
             }
             else
@@ -967,14 +986,14 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      rnn_direction,
                                                      num_fused_rnn_layers,
                                                      rnn_type);
-        NGRAPH_INFO << "New RNN " << *rnn;
+        NGRAPH_INFO << "****** New RNN " << *rnn;
         graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         auto mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0);
         auto mrnn_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2);
 
         // Replace all the users of RNN cell state {ct} across different user.
-        auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node> rnn_ct_goe2, size_t layer) {
+        auto replace_rnn_output_cellstate = [&](const Output<Node>& rnn_ct_goe2, size_t layer) {
             // multi layerd fused rnn second output {GOE2} holds the recurrent output state tensors
             // for the last cell
             // of all the layers, { ct_1 || ct2 || ....|| ctn}
@@ -992,6 +1011,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         // i.e {RNN7, RNN6, RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
+            std::shared_ptr<Node> rnn_node = rnn_nodes[index];
             NGRAPH_INFO << "LOOP " << *rnn_nodes[index];
             auto goe_nodes = get_output_elements(rnn_nodes[index]);
             // if there is no GOE followed by the Lstm, their might be pattern match error
@@ -1011,19 +1031,31 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             auto goe_2 = goe_nodes[2];
             NGRAPH_INFO << goe_2;
 
-            if (goe_2)
+            // if (goe_2)
             {
                 int layer_index = num_fused_rnn_layers - index;
-                replace_rnn_output_cellstate(goe_2, layer_index);
+                // replace_rnn_output_cellstate(goe_2->output(0), layer_index);
+                replace_rnn_output_cellstate(rnn_node->output(2), layer_index);
             }
+            // else
+            // {
+            //     NGRAPH_INFO << "!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+            // }
 
             // dst_layer of layer fused rnn holds the intermediate results of all the lstm cells
             // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and
             // MutliLayerRnn->GOE0
             // holds the same output
-            if ((index == 0) && goe_0)
+            if (index == 0)
             {
-                replace_collapse_node_user(goe_0, mrnn_ht->output(0));
+                // if(goe_0)
+                {
+                    replace_collapse_node_user(rnn_node->output(0), mrnn_ht->output(0));
+                }
+                // else
+                // {
+                //     NGRAPH_INFO << "!!!!!!!!!!!!!!!!!!!!!!!!!!!";
+                // }
             }
         }
         graphviz(rnn->get_name() + "_post_fusion.pdf");
@@ -1072,33 +1104,33 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
 
         if (rnn_ltor_node->get_src_sequence_length() != rnn_rtol_node->get_src_sequence_length())
         {
-            NGRAPH_DEBUG << " Not fusing, timestep of rnn's in both direction should match";
+            NGRAPH_DEBUG << "Not fusing, timestep of rnn's in both direction should match";
             return false;
         }
 
         if (rnn_ltor_node->get_src_layer_feature_size() !=
             rnn_rtol_node->get_src_layer_feature_size())
         {
-            NGRAPH_DEBUG << " Not fusing, feature_size of rnn's in both direction should match";
+            NGRAPH_DEBUG << "Not fusing, feature_size of rnn's in both direction should match";
             return false;
         }
 
         if (rnn_ltor_node->get_src_iter_feature_size() !=
             rnn_rtol_node->get_src_iter_feature_size())
         {
-            NGRAPH_DEBUG << " Not fusing, feature_size of rnn's in both direction should match";
+            NGRAPH_DEBUG << "Not fusing, feature_size of rnn's in both direction should match";
             return false;
         }
 
         if (rnn_ltor_node->get_batch_size() != rnn_rtol_node->get_batch_size())
         {
-            NGRAPH_DEBUG << " Not fusing, feature_size of rnn's in both direction should match";
+            NGRAPH_DEBUG << "Not fusing, feature_size of rnn's in both direction should match";
             return false;
         }
 
         if (rnn_ltor_node->get_src_sequence_length() != rnn_rtol_node->get_src_sequence_length())
         {
-            NGRAPH_DEBUG << " Not fusing, sequence length  of rnn's in both direction should match";
+            NGRAPH_DEBUG << "Not fusing, sequence length  of rnn's in both direction should match";
             return false;
         }
 
