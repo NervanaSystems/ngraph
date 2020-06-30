@@ -322,7 +322,8 @@ size_t ngraph::compiler_byte_size(element::Type_t et)
         ET_CASE(u32);
         ET_CASE(u64);
 #undef ET_CASE
-    default: return 0;
+    case element::Type_t::undefined: return 0;
+    case element::Type_t::dynamic: return 0;
     }
 }
 
