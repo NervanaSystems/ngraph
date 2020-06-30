@@ -656,32 +656,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         NGRAPH_DEBUG << "src_seq_len: " << sequence_len;
         NGRAPH_DEBUG << "batch_size: " << batch_size;
 
-        NGRAPH_INFO << "rnn_src_iter:";
-        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_ht))
-        {
-            NGRAPH_INFO << "    " << output;
-        }
-        NGRAPH_INFO << "rnn_src_iter_c:";
-        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_ct))
-        {
-            NGRAPH_INFO << "    " << output;
-        }
-        NGRAPH_INFO << "rnn_weights_layer:";
-        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_weights_layer_label))
-        {
-            NGRAPH_INFO << "    " << output;
-        }
-        NGRAPH_INFO << "rnn_weights_iter:";
-        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_weights_iter_label))
-        {
-            NGRAPH_INFO << "    " << output;
-        }
-        NGRAPH_INFO << "rnn_bias:";
-        for (Output<Node> output : m.get_bound_values_for_pattern(lstm_bias_label))
-        {
-            NGRAPH_INFO << "    " << output;
-        }
-
         auto check_const_input = [&](std::shared_ptr<Node> n) {
             if (is_type<ngraph::op::Constant>(n) ||
                 (is_type<ngraph::op::Broadcast>(n) &&
@@ -727,29 +701,14 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                      direction,
                                                      num_fused_rnn_layers,
                                                      rnn_type);
-        NGRAPH_INFO << "****** New RNN " << *rnn;
-        // graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
 
-// #define GOE
-#ifdef GOE
-        auto rnn_hts_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0)->output(0);
-        auto rnn_ct_goe = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2)->output(0);
-#else
-        std::make_shared<ngraph::op::Parameter>();
-        std::make_shared<ngraph::op::Parameter>();
-#endif
-
         for (size_t i = 0, start_index = 0; i < sequence_len; i++, start_index += batch_size)
         {
             ht_slice_per_timestep[i] = (std::make_shared<ngraph::op::Slice>(
-#ifdef GOE
-                rnn_hts_goe,
-#else
                 rnn->output(0),
-#endif
                 Coordinate{start_index, 0},
                 Coordinate{start_index + batch_size, src_iter_feature_size}));
         }
@@ -813,7 +772,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         }
 
         // replace last LSTM dst_iter_c with RNN dst iter_c for last LSTM dst_iter_c's users
-        NGRAPH_INFO << "goe " << *lstm_nodes[sequence_len - 1];
         // auto last_lstm_ct_goe = get_output_elements(lstm_nodes[sequence_len - 1])[2];
         // if (last_lstm_ct_goe)
         // {
@@ -824,7 +782,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();
-        // graphviz(rnn->get_name() + "_post_fusion.pdf");
         return true;
     };
 
