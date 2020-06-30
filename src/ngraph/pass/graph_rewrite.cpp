@@ -197,7 +197,6 @@ void pass::RecurrentGraphRewrite::add_matcher(
                 [m, callback](const std::shared_ptr<Node>& node) {
                     if (m->match(node))
                     {
-                        NGRAPH_INFO << "Recurrent matcher matched " << node;
                         return callback(*m.get());
                     }
                     return false;
@@ -229,7 +228,6 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
         bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
         for (auto node : f->get_ops())
         {
-            NGRAPH_INFO << *node;
             for (auto& closure : m_matchers)
             {
                 if (is_dyn_func && closure.property[PassProperty::REQUIRE_STATIC_SHAPE])

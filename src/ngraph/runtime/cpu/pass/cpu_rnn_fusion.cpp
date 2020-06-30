@@ -72,44 +72,6 @@
 
 using namespace ngraph;
 
-#undef NGRAPH_DEBUG
-#define NGRAPH_DEBUG NGRAPH_INFO
-
-namespace
-{
-    std::shared_ptr<Node> output_to_node(Output<Node> output)
-    {
-        std::shared_ptr<Node> node = output.get_node_shared_ptr();
-        if (output.get_index() == 0 && output.get_node()->get_output_size() == 1)
-        {
-            return node;
-        }
-        else
-        {
-            for (auto in : output.get_target_inputs())
-            {
-                if (is_type<op::GetOutputElement>(in.get_node()))
-                {
-                    return in.get_node()->shared_from_this();
-                }
-            }
-            return std::make_shared<op::GetOutputElement>(node, output.get_index());
-        }
-    }
-
-    NodeVector get_output_elements(const std::shared_ptr<Node>& mon)
-    {
-        NGRAPH_INFO << "get_output_elements " << *mon;
-        NodeVector goes(mon->get_output_size());
-        for (auto o : mon->outputs())
-        {
-            NGRAPH_INFO << "goe " << o.get_index();
-            goes.at(o.get_index()) = output_to_node(o);
-        }
-        return goes;
-    }
-}
-
 void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
 {
     // pattern to capture the vanilla RNN
@@ -218,7 +180,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                                        false);
 
     auto callback = [X, W, R, H_t, C_t](pattern::Matcher& m) {
-        NGRAPH_INFO;
         NGRAPH_DEBUG << "In construct_onnx_lstmcell_fprop callback against " << *m.get_match_root();
         auto pattern_map = m.get_pattern_map();
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
@@ -327,10 +288,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
 static void replace_collapse_node_user(const Output<Node>& collapsed_node,
                                        const Output<Node>& new_output)
 {
-    NGRAPH_INFO << collapsed_node;
     for (Input<Node> input : collapsed_node.get_target_inputs())
     {
-        NGRAPH_DEBUG << "node_name: " << input.get_node()->get_name();
         input.replace_source_output(new_output);
     }
 }
@@ -421,7 +380,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto hidden_state = pvm[ht_1];
         auto cell_state = pvm[ct_1];
 
-        NGRAPH_INFO;
         auto swap_lstm_inputs = [&]() -> void {
             src_layer = pvm[ht_1];
             hidden_state = pvm[xt];
@@ -494,56 +452,18 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         auto lstm_node = std::make_shared<ngraph::op::Lstm>(
             src_layer, hidden_state, cell_state, weights_layer, weights_iter, bias, rnn_type);
 
-        NGRAPH_INFO;
-// #define GOE
-#ifdef GOE
-        auto lstm_ht_output =
-            std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 1)->output(0);
-        auto lstm_ct_output =
-            std::make_shared<ngraph::op::GetOutputElement>(lstm_node, 2)->output(0);
-#else
         auto lstm_ht_output = lstm_node->output(1);
         auto lstm_ct_output = lstm_node->output(2);
-        // To keep the node numbers the same either way
-        std::make_shared<ngraph::op::Parameter>();
-        std::make_shared<ngraph::op::Parameter>();
-#endif
 
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
-        graphviz(lstm_node->get_name() + "_pre_fusion.pdf");
-        NGRAPH_INFO << *pvm[ct_label].get_node();
         if (ngraph::is_used(pvm[ct_label].get_node()))
         {
             replace_collapse_node_user(pvm[ct_label], lstm_ct_output);
         }
         // find the user's for {ht} and replace them with lstm_goe_1
         m.get_match_value().replace(lstm_ht_output);
-        graphviz(lstm_node->get_name() + "_post_fusion.pdf");
-
-        NGRAPH_INFO << lstm_node->get_name();
-        int index = 0;
-        for (Output<Node> input : lstm_node->input_values())
-        {
-            NGRAPH_INFO << "lstm input[" << index++ << "] " << input;
-        }
-        index = 0;
-        for (Output<Node> output : lstm_node->outputs())
-        {
-            for (Input<Node> input : output.get_target_inputs())
-            {
-                NGRAPH_INFO << "lstm output[" << index << "] " << input;
-                if (is_type<op::GetOutputElement>(input.get_node()))
-                {
-                    for (Input<Node> redirect : input.get_node()->output(0).get_target_inputs())
-                    {
-                        NGRAPH_INFO << "    redirect " << redirect;
-                    }
-                }
-            }
-            index++;
-        }
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht, "LSTMFusion.Fprop");
@@ -743,7 +663,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // we will return safely
             if (!is_type<op::Lstm>(lstm))
             {
-                NGRAPH_INFO << "match cell is not LSTM";
                 return false;
             }
 
@@ -770,15 +689,6 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 }
             }
         }
-
-        // replace last LSTM dst_iter_c with RNN dst iter_c for last LSTM dst_iter_c's users
-        // auto last_lstm_ct_goe = get_output_elements(lstm_nodes[sequence_len - 1])[2];
-        // if (last_lstm_ct_goe)
-        // {
-        //     NGRAPH_INFO;
-        //     replace_collapse_node_user(last_lstm_ct_goe, lstm_nodes[sequence_len -
-        //     1]->output(2));
-        // }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();

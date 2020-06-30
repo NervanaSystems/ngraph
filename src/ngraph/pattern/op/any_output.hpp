@@ -43,7 +43,4 @@ public:
     bool match_value(pattern::Matcher* matcher,
                      const Output<Node>& pattern_value,
                      const Output<Node>& graph_value) override;
-
-private:
-    Node* m_node;
 };
