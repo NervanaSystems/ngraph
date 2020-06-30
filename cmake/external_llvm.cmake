@@ -90,6 +90,8 @@ if(NEED_TO_BUILD_LLVM)
             -DLLVM_ENABLE_RTTI=ON
             -DLLVM_ENABLE_TERMINFO=OFF
             -DLLVM_ENABLE_ZLIB=OFF
+            -DLLVM_BUILD_UTILS=ON
+            -DLLVM_INSTALL_UTILS=ON
             -DLLVM_TARGETS_TO_BUILD=host
         ${LLVM_CMAKE_ARGS}
         ${llvm_SOURCE_DIR}/llvm
