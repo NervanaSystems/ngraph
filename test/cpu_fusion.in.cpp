@@ -3161,34 +3161,36 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_rnn_fusion_1rnn_layer_3lstm_cell)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_lstm_cell)
 {
     DisableRemoveGOE nogoe;
-    const size_t batch_size = 3;
-    const size_t input_size = 4;
-    const size_t hidden_size = 4;
-    const size_t gates_count = 4;
+    auto make_function = []() {
+        const size_t batch_size = 3;
+        const size_t input_size = 4;
+        const size_t hidden_size = 4;
+        const size_t gates_count = 4;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
-    const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
-    const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+        const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+        const auto W =
+            make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        const auto R =
+            make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+        const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+        const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size);
-    auto ht = lstm_cell->output(0);
-    auto ct = lstm_cell->output(1);
+        const auto lstm_cell = make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size);
+        auto ht = lstm_cell->output(0);
+        auto ct = lstm_cell->output(1);
 
-    auto lstm_function = make_shared<Function>(OutputVector{ht, ct},
-                                               ParameterVector{
-                                                   X,
-                                                   H_t,
-                                                   C_t,
-                                                   W,
-                                                   R,
-                                               });
-
-    auto lstm_function_cpu = clone_function(*lstm_function);
-    auto lstm_function_inter = clone_function(*lstm_function);
+        auto lstm_function = make_shared<Function>(OutputVector{ht, ct},
+                                                   ParameterVector{
+                                                       X,
+                                                       H_t,
+                                                       C_t,
+                                                       W,
+                                                       R,
+                                                   });
+        return lstm_function;
+    };
+    auto lstm_function_cpu = make_function();
+    auto lstm_function_inter = make_function();
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
