@@ -717,7 +717,7 @@ add_custom_command(
         -D OPSETS="${OPSETS}"
         -D CURRENT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
         -Wno-dev
-        -P ${CMAKE_MODULE_PATH}gen_op_version.cmake
+        -P "${PROJECT_SOURCE_DIR}/cmake/Modules/gen_op_version.cmake"
 )
 add_custom_target(
     gen_op_version_table
