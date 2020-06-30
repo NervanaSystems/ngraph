@@ -404,12 +404,10 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
 
     for (Output<Node>& out : new_results)
     {
-        auto ref_result =
-            ref->create_tensor(out.get_element_type(), out.get_shape());
+        auto ref_result = ref->create_tensor(out.get_element_type(), out.get_shape());
         ref_results.push_back(ref_result);
         arg_to_ref_result[out.get()] = ref_result;
-        auto bk_result =
-            backend->create_tensor(out.get_element_type(), out.get_shape());
+        auto bk_result = backend->create_tensor(out.get_element_type(), out.get_shape());
         bk_results.push_back(bk_result);
     }
 

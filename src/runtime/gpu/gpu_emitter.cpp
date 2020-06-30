@@ -51,7 +51,7 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
 // {<Abs typeid>, function<std::string(EMIT_ARGS)},
 // {<Acos typeid>, function<std::string(EMIT_ARGS)},
 // ...
-#define NGRAPH_OP(OP, NAMESPACE)                                                                      \
+#define NGRAPH_OP(OP, NAMESPACE)                                                                   \
     {type_index(typeid(NAMESPACE::OP)), runtime::gpu::GPU_Emitter::emit_##OP},
     static const map<type_index, function<std::string(EMIT_ARGS)>> typeid_map{
 #include "op/op_tbl.hpp"
