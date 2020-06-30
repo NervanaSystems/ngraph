@@ -683,7 +683,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // find the lstm's nodes captured in PM
         auto lstm_cts = m.get_bound_nodes_for_pattern(lstm_ct);
         std::reverse(lstm_cts.begin(), lstm_cts.end());
-        std::vector<std::shared_ptr<ngraph::Node>> lstm_nodes;
+        NodeVector lstm_nodes;
 
         // we need to collect LSTM from GOE's, in order to deterministically determine
         // the individual time slice output ht.

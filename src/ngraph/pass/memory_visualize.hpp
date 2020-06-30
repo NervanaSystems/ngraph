@@ -37,16 +37,15 @@ public:
     virtual bool run_on_module(std::vector<std::shared_ptr<ngraph::Function>>&) override;
 
 private:
-    std::unordered_set<const descriptor::Tensor*>
-        find_largest_op(const std::vector<std::shared_ptr<Node>>& nodes);
-    void draw_tensor_weight(std::ostream& file, const std::vector<std::shared_ptr<Node>>& nodes);
-    void draw_histogram(std::ostream& file, const std::vector<std::shared_ptr<Node>>& nodes);
-    void draw_op_influence(std::ostream& file, const std::vector<std::shared_ptr<Node>>& nodes);
+    std::unordered_set<const descriptor::Tensor*> find_largest_op(const NodeVector& nodes);
+    void draw_tensor_weight(std::ostream& file, const NodeVector& nodes);
+    void draw_histogram(std::ostream& file, const NodeVector& nodes);
+    void draw_op_influence(std::ostream& file, const NodeVector& nodes);
     int compute_op_weight(std::shared_ptr<Node> exop);
 
     static size_t memory_usage(std::shared_ptr<Node>);
     static size_t memory_footprint(std::shared_ptr<Node>);
-    static size_t memory_footprint(const std::vector<std::shared_ptr<Node>>&);
+    static size_t memory_footprint(const NodeVector&);
 
     const std::string m_filename;
 };

@@ -25,7 +25,7 @@ using namespace ngraph;
 
 // This function traverses the vector of ops and verifies that each op's dependencies (its inputs)
 // is located earlier in the vector. That is enough to be valid
-bool validate_list(const vector<shared_ptr<Node>>& nodes)
+bool validate_list(const NodeVector& nodes)
 {
     bool rc = true;
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)

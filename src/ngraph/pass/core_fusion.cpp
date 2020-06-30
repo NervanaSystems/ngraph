@@ -739,7 +739,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         auto pattern_map = m.get_pattern_map();
         auto m_eltwise = pattern_map[eltwise_label];
 
-        vector<shared_ptr<Node>> strided_convs;
+        NodeVector strided_convs;
         for (auto n : m_eltwise->get_users())
         {
             if (is_used(n.get()))
