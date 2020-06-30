@@ -218,6 +218,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
                                        false);
 
     auto callback = [X, W, R, H_t, C_t](pattern::Matcher& m) {
+        NGRAPH_INFO;
         NGRAPH_DEBUG << "In construct_onnx_lstmcell_fprop callback against " << *m.get_match_root();
         auto pattern_map = m.get_pattern_map();
         ngraph::runtime::cpu::rnn_utils::rnntype rnn_type =
@@ -515,7 +516,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         // Now identify the nodes which consumes the output of LSTM nodes
         // and replace them accordingly
         // find the user's for {ct} and replace them with lstm_goe_2
-        graphviz(lstm_node->get_name() + "_pre_fusion.pdf");
+        // graphviz(lstm_node->get_name() + "_pre_fusion.pdf");
         NGRAPH_INFO << *pvm[ct_label].get_node();
         if (ngraph::is_used(pvm[ct_label].get_node()))
         {
@@ -523,7 +524,7 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         }
         // find the user's for {ht} and replace them with lstm_goe_1
         m.get_match_value().replace(lstm_ht_output);
-        graphviz(lstm_node->get_name() + "_post_fusion.pdf");
+        // graphviz(lstm_node->get_name() + "_post_fusion.pdf");
 
         NGRAPH_INFO << lstm_node->get_name();
         int index = 0;
@@ -731,7 +732,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                      num_fused_rnn_layers,
                                                      rnn_type);
         NGRAPH_INFO << "****** New RNN " << *rnn;
-        graphviz(rnn->get_name() + "_pre_fusion.pdf");
+        // graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         std::vector<std::shared_ptr<ngraph::op::Slice>> ht_slice_per_timestep(sequence_len,
                                                                               nullptr);
@@ -826,7 +827,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
                      << "matched_node: " << *m.get_match_root();
-        graphviz(rnn->get_name() + "_post_fusion.pdf");
+        // graphviz(rnn->get_name() + "_post_fusion.pdf");
         return true;
     };
 
@@ -987,7 +988,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      num_fused_rnn_layers,
                                                      rnn_type);
         NGRAPH_INFO << "****** New RNN " << *rnn;
-        graphviz(rnn->get_name() + "_pre_fusion.pdf");
+        // graphviz(rnn->get_name() + "_pre_fusion.pdf");
 
         Output<Node> mrnn_ht;
         Output<Node> mrnn_ct;
@@ -1068,7 +1069,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                 // }
             }
         }
-        graphviz(rnn->get_name() + "_post_fusion.pdf");
+        // graphviz(rnn->get_name() + "_post_fusion.pdf");
         return true;
     };
 

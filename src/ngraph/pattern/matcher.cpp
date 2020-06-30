@@ -265,12 +265,9 @@ bool pattern::Matcher::match(shared_ptr<Node> node)
     {
         if (this->match(output))
         {
-            if (match)
-            {
-                NGRAPH_INFO << "****************** Multi-output node multi match";
-                throw runtime_error("Multi-output node multi match");
-            }
+            NGRAPH_INFO << "****************** Multi-output node multi match";
             match = true;
+            break;
         }
         index++;
     }
@@ -280,8 +277,10 @@ bool pattern::Matcher::match(shared_ptr<Node> node)
 bool pattern::Matcher::match(const Output<Node>& graph_value,
                              const PatternValueMap& previous_matches)
 {
+    NGRAPH_INFO << graph_value;
     // clear our state
     m_match_root.reset();
+    NGRAPH_INFO;
     m_pattern_map.clear();
     m_matched_list.clear();
 
@@ -293,6 +292,7 @@ bool pattern::Matcher::match(const Output<Node>& graph_value,
     {
         m_match_root = graph_value;
     }
+    NGRAPH_INFO << is_match << " " << graph_value;
     return is_match;
 }
 

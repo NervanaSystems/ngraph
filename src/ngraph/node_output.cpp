@@ -48,6 +48,7 @@ namespace ngraph
 
     void Output<Node>::reset()
     {
+        NGRAPH_INFO << "Reset output";
         m_node.reset();
         m_index = 0;
     }

@@ -29,6 +29,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -848,14 +849,20 @@ bool Node::match_value(pattern::Matcher* matcher,
     {
         return false;
     }
-    return match_node(matcher, graph_value);
+    NGRAPH_INFO;
+    bool rc = match_node(matcher, graph_value);
+    NGRAPH_INFO << rc;
+    return rc;
 }
 
 bool Node::match_node(pattern::Matcher* matcher, const Output<Node>& graph_value)
 {
     matcher->add_node(graph_value);
-    return graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
+    NGRAPH_INFO;
+    bool rc = graph_value.get_node_shared_ptr()->get_type_info() == get_type_info() &&
            matcher->match_arguments(this, graph_value.get_node_shared_ptr());
+           NGRAPH_INFO << rc;
+    return rc;
 }
 
 // default implementation for the node to check if it contains partial shape

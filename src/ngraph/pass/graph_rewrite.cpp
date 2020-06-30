@@ -81,6 +81,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
         m_matchers.clear();
         for (auto node : f->get_ordered_ops())
         {
+            NGRAPH_INFO << *node;
             if (m_enable_shape_inference)
             {
                 node->revalidate_and_infer_types();
@@ -93,9 +94,11 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                                     "function is dynamic, skipping this "
                                     "optimization till the shapes are fully "
                                     "materialized";
-                    continue;
                 }
-                if (closure.handler(node))
+                else
+                {
+                    NGRAPH_INFO;
+                    if (closure.handler(node))
                 {
                     rewritten = true;
                     // If call back may change function's is_dynamic state, we need to
@@ -105,6 +108,7 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                         is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
                     }
                     break;
+                }
                 }
             }
         }
@@ -230,6 +234,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
         bool is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
         for (auto node : f->get_ops())
         {
+            NGRAPH_INFO << *node;
             for (auto& closure : m_matchers)
             {
                 if (is_dyn_func && closure.property[PassProperty::REQUIRE_STATIC_SHAPE])
@@ -238,9 +243,11 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                                     "function is dynamic, skipping this "
                                     "optimization till the shapes are fully "
                                     "materialized";
-                    continue;
                 }
-                if (closure.handler(node))
+                else
+                {
+                    NGRAPH_INFO;
+                     if (closure.handler(node))
                 {
                     // If call back may change function's is_dynamic state, we need to
                     // update the cached value.
@@ -249,6 +256,7 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                         is_dyn_func = s_rerun_dynamic_check && f->is_dynamic();
                     }
                     return true;
+                }
                 }
             }
         }

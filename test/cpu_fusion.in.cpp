@@ -3161,7 +3161,6 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_rnn_fusion_1rnn_layer_3lstm_cell)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_lstm_cell)
 {
     DisableRemoveGOE nogoe;
-    auto make_function = []() {
         const size_t batch_size = 3;
         const size_t input_size = 4;
         const size_t hidden_size = 4;
@@ -3187,10 +3186,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_lstm_cell)
                                                        W,
                                                        R,
                                                    });
-        return lstm_function;
-    };
-    auto lstm_function_cpu = make_function();
-    auto lstm_function_inter = make_function();
+
+    auto lstm_function_cpu = clone_function(*lstm_function);
+    auto lstm_function_inter = clone_function(*lstm_function);
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
