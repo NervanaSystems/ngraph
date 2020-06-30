@@ -822,7 +822,8 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // if (last_lstm_ct_goe)
         // {
         //     NGRAPH_INFO;
-        //     replace_collapse_node_user(last_lstm_ct_goe, lstm_nodes[sequence_len - 1]->output(2));
+        //     replace_collapse_node_user(last_lstm_ct_goe, lstm_nodes[sequence_len -
+        //     1]->output(2));
         // }
 
         NGRAPH_DEBUG << "End of recurrent fusion call back "
@@ -901,7 +902,8 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             {
                 rnn_nodes.push_back(rnn_op);
             }
-            else if (auto rnn_op = as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
+            else if (auto rnn_op =
+                         as_type_ptr<ngraph::op::Rnn>(rnn_goe.get_node()->get_arguments()[0]))
             {
                 // This is a hack to support GOE on output of RNN
                 rnn_nodes.push_back(rnn_op);
