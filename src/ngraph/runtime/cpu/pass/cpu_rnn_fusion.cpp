@@ -985,21 +985,6 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                      rnn_direction,
                                                      num_fused_rnn_layers,
                                                      rnn_type);
-        NGRAPH_INFO << "****** New RNN " << *rnn;
-        // graphviz(rnn->get_name() + "_pre_fusion.pdf");
-
-        Output<Node> mrnn_ht;
-        Output<Node> mrnn_ct;
-// #define GOE
-#ifdef GOE
-        mrnn_ht = std::make_shared<ngraph::op::GetOutputElement>(rnn, 0)->output(0);
-        mrnn_ct = std::make_shared<ngraph::op::GetOutputElement>(rnn, 2)->output(0);
-#else
-        mrnn_ht = rnn->output(0);
-        mrnn_ct = rnn->output(2);
-        std::make_shared<ngraph::op::Parameter>();
-        std::make_shared<ngraph::op::Parameter>();
-#endif
 
         // Replace all the users of RNN cell state {ct} across different user.
         auto replace_rnn_output_cellstate = [&](const Output<Node>& rnn_ct_goe2, size_t layer) {
@@ -1007,7 +992,7 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             // for the last cell
             // of all the layers, { ct_1 || ct2 || ....|| ctn}
             auto ct_slice = std::make_shared<ngraph::op::Slice>(
-                mrnn_ct,
+                rnn->output(2),
                 Coordinate{((layer - 1) * batch_size) + batch_size, 0},
                 Coordinate{layer * batch_size, src_iter_feature_size});
 
@@ -1021,35 +1006,9 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
             std::shared_ptr<Node> rnn_node = rnn_nodes[index];
-            NGRAPH_INFO << "LOOP " << *rnn_nodes[index];
-            // auto goe_nodes = get_output_elements(rnn_nodes[index]);
-            // // if there is no GOE followed by the Lstm, their might be pattern match error
-            // // we will return safely
-            // if (goe_nodes.size() != 3)
-            // {
-            //     throw ngraph_error("Expecting three outputs for each RNN node");
-            // }
 
-            // // dst_layer of the RNN cell
-            // auto goe_0 = goe_nodes[0];
-            // NGRAPH_INFO << goe_0;
-            // // dst_iter of the RNN cell
-            // auto goe_1 = goe_nodes[1];
-            // NGRAPH_INFO << goe_1;
-            // // dst_iter_c of the RNN cell
-            // auto goe_2 = goe_nodes[2];
-            // NGRAPH_INFO << goe_2;
-
-            // if (goe_2)
-            {
-                int layer_index = num_fused_rnn_layers - index;
-                // replace_rnn_output_cellstate(goe_2->output(0), layer_index);
-                replace_rnn_output_cellstate(rnn_node->output(2), layer_index);
-            }
-            // else
-            // {
-            //     NGRAPH_INFO << "!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-            // }
+            int layer_index = num_fused_rnn_layers - index;
+            replace_rnn_output_cellstate(rnn_node->output(2), layer_index);
 
             // dst_layer of layer fused rnn holds the intermediate results of all the lstm cells
             // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and
@@ -1057,17 +1016,9 @@ void ngraph::runtime::cpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             // holds the same output
             if (index == 0)
             {
-                // if(goe_0)
-                {
-                    replace_collapse_node_user(rnn_node->output(0), mrnn_ht);
-                }
-                // else
-                // {
-                //     NGRAPH_INFO << "!!!!!!!!!!!!!!!!!!!!!!!!!!!";
-                // }
+                replace_collapse_node_user(rnn_node->output(0), rnn->output(0));
             }
         }
-        // graphviz(rnn->get_name() + "_post_fusion.pdf");
         return true;
     };
 
