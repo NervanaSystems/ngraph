@@ -216,7 +216,6 @@ void pass::RecurrentGraphRewrite::add_matcher(
 bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
     m_function = f;
-    m_function = f;
     bool changed = false;
     size_t i = 0;
 

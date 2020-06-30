@@ -35,24 +35,10 @@ pattern::MatcherState::MatcherState(Matcher* matcher)
 {
 }
 
-pattern::MatcherState::~MatcherState()
+Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
 {
-    if (m_restore)
-    {
-        if (!m_matcher->m_matched_list.empty())
-        {
-            m_matcher->m_matched_list.erase(m_matcher->m_matched_list.begin() + m_watermark,
-                                            m_matcher->m_matched_list.end());
-        }
-
-        if (!m_pattern_value_maps.empty())
-        {
-            m_matcher->m_pattern_value_maps.erase(m_pattern_value_maps.begin() + m_capture_size,
-                                                  m_pattern_value_maps.end());
-        }
-
-        m_matcher->m_pattern_map = m_pattern_value_map;
-    }
+    return node->get_output_size() == 1 ? node->output(0)
+                                        : make_shared<op::AnyOutput>(node)->output(0);
 }
 
 pattern::Matcher::Matcher() {}
@@ -93,10 +79,24 @@ pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name, boo
 {
 }
 
-Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
+pattern::MatcherState::~MatcherState()
 {
-    return node->get_output_size() == 1 ? node->output(0)
-                                        : make_shared<op::AnyOutput>(node)->output(0);
+    if (m_restore)
+    {
+        if (!m_matcher->m_matched_list.empty())
+        {
+            m_matcher->m_matched_list.erase(m_matcher->m_matched_list.begin() + m_watermark,
+                                            m_matcher->m_matched_list.end());
+        }
+
+        if (!m_pattern_value_maps.empty())
+        {
+            m_matcher->m_pattern_value_maps.erase(m_pattern_value_maps.begin() + m_capture_size,
+                                                  m_pattern_value_maps.end());
+        }
+
+        m_matcher->m_pattern_map = m_pattern_value_map;
+    }
 }
 
 bool pattern::MatcherState::finish(bool is_successful)
