@@ -57,9 +57,9 @@ if(NEED_TO_BUILD_LLVM)
     message(STATUS "LLVM: Building LLVM from source")
 
     set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
-        set(LLVM_GIT_TAG ${MLIR_COMMIT_ID})
-        set(LLVM_GIT_SHALLOW 0)
-        set(LLVM_PATCH_COMMAND git reset HEAD --hard COMMAND git apply --ignore-space-change --ignore-whitespace ${PROJECT_SOURCE_DIR}/cmake/mlir.patch)
+    set(LLVM_GIT_TAG ${MLIR_COMMIT_ID})
+    set(LLVM_GIT_SHALLOW 0)
+    set(LLVM_PATCH_COMMAND git reset HEAD --hard COMMAND git apply --ignore-space-change --ignore-whitespace ${PROJECT_SOURCE_DIR}/cmake/mlir.patch)
 
     FetchContent_Declare(
         llvm
@@ -87,12 +87,12 @@ if(NEED_TO_BUILD_LLVM)
         ${NGRAPH_FORWARD_CMAKE_ARGS}
         -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
         -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp\;mlir
-            -DLLVM_ENABLE_RTTI=ON
-            -DLLVM_ENABLE_TERMINFO=OFF
-            -DLLVM_ENABLE_ZLIB=OFF
-            -DLLVM_BUILD_UTILS=ON
-            -DLLVM_INSTALL_UTILS=ON
-            -DLLVM_TARGETS_TO_BUILD=host
+        -DLLVM_ENABLE_RTTI=ON
+        -DLLVM_ENABLE_TERMINFO=OFF
+        -DLLVM_ENABLE_ZLIB=OFF
+        -DLLVM_BUILD_UTILS=ON
+        -DLLVM_INSTALL_UTILS=ON
+        -DLLVM_TARGETS_TO_BUILD=host
         ${LLVM_CMAKE_ARGS}
         ${llvm_SOURCE_DIR}/llvm
         WORKING_DIRECTORY "${llvm_BINARY_DIR}")
@@ -109,52 +109,56 @@ if(NEED_TO_BUILD_LLVM)
     endif()
 endif()
 
-find_package(Clang REQUIRED CONFIG HINTS "${LLVM_ROOT}/lib/cmake/clang" NO_DEFAULT_PATH)
-message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
-message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
-message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
+if(NGRAPH_CODEGEN_ENABLE)
+    find_package(Clang REQUIRED CONFIG HINTS "${LLVM_ROOT}/lib/cmake/clang" NO_DEFAULT_PATH)
+    message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
+    message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
+    message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
+    add_library(libllvm INTERFACE)
+    target_include_directories(libllvm INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
+    target_link_libraries(libllvm INTERFACE clangHandleCXX clangHandleLLVM)
+endif()
 
-add_library(libllvm INTERFACE)
-target_include_directories(libllvm INTERFACE ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
-target_link_libraries(libllvm INTERFACE clangHandleCXX clangHandleLLVM)
-# MLIR environment variables. Some of them are used by LIT tool.
+if(NGRAPH_MLIR_ENABLE)
+    # MLIR environment variables. Some of them are used by LIT tool.
 
-# Only used in this file
-set(MLIR_LLVM_ROOT ${llvm_SOURCE_DIR})
-set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
-set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
-# Used in test/mlir:
-# lit cfg
-set(MLIR_LLVM_BUILD_DIR ${LLVM_ROOT})
-set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
-set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
-# lit cfg and path to llvm-lit
-set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
+    # Only used in this file
+    set(MLIR_LLVM_ROOT ${llvm_SOURCE_DIR})
+    set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
+    set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
+    # Used in test/mlir:
+    # lit cfg
+    set(MLIR_LLVM_BUILD_DIR ${LLVM_ROOT})
+    set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
+    set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
+    # lit cfg and path to llvm-lit
+    set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 
-set(MLIR_ROOT ${LLVM_ROOT})
-find_package(MLIR REQUIRED CONFIG HINTS "${LLVM_ROOT}/lib/cmake/mlir" NO_DEFAULT_PATH)
+    set(MLIR_ROOT ${LLVM_ROOT})
+    find_package(MLIR REQUIRED CONFIG HINTS "${LLVM_ROOT}/lib/cmake/mlir" NO_DEFAULT_PATH)
 
-# Enable LLVM package, definitions and env vars.
-add_definitions(${LLVM_DEFINITIONS})
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
+    # Enable LLVM package, definitions and env vars.
+    add_definitions(${LLVM_DEFINITIONS})
+    message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+    message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
 
-# Enable modules for LLVM.
-list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-message(STATUS "Using modules in: ${LLVM_CMAKE_DIR}")
-include(AddLLVM)
+    # Enable modules for LLVM.
+    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+    message(STATUS "Using modules in: ${LLVM_CMAKE_DIR}")
+    include(AddLLVM)
 
-# Enable modules for MLIR.
-list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
-message(STATUS "Using modules in: ${MLIR_CMAKE_DIR}")
-include(AddMLIR)
+    # Enable modules for MLIR.
+    list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+    message(STATUS "Using modules in: ${MLIR_CMAKE_DIR}")
+    include(AddMLIR)
 
-# Used by tblgen
-set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
-set(MLIR_BIN_INCLUDE_PATH ${MLIR_INCLUDE_DIR})
-# Used by ngraph mlir and cpu backend
-set(MLIR_INCLUDE_PATHS ${MLIR_INCLUDE_DIRS})
-set(MLIR_LLVM_INCLUDE_PATH ${LLVM_INCLUDE_DIRS})
+    # Used by tblgen
+    set(MLIR_SRC_INCLUDE_PATH ${MLIR_SOURCE_DIR}/include)
+    set(MLIR_BIN_INCLUDE_PATH ${MLIR_INCLUDE_DIR})
+    # Used by ngraph mlir and cpu backend
+    set(MLIR_INCLUDE_PATHS ${MLIR_INCLUDE_DIRS})
+    set(MLIR_LLVM_INCLUDE_PATH ${LLVM_INCLUDE_DIRS})
 
-message(STATUS "MLIR headers at: ${MLIR_INCLUDE_PATHS}")
-message(STATUS "LLVM headers at: ${MLIR_LLVM_INCLUDE_PATH}")
+    message(STATUS "MLIR headers at: ${MLIR_INCLUDE_PATHS}")
+    message(STATUS "LLVM headers at: ${MLIR_LLVM_INCLUDE_PATH}")
+endif()
