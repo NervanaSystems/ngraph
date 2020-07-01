@@ -707,11 +707,11 @@ std::string codegen::CompilerCore::find_os_specific_path(const std::string& path
 std::string codegen::CompilerCore::find_rh_devtoolset_path()
 {
     // Redhat/CentOS has devtoolset level support
-    // Support 8, 7, 6, 5, 4, 3, 2
+    // Support 9, 8, 7, 6, 5, 4, 3, 2
     // Find highest toolset version X
     // Find highest header version X.Y.Z
     std::string toolsetprefix("/opt/rh/devtoolset-");
-    for (auto i : {"8", "7", "6", "5", "4", "3", "2"})
+    for (auto i : {"9", "8", "7", "6", "5", "4", "3", "2"})
     {
         std::string toolpath = file_util::path_join(toolsetprefix + i, "root");
         if (file_util::exists(toolpath))
