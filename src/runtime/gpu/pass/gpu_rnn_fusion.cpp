@@ -180,7 +180,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     // auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
     // Define a call back that needs to called once the DFG matches the pattern
-    auto callback = [ct_label,
+    auto callback = [this,
+                     ct_label,
                      input_xt,
                      weights_i2h,
                      hidden_ht,
@@ -218,6 +219,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         // capture this reliably in the RNN fusion.
         std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
         bool intermediate_lstm = false;
+        NGRAPH_INFO << *pattern_map[ct_1];
         if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
         {
             intermediate_lstm = true;
@@ -315,6 +317,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1);
         }
 
+        graphviz(lstm->get_name()+".0.pdf");
         // Now identify the nodes which consume the outputs of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
@@ -332,6 +335,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // find the user's for {ht} and replace them with lstm_goe_0
         m.get_match_value().replace(lstm->output(0));
+        graphviz(lstm->get_name()+".1.pdf");
         NGRAPH_DEBUG << "End construct_fprop_lstm callback against " << m.get_match_root()->get_name();
         return true;
     };
@@ -648,6 +652,15 @@ static std::shared_ptr<Node>
     return std::make_shared<op::Concat>(layer_params, 0);
 }
 
+static void replace_collapse_node_user(const Output<Node>& collapsed_node,
+                                       const Output<Node>& new_output)
+{
+    for (Input<Node> input : collapsed_node.get_target_inputs())
+    {
+        input.replace_source_output(new_output);
+    }
+}
+
 void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_fusion_fprop()
 {
     auto src_layer_label = std::make_shared<pattern::op::Label>(element::f32, Shape{30, 100});
@@ -683,7 +696,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
     auto rnn_ht_label = std::make_shared<pattern::op::Label>(
         ref_rnn_node->output(0), nullptr, OutputVector{ref_rnn_node});
 
-    auto callback = [src_layer_label, src_iter_label, params_label, state_iter_label, rnn_ht_label](
+    auto callback = [this, src_layer_label, src_iter_label, params_label, state_iter_label, rnn_ht_label](
                         pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against " << m.get_match_root()->get_name();
         if (m.get_number_of_recurrent_matches() <= 1)
@@ -787,63 +800,94 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
                                                   feature_size,
                                                   rnn_direction,
                                                   num_fused_rnn_layers);
+        graphviz(rnn->get_name()+".0.pdf");
 
+#define GOE
+#ifdef GOE
         auto output_layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 0);
         auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
         auto layer_rnn_ct = std::make_shared<op::GetOutputElement>(rnn, 2);
+#else
+        auto output_layer_rnn_ht = rnn->output(0);
+        auto layer_rnn_ht = rnn->output(1);
+        auto layer_rnn_ct = rnn->output(2);
+#endif
 
         // Replace all the users of RNN cell state {ct} across different user.
-        auto replace_rnn_output_cellstate = [&](std::shared_ptr<Node>& rnn_ct, size_t layer) {
-            std::shared_ptr<Node> node_to_replace = rnn_ct;
+        auto replace_rnn_output_cellstate = [&](const Output<Node>& rnn_ct_output2, size_t layer) {
+            // std::shared_ptr<Node> node_to_replace = rnn_ct;
             auto ct_slice = std::make_shared<op::Slice>(
-                layer_rnn_ct,
+                rnn->output(2),
                 Coordinate{static_cast<unsigned long>(batch_size * (layer - 1)), 0},
                 Coordinate{static_cast<unsigned long>(batch_size * rnn_direction * layer),
                            static_cast<unsigned long>(feature_size)});
 
-            if (rnn_ct->get_users().size() == 1)
-            {
-                if (std::dynamic_pointer_cast<op::Slice>(rnn_ct->get_users()[0]))
-                {
-                    node_to_replace = rnn_ct->get_users()[0];
-                }
-            }
-            if (ngraph::is_used(node_to_replace.get()))
-            {
-                ngraph::replace_node(node_to_replace, ct_slice);
-            }
+            replace_collapse_node_user(rnn_ct_output2, ct_slice->output(0));
+            // if (rnn_ct->get_users().size() == 1)
+            // {
+            //     if (std::dynamic_pointer_cast<op::Slice>(rnn_ct->get_users()[0]))
+            //     {
+            //         node_to_replace = rnn_ct->get_users()[0];
+            //     }
+            // }
+            // if (ngraph::is_used(node_to_replace.get()))
+            // {
+            //     ngraph::replace_node(node_to_replace, ct_slice);
+            // }
         };
 
+        // for (size_t index = 0; index < rnn_nodes.size(); index++)
+        // {
+        //     for (auto& rnn_goes : rnn_nodes[index]->get_users())
+        //     {
+        //         NGRAPH_DEBUG << "rnn_goes: " << rnn_goes->get_name();
+        //         if (rnn_goes->get_users().empty())
+        //         {
+        //             continue;
+        //         }
+
+        //         if (auto rnn_goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(rnn_goes))
+        //         {
+        //             // we need to only replace the {ht} consumers of the last RNN layer,
+        //             // since for other layers the intermediate outputs {ht} will be computed
+        //             // within the kernel
+        //             if (index == 0)
+        //             {
+        //                 if (rnn_goe_node->get_n() == 0)
+        //                 {
+        //                     ngraph::replace_node(rnn_goes, output_layer_rnn_ht);
+        //                 }
+        //             }
+        //             if (rnn_goe_node->get_n() == 2)
+        //             {
+        //                 replace_rnn_output_cellstate(rnn_goes, num_fused_rnn_layers - index);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // we will replace cell_state {ct} of all the matched RNN cell
+        // with the new {ct} of the fused RNN cell
+        // Note: RNN cells are captured in the reverse order
+        // i.e {RNN7, RNN6, RNN5.... RNN0}
         for (size_t index = 0; index < rnn_nodes.size(); index++)
         {
-            for (auto& rnn_goes : rnn_nodes[index]->get_users())
-            {
-                NGRAPH_DEBUG << "rnn_goes: " << rnn_goes->get_name();
-                if (rnn_goes->get_users().empty())
-                {
-                    continue;
-                }
+            std::shared_ptr<Node> rnn_node = rnn_nodes[index];
 
-                if (auto rnn_goe_node = std::dynamic_pointer_cast<op::GetOutputElement>(rnn_goes))
-                {
-                    // we need to only replace the {ht} consumers of the last RNN layer,
-                    // since for other layers the intermediate outputs {ht} will be computed
-                    // within the kernel
-                    if (index == 0)
-                    {
-                        if (rnn_goe_node->get_n() == 0)
-                        {
-                            ngraph::replace_node(rnn_goes, output_layer_rnn_ht);
-                        }
-                    }
-                    if (rnn_goe_node->get_n() == 2)
-                    {
-                        replace_rnn_output_cellstate(rnn_goes, num_fused_rnn_layers - index);
-                    }
-                }
+            size_t layer_index = num_fused_rnn_layers - index;
+            replace_rnn_output_cellstate(rnn_node->output(2), layer_index);
+
+            // dst_layer of layer fused rnn holds the intermediate results of all the lstm cells
+            // belonging to the last layer we will replace the GOE, since RNN_n->GOE0 and
+            // MutliLayerRnn->GOE0
+            // holds the same output
+            if (index == 0)
+            {
+                replace_collapse_node_user(rnn_node->output(0), rnn->output(0));
             }
         }
 
+        graphviz(rnn->get_name()+".0.pdf");
         NGRAPH_DEBUG << "End construct_multi_layer_rnn_fusion_fprop callback against " << m.get_match_root()->get_name();
         return true;
     };
