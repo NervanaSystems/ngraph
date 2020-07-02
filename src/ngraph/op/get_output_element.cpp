@@ -18,6 +18,7 @@
 
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -83,4 +84,18 @@ std::ostream& op::GetOutputElement::write_description(std::ostream& out, uint32_
         out << ")";
     }
     return out;
+}
+
+bool op::GetOutputElement::match_value(pattern::Matcher* matcher,
+                                       const Output<Node>& pattern_value,
+                                       const Output<Node>& graph_value)
+{
+    NGRAPH_INFO;
+    return Node::match_value(matcher, pattern_value, graph_value);
+}
+
+bool op::GetOutputElement::match_node(pattern::Matcher* matcher, const Output<Node>& graph_value)
+{
+    NGRAPH_INFO;
+    return Node::match_node(matcher, graph_value);
 }

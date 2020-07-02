@@ -47,6 +47,9 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "op/rnn.hpp"
 
+#undef NGRAPH_DEBUG
+#define NGRAPH_DEBUG NGRAPH_INFO
+
 #define RETURN_IF_FALSE(cond, message)                                                             \
     if (!(cond))                                                                                   \
     {                                                                                              \
@@ -71,8 +74,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_sigmoid pattern against "
-                     << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "In construct_sigmoid callback against " << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
         if (m.get_match_value().get_element_type() != element::f32)
@@ -91,6 +93,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
 
         auto sigmoid_node = std::make_shared<op::Sigmoid>(pattern_map[input]);
         m.get_match_value().replace(sigmoid_node->output(0));
+        NGRAPH_DEBUG << "End construct_sigmoid callback against " << m.get_match_root()->get_name();
         return true;
     };
 
@@ -185,11 +188,10 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                      bias_i2h,
                      bias_h2h,
                      ct_1](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In a callback for construct_fprop_lstm pattern against "
+        NGRAPH_DEBUG << "In construct_fprop_lstm callback against "
                      << m.get_match_root()->get_name();
 
         auto pattern_map = m.get_pattern_map();
-        NGRAPH_DEBUG << "In Lstm fprop call back";
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
@@ -330,6 +332,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
         // find the user's for {ht} and replace them with lstm_goe_0
         m.get_match_value().replace(lstm->output(0));
+        NGRAPH_DEBUG << "End construct_fprop_lstm callback against " << m.get_match_root()->get_name();
         return true;
     };
     auto m = std::make_shared<pattern::Matcher>(ht);
@@ -392,7 +395,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
     auto callback = [lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
                         pattern::RecurrentMatcher& m) {
-        NGRAPH_DEBUG << " In RNN fusion callback";
+        NGRAPH_DEBUG << "In construct_rnn_lstm_fprop callback against " << m.get_match_root()->get_name();
 
         auto ht_1_label = m.get_bound_values_for_pattern(ht_1);
         auto params_bound = m.get_bound_values_for_pattern(params_label);
@@ -595,8 +598,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        NGRAPH_DEBUG << "End of recurrent fusion call back "
-                     << "matched_node: " << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "End construct_rnn_lstm_fprop callback against " << m.get_match_root()->get_name();
         return true;
     };
 
@@ -683,6 +685,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto callback = [src_layer_label, src_iter_label, params_label, state_iter_label, rnn_ht_label](
                         pattern::RecurrentMatcher& m) {
+        NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against " << m.get_match_root()->get_name();
         if (m.get_number_of_recurrent_matches() <= 1)
         {
             return false;
@@ -691,7 +694,6 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         auto src_nodes = m.get_bound_values_for_pattern(src_layer_label);
         auto rnn_ht_out_nodes = m.get_bound_values_for_pattern(rnn_ht_label);
         auto number_of_rnn_cell_matched = m.get_number_of_recurrent_matches();
-        NGRAPH_DEBUG << "In Recurrent multi layer RNN fusion callback ";
         NGRAPH_DEBUG << "Number of RNN's Matched: " << number_of_rnn_cell_matched;
         NGRAPH_DEBUG << "matched_root: " << m.get_match_root()->get_name();
         NGRAPH_DEBUG << "src_layer_node: " << src_nodes[0].get_node()->get_name();
@@ -720,7 +722,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         for (auto& rnn_goe_input : m.get_bound_values_for_pattern(rnn_ht_label))
         {
             auto rnn_op = std::dynamic_pointer_cast<op::gpu::Rnn>(
-                rnn_goe_input.get_node()->get_arguments()[0]);
+                rnn_goe_input.get_node_shared_ptr());
             if (rnn_op)
             {
                 rnn_nodes.push_back(rnn_op);
@@ -842,6 +844,7 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
         }
 
+        NGRAPH_DEBUG << "End construct_multi_layer_rnn_fusion_fprop callback against " << m.get_match_root()->get_name();
         return true;
     };
 

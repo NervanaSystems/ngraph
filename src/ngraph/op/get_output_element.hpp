@@ -51,6 +51,13 @@ namespace ngraph
                 std::ostream& write_description(std::ostream& os,
                                                 uint32_t depth = 0) const override;
 
+                bool match_value(pattern::Matcher* matcher,
+                                 const Output<Node>& pattern_value,
+                                 const Output<Node>& graph_value) override;
+
+                bool match_node(pattern::Matcher* matcher,
+                                const Output<Node>& graph_value) override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
