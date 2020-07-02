@@ -36,14 +36,12 @@ namespace ngraph
         : m_node(node->shared_from_this())
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     Output<Node>::Output(const std::shared_ptr<Node>& node, size_t index)
         : m_node(node)
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     void Output<Node>::reset()
@@ -122,16 +120,6 @@ namespace ngraph
     }
     bool Output<Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
-    void Output<Node>::eliminate_goe()
-    {
-        if (remove_goe)
-        {
-            while (is_type<op::GetOutputElement>(m_node))
-            {
-                *this = m_node->input_value(0);
-            }
-        }
-    }
 
     NodeVector Output<Node>::get_users(bool check_is_used) const
     {
@@ -151,14 +139,12 @@ namespace ngraph
         : m_node(node->shared_from_this())
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     Output<const Node>::Output(const std::shared_ptr<const Node>& node, size_t index)
         : m_node(node)
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     void Output<const Node>::reset()
@@ -220,18 +206,6 @@ namespace ngraph
     }
     bool Output<const Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
-    void Output<const Node>::eliminate_goe()
-    {
-        if (remove_goe)
-        {
-            while (is_type<const op::GetOutputElement>(m_node))
-            {
-                auto value = m_node->input_value(0);
-                m_node = value.get_node_shared_ptr();
-                m_index = value.get_index();
-            }
-        }
-    }
 
     NodeVector Output<const Node>::get_users(bool check_is_used) const
     {
@@ -249,37 +223,15 @@ namespace ngraph
 
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
-        if (is_type<op::GetOutputElement>(output.get_node()))
-        {
-            auto captured_output = output.get_node()->input(0).get_source_output();
-            return output.get_node()->write_description(out, 0)
-                   << "(" << captured_output.get_node()->get_name() << "["
-                   << captured_output.get_index() << "]):" << output.get_element_type()
-                   << output.get_partial_shape();
-        }
-        else
-        {
-            return output.get_node()->write_description(out, 0)
-                   << "[" << output.get_index() << "]:" << output.get_element_type()
-                   << output.get_partial_shape();
-        }
+        // Convert Output<Node> to Output<const Node> so we only have one operator<< implementation
+        return out << Output<const Node>(static_cast<const Node*>(output.get_node()),
+                                         output.get_index());
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
     {
-        if (is_type<op::GetOutputElement>(output.get_node()))
-        {
-            auto captured_output = output.get_node()->input(0).get_source_output();
-            return output.get_node()->write_description(out, 0)
-                   << "(" << captured_output.get_node()->get_name() << "["
-                   << captured_output.get_index() << "]):" << output.get_element_type()
-                   << output.get_partial_shape();
-        }
-        else
-        {
-            return output.get_node()->write_description(out, 0)
-                   << "[" << output.get_index() << "]:" << output.get_element_type()
-                   << output.get_partial_shape();
-        }
+        return output.get_node()->write_description(out, 0)
+               << ".O(" << output.get_index() << "):" << output.get_element_type()
+               << output.get_partial_shape();
     }
 }

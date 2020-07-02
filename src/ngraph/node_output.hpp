@@ -41,7 +41,6 @@ namespace ngraph
     class NGRAPH_API Output<Node>
     {
         friend class Node;
-        void eliminate_goe() NGRAPH_DEPRECATED("Remove when GetOrderedOutput is removed");
 
     public:
         /// \brief Constructs a Output.
@@ -123,8 +122,6 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<const Node>
     {
-        void eliminate_goe();
-
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.

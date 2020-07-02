@@ -153,35 +153,15 @@ namespace ngraph
     bool Input<const Node>::operator>=(const Input& other) const { return !(*this < other); }
     std::ostream& operator<<(std::ostream& out, const Input<Node>& input)
     {
-        if (is_type<op::GetOutputElement>(input.get_node()))
-        {
-            return input.get_node()->write_description(out, 0)
-                   << "(" << input.get_source_output().get_node()->get_name() << "["
-                   << input.get_source_output().get_index() << "]):" << input.get_element_type()
-                   << input.get_partial_shape();
-        }
-        else
-        {
-            return input.get_node()->write_description(out, 0)
-                   << ".input(" << input.get_index() << "):" << input.get_element_type()
-                   << input.get_partial_shape();
-        }
+        // Convert Output<Node> to Output<const Node> so we only have one operator<< implementation
+        return out << Input<const Node>(static_cast<const Node*>(input.get_node()),
+                                        input.get_index());
     }
 
     std::ostream& operator<<(std::ostream& out, const Input<const Node>& input)
     {
-        if (is_type<op::GetOutputElement>(input.get_node()))
-        {
-            return input.get_node()->write_description(out, 0)
-                   << "(" << input.get_source_output().get_node()->get_name() << "["
-                   << input.get_source_output().get_index() << "]):" << input.get_element_type()
-                   << input.get_partial_shape();
-        }
-        else
-        {
-            return input.get_node()->write_description(out, 0)
-                   << ".input(" << input.get_index() << "):" << input.get_element_type()
-                   << input.get_partial_shape();
-        }
+        return input.get_node()->write_description(out, 0)
+               << ".I(" << input.get_index() << "):" << input.get_element_type()
+               << input.get_partial_shape();
     }
 }
