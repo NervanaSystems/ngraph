@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include <memory>
-#include <signal.h>
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>
@@ -24,10 +23,8 @@
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
