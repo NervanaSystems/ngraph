@@ -55,8 +55,8 @@ namespace ngraph
                 };
 
                 OutputVector insert_new_reshape_after(const OutputVector& parents,
-                                                    const AxisVector& axis_vector,
-                                                    const Shape& out_shape);
+                                                      const AxisVector& axis_vector,
+                                                      const Shape& out_shape);
             }
         }
     }

@@ -15,7 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/pattern/op/any_output.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/pattern/matcher.hpp"
 
 using namespace std;

@@ -47,9 +47,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "op/rnn.hpp"
 
-#undef NGRAPH_DEBUG
-#define NGRAPH_DEBUG NGRAPH_INFO
-
 #define RETURN_IF_FALSE(cond, message)                                                             \
     if (!(cond))                                                                                   \
     {                                                                                              \
@@ -106,7 +103,6 @@ static std::shared_ptr<Node> compute_lstm_params(const Output<Node>& w_x,
                                                  const Output<Node>& b_x,
                                                  const Output<Node>& b_h)
 {
-    NGRAPH_INFO;
     // check if concat of params exists already
     // if so, use it
     for (auto& node : w_x.get_users())
@@ -128,7 +124,6 @@ static std::shared_ptr<Node> compute_lstm_params(const Output<Node>& w_x,
             param, get_default_order(shape), Shape{shape_size(shape)}));
     }
     auto rc = std::make_shared<op::Concat>(flat_params, 0);
-    NGRAPH_INFO;
     return rc;
 }
 
@@ -183,190 +178,155 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     // auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
     // Define a call back that needs to called once the DFG matches the pattern
-    auto callback = [this,
-                     ct_label,
-                     input_xt,
-                     weights_i2h,
-                     hidden_ht,
-                     weights_h2h,
-                     bias_i2h,
-                     bias_h2h,
-                     ct_1](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In construct_fprop_lstm callback against "
-                     << m.get_match_root()->get_name();
+    auto callback =
+        [this, ct_label, input_xt, weights_i2h, hidden_ht, weights_h2h, bias_i2h, bias_h2h, ct_1](
+            pattern::Matcher& m) {
+            NGRAPH_DEBUG << "In construct_fprop_lstm callback against "
+                         << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_value_map();
+            auto pattern_map = m.get_pattern_value_map();
 
-        if (m.get_match_value().get_element_type() != element::f32)
-        {
-            NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
-                         << " type is not float!";
-            return false;
-        }
-        NGRAPH_INFO;
-
-        auto input_xt_rank = input_xt->get_output_shape(0).size();
-        auto hidden_ht_rank = hidden_ht->get_output_shape(0).size();
-        auto weights_i2h_rank = weights_i2h->get_output_shape(0).size();
-        auto weights_h2h_rank = weights_h2h->get_output_shape(0).size();
-        if (input_xt_rank != 2 || hidden_ht_rank != 2 || weights_i2h_rank != 2 ||
-            weights_h2h_rank != 2)
-        {
-            return false;
-        }
-        NGRAPH_INFO;
-
-        RETURN_IF_FALSE(bias_i2h->get_output_shape(0).size() == 1 &&
-                            bias_h2h->get_output_shape(0).size() == 1,
-                        "Bias should have rank of 1 for Rnn op");
-
-        // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need to
-        // capture this reliably in the RNN fusion.
-        std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
-        bool intermediate_lstm = false;
-        if (is_type<op::gpu::Rnn>(pattern_map[ct_1].get_node()))
-        {
-            intermediate_lstm = true;
-        }
-        NGRAPH_INFO;
-        is_type<op::Broadcast>(pattern_map[hidden_ht].get_node());
-        NGRAPH_INFO << pattern_map[hidden_ht];
-        NGRAPH_INFO << pattern_map[hidden_ht].get_node();
-        NGRAPH_INFO << pattern_map[hidden_ht].get_node()->get_argument(0);
-        is_type<op::Constant>(pattern_map[hidden_ht].get_node()->get_argument(0));
-        NGRAPH_INFO;
-        is_type<op::Broadcast>(pattern_map[input_xt].get_node());
-        NGRAPH_INFO;
-         is_type<op::Constant>(pattern_map[input_xt].get_node()->get_argument(0));
-        NGRAPH_INFO;
-        NGRAPH_INFO;
-        // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
-        // to the input data tensor, or the hidden (recurrent) data tensor
-        if (!intermediate_lstm &&
-            (is_type<op::Broadcast>(pattern_map[hidden_ht].get_node()) &&
-             is_type<op::Constant>(pattern_map[hidden_ht].get_node()->get_argument(0))))
-        // label input_xt is the input data to the first LSTM
-        {
-            NGRAPH_INFO;
-            auto params = compute_lstm_params(pattern_map[weights_i2h],
-                                              pattern_map[weights_h2h],
-                                              pattern_map[bias_i2h],
-                                              pattern_map[bias_h2h]);
-            NGRAPH_INFO;
-            NGRAPH_INFO << pattern_map[input_xt];
-            NGRAPH_INFO << pattern_map[hidden_ht];
-            NGRAPH_INFO << params;
-            NGRAPH_INFO << pattern_map[ct_1];
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
-                                                  pattern_map[hidden_ht],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[input_xt].get_shape()[1],
-                                                  pattern_map[hidden_ht].get_shape()[1],
-                                                  1,
-                                                  1);
-                                                  NGRAPH_INFO;
-        }
-        else if (!intermediate_lstm &&
-                 (is_type<op::Broadcast>(pattern_map[input_xt].get_node()) &&
-                  is_type<op::Constant>(pattern_map[input_xt].get_node()->get_argument(0))))
-        // label hidden_ht is the input data to the first LSTM
-        {
-            NGRAPH_INFO;
-            auto params = compute_lstm_params(pattern_map[weights_h2h],
-                                              pattern_map[weights_i2h],
-                                              pattern_map[bias_h2h],
-                                              pattern_map[bias_i2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
-                                                  pattern_map[input_xt],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[hidden_ht].get_shape()[1],
-                                                  pattern_map[input_xt].get_shape()[1],
-                                                  1,
-                                                  1);
-        }
-        else if (pattern_map[hidden_ht].get_node()->get_arguments().size() &&
-                 pattern_map[ct_1].get_node()->get_argument(0)->get_instance_id() ==
-                     pattern_map[hidden_ht].get_node()->get_argument(0)->get_instance_id())
-        // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
-        // it will be misclassified as input data xt
-        {
-            NGRAPH_INFO;
-            // label input_xt is the output data from the previous LSTM cell
-            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1].get_shape())
-                         << " hidden state shape: "
-                         << join(pattern_map[hidden_ht].get_shape());
-            auto params = compute_lstm_params(pattern_map[weights_i2h],
-                                              pattern_map[weights_h2h],
-                                              pattern_map[bias_i2h],
-                                              pattern_map[bias_h2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
-                                                  pattern_map[hidden_ht],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[input_xt].get_shape()[1],
-                                                  pattern_map[hidden_ht].get_shape()[1],
-                                                  1,
-                                                  1);
-        }
-        else
-        {
-            NGRAPH_INFO;
-            // label hidden_ht is the output data from the previous LSTM cell
-            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1].get_shape())
-                         << " hidden state shape: "
-                         << join(pattern_map[input_xt].get_shape());
-            auto params = compute_lstm_params(pattern_map[weights_h2h],
-                                              pattern_map[weights_i2h],
-                                              pattern_map[bias_h2h],
-                                              pattern_map[bias_i2h]);
-            lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
-                                                  pattern_map[input_xt],
-                                                  params,
-                                                  pattern_map[ct_1],
-                                                  1,
-                                                  4,
-                                                  1,
-                                                  pattern_map[hidden_ht].get_shape()[1],
-                                                  pattern_map[input_xt].get_shape()[1],
-                                                  1,
-                                                  1);
-        }
-
-NGRAPH_INFO;
-        graphviz(lstm->get_name()+".0.pdf");
-        // Now identify the nodes which consume the outputs of LSTM nodes
-        // and replace them accordingly
-        // find the user's for {ht|ct} and replace them with lstm_goe_1
-        for (auto node : pattern_map[ct_label].get_users())
-        {
-            NGRAPH_DEBUG << "node_name: " << node->get_name();
-            for (size_t i = 0; i < node->get_input_size(); i++)
+            if (m.get_match_value().get_element_type() != element::f32)
             {
-                if (node->input_value(i) == pattern_map[ct_label])
+                NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
+                             << " type is not float!";
+                return false;
+            }
+
+            auto input_xt_rank = input_xt->get_output_shape(0).size();
+            auto hidden_ht_rank = hidden_ht->get_output_shape(0).size();
+            auto weights_i2h_rank = weights_i2h->get_output_shape(0).size();
+            auto weights_h2h_rank = weights_h2h->get_output_shape(0).size();
+            if (input_xt_rank != 2 || hidden_ht_rank != 2 || weights_i2h_rank != 2 ||
+                weights_h2h_rank != 2)
+            {
+                return false;
+            }
+
+            RETURN_IF_FALSE(bias_i2h->get_output_shape(0).size() == 1 &&
+                                bias_h2h->get_output_shape(0).size() == 1,
+                            "Bias should have rank of 1 for Rnn op");
+
+            // Determine which is ht_1 and xt. but if both xt and ht_1 have the same shape we need
+            // to capture this reliably in the RNN fusion.
+            std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
+            bool intermediate_lstm = false;
+            if (is_type<op::gpu::Rnn>(pattern_map[ct_1].get_node()))
+            {
+                intermediate_lstm = true;
+            }
+            // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
+            // to the input data tensor, or the hidden (recurrent) data tensor
+            if (!intermediate_lstm &&
+                (is_type<op::Broadcast>(pattern_map[hidden_ht].get_node()) &&
+                 is_type<op::Constant>(pattern_map[hidden_ht].get_node()->get_argument(0))))
+            // label input_xt is the input data to the first LSTM
+            {
+                auto params = compute_lstm_params(pattern_map[weights_i2h],
+                                                  pattern_map[weights_h2h],
+                                                  pattern_map[bias_i2h],
+                                                  pattern_map[bias_h2h]);
+                lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
+                                                      pattern_map[hidden_ht],
+                                                      params,
+                                                      pattern_map[ct_1],
+                                                      1,
+                                                      4,
+                                                      1,
+                                                      pattern_map[input_xt].get_shape()[1],
+                                                      pattern_map[hidden_ht].get_shape()[1],
+                                                      1,
+                                                      1);
+            }
+            else if (!intermediate_lstm &&
+                     (is_type<op::Broadcast>(pattern_map[input_xt].get_node()) &&
+                      is_type<op::Constant>(pattern_map[input_xt].get_node()->get_argument(0))))
+            // label hidden_ht is the input data to the first LSTM
+            {
+                auto params = compute_lstm_params(pattern_map[weights_h2h],
+                                                  pattern_map[weights_i2h],
+                                                  pattern_map[bias_h2h],
+                                                  pattern_map[bias_i2h]);
+                lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
+                                                      pattern_map[input_xt],
+                                                      params,
+                                                      pattern_map[ct_1],
+                                                      1,
+                                                      4,
+                                                      1,
+                                                      pattern_map[hidden_ht].get_shape()[1],
+                                                      pattern_map[input_xt].get_shape()[1],
+                                                      1,
+                                                      1);
+            }
+            else if (pattern_map[hidden_ht].get_node()->get_arguments().size() &&
+                     pattern_map[ct_1].get_node()->get_argument(0)->get_instance_id() ==
+                         pattern_map[hidden_ht].get_node()->get_argument(0)->get_instance_id())
+            // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
+            // it will be misclassified as input data xt
+            {
+                // label input_xt is the output data from the previous LSTM cell
+                NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1].get_shape())
+                             << " hidden state shape: " << join(pattern_map[hidden_ht].get_shape());
+                auto params = compute_lstm_params(pattern_map[weights_i2h],
+                                                  pattern_map[weights_h2h],
+                                                  pattern_map[bias_i2h],
+                                                  pattern_map[bias_h2h]);
+                lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
+                                                      pattern_map[hidden_ht],
+                                                      params,
+                                                      pattern_map[ct_1],
+                                                      1,
+                                                      4,
+                                                      1,
+                                                      pattern_map[input_xt].get_shape()[1],
+                                                      pattern_map[hidden_ht].get_shape()[1],
+                                                      1,
+                                                      1);
+            }
+            else
+            {
+                // label hidden_ht is the output data from the previous LSTM cell
+                NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1].get_shape())
+                             << " hidden state shape: " << join(pattern_map[input_xt].get_shape());
+                auto params = compute_lstm_params(pattern_map[weights_h2h],
+                                                  pattern_map[weights_i2h],
+                                                  pattern_map[bias_h2h],
+                                                  pattern_map[bias_i2h]);
+                lstm = std::make_shared<op::gpu::Rnn>(pattern_map[hidden_ht],
+                                                      pattern_map[input_xt],
+                                                      params,
+                                                      pattern_map[ct_1],
+                                                      1,
+                                                      4,
+                                                      1,
+                                                      pattern_map[hidden_ht].get_shape()[1],
+                                                      pattern_map[input_xt].get_shape()[1],
+                                                      1,
+                                                      1);
+            }
+
+            // Now identify the nodes which consume the outputs of LSTM nodes
+            // and replace them accordingly
+            // find the user's for {ht|ct} and replace them with lstm_goe_1
+            for (auto node : pattern_map[ct_label].get_users())
+            {
+                NGRAPH_DEBUG << "node_name: " << node->get_name();
+                for (size_t i = 0; i < node->get_input_size(); i++)
                 {
-                    node->input(i).replace_source_output(lstm->output(2));
+                    if (node->input_value(i) == pattern_map[ct_label])
+                    {
+                        node->input(i).replace_source_output(lstm->output(2));
+                    }
                 }
             }
-        }
-        NGRAPH_INFO;
 
-        // find the user's for {ht} and replace them with lstm_goe_0
-        m.get_match_value().replace(lstm->output(0));
-        graphviz(lstm->get_name()+".1.pdf");
-        NGRAPH_DEBUG << "End construct_fprop_lstm callback against " << m.get_match_root()->get_name();
-        return true;
-    };
+            // find the user's for {ht} and replace them with lstm_goe_0
+            m.get_match_value().replace(lstm->output(0));
+            NGRAPH_DEBUG << "End construct_fprop_lstm callback against "
+                         << m.get_match_root()->get_name();
+            return true;
+        };
     auto m = std::make_shared<pattern::Matcher>(ht);
     this->add_matcher(m, callback);
 }
@@ -427,7 +387,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
 
     auto callback = [this, lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
                         pattern::RecurrentMatcher& m) {
-        NGRAPH_DEBUG << "In construct_rnn_lstm_fprop callback against " << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "In construct_rnn_lstm_fprop callback against "
+                     << m.get_match_root()->get_name();
 
         auto ht_1_label = m.get_bound_values_for_pattern(ht_1);
         auto params_bound = m.get_bound_values_for_pattern(params_label);
@@ -442,9 +403,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         // since we dont have metadata to differentiate between xt and ht_1
         // we will be using the broadcasted constant initilization of the first LSTM cell
         // in the RNN layer to identify ht_1
-        if (std::dynamic_pointer_cast<op::Broadcast>(
-                xt_node_array[xt_node_array.size() - 1].get_node_shared_ptr()) &&
-            std::dynamic_pointer_cast<op::Constant>(
+        if (is_type<op::Broadcast>(xt_node_array[xt_node_array.size() - 1].get_node()) &&
+            is_type<op::Constant>(
                 xt_node_array[xt_node_array.size() - 1].get_node()->get_argument(0)))
         // here xt is determined to be the hidden (recurrent) input data and so ht is the
         // feedforward input
@@ -457,11 +417,9 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             std::vector<std::shared_ptr<pattern::op::Label>> src_iter_labels{xt};
             src_iter = compute_rnn_args(src_iter_labels, m);
         }
-        else if (std::dynamic_pointer_cast<op::Broadcast>(
-                     hidden_ht_array[hidden_ht_array.size() - 1].get_node_shared_ptr()) &&
-                 std::dynamic_pointer_cast<op::Constant>(hidden_ht_array[hidden_ht_array.size() - 1]
-                                                             .get_node_shared_ptr()
-                                                             ->get_argument(0)))
+        else if (is_type<op::Broadcast>(hidden_ht_array[hidden_ht_array.size() - 1].get_node()) &&
+                 is_type<op::Constant>(
+                     hidden_ht_array[hidden_ht_array.size() - 1].get_node()->get_argument(0)))
         // here ht is determined to be the hidden (recurrent) input data and so xt is the
         // feedforward input
         {
@@ -486,6 +444,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto state_iter = compute_rnn_args(state_iter_labels, m);
 
         auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
+        NGRAPH_INFO << num_of_lstm_matched;
         if (num_of_lstm_matched <= 1)
         {
             return false;
@@ -538,9 +497,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                   direction,
                                                   num_fused_rnn_layers);
 
-        NGRAPH_INFO << "********* " << rnn->get_name();
-        graphviz(rnn->get_name()+".0.pdf");
-
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
         auto rnn_ht_out = rnn->output(0);
         auto layer_rnn_ht = rnn->output(1);
@@ -589,12 +545,10 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t index = 0; index < lstm_nodes.size(); index++)
         {
             // now get the GOE0 which is the first output of lstm (ht)
-            NGRAPH_INFO << *lstm_nodes[index];
             for (Input<Node> goes : lstm_nodes[index]->output(0).get_target_inputs())
             {
-
                 auto goe_node = dynamic_cast<op::GetOutputElement*>(goes.get_node());
-                // first output node of lstm
+                // // first output node of lstm
                 // if (goe_node->get_n() == 0)
                 // {
                 //     goe_0 = goes.get_node()->shared_from_this();
@@ -606,7 +560,8 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                 //         {
                 //             lstm_goe0_user.insert(goe0_user);
                 //             map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
-                //             NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
+                //             NGRAPH_DEBUG << "ht_slice: " <<
+                //             ht_slice_per_timestep[index]->get_name()
                 //                          << " goe0_user " << goe0_user->get_name() << " ";
                 //         }
                 //     }
@@ -635,8 +590,9 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-        graphviz(rnn->get_name()+".1.pdf");
-        NGRAPH_DEBUG << "End construct_rnn_lstm_fprop callback against " << m.get_match_root()->get_name();
+            NGRAPH_INFO << "*****";
+        NGRAPH_DEBUG << "End construct_rnn_lstm_fprop callback against "
+                     << m.get_match_root()->get_name();
         return true;
     };
 
@@ -732,7 +688,8 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
 
     auto callback = [src_layer_label, src_iter_label, params_label, state_iter_label, rnn_ht_label](
                         pattern::RecurrentMatcher& m) {
-        NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against " << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "In construct_multi_layer_rnn_fusion_fprop callback against "
+                     << m.get_match_root()->get_name();
         if (m.get_number_of_recurrent_matches() <= 1)
         {
             return false;
@@ -768,8 +725,8 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
         std::vector<std::shared_ptr<op::gpu::Rnn>> rnn_nodes;
         for (auto& rnn_goe_input : m.get_bound_values_for_pattern(rnn_ht_label))
         {
-            auto rnn_op = std::dynamic_pointer_cast<op::gpu::Rnn>(
-                rnn_goe_input.get_node_shared_ptr());
+            auto rnn_op =
+                std::dynamic_pointer_cast<op::gpu::Rnn>(rnn_goe_input.get_node_shared_ptr());
             if (rnn_op)
             {
                 rnn_nodes.push_back(rnn_op);
@@ -868,7 +825,8 @@ void ngraph::runtime::gpu::pass::MultiLayerRNNFusion::construct_multi_layer_rnn_
             }
         }
 
-        NGRAPH_DEBUG << "End construct_multi_layer_rnn_fusion_fprop callback against " << m.get_match_root()->get_name();
+        NGRAPH_DEBUG << "End construct_multi_layer_rnn_fusion_fprop callback against "
+                     << m.get_match_root()->get_name();
         return true;
     };
 

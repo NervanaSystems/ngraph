@@ -61,11 +61,6 @@ op::gpu::Rnn::Rnn(const Output<Node>& src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
-NGRAPH_INFO << src_layer;
-NGRAPH_INFO << src_iter;
-NGRAPH_INFO << params;
-NGRAPH_INFO << state_iter;
-
     NGRAPH_CHECK(src_layer.get_shape().size() == 2, "src_layer doesnt have a rank 2");
 
     m_batch_size = static_cast<int>(src_layer.get_shape()[0] / num_timesteps);

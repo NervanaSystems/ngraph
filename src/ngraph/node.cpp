@@ -446,7 +446,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return input_value(index).get_node_shared_ptr();
+    return input_value(index).as_single_output_node();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const
@@ -732,8 +732,14 @@ NodeVector Node::get_users(bool check_is_used) const
     NodeVector result;
     for (auto output : outputs())
     {
-        auto tmp = output.get_users(check_is_used);
-        result.insert(result.end(), tmp.begin(), tmp.end());
+        for (auto input : output.get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
     }
     return result;
 }

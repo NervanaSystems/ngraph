@@ -125,7 +125,7 @@ namespace ngraph
                                                           topk->get_compute_max());
                         ngraph::replace_node(topk, new_topk);
                         // Replace old goe with new goe based on new topk
-                        for (size_t i=0; i<new_topk->outputs().size(); i++)
+                        for (size_t i = 0; i < new_topk->outputs().size(); i++)
                         {
                             topk->output(i).replace(new_topk->output(i));
                         }
@@ -142,8 +142,8 @@ namespace ngraph
                     }
                 }
                 OutputVector insert_new_reshape_after(const OutputVector& parents,
-                                                    const AxisVector& axis_vector,
-                                                    const Shape& out_shape)
+                                                      const AxisVector& axis_vector,
+                                                      const Shape& out_shape)
                 {
                     OutputVector reshapes;
                     for (auto& parent : parents)
