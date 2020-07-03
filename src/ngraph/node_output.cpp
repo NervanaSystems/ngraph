@@ -21,28 +21,16 @@
 
 namespace ngraph
 {
-    namespace
-    {
-        static bool remove_goe = true;
-    }
-    void set_remove_goe(bool value)
-    {
-        NGRAPH_DEBUG << "Remove GOE set: " << value;
-        remove_goe = value;
-    }
-    bool get_remove_goe() { return remove_goe; }
     Output<Node>::Output(Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     Output<Node>::Output(const std::shared_ptr<Node>& node, size_t index)
         : m_node(node)
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     void Output<Node>::reset()
@@ -121,29 +109,17 @@ namespace ngraph
     }
     bool Output<Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
-    void Output<Node>::eliminate_goe()
-    {
-        if (remove_goe)
-        {
-            while (is_type<op::GetOutputElement>(m_node))
-            {
-                *this = m_node->input_value(0);
-            }
-        }
-    }
 
     Output<const Node>::Output(const Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     Output<const Node>::Output(const std::shared_ptr<const Node>& node, size_t index)
         : m_node(node)
         , m_index(index)
     {
-        eliminate_goe();
     }
 
     void Output<const Node>::reset()
@@ -205,18 +181,6 @@ namespace ngraph
     }
     bool Output<const Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
-    void Output<const Node>::eliminate_goe()
-    {
-        if (remove_goe)
-        {
-            while (is_type<const op::GetOutputElement>(m_node))
-            {
-                auto value = m_node->input_value(0);
-                m_node = value.get_node_shared_ptr();
-                m_index = value.get_index();
-            }
-        }
-    }
 
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
