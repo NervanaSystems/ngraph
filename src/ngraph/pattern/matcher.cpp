@@ -41,6 +41,28 @@ Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
                                         : make_shared<op::AnyOutput>(node)->output(0);
 }
 
+pattern::Matcher::Matcher() {}
+
+pattern::Matcher::Matcher(Output<Node>& pattern_node)
+    : m_pattern_node{pattern_node}
+{
+}
+
+pattern::Matcher::Matcher(Output<Node>& pattern_node, const std::string& name)
+    : m_pattern_node(pattern_node)
+    , m_name{name}
+{
+}
+
+pattern::Matcher::Matcher(const Output<Node>& pattern_node,
+                          const std::string& name,
+                          bool strict_mode)
+    : m_pattern_node(pattern_node)
+    , m_name(name)
+    , m_strict_mode(strict_mode)
+{
+}
+
 pattern::Matcher::Matcher(shared_ptr<Node> pattern_node)
     : m_pattern_node(make_node_output(pattern_node))
 {
@@ -163,7 +185,15 @@ bool pattern::Matcher::match_value(const Output<Node>& pattern_value,
             return false;
         }
     }
-    return pattern_node->match_value(this, pattern_value, graph_value);
+    bool rc = pattern_node->match_value(this, pattern_value, graph_value);
+    // if (!rc && is_type<ngraph::op::GetOutputElement>(graph_node))
+    // {
+    //     // If the graph_node is a GetOutputElement and the match failed then try the
+    //     // match against the GetOutputElement's input_value. This will recursively skip
+    //     // GetOutputElements in the graph so the patterns do not need to contain them.
+    //     rc = pattern_node->match_value(this, pattern_value, graph_node->input_value(0));
+    // }
+    return rc;
 }
 
 bool pattern::Matcher::match_permutation(const OutputVector& pattern_args, const OutputVector& args)
@@ -229,7 +259,14 @@ bool pattern::Matcher::match(const Output<Node>& graph_value)
 
 bool pattern::Matcher::match(shared_ptr<Node> node)
 {
-    return match(node->output(0));
+    for (Output<Node> output : node->outputs())
+    {
+        if (this->match(output))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool pattern::Matcher::match(const Output<Node>& graph_value,
@@ -267,12 +304,52 @@ set<shared_ptr<Node>>
     return result;
 }
 
+pattern::RecurrentMatcher::RecurrentMatcher(
+    const Output<Node>& initial_pattern,
+    const Output<Node>& pattern,
+    const std::shared_ptr<Node>& rpattern,
+    const std::set<std::shared_ptr<Node>>& correlated_patterns)
+    : m_initial_pattern(initial_pattern)
+    , m_pattern(pattern)
+    , m_recurrent_pattern(rpattern)
+    , m_correlated_patterns(correlated_patterns)
+{
+}
+
+pattern::RecurrentMatcher::RecurrentMatcher(
+    const Output<Node>& pattern,
+    const std::shared_ptr<Node>& rpattern,
+    const std::set<std::shared_ptr<Node>>& correlated_patterns)
+    : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
+{
+}
+
+pattern::RecurrentMatcher::RecurrentMatcher(
+    const Output<Node>& pattern,
+    const std::shared_ptr<Node>& rpattern,
+    const std::set<std::shared_ptr<op::Label>>& correlated_patterns)
+    : RecurrentMatcher(pattern, pattern, rpattern, correlated_patterns)
+{
+}
+
 pattern::RecurrentMatcher::RecurrentMatcher(const Output<Node>& initial_pattern,
                                             const Output<Node>& pattern,
                                             const shared_ptr<Node>& rpattern,
                                             const set<shared_ptr<op::Label>>& correlated_patterns)
     : RecurrentMatcher(initial_pattern, pattern, rpattern, as_node_set(correlated_patterns))
 {
+}
+
+bool pattern::RecurrentMatcher::match(std::shared_ptr<Node> graph)
+{
+    for (Output<Node> output : graph->outputs())
+    {
+        if (match(output))
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool pattern::RecurrentMatcher::match(Output<Node> graph)
@@ -315,4 +392,27 @@ bool pattern::RecurrentMatcher::match(Output<Node> graph)
     }
 
     return matched;
+}
+
+/// \brief Returns a vector of bound values for a given label (used in a pattern
+/// describing an individual cell
+OutputVector pattern::RecurrentMatcher::get_bound_values_for_pattern(
+    const std::shared_ptr<Node>& pattern) const
+{
+    if (m_matches.count(pattern) == 0)
+    {
+        throw ngraph_error("No bound nodes for a given label");
+    }
+
+    return m_matches.at(pattern);
+}
+
+size_t pattern::RecurrentMatcher::get_number_of_recurrent_matches() const
+{
+    if (m_matches.size() == 0)
+    {
+        return 0;
+    }
+
+    return (*m_matches.begin()).second.size();
 }

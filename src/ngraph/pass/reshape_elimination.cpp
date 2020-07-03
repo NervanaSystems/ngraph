@@ -225,7 +225,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
                      << reshape_label->get_argument(0)->get_name();
-        auto reshape_node_vector = m.get_bound_nodes_for_pattern(reshape_label);
+        auto reshape_node_vector = m.get_bound_values_for_pattern(reshape_label);
 
         // The bound node vector is in reverse order. It is convenient to have the
         // bound node vector in the correct order

@@ -178,7 +178,7 @@ bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
         }
     }
 
-    if (is_type<op::v0::BatchNormInference>(op))
+    if (is_type<op::v0::BatchNormInference>(&op))
     {
         const ngraph::op::BatchNormInference* bn =
             static_cast<const ngraph::op::BatchNormInference*>(&op);
@@ -187,7 +187,7 @@ bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
             return false;
         }
     }
-    else if (is_type<op::v0::BatchNormTraining>(op))
+    else if (is_type<op::v0::BatchNormTraining>(&op))
     {
         const ngraph::op::BatchNormTraining* bn =
             static_cast<const ngraph::op::BatchNormTraining*>(&op);
