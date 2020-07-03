@@ -29,6 +29,7 @@ op::GetOutputElement::GetOutputElement(const shared_ptr<Node>& arg, size_t n)
     : Op({arg->output(n)})
     , m_n{n}
 {
+    NGRAPH_INFO << "GetOutputElement ctor *******************************************";
     constructor_validate_and_infer_types();
 }
 

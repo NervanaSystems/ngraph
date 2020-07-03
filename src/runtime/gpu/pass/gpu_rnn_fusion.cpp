@@ -101,14 +101,15 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
     this->add_matcher(m, callback);
 }
 
-static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_x,
-                                                 const std::shared_ptr<Node>& w_h,
-                                                 const std::shared_ptr<Node>& b_x,
-                                                 const std::shared_ptr<Node>& b_h)
+static std::shared_ptr<Node> compute_lstm_params(const Output<Node>& w_x,
+                                                 const Output<Node>& w_h,
+                                                 const Output<Node>& b_x,
+                                                 const Output<Node>& b_h)
 {
+    NGRAPH_INFO;
     // check if concat of params exists already
     // if so, use it
-    for (auto& node : w_x->get_users())
+    for (auto& node : w_x.get_users())
     {
         for (auto& possible_concat : node->get_users())
         {
@@ -120,13 +121,15 @@ static std::shared_ptr<Node> compute_lstm_params(const std::shared_ptr<Node>& w_
     }
 
     OutputVector flat_params;
-    for (auto& param : NodeVector{w_x, w_h, b_x, b_h})
+    for (auto& param : OutputVector{w_x, w_h, b_x, b_h})
     {
-        auto shape = param->get_output_shape(0);
+        auto shape = param.get_shape();
         flat_params.push_back(std::make_shared<op::Reshape>(
             param, get_default_order(shape), Shape{shape_size(shape)}));
     }
-    return std::make_shared<op::Concat>(flat_params, 0);
+    auto rc = std::make_shared<op::Concat>(flat_params, 0);
+    NGRAPH_INFO;
+    return rc;
 }
 
 void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
@@ -192,7 +195,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         NGRAPH_DEBUG << "In construct_fprop_lstm callback against "
                      << m.get_match_root()->get_name();
 
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
 
         if (m.get_match_value().get_element_type() != element::f32)
         {
@@ -200,6 +203,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                          << " type is not float!";
             return false;
         }
+        NGRAPH_INFO;
 
         auto input_xt_rank = input_xt->get_output_shape(0).size();
         auto hidden_ht_rank = hidden_ht->get_output_shape(0).size();
@@ -210,6 +214,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         {
             return false;
         }
+        NGRAPH_INFO;
 
         RETURN_IF_FALSE(bias_i2h->get_output_shape(0).size() == 1 &&
                             bias_h2h->get_output_shape(0).size() == 1,
@@ -219,22 +224,39 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
         // capture this reliably in the RNN fusion.
         std::shared_ptr<op::gpu::Rnn> lstm = nullptr;
         bool intermediate_lstm = false;
-        NGRAPH_INFO << *pattern_map[ct_1];
-        // if (std::dynamic_pointer_cast<op::GetOutputElement>(pattern_map[ct_1]))
-        // {
-        //     intermediate_lstm = true;
-        // }
+        if (is_type<op::gpu::Rnn>(pattern_map[ct_1].get_node()))
+        {
+            intermediate_lstm = true;
+        }
+        NGRAPH_INFO;
+        is_type<op::Broadcast>(pattern_map[hidden_ht].get_node());
+        NGRAPH_INFO << pattern_map[hidden_ht];
+        NGRAPH_INFO << pattern_map[hidden_ht].get_node();
+        NGRAPH_INFO << pattern_map[hidden_ht].get_node()->get_argument(0);
+        is_type<op::Constant>(pattern_map[hidden_ht].get_node()->get_argument(0));
+        NGRAPH_INFO;
+        is_type<op::Broadcast>(pattern_map[input_xt].get_node());
+        NGRAPH_INFO;
+         is_type<op::Constant>(pattern_map[input_xt].get_node()->get_argument(0));
+        NGRAPH_INFO;
+        NGRAPH_INFO;
         // if the matched LSTM is the first cell we need to check if symbol input_xt corresponds
         // to the input data tensor, or the hidden (recurrent) data tensor
         if (!intermediate_lstm &&
-            (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[hidden_ht]) &&
-             std::dynamic_pointer_cast<op::Constant>(pattern_map[hidden_ht]->get_argument(0))))
+            (is_type<op::Broadcast>(pattern_map[hidden_ht].get_node()) &&
+             is_type<op::Constant>(pattern_map[hidden_ht].get_node()->get_argument(0))))
         // label input_xt is the input data to the first LSTM
         {
+            NGRAPH_INFO;
             auto params = compute_lstm_params(pattern_map[weights_i2h],
                                               pattern_map[weights_h2h],
                                               pattern_map[bias_i2h],
                                               pattern_map[bias_h2h]);
+            NGRAPH_INFO;
+            NGRAPH_INFO << pattern_map[input_xt];
+            NGRAPH_INFO << pattern_map[hidden_ht];
+            NGRAPH_INFO << params;
+            NGRAPH_INFO << pattern_map[ct_1];
             lstm = std::make_shared<op::gpu::Rnn>(pattern_map[input_xt],
                                                   pattern_map[hidden_ht],
                                                   params,
@@ -242,16 +264,18 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[input_xt]->get_output_shape(0)[1],
-                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
+                                                  pattern_map[input_xt].get_shape()[1],
+                                                  pattern_map[hidden_ht].get_shape()[1],
                                                   1,
                                                   1);
+                                                  NGRAPH_INFO;
         }
         else if (!intermediate_lstm &&
-                 (std::dynamic_pointer_cast<op::Broadcast>(pattern_map[input_xt]) &&
-                  std::dynamic_pointer_cast<op::Constant>(pattern_map[input_xt]->get_argument(0))))
+                 (is_type<op::Broadcast>(pattern_map[input_xt].get_node()) &&
+                  is_type<op::Constant>(pattern_map[input_xt].get_node()->get_argument(0))))
         // label hidden_ht is the input data to the first LSTM
         {
+            NGRAPH_INFO;
             auto params = compute_lstm_params(pattern_map[weights_h2h],
                                               pattern_map[weights_i2h],
                                               pattern_map[bias_h2h],
@@ -263,21 +287,22 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
-                                                  pattern_map[input_xt]->get_output_shape(0)[1],
+                                                  pattern_map[hidden_ht].get_shape()[1],
+                                                  pattern_map[input_xt].get_shape()[1],
                                                   1,
                                                   1);
         }
-        else if (pattern_map[hidden_ht]->get_arguments().size() &&
-                 pattern_map[ct_1]->get_argument(0)->get_instance_id() ==
-                     pattern_map[hidden_ht]->get_argument(0)->get_instance_id())
+        else if (pattern_map[hidden_ht].get_node()->get_arguments().size() &&
+                 pattern_map[ct_1].get_node()->get_argument(0)->get_instance_id() ==
+                     pattern_map[hidden_ht].get_node()->get_argument(0)->get_instance_id())
         // this still has a bug vector: if the hidden input ht is a non-broadcasted constant
         // it will be misclassified as input data xt
         {
+            NGRAPH_INFO;
             // label input_xt is the output data from the previous LSTM cell
-            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1]->get_output_shape(0))
+            NGRAPH_DEBUG << "ct_shape : " << join(pattern_map[ct_1].get_shape())
                          << " hidden state shape: "
-                         << join(pattern_map[hidden_ht]->get_output_shape(0));
+                         << join(pattern_map[hidden_ht].get_shape());
             auto params = compute_lstm_params(pattern_map[weights_i2h],
                                               pattern_map[weights_h2h],
                                               pattern_map[bias_i2h],
@@ -289,17 +314,18 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[input_xt]->get_output_shape(0)[1],
-                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
+                                                  pattern_map[input_xt].get_shape()[1],
+                                                  pattern_map[hidden_ht].get_shape()[1],
                                                   1,
                                                   1);
         }
         else
         {
+            NGRAPH_INFO;
             // label hidden_ht is the output data from the previous LSTM cell
-            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1]->get_output_shape(0))
+            NGRAPH_DEBUG << "ct_shape: " << join(pattern_map[ct_1].get_shape())
                          << " hidden state shape: "
-                         << join(pattern_map[input_xt]->get_output_shape(0));
+                         << join(pattern_map[input_xt].get_shape());
             auto params = compute_lstm_params(pattern_map[weights_h2h],
                                               pattern_map[weights_i2h],
                                               pattern_map[bias_h2h],
@@ -311,27 +337,29 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
                                                   1,
                                                   4,
                                                   1,
-                                                  pattern_map[hidden_ht]->get_output_shape(0)[1],
-                                                  pattern_map[input_xt]->get_output_shape(0)[1],
+                                                  pattern_map[hidden_ht].get_shape()[1],
+                                                  pattern_map[input_xt].get_shape()[1],
                                                   1,
                                                   1);
         }
 
+NGRAPH_INFO;
         graphviz(lstm->get_name()+".0.pdf");
         // Now identify the nodes which consume the outputs of LSTM nodes
         // and replace them accordingly
         // find the user's for {ht|ct} and replace them with lstm_goe_1
-        for (auto node : pattern_map[ct_label]->get_users())
+        for (auto node : pattern_map[ct_label].get_users())
         {
             NGRAPH_DEBUG << "node_name: " << node->get_name();
             for (size_t i = 0; i < node->get_input_size(); i++)
             {
-                if (node->get_argument(i) == pattern_map[ct_label])
+                if (node->input_value(i) == pattern_map[ct_label])
                 {
                     node->input(i).replace_source_output(lstm->output(2));
                 }
             }
         }
+        NGRAPH_INFO;
 
         // find the user's for {ht} and replace them with lstm_goe_0
         m.get_match_value().replace(lstm->output(0));
@@ -397,7 +425,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_node_label =
         std::make_shared<pattern::op::Label>(lstm->output(0), nullptr, OutputVector{lstm});
 
-    auto callback = [lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
+    auto callback = [this, lstm_node_label, xt, ht_1, params_label, rpattern_ct_1](
                         pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In construct_rnn_lstm_fprop callback against " << m.get_match_root()->get_name();
 
@@ -510,10 +538,13 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
                                                   direction,
                                                   num_fused_rnn_layers);
 
+        NGRAPH_INFO << "********* " << rnn->get_name();
+        graphviz(rnn->get_name()+".0.pdf");
+
         std::vector<std::shared_ptr<op::Slice>> ht_slice_per_timestep(num_of_lstm_matched, nullptr);
-        auto rnn_ht_out = std::make_shared<op::GetOutputElement>(rnn, 0);
-        auto layer_rnn_ht = std::make_shared<op::GetOutputElement>(rnn, 1);
-        auto layer_rnn_ct = std::make_shared<op::GetOutputElement>(rnn, 2);
+        auto rnn_ht_out = rnn->output(0);
+        auto layer_rnn_ht = rnn->output(1);
+        auto layer_rnn_ct = rnn->output(2);
 
         // slice the rnn ht's
         size_t start_index = 0;
@@ -558,33 +589,35 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         for (size_t index = 0; index < lstm_nodes.size(); index++)
         {
             // now get the GOE0 which is the first output of lstm (ht)
+            NGRAPH_INFO << *lstm_nodes[index];
             for (Input<Node> goes : lstm_nodes[index]->output(0).get_target_inputs())
             {
+
                 auto goe_node = dynamic_cast<op::GetOutputElement*>(goes.get_node());
                 // first output node of lstm
-                if (goe_node->get_n() == 0)
-                {
-                    goe_0 = goes.get_node()->shared_from_this();
-                    for (auto goe0_user : goe_0->get_users())
-                    {
-                        if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
-                                lstm_nodes.end() &&
-                            ngraph::is_used(goe0_user.get()))
-                        {
-                            lstm_goe0_user.insert(goe0_user);
-                            map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
-                            NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
-                                         << " goe0_user " << goe0_user->get_name() << " ";
-                        }
-                    }
-                }
-                // we need to only check the last LSTM cell Ct user and replace if needed.
-                if ((index == 0) && (goe_node->get_n() == 1))
-                {
-                    // check if the last LSTM cell has any consumers
-                    auto n_time_step_lstm_ct_goe = goes.get_node()->shared_from_this();
-                    ngraph::replace_node(n_time_step_lstm_ct_goe, layer_rnn_ct);
-                }
+                // if (goe_node->get_n() == 0)
+                // {
+                //     goe_0 = goes.get_node()->shared_from_this();
+                //     for (auto goe0_user : goe_0->get_users())
+                //     {
+                //         if (std::find(lstm_nodes.begin(), lstm_nodes.end(), goe0_user) ==
+                //                 lstm_nodes.end() &&
+                //             ngraph::is_used(goe0_user.get()))
+                //         {
+                //             lstm_goe0_user.insert(goe0_user);
+                //             map_goe_to_lstm_slices[goe_0] = ht_slice_per_timestep[index];
+                //             NGRAPH_DEBUG << "ht_slice: " << ht_slice_per_timestep[index]->get_name()
+                //                          << " goe0_user " << goe0_user->get_name() << " ";
+                //         }
+                //     }
+                // }
+                // // we need to only check the last LSTM cell Ct user and replace if needed.
+                // if ((index == 0) && (goe_node->get_n() == 1))
+                // {
+                //     // check if the last LSTM cell has any consumers
+                //     auto n_time_step_lstm_ct_goe = goes.get_node()->shared_from_this();
+                //     ngraph::replace_node(n_time_step_lstm_ct_goe, layer_rnn_ct);
+                // }
             }
         }
 
@@ -602,6 +635,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
+        graphviz(rnn->get_name()+".1.pdf");
         NGRAPH_DEBUG << "End construct_rnn_lstm_fprop callback against " << m.get_match_root()->get_name();
         return true;
     };

@@ -61,6 +61,11 @@ op::gpu::Rnn::Rnn(const Output<Node>& src_layer,
     , m_direction(direction)
     , m_num_fused_layers(num_fused_layers)
 {
+NGRAPH_INFO << src_layer;
+NGRAPH_INFO << src_iter;
+NGRAPH_INFO << params;
+NGRAPH_INFO << state_iter;
+
     NGRAPH_CHECK(src_layer.get_shape().size() == 2, "src_layer doesnt have a rank 2");
 
     m_batch_size = static_cast<int>(src_layer.get_shape()[0] / num_timesteps);
@@ -70,9 +75,9 @@ op::gpu::Rnn::Rnn(const Output<Node>& src_layer,
                  "src_layer size is not equal t*n*c");
 
     auto et = src_layer.get_element_type();
-    for (auto& rnn_input : get_arguments())
+    for (const Input<Node>& rnn_input : inputs())
     {
-        if (rnn_input->get_output_element_type(0) != et)
+        if (rnn_input.get_element_type() != et)
         {
             throw ngraph_error("all rnn inputs must have the same element type");
         }

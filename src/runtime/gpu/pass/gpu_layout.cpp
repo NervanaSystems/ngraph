@@ -38,36 +38,6 @@ namespace ngraph
         {
             namespace pass
             {
-                std::shared_ptr<Node> output_to_node(Output<Node> output)
-                {
-                    std::shared_ptr<Node> node = output.get_node_shared_ptr();
-                    if (output.get_index() == 0 && output.get_node()->get_output_size() == 1)
-                    {
-                        return node;
-                    }
-                    else
-                    {
-                        for (auto in : output.get_target_inputs())
-                        {
-                            if (is_type<op::GetOutputElement>(in.get_node()))
-                            {
-                                return in.get_node()->shared_from_this();
-                            }
-                        }
-                        return std::make_shared<op::GetOutputElement>(node, output.get_index());
-                    }
-                }
-
-                NodeVector get_output_elements(const shared_ptr<Node>& mon)
-                {
-                    NodeVector goes(mon->get_output_size());
-                    for (auto o : mon->outputs())
-                    {
-                        goes.at(o.get_index()) = output_to_node(o);
-                    }
-                    return goes;
-                }
-
                 template <>
                 void GPULayout::LAYOUT_DECL(ngraph::op::ReplaceSlice)
                 {
@@ -147,7 +117,6 @@ namespace ngraph
                             pre_reshape, axis_order, pre_2d_reshape_out);
                         insert_new_node_between(parent_node, topk, pre_reshape);
                         insert_new_node_between(pre_reshape, topk, pre_2d_reshape);
-                        NodeVector goes = get_output_elements(topk);
                         auto new_topk =
                             make_shared<ngraph::op::TopK>(pre_2d_reshape,
                                                           1,
@@ -156,43 +125,34 @@ namespace ngraph
                                                           topk->get_compute_max());
                         ngraph::replace_node(topk, new_topk);
                         // Replace old goe with new goe based on new topk
-                        NodeVector new_goes;
-                        for (auto& goe : goes)
+                        for (size_t i=0; i<new_topk->outputs().size(); i++)
                         {
-                            auto goe_ptr = std::dynamic_pointer_cast<op::GetOutputElement>(goe);
-                            if (goe_ptr)
-                            {
-                                auto out_idx = goe_ptr->get_n();
-                                auto new_goe =
-                                    std::make_shared<op::GetOutputElement>(new_topk, out_idx);
-                                ngraph::replace_node(goe, new_goe);
-                                new_goes.push_back(new_goe);
-                            }
+                            topk->output(i).replace(new_topk->output(i));
                         }
                         Shape reordered_out_shape;
                         for (size_t j = 0; j < ndim; j++)
                         {
                             reordered_out_shape.push_back(out_shape[reshape_axis_order[j]]);
                         }
-                        NodeVector post_2d_reshapes = insert_new_reshape_after(
-                            new_goes, AxisVector{0, 1}, reordered_out_shape);
+                        OutputVector post_2d_reshapes = insert_new_reshape_after(
+                            new_topk->outputs(), AxisVector{0, 1}, reordered_out_shape);
                         axis_order.pop_back();
                         axis_order.insert(axis_order.begin() + topk_axis, 1, ndim - 1);
                         insert_new_reshape_after(post_2d_reshapes, axis_order, out_shape);
                     }
                 }
-                NodeVector insert_new_reshape_after(NodeVector& parents,
+                OutputVector insert_new_reshape_after(const OutputVector& parents,
                                                     const AxisVector& axis_vector,
                                                     const Shape& out_shape)
                 {
-                    NodeVector reshapes;
+                    OutputVector reshapes;
                     for (auto& parent : parents)
                     {
-                        for (auto node : parent->get_users())
+                        for (auto node : parent.get_users())
                         {
                             for (size_t i = 0; i < node->get_input_size(); i++)
                             {
-                                if (node->get_argument(i) == parent)
+                                if (node->input_value(i) == parent)
                                 {
                                     auto new_reshape = make_shared<ngraph::op::Reshape>(
                                         parent, axis_vector, out_shape);
