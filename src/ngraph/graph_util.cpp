@@ -682,10 +682,10 @@ bool ngraph::is_used(Node* node)
     return false;
 }
 
-size_t ngraph::get_user_count(Node* node)
+size_t ngraph::get_user_count(const Output<Node>& output)
 {
     size_t count = 0;
-    for (const auto& node_user : node->get_users())
+    for (const auto& node_user : output.get_users())
     {
         count += is_used(node_user.get());
     }

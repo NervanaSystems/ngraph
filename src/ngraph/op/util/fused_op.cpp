@@ -41,11 +41,16 @@ void op::util::FusedOp::validate_and_infer_types()
 
     auto subgraph_outputs = decompose_op();
     NodeVector tmp;
+    NodeVector args;
     for (auto output : subgraph_outputs)
     {
         tmp.push_back(output.get_node_shared_ptr());
     }
-    auto subgraph = extract_subgraph(tmp, get_arguments());
+    for (const Output<Node>& arg : input_values())
+    {
+        args.push_back(arg.get_node_shared_ptr());
+    }
+    auto subgraph = extract_subgraph(tmp, args);
     validate_nodes_and_infer_types(subgraph);
 
     size_t i = 0;

@@ -959,7 +959,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
             return false;
         }
 
-        if (get_user_count(conv_m.get()) > 1)
+        if (get_user_count(conv_m->output(0)) > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
             return false;
@@ -1068,7 +1068,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
             return false;
         }
 
-        if (get_user_count(conv_m.get()) > 1)
+        if (get_user_count(conv_m->output(0)) > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
             return false;
@@ -2433,7 +2433,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
             return false;
         }
 
-        if (get_user_count(qconv.get()) > 1)
+        if (get_user_count(qconv->output(0)) > 1)
         {
             NGRAPH_DEBUG << "QuantizedConvolutionBias has more than one user";
             return false;

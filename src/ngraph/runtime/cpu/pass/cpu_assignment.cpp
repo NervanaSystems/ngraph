@@ -490,7 +490,7 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_dnnl_op(true);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        if (get_user_count(node->input_value(0)) == 1)
                         {
                             // Safe to overwrite input
                             op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -508,7 +508,7 @@ namespace ngraph
                     // ReplaceSlice is independent of data type. Hence not checking type
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    if (get_user_count(node->input_value(0)) == 1)
                     {
                         // Safe to overwrite input
                         op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -524,7 +524,7 @@ namespace ngraph
 
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    if (get_user_count(node->input_value(0)) == 1)
                     {
                         // Safe to overwrite input
                         op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -540,7 +540,7 @@ namespace ngraph
 
                     auto op_annotations =
                         std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    if (get_user_count(node->get_argument(0).get()) == 1)
+                    if (get_user_count(node->input_value(0)) == 1)
                     {
                         // Safe to overwrite input
                         op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -732,7 +732,7 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_dnnl_op(true);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        if (get_user_count(node->input_value(0)) == 1)
                         {
                             // Safe to overwrite input
                             op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -753,7 +753,7 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_dnnl_op(true);
                         runtime::cpu::dnnl_utils::assign_dnnl_kernel(node);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        if (get_user_count(node->input_value(0)) == 1)
                         {
                             // Safe to overwrite input
                             op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -774,7 +774,7 @@ namespace ngraph
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_dnnl_op(true);
                         runtime::cpu::dnnl_utils::assign_dnnl_kernel(node);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        if (get_user_count(node->input_value(0)) == 1)
                         {
                             // Safe to overwrite input
                             op_annotations->add_in_place_oi_pair({0, 0, true});
@@ -799,7 +799,7 @@ namespace ngraph
                         auto op_annotations =
                             std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
                         op_annotations->set_dnnl_op(true);
-                        if (get_user_count(node->get_argument(0).get()) == 1)
+                        if (get_user_count(node->input_value(0)) == 1)
                         {
                             // Safe to overwrite input
                             op_annotations->add_in_place_oi_pair({0, 0, true});

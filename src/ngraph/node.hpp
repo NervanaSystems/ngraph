@@ -633,11 +633,11 @@ namespace ngraph
     void check_new_args_count(const Node* node, T new_args)
     {
         NODE_VALIDATION_CHECK(node,
-                              new_args.size() == node->get_arguments().size(),
+                              new_args.size() == node->inputs().size(),
                               "copy_with_new_args() expected ",
-                              node->get_arguments().size(),
+                              node->inputs().size(),
                               " argument",
-                              (node->get_arguments().size() == 1 ? "" : "s"),
+                              (node->inputs().size() == 1 ? "" : "s"),
                               " but got ",
                               new_args.size());
     }

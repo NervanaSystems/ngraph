@@ -18,6 +18,7 @@
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>
+#include <signal.h>
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
@@ -29,6 +30,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -82,6 +84,8 @@ std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
     }
     else
     {
+        NGRAPH_INFO << *this;
+        raise(SIGSEGV);
         for (auto in : output(i).get_target_inputs())
         {
             if (is_type<op::GetOutputElement>(in.get_node()))
@@ -447,6 +451,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
     return input_value(index).as_single_output_node();
+    // return input_value(index).get_node_shared_ptr();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const

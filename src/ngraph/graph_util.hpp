@@ -463,9 +463,9 @@ namespace ngraph
     NGRAPH_API
     bool is_used(Node* node);
 
-    // Returns count of `node` users that are still live in the graph
+    // Returns count of an Output's users that are still live in the graph
     NGRAPH_API
-    size_t get_user_count(Node* node);
+    size_t get_user_count(const Output<Node>& output);
 
     // Return true if a node's user could potentially overwrite
     // the output of this node with in-place kernels
