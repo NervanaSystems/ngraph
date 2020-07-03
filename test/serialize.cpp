@@ -941,3 +941,30 @@ TEST(serialize, deformable_psroi_pooling)
     EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
     EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
 }
+
+TEST(serialize, strip_goe)
+{
+    ngraph::set_remove_goe(false);
+    // Shape input_shape{2, 3};
+    // Shape channel_shape{input_shape[1]};
+    // auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    // auto gamma = make_shared<op::Parameter>(element::f32, channel_shape);
+    // auto beta = make_shared<op::Parameter>(element::f32, channel_shape);
+    // auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, 0.0);
+    // auto goe0 = make_shared<op::GetOutputElement>(bn, 0);
+    // auto goe1 = make_shared<op::GetOutputElement>(bn, 1);
+    // auto goe2 = make_shared<op::GetOutputElement>(bn, 2);
+    // auto result0 = make_shared<op::Result>(goe0->output(0));
+    // auto result1 = make_shared<op::Result>(goe1->output(0));
+    // auto result2 = make_shared<op::Result>(goe2->output(0));
+    // auto function = make_shared<Function>(ResultVector{result0, result1, result2}, ParameterVector{input, gamma, beta});
+    // string s = serialize(function);
+    // cout << s << endl;
+
+    const string test_file = file_util::path_join(TEST_FILES, "graph_with_goe.json");
+    NGRAPH_INFO << test_file;
+    auto f = deserialize(test_file);
+
+    traverse_nodes(f, [](shared_ptr<Node> node){ NGRAPH_INFO << node; });
+
+}
