@@ -15,22 +15,22 @@
 //*****************************************************************************
 
 #include <memory>
+#include <signal.h>
 #include <sstream>
 #include <typeindex>
 #include <typeinfo>
-#include <signal.h>
 
 #include "ngraph/autodiff/adjoints.hpp"
 #include "ngraph/descriptor/input.hpp"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
-#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -74,27 +74,6 @@ Node::~Node()
 std::shared_ptr<Node> Node::copy_with_new_inputs(const OutputVector& inputs) const
 {
     return copy_with_new_inputs(inputs, get_control_dependencies());
-}
-
-std::shared_ptr<Node> Node::get_output_as_single_output_node(size_t i)
-{
-    if (i == 0 && get_output_size() == 1)
-    {
-        return shared_from_this();
-    }
-    else
-    {
-        NGRAPH_INFO << *this;
-        raise(SIGSEGV);
-        for (auto in : output(i).get_target_inputs())
-        {
-            if (is_type<op::GetOutputElement>(in.get_node()))
-            {
-                return in.get_node()->shared_from_this();
-            }
-        }
-        return make_shared<op::GetOutputElement>(shared_from_this(), i);
-    }
 }
 
 Output<const Node> Node::get_default_output() const
@@ -450,8 +429,7 @@ std::shared_ptr<Node> Node::get_argument(size_t index) const
 {
     NGRAPH_CHECK(
         index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return input_value(index).as_single_output_node();
-    // return input_value(index).get_node_shared_ptr();
+    return input_value(index).get_node_shared_ptr();
 }
 
 Node* Node::get_input_node_ptr(size_t index) const

@@ -519,7 +519,6 @@ namespace ngraph
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         std::vector<Node*> m_control_dependents;
         NodeVector m_control_dependencies;

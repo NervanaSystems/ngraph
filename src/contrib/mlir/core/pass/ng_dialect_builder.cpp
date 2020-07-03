@@ -29,7 +29,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/type/element_type.hpp"
-#include "ngraph/log.hpp"
 
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"

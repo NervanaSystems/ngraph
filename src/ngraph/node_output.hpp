@@ -113,8 +113,6 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
     private:
-        std::shared_ptr<Node> as_single_output_node() const;
-
         std::shared_ptr<Node> m_node;
         size_t m_index{0};
     };
