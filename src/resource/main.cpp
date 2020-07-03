@@ -88,6 +88,7 @@ int main(int argc, char** argv)
     vector<ResourceInfo> include_paths;
 
     include_paths.push_back({CLANG_BUILTIN_HEADERS_PATH, {}, true});
+    include_paths.push_back({OPENMP_HEADER_FILE, {}, false});
 
 #ifdef EIGEN_HEADERS_PATH
     include_paths.push_back({EIGEN_HEADERS_PATH, {"Eigen"}, true});
