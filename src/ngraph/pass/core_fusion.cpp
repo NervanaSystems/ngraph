@@ -829,8 +829,8 @@ void pass::CoreFusion::construct_optimized_strided_conv()
             return false;
         }
 
-        auto conv_28w3s2 = make_shared<op::Convolution>(m_conv_stride3->get_argument(0),
-                                                        m_conv_stride3->get_argument(1),
+        auto conv_28w3s2 = make_shared<op::Convolution>(m_conv_stride3->input_value(0),
+                                                        m_conv_stride3->input_value(1),
                                                         stride_2,
                                                         stride_1,
                                                         pad_1,
@@ -841,7 +841,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         auto new_relu_28w3s2 = make_shared<op::Relu>(new_add_conv_28w3s2);
 
         auto conv_28w1s1 = make_shared<op::Convolution>(
-            new_relu_28w3s2, m_conv_stride1->get_argument(1), stride_1, stride_1);
+            new_relu_28w3s2, m_conv_stride1->input_value(1), stride_1, stride_1);
 
         auto new_add_conv28s1 =
             make_shared<op::Add>(conv_28w1s1, reduce_broadcast(pattern_map[broadcast_w1_label]));
@@ -854,7 +854,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         for (auto sconv : sconvs)
         {
             auto sconv_28w1s1 = make_shared<op::Convolution>(
-                new_relu_two_convs, sconv->get_argument(1), stride_1, stride_1);
+                new_relu_two_convs, sconv->input_value(1), stride_1, stride_1);
             NGRAPH_DEBUG << "Replacing " << sconv->get_name() << " with "
                          << sconv_28w1s1->get_name();
             replace_node(sconv, sconv_28w1s1);
@@ -1275,12 +1275,12 @@ void pass::CoreFusion::construct_conv_bias()
             }
         }
 
-        auto bias = bcast_m->get_argument(0);
-        if (bias->get_output_shape(0).size() > 1)
+        auto bias = bcast_m->input_value(0);
+        if (bias.get_shape().size() > 1)
         {
             NGRAPH_DEBUG << "mpattern = " << m.get_match_root()->get_name()
                          << "conv_bias bias shape != 1, requires reshape to match filter count.";
-            auto order = get_default_order(bias->get_output_shape(0));
+            auto order = get_default_order(bias.get_shape());
             auto bias_reshape =
                 make_shared<op::Reshape>(bias, order, Shape{conv_m->get_input_shape(1)[0]});
             auto conv_bias = make_shared<op::ConvolutionBias>(conv_m, bias_reshape);
@@ -1322,12 +1322,12 @@ void pass::CoreFusion::construct_conv_bias_add()
 
         auto add_m = m.get_match_root();
         auto conv_m = as_type_ptr<op::ConvolutionBias>(add_m->get_argument(1));
-        auto add_input_m = add_m->get_argument(0);
+        auto add_input_m = add_m->input_value(0);
 
         if (!conv_m)
         {
             conv_m = static_pointer_cast<op::ConvolutionBias>(add_m->get_argument(0));
-            add_input_m = add_m->get_argument(1);
+            add_input_m = add_m->input_value(1);
         }
 
         if (get_user_count(conv_m.get()) > 1)
