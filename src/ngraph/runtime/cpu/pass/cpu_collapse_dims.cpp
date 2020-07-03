@@ -107,8 +107,8 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
     {
         // Null broadcast operation, replace with reshape
         AxisVector axis_order = ngraph::get_default_order(input_shape);
-        auto reshape = std::make_shared<op::Reshape>(
-            node->input_value(0), axis_order, n->get_output_shape(0));
+        auto reshape =
+            std::make_shared<op::Reshape>(node->input_value(0), axis_order, n->get_output_shape(0));
         ngraph::replace_node(n, reshape);
         replaced = true;
     }
@@ -156,8 +156,8 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
     {
         // Null reduction operation
         AxisVector axis_order = ngraph::get_default_order(input_shape);
-        auto reshape = std::make_shared<op::Reshape>(
-            node->input_value(0), axis_order, n->get_output_shape(0));
+        auto reshape =
+            std::make_shared<op::Reshape>(node->input_value(0), axis_order, n->get_output_shape(0));
         ngraph::replace_node(n, reshape);
         replaced = true;
     }
