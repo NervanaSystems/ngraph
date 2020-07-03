@@ -128,7 +128,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
 #endif
 
 #ifndef NGRAPH_JSON_DISABLE
-TEST(gpu_fusion_nox, fuse_lstm_cells)
+TEST(gpu_fusion, fuse_lstm_cells)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
@@ -142,7 +142,7 @@ TEST(gpu_fusion_nox, fuse_lstm_cells)
     EXPECT_EQ(lstm_ops.size(), 6);
 }
 
-TEST(gpu_fusion_nox, fuse_2_layer_rnn)
+TEST(gpu_fusion, fuse_2_layer_rnn)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();
@@ -487,7 +487,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_2rnn_layer_3lstm_cell)
     }
 }
 
-TEST(gpu_fusion_nox, fuse_rnn_across_layer)
+TEST(gpu_fusion, fuse_rnn_across_layer)
 {
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::gpu::pass::LSTMFusion>();

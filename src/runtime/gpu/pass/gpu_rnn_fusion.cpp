@@ -444,7 +444,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto state_iter = compute_rnn_args(state_iter_labels, m);
 
         auto num_of_lstm_matched = m.get_number_of_recurrent_matches();
-        NGRAPH_INFO << num_of_lstm_matched;
         if (num_of_lstm_matched <= 1)
         {
             return false;
@@ -590,7 +589,6 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             }
         }
 
-            NGRAPH_INFO << "*****";
         NGRAPH_DEBUG << "End construct_rnn_lstm_fprop callback against "
                      << m.get_match_root()->get_name();
         return true;
