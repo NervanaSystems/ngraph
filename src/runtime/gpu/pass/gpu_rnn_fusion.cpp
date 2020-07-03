@@ -546,7 +546,7 @@ void ngraph::runtime::gpu::pass::RNNFusion::construct_rnn_lstm_fprop()
             // now get the GOE0 which is the first output of lstm (ht)
             for (Input<Node> goes : lstm_nodes[index]->output(0).get_target_inputs())
             {
-                auto goe_node = dynamic_cast<op::GetOutputElement*>(goes.get_node());
+                // auto goe_node = dynamic_cast<op::GetOutputElement*>(goes.get_node());
                 // // first output node of lstm
                 // if (goe_node->get_n() == 0)
                 // {
