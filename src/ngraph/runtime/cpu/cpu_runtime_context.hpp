@@ -30,6 +30,10 @@
 
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 
+#ifdef NGRAPH_IN_CODEGEN
+#undef NGRAPH_MLIR_ENABLE
+#endif
+
 #ifdef NGRAPH_MLIR_ENABLE
 #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #endif
