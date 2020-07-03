@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/node_output.hpp"
+#include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/get_output_element.hpp"
@@ -110,6 +111,20 @@ namespace ngraph
     bool Output<Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
 
+    NodeVector Output<Node>::get_users(bool check_is_used) const
+    {
+        NodeVector result;
+        for (auto input : get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
+        return result;
+    }
+
     Output<const Node>::Output(const Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)
@@ -182,17 +197,31 @@ namespace ngraph
     bool Output<const Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
 
+    NodeVector Output<const Node>::get_users(bool check_is_used) const
+    {
+        NodeVector result;
+        for (auto input : get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
+        return result;
+    }
+
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
-        return output.get_node()->write_description(out, 0)
-               << "[" << output.get_index() << "]:" << output.get_element_type()
-               << output.get_partial_shape();
+        // Convert Output<Node> to Output<const Node> so we only have one operator<< implementation
+        return out << Output<const Node>(static_cast<const Node*>(output.get_node()),
+                                         output.get_index());
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
     {
         return output.get_node()->write_description(out, 0)
-               << "[" << output.get_index() << "]:" << output.get_element_type()
+               << ".O(" << output.get_index() << "):" << output.get_element_type()
                << output.get_partial_shape();
     }
 }

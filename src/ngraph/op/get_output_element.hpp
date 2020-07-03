@@ -48,6 +48,9 @@ namespace ngraph
                 size_t get_n() const { return m_n; }
                 NodeVector get_arguments() const override;
 
+                std::ostream& write_description(std::ostream& os,
+                                                uint32_t depth = 0) const override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

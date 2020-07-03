@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -109,6 +110,8 @@ namespace ngraph
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
 
+        NodeVector get_users(bool check_is_used = false) const;
+
     private:
         std::shared_ptr<Node> as_single_output_node() const;
 
@@ -177,6 +180,8 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
+
+        NodeVector get_users(bool check_is_used = false) const;
 
     private:
         std::shared_ptr<const Node> m_node;
