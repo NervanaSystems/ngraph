@@ -41,6 +41,7 @@
 #include <llvm/Option/ArgList.h>
 #include <llvm/Option/OptTable.h>
 #include <llvm/Support/ErrorHandling.h>
+#include <llvm/Support/Host.h>
 #include <llvm/Support/ManagedStatic.h>
 #include <llvm/Support/Signals.h>
 #include <llvm/Support/TargetSelect.h>
@@ -190,6 +191,9 @@ void codegen::CompilerCore::initialize()
         args.push_back("-Rpass=.*");
         args.push_back("-Rpass-missed=.*");
     }
+    // Prevent MLIR in codegen
+    args.push_back("-DNGRAPH_IN_CODEGEN");
+
     // Prevent Eigen from using any LGPL3 code
     args.push_back("-DEIGEN_MPL2_ONLY");
 
@@ -213,7 +217,7 @@ void codegen::CompilerCore::initialize()
 
     // Initialize CompilerInvocation
     CompilerInvocation::CreateFromArgs(
-        m_compiler->getInvocation(), &args[0], &args[0] + args.size(), diag_engine);
+        m_compiler->getInvocation(), ArrayRef<const char*>(&args[0], args.size()), diag_engine);
 
     DiagnosticConsumer* diag_consumer;
     if (m_enable_diag_output)
@@ -235,9 +239,8 @@ void codegen::CompilerCore::initialize()
     // and any dependencies like Eigen
     auto LO = m_compiler->getInvocation().getLangOpts();
     LO->CPlusPlus = 1;
-    LO->CPlusPlus11 = 1;
-    // Strange but need to manually disable c++14
-    LO->CPlusPlus14 = 0;
+    LO->CPlusPlus14 = 1;
+    LO->GNUCVersion = 40201;
     LO->Bool = 1;
     LO->Exceptions = 1;
     LO->CXXExceptions = 1;
@@ -254,7 +257,6 @@ void codegen::CompilerCore::initialize()
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";
     CGO.FloatABI = "hard";
-    CGO.OmitLeafFramePointer = 1;
     CGO.VectorizeLoop = 1;
     CGO.VectorizeSLP = 1;
     CGO.CXAAtExit = 1;
@@ -266,7 +268,7 @@ void codegen::CompilerCore::initialize()
 
     // Enable various target features
     auto& TO = m_compiler->getInvocation().getTargetOpts();
-    TO.CPU = sys::getHostCPUName();
+    TO.CPU = std::string(sys::getHostCPUName());
 
     // Flush out any errors from clang/llvm arg parsing.
     diag_buffer->FlushDiagnostics(m_compiler->getDiagnostics());
@@ -423,6 +425,7 @@ void codegen::CompilerCore::configure_search_path()
     load_headers_from_resource();
 #endif
 
+    add_header_search_path(OPENMP_HEADERS_PATH);
 #ifdef EIGEN_HEADERS_PATH
     add_header_search_path(EIGEN_HEADERS_PATH);
 #endif
@@ -644,7 +647,7 @@ std::string codegen::CompilerCore::find_header_version(const std::string& path)
     // Step 1: find highest g++ version
     std::string gpp_prefix = file_util::path_join(path, "bin/g++-");
     std::string gpp_ver;
-    for (auto i : {"8", "7", "6", "5", "4.9", "4.8"})
+    for (auto i : {"9", "8", "7", "6", "5", "4.9", "4.8"})
     {
         if (file_util::exists(gpp_prefix + i))
         {
@@ -704,11 +707,11 @@ std::string codegen::CompilerCore::find_os_specific_path(const std::string& path
 std::string codegen::CompilerCore::find_rh_devtoolset_path()
 {
     // Redhat/CentOS has devtoolset level support
-    // Support 8, 7, 6, 5, 4, 3, 2
+    // Support 9, 8, 7, 6, 5, 4, 3, 2
     // Find highest toolset version X
     // Find highest header version X.Y.Z
     std::string toolsetprefix("/opt/rh/devtoolset-");
-    for (auto i : {"8", "7", "6", "5", "4", "3", "2"})
+    for (auto i : {"9", "8", "7", "6", "5", "4", "3", "2"})
     {
         std::string toolpath = file_util::path_join(toolsetprefix + i, "root");
         if (file_util::exists(toolpath))

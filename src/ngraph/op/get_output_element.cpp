@@ -16,7 +16,9 @@
 
 #include <sstream>
 
+#include "ngraph/log.hpp"
 #include "ngraph/op/get_output_element.hpp"
+#include "ngraph/util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -65,4 +67,21 @@ void op::GetOutputElement::generate_adjoints(autodiff::Adjoints& adjoints,
     auto delta = deltas.at(0);
 
     adjoints.add_delta(input_value(0), delta);
+}
+
+std::ostream& op::GetOutputElement::write_description(std::ostream& out, uint32_t depth) const
+{
+    if (depth == 0)
+    {
+        out << get_name() << "(" << input_value(0).get_node()->get_name() << "["
+            << input_value(0).get_index() << "])";
+    }
+    else
+    {
+        out << "v" << get_type_info().version << "::" << get_type_info().name << " " << get_name()
+            << "(" << join(input_values()) << ") -> (";
+        out << get_output_element_type(0) << get_output_partial_shape(0);
+        out << ")";
+    }
+    return out;
 }

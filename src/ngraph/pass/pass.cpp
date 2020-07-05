@@ -58,6 +58,11 @@ pass::ModulePass::~ModulePass() {}
 
 pass::FunctionPass::~FunctionPass() {}
 
+void pass::FunctionPass::graphviz(std::string path)
+{
+    ngraph::plot_graph(m_function, path);
+}
+
 pass::NodePass::~NodePass() {}
 
 pass::CallGraphPass::~CallGraphPass() {}

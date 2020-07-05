@@ -130,8 +130,6 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
                     break;
                 }
 
-                NGRAPH_CHECK(arg->get_output_size() == 1);
-
                 if (!is_type<op::v0::Concat>(arg))
                 {
                     if (arg->is_op())

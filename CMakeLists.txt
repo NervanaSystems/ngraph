@@ -177,11 +177,6 @@ if (NGRAPH_MLIR_ENABLE OR NGRAPH_CODEGEN_ENABLE)
     set(NGRAPH_LLVM_ENABLE ON)
 endif()
 
-if (NGRAPH_MLIR_ENABLE AND NGRAPH_CODEGEN_ENABLE)
-    #disable code-gen due to sym collision with LLVM
-    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON")
-endif()
-
 if (NGRAPH_ONNX_IMPORT_ENABLE)
     option(NGRAPH_USE_SYSTEM_PROTOBUF "Use system provided Protobuf shared object" FALSE)
 endif()
@@ -283,8 +278,8 @@ message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM
 message(STATUS "NGRAPH_USE_PREBUILT_MLIR:             ${NGRAPH_USE_PREBUILT_MLIR}")
 message(STATUS "NGRAPH_WARNINGS_AS_ERRORS:            ${NGRAPH_WARNINGS_AS_ERRORS}")
 
-if (NGRAPH_CPU_ENABLE AND NGRAPH_MLIR_ENABLE)
-    #MLIR uses the latest version of LLVM which requires C++14.
+if (NGRAPH_LLVM_ENABLE)
+    #latest version of LLVM which requires C++14.
     set(NGRAPH_CXX_STANDARD 14)
 else()
     set(NGRAPH_CXX_STANDARD 11)
