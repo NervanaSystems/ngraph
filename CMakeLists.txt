@@ -61,6 +61,7 @@ if (APPLE)
     # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
     cmake_policy(SET CMP0025 NEW)
     # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
+    cmake_policy(SET CMP0074 NEW)
     execute_process(COMMAND sw_vers -productVersion
         OUTPUT_VARIABLE OSX_FULL_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE)

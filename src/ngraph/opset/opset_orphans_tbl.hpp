@@ -14,8 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/opset/opset0_tbl.hpp"
-#if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::gpu)
-#endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu)
+NGRAPH_OP(Acosh, ngraph::op::v3)
+NGRAPH_OP(Asinh, ngraph::op::v3)
+NGRAPH_OP(Atanh, ngraph::op::v3)
+NGRAPH_OP(Interpolate, ngraph::op::v3)

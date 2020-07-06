@@ -14,8 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/opset/opset0_tbl.hpp"
-#if CUDNN_VERSION >= 7200
-NGRAPH_OP(Rnn, ngraph::op::gpu)
-#endif
-NGRAPH_OP(BatchNormTrainingWithStats, ngraph::op::gpu)
+#pragma once
+
+#include "ngraph/ops.hpp"
+
+namespace ngraph
+{
+    namespace opset_orphans
+    {
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opset/opset4_tbl.hpp"
+#undef NGRAPH_OP
+    }
+}
