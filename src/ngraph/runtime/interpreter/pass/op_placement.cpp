@@ -25,11 +25,6 @@ using namespace std;
 runtime::interpreter::pass::OpPlacement::OpPlacement(std::set<std::string> unsupported_ops)
     : m_unsupported_ops{unsupported_ops}
 {
-    NGRAPH_INFO << m_unsupported_ops.size();
-    for (string s : m_unsupported_ops)
-    {
-        NGRAPH_INFO << s;
-    }
 }
 
 bool runtime::interpreter::pass::OpPlacement::run_on_function(
@@ -44,13 +39,13 @@ bool runtime::interpreter::pass::OpPlacement::run_on_function(
 
 void runtime::interpreter::pass::OpPlacement::assign_placement(shared_ptr<Node> node)
 {
-    if (is_supported_on_device(node) != DeviceSupport::SUPPORTED)
+    if (is_supported_on_device(node) == DeviceSupport::SUPPORTED)
     {
-        node->set_placement(1);
+        node->set_placement(0);
     }
     else
     {
-        node->set_placement(0);
+        node->set_placement(1);
     }
 }
 
@@ -58,10 +53,13 @@ runtime::interpreter::pass::OpPlacement::DeviceSupport
     runtime::interpreter::pass::OpPlacement::is_supported_on_device(shared_ptr<Node> node)
 {
     DeviceSupport rc = DeviceSupport::UNKNOWN;
-    NGRAPH_INFO << node->get_name();
-    if (m_unsupported_ops.find(node->description()) != m_unsupported_ops.end())
+    if (m_unsupported_ops.find(node->description()) == m_unsupported_ops.end())
     {
-        NGRAPH_INFO << "UNSUPPORTED " << node->get_name();
+        rc = DeviceSupport::SUPPORTED;
+    }
+    else
+    {
+        rc = DeviceSupport::UNSUPPORTED;
     }
     return rc;
 }

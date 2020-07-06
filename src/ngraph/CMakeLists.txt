@@ -227,6 +227,8 @@ set (SRC
     op/experimental/dyn_replace_slice.hpp
     op/experimental/dyn_slice.cpp
     op/experimental/dyn_slice.hpp
+    op/experimental/function_call.cpp
+    op/experimental/function_call.hpp
     op/experimental/generate_mask.cpp
     op/experimental/generate_mask.hpp
     op/experimental/layers/ctc_greedy_decoder.hpp

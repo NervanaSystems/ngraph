@@ -21,6 +21,8 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
+#include "ngraph/op/experimental/function_call.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -79,6 +81,7 @@ vector<unordered_set<shared_ptr<Node>>>
         node_dependency_count[node.get()] = dependency_count;
         if (dependency_count == 0)
         {
+            NGRAPH_INFO << get_placement(node) << ", " << node->get_name();
             independent_nodes_by_placement[get_placement(node)].push_back(node.get());
         }
     }
@@ -91,6 +94,7 @@ vector<unordered_set<shared_ptr<Node>>>
                independent_nodes_by_placement, previous_placement))
     {
         previous_placement = get_placement(independent_node);
+        NGRAPH_INFO << previous_placement << ", " << independent_node->get_name();
         sorted_nodes.push_back(node_map.at(independent_node));
 
         for (auto user : independent_node->get_users(true))
@@ -221,19 +225,26 @@ void pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
 {
     // Split functions to clusters of nodes that can be computed together
     vector<unordered_set<shared_ptr<Node>>> clusters = group_function_nodes_to_clusters(f);
+    NGRAPH_INFO << clusters.size();
 
     unordered_map<shared_ptr<Node>, unordered_set<shared_ptr<Node>>*> map_node_to_cluster;
     for (auto& cluster : clusters)
     {
+        NGRAPH_INFO << cluster.size();
         if (cluster.size() > 0)
         {
+                NGRAPH_INFO;
             shared_ptr<Node> tmp_node = *cluster.begin();
+                NGRAPH_INFO;
             if (tmp_node == nullptr)
             {
+                NGRAPH_INFO;
                 throw runtime_error("cluster contains nullptr instead of nodes");
             }
+                NGRAPH_INFO;
             if (is_fallback(tmp_node))
             {
+                NGRAPH_INFO << *tmp_node;
                 // This is a non-native cluster so make it a FunctionCall
                 vector<Output<Node>> function_call_inputs;
                 vector<Output<Node>> function_call_outputs;
@@ -307,40 +318,46 @@ void pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
                     function_call_outputs.push_back(output);
                 }
 
-                throw runtime_error("unimplemented hybrid.cpp line 316ish");
-                // // Now make a FunctionCall out of the nodes in cluster, including the new nodes
-                // // we just added
-                // auto sub_function = make_shared<Function>(cluster_outputs, cluster_inputs);
-                // auto fc = make_shared<op::FunctionCall>(
-                //     function_call_outputs, function_call_inputs, *sub_function,
-                //     m_fallback_backend);
-                // fc->set_placement(1);
+                // Now make a FunctionCall out of the nodes in cluster, including the new nodes
+                // we just added
+                NGRAPH_INFO;
+                auto sub_function = make_shared<Function>(cluster_outputs, cluster_inputs);
+                NGRAPH_INFO;
+                for (auto op : sub_function->get_ordered_ops())
+                {
+                    NGRAPH_INFO << *op;
+                }
+                auto fc = make_shared<op::FunctionCall>(
+                    function_call_outputs, function_call_inputs, *sub_function,
+                    m_fallback_backend);
+                fc->set_placement(1);
 
-                // // Now connect all of the nodes which get inputs from nodes that now reside
-                // inside
-                // // the FunctionCall we just created
-                // size_t output_index = 0;
-                // for (Output<Node> output : output_set)
-                // {
-                //     auto input_node = output.get_node();
-                //     auto index = output.get_index();
-                //     for (Input<Node> input : output.get_target_inputs())
-                //     {
-                //         Output<Node> new_output = fc->outputs()[output_index];
-                //         auto goe = make_shared<op::GetOutputElement>(fc, output_index);
-                //         goe->set_placement(1);
-                //         input.replace_source_output(goe);
-                //     }
-                //     output_index++;
-                // }
+                // Now connect all of the nodes which get inputs from nodes that now reside
+                // inside the FunctionCall we just created
+                size_t output_index = 0;
+                for (Output<Node> output : output_set)
+                {
+                    auto input_node = output.get_node();
+                    auto index = output.get_index();
+                    for (Input<Node> input : output.get_target_inputs())
+                    {
+                        Output<Node> new_output = fc->outputs()[output_index];
+                        auto goe = make_shared<op::GetOutputElement>(fc, output_index);
+                        goe->set_placement(1);
+                        input.replace_source_output(goe);
+                    }
+                    output_index++;
+                }
             }
+                NGRAPH_INFO;
         }
     }
+                NGRAPH_INFO;
 }
 
 bool pass::Hybrid::is_fallback(const Node* node) const
 {
-    return node->get_placement() != Node::default_placement;
+    return node->get_placement() != 0;
 }
 
 bool pass::Hybrid::is_fallback(std::shared_ptr<Node> node) const
