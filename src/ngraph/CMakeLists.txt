@@ -569,6 +569,8 @@ set (SRC
     pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
     pass/graph_rewrite.hpp
+    pass/hybrid.cpp
+    pass/hybrid.hpp
     pass/implicit_broadcast_elimination.cpp
     pass/implicit_broadcast_elimination.hpp
     pass/like_replacement.cpp

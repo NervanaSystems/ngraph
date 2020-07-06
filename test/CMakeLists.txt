@@ -54,6 +54,7 @@ set(SRC
     build_graph.cpp
     builder_autobroadcast.cpp
     check.cpp
+    compiled_kernel.cpp
     constant.cpp
     constant_folding.cpp
     control_dependencies.cpp
