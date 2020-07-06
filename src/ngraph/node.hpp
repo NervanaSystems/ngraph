@@ -634,7 +634,7 @@ namespace ngraph
         NODE_VALIDATION_CHECK(node,
                               new_args.size() == node->inputs().size(),
                               "copy_with_new_args() expected ",
-                              node->input_size(),
+                              node->get_input_size(),
                               " argument",
                               (node->inputs().size() == 1 ? "" : "s"),
                               " but got ",
