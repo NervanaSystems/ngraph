@@ -25,6 +25,11 @@ using namespace std;
 runtime::interpreter::pass::OpPlacement::OpPlacement(std::set<std::string> unsupported_ops)
     : m_unsupported_ops{unsupported_ops}
 {
+    NGRAPH_INFO << m_unsupported_ops.size();
+    for (string s : m_unsupported_ops)
+    {
+        NGRAPH_INFO << s;
+    }
 }
 
 bool runtime::interpreter::pass::OpPlacement::run_on_function(
@@ -53,6 +58,10 @@ runtime::interpreter::pass::OpPlacement::DeviceSupport
     runtime::interpreter::pass::OpPlacement::is_supported_on_device(shared_ptr<Node> node)
 {
     DeviceSupport rc = DeviceSupport::UNKNOWN;
-    NGRAPH_INFO << *node;
+    NGRAPH_INFO << node->get_name();
+    if (m_unsupported_ops.find(node->description()) != m_unsupported_ops.end())
+    {
+        NGRAPH_INFO << "UNSUPPORTED " << node->get_name();
+    }
     return rc;
 }

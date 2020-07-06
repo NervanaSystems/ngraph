@@ -26,6 +26,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/validate.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/interpreter/int_backend.hpp"
 #include "ngraph/util.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
@@ -364,15 +365,17 @@ TEST(function_call, output_reshape)
     Shape shape2{8, 384};
     vector<int64_t> const_data(1);
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    // op::Sin is selected because it is a fallback op that likely will remain a fallback op
-    // Tensor B must be CPU fallback
     auto B = make_shared<op::Sin>(A);
     auto Br = make_shared<op::Reshape>(B, AxisVector{0, 1, 2}, shape2);
     auto M = make_shared<op::Max>(Br, AxisSet{1});
 
     auto f = make_shared<Function>(OutputVector{Br, M}, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("INTERPRETER");
+    set<string> unsupported_ops{"Sin"};
+    auto backend = dynamic_pointer_cast<runtime::interpreter::INTBackend>(
+        runtime::Backend::create("INTERPRETER"));
+    ASSERT_TRUE(backend);
+    backend->set_unsupported(unsupported_ops);
     auto exec = backend->compile(f);
 
     // Create some tensors for input/output

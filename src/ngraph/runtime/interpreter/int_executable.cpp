@@ -98,7 +98,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
     pass_manager.register_pass<interpreter::pass::OpPlacement>(m_unsupported_ops);
-    // pass_manager.register_pass<ngraph::pass::Hybrid>();
+    pass_manager.register_pass<ngraph::pass::Hybrid>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {

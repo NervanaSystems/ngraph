@@ -37,11 +37,6 @@ extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 
 runtime::interpreter::INTBackend::INTBackend() {}
 
-runtime::interpreter::INTBackend::INTBackend(set<string> unsupported_ops)
-    : m_unsupported_ops{unsupported_ops}
-{
-}
-
 shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
 {
     return make_shared<runtime::HostTensor>();
@@ -63,7 +58,12 @@ shared_ptr<runtime::Executable>
     runtime::interpreter::INTBackend::compile(shared_ptr<Function> function,
                                               bool enable_performance_collection)
 {
-    return make_shared<INTExecutable>(function, enable_performance_collection);
+    return make_shared<INTExecutable>(function, enable_performance_collection, m_unsupported_ops);
+}
+
+void runtime::interpreter::INTBackend::set_unsupported(std::set<std::string> unsupported_ops)
+{
+    m_unsupported_ops = unsupported_ops;
 }
 
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const

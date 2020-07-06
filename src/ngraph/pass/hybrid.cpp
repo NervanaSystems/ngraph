@@ -15,15 +15,12 @@
 //*****************************************************************************
 
 #include "pass/hybrid.hpp"
-// #include "hybrid/hybrid_util.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
 #include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
-// #include "op/function_call.hpp"
-// #include "ngraph/pass/placement.hpp"
 
 using namespace std;
 using namespace ngraph;

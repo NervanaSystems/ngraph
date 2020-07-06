@@ -30,7 +30,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::Hybrid : public ngraph::pass::FunctionPass
+class NGRAPH_API ngraph::pass::Hybrid : public ngraph::pass::FunctionPass
 {
 public:
     Hybrid();
