@@ -53,8 +53,8 @@ namespace
 #define VSUF0(NAME) NAME
 #define VSUF1(NAME) NAME##_v1
 #define VSUF3(NAME) NAME##_v3
-#define NGRAPH_OP(NAME, NAMESPACE, VERSION) VSUF##VERSION(NAME),
-#include "ngraph/op/op_version_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
         UnknownOp
     };
@@ -67,9 +67,9 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
     // {Acos::type_info, OP_TYPEID::Acos},
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(NAME, NAMESPACE, VERSION)                                                        \
-    {NAMESPACE::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
-#include "ngraph/op/op_version_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION)                                                                   \
+    {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -1273,8 +1273,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
             node = make_shared<op::CropAndResize>(
                 args[0], args[1], args[2], args[3], resize_method, extrapolation_value);
             break;
-        }
-        case OP_TYPEID::CompiledKernel: { break;
         }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
@@ -2901,8 +2899,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::CTCGreedyDecoder: { break;
-    }
-    case OP_TYPEID::CompiledKernel: { break;
     }
     case OP_TYPEID::DetectionOutput: { break;
     }
