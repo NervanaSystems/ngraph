@@ -328,8 +328,7 @@ void pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
                     NGRAPH_INFO << *op;
                 }
                 auto fc = make_shared<op::FunctionCall>(
-                    function_call_outputs, function_call_inputs, *sub_function,
-                    m_fallback_backend);
+                    function_call_outputs, function_call_inputs, *sub_function);
                 fc->set_placement(1);
 
                 // Now connect all of the nodes which get inputs from nodes that now reside

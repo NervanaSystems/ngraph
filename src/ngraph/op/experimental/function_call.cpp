@@ -25,13 +25,10 @@ constexpr NodeTypeInfo op::FunctionCall::type_info;
 
 op::FunctionCall::FunctionCall(const vector<Output<Node>>& outputs,
                                const vector<Output<Node>>& inputs,
-                               const Function& function,
-                               shared_ptr<runtime::Backend> backend)
+                               const Function& function)
     : Op(inputs)
     , m_function_outputs{outputs}
     , m_function{ngraph::clone_function(function)}
-    , m_backend{backend}
-    , m_executable{backend->compile(m_function)}
 {
     set_output_size(outputs.size());
     for (size_t i = 0; i < outputs.size(); i++)
@@ -48,7 +45,7 @@ const string& op::FunctionCall::description() const
 
 shared_ptr<Node> op::FunctionCall::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    return make_shared<FunctionCall>(m_function_outputs, new_args, *m_function, m_backend);
+    return make_shared<FunctionCall>(m_function_outputs, new_args, *m_function);
 }
 
 shared_ptr<runtime::Backend> op::FunctionCall::get_backend() const

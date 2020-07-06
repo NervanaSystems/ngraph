@@ -41,8 +41,7 @@ public:
     /// \param backend The Backend used to execute the function.
     FunctionCall(const std::vector<Output<Node>>& outputs,
                  const std::vector<Output<Node>>& inputs,
-                 const Function& function,
-                 std::shared_ptr<runtime::Backend> backend);
+                 const Function& function);
 
     const std::string& description() const override;
 
