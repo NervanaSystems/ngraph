@@ -161,10 +161,7 @@ vector<unordered_set<shared_ptr<Node>>>
     return clusters;
 }
 
-pass::Hybrid::Hybrid(shared_ptr<runtime::Backend> fallback_backend)
-    : m_fallback_backend{fallback_backend}
-{
-}
+pass::Hybrid::Hybrid() {}
 
 bool pass::Hybrid::run_on_function(std::shared_ptr<ngraph::Function> func)
 {
@@ -318,10 +315,12 @@ void pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
                 // // we just added
                 // auto sub_function = make_shared<Function>(cluster_outputs, cluster_inputs);
                 // auto fc = make_shared<op::FunctionCall>(
-                //     function_call_outputs, function_call_inputs, *sub_function, m_fallback_backend);
+                //     function_call_outputs, function_call_inputs, *sub_function,
+                //     m_fallback_backend);
                 // fc->set_placement(1);
 
-                // // Now connect all of the nodes which get inputs from nodes that now reside inside
+                // // Now connect all of the nodes which get inputs from nodes that now reside
+                // inside
                 // // the FunctionCall we just created
                 // size_t output_index = 0;
                 // for (Output<Node> output : output_set)
@@ -340,13 +339,6 @@ void pass::Hybrid::rewrite_function(const shared_ptr<Function>& f)
             }
         }
     }
-}
-
-void pass::Hybrid::add_hybrid_to_pass_manager(ngraph::pass::Manager& pass_manager)
-{
-    const std::string backend_name = "INTERPRETER";
-    shared_ptr<runtime::Backend> fallback_backend = runtime::Backend::create(backend_name);
-    pass_manager.register_pass<pass::Hybrid>(fallback_backend);
 }
 
 bool pass::Hybrid::is_fallback(const Node* node) const

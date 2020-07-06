@@ -135,7 +135,8 @@ class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : publ
 
 public:
     INTExecutable(const std::shared_ptr<Function>& function,
-                  bool enable_performance_collection = false);
+                  bool enable_performance_collection = false,
+                  std::set<std::string> unsupported_ops = {});
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& inputs) override;
@@ -169,7 +170,7 @@ protected:
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
     NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
-    std::set<std::string> m_unsupported_op_name_list;
+    std::set<std::string> m_unsupported_ops;
 
     static OP_TYPEID get_typeid(const Node& node);
 

@@ -18,16 +18,15 @@
 #include <thread>
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/pass/manager.hpp"
-#include "ngraph/runtime/backend.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "util/test_tools.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/pass/hybrid.hpp"
+#include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/validate.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/util.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
@@ -40,12 +39,13 @@ using namespace std;
 // clean up tests to use function to generate functionCall
 // TEST(function_call, silly_input_tensor_nnp)
 // {
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     auto A = make_shared<op::Parameter>(element::f32, Shape{2, 3, 2});
 //     auto B = make_shared<op::Parameter>(element::f32, Shape{3, 4});
 //     auto f =
-//         make_shared<Function>(make_shared<op::ArgMax>(A, 1, element::i32), ParameterVector{A, B});
+//         make_shared<Function>(make_shared<op::ArgMax>(A, 1, element::i32), ParameterVector{A,
+//         B});
 //     auto exec = backend->compile(f);
 
 //     // Create some tensors for input/output
@@ -60,7 +60,7 @@ using namespace std;
 
 // TEST(function_call, create_tensor_nnp)
 // {
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     Shape shape{2, 2};
 //     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -88,7 +88,7 @@ using namespace std;
 // {
 //     Shape shape0{}, shape1{1}, shape2{1, 2};
 
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     auto A = make_shared<op::Parameter>(element::f32, shape0);
 //     auto B = make_shared<op::Parameter>(element::f32, shape1);
@@ -111,7 +111,7 @@ using namespace std;
 
 // TEST(function_call, DISABLED_topk)
 // {
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     // Create the graph
 //     Shape shape{3};
@@ -125,7 +125,8 @@ using namespace std;
 //     auto out_index = make_shared<op::GetOutputElement>(topk, 0);
 //     auto add = make_shared<op::Add>(out_value, power_input2);
 
-//     auto f = make_shared<Function>(NodeVector{make_shared<op::Equal>(add, equal_input), out_index},
+//     auto f = make_shared<Function>(NodeVector{make_shared<op::Equal>(add, equal_input),
+//     out_index},
 //                                    ParameterVector{power_input1, power_input2, equal_input});
 
 //     pass::Manager pass_manager;
@@ -172,7 +173,7 @@ using namespace std;
 // // backwards compatibility test for old api: create_tensor
 // TEST(function_call, create_tensor_function_call)
 // {
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     Shape shape{3};
 //     auto power_input1 = make_shared<op::Parameter>(element::f32, shape);
@@ -209,7 +210,7 @@ using namespace std;
 
 // TEST(function_call, create_hybrid_tensor_function_call)
 // {
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     // Create the graph
 //     Shape shape{3};
@@ -224,7 +225,8 @@ using namespace std;
 //     auto add = make_shared<op::Add>(out_value, power_input2);
 
 //     auto f =
-//         make_shared<Function>(NodeVector{make_shared<op::Add>(add, add2_input), out_index, power},
+//         make_shared<Function>(NodeVector{make_shared<op::Add>(add, add2_input), out_index,
+//         power},
 //                               ParameterVector{power_input1, power_input2, add2_input});
 
 //     auto exec = as_nnp_executable(backend->compile(f));
@@ -271,10 +273,11 @@ using namespace std;
 //     auto t4 = make_shared<op::Multiply>(t1, t2);
 //     auto t5 = make_shared<op::Add>(t3, t4);
 
-//     auto func = make_shared<Function>(NodeVector{t1, t2, t3, t4, t5}, ParameterVector{A, B, C, D});
+//     auto func = make_shared<Function>(NodeVector{t1, t2, t3, t4, t5}, ParameterVector{A, B, C,
+//     D});
 
 //     // This works
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 
 //     pass::Manager pass_manager;
 //     t1->set_placement(Placement::CPU);
@@ -332,7 +335,7 @@ using namespace std;
 //     auto R2 = R1 * B;
 //     auto f = make_shared<Function>(OutputVector{R1, R2}, ParameterVector{A, B});
 
-//     auto backend = runtime::Backend::create("NNP");
+//     auto backend = runtime::Backend::create("INTERPRETER");
 //     auto exec = backend->compile(f);
 
 //     // Create some tensors for input/output
@@ -355,29 +358,29 @@ using namespace std;
 //     EXPECT_TRUE(test::all_close_f(read_vector<float>(r2), e2));
 // }
 
-// TEST(function_call, output_reshape)
-// {
-//     Shape shape{8, 384, 1};
-//     Shape shape2{8, 384};
-//     vector<int64_t> const_data(1);
-//     auto A = make_shared<op::Parameter>(element::f32, shape);
-//     // op::Sin is selected because it is a fallback op that likely will remain a fallback op
-//     // Tensor B must be CPU fallback
-//     auto B = make_shared<op::Sin>(A);
-//     auto Br = make_shared<op::Reshape>(B, AxisVector{0, 1, 2}, shape2);
-//     auto M = make_shared<op::Max>(Br, AxisSet{1});
+TEST(function_call, output_reshape)
+{
+    Shape shape{8, 384, 1};
+    Shape shape2{8, 384};
+    vector<int64_t> const_data(1);
+    auto A = make_shared<op::Parameter>(element::f32, shape);
+    // op::Sin is selected because it is a fallback op that likely will remain a fallback op
+    // Tensor B must be CPU fallback
+    auto B = make_shared<op::Sin>(A);
+    auto Br = make_shared<op::Reshape>(B, AxisVector{0, 1, 2}, shape2);
+    auto M = make_shared<op::Max>(Br, AxisSet{1});
 
-//     auto f = make_shared<Function>(OutputVector{Br, M}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{Br, M}, ParameterVector{A});
 
-//     auto backend = runtime::Backend::create("NNP");
-//     auto exec = backend->compile(f);
+    auto backend = runtime::Backend::create("INTERPRETER");
+    auto exec = backend->compile(f);
 
-//     // Create some tensors for input/output
-//     shared_ptr<runtime::Tensor> a = exec->create_input_tensor(0);
-//     shared_ptr<runtime::Tensor> r1 = exec->create_output_tensor(0);
-//     shared_ptr<runtime::Tensor> r2 = exec->create_output_tensor(1);
+    // Create some tensors for input/output
+    shared_ptr<runtime::Tensor> a = exec->create_input_tensor(0);
+    shared_ptr<runtime::Tensor> r1 = exec->create_output_tensor(0);
+    shared_ptr<runtime::Tensor> r2 = exec->create_output_tensor(1);
 
-//     // This test is only checking that the graph compiles and does not need to check
-//     // results.
-//     exec->call_with_validate({r1, r2}, {a});
-// }
+    // This test is only checking that the graph compiles and does not need to check
+    // results.
+    exec->call_with_validate({r1, r2}, {a});
+}

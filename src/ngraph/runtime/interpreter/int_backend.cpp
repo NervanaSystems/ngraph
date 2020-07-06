@@ -37,8 +37,8 @@ extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
 
 runtime::interpreter::INTBackend::INTBackend() {}
 
-runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
-    : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
+runtime::interpreter::INTBackend::INTBackend(set<string> unsupported_ops)
+    : m_unsupported_ops{unsupported_ops}
 {
 }
 
@@ -68,7 +68,7 @@ shared_ptr<runtime::Executable>
 
 bool runtime::interpreter::INTBackend::is_supported(const Node& node) const
 {
-    return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
+    return m_unsupported_ops.find(node.description()) == m_unsupported_ops.end();
 }
 
 std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istream& in)

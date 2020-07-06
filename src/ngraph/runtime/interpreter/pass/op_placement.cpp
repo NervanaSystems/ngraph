@@ -16,16 +16,19 @@
 
 #include <numeric>
 
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/interpreter/pass/op_placement.hpp"
 
 using namespace ngraph;
 using namespace std;
 
-runtime::interpreter::pass::OpPlacement::OpPlacement()
+runtime::interpreter::pass::OpPlacement::OpPlacement(std::set<std::string> unsupported_ops)
+    : m_unsupported_ops{unsupported_ops}
 {
 }
 
-bool runtime::interpreter::pass::OpPlacement::run_on_function(std::shared_ptr<ngraph::Function> function)
+bool runtime::interpreter::pass::OpPlacement::run_on_function(
+    std::shared_ptr<ngraph::Function> function)
 {
     for (shared_ptr<Node> node : function->get_ops())
     {
@@ -50,5 +53,6 @@ runtime::interpreter::pass::OpPlacement::DeviceSupport
     runtime::interpreter::pass::OpPlacement::is_supported_on_device(shared_ptr<Node> node)
 {
     DeviceSupport rc = DeviceSupport::UNKNOWN;
+    NGRAPH_INFO << *node;
     return rc;
 }

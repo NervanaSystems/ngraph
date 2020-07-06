@@ -23,8 +23,8 @@
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/hybrid.hpp"
+#include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
@@ -62,9 +62,11 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
 }
 
 runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& function,
-                                                   bool enable_performance_collection)
+                                                   bool enable_performance_collection,
+                                                   set<string> unsupported_ops)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
+    , m_unsupported_ops{unsupported_ops}
 {
 #ifndef NGRAPH_JSON_DISABLE
     // To verify that the serializer and deserializer work correctly let's just run this
@@ -95,7 +97,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
-    pass_manager.register_pass<interpreter::pass::OpPlacement>();
+    pass_manager.register_pass<interpreter::pass::OpPlacement>(m_unsupported_ops);
     // pass_manager.register_pass<ngraph::pass::Hybrid>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())

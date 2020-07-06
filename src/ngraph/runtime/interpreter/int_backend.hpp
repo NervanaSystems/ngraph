@@ -44,7 +44,7 @@ class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTBackend : public 
 {
 public:
     INTBackend();
-    INTBackend(const std::vector<std::string>& unsupported_op_name_list);
+    INTBackend(std::set<std::string> unsupported_ops);
     INTBackend(const INTBackend&) = delete;
     INTBackend(INTBackend&&) = delete;
     INTBackend& operator=(const INTBackend&) = delete;
@@ -63,5 +63,5 @@ public:
     bool is_supported(const Node& node) const override;
 
 private:
-    std::set<std::string> m_unsupported_op_name_list;
+    std::set<std::string> m_unsupported_ops;
 };

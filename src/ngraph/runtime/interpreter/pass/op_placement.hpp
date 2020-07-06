@@ -38,7 +38,7 @@ namespace ngraph
 class ngraph::runtime::interpreter::pass::OpPlacement : public ngraph::pass::FunctionPass
 {
 public:
-    OpPlacement();
+    OpPlacement(std::set<std::string> unsupported_ops);
 
     enum class DeviceSupport
     {
@@ -50,6 +50,6 @@ public:
 private:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
     void assign_placement(std::shared_ptr<ngraph::Node> node);
-DeviceSupport
-    is_supported_on_device(std::shared_ptr<ngraph::Node> node);
+    DeviceSupport is_supported_on_device(std::shared_ptr<ngraph::Node> node);
+    std::set<std::string> m_unsupported_ops;
 };

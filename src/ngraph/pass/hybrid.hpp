@@ -24,18 +24,16 @@
 
 namespace ngraph
 {
-            namespace pass
-            {
-                class Hybrid;
-            }
+    namespace pass
+    {
+        class Hybrid;
+    }
 }
 
 class ngraph::pass::Hybrid : public ngraph::pass::FunctionPass
 {
 public:
-    Hybrid(std::shared_ptr<runtime::Backend> fallback_backend);
-
-    static void add_hybrid_to_pass_manager(ngraph::pass::Manager& manager);
+    Hybrid();
 
 private:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
@@ -49,6 +47,4 @@ private:
     bool is_fallback(std::shared_ptr<Node> node) const;
     size_t get_placement(const Node* node) const;
     size_t get_placement(std::shared_ptr<Node> node) const;
-
-    std::shared_ptr<runtime::Backend> m_fallback_backend;
 };
