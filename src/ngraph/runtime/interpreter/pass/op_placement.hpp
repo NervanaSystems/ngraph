@@ -18,37 +18,38 @@
 
 #include <memory>
 #include <set>
-#include <vector>
 
 #include "ngraph/pass/pass.hpp"
 
 namespace ngraph
 {
+    namespace runtime
+    {
+        namespace interpreter
+        {
             namespace pass
             {
-                class Hybrid;
+                class OpPlacement;
             }
+        }
+    }
 }
 
-class ngraph::pass::Hybrid : public ngraph::pass::FunctionPass
+class ngraph::runtime::interpreter::pass::OpPlacement : public ngraph::pass::FunctionPass
 {
 public:
-    Hybrid(std::shared_ptr<runtime::Backend> fallback_backend);
+    OpPlacement();
 
-    static void add_hybrid_to_pass_manager(ngraph::pass::Manager& manager);
+    enum class DeviceSupport
+    {
+        UNKNOWN,
+        SUPPORTED,
+        UNSUPPORTED
+    };
 
 private:
     virtual bool run_on_function(std::shared_ptr<ngraph::Function> function) override;
-    void rewrite_function(const std::shared_ptr<Function>& f);
-
-    std::vector<std::unordered_set<std::shared_ptr<Node>>>
-        group_function_nodes_to_clusters(const std::shared_ptr<Function>& f);
-    Node* take_independent_node_with_placement_priority(
-        std::vector<std::deque<Node*>>& independent_nodes_by_placement, size_t placement);
-    bool is_fallback(const Node* node) const;
-    bool is_fallback(std::shared_ptr<Node> node) const;
-    size_t get_placement(const Node* node) const;
-    size_t get_placement(std::shared_ptr<Node> node) const;
-
-    std::shared_ptr<runtime::Backend> m_fallback_backend;
+    void assign_placement(std::shared_ptr<ngraph::Node> node);
+DeviceSupport
+    is_supported_on_device(std::shared_ptr<ngraph::Node> node);
 };

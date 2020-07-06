@@ -24,11 +24,13 @@
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/like_replacement.hpp"
+#include "ngraph/pass/hybrid.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/interpreter/pass/op_placement.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
@@ -85,13 +87,16 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         }
         return retval;
     };
-    pass::Manager pass_manager;
-    pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
-    pass_manager.register_pass<pass::Opset1Downgrade>();
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    ngraph::pass::Manager pass_manager;
+    pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
+    pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
-    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<interpreter::pass::OpPlacement>();
+    // pass_manager.register_pass<ngraph::pass::Hybrid>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {
