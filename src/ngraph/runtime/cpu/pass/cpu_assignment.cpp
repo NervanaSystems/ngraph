@@ -38,7 +38,6 @@
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/experimental/quantized_dot_bias.hpp"
 #include "ngraph/op/gelu.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -185,17 +184,6 @@ namespace ngraph
                         op_annotations->add_in_place_oi_pair({0, ADD_INPUT, true});
                         convolution->set_op_annotations(op_annotations);
                     }
-                }
-
-                template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::GetOutputElement)
-                {
-                    (void)external_function;
-                    auto goe = static_cast<ngraph::op::GetOutputElement*>(node);
-                    auto op_annotations =
-                        std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
-                    op_annotations->add_in_place_oi_pair({0, 0, false});
-                    goe->set_op_annotations(op_annotations);
                 }
 
                 template <>
@@ -1093,8 +1081,6 @@ static const runtime::cpu::pass::AssignOpMap s_dispatcher{
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedMatmul>},
     {TI(ngraph::op::QuantizedDotBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::QuantizedDotBias>},
-    {TI(ngraph::op::GetOutputElement),
-     &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::DeconvolutionBias>},
     {TI(ngraph::op::ScatterAdd),

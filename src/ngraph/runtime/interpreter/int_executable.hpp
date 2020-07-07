@@ -359,13 +359,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::GetOutputElement:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
-            break;
-        }
         case OP_TYPEID::BatchMatMul:
         {
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),

@@ -29,7 +29,6 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/convolution.hpp"
 #include "ngraph/op/dequantize.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/quantize.hpp"
 #include "ngraph/op/reshape.hpp"
@@ -565,10 +564,6 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         else if (n->is_binary_elementwise_arithmetic())
         {
             sink_binary(n, reorders, reshapes_to_delete);
-        }
-        else if (auto goe = as_type_ptr<op::GetOutputElement>(n))
-        {
-            write_reshapemap(reorders, goe, create_default_reshape(goe));
         }
         else if (auto quantize = as_type_ptr<op::Quantize>(n))
         {

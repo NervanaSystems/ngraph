@@ -92,7 +92,6 @@ set(SRC
     builder/slice.cpp
     builder/state.cpp
     builder/softmax.cpp
-    builder/get_output_element.cpp
     builder/sum.cpp
     builder/tile.cpp
     builder/topk.cpp

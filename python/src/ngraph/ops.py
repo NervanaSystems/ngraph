@@ -20,7 +20,7 @@ from typing import Callable, Iterable, List, Optional, Set, Union
 import numpy as np
 
 from ngraph.impl import Node, Shape
-from ngraph.impl.op import Constant, GetOutputElement, Parameter
+from ngraph.impl.op import Constant, Parameter
 from ngraph.utils.decorators import binary_op, nameable_op, unary_op
 from ngraph.utils.input_validation import (
     assert_list_of_ints,
@@ -2475,12 +2475,6 @@ def roi_align(
         "mode": mode,
     }
     return _get_node_factory().create("ROIAlign", inputs, attributes)
-
-
-@nameable_op
-def get_output_element(data: NodeInput, index: int, name: Optional[str] = None) -> Node:
-    """Return the n-th element of the input tuple."""
-    return GetOutputElement(as_node(data), index)
 
 
 @nameable_op

@@ -16,7 +16,6 @@
 
 #include "ngraph/node_input.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {

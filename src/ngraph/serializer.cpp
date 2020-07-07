@@ -55,10 +55,29 @@ namespace
 #define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
 #include "ngraph/op_version_tbl.hpp"
+        NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
-        UnknownOp
+            UnknownOp
     };
 }
+
+namespace ngraph
+{
+    namespace op
+    {
+        namespace v0
+        {
+            /// \brief Operation to get an output from a node.
+            class NGRAPH_API GetOutputElement : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+            };
+        }
+    }
+}
+constexpr NodeTypeInfo op::v0::GetOutputElement::type_info;
 
 static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 {
@@ -70,6 +89,9 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 #define NGRAPH_OP(NAME, VERSION)                                                                   \
     {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
 #include "ngraph/op_version_tbl.hpp"
+        // Still need to deserialize GetOutputElement because it may be in some old json files
+        // This is just to handle such cases.
+        NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -273,6 +295,7 @@ protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
+    map<string, Output<Node>> m_goe_alias;
 };
 
 static string
@@ -599,7 +622,16 @@ Output<Node> JSONDeserializer::deserialize_output(json j)
     {
         throw ngraph_error("Expected string or object an output while deserializing");
     }
-    return Output<Node>(deserialize_node_reference(json_node_reference), index);
+    const string& name = json_node_reference;
+    auto it = m_goe_alias.find(name);
+    if (it != m_goe_alias.end())
+    {
+        return it->second.get_node_shared_ptr();
+    }
+    else
+    {
+        return Output<Node>(m_node_map.at(name), index);
+    }
 }
 
 OutputVector JSONDeserializer::deserialize_output_vector(json j)
@@ -1468,9 +1500,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(
-                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
-                node_js.at("n").get<size_t>());
+            size_t n = node_js.at("n").get<size_t>();
+            m_goe_alias.insert({node_name, args[0]});
             break;
         }
         case OP_TYPEID::Greater:
@@ -2499,31 +2530,34 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 #pragma GCC diagnostic pop
 #endif
 
-        for (auto& control_dep : control_deps_inputs)
+        if (node)
         {
-            node->add_control_dependency(deserialize_node_reference(control_dep));
-        }
-
-        if (!friendly_name.empty())
-        {
-            node->set_friendly_name(friendly_name);
-        }
-        else
-        {
-            node->set_friendly_name(node_name);
-        }
-        if (ngraph::get_provenance_enabled())
-        {
-            if (has_key(node_js, "provenance_tags"))
+            for (auto& control_dep : control_deps_inputs)
             {
-                const std::vector<json> prov_js = node_js.at("provenance_tags");
-                for (auto prov_tag : prov_js)
+                node->add_control_dependency(deserialize_node_reference(control_dep));
+            }
+
+            if (!friendly_name.empty())
+            {
+                node->set_friendly_name(friendly_name);
+            }
+            else
+            {
+                node->set_friendly_name(node_name);
+            }
+            if (ngraph::get_provenance_enabled())
+            {
+                if (has_key(node_js, "provenance_tags"))
                 {
-                    node->add_provenance_tag(prov_tag);
+                    const std::vector<json> prov_js = node_js.at("provenance_tags");
+                    for (auto prov_tag : prov_js)
+                    {
+                        node->add_provenance_tag(prov_tag);
+                    }
                 }
             }
+            m_node_map[node_name] = node;
         }
-        m_node_map[node_name] = node;
     }
     catch (exception& err)
     {
@@ -3017,11 +3051,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GatherND: { break;
     }
-    case OP_TYPEID::GetOutputElement:
-    {
-        auto tmp = static_cast<const op::GetOutputElement*>(&n);
-        node["n"] = tmp->get_n();
-        break;
+    case OP_TYPEID::GetOutputElement: { break;
     }
     case OP_TYPEID::Gelu: { break;
     }

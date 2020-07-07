@@ -28,7 +28,6 @@
 #include "ngraph/frontend/onnx_import/op/lstm.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lstm_sequence.hpp"
 #include "ngraph/opset/opset0.hpp"
 #include "ngraph/shape.hpp"

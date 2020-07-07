@@ -21,7 +21,6 @@
 #include "ngraph/env_util.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 
 using namespace std;
@@ -185,15 +184,7 @@ bool pattern::Matcher::match_value(const Output<Node>& pattern_value,
             return false;
         }
     }
-    bool rc = pattern_node->match_value(this, pattern_value, graph_value);
-    // if (!rc && is_type<ngraph::op::GetOutputElement>(graph_node))
-    // {
-    //     // If the graph_node is a GetOutputElement and the match failed then try the
-    //     // match against the GetOutputElement's input_value. This will recursively skip
-    //     // GetOutputElements in the graph so the patterns do not need to contain them.
-    //     rc = pattern_node->match_value(this, pattern_value, graph_node->input_value(0));
-    // }
-    return rc;
+    return pattern_node->match_value(this, pattern_value, graph_value);
 }
 
 bool pattern::Matcher::match_permutation(const OutputVector& pattern_args, const OutputVector& args)

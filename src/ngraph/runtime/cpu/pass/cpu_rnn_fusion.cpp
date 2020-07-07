@@ -32,7 +32,6 @@
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/dot.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
@@ -401,16 +400,6 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         else if (hidden_state.get_shape() != cell_state.get_shape())
         {
             swap_lstm_inputs();
-        }
-        else if (is_type<ngraph::op::GetOutputElement>(cell_state.get_node_shared_ptr()))
-        {
-            // swap the inputs if the cell_state and hidden state does not
-            // belong to the same Lstm
-            if (hidden_state.get_node_shared_ptr()->get_input_node_ptr(0) !=
-                cell_state.get_node_shared_ptr()->get_input_node_ptr(0))
-            {
-                swap_lstm_inputs();
-            }
         }
         else if (hidden_state.get_node() != cell_state.get_node())
         {

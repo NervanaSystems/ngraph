@@ -44,8 +44,6 @@ extern "C" GPU_BACKEND_API void ngraph_register_gpu_backend()
 runtime::gpu::GPUBackend::GPUBackend()
     : runtime::Backend()
 {
-    // Some pass patterns need to be fixed
-    set_remove_goe(false);
 }
 
 runtime::gpu::GPUBackend::BackendContext::BackendContext()

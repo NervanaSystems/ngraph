@@ -496,17 +496,6 @@ std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Floor>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_GetOutputElement(EMIT_ARGS)
-{
-    auto get_tuple_element = static_cast<const ngraph::op::GetOutputElement*>(node);
-    auto& host_emitter = compiled_function->get_primitive_emitter()->get_host_emitter();
-    size_t index = host_emitter->build_memcpy(cudaMemcpyDeviceToDevice,
-                                              out[0].get_size() * out[0].get_element_type().size(),
-                                              0,
-                                              get_tuple_element->get_n());
-    return compiled_function->add_to_runtime(index, function_name, args, out);
-}
-
 std::string runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::Greater>(compiled_function, function_name, node, args, out);

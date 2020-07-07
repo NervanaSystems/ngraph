@@ -68,7 +68,6 @@
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/gelu.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/group_conv.hpp"
@@ -1073,17 +1072,6 @@ namespace ngraph
                 writer << out[0].get_name() << "[i] = " << args[0].get_name() << "[i] * "
                        << args[1].get_name() << "[i];\n";
                 writer.block_end();
-                writer.block_end();
-            }
-
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement)
-            {
-                (void)external_function;
-                (void)node;
-                writer.block_begin();
-                writer << "memcpy(" << out[0].get_name() << ", " << args[0].get_name() << ", "
-                       << out[0].get_size() * out[0].get_element_type().size() << ");\n";
                 writer.block_end();
             }
 
@@ -4361,18 +4349,6 @@ namespace ngraph
                                       std::function<std::string(const std::vector<std::string>&)>>
                 inline_emitters = initialize_inline_emitters();
 
-            // GOEE doesn't see GOEs in subgraphs that are hidden inside CompiledKernels
-            // we have to manually propagate the source output
-            static Output<Node> get_goe_input_output(const Output<Node>& output)
-            {
-                auto it = output;
-                while (auto goe = as_type<ngraph::op::GetOutputElement>(it.get_node()))
-                {
-                    it = goe->input(0).get_source_output();
-                }
-                return it;
-            }
-
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::CompiledKernel)
             {
@@ -4436,8 +4412,7 @@ namespace ngraph
                     for (Input<Node> input : op_node->inputs())
                     {
                         // args are expected to be in a map already
-                        sargs.push_back(
-                            loop_symbol_table.at(get_goe_input_output(input.get_source_output())));
+                        sargs.push_back(loop_symbol_table.at(input.get_source_output()));
                     }
 
                     if (as_type_ptr<ngraph::op::Relu>(op_node))

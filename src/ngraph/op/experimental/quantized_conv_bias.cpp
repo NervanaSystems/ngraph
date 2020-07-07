@@ -17,7 +17,6 @@
 #include "quantized_conv_bias.hpp"
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 using namespace std;
 using namespace ngraph;

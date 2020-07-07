@@ -43,7 +43,6 @@ Some operations are experimental.
    * :doc:`equal`
    * :doc:`exp`
    * :doc:`floor`
-   * :doc:`get_output_element`
    * :doc:`greater_eq`
    * :doc:`greater`
    * :doc:`less_eq`
@@ -124,7 +123,6 @@ Some operations are experimental.
    equal.rst
    exp.rst
    floor.rst
-   get_output_element.rst
    greater_eq.rst
    greater.rst
    less_eq.rst

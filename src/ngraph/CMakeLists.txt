@@ -269,8 +269,6 @@ set (SRC
     op/gelu.hpp
     op/gemm.cpp
     op/gemm.hpp
-    op/get_output_element.cpp
-    op/get_output_element.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
     op/greater.cpp
@@ -565,8 +563,6 @@ set (SRC
     pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
-    pass/get_output_element_elimination.cpp
-    pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
     pass/graph_rewrite.hpp
     pass/implicit_broadcast_elimination.cpp
