@@ -512,7 +512,6 @@ namespace ngraph
     private:
         descriptor::Input& get_input_descriptor(size_t position);
         descriptor::Output& get_output_descriptor(size_t position);
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         std::vector<Node*> m_control_dependents;
         NodeVector m_control_dependencies;
@@ -626,11 +625,11 @@ namespace ngraph
     void check_new_args_count(const Node* node, T new_args)
     {
         NODE_VALIDATION_CHECK(node,
-                              new_args.size() == node->get_arguments().size(),
+                              new_args.size() == node->inputs().size(),
                               "copy_with_new_args() expected ",
-                              node->get_arguments().size(),
+                              node->get_input_size(),
                               " argument",
-                              (node->get_arguments().size() == 1 ? "" : "s"),
+                              (node->inputs().size() == 1 ? "" : "s"),
                               " but got ",
                               new_args.size());
     }

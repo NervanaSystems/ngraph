@@ -340,7 +340,7 @@ namespace ngraph
                         QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op =
-                        as_type_ptr<ngraph::op::Constant>(quantize->get_argument(1));
+                        as_type_ptr<ngraph::op::Constant>(quantize->get_input_node_shared_ptr(1));
                     if (scale_const_op == nullptr)
                     {
                         auto arg1_buffer_index =

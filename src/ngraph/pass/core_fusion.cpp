@@ -1330,7 +1330,7 @@ void pass::CoreFusion::construct_conv_bias_add()
             add_input_m = add_m->input_value(1);
         }
 
-        if (get_user_count(conv_m.get()) > 1)
+        if (get_user_count(conv_m->output(0)) > 1)
         {
             NGRAPH_DEBUG << "Convolution has more than one user";
             return false;

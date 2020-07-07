@@ -235,7 +235,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
             auto lower_bounds = slice->get_lower_bounds();
             auto upper_bounds = slice->get_upper_bounds();
 
-            auto arg = slice->get_argument(0);
+            auto arg = slice->get_input_node_ptr(0);
             if (arg->is_constant())
             {
                 NGRAPH_DEBUG << "cpu_memory_optimization: " << arg->get_name()
