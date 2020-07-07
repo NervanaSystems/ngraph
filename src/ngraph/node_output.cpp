@@ -22,16 +22,6 @@
 
 namespace ngraph
 {
-    namespace
-    {
-        static bool remove_goe = true;
-    }
-    void set_remove_goe(bool value)
-    {
-        NGRAPH_DEBUG << "Remove GOE set: " << value;
-        remove_goe = value;
-    }
-    bool get_remove_goe() { return remove_goe; }
     Output<Node>::Output(Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)

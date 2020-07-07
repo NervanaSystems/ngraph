@@ -68,20 +68,6 @@ namespace ngraph
     };
 }
 
-class DisableRemoveGOE
-{
-public:
-    DisableRemoveGOE()
-        : m_saved_remove_goe(ngraph::get_remove_goe())
-    {
-        ngraph::set_remove_goe(false);
-    }
-    ~DisableRemoveGOE() { ngraph::set_remove_goe(m_saved_remove_goe); }
-
-private:
-    bool m_saved_remove_goe;
-};
-
 bool validate_list(const ngraph::NodeVector& nodes);
 std::shared_ptr<ngraph::Function> make_test_graph();
 #ifndef NGRAPH_JSON_DISABLE
