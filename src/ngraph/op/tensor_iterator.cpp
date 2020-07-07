@@ -17,7 +17,6 @@
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/factory.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/specialize_function.hpp"
 
 using namespace std;

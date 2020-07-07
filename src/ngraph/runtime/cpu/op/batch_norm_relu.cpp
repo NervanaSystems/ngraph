@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 using namespace ngraph;
 

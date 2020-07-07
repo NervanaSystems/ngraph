@@ -61,6 +61,24 @@ namespace
     };
 }
 
+namespace ngraph
+{
+    namespace op
+    {
+        namespace v0
+        {
+            /// \brief Operation to get an output from a node.
+            class NGRAPH_API GetOutputElement : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+            };
+        }
+    }
+}
+constexpr NodeTypeInfo op::v0::GetOutputElement::type_info;
+
 static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 {
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:

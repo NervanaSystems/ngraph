@@ -24,7 +24,6 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/interpolate.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/pass/manager.hpp"

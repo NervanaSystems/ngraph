@@ -18,7 +18,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/opset/opset.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/runtime/ie/ie_backend_visibility.hpp"

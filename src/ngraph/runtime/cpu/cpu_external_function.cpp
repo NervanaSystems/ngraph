@@ -90,7 +90,6 @@
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/gemm.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/group_conv.hpp"
@@ -151,7 +150,6 @@
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -1321,7 +1319,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass)
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         PropagateCacheability, true, ngraph::pass, runtime::cpu::get_annotations_factory())
     bool reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||

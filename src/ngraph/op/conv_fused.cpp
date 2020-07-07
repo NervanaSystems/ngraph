@@ -19,7 +19,6 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/relu.hpp"
 #include "ngraph/op/sum.hpp"
 #include "ngraph/validation_util.hpp"

@@ -15,7 +15,6 @@
 //*****************************************************************************
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;

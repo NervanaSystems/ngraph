@@ -22,7 +22,6 @@
 
 #include "gpu_layout.hpp"
 #include "gpu_op_annotations.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/topk.hpp"
