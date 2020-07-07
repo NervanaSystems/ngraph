@@ -667,7 +667,6 @@ TEST(cpu_fusion, sigmoid_multiply_fusion)
 
 TEST(cpu_fusion, fuse_bi_directional_rnn)
 {
-    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
@@ -713,7 +712,6 @@ TEST(cpu_fusion, rnn_fusion_from_json_model)
 
 TEST(cpu_fusion, fuse_lstm_cells)
 {
-    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     const string json_path =
@@ -748,7 +746,6 @@ TEST(cpu_fusion, fuse_2_layer_rnn)
 
 TEST(cpu_fusion, fuse_1_layer_rnn)
 {
-    DisableRemoveGOE nogoe;
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::LSTMFusion>();
     pass_manager.register_pass<runtime::cpu::pass::RNNFusion>();
