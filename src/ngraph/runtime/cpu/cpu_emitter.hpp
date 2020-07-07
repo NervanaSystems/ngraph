@@ -120,8 +120,6 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement);
-            template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Concat);

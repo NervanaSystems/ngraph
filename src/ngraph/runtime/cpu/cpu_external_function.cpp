@@ -333,7 +333,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::GatherND), &runtime::cpu::CPU_Emitter::emit<op::GatherND>},
     {TI(ngraph::op::ScatterAdd), &runtime::cpu::CPU_Emitter::emit<op::ScatterAdd>},
     {TI(ngraph::op::ScatterNDAdd), &runtime::cpu::CPU_Emitter::emit<op::ScatterNDAdd>},
-    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
     {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::emit<op::Less>},
@@ -1012,7 +1011,6 @@ using namespace ngraph;
             writer << func_name << "(" << join(names) << ", ctx, cg_ctx);\n";
         }
 
-        // skip multi-output nodes since they would be covered by GetOutputElement
         if (node->get_output_size() == 1 &&
             // skip non-FP nodes
             (node->get_output_element_type(0) == element::f32 ||

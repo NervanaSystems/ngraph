@@ -88,10 +88,6 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
     for (auto n : f->get_ordered_ops())
     {
         // don't try to replace `op::Result`
-        // all multi-output feed into `GetOutputElement`
-        // if any `GetOutputElement` is zero-length
-        // we replace it w/ a signalling constant
-        // so we don't have to deal w/ multi-output nodes directly
         if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;

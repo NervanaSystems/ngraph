@@ -566,10 +566,6 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         {
             sink_binary(n, reorders, reshapes_to_delete);
         }
-        else if (auto goe = as_type_ptr<op::GetOutputElement>(n))
-        {
-            write_reshapemap(reorders, goe, create_default_reshape(goe));
-        }
         else if (auto quantize = as_type_ptr<op::Quantize>(n))
         {
             sink_quantize(quantize, reorders, reshapes_to_delete);

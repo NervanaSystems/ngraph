@@ -55,9 +55,9 @@ namespace
 #define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
 #include "ngraph/op_version_tbl.hpp"
-    NGRAPH_OP(GetOutputElement, 0)
+        NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
-        UnknownOp
+            UnknownOp
     };
 }
 
@@ -71,9 +71,9 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 #define NGRAPH_OP(NAME, VERSION)                                                                   \
     {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
 #include "ngraph/op_version_tbl.hpp"
-    // Still need to deserialize GetOutputElement because it may be in some old json files
-    // This is just to handle such cases.
-    NGRAPH_OP(GetOutputElement, 0)
+        // Still need to deserialize GetOutputElement because it may be in some old json files
+        // This is just to handle such cases.
+        NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -3022,9 +3022,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GatherND: { break;
     }
-    case OP_TYPEID::GetOutputElement:
-    {
-        break;
+    case OP_TYPEID::GetOutputElement: { break;
     }
     case OP_TYPEID::Gelu: { break;
     }
