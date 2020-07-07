@@ -906,9 +906,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_relu()
         // ConvolutionBias created only if it can run with DNNL.
         // No further checks needed.
         auto conv_relu =
-            std::make_shared<ngraph::op::ConvolutionBias>(conv->get_argument(0),
-                                                          conv->get_argument(1),
-                                                          conv->get_argument(2),
+            std::make_shared<ngraph::op::ConvolutionBias>(conv->input_value(0),
+                                                          conv->input_value(1),
+                                                          conv->input_value(2),
                                                           conv->get_window_movement_strides(),
                                                           conv->get_window_dilation_strides(),
                                                           conv->get_padding_below(),
@@ -1013,9 +1013,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add_relu()
         // ConvolutionAdd created only if it can run with DNNL.
         // No further checks needed.
         auto conv_n =
-            std::make_shared<ngraph::op::ConvolutionAdd>(conv_m->get_argument(0),
-                                                         conv_m->get_argument(1),
-                                                         conv_m->get_argument(2),
+            std::make_shared<ngraph::op::ConvolutionAdd>(conv_m->input_value(0),
+                                                         conv_m->input_value(1),
+                                                         conv_m->input_value(2),
                                                          conv_m->get_window_movement_strides(),
                                                          conv_m->get_window_dilation_strides(),
                                                          conv_m->get_padding_below(),
@@ -1152,11 +1152,8 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
             return false;
         }
 
-        auto dropout_n = std::make_shared<ngraph::op::Dropout>(pvm[x],
-                                                               gm->get_argument(0),
-                                                               gm->get_argument(2),
-                                                               gm->get_argument(3),
-                                                               gm->get_argument(4));
+        auto dropout_n = std::make_shared<ngraph::op::Dropout>(
+            pvm[x], gm->input_value(0), gm->input_value(2), gm->input_value(3), gm->input_value(4));
 
         m.get_match_value().replace(dropout_n->output(0));
         pvm[genmask_label].replace(dropout_n->output(1));
@@ -1213,10 +1210,10 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add_relu()
         // ConvolutionBiasAdd created only if it can run with DNNL.
         // No further checks needed.
         auto conv_n =
-            std::make_shared<ngraph::op::ConvolutionBiasAdd>(conv_m->get_argument(0),
-                                                             conv_m->get_argument(1),
-                                                             conv_m->get_argument(2),
-                                                             conv_m->get_argument(3),
+            std::make_shared<ngraph::op::ConvolutionBiasAdd>(conv_m->input_value(0),
+                                                             conv_m->input_value(1),
+                                                             conv_m->input_value(2),
+                                                             conv_m->input_value(3),
                                                              conv_m->get_window_movement_strides(),
                                                              conv_m->get_window_dilation_strides(),
                                                              conv_m->get_padding_below(),
@@ -1572,7 +1569,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
                 Shape bshape{bcast->get_output_shape(0)[1]};
                 return std::static_pointer_cast<ngraph::Node>(
                     std::make_shared<ngraph::op::Broadcast>(
-                        bcast->get_argument(0), bshape, AxisSet{0}));
+                        bcast->input_value(0), bshape, AxisSet{0}));
             }
             if (shape_size(input_shape) == 1)
             {
@@ -1580,7 +1577,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
                 return std::static_pointer_cast<ngraph::Node>(
                     std::make_shared<ngraph::op::Broadcast>(
                         std::make_shared<ngraph::op::Reshape>(
-                            bcast->get_argument(0), get_default_order(input_shape), Shape{}),
+                            bcast->input_value(0), get_default_order(input_shape), Shape{}),
                         bshape,
                         AxisSet{0}));
             }
@@ -1776,9 +1773,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::
             relu_m, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Relu`");
 
         auto g_conv_bias_relu = std::make_shared<ngraph::op::GroupConvolutionBias>(
-            conv_m->get_argument(0),
-            conv_m->get_argument(1),
-            conv_m->get_argument(2),
+            conv_m->input_value(0),
+            conv_m->input_value(1),
+            conv_m->input_value(2),
             conv_m->get_window_movement_strides(),
             conv_m->get_window_dilation_strides(),
             conv_m->get_padding_below(),
@@ -1933,9 +1930,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
 
         auto g_deconvbias_relu = std::make_shared<op::DeconvolutionBias>(
             deconvb_m->get_data_batch_shape(),
-            deconvb_m->get_argument(0),
-            deconvb_m->get_argument(1),
-            deconvb_m->get_argument(2),
+            deconvb_m->input_value(0),
+            deconvb_m->input_value(1),
+            deconvb_m->input_value(2),
             deconvb_m->get_window_movement_strides_forward(),
             deconvb_m->get_window_dilation_strides_forward(),
             deconvb_m->get_padding_below_forward(),
@@ -2070,7 +2067,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
             return false;
         }
 
-        if (dq_m->get_argument(0)->get_users().size() > 1)
+        if (dq_m->input_value(0).get_users().size() > 1)
         {
             NGRAPH_DEBUG << "QuantizedConvolutionBias has more than one user";
             return false;
@@ -2092,15 +2089,15 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
             auto qconv_m = std::static_pointer_cast<ngraph::op::QuantizedConvolutionBias>(
                 dq_m->get_argument(0));
             qconv_n = std::make_shared<ngraph::op::QuantizedConvolutionBias>(
-                qconv_m->get_argument(0),
-                qconv_m->get_argument(1),
-                qconv_m->get_argument(2),
+                qconv_m->input_value(0),
+                qconv_m->input_value(1),
+                qconv_m->input_value(2),
                 qconv_m->get_window_movement_strides(),
                 qconv_m->get_window_dilation_strides(),
                 qconv_m->get_padding_below(),
                 qconv_m->get_padding_above(),
                 qconv_m->get_data_dilation_strides(),
-                qconv_m->get_argument(3),
+                qconv_m->input_value(3),
                 true);
         }
         else
@@ -2110,8 +2107,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
             auto requantization_scale =
                 qconv_m->get_argument(2) * qconv_m->get_argument(4) / qconv_m->get_argument(6);
             qconv_n = std::make_shared<ngraph::op::QuantizedConvolutionRelu>(
-                qconv_m->get_argument(0),
-                qconv_m->get_argument(1),
+                qconv_m->input_value(0),
+                qconv_m->input_value(1),
                 qconv_m->get_window_movement_strides(),
                 qconv_m->get_window_dilation_strides(),
                 qconv_m->get_padding_below(),
@@ -2121,7 +2118,7 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconv_relu(bool with_
         }
         auto zp = builder::make_constant<uint8_t>(element::u8, dq_m->get_input_shape(1), 0);
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(
-            qconv_n, dq_m->get_argument(1), zp, dq_m->get_output_element_type(0), dq_m->get_axes());
+            qconv_n, dq_m->input_value(1), zp, dq_m->get_output_element_type(0), dq_m->get_axes());
         m.get_match_value().replace(dq_n->output(0));
         return true;
     };
@@ -2161,15 +2158,15 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qavg_pool()
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(avg_pool_m->get_argument(0));
 
         auto qavg_pool_n = std::make_shared<ngraph::op::AvgPool>(
-            dq_m->get_argument(0),
+            dq_m->input_value(0),
             avg_pool_m->get_window_shape(),
             avg_pool_m->get_window_movement_strides(),
             avg_pool_m->get_padding_below(),
             avg_pool_m->get_padding_above(),
             avg_pool_m->get_include_padding_in_avg_computation());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(qavg_pool_n,
-                                                             dq_m->get_argument(1),
-                                                             dq_m->get_argument(2),
+                                                             dq_m->input_value(1),
+                                                             dq_m->input_value(2),
                                                              dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
         m.get_match_value().replace(dq_n->output(0));
@@ -2203,14 +2200,14 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qmax_pool()
         auto dq_m = std::static_pointer_cast<ngraph::op::Dequantize>(max_pool_m->get_argument(0));
 
         auto qmax_pool_n =
-            std::make_shared<ngraph::op::MaxPool>(dq_m->get_argument(0),
+            std::make_shared<ngraph::op::MaxPool>(dq_m->input_value(0),
                                                   max_pool_m->get_window_shape(),
                                                   max_pool_m->get_window_movement_strides(),
                                                   max_pool_m->get_padding_below(),
                                                   max_pool_m->get_padding_above());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(qmax_pool_n,
-                                                             dq_m->get_argument(1),
-                                                             dq_m->get_argument(2),
+                                                             dq_m->input_value(1),
+                                                             dq_m->input_value(2),
                                                              dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
         m.get_match_value().replace(dq_n->output(0));
@@ -2264,8 +2261,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconcat()
         auto concat_n =
             std::make_shared<ngraph::op::Concat>(new_args, concat_m->get_concatenation_axis());
         auto dq_n = std::make_shared<ngraph::op::Dequantize>(concat_n,
-                                                             dq_m->get_argument(1),
-                                                             dq_m->get_argument(2),
+                                                             dq_m->input_value(1),
+                                                             dq_m->input_value(2),
                                                              dq_m->get_output_element_type(0),
                                                              dq_m->get_axes());
         m.get_match_value().replace(dq_n->output(0));
@@ -2472,9 +2469,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
             // TODO (jbobba): Investigate the need for Convert op
             qconvba = std::make_shared<ngraph::op::Convert>(
                 std::make_shared<ngraph::op::QuantizedConvolutionBiasSignedAdd>(
-                    qconv->get_argument(0),
-                    qconv->get_argument(1),
-                    qconv->get_argument(2),
+                    qconv->input_value(0),
+                    qconv->input_value(1),
+                    qconv->input_value(2),
                     inplace_input,
                     qconv->get_window_movement_strides(),
                     qconv->get_window_dilation_strides(),
@@ -2489,9 +2486,9 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         else
         {
             qconvba = std::make_shared<ngraph::op::QuantizedConvolutionBiasAdd>(
-                qconv->get_argument(0),
-                qconv->get_argument(1),
-                qconv->get_argument(2),
+                qconv->input_value(0),
+                qconv->input_value(1),
+                qconv->input_value(2),
                 inplace_input,
                 qconv->get_window_movement_strides(),
                 qconv->get_window_dilation_strides(),

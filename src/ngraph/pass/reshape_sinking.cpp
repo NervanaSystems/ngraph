@@ -437,7 +437,7 @@ static void sink_pad(shared_ptr<op::Pad> n,
     auto new_lower = ngraph::apply_permutation(n->get_padding_below(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_padding_above(), def_order);
     auto new_pad = make_shared<op::Pad>(
-        dummy_correct_shape, n->get_argument(1), new_lower, new_upper, n->get_pad_mode());
+        dummy_correct_shape, n->input_value(1), new_lower, new_upper, n->get_pad_mode());
     ngraph::replace_node(dummy_correct_shape, n->get_argument(0));
     NGRAPH_DEBUG << "Replacing " << n->get_name() << " with " << new_pad->get_name();
     ngraph::replace_node(n, new_pad);
@@ -452,9 +452,9 @@ static void sink_quantize(shared_ptr<op::Quantize> quantize,
     auto arg_reshape = reorders.at(quantize->get_argument(0));
     AxisSet axes_in_def_order =
         get_quantization_axes_in_default_order(arg_reshape, quantize->get_axes());
-    auto new_quantize = make_shared<op::Quantize>(quantize->get_argument(0),
-                                                  quantize->get_argument(1),
-                                                  quantize->get_argument(2),
+    auto new_quantize = make_shared<op::Quantize>(quantize->input_value(0),
+                                                  quantize->input_value(1),
+                                                  quantize->input_value(2),
                                                   quantize->get_output_element_type(0),
                                                   axes_in_def_order,
                                                   quantize->get_round_mode());
@@ -519,9 +519,9 @@ static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
     auto arg_reshape = reorders.at(dequantize->get_argument(0));
     AxisSet axes_in_def_order =
         get_quantization_axes_in_default_order(arg_reshape, dequantize->get_axes());
-    auto new_dequantize = make_shared<op::Dequantize>(dequantize->get_argument(0),
-                                                      dequantize->get_argument(1),
-                                                      dequantize->get_argument(2),
+    auto new_dequantize = make_shared<op::Dequantize>(dequantize->input_value(0),
+                                                      dequantize->input_value(1),
+                                                      dequantize->input_value(2),
                                                       dequantize->get_output_element_type(0),
                                                       axes_in_def_order);
 

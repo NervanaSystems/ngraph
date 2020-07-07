@@ -162,7 +162,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
         auto concat_weights = std::make_shared<ngraph::op::Concat>(weights_nodes, 0);
         auto concat_bias = std::make_shared<ngraph::op::Concat>(bias_nodes, 0);
         auto conv_bias_new = std::make_shared<ngraph::op::ConvolutionBias>(
-            conv_bias_root->get_argument(0),
+            conv_bias_root->input_value(0),
             concat_weights,
             concat_bias,
             conv_bias_root->get_window_movement_strides(),
