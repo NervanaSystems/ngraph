@@ -3160,7 +3160,6 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_rnn_fusion_1rnn_layer_3lstm_cell)
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_lstm_cell)
 {
-    DisableRemoveGOE nogoe;
     auto make_function = []() {
         const size_t batch_size = 3;
         const size_t input_size = 4;
