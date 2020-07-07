@@ -263,7 +263,7 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_
     auto concat_axis_vector = get_concatenation_axis_vector(bounded_concat_ops);
 
     auto& first_bounded_concat = (*bounded_concat_ops.begin());
-    auto driver_op = first_bounded_concat->get_argument(0);
+    auto driver_op = first_bounded_concat->input_value(0);
     const Shape& input_shape = first_bounded_concat->get_input_shape(0);
 
     auto scalarized_shape = scalarize_dim(concat_axis_vector, input_shape);
