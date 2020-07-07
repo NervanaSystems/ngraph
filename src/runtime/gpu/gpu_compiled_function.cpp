@@ -34,7 +34,6 @@
 #include "ngraph/node.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
