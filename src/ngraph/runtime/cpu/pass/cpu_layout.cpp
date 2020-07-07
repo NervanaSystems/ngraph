@@ -1843,23 +1843,6 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::GetOutputElement)
-                {
-                    if (dnnl_utils::get_input_dnnl_md(node.get(), 0).data.format_kind ==
-                        static_cast<dnnl_format_kind_t>(dnnl::memory::format_kind::undef))
-                    {
-                        set_native_layouts(external_function, node);
-                    }
-                    else
-                    {
-                        auto input_md = dnnl_utils::get_input_dnnl_md(node.get(), 0);
-                        vector<memory::desc> o_mds;
-                        o_mds.push_back(input_md);
-                        set_output_layouts(node, o_mds);
-                    }
-                }
-
-                template <>
                 void CPULayout::LAYOUT_DECL(ngraph::op::LRN)
                 {
                     if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node.get()))
@@ -2341,8 +2324,6 @@ static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingRelu>},
     {TI(ngraph::op::BatchNormTrainingBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingBackprop>},
-    {TI(ngraph::op::GetOutputElement),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GetOutputElement>},
     {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
     {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
     {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},

@@ -48,16 +48,7 @@ shared_ptr<runtime::Executable> runtime::ie::IE_Backend::compile(shared_ptr<Func
 
 bool runtime::ie::IE_Backend::is_supported(const Node& node) const
 {
-    const auto& opset = get_opset1();
-    if (node.get_type_info() == op::GetOutputElement::type_info)
-    {
-        // IE currently can handle this op
-        return true;
-    }
-    else
-    {
-        return opset.contains_op_type(&node);
-    }
+    return get_opset1().contains_op_type(&node);
 }
 
 bool runtime::ie::IE_Backend::is_supported_property(const Property) const

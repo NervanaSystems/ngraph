@@ -154,7 +154,6 @@ void runtime::gpu::GPUCompiledFunction::compile()
     pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(get_memory_alignment());
     pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(

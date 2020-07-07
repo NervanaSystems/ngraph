@@ -55,6 +55,7 @@ namespace
 #define VSUF3(NAME) NAME##_v3
 #define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
 #include "ngraph/op_version_tbl.hpp"
+    NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
         UnknownOp
     };
@@ -70,6 +71,9 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 #define NGRAPH_OP(NAME, VERSION)                                                                   \
     {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
 #include "ngraph/op_version_tbl.hpp"
+    // Still need to deserialize GetOutputElement because it may be in some old json files
+    // This is just to handle such cases.
+    NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -1468,9 +1472,10 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(
-                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
-                node_js.at("n").get<size_t>());
+            throw runtime_error("Need to add support for deserialize GOE");
+            // node = make_shared<op::GetOutputElement>(
+            //     static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
+            //     node_js.at("n").get<size_t>());
             break;
         }
         case OP_TYPEID::Greater:
@@ -3019,8 +3024,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GetOutputElement:
     {
-        auto tmp = static_cast<const op::GetOutputElement*>(&n);
-        node["n"] = tmp->get_n();
         break;
     }
     case OP_TYPEID::Gelu: { break;

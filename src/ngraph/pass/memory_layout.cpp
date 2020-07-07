@@ -64,7 +64,6 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
-                             is_type<op::GetOutputElement>(node) ||
                              (m_disable_memory_sharing && !oi_pair.destructive &&
                               !input_node->is_parameter() && !input_node->is_constant())) &&
                             node->liveness_new_list.count(output) != 0)
