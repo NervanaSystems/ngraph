@@ -653,13 +653,6 @@ std::shared_ptr<Node>
     op->m_body =
         std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
 
-    // TODO: remove this code after the fix on the nGraph side (GetOutputElements)
-    ::ngraph::pass::GetOutputElementElimination goe_elimination;
-    for (const auto& n : spec_func->get_ops())
-    {
-        goe_elimination.run_on_node(n);
-    }
-
     for (auto& input_description : m_input_descriptions)
     {
         op->m_input_descriptions.push_back(input_description->copy());

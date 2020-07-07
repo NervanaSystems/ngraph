@@ -91,8 +91,6 @@ void op::BatchNormTraining::generate_adjoints(autodiff::Adjoints& adjoints,
 
     // Extract mean and variance outputs from BatchNormBase
     // as these are used by BatchNormTrainingBackprop.
-    // The users of the outputs (GetOutputElements' Inputs) aren't sorted
-    // and get_n() is used to sort the inputs in the same order as Batchnorm's outputs
     // Next, Mean and Variance (`at(1)` and `at(2)`) are extracted
     // Please see `add_output` in `BatchNormBase::BatchNormBase` for more details
 
