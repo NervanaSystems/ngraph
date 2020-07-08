@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 using namespace ngraph;
 
@@ -51,7 +50,7 @@ ngraph::op::BatchNormTrainingRelu::BatchNormTrainingRelu(double eps,
 
     for (size_t i = 0; i < 2; i++)
     {
-        if (get_argument(i)->get_element_type() != et)
+        if (this->input(i).get_element_type() != et)
         {
             auto err_msg = std::string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";
@@ -110,7 +109,7 @@ ngraph::op::BatchNormInferenceRelu::BatchNormInferenceRelu(double eps,
 
     for (size_t i = 0; i < 2; i++)
     {
-        if (get_argument(i)->get_element_type() != et)
+        if (this->input(i).get_element_type() != et)
         {
             auto err_msg = std::string("The element type of ") + input_names[i] +
                            " isn't equal to input data's type";

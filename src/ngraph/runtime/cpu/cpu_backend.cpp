@@ -46,8 +46,6 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
         static bool is_initialized = false;
         if (!is_initialized)
         {
-            // Some pass patterns need to be fixed
-            set_remove_goe(false);
 #if defined(NGRAPH_TBB_ENABLE)
             // Force TBB to link to the backend
             tbb::TBB_runtime_interface_version();
@@ -61,8 +59,19 @@ extern "C" CPU_BACKEND_API void ngraph_register_cpu_backend()
 
 runtime::cpu::CPU_Backend::CPU_Backend(const string& config)
     : m_allocator{nullptr}
-    , m_codegen_enable{config == "CODEGEN"}
 {
+    if (config == "CODEGEN")
+    {
+        m_execution_mode = EXECUTION_MODE::CODEGEN;
+    }
+    else if (config == "MLIR")
+    {
+        m_execution_mode = EXECUTION_MODE::MLIR;
+    }
+    else
+    {
+        m_execution_mode = EXECUTION_MODE::DIRECT_EXECUTION;
+    }
 }
 
 runtime::cpu::CPU_Backend::~CPU_Backend()
@@ -108,7 +117,7 @@ shared_ptr<runtime::Executable>
                                        bool performance_counters_enabled)
 {
 #ifdef NGRAPH_MLIR_ENABLE
-    if (getenv_bool("NGRAPH_MLIR"))
+    if (m_execution_mode == EXECUTION_MODE::MLIR)
     {
         // Initialize MLIR compiler
         ngmlir::MLIRCompiler::init();
@@ -134,7 +143,7 @@ shared_ptr<runtime::Executable>
                                      pass_config,
                                      get_host_memory_allocator(),
                                      performance_counters_enabled,
-                                     m_codegen_enable);
+                                     m_execution_mode);
     {
         std::lock_guard<std::mutex> guard(m_exec_map_mutex);
         m_exec_map.insert({func, rc});

@@ -69,6 +69,7 @@
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/runtime/reference/mod.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
@@ -166,7 +167,7 @@ protected:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<std::shared_ptr<Node>> m_nodes;
+    NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
@@ -358,13 +359,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::GetOutputElement:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
-            break;
-        }
         case OP_TYPEID::BatchMatMul:
         {
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
@@ -472,7 +466,7 @@ protected:
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
-            element::Type type = node.get_element_type();
+            element::Type type = node.get_output_element_type(0);
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
             switch (type)
@@ -634,7 +628,7 @@ protected:
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
-            auto type = dequantize->get_element_type();
+            auto type = dequantize->get_output_element_type(0);
 
             if (type == element::f32)
             {
@@ -690,7 +684,7 @@ protected:
                                                args[1]->get_data_ptr<const T>(),
                                                out[0]->get_data_ptr<T>(),
                                                element_count,
-                                               embed->get_shape());
+                                               embed->get_output_shape(0));
             }
             else if (type == element::f64)
             {
@@ -698,7 +692,7 @@ protected:
                                                 args[1]->get_data_ptr<const T>(),
                                                 out[0]->get_data_ptr<T>(),
                                                 element_count,
-                                                embed->get_shape());
+                                                embed->get_output_shape(0));
             }
             else if (type == element::i32)
             {
@@ -706,7 +700,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else if (type == element::i64)
             {
@@ -714,7 +708,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else
             {
@@ -874,7 +868,7 @@ protected:
         case OP_TYPEID::Quantize:
         {
             const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
-            auto type = quantize->get_element_type();
+            auto type = quantize->get_output_element_type(0);
 
             if (type == element::u8)
             {
@@ -1461,6 +1455,7 @@ protected:
         case OP_TYPEID::MaxPool:
         case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
+        case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:

@@ -203,19 +203,19 @@ void op::QuantizedDot::validate_and_infer_types()
 shared_ptr<Node> op::QuantizedDot::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return shared_ptr<Node>(new QuantizedDot(new_args.at(0),
-                                             new_args.at(1),
-                                             m_reduction_axes_count,
-                                             new_args.at(2),
-                                             new_args.at(3),
-                                             new_args.at(4),
-                                             new_args.at(5),
-                                             new_args.at(6),
-                                             new_args.at(7),
-                                             m_output_type,
-                                             m_input0_axes,
-                                             m_input1_axes,
-                                             m_output_axes));
+    return make_shared<QuantizedDot>(new_args.at(0),
+                                     new_args.at(1),
+                                     m_reduction_axes_count,
+                                     new_args.at(2),
+                                     new_args.at(3),
+                                     new_args.at(4),
+                                     new_args.at(5),
+                                     new_args.at(6),
+                                     new_args.at(7),
+                                     m_output_type,
+                                     m_input0_axes,
+                                     m_input1_axes,
+                                     m_output_axes);
 }
 
 void op::QuantizedDot::generate_adjoints(autodiff::Adjoints& /* adjoints */,

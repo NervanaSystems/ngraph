@@ -119,7 +119,7 @@ OutputVector builder::MatmulFactory::make_matmul_op()
     {
         groups = right.get_shape().at(0);
     }
-    NodeVector small_dots(groups);
+    OutputVector small_dots(groups);
 
     for (size_t g = 0; g < groups; ++g)
     {
@@ -142,7 +142,7 @@ OutputVector builder::MatmulFactory::make_matmul_op()
     // Expand result _stack of matrices_ axes to get expected result shape.
     else
     {
-        const Shape& shape{result->get_shape()};
+        const Shape& shape{result->get_output_shape(0)};
         Shape result_shape(next(begin(shape)), end(shape));
         result_shape.insert(
             begin(result_shape), begin(left_shape), next(begin(left_shape), left_shape.size() - 2));

@@ -63,6 +63,7 @@ using namespace ngraph;
 
 bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
 {
+    m_function = f;
     bool rewritten = false;
     const size_t NUM_TRIES = 10;
     size_t tries = NUM_TRIES;
@@ -92,9 +93,8 @@ bool pass::GraphRewrite::run_on_function(shared_ptr<Function> f)
                                     "function is dynamic, skipping this "
                                     "optimization till the shapes are fully "
                                     "materialized";
-                    continue;
                 }
-                if (closure.handler(node))
+                else if (closure.handler(node))
                 {
                     rewritten = true;
                     // If call back may change function's is_dynamic state, we need to
@@ -170,7 +170,7 @@ void pass::GraphRewrite::add_matcher(const shared_ptr<pattern::Matcher>& m,
     add_handler(m->get_name(),
                 [m, callback](const std::shared_ptr<Node>& node) -> bool {
                     NGRAPH_DEBUG << "Running matcher " << m->get_name() << " on " << node;
-                    if (m->match(node->output(0)))
+                    if (m->match(node))
                     {
                         NGRAPH_DEBUG << "Matcher " << m->get_name() << " matched " << node;
                         return callback(*m.get());
@@ -195,10 +195,8 @@ void pass::RecurrentGraphRewrite::add_matcher(
 {
     add_handler("Reurrent matcher",
                 [m, callback](const std::shared_ptr<Node>& node) {
-                    NGRAPH_DEBUG << "Running recurrent matcher on " << node;
-                    if (m->match(node->output(0)))
+                    if (m->match(node))
                     {
-                        NGRAPH_DEBUG << "Recurrent matcher matched " << m.get();
                         return callback(*m.get());
                     }
                     return false;
@@ -217,6 +215,7 @@ void pass::RecurrentGraphRewrite::add_matcher(
 
 bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
 {
+    m_function = f;
     bool changed = false;
     size_t i = 0;
 
@@ -236,9 +235,8 @@ bool pass::RecurrentGraphRewrite::run_on_function(shared_ptr<Function> f)
                                     "function is dynamic, skipping this "
                                     "optimization till the shapes are fully "
                                     "materialized";
-                    continue;
                 }
-                if (closure.handler(node))
+                else if (closure.handler(node))
                 {
                     // If call back may change function's is_dynamic state, we need to
                     // update the cached value.

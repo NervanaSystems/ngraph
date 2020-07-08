@@ -205,9 +205,7 @@ cpio::Reader::Reader(const string& filename)
     open(filename);
 }
 
-cpio::Reader::~Reader()
-{
-}
+cpio::Reader::~Reader() {}
 
 void cpio::Reader::open(istream& in)
 {

@@ -24,7 +24,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/abs.hpp"
-#include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/asin.hpp"
@@ -41,7 +40,6 @@
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/one_hot.hpp"
@@ -70,7 +68,8 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_constant for " << a->get_name() << " and " << b->get_name();
 
-    if (a->get_shape() != b->get_shape() || a->get_element_type() != b->get_element_type())
+    if (a->get_output_shape(0) != b->get_output_shape(0) ||
+        a->get_output_element_type(0) != b->get_output_element_type(0))
     {
         return false;
     }
@@ -78,7 +77,7 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
     const op::Constant* ca = static_cast<op::Constant*>(a.get());
     const op::Constant* cb = static_cast<op::Constant*>(b.get());
 
-    size_t size = shape_size(a->get_shape()) * a->get_element_type().size();
+    size_t size = shape_size(a->get_output_shape(0)) * a->get_output_element_type(0).size();
 
     if (ca->get_all_data_elements_bitwise_identical() ||
         cb->get_all_data_elements_bitwise_identical())
@@ -87,7 +86,8 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
             cb->get_all_data_elements_bitwise_identical())
         {
             // Since both Constants are uniform we only need to compare a single element
-            return !memcmp(ca->get_data_ptr(), cb->get_data_ptr(), a->get_element_type().size());
+            return !memcmp(
+                ca->get_data_ptr(), cb->get_data_ptr(), a->get_output_element_type(0).size());
         }
         else
         {
@@ -162,7 +162,7 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
 
     return (a->input_value(0) == b->input_value(0)) &&
            (one_hot_a->get_one_hot_axis() == one_hot_b->get_one_hot_axis()) &&
-           (a->get_shape() == b->get_shape());
+           (a->get_output_shape(0) == b->get_output_shape(0));
 }
 
 // To enable CSE for a new op, add a mapping between the op and a cse handler function to the map
@@ -271,7 +271,7 @@ namespace std
 
             arg_ids.push_back(type_hash);
 
-            std::vector<Output<Node>> cargs;
+            OutputVector cargs;
             for (auto input : k.get_node()->inputs())
             {
                 cargs.push_back(input.get_source_output());

@@ -154,3 +154,22 @@ NGRAPH_TEST(${BACKEND_NAME}, relu_4Dbackprop)
     handle->call_with_validate({result}, {a, delta});
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected, MIN_FLOAT_TOLERANCE_BITS));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, relu_unsigned_limit)
+{
+    auto shape = Shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto relu = make_shared<op::Relu>(A);
+    auto f = make_shared<Function>(relu, ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{std::numeric_limits<uint32_t>::max()});
+    auto result = backend->create_tensor(element::u32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<uint32_t>{std::numeric_limits<uint32_t>::max()}),
+              read_vector<uint32_t>(result));
+}

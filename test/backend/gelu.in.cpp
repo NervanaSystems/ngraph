@@ -59,7 +59,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_f32)
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto name = param->get_name();
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }

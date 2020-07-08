@@ -29,7 +29,7 @@ TEST(type_prop, group_conv_backprop_data)
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 16, 6, 6});
     const auto gcbd = make_shared<op::v1::GroupConvolutionBackpropData>(
         data, weights, Strides{}, CoordinateDiff{}, CoordinateDiff{}, Strides{});
-    EXPECT_EQ(gcbd->get_element_type(), element::f32);
+    EXPECT_EQ(gcbd->get_output_element_type(0), element::f32);
     EXPECT_EQ(gcbd->get_output_shape(0), (Shape{1, 4, 8, 8}));
     EXPECT_EQ(gcbd->get_strides(), (Strides{1, 1}));
     EXPECT_EQ(gcbd->get_dilations(), (Strides{1, 1}));
@@ -49,7 +49,7 @@ TEST(type_prop, group_conv_backprop_data_output_shape)
 
     const auto gcbd = make_shared<op::v1::GroupConvolutionBackpropData>(
         data, weights, output_shape, Strides{}, Strides{}, op::PadType::SAME_UPPER);
-    EXPECT_EQ(gcbd->get_element_type(), element::f32);
+    EXPECT_EQ(gcbd->get_output_element_type(0), element::f32);
     EXPECT_EQ(gcbd->get_output_shape(0), (Shape{1, 2, 3, 3}));
     EXPECT_EQ(gcbd->get_strides(), (Strides{1, 1}));
     EXPECT_EQ(gcbd->get_dilations(), (Strides{1, 1}));

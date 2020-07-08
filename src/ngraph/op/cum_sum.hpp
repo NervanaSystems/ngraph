@@ -106,6 +106,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node> get_default_value() const override;
                 bool is_exclusive() const { return m_exclusive; }
                 bool is_reverse() const { return m_reverse; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

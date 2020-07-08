@@ -24,14 +24,14 @@
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
 #include "ngraph/op/product.hpp"
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/shape_of.hpp"
+#include "ngraph/op/squeeze.hpp"
 #include "ngraph/op/transpose.hpp"
 #include "ngraph/op/variadic_split.hpp"
-#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opset/opset1.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -123,7 +123,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
         make_shared<op::Product>(col_dims, AxisSet{0}), AxisVector{}, Shape{1});
 
     // flattened_dims := Concat({row_dims_prod, col_dims_prod})
-    auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
+    auto flattened_dims = make_shared<op::Concat>(OutputVector{row_dims_prod, col_dims_prod}, 0);
 
     return make_shared<op::v1::Reshape>(value, flattened_dims, true)
         ->add_provenance_group_members_above({value});

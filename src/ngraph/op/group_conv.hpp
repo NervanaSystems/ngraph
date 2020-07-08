@@ -310,6 +310,7 @@ namespace ngraph
                                                const OutputVector& deltas) override;
 
                 bool has_groups_in_filters() const { return m_groups_in_filters; }
+
             protected:
                 Strides m_window_movement_strides;
                 Strides m_window_dilation_strides;

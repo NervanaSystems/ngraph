@@ -22,10 +22,6 @@
 using namespace std;
 using namespace ngraph;
 
-void ngraph::BernoulliRNGState::activate()
-{
-}
+void ngraph::BernoulliRNGState::activate() {}
 
-void ngraph::BernoulliRNGState::deactivate()
-{
-}
+void ngraph::BernoulliRNGState::deactivate() {}

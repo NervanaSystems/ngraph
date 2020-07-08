@@ -43,20 +43,18 @@ namespace ngraph
         PatternValueMap as_pattern_value_map(const PatternMap& pattern_map);
 
         template <typename T>
-        std::function<bool(std::shared_ptr<Node>)> has_class()
+        std::function<bool(Output<Node>)> has_class()
         {
-            auto pred = [](std::shared_ptr<Node> node) -> bool { return is_type<T>(node); };
+            auto pred = [](Output<Node> node) -> bool {
+                return is_type<T>(node.get_node_shared_ptr());
+            };
 
             return pred;
         }
 
         namespace op
         {
-            using NodePredicate = std::function<bool(std::shared_ptr<Node>)>;
             using ValuePredicate = std::function<bool(const Output<Node>& value)>;
-
-            NGRAPH_API
-            ValuePredicate as_value_predicate(NodePredicate pred);
         }
     }
 }
@@ -64,7 +62,7 @@ namespace ngraph
 class NGRAPH_API ngraph::pattern::op::Pattern : public Node
 {
 public:
-    /// \brief \p a base class for \sa Skip and \sa Label
+    /// \brief \p a base class for all patterns
     ///
     Pattern(const OutputVector& patterns, ValuePredicate pred)
         : Node(patterns)

@@ -79,6 +79,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const InterpolateAttrs& get_attrs() const { return m_attrs; }
+
             private:
                 InterpolateAttrs m_attrs;
             };
@@ -168,12 +169,13 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const InterpolateAttrs& get_attrs() const { return m_attrs; }
+
             private:
                 InterpolateAttrs m_attrs;
             };
         }
-        using v0::InterpolateAttrs;
         using v0::Interpolate;
+        using v0::InterpolateAttrs;
     }
 
     NGRAPH_API

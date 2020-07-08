@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NOT NGRAPH_MLIR_ENABLE)
+    return()
+endif()
+
 include_directories(
     ${NGRAPH_INCLUDE_PATH}
     ${MLIR_LLVM_INCLUDE_PATH}
@@ -97,8 +101,8 @@ target_link_libraries(
 )
 
 # Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph libmkl libmkldnn)
-target_include_directories(mlir_backend SYSTEM PUBLIC libmkldnn)
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl libdnnl)
+target_include_directories(mlir_backend SYSTEM PUBLIC libdnnl)
 
 # table-gen dialect ops
 # include table-gen helpers

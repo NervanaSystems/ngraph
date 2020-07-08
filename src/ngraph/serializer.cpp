@@ -42,18 +42,6 @@ static element::Type read_element_type(json j);
 static json write_partial_shape(const PartialShape& s);
 static PartialShape read_partial_shape(json j);
 
-static bool s_serialize_output_shapes_enabled = getenv_bool("NGRAPH_SERIALIZER_OUTPUT_SHAPES");
-
-void ngraph::set_serialize_output_shapes(bool enable)
-{
-    s_serialize_output_shapes_enabled = enable;
-}
-
-bool ngraph::get_serialize_output_shapes()
-{
-    return s_serialize_output_shapes_enabled;
-}
-
 namespace
 {
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
@@ -65,12 +53,31 @@ namespace
 #define VSUF0(NAME) NAME
 #define VSUF1(NAME) NAME##_v1
 #define VSUF3(NAME) NAME##_v3
-#define NGRAPH_OP(NAME, NAMESPACE, VERSION) VSUF##VERSION(NAME),
-#include "ngraph/op/op_version_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION) VSUF##VERSION(NAME),
+#include "ngraph/op_version_tbl.hpp"
+        NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
-        UnknownOp
+            UnknownOp
     };
 }
+
+namespace ngraph
+{
+    namespace op
+    {
+        namespace v0
+        {
+            /// \brief Operation to get an output from a node.
+            class NGRAPH_API GetOutputElement : public Op
+            {
+            public:
+                static constexpr NodeTypeInfo type_info{"GetOutputElement", 0};
+                const NodeTypeInfo& get_type_info() const override { return type_info; }
+            };
+        }
+    }
+}
+constexpr NodeTypeInfo op::v0::GetOutputElement::type_info;
 
 static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
 {
@@ -79,9 +86,12 @@ static OP_TYPEID get_typeid(const NodeTypeInfo& type_info)
     // {Acos::type_info, OP_TYPEID::Acos},
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(NAME, NAMESPACE, VERSION)                                                        \
-    {NAMESPACE::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
-#include "ngraph/op/op_version_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION)                                                                   \
+    {ngraph::op::v##VERSION ::NAME::type_info, OP_TYPEID::VSUF##VERSION(NAME)},
+#include "ngraph/op_version_tbl.hpp"
+        // Still need to deserialize GetOutputElement because it may be in some old json files
+        // This is just to handle such cases.
+        NGRAPH_OP(GetOutputElement, 0)
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -285,6 +295,7 @@ protected:
     unordered_map<string, shared_ptr<Node>> m_node_map;
     unordered_map<string, shared_ptr<Function>> m_function_map;
     function<const_data_callback_t> m_const_data_callback;
+    map<string, Output<Node>> m_goe_alias;
 };
 
 static string
@@ -394,36 +405,25 @@ static json write_element_type(const ngraph::element::Type& n)
 
 static element::Type read_element_type(json j)
 {
-    size_t bitwidth = 0;
-    bool is_real = false;
-    bool is_signed = false;
-    bool is_quantized = false;
-    string c_type_string = "";
+    string c_type_string;
+    element::Type rc;
     if (j.is_object())
     {
-        bitwidth = j.at("bitwidth").get<size_t>();
-        is_real = j.at("is_real").get<bool>();
-        is_signed = j.at("is_signed").get<bool>();
-        is_quantized = j.at("is_quantized").get<bool>();
         c_type_string = j.at("c_type_string").get<string>();
     }
     else
     {
-        string c_type = j.get<string>();
-        for (const element::Type* t : element::Type::get_known_types())
+        c_type_string = j.get<string>();
+    }
+    for (element::Type t : element::Type::get_known_types())
+    {
+        if (t.c_type_string() == c_type_string)
         {
-            if (t->c_type_string() == c_type)
-            {
-                bitwidth = t->bitwidth();
-                is_real = t->is_real();
-                is_signed = t->is_signed();
-                is_quantized = t->is_quantized();
-                c_type_string = t->c_type_string();
-                break;
-            }
+            rc = t;
+            break;
         }
     }
-    return element::Type(bitwidth, is_real, is_signed, is_quantized, c_type_string);
+    return rc;
 }
 
 void ngraph::serialize(const string& path, shared_ptr<ngraph::Function> func, size_t indent)
@@ -463,7 +463,6 @@ static string serialize(shared_ptr<Function> func, size_t indent, bool binary_co
     JSONSerializer serializer;
     serializer.set_binary_constant_data(binary_constant_data);
     serializer.set_indent(indent);
-    serializer.set_serialize_output_shapes(s_serialize_output_shapes_enabled);
 
     json j;
     j.push_back(serializer.serialize_function(*func));
@@ -623,7 +622,16 @@ Output<Node> JSONDeserializer::deserialize_output(json j)
     {
         throw ngraph_error("Expected string or object an output while deserializing");
     }
-    return Output<Node>(deserialize_node_reference(json_node_reference), index);
+    const string& name = json_node_reference;
+    auto it = m_goe_alias.find(name);
+    if (it != m_goe_alias.end())
+    {
+        return it->second.get_node_shared_ptr();
+    }
+    else
+    {
+        return Output<Node>(m_node_map.at(name), index);
+    }
 }
 
 OutputVector JSONDeserializer::deserialize_output_vector(json j)
@@ -794,7 +802,7 @@ std::shared_ptr<op::TensorIterator::OutputDescription>
 
 ParameterVector JSONDeserializer::deserialize_parameter_vector(json json_parameters)
 {
-    std::vector<std::shared_ptr<op::Parameter>> params;
+    ParameterVector params;
     for (auto& param_ref : json_parameters)
     {
         params.push_back(as_type_ptr<op::Parameter>(deserialize_node_reference(param_ref)));
@@ -843,47 +851,6 @@ shared_ptr<Function> JSONDeserializer::deserialize_function(json func_js)
     return rc;
 }
 
-// This helps with conversions to old-style shared-ptr<Node> and new-style Output&
-// arguments to node constructors. Uses of OutputHelper should be replaced with Output
-// when all op constructors use the new style arguments.
-struct OutputHelper
-{
-    OutputHelper(const Output<Node>& output)
-        : m_output(output)
-    {
-    }
-
-    operator shared_ptr<Node>() const { return get_output_element(m_output); }
-    operator const Output<Node>&() const { return m_output; }
-    Output<Node> m_output;
-};
-
-// This helps with conversions to old-style shared-ptr<Node> and new-style Output&
-// arguments to node constructors. Uses of OutputVectorHelper should be replaced with OutputVector
-// when all op constructors use the new style arguments.
-struct OutputVectorHelper
-{
-    OutputVectorHelper(const OutputVector& output_vector)
-        : m_vector(output_vector)
-    {
-    }
-    OutputVectorHelper() = default;
-    OutputHelper operator[](size_t i) const { return OutputHelper(m_vector[i]); }
-    void push_back(const Output<Node>& output) { m_vector.push_back(output); }
-    size_t size() const { return m_vector.size(); }
-    operator vector<shared_ptr<Node>>() const
-    {
-        vector<shared_ptr<Node>> result;
-        for (auto& o : m_vector)
-        {
-            result.push_back(OutputHelper(o));
-        }
-        return result;
-    }
-    operator const OutputVector&() const { return m_vector; }
-    OutputVector m_vector;
-};
-
 shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 {
     auto& factory_registry = FactoryRegistry<Node>::get();
@@ -897,7 +864,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         string friendly_name = get_value<string>(node_js, "friendly_name");
         vector<json> control_deps_inputs = get_value<vector<json>>(node_js, "control_deps");
         vector<string> node_outputs = get_value<vector<string>>(node_js, "outputs");
-        OutputVectorHelper args(deserialize_output_vector(node_js["inputs"]));
+        OutputVector args(deserialize_output_vector(node_js["inputs"]));
         if (has_key(node_js, "attribute_visitor"))
         {
             if (factory_registry.has_factory(type_info))
@@ -1112,8 +1079,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Clamp:
         {
-            const auto clamp_min = node_js.at("min").get<float>();
-            const auto clamp_max = node_js.at("max").get<float>();
+            const double clamp_min = parse_string<double>(node_js.at("min").get<string>());
+            const double clamp_max = parse_string<double>(node_js.at("max").get<string>());
             node = make_shared<op::Clamp>(args[0], clamp_min, clamp_max);
             break;
         }
@@ -1339,8 +1306,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
                 args[0], args[1], args[2], args[3], resize_method, extrapolation_value);
             break;
         }
-        case OP_TYPEID::CompiledKernel: { break;
-        }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
         case OP_TYPEID::DeformableConvolution_v1:
@@ -1535,9 +1500,8 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            node = make_shared<op::GetOutputElement>(
-                static_cast<Output<Node>>(args[0]).get_node_shared_ptr(),
-                node_js.at("n").get<size_t>());
+            size_t n = node_js.at("n").get<size_t>();
+            m_goe_alias.insert({node_name, args[0]});
             break;
         }
         case OP_TYPEID::Greater:
@@ -2566,35 +2530,37 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 #pragma GCC diagnostic pop
 #endif
 
-        for (auto& control_dep : control_deps_inputs)
+        if (node)
         {
-            node->add_control_dependency(deserialize_node_reference(control_dep));
-        }
-
-        if (!friendly_name.empty())
-        {
-            node->set_friendly_name(friendly_name);
-        }
-        else
-        {
-            node->set_friendly_name(node_name);
-        }
-        if (ngraph::get_provenance_enabled())
-        {
-            if (has_key(node_js, "provenance_tags"))
+            for (auto& control_dep : control_deps_inputs)
             {
-                const std::vector<json> prov_js = node_js.at("provenance_tags");
-                for (auto prov_tag : prov_js)
+                node->add_control_dependency(deserialize_node_reference(control_dep));
+            }
+
+            if (!friendly_name.empty())
+            {
+                node->set_friendly_name(friendly_name);
+            }
+            else
+            {
+                node->set_friendly_name(node_name);
+            }
+            if (ngraph::get_provenance_enabled())
+            {
+                if (has_key(node_js, "provenance_tags"))
                 {
-                    node->add_provenance_tag(prov_tag);
+                    const std::vector<json> prov_js = node_js.at("provenance_tags");
+                    for (auto prov_tag : prov_js)
+                    {
+                        node->add_provenance_tag(prov_tag);
+                    }
                 }
             }
+            m_node_map[node_name] = node;
         }
-        m_node_map[node_name] = node;
     }
     catch (exception& err)
     {
-        NGRAPH_INFO << err.what();
         string node_name;
         auto it = node_js.find("name");
         if (it != node_js.end())
@@ -2640,13 +2606,9 @@ json JSONSerializer::serialize_output_vector(const OutputVector& output_vector)
 json JSONSerializer::serialize_node(const Node& n)
 {
     const NodeTypeInfo& type_info = n.get_type_info();
-    json jtype_info = json::object();
-    jtype_info["name"] = type_info.name;
-    jtype_info["version"] = type_info.version;
     json node;
-    node["type_info"] = jtype_info;
     node["name"] = n.get_name();
-    auto op_version = n.get_version();
+    auto op_version = type_info.version;
     node["op_version"] = op_version;
 
     if (n.get_name() != n.get_friendly_name())
@@ -2685,15 +2647,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["outputs"] = outputs;
     }
 
-    if (s_serialize_output_shapes_enabled)
-    {
-        json output_shapes = json::array();
-        for (size_t i = 0; i < n.get_output_size(); ++i)
-        {
-            output_shapes.push_back(n.get_output_shape(i));
-        }
-        node["output_shapes"] = output_shapes;
-    }
     if (ngraph::get_provenance_enabled())
     {
         json provenance_tags = json::array();
@@ -2729,14 +2682,14 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::ArgMin*>(&n);
         node["axis"] = tmp->get_reduction_axis();
-        node["index_element_type"] = write_element_type(tmp->get_element_type());
+        node["index_element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }
     case OP_TYPEID::ArgMax:
     {
         auto tmp = static_cast<const op::ArgMax*>(&n);
         node["axis"] = tmp->get_reduction_axis();
-        node["index_element_type"] = write_element_type(tmp->get_element_type());
+        node["index_element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }
     case OP_TYPEID::All:
@@ -2848,8 +2801,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Clamp:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
-        node["min"] = tmp->get_min();
-        node["max"] = tmp->get_max();
+        node["min"] = to_cpp_string<double>(tmp->get_min());
+        node["max"] = to_cpp_string<double>(tmp->get_max());
         break;
     }
     case OP_TYPEID::Concat:
@@ -2861,7 +2814,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Constant:
     {
         auto tmp = static_cast<const op::Constant*>(&n);
-        if (tmp->get_all_data_elements_bitwise_identical() && shape_size(tmp->get_shape()) > 0)
+        if (tmp->get_all_data_elements_bitwise_identical() &&
+            shape_size(tmp->get_output_shape(0)) > 0)
         {
             vector<string> vs;
             vs.push_back(tmp->convert_value_to_string(0));
@@ -2871,8 +2825,8 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             node["value"] = tmp->get_value_strings();
         }
-        node["shape"] = tmp->get_shape();
-        node["element_type"] = write_element_type(tmp->get_element_type());
+        node["shape"] = tmp->get_output_shape(0);
+        node["element_type"] = write_element_type(tmp->get_output_element_type(0));
         break;
     }
     case OP_TYPEID::Convert:
@@ -2980,8 +2934,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::CTCGreedyDecoder: { break;
     }
-    case OP_TYPEID::CompiledKernel: { break;
-    }
     case OP_TYPEID::DetectionOutput: { break;
     }
     case OP_TYPEID::PSROIPooling: { break;
@@ -3007,14 +2959,14 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Dequantize:
     {
         auto tmp = static_cast<const op::Dequantize*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["axes"] = serialize_axis_set(tmp->get_axes());
         break;
     }
     case OP_TYPEID::DepthToSpace:
     {
         auto tmp = static_cast<const op::DepthToSpace*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
@@ -3099,11 +3051,7 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::GatherND: { break;
     }
-    case OP_TYPEID::GetOutputElement:
-    {
-        auto tmp = static_cast<const op::GetOutputElement*>(&n);
-        node["n"] = tmp->get_n();
-        break;
+    case OP_TYPEID::GetOutputElement: { break;
     }
     case OP_TYPEID::Gelu: { break;
     }
@@ -3456,7 +3404,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Quantize:
     {
         auto tmp = static_cast<const op::Quantize*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["axes"] = serialize_axis_set(tmp->get_axes());
         node["round_mode"] = tmp->get_round_mode();
         break;
@@ -3477,7 +3425,7 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_below"] = tmp->get_padding_below();
         node["padding_above"] = tmp->get_padding_above();
         node["data_dilation_strides"] = tmp->get_data_dilation_strides();
-        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["output_type"] = write_element_type(tmp->get_output_element_type(0));
         node["input_axes"] = tmp->get_input_axes();
         node["filter_axes"] = tmp->get_filter_axes();
         node["output_axes"] = tmp->get_output_axes();
@@ -3489,7 +3437,7 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         auto tmp = static_cast<const op::QuantizedDot*>(&n);
         node["reduction_axes_count"] = tmp->get_reduction_axes_count();
-        node["output_type"] = write_element_type(tmp->get_element_type());
+        node["output_type"] = write_element_type(tmp->get_output_element_type(0));
         node["input0_axes"] = tmp->get_input0_axes();
         node["input1_axes"] = tmp->get_input1_axes();
         node["output_axes"] = tmp->get_output_axes();
@@ -3613,7 +3561,7 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::SpaceToDepth:
     {
         auto tmp = static_cast<const op::SpaceToDepth*>(&n);
-        node["type"] = write_element_type(tmp->get_element_type());
+        node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
         break;
@@ -3753,8 +3701,7 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::UnknownOp: { break;
-    }
+    case OP_TYPEID::UnknownOp:
     default:
     {
         auto& factory_registry = FactoryRegistry<Node>::get();
@@ -3764,10 +3711,18 @@ json JSONSerializer::serialize_node(const Node& n)
             JSONAttributeSerializer visitor(node);
             if (!const_cast<Node&>(n).visit_attributes(visitor))
             {
-                NGRAPH_ERR << "Cannot serialize: " << node;
+                NGRAPH_ERR << "Cannot serialize: "
+                           << "v" << n.get_type_info().version << "::" << n.get_type_info().name;
             }
             return node;
         }
+        else
+        {
+            NGRAPH_ERR << "Cannot serialize, no factory found: "
+                       << "v" << n.get_type_info().version << "::" << n.get_type_info().name;
+        }
+
+        break;
     }
     }
 #if !(defined(__GNUC__) && (__GNUC__ == 4 && __GNUC_MINOR__ == 8))

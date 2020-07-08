@@ -29,8 +29,8 @@ shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> cons
                                                    R dyn_reshape)
 {
     // v1::Reshape and v0::DynReshape do not allow data transposes.
-    return make_shared<op::Constant>(dyn_reshape->get_element_type(),
-                                     dyn_reshape->get_shape(),
+    return make_shared<op::Constant>(dyn_reshape->get_output_element_type(0),
+                                     dyn_reshape->get_output_shape(0),
                                      constant_data->get_data_ptr<T>());
 }
 
@@ -38,7 +38,7 @@ template <typename R>
 std::shared_ptr<Node> do_fold(R dyn_reshape_match, shared_ptr<op::Constant> constant_data_match)
 {
     std::shared_ptr<Node> replacement;
-    auto type = dyn_reshape_match->get_element_type();
+    auto type = dyn_reshape_match->get_output_element_type(0);
     switch (type)
     {
     case element::Type_t::undefined:
@@ -119,7 +119,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         shared_ptr<Node> replacement;
         replacement =
             do_fold(static_pointer_cast<op::v1::Reshape>(match_root), constant_data_match);
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

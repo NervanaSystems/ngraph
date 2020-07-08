@@ -39,8 +39,6 @@
 #include "ngraph/op/erf.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/fused/squeeze.hpp"
-#include "ngraph/op/fused/unsqueeze.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/max_pool.hpp"
@@ -61,11 +59,13 @@
 #include "ngraph/op/sin.hpp"
 #include "ngraph/op/sinh.hpp"
 #include "ngraph/op/sqrt.hpp"
+#include "ngraph/op/squeeze.hpp"
 #include "ngraph/op/stop_gradient.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/topk.hpp"
 #include "ngraph/op/transpose.hpp"
+#include "ngraph/op/unsqueeze.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/validation_util.hpp"
@@ -1239,7 +1239,7 @@ TEST(eval, evaluate_dynamic_concat)
 {
     auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto arg2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto concat = make_shared<op::v0::Concat>(NodeVector{arg1, arg2}, 1);
+    auto concat = make_shared<op::v0::Concat>(OutputVector{arg1, arg2}, 1);
     auto fun = make_shared<Function>(OutputVector{concat}, ParameterVector{arg1, arg2});
     auto result_tensor = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result_tensor},
@@ -1277,7 +1277,7 @@ void test_eval(shared_ptr<Function> fun,
 TEST(eval, eval_transpose)
 {
     auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    vector<shared_ptr<op::Parameter>> axes;
+    ParameterVector axes;
     axes.push_back(make_shared<op::Parameter>(element::i8, PartialShape{Dimension::dynamic()}));
     axes.push_back(make_shared<op::Parameter>(element::i16, PartialShape{Dimension::dynamic()}));
     axes.push_back(make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()}));
@@ -1299,7 +1299,7 @@ TEST(eval, eval_transpose)
     for (auto& axis : axes)
     {
         auto x_transpose = make_shared<op::v1::Transpose>(x, axis);
-        auto fun = make_shared<Function>(NodeVector{x_transpose}, ParameterVector{x, axis});
+        auto fun = make_shared<Function>(OutputVector{x_transpose}, ParameterVector{x, axis});
 
         switch (axis->get_element_type())
         {

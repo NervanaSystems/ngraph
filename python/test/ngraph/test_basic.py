@@ -39,7 +39,7 @@ def test_ngraph_function_api():
     assert len(function.get_ops()) == 6
     assert function.get_output_size() == 1
     assert function.get_output_op(0).get_type_name() == "Result"
-    assert function.get_output_element_type(0) == parameter_a.get_element_type()
+    assert function.get_output_element_type(0) == parameter_a.get_output_element_type(0)
     assert list(function.get_output_shape(0)) == [2, 2]
     assert len(function.get_parameters()) == 3
     assert len(function.get_results()) == 1
@@ -259,12 +259,6 @@ def test_constant_get_data_unsigned_integer(data_type):
     node = ng.constant(input_data, dtype=data_type)
     retrieved_data = node.get_data()
     assert np.allclose(input_data, retrieved_data)
-
-
-def test_backend_config():
-    dummy_config = {"dummy_option": "dummy_value"}
-    # Expect no throw
-    ng.runtime(backend_name=test.BACKEND_NAME).set_config(dummy_config)
 
 
 def test_result():

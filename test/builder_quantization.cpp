@@ -76,7 +76,7 @@ TEST(builder, scaled_QC_with_relu)
                                                                F,
                                                                G,
                                                                H);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -118,7 +118,7 @@ TEST(builder, dynamic_scaled_QC_with_relu)
                                                                F,
                                                                G,
                                                                H);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, C, D, E, F, G, H});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -174,7 +174,7 @@ TEST(builder, scaled_QC_with_bias)
                                                                F,
                                                                G,
                                                                H);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -222,7 +222,7 @@ TEST(builder, dynamic_scaled_QC_with_bias)
                                                                F,
                                                                G,
                                                                H);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, C, D, E, F, G, H});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias, C, D, E, F, G, H});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -282,7 +282,7 @@ TEST(builder, scaled_QC_with_bias_and_relu)
                                                                G,
                                                                H,
                                                                true);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -338,7 +338,7 @@ TEST(builder, scaled_QC_with_bias_add_and_relu)
                                                             I,
                                                             J,
                                                             true);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, Add});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias, Add});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -397,7 +397,7 @@ TEST(builder, dynamic_scaled_QC_with_bias_add_and_relu)
                                                             I,
                                                             J,
                                                             true);
-    auto f = make_shared<Function>(NodeVector{CV},
+    auto f = make_shared<Function>(OutputVector{CV},
                                    ParameterVector{A, B, Bias, Add, C, D, E, F, G, H, I, J});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -472,7 +472,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
         I,
         J,
         true);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, Add});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias, Add});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -534,7 +534,7 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu_nhwc)
         I,
         J,
         true);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, Add});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias, Add});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -593,7 +593,7 @@ TEST(builder, dynamic_scaled_QC_with_bias_signed_add_and_relu)
         I,
         J,
         true);
-    auto f = make_shared<Function>(NodeVector{CV},
+    auto f = make_shared<Function>(OutputVector{CV},
                                    ParameterVector{A, B, Bias, Add, C, D, E, F, G, H, I, J});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -660,7 +660,7 @@ TEST(builder, scaled_QC_with_f32_bias_and_relu)
                                                                G,
                                                                H,
                                                                true);
-    auto f = make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias});
+    auto f = make_shared<Function>(OutputVector{CV}, ParameterVector{A, B, Bias});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -686,7 +686,7 @@ TEST(builder, scaled_Q_unsigned)
     auto B = op::Constant::create(element::f32, Shape{}, {-255.0f});
     auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = ngraph::builder::QuantizeBuilder(A, B, C, element::u8, quantization_axes, round_mode);
-    auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QT}, ParameterVector{A});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -711,7 +711,7 @@ TEST(builder, dynamic_scaled_Q)
         auto B = make_shared<op::Parameter>(element::f32, Shape{});
         auto C = make_shared<op::Parameter>(element::f32, Shape{});
         auto QT = ngraph::builder::QuantizeBuilder(A, B, C, type, AxisSet{}, mode);
-        auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A, B, C});
+        auto f = make_shared<Function>(OutputVector{QT}, ParameterVector{A, B, C});
         // Create some tensors for input/output
         auto a = backend->create_tensor(element::f32, in_shape);
         auto b = backend->create_tensor(element::f32, Shape{});
@@ -777,7 +777,7 @@ TEST(builder, scaled_Q_signed)
     auto B = op::Constant::create(element::f32, Shape{}, {-127.0f});
     auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = ngraph::builder::QuantizeBuilder(A, B, C, element::i8, quantization_axes, round_mode);
-    auto f = make_shared<Function>(NodeVector{QT}, ParameterVector{A});
+    auto f = make_shared<Function>(OutputVector{QT}, ParameterVector{A});
     constant_fold(f);
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -821,7 +821,7 @@ shared_ptr<runtime::Tensor> call_SDQ(shared_ptr<runtime::Backend>& backend,
     auto B = make_shared<op::Parameter>(element::f32, Shape{});
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
     auto DQT = ngraph::builder::DequantizeBuilder(A, B, C, element::f32, AxisSet{});
-    auto f = make_shared<Function>(NodeVector{DQT}, ParameterVector{A, B, C});
+    auto f = make_shared<Function>(OutputVector{DQT}, ParameterVector{A, B, C});
     // Create some tensors for input/output
     auto a = backend->create_tensor(type, in_shape);
     auto b = backend->create_tensor(element::f32, Shape{});
@@ -862,8 +862,8 @@ TEST(builder, scaled_quantize_concat_unsigned)
     auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_r{8, 2};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        NodeVector{A, B, C}, 0, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
-    auto f = make_shared<Function>(NodeVector{QConcat},
+        OutputVector{A, B, C}, 0, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
+    auto f = make_shared<Function>(OutputVector{QConcat},
                                    ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -911,8 +911,8 @@ TEST(builder, scaled_quantize_concat_signed)
     Shape shape_r{8, 2};
 
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        NodeVector{A, B, C}, 0, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
-    auto f = make_shared<Function>(NodeVector{QConcat},
+        OutputVector{A, B, C}, 0, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
+    auto f = make_shared<Function>(OutputVector{QConcat},
                                    ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -959,8 +959,8 @@ TEST(builder, scaled_quantize_concat_unsigned_varying)
     auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
     Shape shape_r{2, 9};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        NodeVector{A, B, C}, 1, NodeVector{An, Bn, Cn}, NodeVector{Ax, Bx, Cx});
-    auto f = make_shared<Function>(NodeVector{QConcat},
+        OutputVector{A, B, C}, 1, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
+    auto f = make_shared<Function>(OutputVector{QConcat},
                                    ParameterVector{A, B, C, An, Bn, Cn, Ax, Bx, Cx});
     auto backend = runtime::Backend::create("CPU");
     // Create some tensors for input/output
@@ -1015,7 +1015,8 @@ TEST(builder, dynamic_scaled_QD_with_bias)
         auto H = make_shared<op::Parameter>(element::f32, Shape{1});
         auto CV = ngraph::builder::QuantizedDotBiasBuilder(
             A, B, Bias, C, D, E, F, G, H, requantize, with_relu);
-        return make_shared<Function>(NodeVector{CV}, ParameterVector{A, B, Bias, C, D, E, F, G, H});
+        return make_shared<Function>(OutputVector{CV},
+                                     ParameterVector{A, B, Bias, C, D, E, F, G, H});
     };
 
     auto backend = runtime::Backend::create("CPU");

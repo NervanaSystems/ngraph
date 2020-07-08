@@ -28,8 +28,8 @@ TEST(type_prop, matmul_2D_same)
 
     auto matmul = make_shared<op::MatMul>(A, B);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{2, 2}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2}));
 }
 
 TEST(type_prop, matmul_4D_same)
@@ -39,8 +39,8 @@ TEST(type_prop, matmul_4D_same)
 
     auto matmul = make_shared<op::MatMul>(A, B);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{2, 2, 3, 3}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 3}));
 }
 
 TEST(type_prop, matmul_2D)
@@ -50,8 +50,8 @@ TEST(type_prop, matmul_2D)
 
     auto matmul = make_shared<op::MatMul>(A, B);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{3, 4}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{3, 4}));
 }
 
 TEST(type_prop, matmul_4D)
@@ -61,8 +61,8 @@ TEST(type_prop, matmul_4D)
 
     auto matmul = make_shared<op::MatMul>(A, B);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{2, 2, 3, 4}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 4}));
 }
 
 TEST(type_prop, matmul_2D_transpose_a)
@@ -72,8 +72,8 @@ TEST(type_prop, matmul_2D_transpose_a)
 
     auto matmul = make_shared<op::MatMul>(A, B, 1);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{3, 4}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{3, 4}));
 }
 
 TEST(type_prop, matmul_4D_transpose_a)
@@ -83,8 +83,8 @@ TEST(type_prop, matmul_4D_transpose_a)
 
     auto matmul = make_shared<op::MatMul>(A, B, 1);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{2, 2, 3, 4}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 4}));
 }
 
 TEST(type_prop, matmul_2D_transpose_b)
@@ -94,8 +94,8 @@ TEST(type_prop, matmul_2D_transpose_b)
 
     auto matmul = make_shared<op::MatMul>(A, B, 0, 1);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{3, 4}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{3, 4}));
 }
 
 TEST(type_prop, matmul_4D_transpose_b)
@@ -105,6 +105,6 @@ TEST(type_prop, matmul_4D_transpose_b)
 
     auto matmul = make_shared<op::MatMul>(A, B, 0, 1);
 
-    ASSERT_EQ(matmul->get_element_type(), element::f32);
-    ASSERT_EQ(matmul->get_shape(), (Shape{2, 2, 3, 4}));
+    ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
+    ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 4}));
 }

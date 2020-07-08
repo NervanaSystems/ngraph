@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -39,7 +40,7 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
-        void eliminate_goe() NGRAPH_DEPRECATED("Remove when GetOrderedOutput is removed");
+        friend class Node;
 
     public:
         /// \brief Constructs a Output.
@@ -75,9 +76,6 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         std::shared_ptr<Node> get_node_shared_ptr() const;
-        /// \return A useable shared pointer to this output. If index 0, the node,
-        /// otherwise find or create a GOE.
-        std::shared_ptr<Node> as_single_output_node() const NGRAPH_DEPRECATED("Transitional.");
 
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const;
@@ -112,6 +110,8 @@ namespace ngraph
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
 
+        NodeVector get_users(bool check_is_used = false) const;
+
     private:
         std::shared_ptr<Node> m_node;
         size_t m_index{0};
@@ -120,8 +120,6 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<const Node>
     {
-        void eliminate_goe();
-
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -180,6 +178,8 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
+
+        NodeVector get_users(bool check_is_used = false) const;
 
     private:
         std::shared_ptr<const Node> m_node;

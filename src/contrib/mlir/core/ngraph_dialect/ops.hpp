@@ -14,26 +14,27 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #pragma once
 
-#include <cstdarg>
-#include "llvm/ADT/STLExtras.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/OperationSupport.h"
 #include "mlir/IR/StandardTypes.h"
 #include "mlir/Interfaces/SideEffects.h"
+#include "llvm/ADT/STLExtras.h"
+#include <cstdarg>
 
 // attributes
 // Currently table-gen dictates that enum attributes are in global namespace
 #include "ops_attributes.h.inc"
 
-namespace mlir
-{
+namespace mlir {
 // interfaces
 #include "ops_interfaces.h.inc"
 
@@ -41,4 +42,4 @@ namespace mlir
 #define GET_OP_CLASSES
 #include "ops.h.inc"
 #undef GET_OP_CLASSES
-}
+} // namespace mlir

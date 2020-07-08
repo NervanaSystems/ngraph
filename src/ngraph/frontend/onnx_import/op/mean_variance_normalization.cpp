@@ -18,8 +18,8 @@
 
 #include "mean_variance_normalization.hpp"
 #include "ngraph/axis_set.hpp"
-#include "ngraph/op/fused/mvn.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/op/mvn.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/validation_util.hpp"
 
 namespace ngraph
@@ -30,7 +30,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector mean_variance_normalization(const Node& node)
+                OutputVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     bool across_channels =
@@ -45,12 +45,12 @@ namespace ngraph
 
             namespace set_9
             {
-                NodeVector mean_variance_normalization(const Node& node)
+                OutputVector mean_variance_normalization(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     auto axes = node.get_attribute_value<std::vector<int64_t>>("axes", {0, 2, 3});
                     const std::vector<std::size_t> normalized_axes = ngraph::normalize_axes(
-                        node.get_description(), axes, data->get_output_partial_shape(0).rank());
+                        node.get_description(), axes, data.get_partial_shape().rank());
 
                     return {std::make_shared<ngraph::opset0::MVN>(data, AxisSet(normalized_axes))};
                 }

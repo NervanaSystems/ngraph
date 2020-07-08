@@ -26,20 +26,20 @@ TEST(type_prop, sum_deduce)
     auto param_0 = make_shared<op::Parameter>(element::f32, Shape{2, 4});
 
     auto r0 = make_shared<op::Sum>(param_0, AxisSet{0});
-    ASSERT_EQ(r0->get_element_type(), element::f32);
-    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+    ASSERT_EQ(r0->get_output_element_type(0), element::f32);
+    ASSERT_EQ(r0->get_output_shape(0), (Shape{4}));
 
     auto r1 = make_shared<op::Sum>(param_0, AxisSet{1});
-    ASSERT_EQ(r1->get_element_type(), element::f32);
-    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+    ASSERT_EQ(r1->get_output_element_type(0), element::f32);
+    ASSERT_EQ(r1->get_output_shape(0), (Shape{2}));
 
     auto r01 = make_shared<op::Sum>(param_0, AxisSet{0, 1});
-    ASSERT_EQ(r01->get_element_type(), element::f32);
-    ASSERT_EQ(r01->get_shape(), (Shape{}));
+    ASSERT_EQ(r01->get_output_element_type(0), element::f32);
+    ASSERT_EQ(r01->get_output_shape(0), (Shape{}));
 
     auto r_none = make_shared<op::Sum>(param_0, AxisSet{});
-    ASSERT_EQ(r_none->get_element_type(), element::f32);
-    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+    ASSERT_EQ(r_none->get_output_element_type(0), element::f32);
+    ASSERT_EQ(r_none->get_output_shape(0), (Shape{2, 4}));
 }
 
 TEST(type_prop, sum_axis_oob)
@@ -90,7 +90,7 @@ TEST(type_prop, sum_partial_rank_static_dynamic_ok_result_static)
     auto sum = make_shared<op::Sum>(param, summation_axes);
 
     EXPECT_EQ(sum->get_output_element_type(0), element::f32);
-    EXPECT_EQ(sum->get_shape(), (Shape{1, 2, 5}));
+    EXPECT_EQ(sum->get_output_shape(0), (Shape{1, 2, 5}));
 }
 
 TEST(type_prop, sum_partial_rank_static_dynamic_ok_result_dynamic)
@@ -135,5 +135,5 @@ TEST(type_prop, sum_partial_negative_axes)
     auto sum = make_shared<op::Sum>(param, summation_axes);
 
     EXPECT_EQ(sum->get_output_element_type(0), element::f32);
-    EXPECT_EQ(sum->get_shape(), (Shape{1, 2, 5}));
+    EXPECT_EQ(sum->get_output_shape(0), (Shape{1, 2, 5}));
 }

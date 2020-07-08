@@ -37,7 +37,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast)
 
     auto bc = make_shared<op::DynBroadcast>(x, shape_i64, axes_i64);
 
-    auto f = make_shared<Function>(NodeVector{bc}, ParameterVector{x, shape, axes});
+    auto f = make_shared<Function>(OutputVector{bc}, ParameterVector{x, shape, axes});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
@@ -86,7 +86,7 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_v1)
 
     auto bc = make_shared<op::v1::Broadcast>(x, shape_i64, axes_i64);
 
-    auto f = make_shared<Function>(NodeVector{bc}, ParameterVector{x, shape, axes});
+    auto f = make_shared<Function>(OutputVector{bc}, ParameterVector{x, shape, axes});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
