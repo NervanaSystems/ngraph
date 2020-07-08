@@ -215,6 +215,8 @@ if (WIN32)
             -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/dnnl
             -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DDNNL_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
+            -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/download"
@@ -248,6 +250,7 @@ else()
             ${DNNL_RPATH}
             -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DDNNL_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
+            -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
             "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${DNNL_FLAG}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/stamp"
@@ -258,42 +261,6 @@ else()
         EXCLUDE_FROM_ALL TRUE
         BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
         )
-endif()
-
-if(WIN32)
-    ExternalProject_Add_Step(
-        ext_dnnl
-        CopyDNNL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/bin/${DNNL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
-        COMMENT "Copy dnnl runtime libraries to ngraph build directory."
-        DEPENDEES install
-        )
-
-    ExternalProject_Add_Step(
-        ext_dnnl
-        CopyDNNLIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/${DNNL_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${DNNL_IMPLIB}
-        COMMENT "Copy dnnl runtime libraries to ngraph build directory."
-        DEPENDEES install
-        )
-else()
-    ExternalProject_Add_Step(
-        ext_dnnl
-        CopyDNNL
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/${CMAKE_INSTALL_LIBDIR}/${DNNL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
-        COMMENT "Copy dnnl runtime libraries to ngraph build directory."
-        DEPENDEES install
-        )
-    if(NGRAPH_LIB_VERSIONING_ENABLE)
-        ExternalProject_Add_Step(
-            ext_dnnl
-            CopyDNNLEXTRA
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/${CMAKE_INSTALL_LIBDIR}/${DNNL_SHORT_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_SHORT_LIB}
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different ${EXTERNAL_PROJECTS_ROOT}/dnnl/${CMAKE_INSTALL_LIBDIR}/${DNNL_FULL_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_FULL_LIB}
-            COMMENT "Copy extra dnnl runtime libraries to ngraph build directory."
-            DEPENDEES install
-           )
-    endif()
 endif()
 
 ExternalProject_Add_Step(
