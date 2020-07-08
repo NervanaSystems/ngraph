@@ -71,9 +71,7 @@ namespace ngraph
                     hardsigmoid(const std::shared_ptr<Node>& arg, float alpha, float beta);
             }
 
-            using ActivationFunctionType = std::shared_ptr<Node> (*)(const std::shared_ptr<Node>&,
-                                                                     float,
-                                                                     float);
+            using ActivationFunctionType = Output<Node> (*)(const Output<Node>&, float, float);
 
             ///
             /// \brief      Class representing activation function used in RNN cells.
@@ -89,10 +87,11 @@ namespace ngraph
                 ///
                 /// \brief  Calls stored activation function with provided node argument.
                 ///
-                std::shared_ptr<Node> operator()(const std::shared_ptr<Node>& arg) const;
+                Output<Node> operator()(const Output<Node>& arg) const;
 
                 void set_alpha(float alpha) { m_alpha = alpha; }
                 void set_beta(float beta) { m_beta = beta; }
+
             private:
                 /// \brief Activation function wrapper.
                 ActivationFunctionType m_function;

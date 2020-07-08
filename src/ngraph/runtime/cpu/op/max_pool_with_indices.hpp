@@ -28,7 +28,7 @@ namespace ngraph
         // The first output is equivalent to what MaxPool produces
         // The second one contains the indices of the maximum numbers
         // for each window in input (arg)
-        // These indices are used by MKLDNN for a back propagation pass
+        // These indices are used by DNNL for a back propagation pass
         class MaxPoolWithIndices : public Op
         {
         public:
@@ -65,7 +65,7 @@ namespace ngraph
         };
 
         // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
-        // pass the indices directly to MKLDNN to avoid max indices recomputation
+        // pass the indices directly to DNNL to avoid max indices recomputation
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:
@@ -86,6 +86,7 @@ namespace ngraph
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Shape& get_padding_below() const { return m_padding_below; }
             const Shape& get_padding_above() const { return m_padding_above; }
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;

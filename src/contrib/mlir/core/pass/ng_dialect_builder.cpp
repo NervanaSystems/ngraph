@@ -33,9 +33,9 @@
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
@@ -78,7 +78,6 @@ private:
 
   mlir::Type getMlirType(const descriptor::Tensor *tensor);
   mlir::Type getMlirType(const element::Type &type);
-  mlir::Type getMlirType(const ngraph::Node *node);
 
   TensorInfo getTensorValue(descriptor::Tensor *tensor);
   void updateTensorValue(descriptor::Tensor *tensor, mlir::Value value);
@@ -134,7 +133,7 @@ private:
   TensorToInfoMap m_tensorToValueMap;
   static const MLIRCompOpMap &getOpDispatcher();
 };
-}
+} // namespace
 
 NgDialectConversionPass::NgDialectConversionPass(
     const NgDialectConversionPass &obj)
@@ -146,17 +145,17 @@ void NgDialectConversionPass::runOnOperation() {
 
   mlir::ModuleOp module = getOperation();
   // Retrieve input and output tensors.
-  const auto &kernelInputs = m_compiledKernel->get_arguments();
-  const auto &kernelOutput = m_compiledKernel->get_kernel_outputs();
+  std::vector<Input<const Node>> kernelInputs = m_compiledKernel->inputs();
+  OutputVector kernelOutput = m_compiledKernel->get_kernel_outputs();
   NGRAPH_CHECK(kernelInputs.size() != 0, "Cannot have empty inputs list");
   NGRAPH_CHECK(kernelOutput.size() != 0, "Cannot have empty outputs list");
 
   for (auto input : kernelInputs) {
-    argsTypeList.push_back(getMlirType(input.get()));
+    argsTypeList.push_back(getMlirType(&input.get_tensor()));
   }
 
   for (auto output : kernelOutput) {
-    resultTypeList.push_back(getMlirType(output.get_node()));
+    resultTypeList.push_back(getMlirType(&output.get_tensor()));
   }
 
   auto funcType =
@@ -264,11 +263,6 @@ mlir::Type NgDialectConversionPass::getMlirType(const element::Type &type) {
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
 #pragma GCC diagnostic pop
 #endif
-}
-
-mlir::Type NgDialectConversionPass::getMlirType(const ngraph::Node *node) {
-  descriptor::Tensor *outTensor = node->get_output_tensor_ptr(0).get();
-  return getMlirType(outTensor);
 }
 
 void NgDialectConversionPass::updateTensorValue(descriptor::Tensor *tensor,

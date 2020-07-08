@@ -24,7 +24,6 @@
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/abs.hpp"
-#include "ngraph/op/abs.hpp"
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/asin.hpp"
@@ -41,7 +40,6 @@
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
-#include "ngraph/op/multiply.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/one_hot.hpp"
@@ -273,7 +271,7 @@ namespace std
 
             arg_ids.push_back(type_hash);
 
-            std::vector<Output<Node>> cargs;
+            OutputVector cargs;
             for (auto input : k.get_node()->inputs())
             {
                 cargs.push_back(input.get_source_output());

@@ -24,7 +24,6 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/topk.hpp"

@@ -16,22 +16,14 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <unordered_map>
-#include <unordered_set>
-#include <vector>
+#include "ngraph/ops.hpp"
 
 namespace ngraph
 {
-    enum class Placement
+    namespace opset_orphans
     {
-        DEFAULT,
-        INTERPRETER,
-        CPU,
-        GPU,
-        NNP,
-    };
-
-    std::string placement_to_string(Placement placement);
+#define NGRAPH_OP(a, b) using b::a;
+#include "ngraph/opset/opset4_tbl.hpp"
+#undef NGRAPH_OP
+    }
 }

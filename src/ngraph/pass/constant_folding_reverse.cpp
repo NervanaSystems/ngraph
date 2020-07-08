@@ -22,8 +22,8 @@ using namespace std;
 using namespace ngraph;
 
 template <typename T>
-static shared_ptr<op::Constant> fold_constant_reverse_helper(shared_ptr<op::Constant> constant,
-                                                             const AxisSet& reversed_axes)
+static Output<Node> fold_constant_reverse_helper(shared_ptr<op::Constant> constant,
+                                                 const AxisSet& reversed_axes)
 {
     const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
@@ -32,11 +32,12 @@ static shared_ptr<op::Constant> fold_constant_reverse_helper(shared_ptr<op::Cons
     runtime::reference::reverse<T>(
         constant->get_vector<T>().data(), data_ptr, out_shape, out_shape, reversed_axes);
 
-    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr)
+        ->output(0);
 }
 
-static shared_ptr<op::Constant> fold_constant_reverse(shared_ptr<op::Constant> constant,
-                                                      const AxisSet& reversed_axes)
+static Output<Node> fold_constant_reverse(shared_ptr<op::Constant> constant,
+                                          const AxisSet& reversed_axes)
 {
     auto& input_element_type = constant->get_output_element_type(0);
 
@@ -100,12 +101,14 @@ void pass::ConstantFolding::construct_constant_reverse()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto reverse_match = static_pointer_cast<op::Reverse>(m.get_match_root());
+        auto reverse_match = m.get_match_root_as<op::Reverse>();
+        NGRAPH_CHECK(
+            reverse_match, "match root node ", *m.get_match_root(), " not of type `op::Reverse`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(reverse_match));
 
-        replace_node(m.get_match_root(),
-                     fold_constant_reverse(constant_match, reverse_match->get_reversed_axes()));
+        m.get_match_value().replace(
+            fold_constant_reverse(constant_match, reverse_match->get_reversed_axes()));
         return true;
     };
 

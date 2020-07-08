@@ -67,8 +67,8 @@ TEST(build_graph, literal)
     ASSERT_EQ(float0->get_output_element_type(0), element::f32);
     ASSERT_EQ(float0->get_output_shape(0), Shape{});
     auto d = make_shared<op::Dot>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_argument(0), float0);
+    ASSERT_EQ(d->get_argument(1), float0);
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
@@ -87,8 +87,8 @@ TEST(build_graph, tensor)
     ASSERT_EQ(float0->get_output_element_type(0), element::f32);
     ASSERT_EQ(float0->get_output_shape(0), shape);
     auto d = make_shared<op::Add>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_argument(0), float0);
+    ASSERT_EQ(d->get_argument(1), float0);
 
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);
@@ -209,7 +209,6 @@ TEST(build_graph, function_revalidate_and_infer)
 TEST(build_graph, validate_function_for_dynamic_shape)
 {
     auto make_function = [&](bool dynamic_shape) {
-
         auto param1_shape =
             dynamic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
         auto param2_shape = dynamic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};

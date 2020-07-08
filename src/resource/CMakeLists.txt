@@ -31,16 +31,18 @@ set (SRC
 
 add_executable(resource_generator EXCLUDE_FROM_ALL ${SRC})
 add_dependencies(resource_generator libllvm)
-get_filename_component(CLANG_INTRIN_INCLUDE_DIR ${LLVM_INCLUDE_DIRS}/../lib/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/include ABSOLUTE)
+get_filename_component(CLANG_INTRIN_INCLUDE_DIR ${LLVM_INCLUDE_DIR}/../lib/clang/${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}/include ABSOLUTE)
+get_filename_component(OMP_H ${LLVM_INCLUDE_DIR}/../projects/openmp/runtime/src/omp.h ABSOLUTE)
 list(APPEND HEADER_SEARCH_DEFINES CLANG_BUILTIN_HEADERS_PATH="${CLANG_INTRIN_INCLUDE_DIR}")
+list(APPEND HEADER_SEARCH_DEFINES OPENMP_HEADER_FILE="${OMP_H}")
 list(APPEND HEADER_SEARCH_DEFINES NGRAPH_HEADERS_PATH="${NGRAPH_INCLUDE_PATH}")
 
 if(NGRAPH_CPU_ENABLE)
-    add_dependencies(resource_generator libmkldnn libeigen)
-    get_target_property(MKLDNN_INCLUDE_DIR libmkldnn INTERFACE_INCLUDE_DIRECTORIES)
+    add_dependencies(resource_generator libdnnl libeigen)
+    get_target_property(DNNL_INCLUDE_DIR libdnnl INTERFACE_INCLUDE_DIRECTORIES)
     get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
     list(APPEND HEADER_SEARCH_DEFINES EIGEN_HEADERS_PATH="${EIGEN_INCLUDE_DIR}")
-    list(APPEND HEADER_SEARCH_DEFINES MKLDNN_HEADERS_PATH="${MKLDNN_INCLUDE_DIR}")
+    list(APPEND HEADER_SEARCH_DEFINES DNNL_HEADERS_PATH="${DNNL_INCLUDE_DIR}")
 endif()
 
 if(NGRAPH_TBB_ENABLE)

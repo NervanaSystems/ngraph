@@ -53,6 +53,7 @@ namespace ngraph
                               const HostTensorVector& inputs) override;
 
                 const AutoBroadcastSpec& get_auto_broadcast() const { return m_auto_broadcast; }
+
             private:
                 AutoBroadcastSpec m_auto_broadcast;
             };

@@ -162,8 +162,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gather_2d_indices_no_axis_2d_input)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-NGRAPH_TEST(${BACKEND_NAME},
-            MLIR_DISABLE_TEST(gather_2d_negative_and_positive_indices_no_axis_2d_input))
+NGRAPH_TEST(${BACKEND_NAME}, gather_2d_negative_and_positive_indices_no_axis_2d_input)
 {
     Shape params_shape{3, 2};
     Shape indices_shape{2, 2};

@@ -59,6 +59,7 @@ namespace ngraph
                         descriptor_() { cudnn_descriptor<T>::create(stored_descriptor); }
                         ~descriptor_() { cudnn_descriptor<T>::destroy(stored_descriptor); }
                         T& get() { return stored_descriptor; }
+
                     private:
                         T stored_descriptor;
                     };

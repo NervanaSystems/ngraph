@@ -43,6 +43,7 @@ public:
     }
 
     uint32_t get_items() { return m_items; }
+
 protected:
     std::string m_filename;
     FILE* m_file{nullptr};
@@ -65,6 +66,7 @@ public:
 
     uint32_t get_rows() { return m_rows; }
     uint32_t get_columns() { return m_columns; }
+
 protected:
     uint32_t m_rows{0};
     uint32_t m_columns{0};
@@ -109,6 +111,7 @@ public:
         return m_image_sample_size * m_batch_size;
     }
     size_t get_label_batch_size() const { return m_batch_size; }
+
 protected:
     size_t m_batch_size;
     MNistImageLoader m_image_loader;

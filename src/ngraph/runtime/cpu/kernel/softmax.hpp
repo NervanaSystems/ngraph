@@ -44,8 +44,8 @@ namespace ngraph
                     }
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
-                        static_cast<ElementType *>(output), in_dims),
-                        in(static_cast<ElementType *>(input), in_dims);
+                        static_cast<ElementType*>(output), in_dims),
+                        in(static_cast<ElementType*>(input), in_dims);
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         (in - in.maximum().eval().reshape(rdims).broadcast(in_dims)).exp();
@@ -92,8 +92,8 @@ namespace ngraph
                     }
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
-                        static_cast<ElementType *>(output), in_dims),
-                        in(static_cast<ElementType *>(input), in_dims);
+                        static_cast<ElementType*>(output), in_dims),
+                        in(static_cast<ElementType*>(input), in_dims);
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         (in - in.maximum(axes).eval().reshape(rdims).broadcast(bcast)).exp();
@@ -127,8 +127,8 @@ namespace ngraph
                     }
 
                     Eigen::TensorMap<Eigen::Tensor<ElementType, Rank, Eigen::RowMajor>> out(
-                        static_cast<ElementType *>(output), in_dims),
-                        in(static_cast<ElementType *>(input), in_dims);
+                        static_cast<ElementType*>(output), in_dims),
+                        in(static_cast<ElementType*>(input), in_dims);
 
                     out.device(ngraph::runtime::cpu::executor::GetCPUExecutor().get_device(arena)) =
                         (in - in.maximum(axis).eval().reshape(rdims).broadcast(bcast)).exp();

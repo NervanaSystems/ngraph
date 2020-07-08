@@ -17,17 +17,18 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
-#include "ngraph/op/get_output_element.hpp"
-#include "pyngraph/ops/get_output_element.hpp"
+#include "ngraph/node_output.hpp"  // ngraph::Output<Node>
+#include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
+#include "pyngraph/output.hpp"
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_GetOutputElement(py::module m)
+static const char* CAPSULE_NAME = "ngraph_function";
+
+void regclass_pyngraph_Output(py::module m)
 {
-    py::class_<ngraph::op::GetOutputElement,
-               std::shared_ptr<ngraph::op::GetOutputElement>,
-               ngraph::op::Op>
-        get_output_element(m, "GetOutputElement");
-    get_output_element.doc() = "ngraph.impl.op.GetOutputElement wraps ngraph::op::GetOutputElement";
-    get_output_element.def(py::init<const std::shared_ptr<ngraph::Node>&, size_t>());
+    py::class_<ngraph::Output<ngraph::Node>> output(m, "Output");
+    output.doc() = "ngraph.impl.Output wraps ngraph::Output<Node>";
+    output.def("get_index", &ngraph::Output<ngraph::Node>::get_index);
+    output.def("get_node", &ngraph::Output<ngraph::Node>::get_node_shared_ptr);
 }

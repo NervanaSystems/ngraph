@@ -167,7 +167,7 @@ protected:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<std::shared_ptr<Node>> m_nodes;
+    NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
@@ -357,13 +357,6 @@ protected:
                 reference::generate_mask_no_state<T>(
                     out[0]->get_data_ptr<T>(), element_count, training, seed, prob);
             }
-            break;
-        }
-        case OP_TYPEID::GetOutputElement:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
             break;
         }
         case OP_TYPEID::BatchMatMul:

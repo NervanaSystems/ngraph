@@ -29,7 +29,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -55,7 +54,6 @@
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
-#include "util/random.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
 

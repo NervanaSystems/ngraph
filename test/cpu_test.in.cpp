@@ -32,7 +32,6 @@
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/conv_fused.hpp"
 #include "ngraph/op/erf.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/tile.hpp"
 #include "ngraph/pass/constant_folding.hpp"
@@ -41,7 +40,7 @@
 #include "ngraph/runtime/cpu/cpu_backend.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/serializer.hpp"
@@ -53,10 +52,13 @@
 #include "util/float_util.hpp"
 #include "util/ndarray.hpp"
 #include "util/random.hpp"
+#include "util/test_control.hpp"
 #include "util/test_tools.hpp"
 
 using namespace ngraph;
 using namespace std;
+
+static string s_manifest = "${MANIFEST}";
 
 namespace
 {
@@ -73,55 +75,55 @@ namespace
     };
 
     constexpr NodeTypeInfo UnhandledOp::type_info;
+
+    static void compare_backends(const std::shared_ptr<Function>& f1,
+                                 const std::shared_ptr<Function>& f2,
+                                 const string backend1,
+                                 const string backend2,
+                                 float rtol = 1e-5,
+                                 float atol = 1e-8)
+    {
+        test::Uniform<float> rng(-1.0f, 1.0f);
+        vector<vector<float>> args;
+        for (shared_ptr<op::Parameter> param : f1->get_parameters())
+        {
+            vector<float> tensor_val(shape_size(param->get_output_shape(0)));
+            rng.initialize(tensor_val);
+            args.push_back(tensor_val);
+        }
+        auto f1_results = execute(f1, args, backend1);
+        auto f2_results = execute(f2, args, backend2);
+
+        for (size_t i = 0; i < f1_results.size(); i++)
+        {
+            EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
+        }
+    }
 }
 
-static void compare_backends(const std::shared_ptr<Function>& f1,
-                             const std::shared_ptr<Function>& f2,
-                             const string backend1,
-                             const string backend2,
-                             float rtol = 1e-5,
-                             float atol = 1e-8)
-{
-    test::Uniform<float> rng(-1.0f, 1.0f);
-    vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : f1->get_parameters())
-    {
-        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
-        rng.initialize(tensor_val);
-        args.push_back(tensor_val);
-    }
-    auto f1_results = execute(f1, args, backend1);
-    auto f2_results = execute(f2, args, backend2);
-
-    for (size_t i = 0; i < f1_results.size(); i++)
-    {
-        EXPECT_TRUE(test::all_close(f1_results.at(i), f2_results.at(i), rtol, atol));
-    }
-}
-
-TEST(cpu_test, unhandled_op)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_unhandled_op)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
     auto unhandled = make_shared<UnhandledOp>(A);
     auto f = make_shared<Function>(unhandled, ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     ASSERT_THROW(backend->compile(f), unsupported_op);
 }
 
-TEST(cpu_test, trivial_in_place_relu)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_trivial_in_place_relu)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto add = A + B;
     auto relu = make_shared<op::Relu>(add);
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     (backend->compile(f));
     ASSERT_EQ(relu->get_output_tensor(0).get_pool_offset(),
               add->get_output_tensor(0).get_pool_offset());
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_trivial_in_place_relu_fail)
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
@@ -129,14 +131,14 @@ TEST(cpu_test, MLIR_DISABLE_TEST(trivial_in_place_relu_fail))
     auto relu = make_shared<op::Relu>(add);
     auto add2 = relu + add;
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     (backend->compile(f));
     ASSERT_NE(relu->get_output_tensor(0).get_pool_offset(),
               add->get_output_tensor(0).get_pool_offset());
 }
 
 #ifdef NGRAPH_TBB_ENABLE
-TEST(cpu_test, abc_tbb)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_abc_tbb)
 {
     // Force TBB flow graph generation in the CPU backend
     // This has no effect on other backends
@@ -152,7 +154,7 @@ TEST(cpu_test, abc_tbb)
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, shape);
@@ -184,7 +186,7 @@ TEST(cpu_test, abc_tbb)
 }
 #endif // NGRAPH_TBB_ENABLE
 
-TEST(cpu_test, mkldnn_layouts)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_dnnl_layouts)
 {
     Shape shape_a{1, 16, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -205,7 +207,7 @@ TEST(cpu_test, mkldnn_layouts)
     pool1_result->set_needs_default_layout(true);
     auto f = make_shared<Function>(ResultVector{pool1_result}, ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     vector<float> input(64, 1.0f);
     vector<float> weights;
@@ -239,7 +241,7 @@ TEST(cpu_test, mkldnn_layouts)
     EXPECT_TRUE(test::all_close_f(vector<float>{expected_result}, rv));
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations1)
 {
     // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -256,7 +258,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
         return make_shared<Function>(OutputVector{squeeze}, ParameterVector{A, B});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -269,7 +271,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     // Two convert layouts for inputs and weights of convolution.
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 2);
     for (size_t i = 0; i < cpu_results.size(); i++)
@@ -278,7 +280,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations1))
     }
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations2)
 {
     // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -296,7 +298,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
         return make_shared<Function>(OutputVector{expand}, ParameterVector{A, B});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -309,7 +311,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 2);
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -317,7 +319,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations2))
     }
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations3)
 {
     // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -334,7 +336,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
         return make_shared<Function>(OutputVector{squeeze}, ParameterVector{A, B});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -347,7 +349,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
     // Two convert layouts for inputs and weights of convolution.
     // One convert layout after convolution
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 3);
@@ -357,7 +359,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations3))
     }
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations4)
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -384,7 +386,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
         return make_shared<Function>(OutputVector{conv2}, ParameterVector{A, B1, B2});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -397,7 +399,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -406,7 +408,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations4))
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations5)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
@@ -434,7 +436,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
         return make_shared<Function>(OutputVector{conv2}, ParameterVector{A, B1, B2});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -447,7 +449,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -456,7 +458,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(reshape_layout_optimizations5))
     EXPECT_LE(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 4);
 }
 
-TEST(cpu_test, reshape_layout_optimizations6)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations6)
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -468,7 +470,7 @@ TEST(cpu_test, reshape_layout_optimizations6)
         return make_shared<Function>(OutputVector{sqrt}, ParameterVector{A});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -481,7 +483,7 @@ TEST(cpu_test, reshape_layout_optimizations6)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -490,7 +492,7 @@ TEST(cpu_test, reshape_layout_optimizations6)
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
 }
 
-TEST(cpu_test, reshape_layout_optimizations7)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations7)
 {
     // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -501,7 +503,7 @@ TEST(cpu_test, reshape_layout_optimizations7)
         return make_shared<Function>(OutputVector{reshape}, ParameterVector{A});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -514,7 +516,7 @@ TEST(cpu_test, reshape_layout_optimizations7)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -523,7 +525,7 @@ TEST(cpu_test, reshape_layout_optimizations7)
     EXPECT_EQ(count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f), 0);
 }
 
-TEST(cpu_test, DISABLED_collapse_dims1)
+NGRAPH_TEST(${BACKEND_NAME}, DISABLED_cpu_test_collapse_dims1)
 {
     // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -533,7 +535,7 @@ TEST(cpu_test, DISABLED_collapse_dims1)
         return make_shared<Function>(OutputVector{sum2}, ParameterVector{A});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -546,7 +548,7 @@ TEST(cpu_test, DISABLED_collapse_dims1)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -557,7 +559,7 @@ TEST(cpu_test, DISABLED_collapse_dims1)
     EXPECT_EQ(count_ops_of_type<op::Reshape>(cpu_f), 3);
 }
 
-TEST(cpu_test, collapse_dims2)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_collapse_dims2)
 {
     // Collapse dims around a dot where one of the inputs is a scalar
     auto make_function = []() -> std::shared_ptr<Function> {
@@ -567,7 +569,7 @@ TEST(cpu_test, collapse_dims2)
         return make_shared<Function>(OutputVector{dot}, ParameterVector{A, B});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -580,7 +582,7 @@ TEST(cpu_test, collapse_dims2)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -588,7 +590,7 @@ TEST(cpu_test, collapse_dims2)
     }
 }
 
-TEST(cpu_test, convert_layout)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_layout)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto W = std::make_shared<op::Parameter>(element::f32, Shape{10, 400});
@@ -601,7 +603,7 @@ TEST(cpu_test, convert_layout)
 
         return make_shared<Function>(OutputVector{add1, sub1, mul1}, ParameterVector{W, X});
     };
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -614,7 +616,7 @@ TEST(cpu_test, convert_layout)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     size_t count = count_ops_of_type<runtime::cpu::op::ConvertLayout>(cpu_f);
     ASSERT_EQ(count, 1);
@@ -624,7 +626,7 @@ TEST(cpu_test, convert_layout)
     }
 }
 
-TEST(cpu_test, post_layout_reshape_convertlayout)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_post_layout_reshape_convertlayout)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
@@ -642,10 +644,10 @@ TEST(cpu_test, post_layout_reshape_convertlayout)
 
     auto int_f = make_function();
     auto cpu_f = make_function();
-    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+    compare_backends(int_f, cpu_f, "INTERPRETER", "${BACKEND_NAME}");
 }
 
-TEST(cpu_test, mkldnn_layouts_eltwise)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_dnnl_layouts_eltwise)
 {
     Shape input_shape{3, 11, 14, 14};
     Shape filter_shape{5, 11, 2, 2};
@@ -661,10 +663,10 @@ TEST(cpu_test, mkldnn_layouts_eltwise)
 
     auto int_f = make_function();
     auto cpu_f = make_function();
-    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU");
+    compare_backends(int_f, cpu_f, "INTERPRETER", "${BACKEND_NAME}");
 }
 
-TEST(cpu_test, convolution_large_padding)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convolution_large_padding)
 {
     Shape input_shape{1, 1, 100, 100};
     Shape filter_shape{1, 1, 3, 3};
@@ -684,7 +686,7 @@ TEST(cpu_test, convolution_large_padding)
 
     auto int_f = make_function();
     auto cpu_f = make_function();
-    compare_backends(int_f, cpu_f, "INTERPRETER", "CPU", 1e-4, 1e-4);
+    compare_backends(int_f, cpu_f, "INTERPRETER", "${BACKEND_NAME}", 1e-4, 1e-4);
 }
 
 #if 0
@@ -697,7 +699,7 @@ static std::shared_ptr<Function> make_function(const std::string& file_name)
     return func;
 }
 
-TEST(cpu_test, memory_reuse_mxnet_densenet121)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_mxnet_densenet121)
 {
     const std::string file_name("mxnet/mxnet_densenet121_inference_batch1_float32.json");
     auto cpu_f = make_function(file_name);
@@ -713,17 +715,17 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
     }
 
     // without memory reuse
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     auto cpu_f_new = make_function(file_name);
-    auto cpu_results_new = execute(cpu_f_new, args, "CPU");
+    auto cpu_results_new = execute(cpu_f_new, args, "${BACKEND_NAME}");
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
         EXPECT_TRUE(test::all_close(cpu_results.at(i), cpu_results_new.at(i), 1.0e-4f, 1.0e-4f));
     }
 
     // with memory reuse
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto parms = cpu_f->get_parameters();
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors(args.size());
     for (size_t i = 0; i < args.size(); i++)
@@ -767,7 +769,7 @@ TEST(cpu_test, memory_reuse_mxnet_densenet121)
 }
 #endif
 
-TEST(cpu_test, memory_reuse_destructive_oi_relu)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_destructive_oi_relu)
 {
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -779,7 +781,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
@@ -796,7 +798,7 @@ TEST(cpu_test, memory_reuse_destructive_oi_relu)
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
-TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_cacheable_no_destructive_oi_relu)
 {
     auto shape_a = Shape{2, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape_a, true);
@@ -808,7 +810,7 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, vector<float>{1, 8, -8, 17, -0.5, 1, 8, -8, 17, -0.5});
@@ -830,17 +832,17 @@ TEST(cpu_test, memory_reuse_cacheable_no_destructive_oi_relu)
     EXPECT_TRUE(test::all_close_f(read_vector<float>(result), expected));
 }
 
-TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_concat_after_in_place_slice)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 4});
     auto D = make_shared<op::Slice>(B, Coordinate{1, 0}, Coordinate{2, 4});
     auto E = make_shared<op::Slice>(A, Coordinate{2, 0}, Coordinate{3, 4});
-    auto r = make_shared<op::Concat>(NodeVector{B, D, E}, 0);
+    auto r = make_shared<op::Concat>(OutputVector{B, D, E}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -855,7 +857,7 @@ TEST(cpu_test, memory_reuse_in_place_concat_after_in_place_slice)
                           read_vector<float>(result)));
 }
 
-TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_slice_after_in_place_concat)
 {
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
@@ -865,12 +867,12 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     auto D = make_shared<op::Parameter>(element::f32, shape);
     auto add2 = make_shared<op::Add>(C, D);
     auto subtract = make_shared<op::Subtract>(C, A);
-    auto concat = make_shared<op::Concat>(NodeVector{add1, add2, subtract}, 0);
+    auto concat = make_shared<op::Concat>(OutputVector{add1, add2, subtract}, 0);
     Shape shape_r{2, 1};
     auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
     auto f = make_shared<Function>(slice, ParameterVector{A, B, C, D});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -889,7 +891,8 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_concat)
     EXPECT_TRUE(test::all_close_f((vector<float>{3, 7}), read_vector<float>(result)));
 }
 
-TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
+NGRAPH_TEST(${BACKEND_NAME},
+            cpu_test_memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
 {
     Shape shape_a{2, 1, 2, 2};
     Shape shape_r{2, 1, 2, 2};
@@ -903,7 +906,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
     auto neg = make_shared<op::Negative>(slice);
     auto f = make_shared<Function>(neg, ParameterVector{});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     auto result = backend->create_tensor(element::f32, shape);
 
@@ -913,7 +916,7 @@ TEST(cpu_test, memory_reuse_in_place_slice_after_in_place_reshape_from_constant)
         vector<float>{-5., -6., -7., -8.}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, convert_inplace)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_inplace)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::u8, shape);
@@ -922,7 +925,7 @@ TEST(cpu_test, convert_inplace)
     auto f =
         make_shared<Function>(make_shared<op::Convert>(A + B, element::i8) - C, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape);
@@ -934,7 +937,7 @@ TEST(cpu_test, convert_inplace)
     EXPECT_EQ((vector<int8_t>{1, 2, 3, -2}), read_vector<int8_t>(result));
 }
 
-TEST(cpu_test, rotated_pooling)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_rotated_pooling)
 {
     auto make_f = [&](bool is_4d, bool avgpool) {
         auto input_shape = is_4d ? Shape{2, 4, 4, 1} : Shape{2, 4, 4, 4, 1};
@@ -955,11 +958,14 @@ TEST(cpu_test, rotated_pooling)
         }
     };
 
-    compare_backends(make_f(true, true), make_f(true, true), "INTERPRETER", "CPU");   // 4D AvgPool
-    compare_backends(make_f(true, false), make_f(true, false), "INTERPRETER", "CPU"); // 4D MaxPool
-    compare_backends(make_f(false, true), make_f(false, true), "INTERPRETER", "CPU"); // 5D AvgPool
     compare_backends(
-        make_f(false, false), make_f(false, false), "INTERPRETER", "CPU"); // 5D MaxPool
+        make_f(true, true), make_f(true, true), "INTERPRETER", "${BACKEND_NAME}"); // 4D AvgPool
+    compare_backends(
+        make_f(true, false), make_f(true, false), "INTERPRETER", "${BACKEND_NAME}"); // 4D MaxPool
+    compare_backends(
+        make_f(false, true), make_f(false, true), "INTERPRETER", "${BACKEND_NAME}"); // 5D AvgPool
+    compare_backends(
+        make_f(false, false), make_f(false, false), "INTERPRETER", "${BACKEND_NAME}"); // 5D MaxPool
 }
 
 // for float this will be 18 bits matching
@@ -967,7 +973,7 @@ TEST(cpu_test, rotated_pooling)
 constexpr int three_quarters_of_available_bits = (MAX_FLOAT_BITS * 3) / 4;
 constexpr int tolerance = FLOAT_MANTISSA_BITS - three_quarters_of_available_bits;
 
-TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_thread_safe_calls_convolution_2d_2items)
 {
     set_environment("NGRAPH_CPU_CONCURRENCY", "2", 1);
 
@@ -988,7 +994,7 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
             ParameterVector{A, B});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto function = make_graph();
 
     vector<float> expected_result{
@@ -1044,10 +1050,10 @@ TEST(cpu_test, thread_safe_calls_convolution_2d_2items)
 // callback.
 // There is no ConvertLayout node when MLIR and MLIR CALLBACK are enabled.
 // Thus this test is disabled with MLIR enabled.
-TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_convertlayout)
 {
     // Initialize CPU constant folders
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape data_shape{1, 64, 56, 56};
     auto data = make_shared<op::Parameter>(element::f32, data_shape);
     Shape weights_shape{64, 64, 3, 3};
@@ -1067,10 +1073,10 @@ TEST(cpu_test, MLIR_DISABLE_TEST(constant_convertlayout))
     ASSERT_EQ(convert_layout, 1);
 }
 
-TEST(cpu_test, constant_reshape)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape)
 {
     // Initialize CPU constant folders
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_in{2, 4};
     Shape shape_out{2, 4, 1};
 
@@ -1094,10 +1100,10 @@ TEST(cpu_test, constant_reshape)
     EXPECT_TRUE(test::all_close_f(values_in, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, constant_reshape_permute)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape_permute)
 {
     // Initialize CPU constant folders
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_in{2, 4};
     Shape shape_out{4, 2};
 
@@ -1122,10 +1128,10 @@ TEST(cpu_test, constant_reshape_permute)
     EXPECT_TRUE(test::all_close_f(values_permute, values_out, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, constant_broadcast)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_broadcast)
 {
     // Initialize CPU constant folders
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_in{2};
     Shape shape_out{2, 4};
 
@@ -1150,10 +1156,10 @@ TEST(cpu_test, constant_broadcast)
     ASSERT_EQ(values_permute, values_out);
 }
 
-TEST(cpu_test, constant_pad_exterior)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_pad_exterior)
 {
     // Initialize CPU constant folders
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_in{2};
 
     vector<int> values_in{777, 888};
@@ -1189,10 +1195,10 @@ static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t po
     return new_const->get_vector<T>();
 }
 
-TEST(cpu_test, constant_unary_binary)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
 {
     // Initialize CPU constant folders
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape shape_in{2, 2};
     vector<int> values_a{1, 2, 3, 4};
     vector<int> values_b{1, 2, 3, 4};
@@ -1341,21 +1347,21 @@ TEST(cpu_test, constant_unary_binary)
     ASSERT_NO_THROW(pass_manager.run_passes(func_error));
 }
 
-TEST(cpu_test, conv_test_winograd)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_conv_test_winograd)
 {
     // clang-format off
     // This test checks for the cpu specific graph pass handling for conv_winograd implementation.
-    // On SKX with MKLDNN version >= v0.18.0, mkldnn_verbose should match the following
+    // On SKX with DNNL version >= v0.18.0, dnnl_verbose should match the following
     //
-    // mkldnn_verbose,info,Intel(R) MKL-DNN v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
-    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
-    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
-    // mkldnn_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
-    // mkldnn_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
-    // mkldnn_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
-    // mkldnn_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
-    // mkldnn_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
-    // mkldnn_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
+    // dnnl_verbose,info,Intel(R) DNNL v0.18.0 (Git Hash 863ff6e7042cec7d2e29897fe9f0872e0888b0fc),Intel(R) Advanced Vector Extensions 512 (Intel(R) AVX-512) with AVX512BW, AVX512VL, and AVX512DQ extensions
+    // dnnl_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.0129395
+    // dnnl_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_OIhw16i16o,num:1,64x3x3x3,0.414062
+    // dnnl_verbose,create,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,0.0119629
+    // dnnl_verbose,exec,reorder,simple:any,undef,in:f32_nchw out:f32_nChw16c,num:1,64x3x224x224,19.302
+    // dnnl_verbose,create,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,1.84106
+    // dnnl_verbose,exec,convolution,jit_wino_4x3:avx512_core,forward_training,fsrc:nChw16c fwei:OIhw16i16o fbia:undef fdst:nChw16c,alg:convolution_winograd,mb64_ic3oc64_ih224oh224kh3sh1dh0ph1_iw224ow224kw3sw1dw0pw1,46.6631
+    // dnnl_verbose,create,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,0.279053
+    // dnnl_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
     // clang-format on
     auto make_function = []() -> std::shared_ptr<Function> {
         auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
@@ -1368,9 +1374,8 @@ TEST(cpu_test, conv_test_winograd)
                                                  CoordinateDiff{1, 1},
                                                  Strides{1, 1});
         return make_shared<Function>(conv, ParameterVector{input, filter});
-
     };
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
 
     test::Uniform<float> rng(-100.0f, 100.0f);
@@ -1381,10 +1386,10 @@ TEST(cpu_test, conv_test_winograd)
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 }
 
-TEST(cpu_test, conv_negative_padding)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_conv_negative_padding)
 {
     auto make_f = [&]() {
         Shape shape_a{1, 16, 2, 2};
@@ -1399,12 +1404,11 @@ TEST(cpu_test, conv_negative_padding)
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
         return make_shared<Function>(conv1, ParameterVector{A, B});
-
     };
-    compare_backends(make_f(), make_f(), "CPU", "INTERPRETER");
+    compare_backends(make_f(), make_f(), "${BACKEND_NAME}", "INTERPRETER");
 }
 
-TEST(cpu_test, gauss_error_function_erf_float32)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_gauss_error_function_erf_float32)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
@@ -1412,7 +1416,7 @@ TEST(cpu_test, gauss_error_function_erf_float32)
         return make_shared<Function>(erf, ParameterVector{A});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
     auto int_f = make_function();
 
@@ -1425,7 +1429,7 @@ TEST(cpu_test, gauss_error_function_erf_float32)
         args.push_back(tensor_val);
     }
     auto int_results = execute(int_f, args, "INTERPRETER");
-    auto cpu_results = execute(cpu_f, args, "CPU");
+    auto cpu_results = execute(cpu_f, args, "${BACKEND_NAME}");
 
     for (size_t i = 0; i < cpu_results.size(); i++)
     {
@@ -1433,7 +1437,7 @@ TEST(cpu_test, gauss_error_function_erf_float32)
     }
 }
 
-TEST(cpu_test, gauss_error_function_erf_int32)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_gauss_error_function_erf_int32)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::i32, shape);
@@ -1442,7 +1446,7 @@ TEST(cpu_test, gauss_error_function_erf_int32)
         return make_shared<Function>(erf, ParameterVector{A});
     };
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto cpu_f = make_function();
 
     auto input_nd_array = test::NDArray<int, 2>({{45, 2}, {7, 9}});
@@ -1464,7 +1468,7 @@ TEST(cpu_test, gauss_error_function_erf_int32)
     ASSERT_EQ(result_values, expected_values);
 }
 
-TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_with_indices_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
@@ -1479,7 +1483,7 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
     auto indices = make_shared<op::Result>(max_pool->output(1));
     auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1537,7 +1541,7 @@ TEST(cpu_test, max_pool_with_indices_2d_2channel_2image)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_with_indices_bprop_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
@@ -1556,7 +1560,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
 
     auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1641,7 +1645,7 @@ TEST(cpu_test, max_pool_with_indices_bprop_2d_2channel_2image)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, max_pool_bprop_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_bprop_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
@@ -1657,7 +1661,7 @@ TEST(cpu_test, max_pool_bprop_2d_2channel_2image)
 
     auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1742,7 +1746,7 @@ TEST(cpu_test, max_pool_bprop_2d_2channel_2image)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_avg_pool_bprop_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 3, 3};
     Shape window_shape{2, 2};
@@ -1757,7 +1761,7 @@ TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
 
     auto f = make_shared<Function>(avg_pool_bprop, ParameterVector{delta});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto d = backend->create_tensor(element::f32, shape_d);
@@ -1802,7 +1806,7 @@ TEST(cpu_test, avg_pool_bprop_2d_2channel_2image)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_1d_with_zero_repeats)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_1d_with_zero_repeats)
 {
     Shape shape_a{2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1814,7 +1818,7 @@ TEST(cpu_test, tile_1d_with_zero_repeats)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1828,7 +1832,7 @@ TEST(cpu_test, tile_1d_with_zero_repeats)
         test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_1d)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_1d)
 {
     Shape shape_a{2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1840,7 +1844,7 @@ TEST(cpu_test, tile_1d)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1854,7 +1858,7 @@ TEST(cpu_test, tile_1d)
         vector<float>{1, 2, 1, 2}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_2d_with_zero_repeats)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_with_zero_repeats)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1866,7 +1870,7 @@ TEST(cpu_test, tile_2d_with_zero_repeats)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1880,7 +1884,7 @@ TEST(cpu_test, tile_2d_with_zero_repeats)
         test::all_close_f(vector<float>{}, read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_2d_1axis)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_1axis)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1892,7 +1896,7 @@ TEST(cpu_test, tile_2d_1axis)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1907,7 +1911,7 @@ TEST(cpu_test, tile_2d_1axis)
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_2d_2axes)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_2axes)
 {
     Shape shape_a{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1919,7 +1923,7 @@ TEST(cpu_test, tile_2d_2axes)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1936,7 +1940,7 @@ TEST(cpu_test, tile_2d_2axes)
                           MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tile_3d)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_3d)
 {
     Shape shape_a{2, 1, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
@@ -1948,7 +1952,7 @@ TEST(cpu_test, tile_3d)
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -1964,7 +1968,7 @@ TEST(cpu_test, tile_3d)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, scatter_add_1d_indices_in_place)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_scatter_add_1d_indices_in_place)
 {
     Shape ref_shape{2, 3, 3};
     Shape indices_shape{2};
@@ -1978,7 +1982,7 @@ TEST(cpu_test, scatter_add_1d_indices_in_place)
     auto G = make_shared<op::ScatterAdd>(R, I, U);
     auto add = make_shared<op::Add>(G, R2);
     auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto r1 = backend->create_tensor(element::f32, ref_shape);
@@ -1999,7 +2003,7 @@ TEST(cpu_test, scatter_add_1d_indices_in_place)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, scatter_add_1d_indices_no_in_place)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_scatter_add_1d_indices_no_in_place)
 {
     Shape ref_shape{2, 3, 3};
     Shape indices_shape{2};
@@ -2013,7 +2017,7 @@ TEST(cpu_test, scatter_add_1d_indices_no_in_place)
     auto G = make_shared<op::ScatterAdd>(R, I, U);
     auto add = make_shared<op::Add>(G, R);
     auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto r1 = backend->create_tensor(element::f32, ref_shape);
@@ -2034,11 +2038,11 @@ TEST(cpu_test, scatter_add_1d_indices_no_in_place)
         MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_interpreter_to_cpu)
 {
     // This test the copying of data between the tensor's having
     // CPUtensorview and no CPUtensorview
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto backend_ref = runtime::Backend::create("INTERPRETER");
     auto a = backend_ref->create_tensor(element::f32, Shape{2, 3});
     auto b = backend->create_tensor(element::f32, Shape{2, 3});
@@ -2047,9 +2051,9 @@ TEST(cpu_test, tensor_copy_from_interpreter_to_cpu)
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
 
-TEST(cpu_test, tensor_copy_from_different_shape)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_different_shape)
 {
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto a = backend->create_tensor(element::f32, Shape{2, 3});
     auto b = backend->create_tensor(element::f32, Shape{1, 3, 2});
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
@@ -2057,11 +2061,11 @@ TEST(cpu_test, tensor_copy_from_different_shape)
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
 
-TEST(cpu_test, tensor_copy_from_same_native_layouts)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_same_native_layouts)
 {
     // this test copying of data between two tensor having same
     // layout
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     auto a = backend->create_tensor(element::f32, Shape{2, 3});
     auto b = backend->create_tensor(element::f32, Shape{2, 3});
     copy_data(a, vector<float>{1, 2, 3, 4, 5, 6});
@@ -2069,7 +2073,7 @@ TEST(cpu_test, tensor_copy_from_same_native_layouts)
     ASSERT_EQ(read_vector<float>(a), read_vector<float>(b));
 }
 
-TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_same_rotated_layouts)
 {
     auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
     auto f1 = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
@@ -2078,7 +2082,7 @@ TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
     auto f2 = make_shared<Function>(make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2}),
                                     ParameterVector{B});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, Shape{2, 3});
@@ -2106,13 +2110,13 @@ TEST(cpu_test, tensor_copy_from_same_rotated_layouts)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(result2));
 }
 
-TEST(cpu_test, tensor_copy_from_different_layout)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_different_layout)
 {
     auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
     auto f = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
                                    ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, Shape{2, 3});
@@ -2128,9 +2132,9 @@ TEST(cpu_test, tensor_copy_from_different_layout)
     EXPECT_EQ((vector<uint8_t>{1, 4, 2, 5, 3, 6}), read_vector<uint8_t>(b));
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_bf16)
 {
-    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    if (!runtime::cpu::dnnl_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
@@ -2153,7 +2157,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
     auto QMP = make_shared<ngraph::op::MaxPool>(
         A_bf16, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
     copy_data(a, a_data);
@@ -2163,9 +2167,9 @@ TEST(cpu_test, MLIR_DISABLE_TEST(max_pool_bf16))
     EXPECT_EQ((vector<bfloat16>{3.5, 3.5, 2.5, 3.5, 3.5, 2.5}), read_vector<bfloat16>(result));
 }
 
-TEST(cpu_test, MLIR_DISABLE_TEST(convolution_simple_bf16))
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convolution_simple_bf16)
 {
-    if (!runtime::cpu::mkldnn_utils::is_bf16_supported())
+    if (!runtime::cpu::dnnl_utils::is_bf16_supported())
     {
         // TODO change to skip when there is a new release of gtest
         NGRAPH_WARN << "This test is skipped for platform without bf16 support and for mlir.";
@@ -2193,7 +2197,7 @@ TEST(cpu_test, MLIR_DISABLE_TEST(convolution_simple_bf16))
 
     auto f = make_shared<Function>(conv1, ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape_a);
@@ -2210,14 +2214,14 @@ TEST(cpu_test, MLIR_DISABLE_TEST(convolution_simple_bf16))
 
 // This tests a backend's implementation of the three parameter version of create_tensor
 // Testing using this tensor as a Function input
-TEST(cpu_test, create_tensor_2_input)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_input)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     vector<float> av = {1, 2, 3, 4};
@@ -2234,14 +2238,14 @@ TEST(cpu_test, create_tensor_2_input)
 
 // This tests a backend's implementation of the three parameter version of create_tensor
 // Testing using this tensor as a Function output
-TEST(cpu_test, create_tensor_2_output)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_output)
 {
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     vector<float> av = {1, 2, 3, 4};
@@ -2260,9 +2264,9 @@ TEST(cpu_test, create_tensor_2_output)
     EXPECT_TRUE(test::all_close_f(actual, expected, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, tensorview_custom_mem)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensorview_custom_mem)
 {
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     Shape shape{2, 2};
 
@@ -2292,7 +2296,7 @@ TEST(cpu_test, tensorview_custom_mem)
     EXPECT_TRUE(test::all_close_f((vector<float>{2, 2, 2, 2}), rv, MIN_FLOAT_TOLERANCE_BITS));
 }
 
-TEST(cpu_test, one_hot_scalar_oob_in_3)
+NGRAPH_TEST(${BACKEND_NAME}, cpu_test_one_hot_scalar_oob_in_3)
 {
     Shape shape_a{};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
@@ -2300,7 +2304,7 @@ TEST(cpu_test, one_hot_scalar_oob_in_3)
     auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
-    auto backend = runtime::Backend::create("CPU");
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape_a);

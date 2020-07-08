@@ -269,8 +269,6 @@ set (SRC
     op/gelu.hpp
     op/gemm.cpp
     op/gemm.hpp
-    op/get_output_element.cpp
-    op/get_output_element.hpp
     op/greater_eq.cpp
     op/greater_eq.hpp
     op/greater.cpp
@@ -565,8 +563,6 @@ set (SRC
     pass/dyn_elimination.hpp
     pass/fused_op_decomposition.cpp
     pass/fused_op_decomposition.hpp
-    pass/get_output_element_elimination.cpp
-    pass/get_output_element_elimination.hpp
     pass/graph_rewrite.cpp
     pass/graph_rewrite.hpp
     pass/implicit_broadcast_elimination.cpp
@@ -640,8 +636,6 @@ set (SRC
     pattern/op/skip.hpp
     pattern/op/true.cpp
     pattern/op/true.hpp
-    placement.cpp
-    placement.hpp
     provenance.cpp
     provenance.hpp
     rank.hpp
@@ -701,6 +695,30 @@ set(SRC ${SRC}
     runtime/dynamic/dynamic_executable.hpp
     runtime/dynamic/dynamic_tensor.cpp
     runtime/dynamic/dynamic_tensor.hpp
+)
+
+# generate the op_version_tbl.hpp file used by the Node Factory
+set(OPSETS
+    opset/opset0_tbl.hpp
+    opset/opset1_tbl.hpp
+    opset/opset2_tbl.hpp
+    opset/opset3_tbl.hpp
+    opset/opset_orphans_tbl.hpp
+)
+set(OP_VERSION_TBL_PATH ${CMAKE_CURRENT_BINARY_DIR}/op_version_tbl.hpp)
+add_custom_command(
+    OUTPUT ${OP_VERSION_TBL_PATH}
+    DEPENDS ${OPSETS}
+    COMMAND ${CMAKE_COMMAND}
+        -D OPSETS="${OPSETS}"
+        -D CURRENT_DIR=${CMAKE_CURRENT_SOURCE_DIR}
+        -Wno-dev
+        -P "${PROJECT_SOURCE_DIR}/cmake/Modules/gen_op_version.cmake"
+)
+add_custom_target(
+    gen_op_version_table
+    ALL
+    DEPENDS ${OP_VERSION_TBL_PATH}
 )
 
 if(NGRAPH_JSON_ENABLE)
@@ -763,6 +781,7 @@ if(NGRAPH_JSON_ENABLE)
     target_link_libraries(ngraph PRIVATE libjson)
 endif()
 target_compile_definitions(ngraph PUBLIC NGRAPH_VERSION="${NGRAPH_VERSION}")
+add_dependencies(ngraph gen_op_version_table)
 
 if (LINUX)
     # nGraph links against one or more libraries (ex. LLVM) but we don't want to
@@ -786,6 +805,7 @@ endif()
 
 # Defines macro in C++ to load backend plugin
 target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${NGRAPH_INCLUDE_PATH}> $<INSTALL_INTERFACE:include>)
+target_include_directories(ngraph PUBLIC $<BUILD_INTERFACE:${PROJECT_BINARY_DIR}/src>)
 
 #Add an alias so that library can be used inside the build tree, e.g. when testing
 add_library(ngraph::ngraph ALIAS ngraph)

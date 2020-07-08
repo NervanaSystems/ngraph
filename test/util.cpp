@@ -192,7 +192,7 @@ public:
     std::shared_ptr<Node> AplusBtimesC = AplusB * C;
 
     NodeMap node_map;
-    std::vector<std::shared_ptr<ngraph::Node>> nodes;
+    NodeVector nodes;
     std::shared_ptr<Function> func =
         make_shared<Function>(AplusBtimesC, ParameterVector{A, B, C}, "f");
 
@@ -205,9 +205,7 @@ public:
         nodes.push_back(C);
     }
 
-    bool CompareNodeVector(const std::vector<std::shared_ptr<ngraph::Node>>& orig,
-                           const std::vector<std::shared_ptr<ngraph::Node>>& clone,
-                           const NodeMap& nm)
+    bool CompareNodeVector(const NodeVector& orig, const NodeVector& clone, const NodeMap& nm)
     {
         if (orig.size() != clone.size())
         {
@@ -306,43 +304,43 @@ TEST(util, parse_string)
 
 TEST(graph_util, get_subgraph_outputs_trivial_tests)
 {
-    auto outputs = ngraph::get_subgraph_outputs(NodeVector{}, NodeVector{});
+    auto outputs = ngraph::get_subgraph_outputs(OutputVector{}, OutputVector{});
     ASSERT_EQ(outputs.size(), 0);
 
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto absn = make_shared<op::Abs>(A);
     auto neg_absn = make_shared<op::Negative>(absn);
-    outputs = ngraph::get_subgraph_outputs(NodeVector{A}, NodeVector{});
-    ASSERT_EQ(outputs, (NodeVector{A}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{A}, OutputVector{});
+    ASSERT_EQ(outputs, (OutputVector{A}));
 
-    outputs = ngraph::get_subgraph_outputs(NodeVector{A}, NodeVector{A});
-    ASSERT_EQ(outputs, (NodeVector{}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{A}, OutputVector{A});
+    ASSERT_EQ(outputs, (OutputVector{}));
 
-    outputs = ngraph::get_subgraph_outputs(NodeVector{A, absn}, NodeVector{});
-    ASSERT_EQ(outputs, (NodeVector{absn}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{A, absn}, OutputVector{});
+    ASSERT_EQ(outputs, (OutputVector{absn}));
 
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto abs_b = make_shared<op::Abs>(B);
     auto neg_b = make_shared<op::Negative>(B);
     auto abs_b_neg = make_shared<op::Negative>(abs_b);
-    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b}, NodeVector{});
-    ASSERT_EQ(outputs, (NodeVector{B, abs_b}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b}, OutputVector{});
+    ASSERT_EQ(outputs, (OutputVector{B, abs_b}));
 
-    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b}, NodeVector{B});
-    ASSERT_EQ(outputs, (NodeVector{abs_b}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b}, OutputVector{B});
+    ASSERT_EQ(outputs, (OutputVector{abs_b}));
 
-    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
-    ASSERT_EQ(outputs, (NodeVector{B}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b, abs_b_neg}, OutputVector{});
+    ASSERT_EQ(outputs, (OutputVector{B}));
 
     auto add_b = make_shared<op::Add>(neg_b, abs_b_neg);
-    outputs =
-        ngraph::get_subgraph_outputs(NodeVector{B, abs_b, neg_b, abs_b_neg, add_b}, NodeVector{});
-    ASSERT_EQ(outputs, (NodeVector{}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b, neg_b, abs_b_neg, add_b},
+                                           OutputVector{});
+    ASSERT_EQ(outputs, (OutputVector{}));
 
     // now add_b uses abs_b_neg
-    outputs = ngraph::get_subgraph_outputs(NodeVector{B, abs_b, abs_b_neg}, NodeVector{});
-    ASSERT_EQ(outputs, (NodeVector{B, abs_b_neg}));
+    outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b, abs_b_neg}, OutputVector{});
+    ASSERT_EQ(outputs, (OutputVector{B, abs_b_neg}));
 }
 
 TEST(util, test_fprop_cache)
@@ -373,7 +371,7 @@ TEST(graph_util, test_subgraph_topological_sort)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A});
-    std::vector<std::shared_ptr<Node>> expected{A, add, mul};
+    NodeVector expected{A, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -391,7 +389,7 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto mul = C * add;
     auto result = make_shared<op::Result>(mul);
     auto sorted = ngraph::subgraph_topological_sort(NodeVector{mul, add, A, D});
-    std::vector<std::shared_ptr<Node>> expected{A, D, add, mul};
+    NodeVector expected{A, D, add, mul};
     ASSERT_EQ(expected, sorted);
 }
 
@@ -701,11 +699,10 @@ TEST(util, topological_sort_replace)
     auto f = make_shared<Function>(A + B + C, ParameterVector{A, B, C});
     bool custom_sorter_used = false;
 
-    f->set_topological_sort(
-        [&custom_sorter_used](const std::vector<std::shared_ptr<Node>>& root_nodes) {
-            custom_sorter_used = true;
-            return topological_sort(root_nodes);
-        });
+    f->set_topological_sort([&custom_sorter_used](const NodeVector& root_nodes) {
+        custom_sorter_used = true;
+        return topological_sort(root_nodes);
+    });
 
     // Need to now call topological sort but don't care about the results
     f->get_ordered_ops();

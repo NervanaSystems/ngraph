@@ -66,7 +66,7 @@ TEST(shape_relevance, param_indirect)
     auto param1 = make_shared<op::Parameter>(element::i64, Shape{4});
     auto param2 = make_shared<op::Parameter>(element::i64, Shape{2});
 
-    auto c = make_shared<op::Concat>(NodeVector{param1, param2}, 0);
+    auto c = make_shared<op::Concat>(OutputVector{param1, param2}, 0);
     auto x = make_shared<op::v1::Reshape>(param0, c, true);
 
     auto f = make_shared<Function>(x, ParameterVector{param0, param1, param2});

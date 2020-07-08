@@ -676,9 +676,10 @@ static void initCONV1D(LLVM::LLVMDialect *llvmDialect,
     geps.push_back(gepConv1dOp);
   }
   // Store attribute values
-  createStore(llvmI8Ty, builder.getI8IntegerAttr(
-                            static_cast<int8_t>(convAttrs1d.withRelu)),
-              geps[0], builder);
+  createStore(
+      llvmI8Ty,
+      builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs1d.withRelu)),
+      geps[0], builder);
   int k = 1;
   for (auto &convAttr :
        {convAttrs1d.windowStrides[0], convAttrs1d.windowDilation[0],
@@ -715,9 +716,10 @@ static void initCONV2D(LLVM::LLVMDialect *llvmDialect,
     geps.push_back(gepConv2dOp);
   }
   // Store attribute values
-  createStore(llvmI8Ty, builder.getI8IntegerAttr(
-                            static_cast<int8_t>(convAttrs2d.withRelu)),
-              geps[0], builder);
+  createStore(
+      llvmI8Ty,
+      builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs2d.withRelu)),
+      geps[0], builder);
   int k = 1, m = 0;
   for (auto &convAttr :
        {convAttrs2d.windowStrides[0], convAttrs2d.windowStrides[1],
@@ -761,9 +763,10 @@ static void initCONV3D(LLVM::LLVMDialect *llvmDialect,
     geps.push_back(gepConv3dOp);
   }
   // Store attribute values
-  createStore(llvmI8Ty, builder.getI8IntegerAttr(
-                            static_cast<int8_t>(convAttrs3d.withRelu)),
-              geps[0], builder);
+  createStore(
+      llvmI8Ty,
+      builder.getI8IntegerAttr(static_cast<int8_t>(convAttrs3d.withRelu)),
+      geps[0], builder);
   int k = 1, m = 0;
   for (auto &convAttr :
        {convAttrs3d.windowStrides[0], convAttrs3d.windowStrides[1],
@@ -820,8 +823,9 @@ static void initPOOL2D(LLVM::LLVMDialect *llvmDialect,
     geps.push_back(gepPool2dOp);
   }
   // Store attribute values
-  createStore(llvmI8Ty, builder.getI8IntegerAttr(static_cast<int8_t>(
-                            poolAttrs2d.includePaddingInAvgComputation)),
+  createStore(llvmI8Ty,
+              builder.getI8IntegerAttr(static_cast<int8_t>(
+                  poolAttrs2d.includePaddingInAvgComputation)),
               geps[0], builder);
   int k = 1, m = 0;
   for (auto &poolAttr :
@@ -866,8 +870,9 @@ static void initPOOL3D(LLVM::LLVMDialect *llvmDialect,
     geps.push_back(gepPool3dOp);
   }
   // Store attribute values
-  createStore(llvmI8Ty, builder.getI8IntegerAttr(static_cast<int8_t>(
-                            poolAttrs3d.includePaddingInAvgComputation)),
+  createStore(llvmI8Ty,
+              builder.getI8IntegerAttr(static_cast<int8_t>(
+                  poolAttrs3d.includePaddingInAvgComputation)),
               geps[0], builder);
   int k = 1, m = 0;
   for (auto &poolAttr :
@@ -946,8 +951,9 @@ static void initGEMM(LLVM::LLVMDialect *llvmDialect, gemmAttrs gemmAttrs2d,
     createStore(llvmF32Ty, builder.getF32FloatAttr(gemmAttr), geps[k], builder);
     k++;
   }
-  createStore(llvmI32Ty, builder.getI32IntegerAttr(
-                             static_cast<int32_t>(gemmAttrs2d.broadcastHint)),
+  createStore(llvmI32Ty,
+              builder.getI32IntegerAttr(
+                  static_cast<int32_t>(gemmAttrs2d.broadcastHint)),
               geps[10], builder);
 }
 
@@ -1580,7 +1586,7 @@ REWRITER(NGMaxPoolBackpropOp) {
   NGRAPH_CHECK(
       (srcShape.size() == 4 && resultShape.size() == 4) ||
           (srcShape.size() == 5 && resultShape.size() == 5),
-      "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+      "DNNL pooling operation is only supported for 3D and 5D tensors");
 
   opAttrs attrs;
   int32_t index = 0;
@@ -1612,10 +1618,11 @@ REWRITER(NGMaxPoolBackpropOp) {
   auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
   auto int64Ty = rewriter.getIntegerType(64);
   auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-  FuncOp callBackFunc = pass.getCallDecl(
-      "callback_2_inputs", {unrankedMemrefTy, unrankedMemrefTy,
-                            unrankedMemrefTy, unionTy.getPointerTo(), int64Ty},
-      {}, rewriter);
+  FuncOp callBackFunc =
+      pass.getCallDecl("callback_2_inputs",
+                       {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy,
+                        unionTy.getPointerTo(), int64Ty},
+                       {}, rewriter);
   // Insert call
   auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
   auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1688,10 +1695,11 @@ REWRITER(NGMatMulOp) {
   auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
   auto int64Ty = rewriter.getIntegerType(64);
   auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-  auto callBackFunc = pass.getCallDecl(
-      "callback_2_inputs", {unrankedMemrefTy, unrankedMemrefTy,
-                            unrankedMemrefTy, unionTy.getPointerTo(), int64Ty},
-      {}, rewriter);
+  auto callBackFunc =
+      pass.getCallDecl("callback_2_inputs",
+                       {unrankedMemrefTy, unrankedMemrefTy, unrankedMemrefTy,
+                        unionTy.getPointerTo(), int64Ty},
+                       {}, rewriter);
   // Insert call
   auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
   auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1838,7 +1846,7 @@ REWRITER(NGSoftMaxOp) {
   NGRAPH_CHECK(
       (lhsShape.size() == 2 && resultShape.size() == 2) ||
           (lhsShape.size() == 4 && resultShape.size() == 4),
-      "MKLDNN Softmax operation is only supported for 2D and 4D tensors");
+      "DNNL Softmax operation is only supported for 2D and 4D tensors");
 
   auto axes = softmax.axes().getValue();
   opAttrs attrs;
@@ -1849,10 +1857,10 @@ REWRITER(NGSoftMaxOp) {
   auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
   auto int64Ty = rewriter.getIntegerType(64);
   auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-  FuncOp callBackFunc =
-      pass.getCallDecl("callback_1_input", {unrankedMemrefTy, unrankedMemrefTy,
-                                            unionTy.getPointerTo(), int64Ty},
-                       {}, rewriter);
+  FuncOp callBackFunc = pass.getCallDecl(
+      "callback_1_input",
+      {unrankedMemrefTy, unrankedMemrefTy, unionTy.getPointerTo(), int64Ty}, {},
+      rewriter);
   // Insert call
   auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
   auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -1899,7 +1907,7 @@ REWRITER(NGConvBiasOp) {
       (imagesShape.size() == 3 && resultShape.size() == 3) ||
           (imagesShape.size() == 4 && resultShape.size() == 4) ||
           (imagesShape.size() == 5 && resultShape.size() == 5),
-      "MKLDNN conv operation is only supported for 3D, 4D, and 5D tensors");
+      "DNNL conv operation is only supported for 3D, 4D, and 5D tensors");
 
   opAttrs attrs;
   size_t index = 0;
@@ -2554,7 +2562,7 @@ void lowerPooling(Operation *op, ArrayRef<Value> operands,
   NGRAPH_CHECK(
       (lhsShape.size() == 4 && resultShape.size() == 4) ||
           (lhsShape.size() == 5 && resultShape.size() == 5),
-      "MKLDNN pooling operation is only supported for 3D and 5D tensors");
+      "DNNL pooling operation is only supported for 3D and 5D tensors");
 
   auto int64Ty = rewriter.getIntegerType(64);
   OpType ty;
@@ -2600,10 +2608,10 @@ void lowerPooling(Operation *op, ArrayRef<Value> operands,
   auto *llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
   auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
   auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
-  FuncOp callBackFunc =
-      pass.getCallDecl("callback_1_input", {unrankedMemrefTy, unrankedMemrefTy,
-                                            unionTy.getPointerTo(), int64Ty},
-                       {}, rewriter);
+  FuncOp callBackFunc = pass.getCallDecl(
+      "callback_1_input",
+      {unrankedMemrefTy, unrankedMemrefTy, unionTy.getPointerTo(), int64Ty}, {},
+      rewriter);
   // Insert call
   auto globalPtr = getGlobalAddr(index, rewriter, pass, context);
   auto opTypeArg = rewriter.create<mlir::ConstantIntOp>(
@@ -2646,13 +2654,13 @@ Value createOneConstant(mlir::Type type) {
   }
   NGRAPH_UNREACHABLE("Unsupported type");
 }
-}
+} // namespace
 
 namespace mlir {
 std::unique_ptr<Pass> createDialectLoweringPass() {
   return std::make_unique<DialectLoweringPass>();
 }
-}
+} // namespace mlir
 
 static PassRegistration<DialectLoweringPass>
     pass(PASS_NAME, "Convert nGraph dialect to affine dialect");

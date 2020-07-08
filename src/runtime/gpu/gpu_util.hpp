@@ -87,6 +87,7 @@ namespace ngraph
                 }
                 StopWatch& get(size_t idx) { return pool[idx]; }
                 size_t size() { return pool.size(); }
+
             private:
                 std::vector<StopWatch> pool;
             };

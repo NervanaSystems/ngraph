@@ -30,8 +30,8 @@ namespace runtime {
 namespace ngmlir {
 class MLIRCompiler;
 }
-}
-}
+} // namespace runtime
+} // namespace ngraph
 
 namespace mlir {
 std::unique_ptr<Pass> createDialectLoweringPass();

@@ -38,7 +38,7 @@ namespace ngraph
                                const std::shared_ptr<Function>& f,
                                const std::vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,
-                               const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+                               const ParameterVector& indep_params)
         {
             Shape y_shape = f->get_output_shape(0);
 

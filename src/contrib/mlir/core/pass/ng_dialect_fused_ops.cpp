@@ -34,9 +34,9 @@
 
 #include <iostream>
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace mlir;
@@ -72,7 +72,7 @@ static Value createSgemmOp(PatternRewriter &rewriter, Operation *old_op,
 }
 
 #include "fused_ops_pattern.h.inc"
-}
+} // namespace mlir
 namespace {
 class NgDialectFusedOpsPass
     : public PassWrapper<NgDialectFusedOpsPass, OperationPass<ModuleOp>> {
@@ -82,7 +82,7 @@ public:
 private:
   void runOnOperation() override;
 };
-}
+} // namespace
 
 void NgDialectFusedOpsPass::runOnOperation() {
   OwningRewritePatternList patterns;

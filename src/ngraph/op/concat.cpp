@@ -33,11 +33,6 @@ op::Concat::Concat(const OutputVector& args, int64_t axis)
     constructor_validate_and_infer_types();
 }
 
-op::Concat::Concat(const NodeVector& args, int64_t axis)
-    : Concat(as_output_vector(args), axis)
-{
-}
-
 bool op::Concat::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("axis", m_axis);

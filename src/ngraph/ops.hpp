@@ -90,7 +90,6 @@
 #include "ngraph/op/gather_tree.hpp"
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/gemm.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/grn.hpp"

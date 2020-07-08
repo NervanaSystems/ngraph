@@ -42,7 +42,6 @@
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/op/util/op_annotations.hpp"
 #include "ngraph/output_vector.hpp"
-#include "ngraph/placement.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/type.hpp"
 
@@ -67,13 +66,6 @@ namespace ngraph
     using HostTensor = runtime::HostTensor;
     using HostTensorPtr = std::shared_ptr<HostTensor>;
     using HostTensorVector = std::vector<HostTensorPtr>;
-
-    // Intermal, controls whether GetOutputElement nodes are elided
-    // Defaults to being elided. Transformer should set to false if
-    // it has passes that depend on GetOutputElement.
-    NGRAPH_API void set_remove_goe(bool value)
-        NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
-    NGRAPH_API bool get_remove_goe() NGRAPH_DEPRECATED("Remove dependencies on GetOrderedOutput");
 
     namespace op
     {
@@ -100,38 +92,29 @@ namespace ngraph
     NGRAPH_API
     std::string node_validation_failure_loc_string(const Node* node);
 
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-    NGRAPH_API
-    const NodeVector& check_single_output_args(const NodeVector& args);
-
-    const std::shared_ptr<Node>& check_single_output_arg(const std::shared_ptr<Node>& node,
-                                                         size_t i);
-
     NGRAPH_API
     OutputVector as_output_vector(const NodeVector& args);
-    NGRAPH_API
-    NodeVector as_node_vector(const OutputVector& values);
     /// Returns a ResultVector referencing values.
     ResultVector as_result_vector(const OutputVector& values);
 
     /// Alias useful for cloning
     using NodeMap = std::unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>>;
 
-/// \brief Used in evaluator switch statement so that the case type and evaluate call
-/// are guaranteed to have the types match.
-///
-/// Use this in an evaluate_*() function like this
-///    switch (arg0->get_element_type())
-///    {
-///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
-///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
-///
-/// Each TYPE_CASE statement expands like this:
-///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out, broadcast_spec)
-///
-/// \note Don't forget to put a break after each statement or it will fall through and generate
-/// a runtime error.
+    /// \brief Used in evaluator switch statement so that the case type and evaluate call
+    /// are guaranteed to have the types match.
+    ///
+    /// Use this in an evaluate_*() function like this
+    ///    switch (arg0->get_element_type())
+    ///    {
+    ///        TYPE_CASE(i8)(arg0, arg1, out, broadcast_spec); break;
+    ///        TYPE_CASE(i16)(arg0, arg1, out, broadcast_spec); break;
+    ///
+    /// Each TYPE_CASE statement expands like this:
+    ///   case element::Type_t::a: rc = evaluate<element::Type_t::a>(arg0, arg1, out,
+    ///   broadcast_spec)
+    ///
+    /// \note Don't forget to put a break after each statement or it will fall through and generate
+    /// a runtime error.
 
 #define TYPE_CASE(a)                                                                               \
     case element::Type_t::a: rc = evaluate<element::Type_t::a>
@@ -314,7 +297,7 @@ namespace ngraph
         virtual std::ostream& write_description(std::ostream& os, uint32_t depth = 0) const;
 
         /// Get control dependencies registered on the node
-        const std::vector<std::shared_ptr<Node>>& get_control_dependencies() const;
+        const NodeVector& get_control_dependencies() const;
 
         /// Get nodes dependent on this node
         const std::vector<Node*>& get_control_dependents() const;
@@ -351,11 +334,6 @@ namespace ngraph
 
         /// Returns the partial shape for output i
         const PartialShape& get_output_partial_shape(size_t i) const;
-
-        /// Second argument is ignored
-        /// Returns the node if i=0 and the node has 1 output, otherwise a GetOutputElement
-        /// If the node is a GetOutputElement, applies to the underlying node
-        std::shared_ptr<Node> get_output_as_single_output_node(size_t i);
 
         /// Return the output to use when converting to an Output<Node> with no index specified.
         /// Throws when not supported.
@@ -420,18 +398,20 @@ namespace ngraph
 
         std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& new_args) const;
 
-        std::shared_ptr<Node> copy_with_new_inputs(
-            const OutputVector& inputs,
-            const std::vector<std::shared_ptr<Node>>& control_dependencies) const;
+        std::shared_ptr<Node> copy_with_new_inputs(const OutputVector& inputs,
+                                                   const NodeVector& control_dependencies) const;
 
         /// True if this and node have one output with same element type and shape
         bool has_same_type(std::shared_ptr<const Node> node) const;
 
-        /// Get device placement
-        Placement get_placement() const;
-
-        /// Set device placement
-        void set_placement(Placement placement);
+        /// \brief Node placement is an arbitrary value used by a backend to describe where a Node
+        /// is to be executed. If a backend is a hybrid of, as an example, a CPU and a GPU then
+        /// it might use the value 0 to be the CPU and 1 to be the GPU. The value is not used by
+        /// ngraph core and is only intended as backend metadata.
+        /// The placement value -1 is defined to mean "default placement"
+        int32_t get_placement() const;
+        void set_placement(int32_t placement);
+        static constexpr int32_t default_placement = -1;
 
         using RTMap = std::map<std::string, std::shared_ptr<Variant>>;
 
@@ -475,7 +455,7 @@ namespace ngraph
         NodeVector get_users(bool check_is_used = false) const;
 
         /// \return Version of this node
-        virtual size_t get_version() const { return get_type_info().version; }
+        virtual size_t get_version() const final { return get_type_info().version; }
         virtual std::shared_ptr<Node> get_default_value() const { return nullptr; }
         /// Use instance ids for comparison instead of memory addresses to improve determinism
         bool operator<(const Node& other) const { return m_instance_id < other.m_instance_id; }
@@ -487,11 +467,11 @@ namespace ngraph
         std::vector<Input<const Node>> inputs() const;
 
         /// \return A vector containing the values for each input
-        std::vector<Output<Node>> input_values() const;
+        OutputVector input_values() const;
 
         /// \return A vector containing a handle for each of this node's outputs, in order.
         // TODO: Rename to get_outputs()?
-        std::vector<Output<Node>> outputs();
+        OutputVector outputs();
 
         /// \return A vector containing a handle for each of this node's outputs, in order.
         std::vector<Output<const Node>> outputs() const;
@@ -534,7 +514,7 @@ namespace ngraph
         descriptor::Output& get_output_descriptor(size_t position);
 
         std::vector<Node*> m_control_dependents;
-        std::vector<std::shared_ptr<Node>> m_control_dependencies;
+        NodeVector m_control_dependencies;
         std::string m_node_type;
         size_t m_instance_id{m_next_instance_id.fetch_add(1)};
         std::string m_friendly_name;
@@ -545,7 +525,7 @@ namespace ngraph
         std::deque<descriptor::Input> m_inputs;
         std::deque<descriptor::Output> m_outputs;
         std::unordered_map<Node*, autodiff::Adjoints> m_adjoint_map;
-        Placement m_placement = Placement::DEFAULT;
+        int32_t m_placement = default_placement;
         std::shared_ptr<ngraph::op::util::OpAnnotations> m_op_annotations;
         std::map<std::string, std::shared_ptr<Variant>> m_rt_info;
     };
@@ -603,6 +583,7 @@ namespace ngraph
         bool visit_attributes(AttributeVisitor& visitor) override;
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<std::shared_ptr<Node>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         std::shared_ptr<Node>& m_ref;
     };
@@ -617,6 +598,7 @@ namespace ngraph
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<NodeVector>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         NodeVector& m_ref;
     };
@@ -643,11 +625,11 @@ namespace ngraph
     void check_new_args_count(const Node* node, T new_args)
     {
         NODE_VALIDATION_CHECK(node,
-                              new_args.size() == node->get_arguments().size(),
+                              new_args.size() == node->inputs().size(),
                               "copy_with_new_args() expected ",
-                              node->get_arguments().size(),
+                              node->get_input_size(),
                               " argument",
-                              (node->get_arguments().size() == 1 ? "" : "s"),
+                              (node->inputs().size() == 1 ? "" : "s"),
                               " but got ",
                               new_args.size());
     }

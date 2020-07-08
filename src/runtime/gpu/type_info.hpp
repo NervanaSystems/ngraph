@@ -97,6 +97,7 @@ namespace ngraph
                 void* lowest_ptr() override { return &m_lowest; }
                 void* min_ptr() override { return &m_min; }
                 void* max_ptr() override { return &m_max; }
+
             private:
                 T m_min;
                 T m_max;

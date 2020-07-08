@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -29,7 +29,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
     , arg_output_index(arg.get_index())
     , output_layout(layout)
 {
-    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
+    runtime::cpu::dnnl_utils::assign_dnnl_kernel(this);
     constructor_validate_and_infer_types();
 }
 

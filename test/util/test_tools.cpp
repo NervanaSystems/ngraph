@@ -25,7 +25,7 @@ using namespace ngraph;
 
 // This function traverses the vector of ops and verifies that each op's dependencies (its inputs)
 // is located earlier in the vector. That is enough to be valid
-bool validate_list(const vector<shared_ptr<Node>>& nodes)
+bool validate_list(const NodeVector& nodes)
 {
     bool rc = true;
     for (auto it = nodes.rbegin(); it != nodes.rend(); it++)
@@ -234,16 +234,16 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
             Node* dep = node->get_input_node_ptr(i);
             if (seen.count(dep) == 0)
             {
-                return ::testing::AssertionFailure() << "Argument " << *dep
-                                                     << " does not occur before op" << *node;
+                return ::testing::AssertionFailure()
+                       << "Argument " << *dep << " does not occur before op" << *node;
             }
         }
         for (auto& dep_ptr : node->get_control_dependencies())
         {
             if (seen.count(dep_ptr.get()) == 0)
             {
-                return ::testing::AssertionFailure() << "Control dependency " << *dep_ptr
-                                                     << " does not occur before op" << *node;
+                return ::testing::AssertionFailure()
+                       << "Control dependency " << *dep_ptr << " does not occur before op" << *node;
             }
         }
         seen.insert(node);
@@ -252,8 +252,8 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
     {
         if (seen.count(node_ptr.get()) == 0)
         {
-            return ::testing::AssertionFailure() << "Required op " << *node_ptr
-                                                 << "does not occur in ordered ops";
+            return ::testing::AssertionFailure()
+                   << "Required op " << *node_ptr << "does not occur in ordered ops";
         }
     }
     return ::testing::AssertionSuccess();

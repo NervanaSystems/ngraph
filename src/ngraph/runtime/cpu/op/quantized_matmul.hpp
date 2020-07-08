@@ -43,6 +43,7 @@ namespace ngraph
                     new_args.at(0), new_args.at(1), new_args.at(2), m_output_type);
             }
             const ngraph::element::Type& get_output_type() const { return m_output_type; }
+
         protected:
             ngraph::element::Type m_output_type;
         };

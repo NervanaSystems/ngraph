@@ -78,7 +78,8 @@ void pass::ConstantFolding::construct_constant_pad()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
+        auto pad_match = m.get_match_root_as<op::Pad>();
+        NGRAPH_CHECK(pad_match, "match root node ", *m.get_match_root(), " not of type `op::Pad`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(pad_match));
 
@@ -144,7 +145,7 @@ void pass::ConstantFolding::construct_constant_pad()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

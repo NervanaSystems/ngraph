@@ -70,9 +70,9 @@ op::gpu::Rnn::Rnn(const Output<Node>& src_layer,
                  "src_layer size is not equal t*n*c");
 
     auto et = src_layer.get_element_type();
-    for (auto& rnn_input : get_arguments())
+    for (const Input<Node>& rnn_input : inputs())
     {
-        if (rnn_input->get_output_element_type(0) != et)
+        if (rnn_input.get_element_type() != et)
         {
             throw ngraph_error("all rnn inputs must have the same element type");
         }

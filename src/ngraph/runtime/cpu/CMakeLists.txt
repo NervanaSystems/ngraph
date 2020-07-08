@@ -92,7 +92,6 @@ set(SRC
     builder/slice.cpp
     builder/state.cpp
     builder/softmax.cpp
-    builder/get_output_element.cpp
     builder/sum.cpp
     builder/tile.cpp
     builder/topk.cpp
@@ -101,9 +100,9 @@ set(SRC
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
     kernel/reshape.cpp
-    mkldnn_emitter.cpp
-    mkldnn_invoke.cpp
-    mkldnn_utils.cpp
+    dnnl_emitter.cpp
+    dnnl_invoke.cpp
+    dnnl_utils.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
@@ -140,7 +139,7 @@ if (NGRAPH_CPU_CODEGEN_ENABLE)
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
-        pass/cpu_mkldnn_primitive_build.cpp
+        pass/cpu_dnnl_primitive_build.cpp
         )
 endif()
 
@@ -197,8 +196,8 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_CPU_CODEGEN_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "CODEGEN_ENABLE")
     endif()
-    if (NGRAPH_ENABLE_CPU_CONV_AUTO)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
+    if (NGRAPH_CPU_CONV_AUTO_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_CONV_AUTO_ENABLE")
     endif()
     if (NGRAPH_TBB_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
@@ -228,8 +227,8 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_OPTIMIZE_${t}")
     endforeach()
 
-    add_dependencies(cpu_backend libmkldnn ext_eigen)
-   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
+    add_dependencies(cpu_backend libdnnl ext_eigen)
+   	target_link_libraries(cpu_backend PUBLIC ngraph libdnnl libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
         target_link_libraries(cpu_backend PUBLIC libjson)
     endif()    
@@ -239,7 +238,7 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_CPU_CODEGEN_ENABLE)
         target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
-    target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+    target_include_directories(cpu_backend SYSTEM PUBLIC libdnnl)
 
     if (NOT APPLE AND NOT MSVC)
         # CPU backend uses third-party libraries like Eigen that might be linked in and

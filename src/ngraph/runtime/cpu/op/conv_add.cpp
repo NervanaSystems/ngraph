@@ -19,7 +19,6 @@
 #include "conv_add.hpp"
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -121,13 +120,13 @@ std::shared_ptr<Node> op::ConvolutionAdd::clone_with_new_inputs(const OutputVect
                           new_args.size(),
                           ").");
 
-    return std::shared_ptr<Node>(new ConvolutionAdd(new_args.at(0),
-                                                    new_args.at(1),
-                                                    new_args.at(2),
-                                                    get_window_movement_strides(),
-                                                    get_window_dilation_strides(),
-                                                    get_padding_below(),
-                                                    get_padding_above(),
-                                                    get_data_dilation_strides(),
-                                                    m_with_relu));
+    return std::make_shared<ConvolutionAdd>(new_args.at(0),
+                                            new_args.at(1),
+                                            new_args.at(2),
+                                            get_window_movement_strides(),
+                                            get_window_dilation_strides(),
+                                            get_padding_below(),
+                                            get_padding_above(),
+                                            get_data_dilation_strides(),
+                                            m_with_relu);
 }

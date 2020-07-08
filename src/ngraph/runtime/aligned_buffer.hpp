@@ -90,6 +90,7 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{
             "AttributeAdapter<std::shared_ptr<runtime::AlignedBuffer>>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
     protected:
         std::shared_ptr<runtime::AlignedBuffer>& m_ref;
     };

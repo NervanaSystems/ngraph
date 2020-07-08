@@ -22,10 +22,10 @@ using namespace std;
 using namespace ngraph;
 
 template <class QUANT, class REAL>
-shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> constant,
-                                                  shared_ptr<op::Dequantize> dequant,
-                                                  shared_ptr<op::Constant> scale,
-                                                  shared_ptr<op::Constant> offset)
+Output<Node> fold_constant_dequantize(shared_ptr<op::Constant> constant,
+                                      shared_ptr<op::Dequantize> dequant,
+                                      shared_ptr<op::Constant> scale,
+                                      shared_ptr<op::Constant> offset)
 {
     const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(REAL));
@@ -39,7 +39,8 @@ shared_ptr<op::Constant> fold_constant_dequantize(shared_ptr<op::Constant> const
                                                 scale->get_output_shape(0),
                                                 dequant->get_axes());
 
-    return make_shared<op::Constant>(dequant->get_output_element_type(0), out_shape, data_ptr);
+    return make_shared<op::Constant>(dequant->get_output_element_type(0), out_shape, data_ptr)
+        ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_dequantize()
@@ -50,7 +51,7 @@ void pass::ConstantFolding::construct_constant_dequantize()
     auto dq_offset = op::Constant::create(element::u8, Shape{}, {1});
     auto dequant_op =
         make_shared<op::Dequantize>(constant_label, dq_scale, dq_offset, element::f32, AxisSet{});
-    auto dequant = make_shared<pattern::op::Label>(dequant_op, nullptr, NodeVector{dequant_op});
+    auto dequant = make_shared<pattern::op::Label>(dequant_op, nullptr, OutputVector{dequant_op});
 
     auto constant_dequantize_callback = [constant_label, dequant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_dequantize_callback against node = "
@@ -76,16 +77,14 @@ void pass::ConstantFolding::construct_constant_dequantize()
 
         if (type == element::u8)
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_dequantize<uint8_t, float>(
-                             constant_match, dequantize_op, scale, offset));
+            m.get_match_value().replace(fold_constant_dequantize<uint8_t, float>(
+                constant_match, dequantize_op, scale, offset));
             return true;
         }
         else if (type == element::i8)
         {
-            replace_node(m.get_match_root(),
-                         fold_constant_dequantize<int8_t, float>(
-                             constant_match, dequantize_op, scale, offset));
+            m.get_match_value().replace(fold_constant_dequantize<int8_t, float>(
+                constant_match, dequantize_op, scale, offset));
             return true;
         }
 

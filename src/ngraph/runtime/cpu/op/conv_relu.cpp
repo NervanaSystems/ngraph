@@ -17,7 +17,6 @@
 #include <numeric>
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/runtime/cpu/op/conv_relu.hpp"
 #include "ngraph/util.hpp"
 
@@ -93,11 +92,11 @@ std::shared_ptr<Node> op::ConvolutionRelu::clone_with_new_inputs(const OutputVec
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return std::shared_ptr<Node>(new ConvolutionRelu(new_args.at(0),
-                                                     new_args.at(1),
-                                                     get_window_movement_strides(),
-                                                     get_window_dilation_strides(),
-                                                     get_padding_below(),
-                                                     get_padding_above(),
-                                                     get_data_dilation_strides()));
+    return std::make_shared<ConvolutionRelu>(new_args.at(0),
+                                             new_args.at(1),
+                                             get_window_movement_strides(),
+                                             get_window_dilation_strides(),
+                                             get_padding_below(),
+                                             get_padding_above(),
+                                             get_data_dilation_strides());
 }

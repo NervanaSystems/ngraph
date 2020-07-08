@@ -20,4 +20,4 @@
 
 namespace py = pybind11;
 
-void regclass_pyngraph_op_GetOutputElement(py::module m);
+void regclass_pyngraph_Output(py::module m);

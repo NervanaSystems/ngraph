@@ -17,7 +17,6 @@
 #include "ngraph/op/tensor_iterator.hpp"
 #include "ngraph/factory.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/specialize_function.hpp"
 
 using namespace std;
@@ -395,7 +394,7 @@ OutputVector op::v0::TensorIterator::decompose_op() const
 
 void op::v0::TensorIterator::revalidate_and_infer_types_for_body_ops()
 {
-    std::stack<std::shared_ptr<Node>, std::vector<std::shared_ptr<Node>>> nodes_to_do;
+    std::stack<std::shared_ptr<Node>, NodeVector> nodes_to_do;
     std::unordered_set<std::shared_ptr<Node>> nodes_done;
 
     for (const auto& r : m_body->get_results())
@@ -447,7 +446,7 @@ void op::v0::TensorIterator::validate_and_infer_types()
                           get_output_size() == m_output_descriptions.size(),
                           "Number of outputs must be the same as number of output descriptions");
 
-    std::vector<std::shared_ptr<Node>> ends;
+    NodeVector ends;
 
     auto make_positive = [](int64_t value, uint64_t dim_size) -> int64_t {
         if (value < 0)
@@ -652,13 +651,6 @@ std::shared_ptr<Node>
         func, types, new_shapes, std::vector<void*>(new_args.size(), nullptr), false, true);
     op->m_body =
         std::make_shared<BodyLambda>(spec_func->get_results(), spec_func->get_parameters());
-
-    // TODO: remove this code after the fix on the nGraph side (GetOutputElements)
-    ::ngraph::pass::GetOutputElementElimination goe_elimination;
-    for (const auto& n : spec_func->get_ops())
-    {
-        goe_elimination.run_on_node(n);
-    }
 
     for (auto& input_description : m_input_descriptions)
     {

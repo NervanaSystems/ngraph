@@ -79,13 +79,9 @@ namespace ngraph
             private:
                 std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
                 std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
-                class FunctionInstance
-                {
-                public:
-                    std::shared_ptr<CPU_ExternalFunction> m_external_function = nullptr;
-                    std::shared_ptr<CPU_CallFrame> m_call_frame = nullptr;
-                    bool m_performance_counters_enabled = false;
-                } m_function_instance;
+
+                std::shared_ptr<CPU_ExternalFunction> m_external_function;
+                std::shared_ptr<CPU_CallFrame> m_call_frame;
             };
         }
     }

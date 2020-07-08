@@ -23,11 +23,11 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/util.hpp"
 
-using namespace mkldnn;
+using namespace dnnl;
 using namespace ngraph;
 using namespace std;
 
@@ -117,7 +117,7 @@ void runtime::cpu::CPUTensor::read(void* target, size_t n) const
         {
             return false;
         }
-        if (!cpu_tvl->is_mkldnn_layout())
+        if (!cpu_tvl->is_dnnl_layout())
         {
             return false;
         }
@@ -125,9 +125,9 @@ void runtime::cpu::CPUTensor::read(void* target, size_t n) const
         {
             return false;
         }
-        auto native_md = mkldnn_utils::create_blocked_mkldnn_md(
+        auto native_md = dnnl_utils::create_blocked_dnnl_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
-        if (mkldnn_utils::compare_mkldnn_mds(cpu_tvl->get_mkldnn_md(), native_md))
+        if (dnnl_utils::compare_dnnl_mds(cpu_tvl->get_dnnl_md(), native_md))
         {
             return false;
         }
@@ -137,15 +137,15 @@ void runtime::cpu::CPUTensor::read(void* target, size_t n) const
     if (needs_conversion())
     {
         auto tensor_shape = this->get_shape();
-        auto input_desc = cpu_tvl->get_mkldnn_md();
-        auto output_desc = mkldnn_utils::create_blocked_mkldnn_md(
+        auto input_desc = cpu_tvl->get_dnnl_md();
+        auto output_desc = dnnl_utils::create_blocked_dnnl_md(
             this->get_shape(), cpu_tvl->get_strides(), this->get_element_type());
 
         memory input{input_desc, executor::global_cpu_engine, aligned_buffer};
         memory output{output_desc, executor::global_cpu_engine, target};
         reorder prim{input, output};
-        mkldnn::stream s(executor::global_cpu_engine);
-        prim.execute(s, {{MKLDNN_ARG_SRC, input}, {MKLDNN_ARG_DST, output}});
+        dnnl::stream s(executor::global_cpu_engine);
+        prim.execute(s, {{DNNL_ARG_SRC, input}, {DNNL_ARG_DST, output}});
         s.wait();
     }
     else

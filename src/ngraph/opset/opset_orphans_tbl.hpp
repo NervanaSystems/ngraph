@@ -14,27 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <deque>
-#include <sstream>
-
-#include "ngraph/function.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
-#include "ngraph/util.hpp"
-
-using namespace std;
-using namespace ngraph;
-
-std::string ngraph::placement_to_string(Placement placement)
-{
-    switch (placement)
-    {
-    case Placement::DEFAULT: return "DEFAULT";
-    case Placement::INTERPRETER: return "INTERPRETER";
-    case Placement::CPU: return "CPU";
-    case Placement::GPU: return "GPU";
-    case Placement::NNP: return "NNP";
-    }
-    throw runtime_error("unhandled placement type");
-}
+NGRAPH_OP(Acosh, ngraph::op::v3)
+NGRAPH_OP(Asinh, ngraph::op::v3)
+NGRAPH_OP(Atanh, ngraph::op::v3)
+NGRAPH_OP(Interpolate, ngraph::op::v3)

@@ -123,7 +123,9 @@ void pass::ConstantFolding::construct_constant_one_hot()
         const auto on_node = static_pointer_cast<op::Constant>(pattern_map[on_label]);
         const auto off_node = static_pointer_cast<op::Constant>(pattern_map[off_label]);
 
-        auto one_hot = static_pointer_cast<op::v1::OneHot>(m.get_match_root());
+        auto one_hot = m.get_match_root_as<op::v1::OneHot>();
+        NGRAPH_CHECK(
+            one_hot, "match root node ", *m.get_match_root(), " not of type `op::v1::OneHot`");
         const size_t axis = one_hot->get_axis();
         const auto output_shape = one_hot->get_output_shape(0);
         auto output_type = on_node->get_output_element_type(0);
@@ -195,7 +197,7 @@ void pass::ConstantFolding::construct_constant_one_hot()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
     auto one_hot_matcher =

@@ -27,7 +27,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
@@ -241,7 +240,7 @@ TEST(reshape_sinking, concat)
         make_shared<op::Broadcast>(C1, reshape_conv->get_output_shape(0), AxisSet{0, 1, 2});
     auto add1 = broadcast1 + reshape_conv1;
 
-    auto concat = make_shared<op::Concat>(NodeVector{add, add1}, 3);
+    auto concat = make_shared<op::Concat>(OutputVector{add, add1}, 3);
     auto relu = make_shared<op::Relu>(concat);
     auto reshape_relu =
         make_shared<op::Reshape>(relu, AxisVector{0, 3, 1, 2}, Shape{1, 2, 3, 3}); /* nchw */

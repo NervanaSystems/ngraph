@@ -25,27 +25,6 @@
 using namespace ngraph;
 using namespace std;
 
-template <typename T>
-string to_cpp_string(T value)
-{
-    string rc;
-    if (std::isnan(value))
-    {
-        rc = "NAN";
-    }
-    else if (std::isinf(value))
-    {
-        rc = (value > 0 ? "INFINITY" : "-INFINITY");
-    }
-    else
-    {
-        stringstream ss;
-        ss << value;
-        rc = ss.str();
-    }
-    return rc;
-}
-
 constexpr NodeTypeInfo op::Constant::type_info;
 
 op::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
@@ -324,9 +303,7 @@ op::Constant::Constant(const Constant& other)
     constructor_validate_and_infer_types();
 }
 
-op::Constant::~Constant()
-{
-}
+op::Constant::~Constant() {}
 
 string op::Constant::convert_value_to_string(size_t index) const
 {

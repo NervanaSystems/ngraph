@@ -22,10 +22,10 @@ using namespace std;
 using namespace ngraph;
 
 template <class REAL, class QUANT>
-shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constant,
-                                                shared_ptr<op::Quantize> quant,
-                                                shared_ptr<op::Constant> scale,
-                                                shared_ptr<op::Constant> offset)
+Output<Node> fold_constant_quantize(shared_ptr<op::Constant> constant,
+                                    shared_ptr<op::Quantize> quant,
+                                    shared_ptr<op::Constant> scale,
+                                    shared_ptr<op::Constant> offset)
 {
     const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(QUANT));
@@ -40,7 +40,8 @@ shared_ptr<op::Constant> fold_constant_quantize(shared_ptr<op::Constant> constan
                                               quant->get_axes(),
                                               quant->get_round_mode());
 
-    return make_shared<op::Constant>(quant->get_output_element_type(0), out_shape, data_ptr);
+    return make_shared<op::Constant>(quant->get_output_element_type(0), out_shape, data_ptr)
+        ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_quantize()
@@ -52,7 +53,7 @@ void pass::ConstantFolding::construct_constant_quantize()
     auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
     auto quant_op =
         make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
-    auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, NodeVector{quant_op});
+    auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, OutputVector{quant_op});
 
     auto constant_quantize_callback = [constant_label, quant](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_quantize_callback against node = "
@@ -79,15 +80,13 @@ void pass::ConstantFolding::construct_constant_quantize()
 
         if (type == element::u8)
         {
-            replace_node(
-                m.get_match_root(),
+            m.get_match_value().replace(
                 fold_constant_quantize<float, uint8_t>(constant_match, quantize_op, scale, offset));
             return true;
         }
         else if (type == element::i8)
         {
-            replace_node(
-                m.get_match_root(),
+            m.get_match_value().replace(
                 fold_constant_quantize<float, int8_t>(constant_match, quantize_op, scale, offset));
             return true;
         }

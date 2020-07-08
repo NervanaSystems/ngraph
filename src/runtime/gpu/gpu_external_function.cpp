@@ -61,7 +61,6 @@
 #include "ngraph/op/equal.hpp"
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
@@ -158,9 +157,7 @@ runtime::gpu::GPUExternalFunction::GPUExternalFunction(
 {
 }
 
-runtime::gpu::GPUExternalFunction::~GPUExternalFunction()
-{
-}
+runtime::gpu::GPUExternalFunction::~GPUExternalFunction() {}
 
 std::string runtime::gpu::GPUExternalFunction::add_to_runtime(
     size_t primitive_index,
@@ -222,7 +219,8 @@ const string& runtime::gpu::GPUExternalFunction::get_pch_header_source()
 const string& runtime::gpu::GPUExternalFunction::get_header_source()
 {
     static string s_header_source =
-        get_pch_header_source() + R"(
+        get_pch_header_source() +
+        R"(
 using namespace ngraph;
 using namespace ngraph::runtime;
 using namespace std;

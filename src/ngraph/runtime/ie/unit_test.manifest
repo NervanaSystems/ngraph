@@ -934,7 +934,7 @@ cum_sum_2dim
 cum_sum_3d
 cum_sum_2dim_allmodes
 
-# Cannot create MKLDNNMemoryDesc from TensorDesc. Unsupported precision!
+# Cannot create DNNLMemoryDesc from TensorDesc. Unsupported precision!
 convert_uint16_float32
 
 # Unsupported primitive of type: Ceiling

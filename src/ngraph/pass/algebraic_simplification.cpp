@@ -86,7 +86,7 @@ static bool simplify_concat(shared_ptr<Node> n)
     auto pslice =
         make_shared<op::v0::Slice>(ltip, Coordinate{0, 0}, Coordinate{2, 1}, Strides{1, 1});
 
-    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, NodeVector{pslice});
+    auto lslice = make_shared<pattern::op::Label>(pslice, nullptr, OutputVector{pslice});
 
     auto skip_reshape =
         make_shared<pattern::op::Skip>(lslice, pattern::has_class<op::v0::Reshape>());
@@ -539,7 +539,7 @@ static bool simplify_gather_shapeof(shared_ptr<Node> node)
     }
     else
     {
-        NodeVector concat_inputs;
+        OutputVector concat_inputs;
         if (axis > 0)
         {
             std::vector<int64_t> vi(axis);

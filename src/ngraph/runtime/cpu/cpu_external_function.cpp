@@ -90,7 +90,6 @@
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/gemm.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/group_conv.hpp"
@@ -151,7 +150,6 @@
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
@@ -177,8 +175,8 @@
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
 #include "ngraph/runtime/cpu/cpu_visualize_tree.hpp"
-#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_emitter.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/batch_norm_relu.hpp"
 #include "ngraph/runtime/cpu/op/bounded_relu.hpp"
 #include "ngraph/runtime/cpu/op/conv_add.hpp"
@@ -198,13 +196,13 @@
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_collapse_dims.hpp"
+#include "ngraph/runtime/cpu/pass/cpu_dnnl_primitive_build.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_horizontal_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_layout.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_mat_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_assignment.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_memory_optimization.hpp"
-#include "ngraph/runtime/cpu/pass/cpu_mkldnn_primitive_build.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_post_layout_optimizations.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_rnn_fusion.hpp"
 #include "ngraph/runtime/cpu/pass/cpu_workspace_insertion.hpp"
@@ -333,7 +331,6 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::GatherND), &runtime::cpu::CPU_Emitter::emit<op::GatherND>},
     {TI(ngraph::op::ScatterAdd), &runtime::cpu::CPU_Emitter::emit<op::ScatterAdd>},
     {TI(ngraph::op::ScatterNDAdd), &runtime::cpu::CPU_Emitter::emit<op::ScatterNDAdd>},
-    {TI(ngraph::op::GetOutputElement), &runtime::cpu::CPU_Emitter::emit<op::GetOutputElement>},
     {TI(ngraph::op::Greater), &runtime::cpu::CPU_Emitter::emit<op::Greater>},
     {TI(ngraph::op::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::GreaterEq>},
     {TI(ngraph::op::Less), &runtime::cpu::CPU_Emitter::emit<op::Less>},
@@ -494,14 +491,14 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
         return;
     }
 
-    m_mkldnn_emitter.reset(new MKLDNNEmitter());
+    m_dnnl_emitter.reset(new DNNLEmitter());
 
     ngraph::pass::Manager pass_manager;
     register_common_passes(pass_manager, pass_config);
 
-    // Build mkldnn primitives for codegen.
-    pass_manager.register_pass<runtime::cpu::pass::MKLDNNPrimitiveBuildPass>(
-        m_desc_filename, *m_mkldnn_emitter, m_node_primitive_string_deps_index_size_map);
+    // Build dnnl primitives for codegen.
+    pass_manager.register_pass<runtime::cpu::pass::DNNLPrimitiveBuildPass>(
+        m_desc_filename, *m_dnnl_emitter, m_node_primitive_string_deps_index_size_map);
 
     unordered_map<Node*, Node*> node_function_map;
     string common_function_string;
@@ -544,8 +541,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     writer +=
         R"(
 #include <cmath>
+#include <dnnl.hpp>
 #include <fstream>
-#include <mkldnn.hpp>
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
@@ -553,8 +550,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/and.hpp"
 #include "ngraph/runtime/reference/any.hpp"
@@ -708,16 +705,16 @@ using namespace ngraph;
 
     writer << common_function_string << "\n";
 
-    // initiate mkldnn_primitives for CPURuntimeContextCG
-    writer << "void inline CPURuntimeContextCG::init_mkldnn_primitives()\n";
+    // initiate dnnl_primitives for CPURuntimeContextCG
+    writer << "void inline CPURuntimeContextCG::init_dnnl_primitives()\n";
     writer.block_begin();
-    writer << "mkldnn_primitives = std::vector<mkldnn::primitive*>("
-           << to_string(m_mkldnn_emitter->get_mkldnn_primitives().size()) << ");\n";
-    writer << "mkldnn_memories = std::vector<mkldnn::memory*>("
-           << to_string(m_mkldnn_emitter->get_mkldnn_memories().size()) << ");\n";
-    writer << "mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>("
-           << to_string(m_mkldnn_emitter->get_mkldnn_scratchpad_mds().size()) << ");\n";
-    writer << "size_t scratchpad_size = " << m_mkldnn_emitter->get_max_scratchpad_size() << ";\n";
+    writer << "dnnl_primitives = std::vector<dnnl::primitive*>("
+           << to_string(m_dnnl_emitter->get_dnnl_primitives().size()) << ");\n";
+    writer << "dnnl_memories = std::vector<dnnl::memory*>("
+           << to_string(m_dnnl_emitter->get_dnnl_memories().size()) << ");\n";
+    writer << "dnnl_scratchpad_mds = std::vector<dnnl::memory::desc*>("
+           << to_string(m_dnnl_emitter->get_dnnl_scratchpad_mds().size()) << ");\n";
+    writer << "size_t scratchpad_size = " << m_dnnl_emitter->get_max_scratchpad_size() << ";\n";
     writer << "if (scratchpad_size > 0)\n";
     writer.block_begin();
     writer << "size_t alignment = 4096;\n";
@@ -781,15 +778,15 @@ using namespace ngraph;
     writer << "{\n";
     writer.indent++;
 
-    // deserialize and build mkldnn primitives
-    if (m_mkldnn_emitter->get_mkldnn_descriptors_size() > 0)
+    // deserialize and build dnnl primitives
+    if (m_dnnl_emitter->get_dnnl_descriptors_size() > 0)
     {
         writer << "if (ctx->first_iteration)\n";
         writer.block_begin();
-        writer << "// read in memory descriptors and build mkldnn primitives\n";
+        writer << "// read in memory descriptors and build dnnl primitives\n";
         writer << "std::ifstream desc_file (\"" << m_desc_filename << "\", std::ios::binary);\n";
         writer << "deserialize_memory_descs_and_build_memory(" << m_desc_filename << ", cg_ctx, "
-               << to_string(m_mkldnn_emitter->get_mkldnn_descriptors_size()) << ");\n";
+               << to_string(m_dnnl_emitter->get_dnnl_descriptors_size()) << ");\n";
         writer.block_end();
     }
 
@@ -1012,7 +1009,6 @@ using namespace ngraph;
             writer << func_name << "(" << join(names) << ", ctx, cg_ctx);\n";
         }
 
-        // skip multi-output nodes since they would be covered by GetOutputElement
         if (node->get_output_size() == 1 &&
             // skip non-FP nodes
             (node->get_output_element_type(0) == element::f32 ||
@@ -1226,9 +1222,9 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         // graph pass
         if (typeid(ngraph::op::LSTMCell) == typeid(node))
         {
-            // MKLDNN version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
+            // DNNL version < 1.0 doesnt support peephole for LSTM, we will skip if the LSTMCell
             // has peephole. LSTMCell with no peephole support is constant initialized to zero
-            // TODO (pthoreho) : For MKLDNN > V1.0, change mkldnn kernel integration to compute for
+            // TODO (pthoreho) : For DNNL > V1.0, change dnnl kernel integration to compute for
             // LSTMCell with peephole as well.
             // Not supported on codegen
             return m_direct_execution && is_type<ngraph::op::Constant>(node.get_argument(6));
@@ -1241,10 +1237,10 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
         {
             return false;
         }
-        // GroupConvolution is only supported with MKLDNN
+        // GroupConvolution is only supported with DNNL
         else if (auto conv = as_type<ngraph::op::GroupConvolution>(const_cast<Node*>(&node)))
         {
-            return mkldnn_utils::can_use_mkldnn_conv<ngraph::op::GroupConvolution>(conv);
+            return dnnl_utils::can_use_dnnl_conv<ngraph::op::GroupConvolution>(conv);
         }
 
         if (dex)
@@ -1323,7 +1319,6 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUPostLayoutOptimizations, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUConvertLayoutConstantFolding, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUMemoryOptimization, true, runtime::cpu::pass)
-    REGISTER_KNOBBED_PASS(GetOutputElementElimination, false, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(
         PropagateCacheability, true, ngraph::pass, runtime::cpu::get_annotations_factory())
     bool reuse_memory = pass_config.get_pass_attribute("CPUMemoryAssignment::ReuseMemory") ||
@@ -1457,7 +1452,7 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
 
     // stream writer to dump the debug manifest for the DEX
     static StaticInitializers s_static_initializers(s_debug_dir);
-    m_mkldnn_emitter.reset(new MKLDNNEmitter());
+    m_dnnl_emitter.reset(new DNNLEmitter());
     ngraph::pass::Manager pass_manager;
     if (getenv_bool("NGRAPH_ENABLE_VISUALIZE_TRACING"))
     {
@@ -2020,7 +2015,6 @@ void runtime::cpu::CPU_ExternalFunction::build(ngraph::pass::PassConfig& pass_co
         {
             NGRAPH_CHECK(m_op_attrs.size() == profiler_count);
         }
-
     };
 
     m_is_built = true;

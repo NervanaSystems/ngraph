@@ -55,7 +55,7 @@ NGRAPH_TEST(${BACKEND_NAME}, stack_matrix_rowise)
     Shape shape_c{2, 2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{3, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Stack>(NodeVector{A, B, C}, 0),
+    auto f = make_shared<Function>(make_shared<op::Stack>(OutputVector{A, B, C}, 0),
                                    ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -85,7 +85,7 @@ NGRAPH_TEST(${BACKEND_NAME}, stack_matrix_colwise)
     Shape shape_c{2, 2};
     auto C = make_shared<op::Parameter>(element::f32, shape_c);
     Shape shape_r{2, 3, 2};
-    auto f = make_shared<Function>(make_shared<op::Stack>(NodeVector{A, B, C}, 1),
+    auto f = make_shared<Function>(make_shared<op::Stack>(OutputVector{A, B, C}, 1),
                                    ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -115,7 +115,7 @@ NGRAPH_TEST(${BACKEND_NAME}, stack_negative_axis)
     auto pshape_c = PartialShape::dynamic();
     auto C = make_shared<op::Parameter>(element::f32, pshape_c);
     auto pshape_r = PartialShape::dynamic();
-    auto f = make_shared<Function>(make_shared<op::Stack>(NodeVector{A, B, C}, -1),
+    auto f = make_shared<Function>(make_shared<op::Stack>(OutputVector{A, B, C}, -1),
                                    ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);

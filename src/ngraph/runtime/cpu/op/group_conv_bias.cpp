@@ -18,7 +18,6 @@
 
 #include "group_conv_bias.hpp"
 
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -66,8 +65,8 @@ static void validate_groupconvbias_shapes(const Shape& input_shape,
         throw ngraph_error(
             "Mismatch between GroupConvolutionBias output and filter channels: "
             " data channels=" +
-            std::to_string(output_shape[OUTPUT_C]) + ", filter channels= " +
-            std::to_string(filters_shape[FILTER_OC]));
+            std::to_string(output_shape[OUTPUT_C]) +
+            ", filter channels= " + std::to_string(filters_shape[FILTER_OC]));
     }
 
     if (output_shape[OUTPUT_C] % groups != 0)
@@ -176,18 +175,18 @@ shared_ptr<Node> op::GroupConvolutionBias::clone_with_new_inputs(const OutputVec
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return shared_ptr<Node>(new GroupConvolutionBias(new_args.at(0),
-                                                     new_args.at(1),
-                                                     new_args.at(2),
-                                                     get_window_movement_strides(),
-                                                     get_window_dilation_strides(),
-                                                     get_padding_below(),
-                                                     get_padding_above(),
-                                                     get_data_dilation_strides(),
-                                                     get_groups(),
-                                                     get_output_shape(0),
-                                                     m_with_relu,
-                                                     get_alpha()));
+    return make_shared<GroupConvolutionBias>(new_args.at(0),
+                                             new_args.at(1),
+                                             new_args.at(2),
+                                             get_window_movement_strides(),
+                                             get_window_dilation_strides(),
+                                             get_padding_below(),
+                                             get_padding_above(),
+                                             get_data_dilation_strides(),
+                                             get_groups(),
+                                             get_output_shape(0),
+                                             m_with_relu,
+                                             get_alpha());
 }
 
 void op::GroupConvolutionBias::generate_adjoints(autodiff::Adjoints& /* adjoints */,

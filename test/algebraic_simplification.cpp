@@ -31,7 +31,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/divide.hpp"
 #include "ngraph/op/exp.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
@@ -654,7 +653,7 @@ TEST(algebraic_simplification, concat_reshape_slice)
     auto reshape3 = make_shared<op::Reshape>(slice3, AxisVector{0, 1}, Shape{32, 1, 100});
 
     size_t concat_axis = 1;
-    auto concat = make_shared<op::Concat>(NodeVector{reshape1, reshape2, reshape3}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{reshape1, reshape2, reshape3}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -672,7 +671,7 @@ TEST(algebraic_simplification, concat_slice)
     auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
-    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -690,7 +689,7 @@ TEST(algebraic_simplification, concat_parameter_slice)
     auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
-    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -708,7 +707,7 @@ TEST(algebraic_simplification, concat_parameter_slices_reversed)
     auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
-    auto concat = make_shared<op::Concat>(NodeVector{slice3, slice2, slice1}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{slice3, slice2, slice1}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -727,7 +726,7 @@ TEST(algebraic_simplification, concat_parameter_slices_element_count)
     auto slice3 = make_shared<op::Slice>(a, Coordinate{20, 0}, Coordinate{30, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
-    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -745,7 +744,7 @@ TEST(algebraic_simplification, concat_parameter_non_uniform_slices)
     auto slice3 = make_shared<op::Slice>(a, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
-    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -768,7 +767,7 @@ TEST(algebraic_simplification, concat_different_inputs)
         make_shared<op::Slice>(goe1, Coordinate{64, 0}, Coordinate{96, 100}, Strides{1, 1});
 
     size_t concat_axis = 0;
-    auto concat = make_shared<op::Concat>(NodeVector{slice1, slice2, slice3}, concat_axis);
+    auto concat = make_shared<op::Concat>(OutputVector{slice1, slice2, slice3}, concat_axis);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::AlgebraicSimplification>();
@@ -925,7 +924,10 @@ TEST(algebraic_simplification, replace_transpose_with_reshape)
 
             check_usecase(PartialShape{Dimension::dynamic(), 20, 1, 1},
                           vector<int64_t>{
-                              0, 2, 3, 1,
+                              0,
+                              2,
+                              3,
+                              1,
                           },
                           i32,
                           multiout,
