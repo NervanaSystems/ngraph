@@ -31,7 +31,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_v1)
     auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
     auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
 
-    auto f = std::make_shared<Function>(NodeVector{reshape_v1}, ParameterVector{arg, pattern});
+    auto f = std::make_shared<Function>(OutputVector{reshape_v1}, ParameterVector{arg, pattern});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);

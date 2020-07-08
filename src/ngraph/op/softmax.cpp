@@ -108,7 +108,7 @@ void op::v0::Softmax::validate_and_infer_types()
             // empty axes == all axes
             if (m_axes.size() == 0)
             {
-                for (size_t i = 0; i < get_shape().size(); ++i)
+                for (size_t i = 0; i < get_output_shape(0).size(); ++i)
                 {
                     m_axes.insert(i);
                 }
@@ -136,18 +136,18 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto zsum = make_shared<op::Sum>(z, axes);
 
     Shape shape;
-    for (size_t i = 0; i < get_shape().size(); ++i)
+    for (size_t i = 0; i < get_output_shape(0).size(); ++i)
     {
         if (axes.find(i) == axes.end())
         {
-            shape.push_back(get_shape()[i]);
+            shape.push_back(get_output_shape(0)[i]);
         }
         else
         {
             shape.push_back(1);
         }
     }
-    auto order = ngraph::get_default_order(zsum->get_shape());
+    auto order = ngraph::get_default_order(zsum->get_output_shape(0));
     auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
     auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
@@ -180,6 +180,7 @@ namespace
 
 bool op::v0::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
+    outputs[0]->set_unary(inputs[0]);
     return evaluate_softmax(inputs[0], outputs[0], get_axes());
 }
 
@@ -224,6 +225,7 @@ shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_
 
 bool op::v1::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
+    outputs[0]->set_unary(inputs[0]);
     return evaluate_softmax(inputs[0], outputs[0], AxisSet{m_axis});
 }
 

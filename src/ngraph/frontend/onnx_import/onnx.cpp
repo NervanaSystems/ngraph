@@ -48,13 +48,12 @@ namespace ngraph
                     {
                     }
                 };
-
-            } // namespace error
-        }     // namespace detail
+            }
+        }
 
         std::shared_ptr<Function> import_onnx_model(std::istream& stream)
         {
-            onnx::ModelProto model_proto;
+            ONNX_NAMESPACE::ModelProto model_proto;
             // Try parsing input as a binary protobuf message
             if (!model_proto.ParseFromIstream(&stream))
             {
@@ -110,7 +109,5 @@ namespace ngraph
             return OperatorsBridge::is_operator_registered(
                 op_name, version, domain == "ai.onnx" ? "" : domain);
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

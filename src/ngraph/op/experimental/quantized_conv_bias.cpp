@@ -17,7 +17,6 @@
 #include "quantized_conv_bias.hpp"
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -78,16 +77,16 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return shared_ptr<Node>(new QuantizedConvolutionBias(new_args.at(0),
-                                                         new_args.at(1),
-                                                         new_args.at(2),
-                                                         get_window_movement_strides(),
-                                                         get_window_dilation_strides(),
-                                                         get_padding_below(),
-                                                         get_padding_above(),
-                                                         get_data_dilation_strides(),
-                                                         new_args.at(3),
-                                                         m_with_relu));
+    return make_shared<QuantizedConvolutionBias>(new_args.at(0),
+                                                 new_args.at(1),
+                                                 new_args.at(2),
+                                                 get_window_movement_strides(),
+                                                 get_window_dilation_strides(),
+                                                 get_padding_below(),
+                                                 get_padding_above(),
+                                                 get_data_dilation_strides(),
+                                                 new_args.at(3),
+                                                 m_with_relu);
 }
 
 constexpr NodeTypeInfo op::QuantizedConvolutionBiasAdd::type_info;
@@ -148,18 +147,18 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return shared_ptr<Node>(new QuantizedConvolutionBiasAdd(new_args.at(0),
-                                                            new_args.at(1),
-                                                            new_args.at(2),
-                                                            new_args.at(3),
-                                                            get_window_movement_strides(),
-                                                            get_window_dilation_strides(),
-                                                            get_padding_below(),
-                                                            get_padding_above(),
-                                                            get_data_dilation_strides(),
-                                                            new_args.at(4),
-                                                            new_args.at(5),
-                                                            m_with_relu));
+    return make_shared<QuantizedConvolutionBiasAdd>(new_args.at(0),
+                                                    new_args.at(1),
+                                                    new_args.at(2),
+                                                    new_args.at(3),
+                                                    get_window_movement_strides(),
+                                                    get_window_dilation_strides(),
+                                                    get_padding_below(),
+                                                    get_padding_above(),
+                                                    get_data_dilation_strides(),
+                                                    new_args.at(4),
+                                                    new_args.at(5),
+                                                    m_with_relu);
 }
 
 constexpr NodeTypeInfo op::QuantizedConvolutionBiasSignedAdd::type_info;
@@ -222,16 +221,16 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return shared_ptr<Node>(new QuantizedConvolutionBiasSignedAdd(new_args.at(0),
-                                                                  new_args.at(1),
-                                                                  new_args.at(2),
-                                                                  new_args.at(3),
-                                                                  get_window_movement_strides(),
-                                                                  get_window_dilation_strides(),
-                                                                  get_padding_below(),
-                                                                  get_padding_above(),
-                                                                  get_data_dilation_strides(),
-                                                                  new_args.at(4),
-                                                                  new_args.at(5),
-                                                                  m_with_relu));
+    return make_shared<QuantizedConvolutionBiasSignedAdd>(new_args.at(0),
+                                                          new_args.at(1),
+                                                          new_args.at(2),
+                                                          new_args.at(3),
+                                                          get_window_movement_strides(),
+                                                          get_window_dilation_strides(),
+                                                          get_padding_below(),
+                                                          get_padding_above(),
+                                                          get_data_dilation_strides(),
+                                                          new_args.at(4),
+                                                          new_args.at(5),
+                                                          m_with_relu);
 }

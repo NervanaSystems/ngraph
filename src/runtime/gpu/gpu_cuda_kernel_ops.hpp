@@ -16,54 +16,10 @@
 
 #pragma once
 
+#include "ngraph/ops.hpp"
+
 namespace ngraph
 {
-    namespace op
-    {
-        class Abs;
-        class Acos;
-        class Add;
-        class Asin;
-        class Atan;
-        class Ceiling;
-        class Cos;
-        class Cosh;
-        class Exp;
-        class Floor;
-        class Log;
-        class Sin;
-        class Sinh;
-        class Tan;
-        class Tanh;
-        class Power;
-        class Subtract;
-        class Divide;
-        class Sign;
-        class Maximum;
-        class Minimum;
-        class Multiply;
-        class Convert;
-        class Equal;
-        class NotEqual;
-        class Greater;
-        class GreaterEq;
-        class Less;
-        class LessEq;
-        class Not;
-        class Relu;
-        class ReluBackprop;
-        class Max;
-        class Min;
-        class Negative;
-        class Not;
-        class Sqrt;
-        class Select;
-        class And;
-        class Or;
-        class Nop;
-        class Sigmoid;
-        class SigmoidBackprop;
-    }
     namespace runtime
     {
         namespace gpu
@@ -358,13 +314,13 @@ namespace ngraph
                 static constexpr const char* atomic = "atomicMax";
             };
 
-            template <>
-            struct CudaOpMap<ngraph::op::Nop>
-            {
-                static constexpr const char* op = "";
-                static constexpr const char* math_kernel = "";
-                static constexpr const char* atomic = "";
-            };
+            // template <>
+            // struct CudaOpMap<ngraph::op::Nop>
+            // {
+            //     static constexpr const char* op = "";
+            //     static constexpr const char* math_kernel = "";
+            //     static constexpr const char* atomic = "";
+            // };
 
             template <>
             struct CudaOpMap<ngraph::op::Sigmoid>

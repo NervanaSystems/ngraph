@@ -126,7 +126,6 @@ namespace ngraph
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }
-
-        } // namespace  common
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

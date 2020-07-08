@@ -80,6 +80,7 @@ namespace ngraph
     size_t hash_combine(const std::vector<size_t>& list);
     NGRAPH_API
     void dump(std::ostream& out, const void*, size_t);
+    NGRAPH_API
     std::string to_lower(const std::string& s);
     NGRAPH_API
     std::string to_upper(const std::string& s);
@@ -186,6 +187,28 @@ namespace ngraph
             return parse_string<T>(s);
         });
         return result;
+    }
+
+    template <typename T>
+    std::string to_cpp_string(T value)
+    {
+        std::string rc;
+        if (std::isnan(value))
+        {
+            rc = "NAN";
+        }
+        else if (std::isinf(value))
+        {
+            rc = (value > 0 ? "INFINITY" : "-INFINITY");
+        }
+        else
+        {
+            std::stringstream ss;
+            ss.precision(std::numeric_limits<T>::max_digits10);
+            ss << value;
+            rc = ss.str();
+        }
+        return rc;
     }
 
     template <typename T>
@@ -394,12 +417,40 @@ namespace ngraph
     NGRAPH_API
     void parse_version_string(
         std::string version, size_t& major, size_t& minor, size_t& patch, std::string& extra);
-} // end namespace ngraph
+
+    template <typename T>
+    T double_to_int(double x, double float_to_int_converter(double))
+    {
+        if (!std::is_integral<T>())
+        {
+            throw std::runtime_error(
+                "Function double_to_int template parameter must be an integral type.");
+        }
+
+        x = float_to_int_converter(x);
+
+        double min_t = static_cast<double>(std::numeric_limits<T>::min());
+        if (x < min_t)
+        {
+            return std::numeric_limits<T>::min();
+        }
+
+        double max_t = static_cast<double>(std::numeric_limits<T>::max());
+        if (x > max_t)
+        {
+            return std::numeric_limits<T>::max();
+        }
+
+        return static_cast<T>(x);
+    }
+}
 
 template <typename T>
 std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 std::vector<float> NGRAPH_API read_float_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
+
+std::vector<int64_t> NGRAPH_API read_index_vector(std::shared_ptr<ngraph::runtime::Tensor> tv);
 
 NGRAPH_API
 std::ostream& operator<<(std::ostream& os, const ngraph::NodeVector& nv);

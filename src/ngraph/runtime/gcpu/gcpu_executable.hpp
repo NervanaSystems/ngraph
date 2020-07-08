@@ -51,7 +51,7 @@ namespace ngraph
                 enum class OP_TYPEID
                 {
 #define NGRAPH_OP(NAME, NAMESPACE) NAME,
-#include "ngraph/opsets/opset0_tbl.hpp"
+#include "ngraph/opset/opset0_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp
                 };

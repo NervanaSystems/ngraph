@@ -27,12 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector dequantize_linear(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector dequantize_linear(const Node& node);
+            }
+        }
+    }
+}

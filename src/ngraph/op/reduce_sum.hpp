@@ -90,13 +90,14 @@ namespace ngraph
                           const Output<Node>& reduction_axes,
                           bool keep_dims = false);
 
-                size_t get_version() const override { return 1; }
-
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 /// \return The default value for Sum.
                 virtual std::shared_ptr<Node> get_default_value() const override;
+
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

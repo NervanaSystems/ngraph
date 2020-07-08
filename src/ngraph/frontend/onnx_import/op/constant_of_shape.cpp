@@ -28,9 +28,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector constant_of_shape(const onnx_import::Node& node)
+                OutputVector constant_of_shape(const onnx_import::Node& node)
                 {
-                    std::shared_ptr<ngraph::Node> constant_value;
+                    Output<ngraph::Node> constant_value;
                     if (node.has_attribute("value"))
                     {
                         auto value_tensor = node.get_attribute_value<Tensor>("value");
@@ -44,11 +44,7 @@ namespace ngraph
                     return {std::make_shared<default_opset::Broadcast>(constant_value,
                                                                        node.get_ng_inputs().at(0))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

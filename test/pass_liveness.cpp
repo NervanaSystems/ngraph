@@ -25,7 +25,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
 #include "ngraph/pass/liveness.hpp"
-#include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
 
@@ -46,7 +45,7 @@ TEST(liveness, constant)
     pass_manager.run_passes(f);
 
     auto tmp = f->get_ordered_ops();
-    vector<shared_ptr<Node>> sorted{tmp.begin(), tmp.end()};
+    NodeVector sorted{tmp.begin(), tmp.end()};
     ASSERT_EQ(3, sorted.size());
     EXPECT_EQ(0, sorted[0]->liveness_new_list.size());
     EXPECT_EQ(0, sorted[0]->liveness_free_list.size());

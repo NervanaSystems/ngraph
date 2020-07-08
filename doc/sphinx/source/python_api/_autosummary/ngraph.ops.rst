@@ -42,7 +42,6 @@ ngraph.ops
       floor
       gelu
       gemm
-      get_output_element
       greater
       greater_eq
       grn

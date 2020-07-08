@@ -68,9 +68,9 @@ void op::PriorBoxClustered::validate_and_infer_types()
     if (auto const_shape = as_type_ptr<op::Constant>(input_value(0).get_node_shared_ptr()))
     {
         NODE_VALIDATION_CHECK(this,
-                              shape_size(const_shape->get_shape()) == 2,
+                              shape_size(const_shape->get_output_shape(0)) == 2,
                               "Layer shape must have rank 2",
-                              const_shape->get_shape());
+                              const_shape->get_output_shape(0));
 
         auto layer_shape = const_shape->get_shape_val();
         // {Prior boxes, variances-adjusted prior boxes}
@@ -88,4 +88,16 @@ shared_ptr<Node> op::PriorBoxClustered::clone_with_new_inputs(const OutputVector
 {
     check_new_args_count(this, new_args);
     return make_shared<PriorBoxClustered>(new_args.at(0), new_args.at(1), m_attrs);
+}
+
+bool op::PriorBoxClustered::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("attrs.widths", m_attrs.widths);
+    visitor.on_attribute("attrs.heights", m_attrs.heights);
+    visitor.on_attribute("attrs.clip", m_attrs.clip);
+    visitor.on_attribute("attrs.step_widths", m_attrs.step_widths);
+    visitor.on_attribute("attrs.step_heights", m_attrs.step_heights);
+    visitor.on_attribute("attrs.offset", m_attrs.offset);
+    visitor.on_attribute("attrs.variances", m_attrs.variances);
+    return true;
 }

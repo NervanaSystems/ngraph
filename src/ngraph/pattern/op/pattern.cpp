@@ -27,19 +27,6 @@ namespace ngraph
         {
             // The symbols are required to be in cpp file to workaround RTTI issue on Android LLVM
             ValuePredicate Pattern::get_predicate() const { return m_predicate; }
-            ValuePredicate as_value_predicate(NodePredicate pred)
-            {
-                if (pred == nullptr)
-                {
-                    return [](const Output<Node>&) { return true; };
-                }
-                else
-                {
-                    return [pred](const Output<Node>& value) {
-                        return pred(value.get_node_shared_ptr());
-                    };
-                }
-            }
         }
 
         PatternMap as_pattern_map(const PatternValueMap& pattern_value_map)

@@ -582,15 +582,6 @@ namespace
         EXPECT_FALSE(node.is_binary_elementwise_logical());
     }
 
-    void op_is_GetOutputElement()
-    {
-        op::GetOutputElement node;
-        EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
-        EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
-        EXPECT_FALSE(node.is_binary_elementwise_comparison());
-        EXPECT_FALSE(node.is_binary_elementwise_logical());
-    }
-
     void op_is_Greater()
     {
         op::Greater node;
@@ -1432,6 +1423,6 @@ namespace
 TEST(op_is, check)
 {
 #define NGRAPH_OP(a, b) op_is_##a();
-#include "ngraph/opsets/opset0_tbl.hpp"
+#include "ngraph/opset/opset0_tbl.hpp"
 #undef NGRAPH_OP
 }

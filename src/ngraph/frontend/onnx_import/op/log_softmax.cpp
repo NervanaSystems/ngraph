@@ -28,11 +28,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector log_softmax(const Node& node)
+                OutputVector log_softmax(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    OutputVector inputs{node.get_ng_inputs()};
                     const auto data = inputs.at(0);
-                    const auto data_rank = data->get_output_partial_shape(0).rank();
+                    const auto data_rank = data.get_partial_shape().rank();
 
                     const auto axis = node.get_attribute_value<int64_t>("axis", 1);
                     const auto normalized_axis =
@@ -42,11 +42,7 @@ namespace ngraph
                         std::make_shared<default_opset::Softmax>(data, normalized_axis);
                     return {std::make_shared<default_opset::Log>(softmax)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -27,8 +27,8 @@ TEST(type_prop, dot_deduce_scalar_2d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{4, 5});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{4, 5}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{4, 5}));
 }
 
 TEST(type_prop, dot_deduce_2d_scalar)
@@ -37,8 +37,8 @@ TEST(type_prop, dot_deduce_2d_scalar)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{4, 5});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{4, 5}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{4, 5}));
 }
 
 TEST(type_prop, dot_deduce_scalar_scalar)
@@ -47,8 +47,8 @@ TEST(type_prop, dot_deduce_scalar_scalar)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{}));
 }
 
 TEST(type_prop, dot_deduce_scalar_1d)
@@ -57,8 +57,8 @@ TEST(type_prop, dot_deduce_scalar_1d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{6});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{6}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{6}));
 }
 
 TEST(type_prop, dot_deduce_1d)
@@ -67,8 +67,8 @@ TEST(type_prop, dot_deduce_1d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{4});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{4});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{}));
 }
 
 TEST(type_prop, dot_deduce_2d)
@@ -77,8 +77,8 @@ TEST(type_prop, dot_deduce_2d)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{4, 3}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{4, 3}));
 }
 
 TEST(type_prop, dot_deduce_different_rank)
@@ -87,8 +87,8 @@ TEST(type_prop, dot_deduce_different_rank)
     auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 8, 4, 2});
     auto param2 = make_shared<op::Parameter>(element::f32, Shape{2, 1, 3});
     auto bc = make_shared<op::Dot>(param1, param2);
-    ASSERT_EQ(bc->get_element_type(), element::f32);
-    ASSERT_EQ(bc->get_shape(), (Shape{2, 8, 4, 1, 3}));
+    ASSERT_EQ(bc->get_output_element_type(0), element::f32);
+    ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 8, 4, 1, 3}));
 }
 
 TEST(type_prop, dot_deduce_element_type_mismatch)

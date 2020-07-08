@@ -29,7 +29,6 @@
 #include "ngraph/check.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/placement.hpp"
 
 namespace ngraph
 {
@@ -70,6 +69,11 @@ namespace ngraph
     void traverse_nodes(const NodeVector& subgraph_results,
                         std::function<void(std::shared_ptr<Node>)> f,
                         const NodeVector& subgraph_params = {});
+
+    NGRAPH_API
+    void traverse_nodes(const OutputVector& subgraph_results,
+                        std::function<void(std::shared_ptr<Node>)> f,
+                        const OutputVector& subgraph_params = {});
 
     NGRAPH_API
     void traverse_nodes(const NodeVector& subgraph_results,
@@ -265,11 +269,11 @@ namespace ngraph
 
     /// Topological sort of nodes needed to compute root_nodes
     template <typename T>
-    std::vector<std::shared_ptr<Node>> topological_sort(T root_nodes)
+    NodeVector topological_sort(T root_nodes)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
-        std::vector<std::shared_ptr<Node>> result;
+        NodeVector result;
 
         for (auto& node : root_nodes)
         {
@@ -317,12 +321,12 @@ namespace ngraph
 
     /// Topological sort of just nodes
     template <typename T>
-    std::vector<std::shared_ptr<Node>> subgraph_topological_sort(T nodes)
+    NodeVector subgraph_topological_sort(T nodes)
     {
         std::stack<Node*, std::vector<Node*>> nodes_to_do;
         std::unordered_set<Node*> nodes_done;
         std::unordered_set<Node*> nodes_to_emit;
-        std::vector<std::shared_ptr<Node>> result;
+        NodeVector result;
 
         for (auto& node : nodes)
         {
@@ -396,16 +400,14 @@ namespace ngraph
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
     NGRAPH_API
-    std::vector<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes, NodeMap& node_map);
+    NodeVector clone_nodes(const NodeVector& nodes, NodeMap& node_map);
 
     // input nodes are cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
     // NodeMap output (by reference) fully maps input and cloned nodes
     NGRAPH_API
-    std::list<std::shared_ptr<ngraph::Node>>
-        clone_nodes(const std::vector<std::shared_ptr<ngraph::Node>>& nodes,
-                    RawNodeOutputMap& node_map);
+    std::list<std::shared_ptr<ngraph::Node>> clone_nodes(const NodeVector& nodes,
+                                                         RawNodeOutputMap& node_map);
 
     // input function is cloned and returned
     // NodeMap input may contain default node mapping i.e. pre-cloned nodes
@@ -417,10 +419,6 @@ namespace ngraph
     // input function is cloned and returned
     NGRAPH_API
     std::shared_ptr<ngraph::Function> clone_function(const ngraph::Function& func);
-
-    // Assert that nodes in the function is colocated and return that placement
-    NGRAPH_API
-    Placement get_colocated_function_placement(std::shared_ptr<Function> func);
 
     NGRAPH_API
     std::pair<std::shared_ptr<op::Result>, std::shared_ptr<op::v0::Parameter>>
@@ -444,14 +442,13 @@ namespace ngraph
     bool is_zero(const Output<Node>& reduce_constant);
 
     NGRAPH_API
-    NodeVector get_subgraph_outputs(const NodeVector& nodes,
-                                    const NodeVector& exclusions,
-                                    bool ignore_unused = false,
-                                    bool ignore_output_duplicates = true);
+    OutputVector get_subgraph_outputs(const OutputVector& nodes,
+                                      const OutputVector& exclusions,
+                                      bool ignore_unused = false,
+                                      bool ignore_output_duplicates = true);
 
     // Extract sub-graph computing the `results`. Stops backward traversal at either a Parameter
-    // node
-    // or a node that belongs to args
+    // node or a node that belongs to args
     NGRAPH_API
     NodeVector extract_subgraph(const NodeVector& results, const NodeVector& args);
 
@@ -466,9 +463,9 @@ namespace ngraph
     NGRAPH_API
     bool is_used(Node* node);
 
-    // Returns count of `node` users that are still live in the graph
+    // Returns count of an Output's users that are still live in the graph
     NGRAPH_API
-    size_t get_user_count(Node* node);
+    size_t get_user_count(const Output<Node>& output);
 
     // Return true if a node's user could potentially overwrite
     // the output of this node with in-place kernels
@@ -494,7 +491,7 @@ namespace ngraph
     /// \return A vector containing a handle for each output of src that is connected to an input
     ///         of `dst`.
     NGRAPH_API
-    std::vector<Output<Node>> get_outputs_to(Node& src, Node& dst);
+    OutputVector get_outputs_to(Node& src, Node& dst);
 
     /// Checks the func for graph cycles starting from results going backwards, then from parameters
     /// going forward.
@@ -506,4 +503,7 @@ namespace ngraph
 
     NGRAPH_API
     bool replace_output_update_name(Output<Node> node, const Output<Node>& node_input);
+
+    NGRAPH_API
+    bool replace_node_update_name(std::shared_ptr<Node> target, std::shared_ptr<Node> replacement);
 }

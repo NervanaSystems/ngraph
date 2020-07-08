@@ -31,7 +31,7 @@ TEST(input_output, param_tensor)
 
     ASSERT_EQ(param->get_output_size(), 1);
     ASSERT_EQ(et, param->get_element_type());
-    ASSERT_EQ(shape, param->get_shape());
+    ASSERT_EQ(shape, param->get_output_shape(0));
 }
 
 TEST(input_output, simple_output)
@@ -41,7 +41,7 @@ TEST(input_output, simple_output)
     auto add = make_shared<op::Add>(param_0, param_1);
 
     // Sort the ops
-    vector<shared_ptr<Node>> nodes;
+    NodeVector nodes;
     nodes.push_back(param_0);
     nodes.push_back(param_1);
     nodes.push_back(add);

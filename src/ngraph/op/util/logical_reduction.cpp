@@ -21,9 +21,7 @@
 using namespace std;
 using namespace ngraph;
 
-op::util::LogicalReduction::LogicalReduction()
-{
-}
+op::util::LogicalReduction::LogicalReduction() {}
 
 op::util::LogicalReduction::LogicalReduction(const Output<Node>& arg, const AxisSet& reduction_axes)
     : Op({arg,
@@ -73,7 +71,7 @@ void op::util::LogicalReduction::validate_and_infer_types()
     {
         AxisSet reduction_axes;
         auto reduction_axes_val =
-            as_type<op::Constant>(input_value(1).get_node())->get_vector<int64_t>();
+            as_type<op::Constant>(input_value(1).get_node())->cast_vector<int64_t>();
         for (auto axis : reduction_axes_val)
         {
             try

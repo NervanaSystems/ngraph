@@ -78,7 +78,7 @@ namespace ngraph
                 uint64_t m_seed{0};
                 double m_probability{0.0};
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -102,7 +102,6 @@ namespace ngraph
                              double prob,
                              bool use_seed = false);
 
-                size_t get_version() const override { return 1; }
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
@@ -134,8 +133,8 @@ namespace ngraph
                 uint64_t m_seed{0};
                 double m_probability{0.0};
             };
-        } // namespace v1
+        }
 
         using v0::GenerateMask;
-    } // op
-} // ngraph
+    }
+}

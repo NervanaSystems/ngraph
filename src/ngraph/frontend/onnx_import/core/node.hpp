@@ -21,8 +21,9 @@
 
 #include "ngraph/except.hpp"
 #include "ngraph/node.hpp"
+#include "utils/onnx_importer_visibility.hpp"
 
-namespace onnx
+namespace ONNX_NAMESPACE
 {
     // forward declaration
     class NodeProto;
@@ -43,19 +44,17 @@ namespace ngraph
                     {
                     }
                 };
-
-            } // namespace node
-
-        } // namespace error
+            }
+        }
 
         // forward declaration
         class Graph;
 
-        class NGRAPH_API Node
+        class ONNX_IMPORTER_API Node
         {
         public:
             Node() = delete;
-            Node(const onnx::NodeProto& node_proto, const Graph& graph);
+            Node(const ONNX_NAMESPACE::NodeProto& node_proto, const Graph& graph);
 
             Node(Node&&) noexcept;
             Node(const Node&);
@@ -63,8 +62,8 @@ namespace ngraph
             Node& operator=(Node&&) noexcept = delete;
             Node& operator=(const Node&) = delete;
 
-            NodeVector get_ng_inputs() const;
-            NodeVector get_ng_nodes() const;
+            OutputVector get_ng_inputs() const;
+            OutputVector get_ng_nodes() const;
             const std::string& domain() const;
             const std::string& op_type() const;
             const std::string& get_name() const;
@@ -99,7 +98,5 @@ namespace ngraph
         {
             return (outs << "<Node(" << node.op_type() << "): " << node.get_description() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

@@ -27,18 +27,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector gemm(const Node& node);
-
-            } // namespace set_1
+                OutputVector gemm(const Node& node);
+            }
 
             namespace set_6
             {
-                NodeVector gemm(const Node& node);
-
-            } // namespace set_6
-
-        } // namespace op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+                OutputVector gemm(const Node& node);
+            }
+        }
+    }
+}

@@ -117,6 +117,7 @@ namespace ngraph
                 return m_data_dilation_strides_backward;
             }
             bool with_relu() const { return m_with_relu; }
+
         protected:
             Shape m_data_batch_shape;
             Strides m_window_movement_strides_forward;

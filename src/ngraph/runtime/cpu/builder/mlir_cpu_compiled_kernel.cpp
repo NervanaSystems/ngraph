@@ -90,8 +90,7 @@ namespace ngraph
                 // Create functor that will be executed to compile and run this CompiledKernel.
                 // Note that 'double_ptr_args' must be captured by value since it's a local var.
                 auto functor = [node, buffer_indices, shape_vec, strides_vec](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-
+                                   CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     // MLIR requires a list of type-erased pointer to arguments. Tensors must have
                     // been allocated at this point so we can get rid of the extra reference.
                     std::vector<MemRefArg> mem_ref_arg_vec;

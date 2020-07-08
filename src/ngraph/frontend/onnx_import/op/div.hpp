@@ -32,7 +32,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector div(const Node& node)
+                inline OutputVector div(const Node& node)
                 {
                     const Output<ngraph::Node> lhs_node = node.get_ng_inputs().at(0);
                     Output<ngraph::Node> rhs_node = node.get_ng_inputs().at(1);
@@ -45,21 +45,16 @@ namespace ngraph
                     return {std::make_shared<default_opset::Divide>(
                         lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_7
             {
-                inline NodeVector div(const Node& node)
+                inline OutputVector div(const Node& node)
                 {
                     return {std::make_shared<default_opset::Divide>(node.get_ng_inputs().at(0),
                                                                     node.get_ng_inputs().at(1))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

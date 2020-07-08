@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector tile(const Node& node)
+                OutputVector tile(const Node& node)
                 {
                     auto input = node.get_ng_inputs().at(0);
                     auto repeats = node.get_ng_inputs().at(1);
@@ -39,11 +39,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Tile>(input, repeats)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

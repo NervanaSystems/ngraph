@@ -54,9 +54,9 @@ namespace ngraph
                     GPUCompiledFunction* m_compiled_function;
                 };
 
-                NodeVector insert_new_reshape_after(NodeVector& parents,
-                                                    const AxisVector& axis_vector,
-                                                    const Shape& out_shape);
+                OutputVector insert_new_reshape_after(const OutputVector& parents,
+                                                      const AxisVector& axis_vector,
+                                                      const Shape& out_shape);
             }
         }
     }

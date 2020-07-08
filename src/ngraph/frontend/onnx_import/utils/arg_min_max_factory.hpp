@@ -48,10 +48,9 @@ namespace ngraph
                     make_topk_subgraph(default_opset::TopK::Mode mode) const;
 
                 const std::int64_t m_keep_dims;
-                std::shared_ptr<ngraph::Node> m_input_node;
+                Output<ngraph::Node> m_input_node;
                 std::int64_t m_axis;
             };
-
-        } // namespace arg
-    }     // namespace onnx_import
-} // namespace ngraph
+        }
+    }
+}

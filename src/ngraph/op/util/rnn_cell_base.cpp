@@ -19,7 +19,7 @@
 
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/add.hpp"
-#include "ngraph/op/fused/clamp.hpp"
+#include "ngraph/op/clamp.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/util/rnn_cell_base.hpp"
@@ -93,12 +93,12 @@ shared_ptr<Node> op::util::RNNCellBase::mul(const Output<Node>& lhs, const Outpu
         make_shared<op::Multiply>(lhs, rhs, op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY))};
 }
 
-shared_ptr<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const
+Output<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const
 {
     if (m_clip == 0.f)
     {
-        return data.as_single_output_node();
+        return data;
     }
 
-    return make_shared<op::Clamp>(data, -m_clip, m_clip);
+    return make_shared<op::Clamp>(data, -m_clip, m_clip)->output(0);
 }

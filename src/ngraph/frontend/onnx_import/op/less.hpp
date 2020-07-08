@@ -31,16 +31,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector less(const Node& node)
+                inline OutputVector less(const Node& node)
                 {
                     return {std::make_shared<default_opset::Less>(node.get_ng_inputs().at(0),
                                                                   node.get_ng_inputs().at(1))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

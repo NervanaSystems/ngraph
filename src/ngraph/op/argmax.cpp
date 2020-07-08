@@ -37,12 +37,12 @@ bool op::ArgMax::visit_attributes(AttributeVisitor& visitor)
 shared_ptr<Node> op::ArgMax::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<ArgMax>(new_args.at(0), m_axis, this->get_element_type());
+    return make_shared<ArgMax>(new_args.at(0), m_axis, this->get_output_element_type(0));
 }
 
 std::shared_ptr<Node> op::ArgMax::get_default_value() const
 {
     // Choice of value here is arbitrary, because validation should be rejecting cases where the
     // axis of reduction has size zero.
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
 }

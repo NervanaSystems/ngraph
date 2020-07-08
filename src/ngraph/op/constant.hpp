@@ -244,6 +244,17 @@ namespace ngraph
                     set_output_type(0, m_element_type, m_shape);
                 }
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
+
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+
+                // Don't constant fold a constant; it would make a copy
+                bool constant_fold(OutputVector& outputs, const OutputVector& inputs) override
+                {
+                    return false;
+                }
+
                 /// \brief Returns the value of the constant node as a Shape object
                 ///        Can only be used on element::i64 nodes and interprets
                 ///        negative values as zeros.
@@ -333,7 +344,7 @@ namespace ngraph
                 template <typename T>
                 std::vector<T> cast_vector() const
                 {
-                    auto source_type = get_element_type();
+                    auto source_type = get_output_element_type(0);
                     std::vector<T> rc;
                     switch (source_type)
                     {
@@ -430,7 +441,7 @@ namespace ngraph
                 template <element::Type_t ET>
                 const typename element_type_traits<ET>::value_type* get_data_ptr() const
                 {
-                    NGRAPH_CHECK(ET == get_element_type(),
+                    NGRAPH_CHECK(ET == get_output_element_type(0),
                                  "get_data_ptr() called for incorrect element type.");
                     return static_cast<const typename element_type_traits<ET>::value_type*>(
                         get_data_ptr());
@@ -451,7 +462,7 @@ namespace ngraph
                 template <element::Type_t ET>
                 typename element_type_traits<ET>::value_type* get_data_ptr_nc()
                 {
-                    NGRAPH_CHECK(ET == get_element_type(),
+                    NGRAPH_CHECK(ET == get_output_element_type(0),
                                  "get_data_ptr_nc() called for incorrect element type.");
                     return static_cast<typename element_type_traits<ET>::value_type*>(
                         get_data_ptr_nc());

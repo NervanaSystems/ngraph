@@ -49,5 +49,5 @@ namespace ngraph
         // clang-format on
         NGRAPH_API
         std::shared_ptr<Node> numpy_transpose(const Output<Node>& value, AxisVector order = {});
-    } // namespace builder
-} // namespace ngraph
+    }
+}
