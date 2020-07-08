@@ -20,10 +20,10 @@
 #include "ngraph/file_util.hpp"
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/pass.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -153,31 +153,27 @@ private:
     std::unordered_map<Node*, int64_t> m_heights;
 };
 
-static std::string label_edge(const std::shared_ptr<Node>& /* src */,
-                              const std::shared_ptr<Node>& dst,
-                              size_t arg_index,
-                              int64_t jump_distance)
+static std::string
+    label_edge(const Output<Node>& output, const std::shared_ptr<Node>& dst, int64_t jump_distance)
 {
     std::stringstream ss;
-    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_LABELS"))
+    for (Input<Node> input : output.get_target_inputs())
     {
-        size_t output = 0;
-        if (auto goe = as_type_ptr<op::GetOutputElement>(dst))
+        if (input.get_node() == dst.get())
         {
-            output = goe->get_as_output().get_index();
+            stringstream label;
+            label << "[label=\" " << output.get_index() << "-" << input.get_index() << " \"]";
+            ss << label.str();
         }
-        stringstream label_edge;
-        label_edge << "[label=\" " << output << " -> " << arg_index << " \"]";
-        ss << label_edge.str();
     }
 
-    else if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
+    if (getenv_bool("NGRAPH_VISUALIZE_EDGE_JUMP_DISTANCE"))
     {
         if (jump_distance > 1)
         {
-            stringstream label_edge;
-            label_edge << "[label=\"jump=" << jump_distance << "\"]";
-            ss << label_edge.str();
+            stringstream label;
+            label << "[label=\"jump=" << jump_distance << "\"]";
+            ss << label.str();
         }
     }
     return ss.str();
@@ -191,7 +187,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
 
         for (auto& node : f->get_ops())
         {
-            if (node->description() == "Result")
+            if (is_type<op::v0::Result>(node))
             {
                 height_maps[node.get()] = HeightMap({node.get()});
             }
@@ -221,7 +217,6 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         size_t fake_node_ctr = 0;
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-
             if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
             {
                 // print sub-graph
@@ -258,7 +253,6 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
                                              unordered_map<Node*, HeightMap>& height_maps,
                                              size_t& fake_node_ctr)
 {
-    size_t arg_index = 0;
     for (auto input_value : node->input_values())
     {
         auto arg = input_value.get_node_shared_ptr();
@@ -266,11 +260,11 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
         if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
-            auto color = (arg->description() == "Parameter" ? "blue" : "black");
+            auto color = (is_type<op::v0::Parameter>(arg) ? "blue" : "black");
             m_ss << "    " << clone_name << "[shape=\"box\" style=\"dashed,filled\" color=\""
                  << color << "\" fillcolor=\"white\" label=\"" << get_node_name(arg) << "\"]\n";
             m_ss << "    " << clone_name << " -> " << node->get_name()
-                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+                 << label_edge(input_value, node, jump_distance) << "\n";
             fake_node_ctr++;
         }
         else if (jump_distance > max_jump_distance)
@@ -279,16 +273,18 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
             m_ss << add_attributes(node);
             auto recv_node_name = "RECV_" + to_string(fake_node_ctr);
             auto send_node_name = "SEND_" + to_string(fake_node_ctr);
-            m_ss << "    " << recv_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                "fillcolor=\"#ffcccc\" label=\"Receive["
+            m_ss << "    " << recv_node_name
+                 << "[shape=\"box\" style=\"solid,filled\" "
+                    "fillcolor=\"#ffcccc\" label=\"Receive["
                  << arg->get_name() << "]\"]\n";
-            m_ss << "    " << send_node_name << "[shape=\"box\" style=\"solid,filled\" "
-                                                "fillcolor=\"#ccffcc\" label=\"Send["
+            m_ss << "    " << send_node_name
+                 << "[shape=\"box\" style=\"solid,filled\" "
+                    "fillcolor=\"#ccffcc\" label=\"Send["
                  << node->get_name() << "]\"]\n";
             m_ss << "    " << arg->get_name() << " -> " << send_node_name
-                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+                 << label_edge(input_value, node, jump_distance) << "\n";
             m_ss << "    " << recv_node_name << " -> " << node->get_name()
-                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+                 << label_edge(input_value, node, jump_distance) << "\n";
             fake_node_ctr++;
         }
         else
@@ -296,9 +292,8 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
             m_ss << add_attributes(arg);
             m_ss << add_attributes(node);
             m_ss << "    " << arg->get_name() << " -> " << node->get_name()
-                 << label_edge(arg, node, arg_index, jump_distance) << "\n";
+                 << label_edge(input_value, node, jump_distance) << "\n";
         }
-        arg_index++;
     }
 }
 
@@ -366,34 +361,100 @@ string pass::VisualizeTree::get_attributes(shared_ptr<Node> node)
     // Construct the label attribute
     {
         stringstream label;
-        label << "label=\"" << get_node_name(node);
+        label << "label=<<table border=\"0\" cellborder=\"0\" cellpadding=\"0\" "
+                 "style=\"\"><tr><td align=\"center\" colspan=\"5\">"
+              << node->get_name() << "</td></tr>";
 
-        static const bool nvtos = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_SHAPES");
-        if (nvtos)
+        size_t index = 0;
+        const string td_start = "<td><font point-size=\"10\" face=\"courier\">";
+        const string td_end = "</font></td>";
+        vector<string> rows;
+        vector<string> row_compare;
+        for (auto input : node->inputs())
         {
-            // The shapes of the Outputs of a multi-output op
-            // will be printed for its corresponding `GetOutputElement`s
-            label << " " << (node->get_output_size() != 1
-                                 ? string("[skipped]")
-                                 : pretty_partial_shape(node->get_output_partial_shape(0)));
+            stringstream row_ss;
+            stringstream row_compare_ss;
+            row_ss << "<tr>";
+            row_ss << td_start << "I[" << index++ << "]" << td_end;
+            row_compare_ss << td_start << input.get_element_type().get_type_name() << td_end;
+            row_compare_ss << td_start << pretty_partial_shape(input.get_shape()) << td_end;
+            row_ss << row_compare_ss.str() << "</tr>";
+            rows.push_back(row_ss.str());
+            row_compare.push_back("I" + row_compare_ss.str());
+        }
+        index = 0;
+        for (auto output : node->outputs())
+        {
+            stringstream row_ss;
+            stringstream row_compare_ss;
+            row_ss << "<tr>";
+            row_ss << td_start << "O[" << index++ << "]" << td_end;
+            row_compare_ss << td_start << output.get_element_type().get_type_name() << td_end;
+            row_compare_ss << td_start << pretty_partial_shape(output.get_shape()) << td_end;
+            row_ss << row_compare_ss.str() << "</tr>";
+            rows.push_back(row_ss.str());
+            row_compare.push_back("O" + row_compare_ss.str());
         }
 
-        static const bool nvtot = getenv_bool("NGRAPH_VISUALIZE_TREE_OUTPUT_TYPES");
-        if (nvtot)
+        // Collapse duplicate rows
+        vector<int64_t> remove_list;
+        for (size_t i = 1; i < row_compare.size() - 1; i++)
         {
-            // The types of the Outputs of a multi-output op
-            // will be printed for its corresponding `GetOutputElement`s
-            label << " "
-                  << ((node->get_output_size() != 1) ? string("[skipped]")
-                                                     : node->get_element_type().c_type_string());
+            string s1 = row_compare[i - 1];
+            string s2 = row_compare[i];
+            string s3 = row_compare[i + 1];
+            if (s1 == s2 && s2 == s3)
+            {
+                remove_list.push_back(i);
+            }
+        }
+        if (remove_list.size() > 3)
+        {
+            // Go backwards through the list to make removal easier
+            int64_t start = remove_list[remove_list.size() - 1];
+            int64_t end = start;
+            int64_t count = 0;
+            for (int64_t i = remove_list.size() - 2; i >= 0; --i)
+            {
+                int64_t row = remove_list[i];
+                if (row == start - 1)
+                {
+                    // continue
+                    start = row;
+                    count++;
+                }
+                else
+                {
+                    rows.erase(rows.begin() + start, rows.begin() + end + 1);
+                    string str = "<tr><td align=\"center\" colspan=\"5\">...</td></tr>";
+                    rows.insert(rows.begin() + start, str);
+                    end = row;
+                    start = row;
+                }
+            }
+            if (start != end)
+            {
+                rows.erase(rows.begin() + start, rows.begin() + end + 1);
+                string str = "<tr><td align=\"center\" colspan=\"5\">...</td></tr>";
+                rows.insert(rows.begin() + start, str);
+            }
         }
 
-        auto eh = m_ops_to_details.find(node->get_type_info());
-        if (eh != m_ops_to_details.end())
+        // if (get_provenance_enabled())
+        // {
+        //     for (auto tag : node->get_provenance_tags())
+        //     {
+        //         string str = "<tr><td align=\"left\" colspan=\"5\">tag=" + tag + "</td></tr>";
+        //         rows.push_back(str);
+        //     }
+        // }
+
+        for (const string& s : rows)
         {
-            eh->second(*node, label);
+            label << s;
         }
-        label << "\"";
+
+        label << "</table>>";
         attributes.push_back(label.str());
     }
 

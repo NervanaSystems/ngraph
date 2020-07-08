@@ -35,12 +35,8 @@ namespace ngraph
                 /// \return The vector containing Ngraph nodes producing output of ONNX MaxPool
                 ///         operation.
                 ///
-                NodeVector max_pool(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector max_pool(const Node& node);
+            }
+        }
+    }
+}

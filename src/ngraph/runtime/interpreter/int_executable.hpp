@@ -65,9 +65,11 @@
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
+#include "ngraph/runtime/reference/matmul.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/min.hpp"
+#include "ngraph/runtime/reference/mod.hpp"
 #include "ngraph/runtime/reference/negate.hpp"
 #include "ngraph/runtime/reference/not.hpp"
 #include "ngraph/runtime/reference/one_hot.hpp"
@@ -123,9 +125,9 @@ namespace ngraph
 #undef NGRAPH_OP
                 UnknownOp
             };
-        } // namespace interpreter
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
 
 class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
@@ -165,7 +167,7 @@ protected:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<std::shared_ptr<Node>> m_nodes;
+    NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
@@ -336,8 +338,8 @@ protected:
             {
                 const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] =
-                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
+                m_states[&node] = std::unique_ptr<BernoulliRNGState>(
+                    new BernoulliRNGState(seed, gm->get_probability()));
             }
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
@@ -357,13 +359,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::GetOutputElement:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
-            break;
-        }
         case OP_TYPEID::BatchMatMul:
         {
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
@@ -374,7 +369,6 @@ protected:
                                      node.get_output_shape(0));
             break;
         }
-
         case OP_TYPEID::BatchNormTraining:
         {
             const ngraph::op::BatchNormTraining* bn =
@@ -434,19 +428,6 @@ protected:
                                             apb->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::Broadcast:
-        {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
-            Shape out_shape = node.get_output_shape(0);
-            AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    in_shape,
-                                    out_shape,
-                                    broadcast_axes);
-            break;
-        }
         case OP_TYPEID::BroadcastDistributed:
         {
             const ngraph::op::BroadcastDistributed* broadcast =
@@ -485,7 +466,7 @@ protected:
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
-            element::Type type = node.get_element_type();
+            element::Type type = node.get_output_element_type(0);
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
             switch (type)
@@ -647,7 +628,7 @@ protected:
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
-            auto type = dequantize->get_element_type();
+            auto type = dequantize->get_output_element_type(0);
 
             if (type == element::f32)
             {
@@ -703,7 +684,7 @@ protected:
                                                args[1]->get_data_ptr<const T>(),
                                                out[0]->get_data_ptr<T>(),
                                                element_count,
-                                               embed->get_shape());
+                                               embed->get_output_shape(0));
             }
             else if (type == element::f64)
             {
@@ -711,7 +692,7 @@ protected:
                                                 args[1]->get_data_ptr<const T>(),
                                                 out[0]->get_data_ptr<T>(),
                                                 element_count,
-                                                embed->get_shape());
+                                                embed->get_output_shape(0));
             }
             else if (type == element::i32)
             {
@@ -719,7 +700,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else if (type == element::i64)
             {
@@ -727,7 +708,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else
             {
@@ -782,35 +763,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Gather:
-        {
-            const op::Gather* gather = static_cast<const op::Gather*>(&node);
-            if (node.get_input_element_type(1) == element::i64)
-            {
-                reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
-                                              args[1]->get_data_ptr<int64_t>(),
-                                              out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
-                                              node.get_input_shape(1),
-                                              node.get_output_shape(0),
-                                              gather->get_axis());
-            }
-            else if (node.get_input_element_type(1) == element::i32)
-            {
-                reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
-                                              args[1]->get_data_ptr<int32_t>(),
-                                              out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
-                                              node.get_input_shape(1),
-                                              node.get_output_shape(0),
-                                              gather->get_axis());
-            }
-            else
-            {
-                throw ngraph_error("Unexpected type");
-            }
-            break;
-        }
         case OP_TYPEID::GatherND:
         {
             if (node.get_input_element_type(1) == element::i64)
@@ -857,30 +809,6 @@ protected:
                               lrn->get_nsize());
             break;
         }
-        case OP_TYPEID::Max:
-        {
-            const op::Max* max = static_cast<const op::Max*>(&node);
-            reference::max<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              max->get_reduction_axes());
-            break;
-        }
-        case OP_TYPEID::MaxPool:
-        {
-            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
-
-            reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_output_shape(0),
-                                   max_pool->get_window_shape(),
-                                   max_pool->get_window_movement_strides(),
-                                   max_pool->get_padding_below(),
-                                   max_pool->get_padding_above());
-            break;
-        }
         case OP_TYPEID::MaxPoolBackprop:
         {
             const op::MaxPoolBackprop* max_pool_backprop =
@@ -895,16 +823,6 @@ protected:
                                             max_pool_backprop->get_window_movement_strides(),
                                             max_pool_backprop->get_padding_below(),
                                             max_pool_backprop->get_padding_above());
-            break;
-        }
-        case OP_TYPEID::Min:
-        {
-            const op::Min* min = static_cast<const op::Min*>(&node);
-            reference::min<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              min->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Negative:
@@ -947,20 +865,10 @@ protected:
                            pad->get_pad_mode());
             break;
         }
-        case OP_TYPEID::Product:
-        {
-            const op::Product* product = static_cast<const op::Product*>(&node);
-            reference::product<T>(args[0]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_output_shape(0),
-                                  product->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::Quantize:
         {
             const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
-            auto type = quantize->get_element_type();
+            auto type = quantize->get_output_element_type(0);
 
             if (type == element::u8)
             {
@@ -1280,16 +1188,6 @@ protected:
                                         node.get_output_shape(0));
             break;
         }
-        case OP_TYPEID::Reshape:
-        {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
-                               out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
-                               reshape->get_input_order(),
-                               node.get_output_shape(0));
-            break;
-        }
         case OP_TYPEID::Reverse:
         {
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
@@ -1467,16 +1365,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Sum:
-        {
-            const op::Sum* sum = static_cast<const op::Sum*>(&node);
-            reference::sum<T>(args[0]->get_data_ptr<const T>(),
-                              out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_output_shape(0),
-                              sum->get_reduction_axes());
-            break;
-        }
         case OP_TYPEID::Tan:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -1491,43 +1379,9 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::TopK:
-        {
-            const op::TopK* topk = static_cast<const op::TopK*>(&node);
-            if (node.get_output_element_type(0) == element::i64)
-            {
-                reference::topk<T, int64_t>(args[0]->get_data_ptr<const T>(),
-                                            out[0]->get_data_ptr<int64_t>(),
-                                            out[1]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
-                                            node.get_output_shape(0),
-                                            topk->get_top_k_axis(),
-                                            topk->get_k(),
-                                            topk->get_compute_max(),
-                                            topk->get_sort());
-            }
-            else if (node.get_output_element_type(0) == element::i32)
-            {
-                reference::topk<T, int32_t>(args[0]->get_data_ptr<const T>(),
-                                            out[0]->get_data_ptr<int32_t>(),
-                                            out[1]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
-                                            node.get_output_shape(0),
-                                            topk->get_top_k_axis(),
-                                            topk->get_k(),
-                                            topk->get_compute_max(),
-                                            topk->get_sort());
-            }
-            else
-            {
-                throw ngraph_error("Unexpected type");
-            }
-            break;
-        }
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
         case OP_TYPEID::BatchMatMulTranspose:
-        case OP_TYPEID::Clamp:
         case OP_TYPEID::ConvolutionBias:
         case OP_TYPEID::ConvolutionBiasAdd:
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias:
@@ -1541,6 +1395,7 @@ protected:
         case OP_TYPEID::DynSlice:
         case OP_TYPEID::Elu:
         case OP_TYPEID::FakeQuantize:
+        case OP_TYPEID::Gather:
         case OP_TYPEID::Gelu:
         case OP_TYPEID::GeluBackpropFactor:
         case OP_TYPEID::Gemm:
@@ -1555,7 +1410,6 @@ protected:
         case OP_TYPEID::LayerNormBackprop:
         case OP_TYPEID::LSTMCell:
         case OP_TYPEID::LSTMSequence:
-        case OP_TYPEID::MatMul:
         case OP_TYPEID::MVN:
         case OP_TYPEID::NormalizeL2:
         case OP_TYPEID::PartialSlice:
@@ -1581,6 +1435,8 @@ protected:
             throw unsupported_op("Unsupported op '" + node.description() + "'");
         case OP_TYPEID::Add:
         case OP_TYPEID::And:
+        case OP_TYPEID::Broadcast:
+        case OP_TYPEID::Clamp:
         case OP_TYPEID::Concat:
         case OP_TYPEID::Constant:
         case OP_TYPEID::Divide:
@@ -1593,20 +1449,29 @@ protected:
         case OP_TYPEID::LogicalAnd_v1:
         case OP_TYPEID::LogicalOr_v1:
         case OP_TYPEID::LogicalXor_v1:
+        case OP_TYPEID::MatMul:
+        case OP_TYPEID::Max:
         case OP_TYPEID::Maximum:
+        case OP_TYPEID::MaxPool:
+        case OP_TYPEID::Min:
         case OP_TYPEID::Minimum:
+        case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Multiply:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NotEqual:
         case OP_TYPEID::Or:
         case OP_TYPEID::Power:
+        case OP_TYPEID::Product:
         case OP_TYPEID::Range:
+        case OP_TYPEID::Reshape:
         case OP_TYPEID::Result:
         case OP_TYPEID::ShapeOf_v3:
         case OP_TYPEID::ShapeOf:
         case OP_TYPEID::Softmax:
         case OP_TYPEID::Squeeze:
+        case OP_TYPEID::Sum:
         case OP_TYPEID::Subtract:
+        case OP_TYPEID::TopK:
         case OP_TYPEID::Unsqueeze:
         case OP_TYPEID::Xor:
             // These ops are handled by op evaluators so nothing to do

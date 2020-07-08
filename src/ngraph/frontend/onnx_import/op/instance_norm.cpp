@@ -28,7 +28,7 @@
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "utils/common.hpp"
 
 namespace ngraph
@@ -39,12 +39,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector instance_norm(const Node& node)
+                OutputVector instance_norm(const Node& node)
                 {
-                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    const Output<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     Output<ngraph::Node> scale(node.get_ng_inputs().at(1));
                     Output<ngraph::Node> bias(node.get_ng_inputs().at(2));
-                    const Shape& data_shape = data->get_shape();
+                    const Shape& data_shape = data.get_shape();
                     const Shape& scale_shape = scale.get_shape();
                     const Shape& bias_shape = bias.get_shape();
                     const float epsilon{node.get_attribute_value<float>("epsilon", 1e-5f)};
@@ -66,7 +66,7 @@ namespace ngraph
 
                     const std::shared_ptr<ngraph::Node> eps_node =
                         std::make_shared<default_opset::Constant>(
-                            data->get_element_type(), data_shape, std::vector<float>{epsilon});
+                            data.get_element_type(), data_shape, std::vector<float>{epsilon});
 
                     scale = ngraph::builder::opset1::make_broadcast(scale, data_shape, 1);
                     bias = ngraph::builder::opset1::make_broadcast(bias, data_shape, 1);
@@ -91,11 +91,7 @@ namespace ngraph
 
                     return {result};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -23,6 +23,7 @@
 #include "ngraph/op/multiply.hpp" // ngraph::op::Multiply
 #include "ngraph/op/subtract.hpp" // ngraph::op::Subtract
 #include "pyngraph/node.hpp"
+#include "pyngraph/output.hpp"
 
 namespace py = pybind11;
 
@@ -59,7 +60,7 @@ void regclass_pyngraph_Node(py::module m)
     node.def("__repr__", [](const ngraph::Node& self) {
         std::string type_name = self.get_type_name();
         std::stringstream shapes_ss;
-        for (int i = 0; i < self.get_output_size(); ++i)
+        for (size_t i = 0; i < self.get_output_size(); ++i)
         {
             if (i > 0)
             {
@@ -72,13 +73,13 @@ void regclass_pyngraph_Node(py::module m)
 
     node.def("get_output_size", &ngraph::Node::get_output_size);
     node.def("get_output_element_type", &ngraph::Node::get_output_element_type);
-    node.def("get_element_type", &ngraph::Node::get_element_type);
     node.def("get_output_shape", &ngraph::Node::get_output_shape);
-    node.def("get_shape", &ngraph::Node::get_shape);
+    node.def("get_output_partial_shape", &ngraph::Node::get_output_partial_shape);
     node.def("get_type_name", &ngraph::Node::get_type_name);
     node.def("get_argument", &ngraph::Node::get_argument);
     node.def("get_unique_name", &ngraph::Node::get_name);
+    node.def("output",
+             (ngraph::Output<ngraph::Node>(ngraph::Node::*)(size_t)) & ngraph::Node::output);
 
     node.def_property("name", &ngraph::Node::get_friendly_name, &ngraph::Node::set_friendly_name);
-    node.def_property_readonly("shape", &ngraph::Node::get_shape);
 }

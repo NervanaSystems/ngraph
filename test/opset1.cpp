@@ -19,8 +19,8 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
-#include "ngraph/opsets/opset.hpp"
-#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opset/opset.hpp"
+#include "ngraph/opset/opset1.hpp"
 
 #include <memory>
 #include <type_traits>

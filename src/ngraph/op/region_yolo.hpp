@@ -34,9 +34,9 @@ namespace ngraph
                 /// \brief      Constructs a RegionYolo operation
                 ///
                 /// \param[in]  input        Input
-                /// \param[in]  num_coords   Number of coordinates for each region
-                /// \param[in]  num_classes  Number of classes for each region
-                /// \param[in]  num_regions  Number of regions
+                /// \param[in]  coords       Number of coordinates for each region
+                /// \param[in]  classes      Number of classes for each region
+                /// \param[in]  regions      Number of regions
                 /// \param[in]  do_softmax   Compute softmax
                 /// \param[in]  mask         Mask
                 /// \param[in]  axis         Axis to begin softmax on
@@ -46,9 +46,9 @@ namespace ngraph
                 ///                          prior box sizes.
                 ///
                 RegionYolo(const Output<Node>& input,
-                           const size_t num_coords,
-                           const size_t num_classes,
-                           const size_t num_regions,
+                           const size_t coords,
+                           const size_t classes,
+                           const size_t regions,
                            const bool do_softmax,
                            const std::vector<int64_t>& mask,
                            const int axis,
@@ -69,6 +69,7 @@ namespace ngraph
                 const std::vector<float>& get_anchors() const { return m_anchors; }
                 int get_axis() const { return m_axis; }
                 int get_end_axis() const { return m_end_axis; }
+
             private:
                 size_t m_num_coords;
                 size_t m_num_classes;

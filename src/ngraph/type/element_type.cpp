@@ -93,23 +93,23 @@ static const map<element::Type_t, const TypeInfo>& get_type_info_map()
     return s_type_info_map;
 };
 
-std::vector<const element::Type*> element::Type::get_known_types()
+const std::vector<element::Type>& element::Type::get_known_types()
 {
-    std::vector<const element::Type*> rc = {&element::dynamic,
-                                            &element::boolean,
-                                            &element::bf16,
-                                            &element::f16,
-                                            &element::f32,
-                                            &element::f64,
-                                            &element::i8,
-                                            &element::i16,
-                                            &element::i32,
-                                            &element::i64,
-                                            &element::u1,
-                                            &element::u8,
-                                            &element::u16,
-                                            &element::u32,
-                                            &element::u64};
+    static std::vector<element::Type> rc = {element::dynamic,
+                                            element::boolean,
+                                            element::bf16,
+                                            element::f16,
+                                            element::f32,
+                                            element::f64,
+                                            element::i8,
+                                            element::i16,
+                                            element::i32,
+                                            element::i64,
+                                            element::u1,
+                                            element::u8,
+                                            element::u16,
+                                            element::u32,
+                                            element::u64};
     return rc;
 }
 
@@ -322,8 +322,7 @@ size_t ngraph::compiler_byte_size(element::Type_t et)
         ET_CASE(u32);
         ET_CASE(u64);
 #undef ET_CASE
-    case element::Type_t::undefined: return 0;
-    case element::Type_t::dynamic: return 0;
+    default: return 0;
     }
 }
 
@@ -357,10 +356,10 @@ constexpr DiscreteTypeInfo AttributeAdapter<element::Type_t>::type_info;
 
 const std::string& AttributeAdapter<element::Type>::get()
 {
-    return as_string(static_cast<element::Type_t>(ValueReference<element::Type>::m_value));
+    return as_string(static_cast<element::Type_t>(m_ref));
 }
 
 void AttributeAdapter<element::Type>::set(const std::string& value)
 {
-    ValueReference<element::Type>::m_value = as_enum<element::Type_t>(value);
+    m_ref = as_enum<element::Type_t>(value);
 }

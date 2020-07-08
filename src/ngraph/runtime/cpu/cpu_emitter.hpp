@@ -32,7 +32,6 @@
 #include "ngraph/runtime/cpu/op/matmul_bias.hpp"
 #include "ngraph/runtime/cpu/op/max_pool_with_indices.hpp"
 #include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
-#include "ngraph/runtime/cpu/op/quantized_matmul.hpp"
 #include "ngraph/runtime/cpu/op/rnn.hpp"
 #include "ngraph/runtime/cpu/op/sigmoid_mul.hpp"
 #include "ngraph/runtime/cpu/op/update_slice.hpp"
@@ -120,8 +119,6 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply);
-            template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::GetOutputElement);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs);
             template <>

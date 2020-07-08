@@ -50,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_abc)
 
     auto a_plus_b_times_c = (a + b) * c;
 
-    auto f = make_shared<Function>(NodeVector{a_plus_b_times_c}, ParameterVector{a, b, c});
+    auto f = make_shared<Function>(OutputVector{a_plus_b_times_c}, ParameterVector{a, b, c});
 
     //
     // Get a backend with dynamic support, and compile f.
@@ -114,7 +114,7 @@ static void axpy_test(const PartialShape& input_pshape, const std::vector<Shape>
 
     auto axpy = a * x + y;
 
-    auto f = make_shared<Function>(NodeVector{axpy}, ParameterVector{a, x, y});
+    auto f = make_shared<Function>(OutputVector{axpy}, ParameterVector{a, x, y});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);
 
@@ -183,7 +183,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
 
     auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);
 
-    auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
+    auto f = make_shared<Function>(OutputVector{x_reshaped}, ParameterVector{x});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);
 
@@ -242,7 +242,7 @@ static void reverse_shape_test(const PartialShape& input_pshape,
 
     auto x_reshaped = make_shared<op::v1::Reshape>(x, x_new_shape, true);
 
-    auto f = make_shared<Function>(NodeVector{x_reshaped}, ParameterVector{x});
+    auto f = make_shared<Function>(OutputVector{x_reshaped}, ParameterVector{x});
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);
 

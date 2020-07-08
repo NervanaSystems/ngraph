@@ -21,6 +21,7 @@
 #include "ngraph/function.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/constant.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -38,7 +39,7 @@ Function::Function(const ResultVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
+    , m_topological_sorter(topological_sort<NodeVector>)
 {
     init();
 }
@@ -51,20 +52,7 @@ Function::Function(const OutputVector& results,
     , m_instance_id(m_next_instance_id.fetch_add(1))
     , m_name(name)
     , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
-{
-    init();
-}
-
-Function::Function(const NodeVector& results,
-                   const ParameterVector& parameters,
-                   const std::string& name)
-    : Lambda(as_output_vector(results), parameters)
-    , m_temporary_pool_size(0)
-    , m_instance_id(m_next_instance_id.fetch_add(1))
-    , m_name(name)
-    , m_unique_name("Function_" + to_string(m_instance_id))
-    , m_topological_sorter(topological_sort<std::vector<std::shared_ptr<Node>>>)
+    , m_topological_sorter(topological_sort<NodeVector>)
 {
     init();
 }
@@ -72,7 +60,7 @@ Function::Function(const NodeVector& results,
 Function::Function(const std::shared_ptr<Node>& result,
                    const ParameterVector& parameters,
                    const std::string& name)
-    : Function(NodeVector{result}, parameters, name)
+    : Function(result->outputs(), parameters, name)
 {
 }
 
@@ -99,9 +87,9 @@ void Function::init()
     validate_nodes_and_infer_types();
 }
 
-std::vector<shared_ptr<Node>> Function::get_ordered_ops() const
+NodeVector Function::get_ordered_ops() const
 {
-    vector<shared_ptr<Node>> nodes;
+    NodeVector nodes;
     for (auto& r : get_results())
     {
         nodes.push_back(r);
@@ -194,12 +182,12 @@ size_t Function::get_output_size() const
 
 const element::Type& Function::get_output_element_type(size_t i) const
 {
-    return m_results.at(i)->get_element_type();
+    return m_results.at(i)->get_output_element_type(0);
 }
 
 const Shape& Function::get_output_shape(size_t i) const
 {
-    return m_results.at(i)->get_shape();
+    return m_results.at(i)->get_output_shape(0);
 }
 
 const PartialShape& Function::get_output_partial_shape(size_t i) const
@@ -226,9 +214,9 @@ shared_ptr<Node> Function::get_result() const
     return m_results.at(0);
 }
 
-std::vector<shared_ptr<Node>> Function::get_ops() const
+NodeVector Function::get_ops() const
 {
-    std::vector<std::shared_ptr<Node>> ops;
+    NodeVector ops;
     traverse_nodes(this, [&](shared_ptr<Node> node) { ops.push_back(node); });
     return ops;
 }
@@ -244,7 +232,7 @@ size_t Function::get_graph_size() const
     for (auto node : get_ops())
     {
         total_size += sizeof(*node);
-        if (node->description() == "Constant")
+        if (is_type<op::v0::Constant>(node))
         {
             const Shape& shape = node->get_output_shape(0);
             size_t const_size = node->get_output_element_type(0).size();

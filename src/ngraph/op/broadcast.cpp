@@ -21,6 +21,8 @@
 #include "ngraph/partial_shape.hpp"
 
 #include <numeric>
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -44,6 +46,27 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
+namespace
+{
+    std::pair<bool, AxisSet> get_broadcast_axes_bidirectional(const Shape& arg_shape,
+                                                              const Shape& result_shape)
+    {
+        AxisSet broadcast_axes;
+        bool axes_known = false;
+        const auto start_axis = result_shape.size() - arg_shape.size();
+        NGRAPH_CHECK(start_axis >= 0);
+        for (size_t i = 0; i < result_shape.size(); i++)
+        {
+            if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
+            {
+                broadcast_axes.insert(i);
+            }
+        }
+        axes_known = true;
+        return std::make_pair(axes_known, broadcast_axes);
+    }
+}
+
 std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
 {
     if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
@@ -55,23 +78,46 @@ std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
         {
             const auto arg_shape = get_input_shape(0);
             const auto result_shape = get_output_shape(0);
-
-            const auto start_axis = result_shape.size() - arg_shape.size();
-            NGRAPH_CHECK(start_axis >= 0);
-            for (size_t i = 0; i < result_shape.size(); i++)
-            {
-                if (i < start_axis || result_shape[i] != arg_shape[i - start_axis])
-                {
-                    broadcast_axes.insert(i);
-                }
-            }
-
-            axes_known = true;
+            return get_broadcast_axes_bidirectional(arg_shape, result_shape);
         }
         return std::make_pair(axes_known, broadcast_axes);
     }
 
     return util::BroadcastBase::get_broadcast_axes();
+}
+
+namespace
+{
+    PartialShape
+        get_result_shape_bidirectional(Node* this_ptr, Shape& arg_shape, Shape& target_shape)
+    {
+        PartialShape result_shape;
+        // Add left padding to shorter target or argument shape
+        const auto target_padded_rank = std::max(arg_shape.size(), target_shape.size());
+        while (arg_shape.size() < target_padded_rank)
+        {
+            arg_shape.insert(arg_shape.begin(), 1);
+        }
+        while (target_shape.size() < target_padded_rank)
+        {
+            target_shape.insert(target_shape.begin(), 1);
+        }
+
+        result_shape = target_shape;
+        for (auto i = 0; i < target_shape.size(); ++i)
+        {
+            NODE_VALIDATION_CHECK(this_ptr,
+                                  arg_shape[i] == 1 || target_shape[i] == 1 ||
+                                      arg_shape[i] == target_shape[i],
+                                  "Broadcast incorrect target shape. Expecting either 1 or ",
+                                  arg_shape[i],
+                                  ". Got ",
+                                  target_shape[i]);
+
+            result_shape[i] = std::max(arg_shape[i], target_shape[i]);
+        }
+        return result_shape;
+    }
 }
 
 void op::v3::Broadcast::validate_and_infer_types()
@@ -104,30 +150,7 @@ void op::v3::Broadcast::validate_and_infer_types()
             if (shape_constant)
             {
                 auto target_shape = shape_constant->get_shape_val();
-                // Add left padding to shorter target or argument shape
-                const auto target_padded_rank = std::max(arg_shape.size(), target_shape.size());
-                while (arg_shape.size() < target_padded_rank)
-                {
-                    arg_shape.insert(arg_shape.begin(), 1);
-                }
-                while (target_shape.size() < target_padded_rank)
-                {
-                    target_shape.insert(target_shape.begin(), 1);
-                }
-                result_shape = target_shape;
-
-                for (auto i = 0; i < target_shape.size(); ++i)
-                {
-                    NODE_VALIDATION_CHECK(
-                        this,
-                        arg_shape[i] == 1 || target_shape[i] == 1 ||
-                            arg_shape[i] == target_shape[i],
-                        "Broadcast incorrect target shape. Expecting either 1 or ",
-                        arg_shape[i],
-                        ". Got ",
-                        target_shape[i]);
-                    result_shape[i] = std::max(arg_shape[i], target_shape[i]);
-                }
+                result_shape = get_result_shape_bidirectional(this, arg_shape, target_shape);
             }
         }
     }
@@ -159,8 +182,24 @@ shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& ne
 
 bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
+    BroadcastBase::visit_attributes(visitor);
     visitor.on_attribute("broadcast_spec", m_mode);
     return true;
+}
+
+bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    if (get_broadcast_spec().m_type == op::BroadcastType::BIDIRECTIONAL)
+    {
+        auto arg_shape = inputs[0]->get_shape();
+        Shape target_shape = op::util::BroadcastBase::get_target_shape(inputs[1]);
+        PartialShape result_shape = get_result_shape_bidirectional(this, arg_shape, target_shape);
+        auto pair_broadcast_axes =
+            get_broadcast_axes_bidirectional(arg_shape, result_shape.to_shape());
+        return op::util::BroadcastBase::evaluate_broadcast(
+            inputs[0], outputs[0], pair_broadcast_axes, result_shape.to_shape());
+    }
+    return op::util::BroadcastBase::evaluate(outputs, inputs);
 }
 
 namespace
@@ -222,8 +261,14 @@ shared_ptr<Node> op::v1::Broadcast::clone_with_new_inputs(const OutputVector& ne
 
 bool op::v1::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
+    BroadcastBase::visit_attributes(visitor);
     visitor.on_attribute("broadcast_spec", m_broadcast_spec);
     return true;
+}
+
+bool op::v1::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return op::util::BroadcastBase::evaluate(outputs, inputs);
 }
 
 constexpr NodeTypeInfo op::v0::Broadcast::type_info;
@@ -308,6 +353,73 @@ void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const Ou
     auto x = input_value(0);
 
     adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
+}
+
+namespace
+{
+#define TYPE_CASE_v0(a)                                                                            \
+    case element::Type_t::a: rc = evaluate_v0<element::Type_t::a>
+
+    template <element::Type_t ET>
+    inline bool evaluate_v0(const HostTensorPtr& arg0,
+                            const HostTensorPtr& out,
+                            const AxisSet& broadcast_axes)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        runtime::reference::broadcast<T>((arg0->get_data_ptr<ET>()),
+                                         (out->get_data_ptr<ET>()),
+                                         arg0->get_shape(),
+                                         out->get_shape(),
+                                         broadcast_axes);
+        return true;
+    }
+
+    bool evaluate_broadcast_v0(const HostTensorPtr& arg0,
+                               const HostTensorPtr& out,
+                               const AxisSet broadcast_axes,
+                               const Shape output_shape)
+    {
+        bool rc = true;
+        Shape in_shape = arg0->get_shape();
+        out->set_shape(output_shape);
+        out->set_element_type(arg0->get_element_type());
+        switch (arg0->get_element_type())
+        {
+            TYPE_CASE_v0(boolean)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(i8)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(i16)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(i32)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(i64)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(u8)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(u16)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(u32)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(u64)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(bf16)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(f16)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(f32)(arg0, out, broadcast_axes);
+            break;
+            TYPE_CASE_v0(f64)(arg0, out, broadcast_axes);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Broadcast::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_broadcast_v0(inputs[0], outputs[0], get_broadcast_axes(), get_output_shape(0));
 }
 
 constexpr NodeTypeInfo op::v0::BroadcastLike::type_info;

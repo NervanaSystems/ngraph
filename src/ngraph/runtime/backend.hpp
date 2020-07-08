@@ -150,15 +150,6 @@ public:
     /// \returns a shared pointer to the op if found, else nullptr
     virtual std::shared_ptr<ngraph::Node> get_backend_op(const std::string& op_name, ...);
 
-    /// \brief Allows sending backend specific configuration. The map contains key, value pairs
-    ///     specific to a particluar backend. The definition of these key, value pairs is
-    ///     defined by each backend.
-    /// \param config The configuration map sent to the backend
-    /// \param error An error string describing any error encountered
-    /// \returns true if the configuration is supported, false otherwise. On false the error
-    ///     parameter value is valid.
-    virtual bool set_config(const std::map<std::string, std::string>& config, std::string& error);
-
     static void set_backend_shared_library_search_directory(const std::string& path);
     static const std::string& get_backend_shared_library_search_directory();
 
@@ -185,6 +176,7 @@ public:
     /// \brief Get the version of the backend
     /// The default value of 0.0.0 is chosen to be a parsable version number
     virtual std::string get_version() const { return "0.0.0"; }
+
 private:
     // mutex to modify s_backend_shared_library_search_directory thread safe
     static std::mutex m_mtx;

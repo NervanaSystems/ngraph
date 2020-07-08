@@ -81,3 +81,22 @@ NGRAPH_TEST(${BACKEND_NAME}, round_2D)
         read_vector<float>(result),
         MIN_FLOAT_TOLERANCE_BITS));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, round_int64)
+{
+    // This tests large numbers that will not fit in a double
+    Shape shape{3};
+    auto A = make_shared<op::Parameter>(element::i64, shape);
+    auto f = make_shared<Function>(make_shared<op::Round>(A), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::i64, shape);
+    vector<int64_t> expected{0, 1, 0x4000000000000001};
+    copy_data(a, expected);
+    auto result = backend->create_tensor(element::i64, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ(expected, read_vector<int64_t>(result));
+}

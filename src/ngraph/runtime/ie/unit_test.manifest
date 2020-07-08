@@ -102,6 +102,7 @@ bool_init_raw
 bool_const_op
 onnx_model_tile
 onnx_model_tile_static
+onnx_model_softmax_0D
 
 # [NOT_IMPLEMENTED] Input image format BOOL is not supported yet...
 bool_input_or
@@ -294,6 +295,39 @@ dyn_slice_92
 dyn_slice_106
 dyn_slice_109
 dyn_slice_114
+reduce_sum_keep_dynamic
+reduce_sum_keep_stable_simple_double 
+reduce_sum_keep_stable_acc_double
+reduce_sum_keep_stable_acc
+reduce_sum_keep_3d_eliminate_zero_dim
+reduce_sum_keep_vector_zero
+reduce_sum_keep_matrix_rows_zero
+reduce_sum_dynamic
+reduce_sum_3d_eliminate_zero_dim_int32
+reduce_sum_keep_3d_eliminate_zero_dim_int32
+reduce_sum_keep_trivial_in_double
+reduce_sum_3d_eliminate_zero_dim
+reduce_sum_matrix_to_scalar_zero_by_zero
+reduce_sum_vector_zero
+reduce_sum_matrix_cols_zero
+reduce_sum_matrix_rows_zero
+onnx_model_softmax_0D
+reduce_sum_keep_matrix_to_scalar_zero_by_zero
+reduce_sum_keep_matrix_cols_zero
+reduce_product_matrix_columns
+
+# accuracy
+reduce_sum_keep_stable_acc
+reduce_sum_keep_2d_to_scalar_int8
+reduce_sum_keep_3d_to_scalar_int32
+reduce_sum_keep_large_1d_to_scalar
+reduce_sum_stable_simple_double
+reduce_sum_stable_acc_double
+reduce_sum_stable_acc
+reduce_sum_trivial_in_double
+reduce_sum_2d_to_scalar_int8
+reduce_sum_3d_to_scalar_int32
+reduce_sum_large_1d_to_scalar
 
 # Doesn't throw expected exception type.
 unhandled_op
@@ -727,8 +761,8 @@ dyn_convolution_backprop_filter
 # Cannot cast ngraph node PartialSlice to CNNLayer!
 partial_slice_static
 partial_slice_partial_shape
-partial_slice_unkown_rank
-partial_slice_bprop_unkown_rank
+partial_slice_unknown_rank
+partial_slice_bprop_unknown_rank
 
 # Pad Pad_524448 with not constant pad_value is not allowed
 pad_exterior_1d
@@ -900,7 +934,7 @@ cum_sum_2dim
 cum_sum_3d
 cum_sum_2dim_allmodes
 
-# Cannot create MKLDNNMemoryDesc from TensorDesc. Unsupported precision!
+# Cannot create DNNLMemoryDesc from TensorDesc. Unsupported precision!
 convert_uint16_float32
 
 # Unsupported primitive of type: Ceiling
@@ -1189,6 +1223,15 @@ IE_CPU.onnx_model_instance_normalization
 IE_CPU.onnx_model_reverse_sequence_1_batch_0
 IE_CPU.onnx_model_reverse_sequence_0_batch_1
 IE_CPU.cum_sum_2dim_default_axis
+IE_CPU.clamp_double
+IE_CPU.clamp_int8
+IE_CPU.clamp_int16
+IE_CPU.clamp_int32
+IE_CPU.clamp_int64
+IE_CPU.clamp_uint8
+IE_CPU.clamp_uint16
+IE_CPU.clamp_uint32
+IE_CPU.clamp_uint64
 
 #Node <name> contains empty child edge for index 0
 IE_CPU.backwards_log
@@ -1399,7 +1442,7 @@ IE_GPU.normalize_across_chw_4d
 IE_GPU.normalize_across_h_4d
 IE_GPU.normalize_across_c_2x2_shape
 IE_GPU.normalize_across_c_2x4_shape
-IE_GPU.fused_clamp
+IE_GPU.clamp
 IE_GPU.grn_4d
 IE_GPU.squeeze
 IE_GPU.squared_difference

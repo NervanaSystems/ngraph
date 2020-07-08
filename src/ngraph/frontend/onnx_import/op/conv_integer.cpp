@@ -18,7 +18,7 @@
 #include "exceptions.hpp"
 #include "ngraph/builder/make_constant.hpp"
 #include "ngraph/op/util/attr_types.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "utils/convpool.hpp"
 
 using namespace ngraph::builder;
@@ -31,9 +31,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector conv_integer(const Node& node)
+                OutputVector conv_integer(const Node& node)
                 {
-                    const NodeVector& inputs = node.get_ng_inputs();
+                    const OutputVector& inputs = node.get_ng_inputs();
                     auto num_inputs = inputs.size();
                     auto input = inputs.at(0);
                     auto filters = inputs.at(1);
@@ -49,19 +49,20 @@ namespace ngraph
                     ngraph::op::PadType auto_pad_type = convpool::get_auto_pad(node);
                     auto& padding_below = paddings.first;
                     auto& padding_above = paddings.second;
-                    convpool::calculate_auto_pads(input->get_shape(),
-                                                  filters->get_shape(),
+                    convpool::calculate_auto_pads(input.get_shape(),
+                                                  filters.get_shape(),
                                                   window_movement_strides,
                                                   window_dilation_strides,
                                                   auto_pad_type,
                                                   padding_below,
                                                   padding_above);
 
-                    const Strides default_data_dilation_strides(input->get_shape().size() - 2, 1);
+                    const Strides default_data_dilation_strides(input.get_shape().size() - 2, 1);
                     auto scale_one = make_constant(ngraph::element::f32, Shape{}, 1);
-                    auto input_zero_point = make_constant(input->get_element_type(), Shape{}, 0);
-                    auto filters_zero_point =
-                        make_constant(filters->get_element_type(), Shape{}, 0);
+                    Output<ngraph::Node> input_zero_point =
+                        make_constant(input.get_element_type(), Shape{}, 0)->output(0);
+                    Output<ngraph::Node> filters_zero_point =
+                        make_constant(filters.get_element_type(), Shape{}, 0)->output(0);
                     auto output_zero_point = make_constant(ngraph::element::i32, Shape{}, 0);
 
                     if (num_inputs == 2)
@@ -111,10 +112,7 @@ namespace ngraph
                         ngraph::AxisSet{},
                         ngraph::AxisSet{})};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

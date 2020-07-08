@@ -22,29 +22,22 @@ Low level wrappers for the nGraph c++ api.
 
 import os
 import sys
-import six
 
-if sys.platform == 'win32':
+if sys.platform == "win32":
     # ngraph.dll is installed 3 directories above by default
     # and this path needs to be visible to the _pyngraph module
     #
     # If you're using a custom installation of nGraph,
     # add the location of ngraph.dll to your system PATH.
-    ngraph_dll = os.path.join(os.path.dirname(__file__), '..', '..', '..')
-    os.environ['PATH'] = os.path.abspath(ngraph_dll) + ';' + os.environ['PATH']
-else:
-    # workaround to load the libngraph.so with RTLD_GLOBAL
-    if six.PY3:
-        import os
-        flags = os.RTLD_NOW | os.RTLD_GLOBAL
-    else:
-        import ctypes
-        flags = sys.getdlopenflags() | ctypes.RTLD_GLOBAL
-    sys.setdlopenflags(flags)
+    ngraph_dll = os.path.join(os.path.dirname(__file__), "..", "..", "..")
+    os.environ["PATH"] = os.path.abspath(ngraph_dll) + ";" + os.environ["PATH"]
 
+from _pyngraph import Dimension
 from _pyngraph import Function
+from _pyngraph import Output
 from _pyngraph import Node
 from _pyngraph import Type
+from _pyngraph import PartialShape
 from _pyngraph import Shape
 from _pyngraph import Strides
 from _pyngraph import CoordinateDiff

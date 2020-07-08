@@ -45,13 +45,9 @@ ngraph::AxisVector::AxisVector(size_t n)
 {
 }
 
-ngraph::AxisVector::AxisVector()
-{
-}
+ngraph::AxisVector::AxisVector() {}
 
-ngraph::AxisVector::~AxisVector()
-{
-}
+ngraph::AxisVector::~AxisVector() {}
 
 ngraph::AxisVector& ngraph::AxisVector::operator=(const AxisVector& v)
 {
@@ -64,3 +60,5 @@ ngraph::AxisVector& ngraph::AxisVector::operator=(AxisVector&& v) noexcept
     static_cast<std::vector<size_t>*>(this)->operator=(v);
     return *this;
 }
+
+constexpr ngraph::DiscreteTypeInfo ngraph::AttributeAdapter<ngraph::AxisVector>::type_info;

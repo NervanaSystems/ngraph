@@ -27,7 +27,6 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/convert.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/strides.hpp"

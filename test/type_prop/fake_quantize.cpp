@@ -32,8 +32,8 @@ TEST(type_prop, fake_quantize)
 
     const auto fake_quantize =
         make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
-    EXPECT_EQ(fake_quantize->get_element_type(), element::f32);
-    EXPECT_EQ(fake_quantize->get_shape(), (Shape{1, 2, 3, 4}));
+    EXPECT_EQ(fake_quantize->get_output_element_type(0), element::f32);
+    EXPECT_EQ(fake_quantize->get_output_shape(0), (Shape{1, 2, 3, 4}));
 }
 
 TEST(type_prop, fake_quantize_autob)
@@ -47,8 +47,8 @@ TEST(type_prop, fake_quantize_autob)
 
     const auto fake_quantize =
         make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
-    EXPECT_EQ(fake_quantize->get_element_type(), element::f32);
-    EXPECT_EQ(fake_quantize->get_shape(), (Shape{1, 2, 3, 4}));
+    EXPECT_EQ(fake_quantize->get_output_element_type(0), element::f32);
+    EXPECT_EQ(fake_quantize->get_output_shape(0), (Shape{1, 2, 3, 4}));
 }
 
 TEST(type_prop, fake_quantize_invalid_autob)

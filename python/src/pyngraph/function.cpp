@@ -19,6 +19,7 @@
 
 #include "ngraph/function.hpp"     // ngraph::Function
 #include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
+#include "ngraph/output_vector.hpp"
 #include "pyngraph/function.hpp"
 
 namespace py = pybind11;
@@ -29,11 +30,22 @@ void regclass_pyngraph_Function(py::module m)
 {
     py::class_<ngraph::Function, std::shared_ptr<ngraph::Function>> function(m, "Function");
     function.doc() = "ngraph.impl.Function wraps ngraph::Function";
-    function.def(py::init<const std::vector<std::shared_ptr<ngraph::Node>>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+    function.def(py::init([](const ngraph::NodeVector& outputs,
+                             const ngraph::ParameterVector& in,
+                             const std::string& name) {
+        ngraph::OutputVector ov;
+        for (std::shared_ptr<ngraph::Node> output : outputs)
+        {
+            ov.push_back(output->output(0));
+        }
+        return std::make_shared<ngraph::Function>(ov, in, name);
+    }));
+    function.def(py::init<const std::vector<ngraph::Output<ngraph::Node>>&,
+                          const ngraph::ParameterVector&,
                           const std::string&>());
+
     function.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                          const std::vector<std::shared_ptr<ngraph::op::Parameter>>&,
+                          const ngraph::ParameterVector&,
                           const std::string&>());
     function.def("get_output_size", &ngraph::Function::get_output_size);
     function.def("get_ops", &ngraph::Function::get_ops);
@@ -41,12 +53,14 @@ void regclass_pyngraph_Function(py::module m)
     function.def("get_output_op", &ngraph::Function::get_output_op);
     function.def("get_output_element_type", &ngraph::Function::get_output_element_type);
     function.def("get_output_shape", &ngraph::Function::get_output_shape);
+    function.def("get_output_partial_shape", &ngraph::Function::get_output_partial_shape);
     function.def("get_parameters", &ngraph::Function::get_parameters);
     function.def("get_results", &ngraph::Function::get_results);
     function.def("get_result", &ngraph::Function::get_result);
     function.def("get_unique_name", &ngraph::Function::get_name);
     function.def("get_name", &ngraph::Function::get_friendly_name);
     function.def("set_friendly_name", &ngraph::Function::set_friendly_name);
+    function.def("is_dynamic", &ngraph::Function::is_dynamic);
     function.def("__repr__", [](const ngraph::Function& self) {
         std::string class_name = py::cast(self).get_type().attr("__name__").cast<std::string>();
         std::string shape =

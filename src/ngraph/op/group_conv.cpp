@@ -37,7 +37,7 @@ constexpr NodeTypeInfo op::v1::GroupConvolution::type_info;
 
 shared_ptr<Node> op::v1::GroupConvolution::get_default_value() const
 {
-    return op::Constant::create(get_element_type(), get_shape(), {0});
+    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }
 
 op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
@@ -243,7 +243,7 @@ bool ngraph::op::v1::GroupConvolutionBackpropData::visit_attributes(AttributeVis
 bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
 {
     bool is_dynamic = Node::is_dynamic();
-    if (get_inputs().size() == 3 && !is_dynamic)
+    if (get_input_size() == 3 && !is_dynamic)
     {
         return !is_type<op::Constant>(input_value(2).get_node());
     }
@@ -263,7 +263,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_
     {
         shape = PartialShape{vector<Dimension>(m_strides.size())};
     }
-    bool is_output_shape_present = get_inputs().size() == 3;
+    bool is_output_shape_present = get_input_size() == 3;
     if (is_output_shape_present)
     {
         if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
@@ -339,9 +339,9 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
         if (filters_pshape[0].is_static() && filters_pshape[1].is_static() &&
             data_pshape[1].is_static())
         {
-            size_t groups{filters_pshape[0]};
-            size_t input_channels{filters_pshape[1]};
-            size_t n_data_channels{data_pshape[1]};
+            auto groups = filters_pshape[0].get_length();
+            auto input_channels = filters_pshape[1].get_length();
+            auto n_data_channels = data_pshape[1].get_length();
 
             NODE_VALIDATION_CHECK(this,
                                   n_data_channels % groups == 0,
@@ -389,7 +389,7 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
                               "spatial features.");
     }
 
-    bool is_output_shape_present = get_inputs().size() == 3;
+    bool is_output_shape_present = get_input_size() == 3;
     PartialShape output_pshape;
 
     // If output shape is provided, ignore current values for padding begin/end
@@ -475,24 +475,28 @@ void op::v1::GroupConvolutionBackpropData::pre_validate_and_infer_types()
     set_output_type(0, result_et, output_pshape);
 }
 
-NodeVector op::v1::GroupConvolutionBackpropData::decompose_op() const
+OutputVector op::v1::GroupConvolutionBackpropData::decompose_op() const
 {
     auto data = input_value(0);
     auto filters = input_value(1);
-    NodeVector conv_groups;
+    OutputVector conv_groups;
 
     auto groups = filters.get_shape()[0];
     // slice data
-    auto sliced_data = builder::split(data, groups, 1);
+    OutputVector sliced_data = builder::split(data, groups, 1);
     // slice filters
-    auto sliced_filters = builder::split(filters, groups, 0);
+    OutputVector sliced_filters = builder::split(filters, groups, 0);
     // We have to squeeze first empty dimension (groups).
-    std::transform(std::begin(sliced_filters),
-                   std::end(sliced_filters),
-                   std::begin(sliced_filters),
-                   [](const std::shared_ptr<Node>& n) -> std::shared_ptr<Node> {
-                       return builder::opset1::squeeze(n);
-                   });
+    for (Output<Node>& filter : sliced_filters)
+    {
+        filter = builder::opset1::squeeze(filter);
+    }
+    // std::transform(std::begin(sliced_filters),
+    //                std::end(sliced_filters),
+    //                std::begin(sliced_filters),
+    //                [](const std::shared_ptr<Node>& n) -> std::shared_ptr<Node> {
+    //                    return builder::opset1::squeeze(n);
+    //                });
 
     for (auto i = 0; i < groups; ++i)
     {
@@ -684,7 +688,7 @@ Shape op::v0::GroupConvolution::get_weights_dimensions() const
     Shape weights_shape_groups{weights_shape};
     // adjust output and channel given a number of groups
 
-    weights_shape_groups.at(OC) = get_shape().at(OC_IN_OUTPUT) / get_groups();
+    weights_shape_groups.at(OC) = get_output_shape(0).at(OC_IN_OUTPUT) / get_groups();
     weights_shape_groups.at(IC) = data_shape.at(IC) / get_groups();
     // push_front the number of groups
     weights_shape_groups.insert(weights_shape_groups.begin(), get_groups());
@@ -720,7 +724,7 @@ shared_ptr<Node> op::v0::GroupConvolution::clone_with_new_inputs(const OutputVec
     }
 }
 
-NodeVector op::v0::GroupConvolution::decompose_op() const
+OutputVector op::v0::GroupConvolution::decompose_op() const
 {
     auto data = input_value(0);
     auto filters = input_value(1);
@@ -729,7 +733,7 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
     // and concat results after computation.
     // reference:
     // https://github.com/NervanaSystems/ngraph-mxnet/blob/fdd692/src/ngraph/ngraph_emitter.cc#L822-L856
-    NodeVector convolution_nodes;
+    OutputVector convolution_nodes;
 
     // slice data
     auto sliced_data = builder::split(data, get_groups(), 1);
@@ -743,7 +747,7 @@ NodeVector op::v0::GroupConvolution::decompose_op() const
             // Remove group dimmension after slicing
             sliced_filter = make_shared<op::Reshape>(
                 sliced_filters[group],
-                get_default_order(sliced_filters[group]->get_shape().size()),
+                get_default_order(sliced_filters[group].get_shape().size()),
                 Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
         }
         convolution_nodes.push_back(
@@ -835,13 +839,13 @@ shared_ptr<Node>
                                                              get_groups());
 }
 
-NodeVector op::v0::GroupConvolutionBackpropData::decompose_op() const
+OutputVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 {
     auto filters = input_value(1);
     auto output_delta = input_value(2);
     auto data_shape = get_input_shape(0);
 
-    NodeVector sliced_inputs;
+    OutputVector sliced_inputs;
 
     auto groups = get_groups();
     // slice data shape
@@ -934,7 +938,7 @@ shared_ptr<Node> op::v0::GroupConvolutionBackpropFilters::clone_with_new_inputs(
                                                                 get_groups());
 }
 
-NodeVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
+OutputVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
 {
     auto data_batch = input_value(0);
     auto filters = input_value(1);
@@ -944,7 +948,7 @@ NodeVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
     auto filters_shape = get_input_shape(1);
     auto delta_shape = get_input_shape(2);
 
-    NodeVector sliced_inputs;
+    OutputVector sliced_inputs;
 
     for (size_t i = 0; i < get_groups(); ++i)
     {
@@ -972,7 +976,7 @@ NodeVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
 
         auto sliced_conv =
             std::make_shared<op::ConvolutionBackpropFilters>(sliced_data,
-                                                             sliced_filters->get_shape(),
+                                                             sliced_filters->get_output_shape(0),
                                                              sliced_delta,
                                                              get_window_movement_strides(),
                                                              get_window_dilation_strides(),

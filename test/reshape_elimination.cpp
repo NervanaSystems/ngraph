@@ -35,7 +35,6 @@
 #include "ngraph/pattern/op/skip.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/util.hpp"
 #include "util/all_close.hpp"
 #include "util/matcher.hpp"
 #include "util/random.hpp"
@@ -155,7 +154,7 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
     ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(1)));
     ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
     ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
-    ASSERT_EQ(gdot->get_shape(), (Shape{1, 2}));
+    ASSERT_EQ(gdot->get_output_shape(0), (Shape{1, 2}));
 }
 
 #ifdef NGRAPH_INTERPRETER_ENABLE
@@ -184,7 +183,7 @@ TEST(reshape_elimination, recurrent_reshapes)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes.png");
@@ -233,7 +232,7 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_elimination.png");
@@ -268,13 +267,13 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
         auto reshape_1 = make_shared<op::Reshape>(A, AxisVector{0, 3, 2, 1}, shape_r_1);
         auto reshape_2 = make_shared<op::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_r_2);
         auto reshape_3 = make_shared<op::Reshape>(reshape_2, AxisVector{0, 1}, shape_a);
-        auto f_ = make_shared<Function>(NodeVector{reshape_2, reshape_3}, ParameterVector{A});
+        auto f_ = make_shared<Function>(OutputVector{reshape_2, reshape_3}, ParameterVector{A});
         return f_;
     };
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out.png");
@@ -308,13 +307,13 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
         auto reshape_3 =
             make_shared<op::Reshape>(reshape_2, AxisVector{0, 1, 2, 3}, Shape{4, 3, 8, 1});
         auto abs_1 = make_shared<op::Abs>(reshape_3);
-        auto f_ = make_shared<Function>(NodeVector{abs_1, reshape_3}, ParameterVector{A});
+        auto f_ = make_shared<Function>(OutputVector{abs_1, reshape_3}, ParameterVector{A});
         return f_;
     };
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_recurrent_reshapes_fan_out_at_end.png");
@@ -362,7 +361,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>(
@@ -399,13 +398,13 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
         auto reshape_2 = make_shared<op::Reshape>(abs_1, AxisVector{0, 1}, shape_a);
         auto abs_2 = make_shared<op::Abs>(reshape_2);
         auto reshape_3 = make_shared<op::Reshape>(abs_2, AxisVector{0, 1, 2, 3}, shape_a);
-        auto f_ = make_shared<Function>(NodeVector{reshape_3}, ParameterVector{A});
+        auto f_ = make_shared<Function>(OutputVector{reshape_3}, ParameterVector{A});
         return f_;
     };
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>("before_nonrecurrent_reshapes.png");
@@ -450,13 +449,13 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
         auto r_7 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_2);
         auto r_8 = make_shared<op::Reshape>(r_7, AxisVector{0, 1, 2, 3}, shape_r_3);
 
-        auto f = make_shared<Function>(NodeVector{r_6, r_8}, ParameterVector{A});
+        auto f = make_shared<Function>(OutputVector{r_6, r_8}, ParameterVector{A});
         return f;
     };
 
     auto baseline_f = generate_func();
     auto optimized_f = generate_func();
-    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_shape();
+    auto baseline_input_shape = baseline_f->get_parameters().at(0)->get_output_shape(0);
 
     pass::Manager pass_manager;
     // pass_manager.register_pass<pass::VisualizeTree>(

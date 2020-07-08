@@ -30,15 +30,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector exp(const Node& node)
+                inline OutputVector exp(const Node& node)
                 {
                     return {std::make_shared<default_opset::Exp>(node.get_ng_inputs().at(0))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

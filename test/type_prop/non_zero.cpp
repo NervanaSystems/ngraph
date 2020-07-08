@@ -25,7 +25,7 @@ TEST(type_prop, non_zero)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{3, 3, 224, 224});
     auto non_zero = make_shared<op::v3::NonZero>(data);
-    EXPECT_EQ(non_zero->get_element_type(), element::i64);
+    EXPECT_EQ(non_zero->get_output_element_type(0), element::i64);
     EXPECT_TRUE(
         non_zero->get_output_partial_shape(0).same_scheme(PartialShape{4, Dimension::dynamic()}));
 }
@@ -34,7 +34,7 @@ TEST(type_prop, non_zero_dynamic)
 {
     auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto non_zero = make_shared<op::v3::NonZero>(data);
-    EXPECT_EQ(non_zero->get_element_type(), element::i64);
+    EXPECT_EQ(non_zero->get_output_element_type(0), element::i64);
     EXPECT_TRUE(non_zero->get_output_partial_shape(0).same_scheme(
         PartialShape{Dimension::dynamic(), Dimension::dynamic()}));
 }

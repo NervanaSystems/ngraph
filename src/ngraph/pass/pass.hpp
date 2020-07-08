@@ -101,6 +101,11 @@ class NGRAPH_API ngraph::pass::FunctionPass : public PassBase
 public:
     virtual ~FunctionPass();
     virtual bool run_on_function(std::shared_ptr<ngraph::Function>) = 0;
+
+protected:
+    void graphviz(std::string path);
+
+    std::shared_ptr<ngraph::Function> m_function;
 };
 
 class NGRAPH_API ngraph::pass::NodePass : public PassBase
@@ -115,5 +120,5 @@ class NGRAPH_API ngraph::pass::CallGraphPass : public PassBase
 public:
     virtual ~CallGraphPass();
     virtual bool run_on_call_graph(const std::list<std::shared_ptr<ngraph::Node>>&) = 0;
-    virtual bool run_on_call_graph(const std::vector<std::shared_ptr<ngraph::Node>>&);
+    virtual bool run_on_call_graph(const NodeVector&);
 };

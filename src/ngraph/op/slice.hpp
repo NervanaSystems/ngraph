@@ -68,6 +68,7 @@ namespace ngraph
                 const Coordinate& get_upper_bounds() const { return m_upper_bounds; }
                 /// \return The slicing strides.
                 const Strides& get_strides() const { return m_strides; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

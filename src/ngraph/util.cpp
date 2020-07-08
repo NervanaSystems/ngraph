@@ -217,7 +217,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
     // and aren't inputs to bprop
-    vector<Output<Node>> bprop_inputs;
+    OutputVector bprop_inputs;
     for (auto param : bprop->get_parameters())
     {
         bprop_inputs.push_back(param);
@@ -291,9 +291,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
             auto pnode = as_type_ptr<op::Parameter>(node);
-            if (pnode &&
-                std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
-                    cloned_bprop_inputs.end())
+            if (pnode && std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
+                             cloned_bprop_inputs.end())
             {
                 fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(Output<Node>(node)));
             }
@@ -669,7 +668,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), size);
+    if (size > 0)
+    {
+        tv->read(rc.data(), size);
+    }
     return rc;
 }
 

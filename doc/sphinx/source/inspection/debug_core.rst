@@ -24,7 +24,8 @@ Compile Flags
    ``NGRAPH_CODE_COVERAGE_ENABLE``, Enable code coverage data collection, ``FALSE``
    ``NGRAPH_DEBUG_ENABLE``, Enable output for ``NGRAPH_DEBUG`` statements, ``FALSE``
    ``NGRAPH_DEPRECATED_ENABLE``, Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use), ``FALSE``
-   ``NGRAPH_DEX_ONLY``, Build CPU DEX without codegen, ``FALSE``
+   ``NGRAPH_CPU_ENABLE``, Build CPU backend, ``TRUE``
+   ``NGRAPH_CPU_CODEGEN_ENABLE``, Build CPU Codegen backend, ``FALSE``
    ``NGRAPH_DOC_BUILD_ENABLE``,  Automatically build documentation, ``OFF``
    ``NGRAPH_FAST_MATH_ENABLE``,  Enable fast math, ``ON``
    ``NGRAPH_HALIDE``,  ,``OFF``

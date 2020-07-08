@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector lrn(const Node& node)
+                OutputVector lrn(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     double alpha = node.get_attribute_value<double>("alpha", 1e-4);
@@ -37,11 +37,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::LRN>(data, alpha, beta, bias, size)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

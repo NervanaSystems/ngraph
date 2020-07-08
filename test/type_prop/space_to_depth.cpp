@@ -27,8 +27,8 @@ TEST(type_prop, space_to_depth_output_shape_block_first_4D)
     const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
     auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 8);
 
-    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 128, 8, 8}));
+    ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 128, 8, 8}));
 }
 
 TEST(type_prop, space_to_depth_output_shape_block_first_4D_2)
@@ -37,8 +37,8 @@ TEST(type_prop, space_to_depth_output_shape_block_first_4D_2)
     const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
     auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 2);
 
-    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 12 * 4, 1080 / 2, 1616 / 2}));
+    ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 12 * 4, 1080 / 2, 1616 / 2}));
 }
 
 TEST(type_prop, space_to_depth_output_shape_depth_first_4D)
@@ -47,8 +47,8 @@ TEST(type_prop, space_to_depth_output_shape_depth_first_4D)
     const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST;
     auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 2);
 
-    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 12 * 4, 1080 / 2, 1616 / 2}));
+    ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 12 * 4, 1080 / 2, 1616 / 2}));
 }
 
 TEST(type_prop, space_to_depth_output_shape_depth_first_5D)
@@ -57,8 +57,8 @@ TEST(type_prop, space_to_depth_output_shape_depth_first_5D)
     const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST;
     auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 2);
 
-    ASSERT_EQ(space_to_depth->get_element_type(), element::f32);
-    ASSERT_EQ(space_to_depth->get_shape(), (Shape{1, 12 * 8, 4 / 2, 1080 / 2, 1616 / 2}));
+    ASSERT_EQ(space_to_depth->get_output_element_type(0), element::f32);
+    ASSERT_EQ(space_to_depth->get_output_shape(0), (Shape{1, 12 * 8, 4 / 2, 1080 / 2, 1616 / 2}));
 }
 
 TEST(type_prop, space_to_depth_input_rank_not_supported)

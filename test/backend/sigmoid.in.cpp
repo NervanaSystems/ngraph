@@ -46,8 +46,10 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h2w2)
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::Tensor> a =
+        backend->create_tensor(element::f32, input->get_output_shape(0));
+    shared_ptr<runtime::Tensor> result =
+        backend->create_tensor(element::f32, input->get_output_shape(0));
 
     float x1 = 1.0f;
     float x2 = 4.0f;
@@ -71,8 +73,10 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_n1c1h4)
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::Tensor> a =
+        backend->create_tensor(element::f32, input->get_output_shape(0));
+    shared_ptr<runtime::Tensor> result =
+        backend->create_tensor(element::f32, input->get_output_shape(0));
 
     float x1 = 1.0f;
     float x2 = 4.0f;
@@ -98,9 +102,12 @@ NGRAPH_TEST(${BACKEND_NAME}, sigmoid_bprop_n1c1h4)
     auto func = make_shared<Function>(sigmoid_node, ParameterVector{input, delta});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(element::f32, input->get_shape());
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(element::f32, delta->get_shape());
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, input->get_shape());
+    shared_ptr<runtime::Tensor> a =
+        backend->create_tensor(element::f32, input->get_output_shape(0));
+    shared_ptr<runtime::Tensor> b =
+        backend->create_tensor(element::f32, delta->get_output_shape(0));
+    shared_ptr<runtime::Tensor> result =
+        backend->create_tensor(element::f32, input->get_output_shape(0));
 
     float x1 = 1.0f;
     float x2 = 4.0f;

@@ -39,6 +39,11 @@ add_definitions(-DONNX_NAMESPACE=${NGRAPH_ONNX_NAMESPACE})
 
 set(CMAKE_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
 
+if(WIN32)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4244 /wd4251")
+    string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+endif()
+
 FetchContent_Declare(
     ext_onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}

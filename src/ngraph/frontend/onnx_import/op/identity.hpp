@@ -20,7 +20,6 @@
 
 #include "core/node.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
@@ -30,16 +29,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector identity(const Node& node)
+                inline OutputVector identity(const Node& node)
                 {
                     auto input = node.get_ng_inputs().at(0);
-                    auto zero = default_opset::Constant::create(input->get_element_type(), {}, {0});
+                    auto zero = default_opset::Constant::create(input.get_element_type(), {}, {0});
                     return {std::make_shared<default_opset::Add>(input, zero)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

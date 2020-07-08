@@ -275,8 +275,7 @@ namespace ngraph
                 CoordinateDiff m_pads_begin;
                 CoordinateDiff m_pads_end;
             };
-
-        } // namespace v1
+}
 
         namespace v0
         {
@@ -662,8 +661,7 @@ namespace ngraph
                 CoordinateDiff m_padding_above_forward;
                 Strides m_data_dilation_strides_forward;
             };
-
-        } // namespace v0
+}
 
         namespace util
         {
@@ -684,11 +682,8 @@ namespace ngraph
                                                  size_t input_channel_axis_filters,
                                                  size_t output_channel_axis_filters,
                                                  size_t batch_axis_result,
-                                                 size_t output_channel_axis_result);
-        } // namespace util
+                                                 size_t output_channel_axis_result);}
 
         using v0::Convolution;
         using v0::ConvolutionBackpropData;
-        using v0::ConvolutionBackpropFilters;
-    } // namespace op
-} // namespace ngraph
+        using v0::ConvolutionBackpropFilters;}}

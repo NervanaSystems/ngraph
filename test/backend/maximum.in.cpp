@@ -108,3 +108,24 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_int64)
     EXPECT_EQ((vector<int64_t>{1, 8, 4, 17, 0, 67635216, 2, 17179887632}),
               read_vector<int64_t>(result));
 }
+
+NGRAPH_TEST(${BACKEND_NAME}, maximum_unsigned_limit)
+{
+    Shape shape{};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto B = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::Maximum>(A, B), ParameterVector{A, B});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    copy_data(a, vector<uint32_t>{numeric_limits<uint32_t>::max()});
+    auto b = backend->create_tensor(element::u32, shape);
+    copy_data(b, vector<uint32_t>{10});
+    auto result = backend->create_tensor(element::u32, shape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a, b});
+    EXPECT_EQ((vector<uint32_t>{numeric_limits<uint32_t>::max()}), read_vector<uint32_t>(result));
+}

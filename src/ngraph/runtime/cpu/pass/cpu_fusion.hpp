@@ -19,7 +19,7 @@
 #include "ngraph/env_util.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 namespace ngraph
 {

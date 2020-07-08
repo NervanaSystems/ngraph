@@ -117,7 +117,7 @@ TEST(copy, concat)
     OutputVector new_args{make_shared<op::Parameter>(element::f32, shape),
                           make_shared<op::Parameter>(element::f32, shape)};
     size_t axis = 0;
-    auto node = make_shared<op::Concat>(NodeVector{arg0, arg1}, axis);
+    auto node = make_shared<op::Concat>(OutputVector{arg0, arg1}, axis);
     auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Concat>(new_node);
     ASSERT_NE(node_cast, nullptr);
@@ -139,8 +139,8 @@ TEST(copy, constant)
     ASSERT_TRUE(nullptr != new_node);
     ASSERT_TRUE(NodeVector{} == new_node->get_arguments());
     ASSERT_TRUE(node_cast->get_vector<float>() == c);
-    ASSERT_TRUE(node_cast->get_shape() == shape);
-    ASSERT_TRUE(node_cast->get_element_type() == et);
+    ASSERT_TRUE(node_cast->get_output_shape(0) == shape);
+    ASSERT_TRUE(node_cast->get_output_element_type(0) == et);
 }
 
 TEST(copy, convert)
@@ -351,7 +351,7 @@ TEST(copy, sum)
     auto arg0 = make_shared<op::Parameter>(element::f32, shape);
 
     auto node = make_shared<op::Sum>(arg0, axes);
-    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape), node->get_argument(1)};
+    OutputVector new_args{make_shared<op::Parameter>(element::f32, shape), node->input_value(1)};
     auto new_node = node->clone_with_new_inputs(new_args);
     auto node_cast = as_type_ptr<op::Sum>(new_node);
     ASSERT_NE(node_cast, nullptr);
