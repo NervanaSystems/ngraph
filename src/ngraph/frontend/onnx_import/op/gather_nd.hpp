@@ -27,12 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector gather_nd(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector gather_nd(const Node& node);
+            }
+        }
+    }
+}

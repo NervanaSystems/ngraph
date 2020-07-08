@@ -57,7 +57,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten)
     auto value = make_shared<op::Parameter>(element::i32, p.in_shape);
     auto axis = make_shared<op::Parameter>(element::i64, Shape{});
     auto flattened = builder::flatten(value, axis);
-    auto f = make_shared<Function>(NodeVector{flattened}, ParameterVector{value, axis});
+    auto f = make_shared<Function>(OutputVector{flattened}, ParameterVector{value, axis});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
     auto ex = backend->compile(f);

@@ -18,9 +18,9 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/kernel/dot.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -46,20 +46,20 @@ namespace ngraph
                     external_function->get_buffer_index(args[2].get_name()); // scale
                 auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
                     auto ip_desc =
-                        mkldnn_emitter->get_inner_product_forward_desc<ngraph::op::QuantizedMatmul>(
+                        dnnl_emitter->get_inner_product_forward_desc<ngraph::op::QuantizedMatmul>(
                             node);
                     auto ip_attr =
-                        mkldnn_emitter->get_inner_product_forward_attr<ngraph::op::QuantizedMatmul>(
+                        dnnl_emitter->get_inner_product_forward_attr<ngraph::op::QuantizedMatmul>(
                             node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD_2ARGS(ip_forward, ip_desc, ip_attr);
 
-                    size_t ip_index = mkldnn_emitter->inner_product_forward_init(false);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(ip_index);
+                    size_t ip_index = dnnl_emitter->inner_product_forward_init(false);
+                    auto& deps = dnnl_emitter->get_primitive_deps(ip_index);
 
                     auto functor = [&,
                                     ip_desc,
@@ -78,28 +78,28 @@ namespace ngraph
                             dyn_scales.push_back(
                                 *(static_cast<float*>(ctx->buffer_data[arg2_buffer_index])));
                             ip_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->build_inner_product_forward<false>(
-                                ctx->mkldnn_memories,
-                                ctx->mkldnn_primitives,
-                                ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_inner_product_forward<false>(
+                                ctx->dnnl_memories,
+                                ctx->dnnl_primitives,
+                                ctx->dnnl_scratchpad_mds,
                                 ip_desc,
                                 ip_attr,
                                 executor::global_cpu_engine,
                                 deps,
                                 ip_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             ip_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDMATMUL,
+                            cpu::dnnl_utils::OpType::QUANTIZEDMATMUL,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);

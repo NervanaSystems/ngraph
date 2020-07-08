@@ -55,8 +55,8 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 size_t get_default_output_index() const override { return no_default_index(); }
             };
-        } // namespace v1
+        }
 
         using v1::VariadicSplit;
-    } // namespace op
-} // namespace ngraph
+    }
+}

@@ -89,7 +89,7 @@ namespace ngraph
 
             // convert sequence to input type
             auto convert_sequence = std::make_shared<ngraph::op::Convert>(
-                sequence, sequence_lengths->get_element_type());
+                sequence, sequence_lengths->get_output_element_type(0));
 
             // broadcast sequence to mask shape along all non-sequence axes
             auto broadcast_sequence = std::make_shared<ngraph::op::Broadcast>(

@@ -17,8 +17,8 @@
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/op/group_conv_bias.hpp"
 
 using namespace std;
@@ -38,35 +38,34 @@ namespace ngraph
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
-                auto input_desc = mkldnn_utils::get_input_mkldnn_md(node, 0);
-                auto result_desc = mkldnn_utils::get_output_mkldnn_md(node, 0);
+                auto input_desc = dnnl_utils::get_input_dnnl_md(node, 0);
+                auto result_desc = dnnl_utils::get_output_dnnl_md(node, 0);
 
                 size_t scratchpad_size = 0;
 
-                bool input_format_is_nchw = mkldnn_utils::mkldnn_md_matches_format_tag(
-                    input_desc.data, mkldnn::memory::format_tag::nchw);
-                if (input_format_is_nchw &&
-                    mkldnn_utils::mkldnn_md_matches_format_tag(result_desc.data,
-                                                               mkldnn::memory::format_tag::goihw))
+                bool input_format_is_nchw = dnnl_utils::dnnl_md_matches_format_tag(
+                    input_desc.data, dnnl::memory::format_tag::nchw);
+                if (input_format_is_nchw && dnnl_utils::dnnl_md_matches_format_tag(
+                                                result_desc.data, dnnl::memory::format_tag::goihw))
                 {
                     // becomes a copy
                     input_desc = result_desc;
                 }
                 else if ((input_format_is_nchw ||
-                          mkldnn_utils::mkldnn_md_matches_format_tag(
-                              input_desc.data, mkldnn::memory::format_tag::nhwc)) &&
-                         (mkldnn_utils::mkldnn_md_matches_format_tag(
-                              result_desc.data, mkldnn::memory::format_tag::OIhw4i16o4i) &&
+                          dnnl_utils::dnnl_md_matches_format_tag(input_desc.data,
+                                                                 dnnl::memory::format_tag::nhwc)) &&
+                         (dnnl_utils::dnnl_md_matches_format_tag(
+                              result_desc.data, dnnl::memory::format_tag::OIhw4i16o4i) &&
                           // check if compensation is conv_s8s8(1U)
                           result_desc.data.extra.flags & 0x1U))
                 {
                     auto arg0_shape = args[0].get_shape();
-                    input_desc = mkldnn::memory::desc(
-                        mkldnn::memory::dims(arg0_shape.begin(), arg0_shape.end()),
-                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                        mkldnn::memory::format_tag::oihw);
+                    input_desc = dnnl::memory::desc(
+                        dnnl::memory::dims(arg0_shape.begin(), arg0_shape.end()),
+                        dnnl_utils::get_dnnl_data_type(args[0].get_element_type()),
+                        dnnl::memory::format_tag::oihw);
                 }
                 else if (input_format_is_nchw && input_desc.data.ndims == 4 &&
                          result_desc.data.ndims == 5 && node->get_users().size() == 1)
@@ -86,18 +85,18 @@ namespace ngraph
                     {
                         throw ngraph_error("Incompatible input/output shape in ConvertLayout op");
                     }
-                    input_desc = mkldnn::memory::desc(
-                        mkldnn::memory::dims(weights_shape_groups.begin(),
-                                             weights_shape_groups.end()),
-                        mkldnn_utils::get_mkldnn_data_type(args[0].get_element_type()),
-                        mkldnn::memory::format_tag::goihw);
+                    input_desc = dnnl::memory::desc(
+                        dnnl::memory::dims(weights_shape_groups.begin(),
+                                           weights_shape_groups.end()),
+                        dnnl_utils::get_dnnl_data_type(args[0].get_element_type()),
+                        dnnl::memory::format_tag::goihw);
                 }
 
-                scratchpad_size = mkldnn_emitter->query_scratchpad_reorder(input_desc, result_desc);
+                scratchpad_size = dnnl_emitter->query_scratchpad_reorder(input_desc, result_desc);
 
                 // ConvertLayout needs 3 primitives: input, result, and reorder.
-                size_t reorder_index = mkldnn_emitter->reserve_primitive_space(3);
-                auto& deps = mkldnn_emitter->get_primitive_deps(reorder_index);
+                size_t reorder_index = dnnl_emitter->reserve_primitive_space(3);
+                auto& deps = dnnl_emitter->get_primitive_deps(reorder_index);
                 auto functor = [&,
                                 input_desc,
                                 result_desc,
@@ -108,25 +107,24 @@ namespace ngraph
                                                   CPUExecutionContext* /* ectx */) {
                     if (ctx->first_iteration)
                     {
-                        mkldnn_emitter->build_reorder(ctx->mkldnn_memories,
-                                                      ctx->mkldnn_primitives,
-                                                      ctx->mkldnn_scratchpad_mds,
-                                                      input_desc,
-                                                      result_desc,
-                                                      deps,
-                                                      reorder_index);
+                        dnnl_emitter->build_reorder(ctx->dnnl_memories,
+                                                    ctx->dnnl_primitives,
+                                                    ctx->dnnl_scratchpad_mds,
+                                                    input_desc,
+                                                    result_desc,
+                                                    deps,
+                                                    reorder_index);
                     }
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[0], ctx->buffer_data[arg_buffer_index]);
-                    cpu::mkldnn_utils::set_memory_ptr(
+                    cpu::dnnl_utils::set_memory_ptr(
                         ctx, deps[1], ctx->buffer_data[out_buffer_index]);
 
-                    cpu::mkldnn_utils::mkldnn_invoke_primitive(
-                        ctx,
-                        reorder_index,
-                        deps,
-                        cpu::mkldnn_utils::OpType::CONVERTLAYOUT,
-                        scratchpad_size);
+                    cpu::dnnl_utils::dnnl_invoke_primitive(ctx,
+                                                           reorder_index,
+                                                           deps,
+                                                           cpu::dnnl_utils::OpType::CONVERTLAYOUT,
+                                                           scratchpad_size);
                 };
                 functors.emplace_back(functor);
             }

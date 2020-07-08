@@ -28,9 +28,10 @@
 #include "ngraph/op/reduce_prod.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/shape_of.hpp"
+#include "ngraph/op/squeeze.hpp"
 #include "ngraph/op/transpose.hpp"
 #include "ngraph/op/variadic_split.hpp"
-#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opset/opset1.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -122,7 +123,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>&
         make_shared<op::Product>(col_dims, AxisSet{0}), AxisVector{}, Shape{1});
 
     // flattened_dims := Concat({row_dims_prod, col_dims_prod})
-    auto flattened_dims = make_shared<op::Concat>(NodeVector{row_dims_prod, col_dims_prod}, 0);
+    auto flattened_dims = make_shared<op::Concat>(OutputVector{row_dims_prod, col_dims_prod}, 0);
 
     return make_shared<op::v1::Reshape>(value, flattened_dims, true)
         ->add_provenance_group_members_above({value});
@@ -177,13 +178,29 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
         ->add_provenance_group_members_above({value});
 }
 
+NGRAPH_API
 shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape& shape)
 {
-    const auto out_pattern = op::Constant::create(
-        element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
-    const bool special_zero = false;
-    return make_shared<ngraph::opset1::Reshape>(value, out_pattern, special_zero)
-        ->add_provenance_group_members_above({value});
+    if (value.get_partial_shape().same_scheme(shape))
+    {
+        return value.get_node_shared_ptr();
+    }
+    else if (is_scalar(shape))
+    {
+        auto value_rank = value.get_shape().size();
+        AxisVector axes_vector(value_rank);
+        std::iota(axes_vector.begin(), axes_vector.end(), 0);
+        auto axes = op::Constant::create(element::i64, Shape{value_rank}, axes_vector);
+        return std::make_shared<op::Squeeze>(value, axes);
+    }
+    else
+    {
+        auto out_pattern = op::Constant::create(
+            element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
+
+        return make_shared<ngraph::opset1::Reshape>(value, out_pattern, false)
+            ->add_provenance_group_members_above({value});
+    }
 }
 
 shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
@@ -251,65 +268,48 @@ namespace ngraph
                     // node_rank-1]
                     return make_shared<ngraph::opset1::Add>(node_rank, axis_node);
                 }
-            } // opset1
-        }     // builder
-    }         // ngraph
+            }
+        }
+    }
 }
 
 shared_ptr<Node> builder::opset1::flatten(const Output<Node>& value, int axis)
 {
-    if (value.get_partial_shape().is_static())
+    // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of
+    // input tensor. The last dimension is the product of the rest of input tensor dimensions:
+    // [d_{axis}, ..., d_n]
+    shared_ptr<Node> output_shape;
+    if (axis == 0)
     {
-        auto data_shape = value.get_shape();
-        // First dimension of output tensor is the product of [d_0, ... d_{axis-1}] dimensions of
-        // input
-        // tensor. The last dimension is the product of the rest of input tensor dimensions:
-        // [d_{axis}, ..., d_n]
-        size_t first_dim_size =
-            accumulate(begin(data_shape), next(begin(data_shape), axis), 1UL, multiplies<size_t>());
-
-        size_t last_dim_size =
-            accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
-
-        return builder::opset1::reshape(value, Shape{first_dim_size, last_dim_size});
+        output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {1, -1});
+    }
+    else if (axis == 1)
+    {
+        output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {0, -1});
     }
     else
     {
-        shared_ptr<Node> output_shape;
-        if (axis == 0)
-        {
-            output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {1, -1});
-        }
-        else if (axis == 1)
-        {
-            output_shape = ngraph::opset1::Constant::create(element::i64, Shape{2}, {0, -1});
-        }
-        else
-        {
-            const auto value_shape = make_shared<ngraph::opset1::ShapeOf>(value);
-            const auto value_rank = make_shared<ngraph::opset1::ShapeOf>(value_shape);
-            const auto axis_node = get_normalized_axis_node(value_rank, axis);
-            const auto remaining_part_length =
-                ngraph::opset1::Constant::create(element::i64, Shape{1}, {-1});
-            const auto shape_split_lengths = make_shared<ngraph::opset1::Concat>(
-                OutputVector{axis_node, remaining_part_length}, 0);
-            const auto split_parts = make_shared<ngraph::opset1::VariadicSplit>(
-                value_shape,
-                ngraph::opset1::Constant::create(element::i64, Shape{}, {0}),
-                shape_split_lengths);
-            // We're reducing vectors thus, just single zero axis to reduce and keep dims to true.
-            const auto first_part_dim = make_shared<ngraph::opset1::ReduceProd>(
-                split_parts->get_output_as_single_output_node(0),
-                ngraph::opset1::Constant::create(element::i64, Shape{}, {0}),
-                true);
-            // TODO, handle edge case where first part is empty - then should equal to one
-            output_shape = make_shared<ngraph::opset1::Concat>(
-                OutputVector{first_part_dim, remaining_part_length}, 0);
-        }
+        const auto value_shape = make_shared<ngraph::opset1::ShapeOf>(value);
+        const auto value_rank = make_shared<ngraph::opset1::ShapeOf>(value_shape);
+        const auto axis_node = get_normalized_axis_node(value_rank, axis);
 
-        return make_shared<ngraph::opset1::Reshape>(value, output_shape, true)
-            ->add_provenance_group_members_above({value});
+        const auto first_part_dims = make_shared<ngraph::opset1::StridedSlice>(
+            value_shape,
+            ngraph::opset1::Constant::create(element::i64, {1}, {0}),
+            axis_node,
+            vector<int64_t>{},
+            vector<int64_t>{});
+        const auto first_part_dims_length = make_shared<ngraph::opset1::ReduceProd>(
+            first_part_dims, ngraph::opset1::Constant::create(element::i64, {}, {0}), true);
+
+        const auto remaining_part_length =
+            ngraph::opset1::Constant::create(element::i64, {1}, {-1});
+
+        output_shape = make_shared<ngraph::opset1::Concat>(
+            OutputVector{first_part_dims_length, remaining_part_length}, 0);
     }
+    return make_shared<ngraph::opset1::Reshape>(value, output_shape, true)
+        ->add_provenance_group_members_above({value});
 }
 
 shared_ptr<Node> builder::opset1::expand_dims(const Output<Node>& value, size_t axis)

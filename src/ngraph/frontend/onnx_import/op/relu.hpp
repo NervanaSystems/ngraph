@@ -30,16 +30,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector relu(const Node& node)
+                inline OutputVector relu(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    OutputVector ng_inputs{node.get_ng_inputs()};
                     return {std::make_shared<default_opset::Relu>(ng_inputs.at(0))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset3.hpp"
+#include "default_opset.hpp"
 #include "non_zero.hpp"
 
 namespace ngraph
@@ -27,16 +27,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector non_zero(const Node& node)
+                OutputVector non_zero(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
-                    return {std::make_shared<ngraph::opset3::NonZero>(data, element::i64)};
+                    return {std::make_shared<default_opset::NonZero>(data, element::i64)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

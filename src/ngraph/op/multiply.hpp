@@ -55,7 +55,7 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
             };
-        } // namespace v0
+        }
 
         namespace v1
         {
@@ -92,11 +92,11 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
             };
-        } // namespace v1
+        }
 
         using v0::Multiply;
-    } // namespace op
+    }
 
     NGRAPH_API
     std::shared_ptr<Node> operator*(const Output<Node>& arg0, const Output<Node>& arg1);
-} // namespace ngraph
+}

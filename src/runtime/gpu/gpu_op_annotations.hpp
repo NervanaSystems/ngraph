@@ -37,6 +37,7 @@ namespace ngraph
                 ~BatchNormBackpropAnnotations() = default;
                 bool has_inverted_variance() { return m_inv_variance; }
                 void set_inverted_variance(bool b) { m_inv_variance = b; }
+
             private:
                 bool m_inv_variance = false;
             };

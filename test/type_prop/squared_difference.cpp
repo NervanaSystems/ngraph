@@ -38,6 +38,6 @@ TEST(type_prop, squared_difference)
     }
 
     const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
-    EXPECT_EQ(clamp->get_element_type(), element::f64);
-    EXPECT_EQ(clamp->get_shape(), (Shape{2, 2}));
+    EXPECT_EQ(clamp->get_output_element_type(0), element::f64);
+    EXPECT_EQ(clamp->get_output_shape(0), (Shape{2, 2}));
 }

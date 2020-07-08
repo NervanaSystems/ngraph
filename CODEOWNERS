@@ -4,34 +4,24 @@
 # Default rule: @diyessi gets everything.
 *                                   @diyessi
 
-/cmake/                             @silee2
+/cmake/                             @silee2 @rkimballn1
 
 /.ci/                               @raramer01
-/.ci/travis/                        @postrational
-/.ci/onnx/                          @postrational
 /contrib/docker/                    @raramer01
-/.travis.yml                        @postrational
 
 /.clang-format                      @rkimballn1
 /.gitattributes                     @rkimballn1
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
 
-/doc/                               @indie
-/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv @indie
+/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik
 /doc/*/*/inspection/                @diyessi
-/doc/examples/onnx/                 @arogowie-intel @tsocha
-/README.md                          @indie
 project/introduction.rst            @adstraw
 project/governance.rst              @adstraw
-/changes.md                         @indie @diyessi
-project/doc-contributor-README.rst  @indie
 
 /licenses/                          @diyessi @raramer01
 /LICENSE                            @diyessi @raramer01
-
-/python/                            @postrational
 
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
@@ -39,11 +29,9 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/builder/                @silee2
 /src/ngraph/codegen/                @rkimballn1
 /src/ngraph/distributed.*           @wenzhe-nrv @diyessi
-/src/ngraph/frontend/ATen/          @silee2
-/src/ngraph/frontend/onnx_import/   @postrational
-/src/ngraph/op/                     @diyessi @postrational
+/src/ngraph/frontend/               @silee2
+/src/ngraph/op/                     @diyessi
 /src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
-/src/ngraph/op/experimental/layers  @ilyachur
 /src/ngraph/pass/                   @diyessi
 /src/ngraph/pattern/                @diyessi
 /src/ngraph/runtime/                @rkimballn1
@@ -58,11 +46,11 @@ project/doc-contributor-README.rst  @indie
 /src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
-/test/backend/distributed.in.cpp    @wenzhe-nrv @diyessi
 /test/mlir/                         @silee2
 
 # Putting this last so it's not overridden by directory rules
-CMakeLists.txt                      @silee2
+# ** means in any directory
+**/CMakeLists.txt                   @silee2 @rkimballn1
 
 # Putting this last to make sure nothing else overrides.
 /CODEOWNERS                         @diyessi

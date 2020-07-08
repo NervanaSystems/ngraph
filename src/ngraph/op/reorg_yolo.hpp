@@ -38,10 +38,13 @@ namespace ngraph
 
                 void validate_and_infer_types() override;
 
+                virtual bool visit_attributes(AttributeVisitor& visitor) override;
+
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
-                const Strides get_strides() const { return m_strides; }
+                Strides get_strides() const { return m_strides; }
+
             private:
                 Strides m_strides;
             };

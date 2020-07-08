@@ -169,12 +169,12 @@ NGRAPH_TEST(${BACKEND_NAME}, divide_adjoint_stability)
         auto Xs = f->get_parameters();
         auto C = std::make_shared<op::Parameter>(Y_out.get_element_type(), Y_out.get_shape());
         ngraph::autodiff::Adjoints adjoints(OutputVector{Y_out}, OutputVector{C});
-        std::vector<Output<Node>> dYdXs(Xs.size());
+        OutputVector dYdXs(Xs.size());
         transform(
             Xs.begin(), Xs.end(), dYdXs.begin(), [C, &adjoints](const std::shared_ptr<Node>& X) {
                 return adjoints.backprop_output(X);
             });
-        std::vector<std::shared_ptr<op::Parameter>> params(Xs);
+        ParameterVector params(Xs);
         params.push_back(C);
 
         auto bf = std::make_shared<Function>(dYdXs, params);

@@ -43,7 +43,6 @@ namespace ngraph
             void register_builders_gather_cpp();
             void register_builders_gather_nd_cpp();
             void register_builders_gelu_cpp();
-            void register_builders_get_output_element_cpp();
             void register_builders_leaky_relu_cpp();
             void register_builders_lrn_cpp();
             void register_builders_lstm_cpp();

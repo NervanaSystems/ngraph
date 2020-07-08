@@ -147,7 +147,7 @@ namespace ngraph
                 NGRAPH_CHECK(m_output_index < results.size(),
                              "All function results already have expected outputs.");
 
-                auto function_output_type = results.at(m_output_index)->get_element_type();
+                auto function_output_type = results.at(m_output_index)->get_output_element_type(0);
 
                 const auto& output_pshape = results.at(m_output_index)->get_output_partial_shape(0);
                 NGRAPH_CHECK(
@@ -166,7 +166,7 @@ namespace ngraph
             template <typename T>
             void add_expected_output(const std::vector<T>& values)
             {
-                auto shape = m_function->get_results().at(m_output_index)->get_shape();
+                auto shape = m_function->get_results().at(m_output_index)->get_output_shape(0);
                 add_expected_output<T>(shape, values);
             }
 
@@ -187,7 +187,7 @@ namespace ngraph
                 add_expected_output<T>(expected_shape, value);
             }
 
-            void run(size_t tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
+            ::testing::AssertionResult run(size_t tolerance_bits = DEFAULT_FLOAT_TOLERANCE_BITS);
 
         private:
             template <typename T>
@@ -223,6 +223,34 @@ namespace ngraph
                 return ngraph::test::all_close(expected, result);
             }
 
+            // used for float16 and bfloat 16 comparisons
+            template <typename T>
+            typename std::enable_if<std::is_class<T>::value, ::testing::AssertionResult>::type
+                compare_values(const std::shared_ptr<ngraph::op::Constant>& expected_results,
+                               const std::shared_ptr<ngraph::runtime::Tensor>& results)
+            {
+                const auto expected = expected_results->get_vector<T>();
+                const auto result = read_vector<T>(results);
+
+                // TODO: add testing infrastructure for float16 and bfloat16 to avoid cast to double
+                std::vector<double> expected_double(expected.size());
+                std::vector<double> result_double(result.size());
+                assert(expected.size() == result.size() && "expected and result size must match");
+                for (int i = 0; i < expected.size(); ++i)
+                {
+                    expected_double[i] = static_cast<double>(expected[i]);
+                    result_double[i] = static_cast<double>(result[i]);
+                }
+
+                if (m_dump_results)
+                {
+                    std::cout << get_results_str<double>(
+                        expected_double, result_double, expected.size());
+                }
+
+                return ngraph::test::all_close_f(expected_double, result_double, m_tolerance_bits);
+            }
+
             using value_comparator_function = std::function<::testing::AssertionResult(
                 const std::shared_ptr<ngraph::op::Constant>&,
                 const std::shared_ptr<ngraph::runtime::Tensor>&)>;
@@ -236,6 +264,8 @@ namespace ngraph
     }
 
             std::map<ngraph::element::Type_t, value_comparator_function> m_value_comparators = {
+                REGISTER_COMPARATOR(f16, ngraph::float16),
+                REGISTER_COMPARATOR(bf16, ngraph::bfloat16),
                 REGISTER_COMPARATOR(f32, float),
                 REGISTER_COMPARATOR(f64, double),
                 REGISTER_COMPARATOR(i8, int8_t),

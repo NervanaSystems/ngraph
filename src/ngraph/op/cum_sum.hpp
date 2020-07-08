@@ -81,22 +81,32 @@ namespace ngraph
                 ///
                 /// \param arg The tensor to be summed.
                 /// \param axis zero dimension tensor specifying axis position along which
-                /// cumulative
-                /// sum must be performed
+                /// cumulative sum must be performed
+                /// \param exclusive if set to true, the top element is not included
+                /// \param reverse if set to true, will perform the sums in reverse direction
                 CumSum(const Output<Node>& arg,
                        const Output<Node>& axis,
+                       const bool exclusive = false,
+                       const bool reverse = false);
+
+                /// \brief Constructs a cumulative summation operation with axis = 0
+                ///
+                /// \param arg The tensor to be summed
+                CumSum(const Output<Node>& arg,
                        const bool exclusive = false,
                        const bool reverse = false);
 
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
+                bool visit_attributes(AttributeVisitor& visitor) override;
                 void validate_and_infer_types() override;
 
                 /// \return The default value for CumSum.
                 virtual std::shared_ptr<Node> get_default_value() const override;
                 bool is_exclusive() const { return m_exclusive; }
                 bool is_reverse() const { return m_reverse; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

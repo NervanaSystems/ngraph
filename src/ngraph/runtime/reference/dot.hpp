@@ -133,19 +133,19 @@ namespace ngraph
                             // Multiply and add to the sum.
                             if (is_quantized)
                             {
-                                sum += (static_cast<ACCUMULATION>(
-                                            arg0[arg0_transform.index(arg0_coord)]) -
-                                        static_cast<ACCUMULATION>(*input0_zero_point)) *
-                                       (static_cast<ACCUMULATION>(
-                                            arg1[arg1_transform.index(arg1_coord)]) -
-                                        static_cast<ACCUMULATION>(*input1_zero_point));
+                                sum = sum + ((static_cast<ACCUMULATION>(
+                                                  arg0[arg0_transform.index(arg0_coord)]) -
+                                              static_cast<ACCUMULATION>(*input0_zero_point)) *
+                                             (static_cast<ACCUMULATION>(
+                                                  arg1[arg1_transform.index(arg1_coord)]) -
+                                              static_cast<ACCUMULATION>(*input1_zero_point)));
                             }
                             else
                             {
-                                sum += static_cast<ACCUMULATION>(
-                                           arg0[arg0_transform.index(arg0_coord)]) *
-                                       static_cast<ACCUMULATION>(
-                                           arg1[arg1_transform.index(arg1_coord)]);
+                                sum = sum + (static_cast<ACCUMULATION>(
+                                                 arg0[arg0_transform.index(arg0_coord)]) *
+                                             static_cast<ACCUMULATION>(
+                                                 arg1[arg1_transform.index(arg1_coord)]));
                             }
                         }
 

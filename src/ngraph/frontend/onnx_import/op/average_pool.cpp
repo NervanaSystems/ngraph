@@ -26,15 +26,11 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector average_pool(const Node& node)
+                OutputVector average_pool(const Node& node)
                 {
                     return pooling::LocalPoolingFactory(node).make_avg_pool();
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

@@ -143,7 +143,7 @@ NGRAPH_TEST(${BACKEND_NAME}, v1_group_conv_backprop_data)
     auto gcbd = make_shared<op::v1::GroupConvolutionBackpropData>(
         data, filters, strides, pads_begin, pads_end, dilations, auto_pad, output_padding);
 
-    auto function = make_shared<Function>(NodeVector{gcbd}, ParameterVector{data, filters});
+    auto function = make_shared<Function>(OutputVector{gcbd}, ParameterVector{data, filters});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
     // X
@@ -190,7 +190,7 @@ NGRAPH_TEST(${BACKEND_NAME}, v1_group_conv_backprop_data_output_shape)
     auto gcbd = make_shared<op::v1::GroupConvolutionBackpropData>(
         data, filters, output_shape, strides, dilations, op::PadType::SAME_UPPER);
 
-    auto function = make_shared<Function>(NodeVector{gcbd}, ParameterVector{data, filters});
+    auto function = make_shared<Function>(OutputVector{gcbd}, ParameterVector{data, filters});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
 
     // X

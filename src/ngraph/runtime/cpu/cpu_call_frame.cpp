@@ -23,7 +23,7 @@
 #include "ngraph/runtime/cpu/cpu_external_function.hpp"
 #include "ngraph/runtime/cpu/cpu_tensor.hpp"
 #include "ngraph/runtime/cpu/cpu_tracing.hpp"
-#include "ngraph/runtime/cpu/mkldnn_emitter.hpp"
+#include "ngraph/runtime/cpu/dnnl_emitter.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -207,17 +207,17 @@ void runtime::cpu::CPU_CallFrame::setup_runtime_context(Allocator* allocator)
             auto buffer = new AlignedBuffer(buffer_size, alignment, allocator);
             ctx->memory_buffers.push_back(buffer);
         }
-        const auto& mkldnn_emitter = m_external_function->get_mkldnn_emitter();
+        const auto& dnnl_emitter = m_external_function->get_dnnl_emitter();
         // Create scratchpad
-        auto scratchpad_size = mkldnn_emitter->get_max_scratchpad_size();
+        auto scratchpad_size = dnnl_emitter->get_max_scratchpad_size();
         if (m_external_function->is_direct_execution())
         {
-            ctx->mkldnn_primitives =
-                std::vector<mkldnn::primitive*>(mkldnn_emitter->get_mkldnn_primitives().size());
-            ctx->mkldnn_memories =
-                std::vector<mkldnn::memory*>(mkldnn_emitter->get_mkldnn_memories().size());
-            ctx->mkldnn_scratchpad_mds = std::vector<mkldnn::memory::desc*>(
-                mkldnn_emitter->get_mkldnn_scratchpad_mds().size());
+            ctx->dnnl_primitives =
+                std::vector<dnnl::primitive*>(dnnl_emitter->get_dnnl_primitives().size());
+            ctx->dnnl_memories =
+                std::vector<dnnl::memory*>(dnnl_emitter->get_dnnl_memories().size());
+            ctx->dnnl_scratchpad_mds =
+                std::vector<dnnl::memory::desc*>(dnnl_emitter->get_dnnl_scratchpad_mds().size());
             if (scratchpad_size > 0)
             {
                 ctx->scratchpad_buffer = new AlignedBuffer(scratchpad_size, alignment, allocator);
@@ -259,11 +259,11 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
 
         delete[] ctx->op_durations;
         delete[] ctx->p_en;
-        for (auto p : ctx->mkldnn_primitives)
+        for (auto p : ctx->dnnl_primitives)
         {
             delete p;
         }
-        for (auto m : ctx->mkldnn_memories)
+        for (auto m : ctx->dnnl_memories)
         {
             delete m;
         }
@@ -271,7 +271,7 @@ void runtime::cpu::CPU_CallFrame::cleanup_runtime_context()
         {
             delete buffer;
         }
-        for (auto s : ctx->mkldnn_scratchpad_mds)
+        for (auto s : ctx->dnnl_scratchpad_mds)
         {
             delete s;
         }

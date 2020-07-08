@@ -36,10 +36,6 @@ namespace ngraph
     public:
         static constexpr DiscreteTypeInfo type_info{"Function", 0};
         const DiscreteTypeInfo& get_type_info() const { return type_info; }
-        Function(const NodeVector& results,
-                 const ParameterVector& parameters,
-                 const std::string& name = "");
-
         Function(const OutputVector& results,
                  const ParameterVector& parameters,
                  const std::string& name = "");
@@ -55,6 +51,7 @@ namespace ngraph
         void init();
 
         virtual ~Function() {}
+
     public:
         /// Return the number of outputs for this function.
         size_t get_output_size() const;
@@ -92,8 +89,8 @@ namespace ngraph
         /// \returns A const reference to the function's friendly name.
         const std::string& get_friendly_name() const;
 
-        std::vector<std::shared_ptr<Node>> get_ops() const;
-        std::vector<std::shared_ptr<Node>> get_ordered_ops() const;
+        NodeVector get_ops() const;
+        NodeVector get_ordered_ops() const;
         void map_unordered_ops(std::function<void(Node*)> f) const;
 
         friend std::ostream& operator<<(std::ostream&, const Function&);
@@ -126,8 +123,7 @@ namespace ngraph
         void replace_parameter(size_t parameter_index,
                                const std::shared_ptr<op::Parameter>& parameter);
 
-        using topological_sort_t = std::function<std::vector<std::shared_ptr<Node>>(
-            const std::vector<std::shared_ptr<Node>>& root_nodes)>;
+        using topological_sort_t = std::function<NodeVector(const NodeVector& root_nodes)>;
         void set_topological_sort(topological_sort_t);
 
     protected:

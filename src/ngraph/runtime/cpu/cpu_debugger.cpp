@@ -43,9 +43,7 @@ runtime::cpu::CPU_Debugger::CPU_Debugger(ngraph::runtime::cpu::CPU_CallFrame& ca
 {
 }
 
-runtime::cpu::CPU_Debugger::~CPU_Debugger()
-{
-}
+runtime::cpu::CPU_Debugger::~CPU_Debugger() {}
 
 bool runtime::cpu::CPU_Debugger::step()
 {
@@ -158,7 +156,7 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
 
         auto op_name = op->get_name();
         std::vector<size_t> poutputs;
-        for (size_t i = 0; i < op->get_outputs().size(); i++)
+        for (size_t i = 0; i < op->get_output_size(); i++)
         {
             poutputs.push_back(external_function->get_buffer_index(op_name + "_" + to_string(i)));
         }
@@ -166,8 +164,7 @@ bool runtime::cpu::CPU_Debugger::add_tracepoint(
         auto original_functor = external_function->functors.at(pc);
 
         auto trace_functor = [poutputs, callback, original_functor, op_name](
-            CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-
+                                 CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
             original_functor(ctx, ectx);
 
             std::vector<void*> outputs;
