@@ -57,9 +57,7 @@ Function::Function(const OutputVector& results,
     init();
 }
 
-Function::Function(Output<Node> result,
-                   const ParameterVector& parameters,
-                   const std::string& name)
+Function::Function(Output<Node> result, const ParameterVector& parameters, const std::string& name)
     : Function(OutputVector{result}, parameters, name)
 {
 }
