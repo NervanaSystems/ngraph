@@ -84,6 +84,7 @@ if(DNNL_INCLUDE_DIR AND DNNL_LIB_DIR)
     set_target_properties(libdnnl PROPERTIES INTERFACE_INCLUDE_DIRECTORIES ${DNNL_INCLUDE_DIR})
 
     install(FILES ${DNNL_LIB_DIR}/${DNNL_LIB} ${MKLML_LIB_DIR}/${MKLML_LIB} ${MKLML_LIB_DIR}/${OMP_LIB}  DESTINATION ${NGRAPH_INSTALL_LIB})
+    add_library(DNNL::dnnl ALIAS libdnnl)
     return()
 endif()
 
@@ -319,3 +320,4 @@ else()
             )
     endif()
 endif()
+add_library(DNNL::dnnl ALIAS libdnnl)
