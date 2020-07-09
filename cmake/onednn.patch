@@ -63,10 +63,10 @@ index 26dea5cc8..c2cda06e7 100644
      # Compilation happens with OpenMP to enable `#pragma omp simd`
      # but during linkage OpenMP dependency should be avoided
 diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
-index 88e318923..afb27c391 100644
+index 2db6536b7..3b0719995 100644
 --- a/src/CMakeLists.txt
 +++ b/src/CMakeLists.txt
-@@ -87,8 +87,10 @@ get_property(LIB_DEPS GLOBAL PROPERTY DNNL_LIB_DEPS)
+@@ -81,8 +81,10 @@ get_property(LIB_DEPS GLOBAL PROPERTY DNNL_LIB_DEPS)
  add_library(${LIB_NAME} ${DNNL_LIBRARY_TYPE}
      ${VERSION_RESOURCE_FILE} ${HEADERS} ${LIB_DEPS})
  
@@ -79,3 +79,14 @@ index 88e318923..afb27c391 100644
  set_property(TARGET ${LIB_NAME} PROPERTY PUBLIC_HEADER ${HEADERS})
  
  target_include_directories(${LIB_NAME} PUBLIC
+@@ -157,7 +159,9 @@ if (WIN32)
+ else()
+     if(DNNL_LIBRARY_TYPE STREQUAL "SHARED")
+         set_ternary(ext APPLE ".dylib" ".so")
+-        set(vers ".${DNNL_VERSION_MAJOR};.${DNNL_VERSION_MAJOR}.${DNNL_VERSION_MINOR}")
++        if(DNNL_LIB_VERSIONING_ENABLE)
++            set(vers ".${DNNL_VERSION_MAJOR};.${DNNL_VERSION_MAJOR}.${DNNL_VERSION_MINOR}")
++        endif()
+     else()
+         set(ext ".a")
+         set(vers "")
