@@ -27,10 +27,10 @@ cmake_policy(SET CMP0074 NEW)
 set(NGRAPH_TBB_VERSION "2020.2")
 
 if (WIN32)
-    set(TBB_FILE https://github.com/01org/tbb/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-win.zip)
+    set(TBB_FILE https://github.com/oneapi-src/oneTBB/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-win.zip)
     set(TBB_SHA1_HASH 38b2af1626e5dea06269c17ffb85f190d4f9b79a)
 elseif(APPLE)
-    set(TBB_FILE https://github.com/01org/tbb/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-mac.tgz)
+    set(TBB_FILE https://github.com/oneapi-src/oneTBB/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-mac.tgz)
     set(TBB_SHA1_HASH 19b56f90bae806e7c9a9f331bb03db934f046016)
 endif()
 
