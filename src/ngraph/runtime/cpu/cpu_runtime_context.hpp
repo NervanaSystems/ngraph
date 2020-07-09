@@ -25,7 +25,6 @@
 #define TBB_PREVIEW_FLOW_GRAPH_TRACE 1
 #include <tbb/flow_graph.h>
 #include <tbb/global_control.h>
-#include <tbb/task_scheduler_init.h>
 #endif
 
 #include "ngraph/op/experimental/compiled_kernel.hpp"

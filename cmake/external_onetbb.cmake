@@ -24,16 +24,14 @@ endif()
 
 cmake_policy(SET CMP0074 NEW)
 
-set(TBB_GIT_REPO_URL https://github.com/oneapi-src/oneTBB.git)
-set(NGRAPH_TBB_VERSION "2019_U3")
-set(NGRAPH_TBB_SUB_VERSION "tbb2019_20181203oss")
+set(NGRAPH_TBB_VERSION "2020.2")
 
 if (WIN32)
-    set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_win.zip)
-    set(TBB_SHA1_HASH 1989458a49e780d76248edac13b963f80c9a460c)
+    set(TBB_FILE https://github.com/oneapi-src/oneTBB/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-win.zip)
+    set(TBB_SHA1_HASH 38b2af1626e5dea06269c17ffb85f190d4f9b79a)
 elseif(APPLE)
-    set(TBB_FILE https://github.com/01org/tbb/releases/download/${NGRAPH_TBB_VERSION}/${NGRAPH_TBB_SUB_VERSION}_mac.tgz)
-    set(TBB_SHA1_HASH 36926fb46add578b88a5c7e19652b94bb612e4be)
+    set(TBB_FILE https://github.com/oneapi-src/oneTBB/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-mac.tgz)
+    set(TBB_SHA1_HASH 19b56f90bae806e7c9a9f331bb03db934f046016)
 endif()
 
 include(FetchContent)
@@ -45,10 +43,11 @@ if(WIN32 OR APPLE)
         URL_HASH       SHA1=${TBB_SHA1_HASH}
     )
 else()
+    set(TBB_GIT_REPO_URL https://github.com/oneapi-src/oneTBB.git)
     FetchContent_Declare(
         ngraphtbb
         GIT_REPOSITORY ${TBB_GIT_REPO_URL}
-        GIT_TAG        ${NGRAPH_TBB_VERSION}
+        GIT_TAG        v${NGRAPH_TBB_VERSION}
         GIT_SHALLOW    1
     )
 endif()
@@ -59,7 +58,7 @@ if(NOT ngraphtbb_POPULATED)
 endif()
 
 if(WIN32 OR APPLE)
-    set(TBB_DIR  ${ngraphtbb_SOURCE_DIR}/${NGRAPH_TBB_SUB_VERSION}/cmake)
+    set(TBB_DIR  ${ngraphtbb_SOURCE_DIR}/tbb/cmake)
 else()
     set(TBB_ROOT ${ngraphtbb_SOURCE_DIR})
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
