@@ -14,36 +14,19 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Enable ExternalProject CMake module
-include(ExternalProject)
-
-#------------------------------------------------------------------------------
-# Download json
-#------------------------------------------------------------------------------
-
-SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
-if(WIN32)
-    SET(JSON_GIT_LABEL v3.5.0)
-else()
-    SET(JSON_GIT_LABEL v3.7.3)
+if(TARGET nlohmann_json::nlohmann_json)
+    return()
 endif()
 
-ExternalProject_Add(
-    ext_json
-    PREFIX json
-    GIT_REPOSITORY ${JSON_GIT_REPO_URL}
-    GIT_TAG ${JSON_GIT_LABEL}
-    # Disable install step
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    EXCLUDE_FROM_ALL TRUE
-    )
+include(FetchContent)
 
-#------------------------------------------------------------------------------
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent
+    GIT_TAG v3.8.0
+    GIT_SHALLOW 1)
 
-ExternalProject_Get_Property(ext_json SOURCE_DIR)
-add_library(libjson INTERFACE)
-target_include_directories(libjson SYSTEM INTERFACE ${SOURCE_DIR}/include)
-add_dependencies(libjson ext_json)
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()

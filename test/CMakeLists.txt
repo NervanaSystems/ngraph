@@ -555,7 +555,7 @@ endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
-    target_link_libraries(unit-test PRIVATE libjson)
+    target_link_libraries(unit-test PRIVATE nlohmann_json::nlohmann_json)
 endif()
 if(NOT WIN32)
     target_link_libraries(unit-test PRIVATE pthread)
