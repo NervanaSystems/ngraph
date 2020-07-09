@@ -20,10 +20,16 @@ endif()
 
 include(FetchContent)
 
+if(WIN32)
+    SET(JSON_GIT_LABEL v3.5.0)
+else()
+    SET(JSON_GIT_LABEL v3.8.0)
+endif()
+
 FetchContent_Declare(json
     GIT_REPOSITORY https://github.com/nlohmann/json
-    GIT_TAG v3.8.0
-    GIT_SHALLOW 1)
+    GIT_TAG        ${JSON_GIT_LABEL}
+    GIT_SHALLOW    1)
 
 FetchContent_GetProperties(json)
 if(NOT json_POPULATED)
