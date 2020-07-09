@@ -20,7 +20,12 @@ endif()
 
 include(FetchContent)
 
-SET(JSON_GIT_LABEL v3.8.0)
+# Hedley annotations introduced in v3.7.0 causes build failure on MSVC 2017 + ICC 18
+if(WIN32)
+    SET(JSON_GIT_LABEL v3.6.1)
+else()
+    SET(JSON_GIT_LABEL v3.8.0)
+endif()
 
 FetchContent_Declare(json
     GIT_REPOSITORY https://github.com/nlohmann/json
