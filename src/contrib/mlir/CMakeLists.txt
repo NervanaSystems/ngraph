@@ -96,13 +96,13 @@ set(LIBS
 whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
-    mlir_backend PRIVATE 
+    mlir_backend PRIVATE
     ${llvm_libs}
 )
 
-# Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph libmkl libdnnl)
-target_include_directories(mlir_backend SYSTEM PUBLIC libdnnl)
+# Link ngraph
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl DNNL::dnnl)
+target_include_directories(mlir_backend SYSTEM PUBLIC DNNL::dnnl)
 
 # table-gen dialect ops
 # include table-gen helpers
