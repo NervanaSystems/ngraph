@@ -78,7 +78,7 @@ namespace
     ///   * Support upcoming region ops.
     ///   * Do not treat constants as definitions that might prevent fusion.
     ///   * Model memory cost, etc.
-    class NgOpFusionPass : public FunctionPass<NgOpFusionPass>
+    class NgOpFusionPass : public PassWrapper<NgOpFusionPass, FunctionPass>
     {
     public:
         void runOnFunction() override;
