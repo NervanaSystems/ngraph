@@ -230,7 +230,7 @@ if (NGRAPH_CPU_ENABLE)
     add_dependencies(cpu_backend DNNL::dnnl ext_eigen)
     target_link_libraries(cpu_backend PUBLIC ngraph DNNL::dnnl libmkl libeigen)
     if (NGRAPH_JSON_ENABLE)
-        target_link_libraries(cpu_backend PUBLIC libjson)
+        target_link_libraries(cpu_backend PUBLIC nlohmann_json::nlohmann_json)
     endif()
     if (NGRAPH_TBB_ENABLE)
         target_link_libraries(cpu_backend PUBLIC TBB::tbb)
@@ -250,12 +250,12 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     if (NGRAPH_MLIR_ENABLE)
-        # TODO: can we get away without LLVM/MLIR include path. 
+        # TODO: can we get away without LLVM/MLIR include path.
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
                                DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
-        
+
         message(STATUS "Building CPU backend with MLIR")
         add_dependencies(cpu_backend mlir_backend)
         target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
@@ -264,6 +264,6 @@ if (NGRAPH_CPU_ENABLE)
         # and add them to cpu_backend here instead.
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
     endif()
-    
+
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()
