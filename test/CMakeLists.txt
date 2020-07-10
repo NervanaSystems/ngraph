@@ -555,7 +555,7 @@ endif()
 
 target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
-    target_link_libraries(unit-test PRIVATE libjson)
+    target_link_libraries(unit-test PRIVATE nlohmann_json::nlohmann_json)
 endif()
 if(NOT WIN32)
     target_link_libraries(unit-test PRIVATE pthread)
@@ -579,7 +579,7 @@ endif()
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
-    target_link_libraries(unit-test PRIVATE libdnnl)
+    target_link_libraries(unit-test PRIVATE DNNL::dnnl)
     target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
