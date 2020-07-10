@@ -44,9 +44,9 @@ void regclass_pyngraph_Function(py::module m)
                           const ngraph::ParameterVector&,
                           const std::string&>());
 
-    function.def(py::init<const std::shared_ptr<ngraph::Node>&,
-                          const ngraph::ParameterVector&,
-                          const std::string&>());
+    function.def(
+        py::init <
+        ngraph::Output<ngraph::Node, const ngraph::ParameterVector&, const std::string&>());
     function.def("get_output_size", &ngraph::Function::get_output_size);
     function.def("get_ops", &ngraph::Function::get_ops);
     function.def("get_ordered_ops", &ngraph::Function::get_ordered_ops);
