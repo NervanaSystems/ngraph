@@ -14,14 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does not expose public API to the rest of nGraph codebase and heavily
+// depends on MLIR API.
 
 #pragma once
 
 #include <mlir/Pass/Pass.h>
 
-namespace mlir
-{
-    std::unique_ptr<mlir::Pass> createNgOpFusionPass();
+namespace mlir {
+std::unique_ptr<mlir::Pass> createNgOpFusionPass();
 }

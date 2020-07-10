@@ -74,9 +74,9 @@ using llvm::StringRef;
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
 
-static llvm::cl::opt<bool> clEnableOpFusion("ngraph-op-fusion",
-                                            llvm::cl::init(false),
-                                            llvm::cl::desc("Enable ngraph dialect op fusion pass"));
+static llvm::cl::opt<bool>
+    clEnableOpFusion("ngraph-op-fusion", llvm::cl::init(false),
+                     llvm::cl::desc("Enable ngraph dialect op fusion pass"));
 
 bool MLIRCompiler::initialized = false;
 
