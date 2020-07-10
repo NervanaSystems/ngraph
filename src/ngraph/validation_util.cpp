@@ -14,13 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/validation_util.hpp"
+#include <algorithm>
+
 #include "ngraph/evaluator.hpp"
-#include "ngraph/op/constant.hpp"
+#include "ngraph/op/concat.hpp"
+#include "ngraph/op/convert.hpp"
+#include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
+#include "ngraph/op/squeeze.hpp"
+#include "ngraph/op/unsqueeze.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type_traits.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/validation_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -649,10 +656,17 @@ PartialShape ngraph::infer_slice_shape(const Node* node,
                               "Upper bounds and strides needs to have same number of values");
     }
 
+    NODE_VALIDATION_CHECK(node, ellipsis_mask.size() <= 1, "At most one ellipsis is allowed.");
+
     if (input_shape.rank().is_dynamic())
     {
         return PartialShape::dynamic();
     }
+
+    NODE_VALIDATION_CHECK(node,
+                          input_shape.rank().get_length() + new_axis_mask.size() >= begin.size(),
+                          "Input rank plus number of new axis has to be at least the size of Lower "
+                          "and Upper bounds vector.");
 
     std::vector<Dimension> dim;
 
@@ -915,81 +929,173 @@ void ngraph::opset1::infer_conv_backprop_auto_padding(const Shape& input_data_sh
 
 namespace
 {
-    /// \brief Scalar variant describes value of an Output
+    /// \brief Scalar variant describes value of an Output, for use in max shape determination
+    ///
+    /// For tensor values, we use the maximum value in the tensor
     struct MaxValue
     {
         /// \brief No information known about the output
-        MaxValue()
-            : m_element_type(element::Type_t::undefined)
+        MaxValue() {}
+        /// \brief uint64_t assoiated with the output
+        MaxValue(uint64_t value)
+            : m_value(value)
         {
         }
-        /// \brief int64_t assoiated with the output
-        MaxValue(int64_t value)
-            : m_element_type(element::Type_t::i64)
-            , m_int64_t(value)
+        MaxValue(const vector<uint64_t>& slices, int64_t slice_axis)
+            : m_slices(slices)
+            , m_slice_axis(slice_axis)
         {
+            m_value = *max_element(m_slices.begin(), m_slices.end());
         }
-        element::Type_t m_element_type;
-        element_type_traits<element::Type_t::i64>::value_type m_int64_t;
+        uint64_t m_value{numeric_limits<uint64_t>::max()};
+        vector<uint64_t> m_slices;
+        int64_t m_slice_axis{-1};
     };
 
     vector<MaxValue> exec_constant(Node* node, vector<MaxValue>& inputs)
     {
+        auto result = MaxValue();
         auto op = as_type<op::Constant>(node);
-        auto shape = op->get_output_partial_shape(0);
-        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        auto element_type = op->get_output_element_type(0);
+        if (element_type.is_integral())
         {
-            auto et = op->get_output_element_type(0);
-            if (et == element::i64)
+            uint64_t max_val = 0;
+            if (element_type.is_signed())
             {
-                vector<int64_t> elts = op->get_vector<int64_t>();
-                return {MaxValue(elts[0])};
+                for (auto elt : op->cast_vector<int64_t>())
+                {
+                    if (max_val < elt)
+                    {
+                        max_val = elt;
+                    }
+                }
             }
+            else
+            {
+                for (auto elt : op->cast_vector<uint64_t>())
+                {
+                    if (max_val < elt)
+                    {
+                        max_val = elt;
+                    }
+                }
+            }
+            result = MaxValue(max_val);
         }
-        return {MaxValue()};
+        return {result};
     }
 
     vector<MaxValue> exec_minimum(Node* node, vector<MaxValue>& inputs)
     {
-        auto op = as_type<op::Minimum>(node);
-        auto shape = op->get_output_partial_shape(0);
-        if (shape.rank().is_static() && shape.rank().get_length() == 0)
+        uint64_t min_value = numeric_limits<uint64_t>::max();
+        switch (node->get_output_element_type(0))
         {
-            auto et = op->get_output_element_type(0);
-            if (et == element::i64)
+        case element::Type_t::i8: min_value = numeric_limits<int8_t>::max(); break;
+        case element::Type_t::i16: min_value = numeric_limits<int16_t>::max(); break;
+        case element::Type_t::i32: min_value = numeric_limits<int32_t>::max(); break;
+        case element::Type_t::i64: min_value = numeric_limits<int64_t>::max(); break;
+        case element::Type_t::u8: min_value = numeric_limits<uint8_t>::max(); break;
+        case element::Type_t::u16: min_value = numeric_limits<uint16_t>::max(); break;
+        case element::Type_t::u32: min_value = numeric_limits<uint32_t>::max(); break;
+        case element::Type_t::u64: min_value = numeric_limits<uint64_t>::max(); break;
+        default: break;
+        }
+        min_value = min(min_value, inputs.at(0).m_value);
+        min_value = min(min_value, inputs.at(1).m_value);
+        return {MaxValue(min_value)};
+    }
+
+    vector<MaxValue> exec_concat(Node* node, vector<MaxValue>& inputs)
+    {
+        auto op = as_type<op::v0::Concat>(node);
+        vector<uint64_t> slice_maxen;
+        for (auto input : inputs)
+        {
+            slice_maxen.push_back(input.m_value);
+        }
+        auto axis = op->get_concatenation_axis();
+        return {MaxValue(slice_maxen, axis)};
+    }
+
+    vector<MaxValue> exec_reduce_min(Node* node, vector<MaxValue>& inputs)
+    {
+        auto data = inputs.at(0);
+        if (data.m_slice_axis >= 0 && data.m_slices.size() > 1)
+        {
+            if (auto indices_const = as_type<op::v0::Constant>(node->get_input_node_ptr(1)))
             {
-                int64_t min_value = numeric_limits<int64_t>::max();
+                if (indices_const->get_output_element_type(0).is_integral())
                 {
-                    auto v1 = inputs.at(0);
-                    if (v1.m_element_type == et)
+                    auto indices_shape = indices_const->get_output_shape(0);
+                    if (indices_shape == Shape{1})
                     {
-                        min_value = min(min_value, v1.m_int64_t);
+                        auto indices = indices_const->cast_vector<int64_t>();
+                        auto axis = indices.at(0);
+                        if (axis == data.m_slice_axis)
+                        {
+                            return {
+                                MaxValue(*min_element(data.m_slices.begin(), data.m_slices.end()))};
+                        }
                     }
                 }
-                {
-                    auto v2 = inputs.at(1);
-                    if (v2.m_element_type == et)
-                    {
-                        min_value = min(min_value, v2.m_int64_t);
-                    }
-                }
-                return {min_value == numeric_limits<int64_t>::max() ? MaxValue()
-                                                                    : MaxValue(min_value)};
             }
         }
-        return {MaxValue()};
+        // Noting we can do
+        return {MaxValue(data.m_value)};
     }
+    vector<MaxValue> exec_nop(Node* node, vector<MaxValue>& inputs) { return {inputs.at(0)}; }
 }
 
-pair<bool, int64_t> ngraph::maximum_value(const Output<Node>& value)
+pair<bool, uint64_t> ngraph::maximum_value(const Output<Node>& value)
 {
     static Evaluator<MaxValue>::op_handler_map handlers = {
-        {op::Minimum::type_info, exec_minimum}, {op::Constant::type_info, exec_constant}};
-    Evaluator<MaxValue> evaluator(handlers);
+        {op::v0::Concat::type_info, exec_concat},
+        {op::v0::Constant::type_info, exec_constant},
+        {op::v0::Convert::type_info, exec_nop},
+        {op::v0::Minimum::type_info, exec_minimum},
+        {op::v1::Minimum::type_info, exec_minimum},
+        {op::v1::ReduceMin::type_info, exec_reduce_min},
+        {op::v0::Squeeze::type_info, exec_nop},
+        {op::v0::Unsqueeze::type_info, exec_nop}};
+    Evaluator<MaxValue>::value_map value_map;
+    Evaluator<MaxValue> evaluator(handlers, value_map);
     auto val = evaluator.evaluate(value);
-    if (val.m_element_type == element::Type_t::i64)
+    return pair<bool, uint64_t>(val.m_value < numeric_limits<uint64_t>::max(), val.m_value);
+}
+
+void ngraph::evaluate_nodes(std::map<RawNodeOutput, HostTensorPtr>& value_map,
+                            std::map<RawNodeOutput, HostTensorPtr>& output_tensor_map,
+                            const OutputVector& outputs)
+{
+    Evaluator<HostTensorPtr> evaluator({}, value_map);
+    evaluator.set_univeral_handler(
+        [&output_tensor_map](Node* node,
+                             const HostTensorVector& input_tensors) -> HostTensorVector {
+            HostTensorVector output_tensors;
+            for (auto v : node->outputs())
+            {
+                auto it = output_tensor_map.find(v);
+                if (it == output_tensor_map.end())
+                {
+                    auto c = make_shared<HostTensor>(v);
+                    output_tensors.push_back(c);
+                }
+                else
+                {
+                    output_tensors.push_back(it->second);
+                }
+            }
+            if (node->evaluate(output_tensors, input_tensors))
+            {
+                return output_tensors;
+            }
+            else
+            {
+                NGRAPH_CHECK(false, "Evaluation failed on ", node);
+            }
+        });
+    for (auto value : outputs)
     {
-        return pair<bool, int64_t>(true, val.m_int64_t);
+        evaluator.evaluate(value);
     }
-    return pair<bool, int64_t>(false, 0);
 }

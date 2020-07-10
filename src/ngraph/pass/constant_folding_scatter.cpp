@@ -30,14 +30,15 @@ static shared_ptr<op::Constant>
                                     const shared_ptr<op::Constant>& axis,
                                     const shared_ptr<Node>& scatter)
 {
-    runtime::AlignedBuffer buffer(shape_size(scatter->get_shape()) * sizeof(DataType));
+    runtime::AlignedBuffer buffer(shape_size(scatter->get_output_shape(0)) * sizeof(DataType));
     DataType* data_ptr = buffer.get_ptr<DataType>();
 
     if (is_type<op::v3::ScatterElementsUpdate>(scatter))
     {
-        int64_t normalized_axis = normalize_axis(scatter.get(),
-                                                 *(axis->get_data_ptr<AxisType>()),
-                                                 static_cast<int64_t>(data->get_shape().size()));
+        int64_t normalized_axis =
+            normalize_axis(scatter.get(),
+                           *(axis->get_data_ptr<AxisType>()),
+                           static_cast<int64_t>(data->get_output_shape(0).size()));
 
         runtime::reference::scatter_elem_update<DataType, IndicesType>(
             data->get_data_ptr<DataType>(),
@@ -45,8 +46,8 @@ static shared_ptr<op::Constant>
             updates->get_data_ptr<DataType>(),
             normalized_axis,
             data_ptr,
-            data->get_shape(),
-            indices->get_shape());
+            data->get_output_shape(0),
+            indices->get_output_shape(0));
     }
     else
     {
@@ -257,7 +258,7 @@ void pass::ConstantFolding::construct_constant_scatter_elements_update()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

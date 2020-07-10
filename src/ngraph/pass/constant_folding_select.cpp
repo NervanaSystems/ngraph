@@ -27,7 +27,7 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
                                               const shared_ptr<op::Constant>& f,
                                               const shared_ptr<Node>& select)
 {
-    const Shape& out_shape = select->get_shape();
+    const Shape& out_shape = select->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
 
@@ -45,13 +45,13 @@ shared_ptr<op::Constant> fold_constant_select(const shared_ptr<op::Constant>& se
                                       t->get_data_ptr<T>(),
                                       f->get_data_ptr<T>(),
                                       data_ptr,
-                                      selection->get_shape(),
-                                      t->get_shape(),
-                                      f->get_shape(),
+                                      selection->get_output_shape(0),
+                                      t->get_output_shape(0),
+                                      f->get_output_shape(0),
                                       select_v1->get_auto_broadcast());
     }
 
-    return make_shared<op::Constant>(select->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(select->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_select()
@@ -71,11 +71,10 @@ void pass::ConstantFolding::construct_constant_select()
 
         auto pattern_map = m.get_pattern_map();
 
-        const auto& selection_node =
-            static_pointer_cast<op::Constant>(pattern_map[selection_label]);
-        const auto& t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
-        const auto& f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
-        const auto& select = m.get_match_root();
+        const auto selection_node = static_pointer_cast<op::Constant>(pattern_map[selection_label]);
+        const auto t_node = static_pointer_cast<op::Constant>(pattern_map[t_label]);
+        const auto f_node = static_pointer_cast<op::Constant>(pattern_map[f_label]);
+        const auto select = m.get_match_root();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(select));
 
@@ -133,7 +132,7 @@ void pass::ConstantFolding::construct_constant_select()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

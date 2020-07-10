@@ -98,7 +98,7 @@ namespace ngraph
         ///
         /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
         NGRAPH_API
-        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+        std::pair<Output<Node>, Output<Node>>
             numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
         /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style
@@ -225,6 +225,26 @@ namespace ngraph
                                          const Shape& input_shape,
                                          std::size_t start_match_axis);
 
+        ///
+        /// \brief      Calculate the output shape of numpy-style broadcast operation for all input
+        ///             shapes.
+        ///
+        ///             This function finds the maximum tensor shape that will be the result of
+        ///             element-wise operation that will be applied to the input shapes vector.
+        ///             The function also prepares the shape of each input for the element-wise
+        ///             operation by left-padding those shapes so that their rank is equal to the
+        ///             left_shape's rank.
+        ///
+        /// \param      input_shapes  A vector of input shapes for which a common shape should be
+        ///                           found
+        ///
+        /// \return     A pair that contains the target shape as its first object and a vector of
+        ///             padded input shapes ready to be broadcasted as the second object
+        ///
+        NGRAPH_API
+        std::pair<Shape, std::vector<Shape>>
+            get_numpy_broadcast_shapes(const std::vector<Shape>& input_shapes);
+
         /// \brief Generate a list of broadcast along axes.
         ///
         /// \details Broadcast "adds" elements along axes to the input tensor, replicating
@@ -328,7 +348,6 @@ namespace ngraph
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
                                         std::size_t start_match_axis);
-
-        } // namespace opset1
-    }     // namespace builder
-} // namespace ngraph
+        }
+    }
+}

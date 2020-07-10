@@ -29,25 +29,20 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector max(const Node& node)
+                inline OutputVector max(const Node& node)
                 {
                     return variadic::make_ng_variadic_op<default_opset::Maximum>(
                         node, ngraph::op::AutoBroadcastSpec::NONE);
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_8
             {
-                inline NodeVector max(const Node& node)
+                inline OutputVector max(const Node& node)
                 {
                     return variadic::make_ng_variadic_op<default_opset::Maximum>(node);
                 }
-
-            } // namespace set_8
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

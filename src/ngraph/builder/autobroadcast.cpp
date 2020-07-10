@@ -92,24 +92,7 @@ namespace ngraph
             return result;
         };
 
-        ///
-        /// \brief      Calculate the output shape of numpy-style broadcast operation for all input
-        ///             shapes.
-        ///
-        ///             This function finds the maximum tensor shape that will be the result of
-        ///             element-wise operation that will be applied to the input shapes vector.
-        ///             The function also prepares the shape of each input for the element-wise
-        ///             operation by left-padding those shapes so that their rank is equal to the
-        ///             left_shape's rank.
-        ///
-        /// \param      input_shapes  A vector of input shapes for which a common shape should be
-        ///                           found
-        ///
-        /// \return     A pair that contains the target shape as its first object and a vector of
-        ///             padded input shapes ready to be broadcasted as the second object
-        ///
-        static pair<Shape, vector<Shape>>
-            get_numpy_broadcast_shapes(const vector<Shape>& input_shapes)
+        pair<Shape, vector<Shape>> get_numpy_broadcast_shapes(const vector<Shape>& input_shapes)
         {
             Shape target_shape = accumulate(
                 begin(input_shapes), end(input_shapes), Shape{}, calculate_broadcast_shape);
@@ -156,7 +139,7 @@ namespace ngraph
                                                      const Shape& output_shape,
                                                      const Shape& source_shape)
         {
-            shared_ptr<Node> broadcasted_node = value.as_single_output_node();
+            shared_ptr<Node> broadcasted_node = value.get_node_shared_ptr();
             // If node already has the required shape, return original node
             if (output_shape == value.get_shape())
             {
@@ -217,7 +200,7 @@ namespace ngraph
             // If node already has the required shape, return original node
             if (output_shape == value_shape)
             {
-                return value.as_single_output_node();
+                return value.get_node_shared_ptr();
             }
 
             if (axis == -1)
@@ -254,7 +237,7 @@ namespace ngraph
             return move(value_bcast);
         }
 
-        pair<shared_ptr<Node>, shared_ptr<Node>>
+        pair<Output<Node>, Output<Node>>
             numpy_broadcast(const pair<Output<Node>, Output<Node>>& args)
         {
             NGRAPH_CHECK(args.first.get_node());
@@ -266,12 +249,10 @@ namespace ngraph
             // Handle the trivial case...
             if (arg1_in_shape == arg2_in_shape)
             {
-                return make_pair(args.first.as_single_output_node(),
-                                 args.second.as_single_output_node());
+                return args;
             }
 
-            NodeVector bcasted_outputs =
-                as_node_vector(numpy_broadcast_outputs({args.first, args.second}));
+            OutputVector bcasted_outputs = numpy_broadcast_outputs({args.first, args.second});
 
             return make_pair(bcasted_outputs.at(0), bcasted_outputs.at(1));
         }
@@ -532,7 +513,6 @@ namespace ngraph
                     op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
                     get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
             }
-
-        } // namespace opset1
-    }     // namespace builder
-} // namespace ngraph
+        }
+    }
+}

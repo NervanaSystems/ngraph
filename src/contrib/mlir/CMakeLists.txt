@@ -14,6 +14,10 @@
 # limitations under the License.
 # ******************************************************************************
 
+if (NOT NGRAPH_MLIR_ENABLE)
+    return()
+endif()
+
 include_directories(
     ${NGRAPH_INCLUDE_PATH}
     ${MLIR_LLVM_INCLUDE_PATH}
@@ -50,7 +54,9 @@ llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link MLIR libs
 target_link_libraries(
-    mlir_backend PRIVATE 
+    mlir_backend PRIVATE
+    MLIRAffineOps
+    MLIRAffineEDSC
     MLIRAffineToStandard
     MLIRAnalysis
     MLIREDSC
@@ -64,6 +70,7 @@ target_link_libraries(
     MLIRTargetLLVMIR
     MLIRTransforms
     MLIRSupport
+    MLIRAffineTransforms
 )
 # some libs need whole archive linkage because of Globals static initialization
 function(whole_archive_link target)
@@ -91,13 +98,13 @@ set(LIBS
 whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
-    mlir_backend PRIVATE 
+    mlir_backend PRIVATE
     ${llvm_libs}
 )
 
-# Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph libmkl libmkldnn)
-target_include_directories(mlir_backend SYSTEM PUBLIC libmkldnn)
+# Link ngraph
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl DNNL::dnnl)
+target_include_directories(mlir_backend SYSTEM PUBLIC DNNL::dnnl)
 
 # table-gen dialect ops
 # include table-gen helpers

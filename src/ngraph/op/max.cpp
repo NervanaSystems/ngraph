@@ -16,6 +16,9 @@
 
 #include "ngraph/op/max.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/max.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -42,44 +45,100 @@ shared_ptr<Node> op::v0::Max::clone_with_new_inputs(const OutputVector& new_args
 
 shared_ptr<Node> op::v0::Max::get_default_value() const
 {
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean:
-        return make_constant_from_string("0", get_element_type(), get_shape());
+        return make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
     case element::Type_t::bf16:
     case element::Type_t::f16:
     case element::Type_t::f32:
     case element::Type_t::f64:
-        return make_constant_from_string("-INFINITY", get_element_type(), get_shape());
+        return make_constant_from_string(
+            "-INFINITY", get_output_element_type(0), get_output_shape(0));
     case element::Type_t::i8:
-        return make_constant_from_string(
-            to_string(numeric_limits<int8_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<int8_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::i16:
-        return make_constant_from_string(
-            to_string(numeric_limits<int16_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<int16_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::i32:
-        return make_constant_from_string(
-            to_string(numeric_limits<int32_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<int32_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::i64:
-        return make_constant_from_string(
-            to_string(numeric_limits<int64_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<int64_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u8:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint8_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<uint8_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u16:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint16_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<uint16_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u32:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint32_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<uint32_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u64:
-        return make_constant_from_string(
-            to_string(numeric_limits<uint64_t>::min()), get_element_type(), get_shape());
+        return make_constant_from_string(to_string(numeric_limits<uint64_t>::min()),
+                                         get_output_element_type(0),
+                                         get_output_shape(0));
     case element::Type_t::u1:
     case element::Type_t::undefined:
     case element::Type_t::dynamic:
     default: throw runtime_error("Max default value not defined for type");
     }
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        out->set_shape(reduce(arg->get_shape(), axes));
+        runtime::reference::max(
+            arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), arg->get_shape(), axes);
+        return true;
+    }
+
+    bool evaluate_max(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        bool rc = true;
+        switch (arg->get_element_type())
+        {
+            TYPE_CASE(i8)(arg, out, axes);
+            break;
+            TYPE_CASE(i16)(arg, out, axes);
+            break;
+            TYPE_CASE(i32)(arg, out, axes);
+            break;
+            TYPE_CASE(i64)(arg, out, axes);
+            break;
+            TYPE_CASE(u8)(arg, out, axes);
+            break;
+            TYPE_CASE(u16)(arg, out, axes);
+            break;
+            TYPE_CASE(u32)(arg, out, axes);
+            break;
+            TYPE_CASE(u64)(arg, out, axes);
+            break;
+            TYPE_CASE(f32)(arg, out, axes);
+            break;
+            TYPE_CASE(f64)(arg, out, axes);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Max::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_max(inputs[0], outputs[0], get_reduction_axes());
 }
 
 constexpr NodeTypeInfo op::v1::ReduceMax::type_info;
@@ -96,4 +155,9 @@ shared_ptr<Node> op::v1::ReduceMax::clone_with_new_inputs(const OutputVector& ne
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v1::ReduceMax>(new_args.at(0), new_args.at(1), get_keep_dims());
+}
+
+bool op::v1::ReduceMax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_max(inputs[0], outputs[0], get_reduction_axes());
 }

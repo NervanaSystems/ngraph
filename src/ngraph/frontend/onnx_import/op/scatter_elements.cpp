@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "default_opset.hpp"
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "scatter_elements.hpp"
 
 namespace ngraph
@@ -28,7 +28,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector scatter_elements(const Node& node)
+                OutputVector scatter_elements(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
                     const auto indices = node.get_ng_inputs().at(1);
@@ -41,10 +41,7 @@ namespace ngraph
                     return {std::make_shared<ngraph::opset3::ScatterElementsUpdate>(
                         data, indices, updates, axis_node)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

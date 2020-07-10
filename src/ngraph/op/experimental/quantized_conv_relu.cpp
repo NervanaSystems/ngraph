@@ -16,7 +16,6 @@
 
 #include "ngraph/op/experimental/quantized_conv_relu.hpp"
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -70,12 +69,12 @@ shared_ptr<Node>
         throw ngraph_error("Incorrect number of new arguments");
     }
 
-    return shared_ptr<Node>(new QuantizedConvolutionRelu(new_args.at(0),
-                                                         new_args.at(1),
-                                                         get_window_movement_strides(),
-                                                         get_window_dilation_strides(),
-                                                         get_padding_below(),
-                                                         get_padding_above(),
-                                                         get_data_dilation_strides(),
-                                                         new_args.at(2)));
+    return make_shared<QuantizedConvolutionRelu>(new_args.at(0),
+                                                 new_args.at(1),
+                                                 get_window_movement_strides(),
+                                                 get_window_dilation_strides(),
+                                                 get_padding_below(),
+                                                 get_padding_above(),
+                                                 get_data_dilation_strides(),
+                                                 new_args.at(2));
 }

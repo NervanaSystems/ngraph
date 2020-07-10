@@ -27,8 +27,8 @@ TEST(type_prop, reverse_0d_deduce)
     auto param = make_shared<op::Parameter>(element::f32, Shape{});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{}));
 }
 
 TEST(type_prop, reverse_1d_deduce_nochange)
@@ -37,8 +37,8 @@ TEST(type_prop, reverse_1d_deduce_nochange)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5}));
 }
 
 TEST(type_prop, reverse_1d_deduce_0)
@@ -47,8 +47,8 @@ TEST(type_prop, reverse_1d_deduce_0)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5}));
 }
 
 TEST(type_prop, reverse_2d_deduce_nochange)
@@ -57,8 +57,8 @@ TEST(type_prop, reverse_2d_deduce_nochange)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_2d_deduce_0)
@@ -67,8 +67,8 @@ TEST(type_prop, reverse_2d_deduce_0)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_2d_deduce_1)
@@ -77,8 +77,8 @@ TEST(type_prop, reverse_2d_deduce_1)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{1});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_2d_deduce_01)
@@ -87,8 +87,8 @@ TEST(type_prop, reverse_2d_deduce_01)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6}));
 }
 
 TEST(type_prop, reverse_3d_deduce_nochange)
@@ -97,8 +97,8 @@ TEST(type_prop, reverse_3d_deduce_nochange)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_0)
@@ -107,8 +107,8 @@ TEST(type_prop, reverse_3d_deduce_0)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_1)
@@ -117,8 +117,8 @@ TEST(type_prop, reverse_3d_deduce_1)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{1});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_2)
@@ -127,8 +127,8 @@ TEST(type_prop, reverse_3d_deduce_2)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{2});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_01)
@@ -137,8 +137,8 @@ TEST(type_prop, reverse_3d_deduce_01)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_02)
@@ -147,8 +147,8 @@ TEST(type_prop, reverse_3d_deduce_02)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_12)
@@ -157,8 +157,8 @@ TEST(type_prop, reverse_3d_deduce_12)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{1, 2});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_012)
@@ -167,8 +167,8 @@ TEST(type_prop, reverse_3d_deduce_012)
     auto param = make_shared<op::Parameter>(element::f32, Shape{5, 6, 7});
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 1, 2});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
-    EXPECT_EQ(rev->get_shape(), (Shape{5, 6, 7}));
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
+    EXPECT_EQ(rev->get_output_shape(0), (Shape{5, 6, 7}));
 }
 
 TEST(type_prop, reverse_3d_deduce_oob)
@@ -200,7 +200,7 @@ TEST(type_prop, reverse_partial_rank_dynamic)
     auto param = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2, 1776, 90909});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
     EXPECT_TRUE(rev->get_output_partial_shape(0).rank().is_dynamic());
 }
 
@@ -214,7 +214,7 @@ TEST(type_prop, reverse_partial_rank_static_dynamic_axes_ok)
     auto param = make_shared<op::Parameter>(element::f32, param_shape);
     auto rev = make_shared<op::Reverse>(param, AxisSet{0, 2});
 
-    EXPECT_EQ(rev->get_element_type(), element::f32);
+    EXPECT_EQ(rev->get_output_element_type(0), element::f32);
     EXPECT_TRUE(rev->get_output_partial_shape(0).same_scheme(param_shape));
 }
 

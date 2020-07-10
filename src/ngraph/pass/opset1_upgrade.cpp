@@ -220,6 +220,14 @@ namespace
         return replacement_node;
     }
 
+    shared_ptr<Node> op_cast(shared_ptr<op::Reshape> node)
+    {
+        shared_ptr<Node> replacement_node =
+            builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
+        replace_node(node, replacement_node);
+        return replacement_node;
+    }
+
     shared_ptr<Node> op_cast(shared_ptr<op::Equal> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
@@ -633,9 +641,9 @@ namespace
         std::string sort;
         switch (node->get_sort())
         {
-        case op::TopK::SortType::SORT_INDICES: sort = "index"; break;
-        case op::TopK::SortType::SORT_VALUES: sort = "value"; break;
-        case op::TopK::SortType::NONE: sort = "none"; break;
+        case op::TopK::SortType::index: sort = "index"; break;
+        case op::TopK::SortType::value: sort = "value"; break;
+        case op::TopK::SortType::none: sort = "none"; break;
         }
 
         std::string mode;
@@ -689,12 +697,12 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-#include "ngraph/opsets/opset0_tbl.hpp"
+#include "ngraph/opset/opset0_tbl.hpp"
 #undef NGRAPH_OP
         };
         return dispatch_map;
     }
-} // namespace
+}
 
 bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
 {

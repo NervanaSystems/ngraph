@@ -384,6 +384,5 @@ namespace ngraph
         }
 
 #undef REGISTER_OPERATOR
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

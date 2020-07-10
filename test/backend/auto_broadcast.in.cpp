@@ -55,50 +55,53 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-template <typename optype, typename itype, typename otype>
-void check_auto_bcast(
-    const std::vector<std::vector<itype>>& inputs,
-    const std::vector<otype> output,
-    const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY),
-    bool set_tolerance = false)
+namespace
 {
-    auto iet = element::from<itype>();
-    auto oet = element::from<otype>();
-
-    if (std::is_same<itype, char>::value)
+    template <typename optype, typename itype, typename otype>
+    void check_auto_bcast(
+        const std::vector<std::vector<itype>>& inputs,
+        const std::vector<otype> output,
+        const op::AutoBroadcastSpec& autob = op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY),
+        bool set_tolerance = false)
     {
-        iet = element::boolean;
-    }
-    if (std::is_same<otype, char>::value)
-    {
-        oet = element::boolean;
-    }
-    auto A = make_shared<op::Parameter>(iet, Shape{2, 3});
-    auto B = make_shared<op::Parameter>(iet, Shape{3});
-    auto f = make_shared<Function>(make_shared<optype>(A, B, autob), ParameterVector{A, B});
+        auto iet = element::from<itype>();
+        auto oet = element::from<otype>();
 
-    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+        if (std::is_same<itype, char>::value)
+        {
+            iet = element::boolean;
+        }
+        if (std::is_same<otype, char>::value)
+        {
+            oet = element::boolean;
+        }
+        auto A = make_shared<op::Parameter>(iet, Shape{2, 3});
+        auto B = make_shared<op::Parameter>(iet, Shape{3});
+        auto f = make_shared<Function>(make_shared<optype>(A, B, autob), ParameterVector{A, B});
 
-    // Create some tensors for input/output
-    shared_ptr<runtime::Tensor> a = backend->create_tensor(iet, Shape{2, 3});
-    shared_ptr<runtime::Tensor> b = backend->create_tensor(iet, Shape{3});
-    shared_ptr<runtime::Tensor> result = backend->create_tensor(oet, Shape{2, 3});
+        auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
-    copy_data(a, inputs[0]);
-    copy_data(b, inputs[1]);
+        // Create some tensors for input/output
+        shared_ptr<runtime::Tensor> a = backend->create_tensor(iet, Shape{2, 3});
+        shared_ptr<runtime::Tensor> b = backend->create_tensor(iet, Shape{3});
+        shared_ptr<runtime::Tensor> result = backend->create_tensor(oet, Shape{2, 3});
 
-    auto handle = backend->compile(f);
-    handle->call_with_validate({result}, {a, b});
-    if (set_tolerance)
-    {
-        EXPECT_TRUE(test::all_close(read_vector<otype>(result),
-                                    output,
-                                    static_cast<otype>(RTOL),
-                                    static_cast<otype>(ATOL)));
-    }
-    else
-    {
-        EXPECT_TRUE(test::all_close(read_vector<otype>(result), output));
+        copy_data(a, inputs[0]);
+        copy_data(b, inputs[1]);
+
+        auto handle = backend->compile(f);
+        handle->call_with_validate({result}, {a, b});
+        if (set_tolerance)
+        {
+            EXPECT_TRUE(test::all_close(read_vector<otype>(result),
+                                        output,
+                                        static_cast<otype>(RTOL),
+                                        static_cast<otype>(ATOL)));
+        }
+        else
+        {
+            EXPECT_TRUE(test::all_close(read_vector<otype>(result), output));
+        }
     }
 }
 

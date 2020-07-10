@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <mkldnn.hpp>
+#include <dnnl.hpp>
 #include "ngraph/op/op.hpp"
 #include "ngraph/runtime/cpu/cpu_backend_visibility.h"
 #include "ngraph/runtime/cpu/op/rnn_utils.hpp"

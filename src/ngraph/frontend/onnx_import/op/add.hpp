@@ -29,18 +29,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector add(const Node& node);
-
-            } // namespace set_1
+                OutputVector add(const Node& node);
+            }
 
             namespace set_7
             {
-                NodeVector add(const Node& node);
-
-            } // namespace set_7
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector add(const Node& node);
+            }
+        }
+    }
+}

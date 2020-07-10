@@ -16,9 +16,7 @@
 
 #include "ngraph/runtime/allocator.hpp"
 
-ngraph::runtime::Allocator::~Allocator()
-{
-}
+ngraph::runtime::Allocator::~Allocator() {}
 
 class ngraph::runtime::DefaultAllocator : public ngraph::runtime::Allocator
 {

@@ -20,7 +20,7 @@
 #include "exceptions.hpp"
 #include "mod.hpp"
 #include "ngraph/op/abs.hpp"
-#include "ngraph/op/fused/mod.hpp"
+#include "ngraph/op/mod.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 
 namespace ngraph
@@ -31,10 +31,10 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector mod(const Node& node)
+                OutputVector mod(const Node& node)
                 {
-                    std::shared_ptr<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
-                    std::shared_ptr<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
+                    Output<ngraph::Node> dividend{node.get_ng_inputs().at(0)};
+                    Output<ngraph::Node> divisor{node.get_ng_inputs().at(1)};
 
                     std::int64_t fmod = node.get_attribute_value<std::int64_t>("fmod", 0);
                     ASSERT_IS_SUPPORTED(node, fmod == 1)
@@ -42,11 +42,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Mod>(dividend, divisor)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

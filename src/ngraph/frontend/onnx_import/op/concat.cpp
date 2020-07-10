@@ -30,24 +30,13 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector concat(const Node& node)
+                OutputVector concat(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
+                    OutputVector inputs{node.get_ng_inputs()};
                     std::int64_t axis = node.get_attribute_value<std::int64_t>("axis");
-                    if (axis < 0)
-                    {
-                        axis = ngraph::normalize_axis(
-                            node.get_description(),
-                            axis,
-                            inputs.at(0)->get_output_partial_shape(0).rank());
-                    }
                     return {std::make_shared<default_opset::Concat>(inputs, axis)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

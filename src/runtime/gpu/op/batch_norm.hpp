@@ -42,6 +42,7 @@ namespace ngraph
 
                 static constexpr NodeTypeInfo type_info{"BatchNormTrainingWithStats", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
+
             protected:
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;

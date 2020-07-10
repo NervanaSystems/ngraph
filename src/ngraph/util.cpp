@@ -217,7 +217,7 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
     // Traverse fprop to make a map that stores parameters with the same
     // shape and element type as the nodes in fprop iff they are in bprop
     // and aren't inputs to bprop
-    vector<Output<Node>> bprop_inputs;
+    OutputVector bprop_inputs;
     for (auto param : bprop->get_parameters())
     {
         bprop_inputs.push_back(param);
@@ -291,9 +291,8 @@ ngraph::FpropCache ngraph::cache_fprop(std::shared_ptr<ngraph::Function> fprop,
         result_nodes,
         [&cloned_bprop_inputs, &fprop_cache, &inverted_node_map](std::shared_ptr<Node> node) {
             auto pnode = as_type_ptr<op::Parameter>(node);
-            if (pnode &&
-                std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
-                    cloned_bprop_inputs.end())
+            if (pnode && std::find(cloned_bprop_inputs.begin(), cloned_bprop_inputs.end(), pnode) ==
+                             cloned_bprop_inputs.end())
             {
                 fprop_cache.fprop_output_nodes.push_back(inverted_node_map.at(Output<Node>(node)));
             }
@@ -494,6 +493,19 @@ bool ngraph::is_valid_permutation(ngraph::AxisVector permutation, ngraph::Rank r
 {
     std::vector<bool> axis_occurs(permutation.size(), false);
 
+    // Check bounds if rank is static
+    if (rank.is_static())
+    {
+        auto bound = rank.get_length();
+        for (auto axis : permutation)
+        {
+            if (static_cast<decltype(bound)>(axis) >= bound)
+            {
+                return false;
+            }
+        }
+    }
+
     for (auto& axis : permutation)
     {
         axis_occurs[axis] = true;
@@ -656,7 +668,10 @@ std::vector<T> read_vector(std::shared_ptr<ngraph::runtime::Tensor> tv)
     size_t element_count = ngraph::shape_size(tv->get_shape());
     size_t size = element_count * sizeof(T);
     std::vector<T> rc(element_count);
-    tv->read(rc.data(), size);
+    if (size > 0)
+    {
+        tv->read(rc.data(), size);
+    }
     return rc;
 }
 
@@ -774,4 +789,120 @@ vector<float> read_float_vector(shared_ptr<runtime::Tensor> tv)
     }
 
     return float_vec;
+}
+
+vector<int64_t> read_index_vector(shared_ptr<runtime::Tensor> tv)
+{
+    vector<int64_t> index_vec;
+    element::Type element_type = tv->get_tensor_layout()->get_element_type();
+
+    if (element_type == element::boolean)
+    {
+        vector<char> vec = read_vector<char>(tv);
+        // Changed from vector ctor to explicit for loop to add static_cast
+        // This silences MSVC warnings
+        for (char value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::bf16)
+    {
+        vector<bfloat16> vec = read_vector<bfloat16>(tv);
+        vector<float> float_vec = bfloat16::to_float_vector(vec);
+        for (float value : float_vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::f16)
+    {
+        vector<float16> vec = read_vector<float16>(tv);
+        for (float16 value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(static_cast<float>(value)));
+        }
+    }
+    else if (element_type == element::f32)
+    {
+        vector<float> vec = read_vector<float>(tv);
+        for (float value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::f64)
+    {
+        vector<double> vec = read_vector<double>(tv);
+        for (double value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i8)
+    {
+        vector<int8_t> vec = read_vector<int8_t>(tv);
+        for (int8_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i16)
+    {
+        vector<int16_t> vec = read_vector<int16_t>(tv);
+        for (int16_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i32)
+    {
+        vector<int32_t> vec = read_vector<int32_t>(tv);
+        for (int32_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::i64)
+    {
+        index_vec = read_vector<int64_t>(tv);
+    }
+    else if (element_type == element::u8)
+    {
+        vector<uint8_t> vec = read_vector<uint8_t>(tv);
+        for (uint8_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u16)
+    {
+        vector<uint16_t> vec = read_vector<uint16_t>(tv);
+        for (uint16_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u32)
+    {
+        vector<uint32_t> vec = read_vector<uint32_t>(tv);
+        for (uint32_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else if (element_type == element::u64)
+    {
+        vector<uint64_t> vec = read_vector<uint64_t>(tv);
+        for (uint64_t value : vec)
+        {
+            index_vec.push_back(static_cast<int64_t>(value));
+        }
+    }
+    else
+    {
+        throw ngraph_error("Unsupported nGraph element type.");
+    }
+
+    return index_vec;
 }

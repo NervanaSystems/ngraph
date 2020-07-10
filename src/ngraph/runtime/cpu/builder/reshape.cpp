@@ -18,9 +18,9 @@
 
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/kernel/reshape.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -43,12 +43,12 @@ namespace ngraph
             {
                 auto reshape = static_cast<const ngraph::op::Reshape*>(node);
 
-                arg_shape = reshape->get_argument(0)->get_shape();
+                arg_shape = reshape->get_input_shape(0);
                 auto arg_rank = arg_shape.size();
 
                 result_shape = reshape->get_output_shape(0);
                 auto result_rank = result_shape.size();
-                auto& result_element_type = reshape->get_element_type();
+                auto& result_element_type = reshape->get_output_element_type(0);
 
                 input_order = reshape->get_input_order();
 
@@ -130,14 +130,14 @@ namespace ngraph
                 if (kernel)
                 {
                     functor = [kernel, arg_shape, input_order, result_shape](
-                        const std::vector<void*>& inputs, std::vector<void*>& outputs) {
+                                  const std::vector<void*>& inputs, std::vector<void*>& outputs) {
                         kernel(inputs[0], outputs[0], arg_shape, input_order, result_shape, 0);
                     };
                 }
                 else if (ref_kernel)
                 {
                     functor = [ref_kernel, arg_shape, input_order, result_shape](
-                        std::vector<void*> inputs, std::vector<void*> outputs) {
+                                  std::vector<void*> inputs, std::vector<void*> outputs) {
                         ref_kernel(inputs[0], outputs[0], arg_shape, input_order, result_shape, 0);
                     };
                 }
@@ -224,7 +224,7 @@ namespace ngraph
                 else if (skip_reshape)
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                                  CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         if (ctx->buffer_data[out_buffer_index] !=
                             ctx->buffer_data[arg_buffer_index])
                         {
@@ -237,7 +237,7 @@ namespace ngraph
                 else
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                                  CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg_buffer_index],
                                size);

@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace rnn_utils
             {
-                // TODO(pruthvi): Populate this enums based of addition of new MKLDNN RNN variants
+                // TODO(pruthvi): Populate this enums based of addition of new DNNL RNN variants
                 enum rnntype
                 {
                     vanilla_rnn,

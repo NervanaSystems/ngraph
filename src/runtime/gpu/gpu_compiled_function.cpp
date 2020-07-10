@@ -34,10 +34,10 @@
 #include "ngraph/node.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
-#include "ngraph/pass/get_output_element_elimination.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
+#include "ngraph/pass/opset1_downgrade.hpp"
 
 #include "gpu_backend.hpp"
 #include "gpu_compiled_function.hpp"
@@ -90,9 +90,7 @@ runtime::gpu::GPUCompiledFunction::GPUCompiledFunction(
 {
 }
 
-runtime::gpu::GPUCompiledFunction::~GPUCompiledFunction()
-{
-}
+runtime::gpu::GPUCompiledFunction::~GPUCompiledFunction() {}
 
 std::vector<std::string> get_case_variants(std::vector<std::string> cases)
 {
@@ -149,12 +147,12 @@ void runtime::gpu::GPUCompiledFunction::compile()
 #endif
     pass_manager.register_pass<runtime::gpu::pass::BatchNormCache>();
     pass_manager.register_pass<ngraph::pass::LikeReplacement>();
+    pass_manager.register_pass<ngraph::pass::Opset1Downgrade>();
     pass_manager.register_pass<ngraph::pass::Opset0Downgrade>();
     pass_manager.register_pass<ngraph::pass::FusedOpDecomposition>();
     pass_manager.register_pass<ngraph::pass::ImplicitBroadcastElimination>();
     pass_manager.register_pass<runtime::gpu::pass::GPULayout>(this);
     pass_manager.register_pass<ngraph::pass::AssignLayout<descriptor::layout::DenseTensorLayout>>();
-    pass_manager.register_pass<ngraph::pass::GetOutputElementElimination>();
     pass_manager.register_pass<ngraph::pass::Liveness>();
     pass_manager.register_pass<ngraph::pass::MemoryLayout>(get_memory_alignment());
     pass_manager.register_pass<runtime::gpu::pass::TensorMemoryReservation>(

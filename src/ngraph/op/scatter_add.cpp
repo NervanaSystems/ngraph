@@ -67,9 +67,9 @@ void op::v0::ScatterAdd::validate_and_infer_types()
         }
         for (size_t i = 1; i < inputs_shape.rank().get_length(); i++)
         {
-            compatible = compatible &&
-                         updates_shape[indices_shape.rank().get_length() + i - 1].same_scheme(
-                             inputs_shape[i]);
+            compatible =
+                compatible && updates_shape[indices_shape.rank().get_length() + i - 1].same_scheme(
+                                  inputs_shape[i]);
         }
     }
 

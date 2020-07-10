@@ -340,7 +340,7 @@ namespace
                      *node);
 
         NGRAPH_CHECK(
-            axis_node->get_element_type() == element::i64,
+            axis_node->get_output_element_type(0) == element::i64,
             "Unable to convert Gather:v1 to Gather:v0 with axis other type than int64. Node: ",
             *node);
 
@@ -361,7 +361,7 @@ namespace
         auto seed = node->get_seed();
         auto use_seed = node->get_use_seed();
         auto probability = node->get_probability();
-        auto et = node->get_element_type();
+        auto et = node->get_output_element_type(0);
 
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input_value(0), mask_shape, et, seed, probability, use_seed);
@@ -628,7 +628,7 @@ namespace
         {
             // In order to keep the original dimensions we need to reshape the Count node
             // before we use it in Divide with NUMPY broadcast
-            auto output_shape = count_node->get_shape();
+            auto output_shape = count_node->get_output_shape(0);
             auto reshaped_output_shape = output_shape;
             for (const auto& axis : node->get_reduction_axes())
             {
@@ -772,12 +772,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Softmax> node)
     {
-        auto axis = node->get_axis();
-        auto data = node->input(0);
-        auto data_shape = data.get_shape();
+        const auto axis = node->get_axis();
+        const auto data = node->input(0);
+        const auto data_shape = data.get_shape();
         std::vector<size_t> axes(data_shape.size() - axis);
         std::iota(std::begin(axes), std::end(axes), axis);
-        auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
+        const auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -807,8 +807,8 @@ namespace
         bool compute_max;
         switch (node->get_mode())
         {
-        case op::v1::TopK::Mode::MAX: compute_max = true; break;
-        case op::v1::TopK::Mode::MIN: compute_max = false; break;
+        case op::v1::TopK::Mode::max: compute_max = true; break;
+        case op::v1::TopK::Mode::min: compute_max = false; break;
         default: break;
         }
 
@@ -904,14 +904,14 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opset/opset1_tbl.hpp"
             NGRAPH_OP(AvgPoolBackprop, op::v1) NGRAPH_OP(ConvolutionBackpropFilters, op::v1)
                 NGRAPH_OP(GenerateMask, op::v1) NGRAPH_OP(MaxPoolBackprop, op::v1)
 #undef NGRAPH_OP
         };
         return dispatch_map;
     }
-} // namespace
+}
 
 bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {

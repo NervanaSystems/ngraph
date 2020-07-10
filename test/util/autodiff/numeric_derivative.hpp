@@ -38,7 +38,7 @@ namespace ngraph
                                const std::shared_ptr<Function>& f,
                                const std::vector<std::shared_ptr<runtime::Tensor>>& args,
                                T delta,
-                               const std::vector<std::shared_ptr<op::Parameter>>& indep_params)
+                               const ParameterVector& indep_params)
         {
             Shape y_shape = f->get_output_shape(0);
 
@@ -50,7 +50,7 @@ namespace ngraph
             for (auto param : indep_params)
             {
                 Shape s = y_shape;
-                auto param_shape = param->get_shape();
+                auto param_shape = param->get_output_shape(0);
                 s.insert(s.end(), param_shape.begin(), param_shape.end());
                 results.push_back(backend->create_tensor<T>(s));
             }

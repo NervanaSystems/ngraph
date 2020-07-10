@@ -67,6 +67,7 @@ namespace ngraph
                 void allocate();
                 size_t get_allocation_size() const;
                 GPUAllocator build_allocator() { return GPUAllocator(this); }
+
             private:
                 GPUMemoryManager(GPUPrimitiveEmitter* emitter);
                 size_t queue_for_transfer(const void* data, size_t size);
