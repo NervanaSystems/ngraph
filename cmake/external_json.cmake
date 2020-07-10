@@ -14,36 +14,29 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Enable ExternalProject CMake module
-include(ExternalProject)
-
-#------------------------------------------------------------------------------
-# Download json
-#------------------------------------------------------------------------------
-
-SET(JSON_GIT_REPO_URL https://github.com/nlohmann/json)
-if(WIN32)
-    SET(JSON_GIT_LABEL v3.5.0)
-else()
-    SET(JSON_GIT_LABEL v3.7.3)
+if(TARGET nlohmann_json::nlohmann_json)
+    return()
 endif()
 
-ExternalProject_Add(
-    ext_json
-    PREFIX json
-    GIT_REPOSITORY ${JSON_GIT_REPO_URL}
-    GIT_TAG ${JSON_GIT_LABEL}
-    # Disable install step
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    EXCLUDE_FROM_ALL TRUE
-    )
+include(FetchContent)
 
-#------------------------------------------------------------------------------
+# Hedley annotations introduced in v3.7.0 causes build failure on MSVC 2017 + ICC 18
+if(WIN32 AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"))
+    SET(JSON_GIT_LABEL v3.6.1)
+else()
+    SET(JSON_GIT_LABEL v3.8.0)
+endif()
 
-ExternalProject_Get_Property(ext_json SOURCE_DIR)
-add_library(libjson INTERFACE)
-target_include_directories(libjson SYSTEM INTERFACE ${SOURCE_DIR}/include)
-add_dependencies(libjson ext_json)
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG        ${JSON_GIT_LABEL}
+    GIT_SHALLOW    1)
+
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
+
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()

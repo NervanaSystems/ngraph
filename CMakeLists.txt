@@ -650,7 +650,7 @@ if(NGRAPH_LLVM_ENABLE)
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    include(cmake/external_tbb.cmake)
+    include(cmake/external_onetbb.cmake)
 endif()
 
 add_subdirectory(src)
