@@ -47,7 +47,7 @@ void regclass_pyngraph_Function(py::module m)
     function.def(py::init([](const std::shared_ptr<ngraph::Node>& output,
                              const ngraph::ParameterVector& in,
                              const std::string& name) {
-        return std::make_shared < ngraph::Function(output->output(0), in, name);
+        return std::make_shared<ngraph::Function>(output->output(0), in, name);
     }));
     function.def("get_output_size", &ngraph::Function::get_output_size);
     function.def("get_ops", &ngraph::Function::get_ops);
