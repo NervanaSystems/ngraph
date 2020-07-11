@@ -27,6 +27,7 @@ FetchContent_Declare(
     ext_pybind11
     GIT_REPOSITORY ${PYBIND11_GIT_URL}
     GIT_TAG        ${PYBIND11_GIT_TAG}
+    GIT_SHALLOW    1
 )
 
 FetchContent_GetProperties(ext_pybind11)
