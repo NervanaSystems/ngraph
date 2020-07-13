@@ -228,7 +228,7 @@ endif()
 # has just a single #include statement. This checks that each header in the source tree is
 # complete and self-contained so it can be included without requiring any other includes.
 set(DIRECTORIES_IGNORED runtime frontend)
-set(NGRAPH_MAIN_SRC_DIR "${CMAKE_SOURCE_DIR}/src/ngraph")
+set(NGRAPH_MAIN_SRC_DIR "${PROJECT_SOURCE_DIR}/src/ngraph")
 file(GLOB_RECURSE LIST_RECURSE
     "${NGRAPH_MAIN_SRC_DIR}/autodiff/*.hpp"
     "${NGRAPH_MAIN_SRC_DIR}/builder/*.hpp"
@@ -616,7 +616,7 @@ if (NGRAPH_NOP_ENABLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
-    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
+    target_include_directories(unit-test PRIVATE ${PROJECT_BINARY_DIR}/src/contrib/mlir)
     target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
 endif()
 

@@ -129,8 +129,8 @@ if(NGRAPH_MLIR_ENABLE)
     # Used in test/mlir:
     # lit cfg
     set(MLIR_LLVM_BUILD_DIR ${LLVM_ROOT})
-    set(NGRAPH_LIT_TEST_SRC_DIR ${CMAKE_SOURCE_DIR}/test/mlir)
-    set(NGRAPH_LIT_TEST_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/test/mlir)
+    set(NGRAPH_LIT_TEST_SRC_DIR ${PROJECT_SOURCE_DIR}/test/mlir)
+    set(NGRAPH_LIT_TEST_BUILD_DIR ${PROJECT_BINARY_DIR}/test/mlir)
     # lit cfg and path to llvm-lit
     set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 
