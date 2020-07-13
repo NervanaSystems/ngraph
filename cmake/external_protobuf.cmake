@@ -48,7 +48,7 @@ if(CMAKE_CROSSCOMPILING)
         message(FATAL_ERROR "System Protobuf is needed while cross-compiling")
     endif()
 else()
-    set(PROTOC_VERSION "3.7.1")
+    set(PROTOC_VERSION "3.11.3")
 endif()
 
 set(NGRAPH_PROTOBUF_GIT_TAG "v${PROTOC_VERSION}")
@@ -57,6 +57,7 @@ FetchContent_Declare(
     ext_protobuf
     GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
     GIT_TAG        ${NGRAPH_PROTOBUF_GIT_TAG}
+    GIT_SHALLOW    1
 )
 
 FetchContent_GetProperties(ext_protobuf)
