@@ -41,7 +41,7 @@ get_filename_component(OMP_H_DIR ${LLVM_INCLUDE_DIR}/../projects/openmp/runtime/
 
 if(NGRAPH_CPU_ENABLE)
     get_target_property(DNNL_INCLUDE_DIR DNNL::dnnl INTERFACE_INCLUDE_DIRECTORIES)
-    get_target_property(EIGEN_INCLUDE_DIR libeigen INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(EIGEN_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
     list(APPEND HEADER_SEARCH_DEFINES EIGEN_HEADERS_PATH="${EIGEN_INCLUDE_DIR}")
     list(APPEND HEADER_SEARCH_DEFINES DNNL_HEADERS_PATH="${DNNL_INCLUDE_DIR}")
 endif()
@@ -75,9 +75,6 @@ add_custom_target(header_resource
     DEPENDS resource_generator
     BYPRODUCTS
 )
-if (NGRAPH_CPU_ENABLE)
-    add_dependencies(header_resource ext_eigen DNNL::dnnl)
-endif()
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(codegen PROPERTIES
@@ -86,7 +83,6 @@ if(NGRAPH_LIB_VERSIONING_ENABLE)
 endif()
 add_dependencies(codegen header_resource)
 if (NGRAPH_CPU_ENABLE)
-    add_dependencies(codegen DNNL::dnnl libeigen)
     if(LINUX)
         # --exclude-libs=ALL prevents symbols from statically-linked libraries (LLVM, in this case)
         # from being automatically exported
