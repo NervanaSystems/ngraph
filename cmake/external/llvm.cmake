@@ -33,7 +33,7 @@ if(NGRAPH_USE_PREBUILT_MLIR)
     set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH}/build)
 endif()
 # TODO: remove this file after CI is updated.
-include(cmake/external_mlir.cmake)
+include(cmake/external/external_mlir.cmake)
 set(MLIR_COMMIT_ID ${MLIR_LLVM_COMMIT_ID})
 set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
 if(EXISTS "${VCSREVISION}")
@@ -59,7 +59,7 @@ if(NEED_TO_BUILD_LLVM)
     set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
     set(LLVM_GIT_TAG ${MLIR_COMMIT_ID})
     set(LLVM_GIT_SHALLOW 0)
-    set(LLVM_PATCH_COMMAND git reset HEAD --hard COMMAND git apply --ignore-space-change --ignore-whitespace ${PROJECT_SOURCE_DIR}/cmake/mlir.patch)
+    set(LLVM_PATCH_COMMAND git reset HEAD --hard COMMAND git apply --ignore-space-change --ignore-whitespace ${PROJECT_SOURCE_DIR}/cmake/external/mlir.patch)
 
     FetchContent_Declare(
         llvm

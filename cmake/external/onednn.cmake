@@ -188,7 +188,7 @@ endif()
 
 set(DNNL_GIT_REPO_URL https://github.com/oneapi-src/oneDNN)
 set(DNNL_GIT_TAG ${NGRAPH_DNNL_GIT_TAG})
-set(DNNL_PATCH_FILE onednn.patch)
+set(DNNL_PATCH_FILE ${PROJECT_SOURCE_DIR}/cmake/external/onednn.patch)
 set(DNNL_LIBS ${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/${DNNL_LIB})
 
 # Revert prior changes to make incremental build work.
@@ -205,7 +205,7 @@ if (WIN32)
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         PATCH_COMMAND ${DNNL_PATCH_REVERT_COMMAND}
-        COMMAND git apply --ignore-space-change --ignore-whitespace ${CMAKE_SOURCE_DIR}/cmake/${DNNL_PATCH_FILE}
+        COMMAND git apply --ignore-space-change --ignore-whitespace ${DNNL_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
@@ -240,7 +240,7 @@ else()
         UPDATE_COMMAND ""
         CONFIGURE_COMMAND
         PATCH_COMMAND ${DNNL_PATCH_REVERT_COMMAND}
-        COMMAND git apply ${CMAKE_SOURCE_DIR}/cmake/${DNNL_PATCH_FILE}
+        COMMAND git apply --ignore-space-change --ignore-whitespace ${DNNL_PATCH_FILE}
         CMAKE_GENERATOR ${CMAKE_GENERATOR}
         CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
         CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
