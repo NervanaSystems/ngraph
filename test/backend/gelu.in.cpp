@@ -128,7 +128,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f32)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(
-        test::all_close_f(input, read_vector<float>(result), DEFAULT_FLOAT_TOLERANCE_BITS + 6));
+        test::all_close_f(input, read_vector<float>(result), DEFAULT_FLOAT_TOLERANCE_BITS + 7));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f64)
