@@ -34,12 +34,6 @@ pattern::MatcherState::MatcherState(Matcher* matcher)
 {
 }
 
-Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
-{
-    return node->get_output_size() == 1 ? node->output(0)
-                                        : make_shared<op::AnyOutput>(node)->output(0);
-}
-
 pattern::Matcher::Matcher() {}
 
 pattern::Matcher::Matcher(Output<Node>& pattern_node)
@@ -63,18 +57,18 @@ pattern::Matcher::Matcher(const Output<Node>& pattern_node,
 }
 
 pattern::Matcher::Matcher(shared_ptr<Node> pattern_node)
-    : m_pattern_node(make_node_output(pattern_node))
+    : m_pattern_node(pattern_node->output(0))
 {
 }
 
 pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name)
-    : m_pattern_node(make_node_output(pattern_node))
+    : m_pattern_node(pattern_node->output(0))
     , m_name(name)
 {
 }
 
 pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name, bool strict_mode)
-    : Matcher(make_node_output(pattern_node), name, strict_mode)
+    : Matcher(pattern_node->output(0), name, strict_mode)
 {
 }
 
