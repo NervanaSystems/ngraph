@@ -24,7 +24,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/pattern/op/any.hpp"
 #include "ngraph/pattern/op/any_of.hpp"
-#include "ngraph/pattern/op/any_output.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/pattern/op/skip.hpp"
 
@@ -177,7 +176,6 @@ public:
 
 protected:
     bool match_permutation(const OutputVector& pattern_args, const OutputVector& args);
-    Output<Node> make_node_output(const std::shared_ptr<Node>& node);
 
     std::string m_name{"unnamed"};
     bool m_strict_mode{false};
