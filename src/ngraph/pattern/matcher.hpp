@@ -85,22 +85,15 @@ public:
     Matcher(const std::shared_ptr<Node> pattern_node, std::nullptr_t name) = delete;
 
     Matcher();
-    Matcher(Output<Node>& pattern_node);
-
-    Matcher(Output<Node>& pattern_node, const std::string& name);
 
     /// \brief Constructs a Matcher object
     ///
     /// \param pattern_node is a pattern sub graph that will be matched against input graphs
     /// \param name is a string which is used for logging and disabling a matcher
     /// \param strict_mode forces a matcher to consider shapes and ET of nodes
+    Matcher(const Output<Node>& pattern_node);
+    Matcher(const Output<Node>& pattern_node, const std::string& name);
     Matcher(const Output<Node>& pattern_node, const std::string& name, bool strict_mode);
-
-    // Some matches should start on a node rather than an output. These three constructors
-    // are transition until we work out the right way to do that.
-    Matcher(std::shared_ptr<Node> pattern_node);
-    Matcher(std::shared_ptr<Node> pattern_node, const std::string& name);
-    Matcher(std::shared_ptr<Node> pattern_node, const std::string& name, bool strict_mode);
 
     virtual ~Matcher() {}
     /// \brief Matches a pattern to \p graph_node

@@ -42,12 +42,12 @@ Output<Node> pattern::Matcher::make_node_output(const shared_ptr<Node>& node)
 
 pattern::Matcher::Matcher() {}
 
-pattern::Matcher::Matcher(Output<Node>& pattern_node)
+pattern::Matcher::Matcher(const Output<Node>& pattern_node)
     : m_pattern_node{pattern_node}
 {
 }
 
-pattern::Matcher::Matcher(Output<Node>& pattern_node, const std::string& name)
+pattern::Matcher::Matcher(const Output<Node>& pattern_node, const std::string& name)
     : m_pattern_node(pattern_node)
     , m_name{name}
 {
@@ -59,22 +59,6 @@ pattern::Matcher::Matcher(const Output<Node>& pattern_node,
     : m_pattern_node(pattern_node)
     , m_name(name)
     , m_strict_mode(strict_mode)
-{
-}
-
-pattern::Matcher::Matcher(shared_ptr<Node> pattern_node)
-    : m_pattern_node(make_node_output(pattern_node))
-{
-}
-
-pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name)
-    : m_pattern_node(make_node_output(pattern_node))
-    , m_name(name)
-{
-}
-
-pattern::Matcher::Matcher(shared_ptr<Node> pattern_node, const string& name, bool strict_mode)
-    : Matcher(make_node_output(pattern_node), name, strict_mode)
 {
 }
 
