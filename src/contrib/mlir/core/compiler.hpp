@@ -34,57 +34,65 @@
 #include <unordered_map>
 #include <vector>
 
-namespace ngraph {
-namespace descriptor {
-class Tensor;
-}
-namespace element {
-class Type;
-}
-namespace runtime {
-namespace ngmlir {
-/// MLIR Compiler. Given an nGraph sub-graph, represented as CompiledKernel
-/// node, it
-/// translates the graph down to nGraph dialect and applies core optimizations.
-///
-/// The compiler owns the MLIR module until compilation is done. After that,
-/// the module can be grabbed and plugged into MLIR backends.
-class MLIRCompiler {
-public:
-  /// Initializes MLIR environment. It must be called only once.
-  static void init();
+namespace ngraph
+{
+    namespace descriptor
+    {
+        class Tensor;
+    }
+    namespace element
+    {
+        class Type;
+    }
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            /// MLIR Compiler. Given an nGraph sub-graph, represented as CompiledKernel
+            /// node, it
+            /// translates the graph down to nGraph dialect and applies core optimizations.
+            ///
+            /// The compiler owns the MLIR module until compilation is done. After that,
+            /// the module can be grabbed and plugged into MLIR backends.
+            class MLIRCompiler
+            {
+            public:
+                /// Initializes MLIR environment. It must be called only once.
+                static void init();
 
-public:
-  MLIRCompiler(const ngraph::op::CompiledKernel *compiled_kernel,
-               mlir::MLIRContext &context)
-      : m_compiledKernel(compiled_kernel), m_context(context) {
-    NGRAPH_CHECK(initialized,
-                 "Cannot instantiate a compiler without initializing MLIR");
-  }
+            public:
+                MLIRCompiler(const ngraph::op::CompiledKernel* compiled_kernel,
+                             mlir::MLIRContext& context)
+                    : m_compiledKernel(compiled_kernel)
+                    , m_context(context)
+                {
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate a compiler without initializing MLIR");
+                }
 
-  /// Compiles a subgraph with MLIR
-  void compile();
+                /// Compiles a subgraph with MLIR
+                void compile();
 
-  mlir::OwningModuleRef &get_module() { return m_module; }
+                mlir::OwningModuleRef& get_module() { return m_module; }
 
-private:
-  // Converts an nGraph sub-graph to MLIR nGraph dialect.
-  void buildNgDialectModule();
-  // Applies any nGraph dialect optimizations
-  void optimizeNgDialect();
+            private:
+                // Converts an nGraph sub-graph to MLIR nGraph dialect.
+                void buildNgDialectModule();
+                // Applies any nGraph dialect optimizations
+                void optimizeNgDialect();
 
-private:
-  // Sub-graph to be compiled and executed with MLIR.
-  const ngraph::op::CompiledKernel *m_compiledKernel;
+            private:
+                // Sub-graph to be compiled and executed with MLIR.
+                const ngraph::op::CompiledKernel* m_compiledKernel;
 
-  // MLIR context that holds all the MLIR information related to the sub-graph
-  // compilation.
-  mlir::MLIRContext &m_context;
-  mlir::OwningModuleRef m_module;
+                // MLIR context that holds all the MLIR information related to the sub-graph
+                // compilation.
+                mlir::MLIRContext& m_context;
+                mlir::OwningModuleRef m_module;
 
-  // Global initialization for MLIR compiler
-  static bool initialized;
-};
-} // namespace ngmlir
-} // namespace runtime
+                // Global initialization for MLIR compiler
+                static bool initialized;
+            };
+        } // namespace ngmlir
+    }     // namespace runtime
 } // namespace ngraph

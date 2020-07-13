@@ -22,8 +22,10 @@
 
 #include <mlir/Pass/Pass.h>
 
-namespace ngraph {
-namespace pass {
-std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
-}
+namespace ngraph
+{
+    namespace pass
+    {
+        std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
+    }
 } // namespace ngraph

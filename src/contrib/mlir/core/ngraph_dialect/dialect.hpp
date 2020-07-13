@@ -30,18 +30,19 @@
 #include "mlir/IR/Types.h"
 #include "ngraph/check.hpp"
 
-namespace mlir {
-class NGraphOpsDialect : public mlir::Dialect {
-public:
-  explicit NGraphOpsDialect(mlir::MLIRContext *ctx);
+namespace mlir
+{
+    class NGraphOpsDialect : public mlir::Dialect
+    {
+    public:
+        explicit NGraphOpsDialect(mlir::MLIRContext* ctx);
 
-  mlir::Type parseType(mlir::DialectAsmParser &parser) const override;
-  void printType(mlir::Type type,
-                 mlir::DialectAsmPrinter &printer) const override;
+        mlir::Type parseType(mlir::DialectAsmParser& parser) const override;
+        void printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const override;
 
-  static StringRef getDialectNamespace() { return "ng"; }
+        static StringRef getDialectNamespace() { return "ng"; }
 
-private:
-  mlir::Type parseEltType(mlir::DialectAsmParser &parser) const;
-};
+    private:
+        mlir::Type parseEltType(mlir::DialectAsmParser& parser) const;
+    };
 } // namespace mlir

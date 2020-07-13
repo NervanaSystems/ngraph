@@ -25,14 +25,18 @@
 
 #include <mlir/Pass/Pass.h>
 
-namespace ngraph {
-namespace runtime {
-namespace ngmlir {
-class MLIRCompiler;
-}
-} // namespace runtime
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            class MLIRCompiler;
+        }
+    } // namespace runtime
 } // namespace ngraph
 
-namespace mlir {
-std::unique_ptr<Pass> createDialectLoweringPass();
+namespace mlir
+{
+    std::unique_ptr<Pass> createDialectLoweringPass();
 }

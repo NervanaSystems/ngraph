@@ -25,26 +25,30 @@
 #include <stdlib.h>
 #include <vector>
 
-namespace ngraph {
-namespace runtime {
-namespace ngmlir {
-/// Memory manager for temporaries in MLIR compiled sub-graph
-/// It handles call-backs from the code and returns pointer to allocated memory
-/// Also, handles freeing up memory
-class MLIRMemMgr {
-public:
-  /// Allocates data for temporary tensor. Currently, it is called for each
-  /// temp tensor defintion. Keeps track of each pointer and free them during
-  /// cleanup.
-  // TODO: Use pre-allocation from framework memory manager
-  void *allocate(size_t size);
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            /// Memory manager for temporaries in MLIR compiled sub-graph
+            /// It handles call-backs from the code and returns pointer to allocated memory
+            /// Also, handles freeing up memory
+            class MLIRMemMgr
+            {
+            public:
+                /// Allocates data for temporary tensor. Currently, it is called for each
+                /// temp tensor defintion. Keeps track of each pointer and free them during
+                /// cleanup.
+                // TODO: Use pre-allocation from framework memory manager
+                void* allocate(size_t size);
 
-  /// Frees all allocated pointers
-  void freeAll();
+                /// Frees all allocated pointers
+                void freeAll();
 
-private:
-  std::vector<void *> ptrList;
-};
-} // namespace ngmlir
-} // namespace runtime
+            private:
+                std::vector<void*> ptrList;
+            };
+        } // namespace ngmlir
+    }     // namespace runtime
 } // namespace ngraph

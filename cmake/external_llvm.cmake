@@ -59,14 +59,12 @@ if(NEED_TO_BUILD_LLVM)
     set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
     set(LLVM_GIT_TAG ${MLIR_COMMIT_ID})
     set(LLVM_GIT_SHALLOW 0)
-    set(LLVM_PATCH_COMMAND git reset HEAD --hard COMMAND git apply --ignore-space-change --ignore-whitespace ${PROJECT_SOURCE_DIR}/cmake/mlir.patch)
 
     FetchContent_Declare(
         llvm
         GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
         GIT_TAG ${LLVM_GIT_TAG}
         GIT_SHALLOW ${LLVM_GIT_SHALLOW}
-        PATCH_COMMAND ${LLVM_PATCH_COMMAND}
         )
 
     FetchContent_GetProperties(llvm)
