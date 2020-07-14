@@ -31,7 +31,7 @@ namespace ngraph
             class NGRAPH_API Mod : public ngraph::op::util::FusedOp
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Mod", 0};
+                static constexpr NodeTypeInfo type_info{"Mod", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Mod() = default;
                 /// \brief Constructs a Mod node.
@@ -57,11 +57,6 @@ namespace ngraph
             private:
                 AutoBroadcastSpec m_auto_broadcast;
             };
-        }
-
-        namespace v0
-        {
-            using v1::Mod;
         }
     }
 }
