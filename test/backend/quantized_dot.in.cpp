@@ -58,7 +58,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_dot_u8u8)
                                             axes,
                                             axes,
                                             axes);
-    auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
+    auto f = make_shared<Function>(OutputVector{QD}, ParameterVector{A, B});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);
@@ -101,7 +101,7 @@ NGRAPH_TEST(${BACKEND_NAME}, quantized_dot_int32_output)
                                             axes,
                                             axes,
                                             axes);
-    auto f = make_shared<Function>(NodeVector{QD}, ParameterVector{A, B});
+    auto f = make_shared<Function>(OutputVector{QD}, ParameterVector{A, B});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::u8, shape_a);

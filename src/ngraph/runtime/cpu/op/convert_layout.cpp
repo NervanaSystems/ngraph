@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -29,7 +29,7 @@ runtime::cpu::op::ConvertLayout::ConvertLayout(
     , arg_output_index(arg.get_index())
     , output_layout(layout)
 {
-    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
+    runtime::cpu::dnnl_utils::assign_dnnl_kernel(this);
     constructor_validate_and_infer_types();
 }
 
@@ -45,9 +45,9 @@ shared_ptr<Node>
 
 void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
 {
-    const auto& arg = get_argument(0);
+    Input<Node> arg = input(0);
 
-    const auto& arg_tensor = arg->get_output_tensor_ptr(arg_output_index);
+    shared_ptr<descriptor::Tensor> arg_tensor = arg.get_tensor_ptr();
     const auto& arg_layout = arg_tensor->get_tensor_layout();
 
     if (!arg_layout)
@@ -56,5 +56,5 @@ void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
     }
 
     set_output_type(0, output_layout->get_element_type(), output_layout->get_shape());
-    get_output_tensor_ptr()->set_tensor_layout(output_layout);
+    get_output_tensor_ptr(0)->set_tensor_layout(output_layout);
 }

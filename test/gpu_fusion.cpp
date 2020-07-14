@@ -29,7 +29,6 @@
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/parameter.hpp"
@@ -55,7 +54,6 @@
 #include "util/autodiff/backprop_function.hpp"
 #include "util/autodiff/numeric_compare.hpp"
 #include "util/matcher.hpp"
-#include "util/random.hpp"
 #include "util/random.hpp"
 #include "util/test_tools.hpp"
 
@@ -97,13 +95,13 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     auto backend = runtime::Backend::create("GPU");
 
     shared_ptr<runtime::Tensor> src_layer_t =
-        backend->create_tensor(element::f32, src_layer->get_shape());
+        backend->create_tensor(element::f32, src_layer->get_output_shape(0));
     shared_ptr<runtime::Tensor> src_iter_t =
-        backend->create_tensor(element::f32, src_iter->get_shape());
+        backend->create_tensor(element::f32, src_iter->get_output_shape(0));
     shared_ptr<runtime::Tensor> state_iter_t =
-        backend->create_tensor(element::f32, state_iter->get_shape());
+        backend->create_tensor(element::f32, state_iter->get_output_shape(0));
     shared_ptr<runtime::Tensor> params_t =
-        backend->create_tensor(element::f32, params->get_shape());
+        backend->create_tensor(element::f32, params->get_output_shape(0));
 
     shared_ptr<runtime::Tensor> result_ht = backend->create_tensor(element::f32, {10, 100});
     shared_ptr<runtime::Tensor> result_ct = backend->create_tensor(element::f32, Shape{10, 100});
@@ -111,7 +109,7 @@ TEST(gpu_fusion, rnn_fprop_1_lstm_cell)
     copy_data(src_layer_t, vector<float>(1000, 1));
     copy_data(src_iter_t, vector<float>(1000, 1));
     copy_data(state_iter_t, vector<float>(1000, 1));
-    copy_data(params_t, vector<float>(shape_size(params->get_shape()), 1));
+    copy_data(params_t, vector<float>(shape_size(params->get_output_shape(0)), 1));
 
     auto handle = backend->compile(func);
     handle->call_with_validate({result_ht, result_ct},
@@ -235,35 +233,35 @@ TEST(gpu_fusion, lstm_analytic)
     auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
 
     auto f = make_shared<Function>(
-        NodeVector{ht, ct},
+        OutputVector{ht, ct},
         ParameterVector{input_xt, weights_i2h, weights_h2h, bias_i2h, bias_h2h});
 
     auto backend = runtime::Backend::create("GPU");
 
     std::shared_ptr<runtime::Tensor> input_xt_t =
-        backend->create_tensor(element::f32, input_xt->get_shape());
+        backend->create_tensor(element::f32, input_xt->get_output_shape(0));
     copy_data(input_xt_t, std::vector<float>{1.0});
 
     std::shared_ptr<runtime::Tensor> weights_i2h_t =
-        backend->create_tensor(element::f32, weights_i2h->get_shape());
+        backend->create_tensor(element::f32, weights_i2h->get_output_shape(0));
     copy_data(weights_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::Tensor> weights_h2h_t =
-        backend->create_tensor(element::f32, weights_h2h->get_shape());
+        backend->create_tensor(element::f32, weights_h2h->get_output_shape(0));
     copy_data(weights_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::Tensor> bias_i2h_t =
-        backend->create_tensor(element::f32, bias_i2h->get_shape());
+        backend->create_tensor(element::f32, bias_i2h->get_output_shape(0));
     copy_data(bias_i2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::Tensor> bias_h2h_t =
-        backend->create_tensor(element::f32, bias_h2h->get_shape());
+        backend->create_tensor(element::f32, bias_h2h->get_output_shape(0));
     copy_data(bias_h2h_t, std::vector<float>{-1.0, -1.0, -1.0, -1.0});
 
     std::shared_ptr<runtime::Tensor> result_ht =
-        backend->create_tensor(element::f32, ht->get_shape());
+        backend->create_tensor(element::f32, ht->get_output_shape(0));
     std::shared_ptr<runtime::Tensor> result_ct =
-        backend->create_tensor(element::f32, ct->get_shape());
+        backend->create_tensor(element::f32, ct->get_output_shape(0));
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result_ht, result_ct},
@@ -376,7 +374,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto tanh_2_0 = std::make_shared<op::Tanh>(ct_0);
     auto ht_0 = std::make_shared<op::Multiply>(output_gate_0, tanh_2_0);
 
-    auto f = make_shared<Function>(NodeVector{ht_0, ct_0},
+    auto f = make_shared<Function>(OutputVector{ht_0, ct_0},
                                    ParameterVector{input_xt,
                                                    weights_i2h,
                                                    weights_h2h,
@@ -393,16 +391,16 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> arg_tensors;
     for (shared_ptr<op::Parameter> param : params)
     {
-        vector<float> tensor_vals(shape_size(param->get_shape()), 1.0f);
-        auto tensor = backend->create_tensor(element::f32, param->get_shape());
+        vector<float> tensor_vals(shape_size(param->get_output_shape(0)), 1.0f);
+        auto tensor = backend->create_tensor(element::f32, param->get_output_shape(0));
         copy_data(tensor, tensor_vals);
         arg_tensors.push_back(tensor);
     }
 
     std::shared_ptr<runtime::Tensor> result_ht =
-        backend->create_tensor(element::f32, ht->get_shape());
+        backend->create_tensor(element::f32, ht->get_output_shape(0));
     std::shared_ptr<runtime::Tensor> result_ct =
-        backend->create_tensor(element::f32, ct->get_shape());
+        backend->create_tensor(element::f32, ct->get_output_shape(0));
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result_ht, result_ct}, arg_tensors);
@@ -432,7 +430,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_1lstm_cell)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -454,7 +452,7 @@ TEST(DISABLED_gpu_fusion, rnn_fusion_inter_vs_gpu_1rnn_layer_3lstm_cell)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -476,7 +474,7 @@ TEST(gpu_fusion, rnn_fusion_inter_vs_gpu_2rnn_layer_3lstm_cell)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -516,7 +514,7 @@ TEST(gpu_fusion, fuse_rnn_across_2layer_1timestep)
 
     for (shared_ptr<op::Parameter> param : int_f->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }

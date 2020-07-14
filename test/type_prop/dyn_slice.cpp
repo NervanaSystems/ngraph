@@ -131,7 +131,7 @@ TEST(type_prop, dynslice_static_shape)
     auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_EQ(r->get_shape(), (Shape{1, 2, 1, 1, 3}));
+    EXPECT_EQ(r->get_output_shape(0), (Shape{1, 2, 1, 1, 3}));
 }
 
 struct DynSliceParams
@@ -172,7 +172,7 @@ TEST_P(DeduceDynSliceTest, output_shape)
                                        tp.attrs[3],
                                        tp.attrs[4]);
 
-    EXPECT_EQ(r->get_shape(), tp.shapes[4]);
+    EXPECT_EQ(r->get_output_shape(0), tp.shapes[4]);
 }
 
 INSTANTIATE_TEST_CASE_P(

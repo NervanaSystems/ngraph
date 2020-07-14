@@ -158,6 +158,7 @@ namespace ngraph
         /// Returns an ostream to which additional error details can be written. The returned
         /// stream has the lifetime of the AssertionHelper.
         std::ostream& get_stream() { return m_stream; }
+
     private:
         std::stringstream m_stream;
         std::string m_file;
@@ -178,6 +179,7 @@ namespace ngraph
         /// to this stream will be ignored. The returned stream has the lifetime of the
         /// DummyAssertionHelper.
         std::ostream& get_stream() { return m_stream; }
+
     private:
         std::stringstream m_stream;
     };

@@ -446,7 +446,7 @@ TEST(provenance, fused_decomposition_tag)
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
     const auto decomposed_op = f->get_result()->get_input_node_shared_ptr(0);
-    traverse_nodes(as_node_vector(decomposed_op->outputs()), tag_check, {p1});
+    traverse_nodes(decomposed_op->outputs(), tag_check, {p1->output(0)});
 }
 
 TEST(provenance, topk_setk)
@@ -524,8 +524,8 @@ TEST(provenance, scaled_quantize_concat_unsigned)
     Ax->add_provenance_tag("in2");
     ngraph::Shape shape_r{2, 2};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
-        ngraph::NodeVector{A}, 0, ngraph::NodeVector{An}, ngraph::NodeVector{Ax});
-    auto f = make_shared<ngraph::Function>(ngraph::NodeVector{QConcat},
+        ngraph::OutputVector{A}, 0, ngraph::OutputVector{An}, ngraph::OutputVector{Ax});
+    auto f = make_shared<ngraph::Function>(ngraph::OutputVector{QConcat},
                                            ngraph::ParameterVector{A, An, Ax});
     QConcat->add_provenance_tag("hello");
     auto check_if_result = [](shared_ptr<Node> n) {
@@ -568,7 +568,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes({topk_v1}, tag_check, as_node_vector(topk_v0->input_values()));
+    traverse_nodes({topk_v1->output(0)}, tag_check, topk_v0->input_values());
 }
 
 TEST(provenance, opset0_downgrade_pass_topk)
@@ -599,7 +599,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
         auto tags = node->get_provenance_tags();
         EXPECT_TRUE(tags.find(tag) != tags.end());
     };
-    traverse_nodes({topk_v0}, tag_check, as_node_vector(topk_v1->input_values()));
+    traverse_nodes({topk_v0->output(0)}, tag_check, topk_v1->input_values());
 }
 
 TEST(provenance, opset1_upgrade_pass_graph)

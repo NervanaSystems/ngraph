@@ -166,14 +166,20 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
 
     vector<float> filter, delta, expected_result;
 
-    for (int i = 0; i < 6 * 3 * 3 * 3; i++)
+    for (int i = 0; i < shape_size(shape_filter); i++)
+    {
         filter.emplace_back(i);
+    }
 
-    for (int i = 0; i < 2 * 6 * 3 * 3; i++)
+    for (int i = 0; i < shape_size(shape_delta); i++)
+    {
         delta.emplace_back(i);
+    }
 
-    for (int i = 0; i < 2 * 3 * 5 * 5; i++)
+    for (int i = 0; i < shape_size(shape_data_batch_shape); i++)
+    {
         expected_result.emplace_back(i);
+    }
 
     vector<int64_t> shapes = {5, 5};
 
@@ -216,13 +222,19 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_filter)
     vector<float> input, delta, expected_result;
 
     for (int i = 0; i < 64 * 3 * 100; i++)
+    {
         input.emplace_back(i);
+    }
 
     for (int i = 0; i < 64 * 128 * 96; i++)
+    {
         delta.emplace_back(i);
+    }
 
     for (int i = 0; i < 128 * 3 * 10; i++)
+    {
         expected_result.emplace_back(i);
+    }
 
     vector<int64_t> shapes = {128, 3, 10};
 

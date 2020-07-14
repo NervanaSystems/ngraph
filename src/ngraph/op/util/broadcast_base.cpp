@@ -149,8 +149,9 @@ void op::util::BroadcastBase::validate_and_infer_types()
     {
         auto concat_inputs = concat->inputs();
 
-        if (concat->get_output_partial_shape(0).is_static() && concat->get_shape().size() == 1 &&
-            concat_inputs.size() == shape_size(concat->get_shape()))
+        if (concat->get_output_partial_shape(0).is_static() &&
+            concat->get_output_shape(0).size() == 1 &&
+            concat_inputs.size() == shape_size(concat->get_output_shape(0)))
         {
             auto output_partial_shape = vector<Dimension>{};
             for (const auto& concat_input : concat_inputs)
@@ -511,4 +512,10 @@ bool op::util::BroadcastBase::evaluate(const HostTensorVector& outputs,
     }
 
     return evaluate_broadcast(inputs[0], outputs[0], pair_broadcast_axes, result_shape.to_shape());
+}
+
+bool op::util::BroadcastBase::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("broadcast_mode", m_mode);
+    return true;
 }

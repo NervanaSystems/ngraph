@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector split(const Node& node)
+                OutputVector split(const Node& node)
                 {
                     const auto input = node.get_ng_inputs().at(0);
                     const auto axis = node.get_attribute_value<int64_t>("axis", 0);
@@ -38,13 +38,12 @@ namespace ngraph
                     {
                         const auto splits =
                             node.get_attribute_value<std::vector<std::size_t>>("split");
-                        return as_node_vector(ngraph::builder::opset1::split(input, splits, axis));
+                        return ngraph::builder::opset1::split(input, splits, axis);
                     }
                     else
                     {
                         const auto outputs_number = node.get_output_names().size();
-                        return as_node_vector(
-                            ngraph::builder::opset1::split(input, outputs_number, axis));
+                        return ngraph::builder::opset1::split(input, outputs_number, axis);
                     }
                 }
             }

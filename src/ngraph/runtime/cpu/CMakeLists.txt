@@ -92,7 +92,6 @@ set(SRC
     builder/slice.cpp
     builder/state.cpp
     builder/softmax.cpp
-    builder/get_output_element.cpp
     builder/sum.cpp
     builder/tile.cpp
     builder/topk.cpp
@@ -101,9 +100,9 @@ set(SRC
     kernel/reduce_max.cpp
     kernel/reduce_sum.cpp
     kernel/reshape.cpp
-    mkldnn_emitter.cpp
-    mkldnn_invoke.cpp
-    mkldnn_utils.cpp
+    dnnl_emitter.cpp
+    dnnl_invoke.cpp
+    dnnl_utils.cpp
     op/batch_norm_relu.cpp
     op/bounded_relu.cpp
     op/conv_add.cpp
@@ -134,13 +133,13 @@ set(SRC
     pass/cpu_workspace_insertion.cpp
 )
 
-if (NOT NGRAPH_DEX_ONLY)
+if (NGRAPH_CPU_CODEGEN_ENABLE)
     set(SRC
         ${SRC}
         cpu_emitter.cpp
         cpu_kernel_emitters.cpp
         cpu_kernel_utils.cpp
-        pass/cpu_mkldnn_primitive_build.cpp
+        pass/cpu_dnnl_primitive_build.cpp
         )
 endif()
 
@@ -194,11 +193,11 @@ if (NGRAPH_CPU_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    if (NGRAPH_DEX_ONLY)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_DEX_ONLY")
+    if (NGRAPH_CPU_CODEGEN_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "CODEGEN_ENABLE")
     endif()
-    if (NGRAPH_ENABLE_CPU_CONV_AUTO)
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_ENABLE_CPU_CONV_AUTO")
+    if (NGRAPH_CPU_CONV_AUTO_ENABLE)
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_CONV_AUTO_ENABLE")
     endif()
     if (NGRAPH_TBB_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_TBB_ENABLE")
@@ -228,18 +227,17 @@ if (NGRAPH_CPU_ENABLE)
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_OPTIMIZE_${t}")
     endforeach()
 
-    add_dependencies(cpu_backend libmkldnn ext_eigen)
-   	target_link_libraries(cpu_backend PUBLIC ngraph libmkldnn libmkl libeigen)
+    target_link_libraries(cpu_backend PUBLIC ngraph DNNL::dnnl libmkl Eigen3::Eigen)
     if (NGRAPH_JSON_ENABLE)
-        target_link_libraries(cpu_backend PUBLIC libjson)
-    endif()    
+        target_link_libraries(cpu_backend PUBLIC nlohmann_json::nlohmann_json)
+    endif()
     if (NGRAPH_TBB_ENABLE)
         target_link_libraries(cpu_backend PUBLIC TBB::tbb)
     endif()
-    if (NOT NGRAPH_DEX_ONLY)
+    if (NGRAPH_CPU_CODEGEN_ENABLE)
         target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
-    target_include_directories(cpu_backend SYSTEM PUBLIC libmkldnn)
+    target_include_directories(cpu_backend SYSTEM PUBLIC DNNL::dnnl)
 
     if (NOT APPLE AND NOT MSVC)
         # CPU backend uses third-party libraries like Eigen that might be linked in and
@@ -251,12 +249,12 @@ if (NGRAPH_CPU_ENABLE)
     endif()
 
     if (NGRAPH_MLIR_ENABLE)
-        # TODO: can we get away without LLVM/MLIR include path. 
+        # TODO: can we get away without LLVM/MLIR include path.
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
                                DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
-        
+
         message(STATUS "Building CPU backend with MLIR")
         add_dependencies(cpu_backend mlir_backend)
         target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
@@ -265,6 +263,6 @@ if (NGRAPH_CPU_ENABLE)
         # and add them to cpu_backend here instead.
         target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
     endif()
-    
+
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})
 endif()

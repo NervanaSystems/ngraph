@@ -25,15 +25,15 @@ TEST(type_prop, mvn)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6});
     auto mvn_func = make_shared<op::MVN>(data);
-    EXPECT_EQ(mvn_func->get_element_type(), element::f32);
-    EXPECT_EQ(mvn_func->get_shape(), (Shape{1, 3, 6}));
+    EXPECT_EQ(mvn_func->get_output_element_type(0), element::f32);
+    EXPECT_EQ(mvn_func->get_output_shape(0), (Shape{1, 3, 6}));
 }
 
 TEST(type_prop, mvn_partial)
 {
     auto data = make_shared<op::Parameter>(element::f32, PartialShape{1, Dimension::dynamic(), 6});
     auto mvn_func = make_shared<op::MVN>(data);
-    EXPECT_EQ(mvn_func->get_element_type(), element::f32);
+    EXPECT_EQ(mvn_func->get_output_element_type(0), element::f32);
     EXPECT_EQ(mvn_func->get_reduction_axes(), (AxisSet{0, 1, 2}));
     ASSERT_TRUE(mvn_func->get_output_partial_shape(0).same_scheme(
         (PartialShape{1, Dimension::dynamic(), 6})));

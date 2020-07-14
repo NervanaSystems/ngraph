@@ -70,13 +70,13 @@ ngraph::test::NgraphTestCase::NgraphTestCase(const std::shared_ptr<Function>& fu
                    << "'" << expected_result_constant->get_output_size() << "'"
                    << " != 1";
         }
-        const auto& expected_shape = expected_result_constant->get_shape();
+        const auto& expected_shape = expected_result_constant->get_output_shape(0);
         const auto& result_shape = result_tensor->get_shape();
 
         if (expected_shape != result_shape)
         {
-            return ::testing::AssertionFailure() << "result_shape " << result_shape
-                                                 << " != expected_shape " << expected_shape;
+            return ::testing::AssertionFailure()
+                   << "result_shape " << result_shape << " != expected_shape " << expected_shape;
         }
 
         if (m_value_comparators.count(element_type) == 0)

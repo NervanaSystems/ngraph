@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "round.hpp"
 
 namespace ngraph
@@ -27,9 +27,9 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector round(const Node& node)
+                OutputVector round(const Node& node)
                 {
-                    const std::shared_ptr<ngraph::Node> data{node.get_ng_inputs().at(0)};
+                    const Output<ngraph::Node> data{node.get_ng_inputs().at(0)};
                     return {std::make_shared<ngraph::opset0::Round>(data)};
                 }
             }

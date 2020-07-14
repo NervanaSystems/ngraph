@@ -340,7 +340,7 @@ namespace
                      *node);
 
         NGRAPH_CHECK(
-            axis_node->get_element_type() == element::i64,
+            axis_node->get_output_element_type(0) == element::i64,
             "Unable to convert Gather:v1 to Gather:v0 with axis other type than int64. Node: ",
             *node);
 
@@ -361,7 +361,7 @@ namespace
         auto seed = node->get_seed();
         auto use_seed = node->get_use_seed();
         auto probability = node->get_probability();
-        auto et = node->get_element_type();
+        auto et = node->get_output_element_type(0);
 
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input_value(0), mask_shape, et, seed, probability, use_seed);
@@ -628,7 +628,7 @@ namespace
         {
             // In order to keep the original dimensions we need to reshape the Count node
             // before we use it in Divide with NUMPY broadcast
-            auto output_shape = count_node->get_shape();
+            auto output_shape = count_node->get_output_shape(0);
             auto reshaped_output_shape = output_shape;
             for (const auto& axis : node->get_reduction_axes())
             {
@@ -904,7 +904,7 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opset/opset1_tbl.hpp"
             NGRAPH_OP(AvgPoolBackprop, op::v1) NGRAPH_OP(ConvolutionBackpropFilters, op::v1)
                 NGRAPH_OP(GenerateMask, op::v1) NGRAPH_OP(MaxPoolBackprop, op::v1)
 #undef NGRAPH_OP

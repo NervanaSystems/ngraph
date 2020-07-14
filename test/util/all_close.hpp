@@ -176,7 +176,7 @@ bool compare_pass_int(std::shared_ptr<ngraph::Function>& baseline_f,
     {
         for (auto& p : baseline_f->get_parameters())
         {
-            args.emplace_back(shape_size(p->get_shape()), 0);
+            args.emplace_back(shape_size(p->get_output_shape(0)), 0);
             if (std::is_integral<TIN>())
             {
                 std::generate(args.back().begin(), args.back().end(), rand);

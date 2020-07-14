@@ -50,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, range)
     auto range = make_shared<op::Range>(start, stop, step);
     ASSERT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 
-    auto f = make_shared<Function>(NodeVector{range}, ParameterVector{start, stop, step});
+    auto f = make_shared<Function>(OutputVector{range}, ParameterVector{start, stop, step});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 

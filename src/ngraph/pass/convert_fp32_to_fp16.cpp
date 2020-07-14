@@ -27,13 +27,8 @@ void pass::ConvertFP32ToFP16::convert_constants_precision()
         std::make_shared<ngraph::op::Constant>(element::f32, Shape{1}, std::vector<float>{0});
 
     ngraph::graph_rewrite_callback callback = [](pattern::Matcher& m) {
-        auto constant = std::dynamic_pointer_cast<ngraph::op::Constant>(m.get_match_root());
-        if (!constant)
-        {
-            return false;
-        }
-
-        if (constant->get_element_type() == element::f32)
+        auto constant = m.get_match_root_as<ngraph::op::Constant>();
+        if (constant && constant->get_output_element_type(0) == element::f32)
         {
             auto data = constant->get_vector<float>();
             std::vector<ngraph::float16> new_data(data.size());
@@ -42,7 +37,7 @@ void pass::ConvertFP32ToFP16::convert_constants_precision()
                 new_data[i] = ngraph::float16(data[i]);
             }
             auto new_const = std::make_shared<ngraph::op::Constant>(
-                element::f16, constant->get_shape(), new_data);
+                element::f16, constant->get_output_shape(0), new_data);
             new_const->set_friendly_name(constant->get_friendly_name());
             ngraph::replace_node(constant, new_const);
             return true;
@@ -59,7 +54,7 @@ void pass::ConvertFP32ToFP16::convert_parameters_precision()
     auto constant = std::make_shared<ngraph::op::Parameter>(element::f32, Shape{1});
 
     ngraph::graph_rewrite_callback callback = [](pattern::Matcher& m) {
-        auto parameter = std::dynamic_pointer_cast<ngraph::op::Parameter>(m.get_match_root());
+        auto parameter = m.get_match_root_as<ngraph::op::Parameter>();
         if (parameter && parameter->get_element_type() == element::f32)
         {
             parameter->set_element_type(element::f16);

@@ -201,6 +201,60 @@ namespace ngraph
                         };
                     }
                 }
+                else if (element_type == element::u32)
+                {
+                    if (is_int64)
+                    {
+                        std::function<decltype(runtime::cpu::kernel::argmax<uint32_t, int64_t, 1>)>
+                            kernel;
+
+                        SELECT_KERNEL_RANK(kernel,
+                                           uint32_t,
+                                           int64_t,
+                                           in_shape.size(),
+                                           runtime::cpu::kernel::argmax);
+
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
+                        };
+                    }
+                    else
+                    {
+                        std::function<decltype(runtime::cpu::kernel::argmax<uint32_t, int, 1>)>
+                            kernel;
+
+                        SELECT_KERNEL_RANK(
+                            kernel, uint32_t, int, in_shape.size(), runtime::cpu::kernel::argmax);
+
+                        functor = [&,
+                                   kernel,
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   arg_buffer_index,
+                                   out_buffer_index](CPURuntimeContext* ctx,
+                                                     CPUExecutionContext* ectx) {
+                            kernel(ctx->buffer_data[arg_buffer_index],
+                                   ctx->buffer_data[out_buffer_index],
+                                   in_shape,
+                                   out_shape,
+                                   axis,
+                                   ectx->arena);
+                        };
+                    }
+                }
                 else
                 {
                     throw ngraph_error("Unsupported type in CPU Builder for ArgMax");

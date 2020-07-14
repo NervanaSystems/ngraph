@@ -40,6 +40,8 @@ set(SRC
     core/pass/ng_dialect_builder.hpp
     core/pass/ng_dialect_fused_ops.cpp
     core/pass/ng_dialect_fused_ops.hpp
+    core/pass/ng_op_fusion.cpp
+    core/pass/ng_op_fusion.hpp
     runtime/cpu/memory_manager.cpp
     runtime/cpu/cpu_runtime.cpp
     runtime/cpu/cpu_callbacks.cpp
@@ -96,13 +98,13 @@ set(LIBS
 whole_archive_link(mlir_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
-    mlir_backend PRIVATE 
+    mlir_backend PRIVATE
     ${llvm_libs}
 )
 
-# Link ngraph 
-target_link_libraries(mlir_backend PUBLIC ngraph libmkl libmkldnn)
-target_include_directories(mlir_backend SYSTEM PUBLIC libmkldnn)
+# Link ngraph
+target_link_libraries(mlir_backend PUBLIC ngraph libmkl DNNL::dnnl)
+target_include_directories(mlir_backend SYSTEM PUBLIC DNNL::dnnl)
 
 # table-gen dialect ops
 # include table-gen helpers

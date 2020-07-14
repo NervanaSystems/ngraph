@@ -32,7 +32,7 @@ fi
 #
 # For this reason, this script specifies the exact version of clang-format to be used.
 
-declare REQUIRED_CLANG_FORMAT_VERSION=3.9
+declare REQUIRED_CLANG_FORMAT_VERSION=6.0
 declare CLANG_FORMAT_BASENAME="clang-format-"${REQUIRED_CLANG_FORMAT_VERSION}
 
 declare THIS_SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

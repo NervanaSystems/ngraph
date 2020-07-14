@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-cmake_minimum_required (VERSION 3.11)
+cmake_minimum_required (VERSION 3.12)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -52,12 +52,16 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+# Enable <PackageName>_ROOT for CMake 3.12+
+cmake_policy(SET CMP0074 NEW)
+
 if (APPLE)
     # Enable MACOS_RPATH by default.
     cmake_policy(SET CMP0042 NEW)
     # Enable CMAKE_<LANG>_COMPILER_ID AppleClang
     cmake_policy(SET CMP0025 NEW)
     # APPLE: Set CMAKE_OSX_SYSROOT if not set already.
+    cmake_policy(SET CMP0074 NEW)
     execute_process(COMMAND sw_vers -productVersion
         OUTPUT_VARIABLE OSX_FULL_VERSION
         OUTPUT_STRIP_TRAILING_WHITESPACE)
@@ -121,6 +125,7 @@ option(NGRAPH_TEST_UTIL_ENABLE "Control the building of test utility" TRUE)
 option(NGRAPH_DOC_BUILD_ENABLE "Control the building of documentation" FALSE)
 option(NGRAPH_TOOLS_ENABLE "Control the building of tool" TRUE)
 option(NGRAPH_CPU_ENABLE "Control the building of the CPU backend" TRUE)
+option(NGRAPH_CPU_CODEGEN_ENABLE "Control the building of the CPU_CODEGEN backend" FALSE)
 option(NGRAPH_MLIR_ENABLE "Control the building of MLIR backend" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
@@ -129,8 +134,7 @@ option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" T
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
-option(NGRAPH_DEX_ONLY "Build CPU DEX without codegen" FALSE)
-option(NGRAPH_ENABLE_CPU_CONV_AUTO "Enable mkldnn convolution_auto for CPU" TRUE)
+option(NGRAPH_CPU_CONV_AUTO_ENABLE "Enable dnnl convolution_auto for CPU" TRUE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
@@ -153,6 +157,12 @@ option(NGRAPH_ADDRESS_SANITIZER_ENABLE "Compiles and links with Address Sanitize
 option(NGRAPH_THREAD_SANITIZER_ENABLE "Compiles and links with Thread Sanitizer" FALSE)
 option(NGRAPH_UB_SANITIZER_ENABLE "Compiles and links with Undefined Behavior Sanitizer" FALSE)
 
+if (NGRAPH_CPU_CODEGEN_ENABLE)
+    message(STATUS "NGRAPH_CPU_ENABLE Backend enabled because the NGRAPH_CPU_CODEGEN_ENABLE is enabled")
+    set(NGRAPH_CPU_ENABLE TRUE)
+    set(NGRAPH_CODEGEN_ENABLE TRUE)
+endif()
+
 if (NGRAPH_STATIC_LIB_ENABLE)
     message(WARNING "Workaround: "
                     "Turning off NGRAPH_EXPORT_TARGETS_ENABLE for nGraph static lib")
@@ -163,10 +173,8 @@ if (NGRAPH_CPU_ENABLE)
     set(NGRAPH_INTEL_CPU_ONLY_ENABLE ON)
 endif()
 
-if (NGRAPH_MLIR_ENABLE AND (NOT NGRAPH_DEX_ONLY))
-    #disable code-gen due to sym collision with LLVM
-    message(FATAL_ERROR "Cannot build with both MLIR and code-gen ON.\n"
-                        "Use -DNGRAPH_DEX_ONLY=ON and try again. \n")
+if (NGRAPH_MLIR_ENABLE OR NGRAPH_CODEGEN_ENABLE)
+    set(NGRAPH_LLVM_ENABLE ON)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
@@ -198,6 +206,7 @@ NORMALIZE_BOOL(NGRAPH_TEST_UTIL_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DOC_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_TOOLS_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CPU_ENABLE)
+NORMALIZE_BOOL(NGRAPH_CPU_CODEGEN_ENABLE)
 NORMALIZE_BOOL(NGRAPH_MLIR_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
@@ -206,8 +215,7 @@ NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
-NORMALIZE_BOOL(NGRAPH_DEX_ONLY)
-NORMALIZE_BOOL(NGRAPH_ENABLE_CPU_CONV_AUTO)
+NORMALIZE_BOOL(NGRAPH_CPU_CONV_AUTO_ENABLE)
 NORMALIZE_BOOL(NGRAPH_CODE_COVERAGE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)
@@ -234,13 +242,13 @@ NORMALIZE_BOOL(NGRAPH_UB_SANITIZER_ENABLE)
 message(STATUS "NGRAPH_ADDRESS_SANITIZER_ENABLE:      ${NGRAPH_ADDRESS_SANITIZER_ENABLE}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:          ${NGRAPH_CODE_COVERAGE_ENABLE}")
 message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
+message(STATUS "NGRAPH_CPU_CODEGEN_ENABLE:            ${NGRAPH_CPU_CODEGEN_ENABLE}")
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:                  ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_DEPRECATED_ENABLE:             ${NGRAPH_DEPRECATED_ENABLE}")
-message(STATUS "NGRAPH_DEX_ONLY:                      ${NGRAPH_DEX_ONLY}")
 message(STATUS "NGRAPH_DOC_BUILD_ENABLE:              ${NGRAPH_DOC_BUILD_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
-message(STATUS "NGRAPH_ENABLE_CPU_CONV_AUTO:          ${NGRAPH_ENABLE_CPU_CONV_AUTO}")
+message(STATUS "NGRAPH_CPU_CONV_AUTO_ENABLE:          ${NGRAPH_CPU_CONV_AUTO_ENABLE}")
 message(STATUS "NGRAPH_EXPORT_TARGETS_ENABLE:         ${NGRAPH_EXPORT_TARGETS_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:            ${NGRAPH_GENERIC_CPU_ENABLE}")
 message(STATUS "NGRAPH_GPU_ENABLE:                    ${NGRAPH_GPU_ENABLE}")
@@ -270,8 +278,8 @@ message(STATUS "NGRAPH_USE_PREBUILT_LLVM:             ${NGRAPH_USE_PREBUILT_LLVM
 message(STATUS "NGRAPH_USE_PREBUILT_MLIR:             ${NGRAPH_USE_PREBUILT_MLIR}")
 message(STATUS "NGRAPH_WARNINGS_AS_ERRORS:            ${NGRAPH_WARNINGS_AS_ERRORS}")
 
-if (NGRAPH_CPU_ENABLE AND NGRAPH_MLIR_ENABLE)
-    #MLIR uses the latest version of LLVM which requires C++14.
+if (NGRAPH_LLVM_ENABLE)
+    #latest version of LLVM which requires C++14.
     set(NGRAPH_CXX_STANDARD 14)
 else()
     set(NGRAPH_CXX_STANDARD 11)
@@ -489,6 +497,9 @@ if(NGRAPH_UB_SANITIZER_ENABLE)
 endif()
 
 if(NGRAPH_ADDRESS_SANITIZER_ENABLE OR NGRAPH_THREAD_SANITIZER_ENABLE OR NGRAPH_UB_SANITIZER_ENABLE)
+    if (LINUX AND NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "^Clang$")
+        message(FATAL_ERROR "Sanitizers only work with the clang compiler")
+    endif()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fno-omit-frame-pointer")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g -fno-omit-frame-pointer")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -g -fno-omit-frame-pointer")
@@ -627,28 +638,19 @@ if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
     include(cmake/external_eigen.cmake)
 endif()
 if(NGRAPH_CPU_ENABLE)
-    include(cmake/external_mkldnn_v1.cmake)
-endif()
-if (NGRAPH_MLIR_ENABLE)
-    include(cmake/external_mlir.cmake)
+    include(cmake/external_onednn.cmake)
 endif()
 
-if (NGRAPH_CPU_ENABLE AND NOT NGRAPH_DEX_ONLY)
-    set(NGRAPH_CODEGEN_ENABLE TRUE)
-else()
-    set(NGRAPH_CODEGEN_ENABLE FALSE)
-endif()
-
-if(NGRAPH_CODEGEN_ENABLE)
+if(NGRAPH_LLVM_ENABLE)
     if (NOT MSVC)
         include(cmake/external_llvm.cmake)
     else()
-        message(FATAL_ERROR "CODEGEN is not supported on Windows!")
+        message(FATAL_ERROR "LLVM is not supported on Windows!")
     endif()
 endif()
 
 if(NGRAPH_TBB_ENABLE)
-    include(cmake/external_tbb.cmake)
+    include(cmake/external_onetbb.cmake)
 endif()
 
 add_subdirectory(src)

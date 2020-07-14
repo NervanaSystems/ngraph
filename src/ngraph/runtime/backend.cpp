@@ -58,9 +58,7 @@ static string find_my_pathname()
 #endif
 }
 
-runtime::Backend::~Backend()
-{
-}
+runtime::Backend::~Backend() {}
 
 std::shared_ptr<ngraph::Node> runtime::Backend::get_backend_op(const std::string& /* op_name */,
                                                                ...)
@@ -124,9 +122,7 @@ bool runtime::Backend::is_supported_property(const Property /* prop */) const
     return false;
 }
 
-void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> /* exec */)
-{
-}
+void runtime::Backend::remove_compiled_function(std::shared_ptr<Executable> /* exec */) {}
 
 std::shared_ptr<runtime::Executable> runtime::Backend::load(istream& /* input_stream */)
 {
@@ -158,7 +154,7 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
 bool runtime::Backend::executable_can_create_tensors()
 {
     auto A = make_shared<op::Parameter>(element::f32, Shape());
-    auto function = make_shared<Function>(NodeVector{A}, ParameterVector{A});
+    auto function = make_shared<Function>(OutputVector{A}, ParameterVector{A});
     auto exec = compile(function);
     bool exec_can_create_tensors = false;
     try

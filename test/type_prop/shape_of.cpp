@@ -27,7 +27,7 @@ TEST(type_prop, shape_of_v0)
     auto so = make_shared<op::v0::ShapeOf>(a);
 
     ASSERT_EQ(so->get_output_element_type(0), element::i64);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }
 
 TEST(type_prop, shape_of_partial_et_dynamic_v0)
@@ -36,7 +36,7 @@ TEST(type_prop, shape_of_partial_et_dynamic_v0)
     auto so = make_shared<op::v0::ShapeOf>(a);
 
     ASSERT_EQ(so->get_output_element_type(0), element::i64);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }
 
 TEST(type_prop, shape_of_partial_rank_static_dynamic_v0)
@@ -46,7 +46,7 @@ TEST(type_prop, shape_of_partial_rank_static_dynamic_v0)
     auto so = make_shared<op::v0::ShapeOf>(a);
 
     ASSERT_EQ(so->get_output_element_type(0), element::i64);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }
 
 TEST(type_prop, shape_of_partial_rank_dynamic_v0)
@@ -64,7 +64,7 @@ TEST(type_prop, shape_of_v3)
     auto so = make_shared<op::v3::ShapeOf>(a);
 
     ASSERT_EQ(so->get_output_element_type(0), element::i64);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }
 
 TEST(type_prop, shape_of_partial_et_dynamic_v3)
@@ -73,7 +73,7 @@ TEST(type_prop, shape_of_partial_et_dynamic_v3)
     auto so = make_shared<op::v3::ShapeOf>(a);
 
     ASSERT_EQ(so->get_output_element_type(0), element::i64);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }
 
 TEST(type_prop, shape_of_partial_rank_static_dynamic_v3)
@@ -83,7 +83,7 @@ TEST(type_prop, shape_of_partial_rank_static_dynamic_v3)
     auto so = make_shared<op::v3::ShapeOf>(a);
 
     ASSERT_EQ(so->get_output_element_type(0), element::i64);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }
 
 TEST(type_prop, shape_of_partial_rank_dynamic_v3)
@@ -137,5 +137,5 @@ TEST(type_prop, shape_of_output_type_v3)
     }
 
     ASSERT_EQ(so->get_output_element_type(0), element::i32);
-    ASSERT_EQ(so->get_shape(), Shape{4});
+    ASSERT_EQ(so->get_output_shape(0), Shape{4});
 }

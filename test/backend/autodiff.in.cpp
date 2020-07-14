@@ -342,7 +342,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_numeric)
         auto window_movement_strides = Strides{2, 2};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -366,7 +365,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw4x4_win_2x2_str_1x1_numer
         auto window_movement_strides = Strides{1, 1};
         auto avgpool = make_shared<op::AvgPool>(A, window_shape, window_movement_strides);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -392,7 +390,6 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_avgpool_n2_c2_hw2x2_win_2x2_str_1x1_paddi
         auto avgpool = make_shared<op::AvgPool>(
             A, window_shape, window_movement_strides, padding, padding, false);
         return make_shared<Function>(avgpool, ParameterVector{A});
-
     };
 
     auto f = make_graph();
@@ -416,8 +413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_abs)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Abs>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Abs>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -444,8 +440,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_acos)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Acos>(X0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Acos>(X0), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -462,7 +457,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_add)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(X0 + X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(X0 + X1, ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -479,8 +474,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_add_nested)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>((X0 + X1) + (X1 + X0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>((X0 + X1) + (X1 + X0), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -495,8 +489,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_asin)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Asin>(X0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Asin>(X0), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -511,8 +504,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_atan)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Atan>(X0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Atan>(X0), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -545,7 +537,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_broadcast0)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Broadcast>(X0, Shape{2, 3}, AxisSet{0}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -561,7 +553,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_broadcast1)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Broadcast>(X0, Shape{3, 2}, AxisSet{1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -582,8 +574,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_vector)
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
         auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
-        return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+        return make_shared<Function>(make_shared<op::Concat>(OutputVector{X0, X1, X2}, 0),
+                                     ParameterVector{X0, X1, X2});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
@@ -605,8 +597,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_0)
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
         auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
-        return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+        return make_shared<Function>(make_shared<op::Concat>(OutputVector{X0, X1, X2}, 0),
+                                     ParameterVector{X0, X1, X2});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
@@ -628,8 +620,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_concat_axis_1)
         auto X0 = make_shared<op::Parameter>(element::f32, shape_0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape_1);
         auto X2 = make_shared<op::Parameter>(element::f32, shape_2);
-        return make_shared<Function>(make_shared<op::Concat>(NodeVector{X0, X1, X2}, 1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+        return make_shared<Function>(make_shared<op::Concat>(OutputVector{X0, X1, X2}, 1),
+                                     ParameterVector{X0, X1, X2});
     };
     EXPECT_TRUE(
         autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1, x2}, .01f, .01f));
@@ -648,8 +640,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_ceiling)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Ceiling>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Ceiling>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -678,8 +669,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_cos)
     Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Cos>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Cos>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -700,8 +690,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_cosh)
     Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Cosh>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Cosh>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -729,7 +718,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_divide)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(X0 / X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(X0 / X1, ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x2}, .01f, .01f));
@@ -748,8 +737,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_scalar_scalar)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -767,8 +755,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_scalar_tensor)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -786,8 +773,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor_scalar)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -805,8 +791,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_vector_vector)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -824,8 +809,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor_vector)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -843,8 +827,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor2_tensor2)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -862,8 +845,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_dot_tensor3_tensor3)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::Dot>(X0, X1, 2),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Dot>(X0, X1, 2), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -880,8 +862,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmul_tensor2_tensor2)
     auto make_graph = [shape0, shape1]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape0);
         auto X1 = make_shared<op::Parameter>(element::f32, shape1);
-        return make_shared<Function>(make_shared<op::BatchMatMul>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::BatchMatMul>(X0, X1), ParameterVector{X0, X1});
     };
 
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
@@ -897,8 +878,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_exp)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Exp>(X0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Exp>(X0), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -916,8 +896,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_floor)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Floor>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Floor>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -948,8 +927,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_log)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Log>(X0),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Log>(X0), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -966,8 +944,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maximum)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Maximum>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Maximum>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -984,8 +961,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_minimum)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Minimum>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(make_shared<op::Minimum>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -1002,7 +978,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_multiply)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(X0 * X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(X0 * X1, ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -1017,7 +993,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_negative)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(-X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(-X0, ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -1031,7 +1007,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_parameter)
     auto x0 = rng.initialize(backend->create_tensor<float>(shape));
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(X0, std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(X0, ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -1047,8 +1023,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_power)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(std::make_shared<op::Power>(X0, X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(std::make_shared<op::Power>(X0, X1), ParameterVector{X0, X1});
     };
 
     auto x0 = rng_pos.initialize(backend->create_tensor<float>(shape));
@@ -1074,8 +1049,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_relu)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Relu>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Relu>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1104,7 +1078,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_replace_slice)
         auto Y = make_shared<op::Parameter>(element::f32, shape_y);
         return make_shared<Function>(
             make_shared<op::ReplaceSlice>(X, Y, Coordinate{2, 3}, Coordinate{4, 5}),
-            std::vector<std::shared_ptr<op::Parameter>>{X, Y});
+            ParameterVector{X, Y});
     };
 
     auto f = make_graph();
@@ -1129,7 +1103,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reshape)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Reshape>(X0, AxisVector{1, 0}, Shape{4, 3}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -1145,7 +1119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select)
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         auto X2 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Select>(X0, X1, X2),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+                                     ParameterVector{X0, X1, X2});
     };
 
     auto f = make_graph();
@@ -1173,7 +1147,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         auto X2 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Select>(X0, X2 + X1, X2 - X1),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+                                     ParameterVector{X0, X1, X2});
     };
 
     auto f = make_graph();
@@ -1202,8 +1176,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sigmoid)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sigmoid>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sigmoid>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1232,8 +1205,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sign)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sign>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sign>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1258,8 +1230,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sin)
     Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sin>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sin>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1280,8 +1251,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sinh)
     Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sinh>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sinh>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1302,7 +1272,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_slice)
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Slice>(X, Coordinate{2, 3}, Coordinate{4, 5}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+                                     ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1326,7 +1296,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_all)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -1341,8 +1311,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_axis)
 
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -1360,7 +1329,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_underflow)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0}, .01f, .01f));
 }
@@ -1375,50 +1344,47 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_softmax_3d)
 
     auto make_graph0 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0}), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph0, {x0}, .01f, .01f));
 
     auto make_graph1 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1}), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph1, {x0}, .01f, .01f));
 
     auto make_graph2 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{2}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+        return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{2}), ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph2, {x0}, .01f, .01f));
 
     auto make_graph01 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph01, {x0}, .01f, .01f));
 
     auto make_graph02 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 2}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph02, {x0}, .01f, .01f));
 
     auto make_graph12 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{1, 2}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph12, {x0}, .01f, .01f));
 
     auto make_graph012 = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Softmax>(X0, AxisSet{0, 1, 2}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0});
+                                     ParameterVector{X0});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph012, {x0}, .01f, .01f));
 }
@@ -1435,7 +1401,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_subtract)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(X0 - X1, std::vector<std::shared_ptr<op::Parameter>>{X0, X1});
+        return make_shared<Function>(X0 - X1, ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -1450,8 +1416,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_v2s)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}), ParameterVector{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x}, .01f, .01f));
 }
@@ -1466,8 +1431,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_m2s)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0, 1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0, 1}), ParameterVector{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x}, .01f, .01f));
 }
@@ -1482,8 +1446,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_m2v_0)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{0}), ParameterVector{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x}, .01f, .01f));
 }
@@ -1498,8 +1461,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_sum_m2v_1)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{1}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Sum>(X, AxisSet{1}), ParameterVector{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x}, .01f, .01f));
 }
@@ -1519,8 +1481,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_tan)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Tan>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Tan>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1545,8 +1506,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_tanh)
     Shape shape{2, 3};
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Tanh>(X),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+        return make_shared<Function>(make_shared<op::Tanh>(X), ParameterVector{X});
     };
 
     auto f = make_graph();
@@ -1573,8 +1533,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_abc)
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         auto X2 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>((X0 + X1) * X2,
-                                     std::vector<std::shared_ptr<op::Parameter>>{X0, X1, X2});
+        return make_shared<Function>((X0 + X1) * X2, ParameterVector{X0, X1, X2});
     };
 
     EXPECT_TRUE(
@@ -1592,7 +1551,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_reverse_3d_02)
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
         return make_shared<Function>(make_shared<op::Reverse>(X, AxisSet{0, 2}),
-                                     std::vector<std::shared_ptr<op::Parameter>>{X});
+                                     ParameterVector{X});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x}, .01f, .01f));
 }

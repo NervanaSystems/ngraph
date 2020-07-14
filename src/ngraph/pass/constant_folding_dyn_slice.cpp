@@ -26,13 +26,13 @@ using namespace std;
 using namespace ngraph;
 
 template <class T>
-shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
-                                                 shared_ptr<op::Constant> lb,
-                                                 shared_ptr<op::Constant> ub,
-                                                 shared_ptr<op::Constant> strides,
-                                                 shared_ptr<op::DynSlice> slice)
+Output<Node> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
+                                     shared_ptr<op::Constant> lb,
+                                     shared_ptr<op::Constant> ub,
+                                     shared_ptr<op::Constant> strides,
+                                     shared_ptr<op::DynSlice> slice)
 {
-    SlicePlan plan = make_slice_plan(data->get_shape(),
+    SlicePlan plan = make_slice_plan(data->get_output_shape(0),
                                      lb->get_vector<int64_t>(),
                                      ub->get_vector<int64_t>(),
                                      strides->get_vector<int64_t>(),
@@ -46,7 +46,7 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
     T* slice_out_data = slice_out_buffer.get_ptr<T>();
     runtime::reference::slice<T>(data->get_data_ptr<T>(),
                                  slice_out_data,
-                                 data->get_shape(),
+                                 data->get_output_shape(0),
                                  Coordinate(plan.begins.begin(), plan.begins.end()),
                                  Coordinate(plan.ends.begin(), plan.ends.end()),
                                  Strides(plan.strides.begin(), plan.strides.end()),
@@ -69,7 +69,8 @@ shared_ptr<op::Constant> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                    plan.reverse_axes);
 
     return make_shared<op::Constant>(
-        data->get_element_type(), plan.reshape_out_shape, reverse_out_data);
+               data->get_output_element_type(0), plan.reshape_out_shape, reverse_out_data)
+        ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_dyn_slice()
@@ -93,7 +94,7 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
                                                   AxisSet{});
 
     auto constant_dyn_slice_callback = [data_label, lb_label, ub_label, strides_label](
-        pattern::Matcher& m) {
+                                           pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_dyn_slice_callback against node = "
                      << m.get_match_root()->get_name();
 
@@ -103,11 +104,13 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
         auto lb_node = static_pointer_cast<op::Constant>(pattern_map[lb_label]);
         auto ub_node = static_pointer_cast<op::Constant>(pattern_map[ub_label]);
         auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
-        auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
+        auto dyn_slice = m.get_match_root_as<op::DynSlice>();
+        NGRAPH_CHECK(
+            dyn_slice, "match root node ", *m.get_match_root(), " not of type `op::DynSlice`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dyn_slice));
 
-        std::shared_ptr<op::Constant> replacement;
+        Output<Node> replacement;
 
         switch (dyn_slice->get_output_element_type(0))
         {
@@ -174,7 +177,7 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement);
         return true;
     };
 

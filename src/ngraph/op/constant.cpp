@@ -25,27 +25,6 @@
 using namespace ngraph;
 using namespace std;
 
-template <typename T>
-string to_cpp_string(T value)
-{
-    string rc;
-    if (std::isnan(value))
-    {
-        rc = "NAN";
-    }
-    else if (std::isinf(value))
-    {
-        rc = (value > 0 ? "INFINITY" : "-INFINITY");
-    }
-    else
-    {
-        stringstream ss;
-        ss << value;
-        rc = ss.str();
-    }
-    return rc;
-}
-
 constexpr NodeTypeInfo op::Constant::type_info;
 
 op::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
@@ -324,9 +303,7 @@ op::Constant::Constant(const Constant& other)
     constructor_validate_and_infer_types();
 }
 
-op::Constant::~Constant()
-{
-}
+op::Constant::~Constant() {}
 
 string op::Constant::convert_value_to_string(size_t index) const
 {
@@ -336,7 +313,7 @@ string op::Constant::convert_value_to_string(size_t index) const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean: rc = to_string(get_vector<char>()[index]); break;
     case element::Type_t::bf16:
@@ -376,7 +353,7 @@ vector<string> op::Constant::get_value_strings() const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean:
         for (int value : get_vector<char>())
@@ -547,7 +524,7 @@ shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_arg
 template <typename T>
 static bool test_bitwise_identical(const op::Constant* constant)
 {
-    const size_t size = shape_size(constant->get_shape());
+    const size_t size = shape_size(constant->get_output_shape(0));
     bool data_is_constant = true;
     if (size > 0)
     {
@@ -573,7 +550,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean:
     case element::Type_t::i8:

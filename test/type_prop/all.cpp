@@ -26,20 +26,20 @@ TEST(type_prop, all_deduce)
     auto param_0 = make_shared<op::Parameter>(element::boolean, Shape{2, 4});
 
     auto r0 = make_shared<op::All>(param_0, AxisSet{0});
-    ASSERT_EQ(r0->get_element_type(), element::boolean);
-    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+    ASSERT_EQ(r0->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r0->get_output_shape(0), (Shape{4}));
 
     auto r1 = make_shared<op::All>(param_0, AxisSet{1});
-    ASSERT_EQ(r1->get_element_type(), element::boolean);
-    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+    ASSERT_EQ(r1->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r1->get_output_shape(0), (Shape{2}));
 
     auto r01 = make_shared<op::All>(param_0, AxisSet{0, 1});
-    ASSERT_EQ(r01->get_element_type(), element::boolean);
-    ASSERT_EQ(r01->get_shape(), (Shape{}));
+    ASSERT_EQ(r01->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r01->get_output_shape(0), (Shape{}));
 
     auto r_none = make_shared<op::All>(param_0, AxisSet{});
-    ASSERT_EQ(r_none->get_element_type(), element::boolean);
-    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+    ASSERT_EQ(r_none->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r_none->get_output_shape(0), (Shape{2, 4}));
 }
 
 TEST(type_prop, all_deduce_et_dynamic)
@@ -47,20 +47,20 @@ TEST(type_prop, all_deduce_et_dynamic)
     auto param_0 = make_shared<op::Parameter>(element::dynamic, Shape{2, 4});
 
     auto r0 = make_shared<op::All>(param_0, AxisSet{0});
-    ASSERT_EQ(r0->get_element_type(), element::boolean);
-    ASSERT_EQ(r0->get_shape(), (Shape{4}));
+    ASSERT_EQ(r0->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r0->get_output_shape(0), (Shape{4}));
 
     auto r1 = make_shared<op::All>(param_0, AxisSet{1});
-    ASSERT_EQ(r1->get_element_type(), element::boolean);
-    ASSERT_EQ(r1->get_shape(), (Shape{2}));
+    ASSERT_EQ(r1->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r1->get_output_shape(0), (Shape{2}));
 
     auto r01 = make_shared<op::All>(param_0, AxisSet{0, 1});
-    ASSERT_EQ(r01->get_element_type(), element::boolean);
-    ASSERT_EQ(r01->get_shape(), (Shape{}));
+    ASSERT_EQ(r01->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r01->get_output_shape(0), (Shape{}));
 
     auto r_none = make_shared<op::All>(param_0, AxisSet{});
-    ASSERT_EQ(r_none->get_element_type(), element::boolean);
-    ASSERT_EQ(r_none->get_shape(), (Shape{2, 4}));
+    ASSERT_EQ(r_none->get_output_element_type(0), element::boolean);
+    ASSERT_EQ(r_none->get_output_shape(0), (Shape{2, 4}));
 }
 
 TEST(type_prop, all_et_non_boolean)
@@ -121,7 +121,7 @@ TEST(type_prop, all_partial_rank_static_dynamic_ok_result_static)
     auto all = make_shared<op::All>(param, axes);
 
     EXPECT_EQ(all->get_output_element_type(0), element::boolean);
-    EXPECT_EQ(all->get_shape(), (Shape{1, 2, 5}));
+    EXPECT_EQ(all->get_output_shape(0), (Shape{1, 2, 5}));
 }
 
 TEST(type_prop, all_partial_rank_static_dynamic_ok_result_dynamic)

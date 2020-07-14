@@ -20,7 +20,7 @@ include(FetchContent)
 # ONNX.proto definition version
 #------------------------------------------------------------------------------
 
-set(ONNX_BRANCH etusien/attribute_in_function)
+set(ONNX_VERSION 1.7.0)
 
 #------------------------------------------------------------------------------
 # Download and install libonnx ...
@@ -48,6 +48,7 @@ FetchContent_Declare(
     ext_onnx
     GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
     GIT_TAG ${ONNX_GIT_BRANCH}
+    GIT_SHALLOW 1
 )
 
 FetchContent_GetProperties(ext_onnx)

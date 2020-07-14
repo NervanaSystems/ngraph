@@ -44,8 +44,6 @@ extern "C" GPU_BACKEND_API void ngraph_register_gpu_backend()
 runtime::gpu::GPUBackend::GPUBackend()
     : runtime::Backend()
 {
-    // Some pass patterns need to be fixed
-    set_remove_goe(false);
 }
 
 runtime::gpu::GPUBackend::BackendContext::BackendContext()
@@ -178,7 +176,7 @@ bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
         }
     }
 
-    if (op.description() == "BatchNormInference")
+    if (is_type<op::v0::BatchNormInference>(&op))
     {
         const ngraph::op::BatchNormInference* bn =
             static_cast<const ngraph::op::BatchNormInference*>(&op);
@@ -187,7 +185,7 @@ bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
             return false;
         }
     }
-    else if (op.description() == "BatchNormTraining")
+    else if (is_type<op::v0::BatchNormTraining>(&op))
     {
         const ngraph::op::BatchNormTraining* bn =
             static_cast<const ngraph::op::BatchNormTraining*>(&op);
