@@ -25,6 +25,7 @@
 #include "ngraph_dialect/type.hpp"
 #include "pass/ng_dialect_builder.hpp"
 #include "pass/ng_dialect_fused_ops.hpp"
+#include "pass/ng_op_fusion.hpp"
 
 #include "ngraph/check.hpp"
 #include "ngraph/descriptor/tensor.hpp"
@@ -72,6 +73,10 @@ using llvm::StringRef;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
+
+static llvm::cl::opt<bool>
+    clEnableOpFusion("ngraph-op-fusion", llvm::cl::init(false),
+                     llvm::cl::desc("Enable ngraph dialect op fusion pass"));
 
 bool MLIRCompiler::initialized = false;
 
