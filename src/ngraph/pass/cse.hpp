@@ -53,7 +53,7 @@ public:
     }
 
     CommonSubexpressionElimination(
-        const std::unordered_map<std::type_index,
+        const std::unordered_map<NodeTypeInfo,
                                  std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
             backend_cse_handlers)
         : FunctionPass()
@@ -62,7 +62,7 @@ public:
         set_property(PassProperty::REQUIRE_STATIC_SHAPE, true);
     }
 
-    std::unordered_map<std::type_index,
+    std::unordered_map<NodeTypeInfo,
                        std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
         m_backend_cse_handlers;
 

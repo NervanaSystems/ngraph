@@ -59,14 +59,14 @@ namespace ngraph
         namespace cpu
         {
             const std::unordered_map<
-                std::type_index,
+                NodeTypeInfo,
                 std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
                 get_cse_handlers_map()
             {
                 const static std::unordered_map<
-                    std::type_index,
+                    NodeTypeInfo,
                     std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>
-                    cse_map{{TI(runtime::cpu::op::ConvertLayout), cse_convertlayout}};
+                    cse_map{{runtime::cpu::op::ConvertLayout::type_info, cse_convertlayout}};
                 return cse_map;
             }
         }

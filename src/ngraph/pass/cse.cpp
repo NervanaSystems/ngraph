@@ -168,58 +168,58 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
 // To enable CSE for a new op, add a mapping between the op and a cse handler function to the map
 // below. If the op doesn't map to an existing handler, create a new handler to check if
 // all inputs and attributes for two nodes are exactly same.
-static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
+static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     initialize_ops_to_cse_handlers()
 {
-    return unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
-        {{TI(op::Abs), cse_unarywise},
-         {TI(op::Acos), cse_unarywise},
-         {TI(op::Asin), cse_unarywise},
-         {TI(op::Atan), cse_unarywise},
-         {TI(op::Atan2), cse_binarywise},
-         {TI(op::Ceiling), cse_unarywise},
-         {TI(op::Constant), cse_constant},
-         {TI(op::Cos), cse_unarywise},
-         {TI(op::Cosh), cse_unarywise},
-         {TI(op::Exp), cse_unarywise},
-         {TI(op::Floor), cse_unarywise},
-         {TI(op::Log), cse_unarywise},
-         {TI(op::Negative), cse_unarywise},
-         {TI(op::OneHot), cse_one_hot},
-         {TI(op::Relu), cse_unarywise},
-         {TI(op::Sigmoid), cse_unarywise},
-         {TI(op::Sign), cse_unarywise},
-         {TI(op::Sin), cse_unarywise},
-         {TI(op::Sinh), cse_unarywise},
-         //{TI(op::Softmax), cse_unarywise},
-         {TI(op::Sqrt), cse_unarywise},
-         {TI(op::Tan), cse_unarywise},
-         {TI(op::Tanh), cse_unarywise},
-         {TI(op::Add), cse_binarywise},
-         {TI(op::Divide), cse_binarywise},
-         {TI(op::Maximum), cse_binarywise},
-         {TI(op::Minimum), cse_binarywise},
-         {TI(op::Multiply), cse_binarywise},
-         {TI(op::Power), cse_binarywise},
-         {TI(op::Subtract), cse_binarywise},
-         {TI(op::Sum), cse_reduction},
-         {TI(op::Product), cse_reduction},
-         {TI(op::Reshape), cse_reshape},
-         {TI(op::Broadcast), cse_broadcast}});
+    return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
+        {{op::v0::Abs::type_info, cse_unarywise},
+         {op::v0::Acos::type_info, cse_unarywise},
+         {op::v0::Asin::type_info, cse_unarywise},
+         {op::v0::Atan::type_info, cse_unarywise},
+         {op::v0::Atan2::type_info, cse_binarywise},
+         {op::v0::Ceiling::type_info, cse_unarywise},
+         {op::v0::Constant::type_info, cse_constant},
+         {op::v0::Cos::type_info, cse_unarywise},
+         {op::v0::Cosh::type_info, cse_unarywise},
+         {op::v0::Exp::type_info, cse_unarywise},
+         {op::v0::Floor::type_info, cse_unarywise},
+         {op::v0::Log::type_info, cse_unarywise},
+         {op::v0::Negative::type_info, cse_unarywise},
+         {op::v0::OneHot::type_info, cse_one_hot},
+         {op::v0::Relu::type_info, cse_unarywise},
+         {op::v0::Sigmoid::type_info, cse_unarywise},
+         {op::v0::Sign::type_info, cse_unarywise},
+         {op::v0::Sin::type_info, cse_unarywise},
+         {op::v0::Sinh::type_info, cse_unarywise},
+         //{op::v0::Softmax::type_info, cse_unarywise},
+         {op::v0::Sqrt::type_info, cse_unarywise},
+         {op::v0::Tan::type_info, cse_unarywise},
+         {op::v0::Tanh::type_info, cse_unarywise},
+         {op::v0::Add::type_info, cse_binarywise},
+         {op::v0::Divide::type_info, cse_binarywise},
+         {op::v0::Maximum::type_info, cse_binarywise},
+         {op::v0::Minimum::type_info, cse_binarywise},
+         {op::v0::Multiply::type_info, cse_binarywise},
+         {op::v0::Power::type_info, cse_binarywise},
+         {op::v0::Subtract::type_info, cse_binarywise},
+         {op::v0::Sum::type_info, cse_reduction},
+         {op::v0::Product::type_info, cse_reduction},
+         {op::v0::Reshape::type_info, cse_reshape},
+         {op::v0::Broadcast::type_info, cse_broadcast}});
 }
 
-static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
+static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>
     ops_to_cse_handlers = initialize_ops_to_cse_handlers();
 
 class NodeKey
 {
 public:
     NodeKey(const shared_ptr<Node>& n,
-            unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
+            unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
                 backend_handlers)
         : m_node(n)
         , m_node_ref(*n)
-        , m_ti(TI(m_node_ref))
+        , m_ti(m_node_ref.get_type_info())
         , m_backend_handlers(backend_handlers)
     {
     }
@@ -249,8 +249,8 @@ private:
     shared_ptr<Node> m_node;
     // m_node_ref is only to allow getting the type_index in the ctor
     Node& m_node_ref;
-    std::type_index m_ti;
-    unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
+    NodeTypeInfo m_ti;
+    unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>&
         m_backend_handlers;
 };
 

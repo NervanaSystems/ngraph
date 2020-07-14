@@ -35,7 +35,7 @@ namespace ngraph
         namespace cpu
         {
             const std::unordered_map<
-                std::type_index,
+                NodeTypeInfo,
                 std::function<bool(std::shared_ptr<Node>, std::shared_ptr<Node>)>>&
                 get_cse_handlers_map();
         }
