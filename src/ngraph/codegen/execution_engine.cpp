@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/Support/Host.h>
 
 #include "ngraph/codegen/execution_engine.hpp"
 

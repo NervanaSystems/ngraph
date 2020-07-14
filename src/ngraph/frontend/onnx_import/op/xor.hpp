@@ -28,18 +28,14 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector logical_xor(const Node& node)
+                inline OutputVector logical_xor(const Node& node)
                 {
                     return {std::make_shared<default_opset::LogicalXor>(
                         node.get_ng_inputs().at(0),
                         node.get_ng_inputs().at(1),
                         ngraph::op::AutoBroadcastSpec(ngraph::op::AutoBroadcastType::NUMPY))};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

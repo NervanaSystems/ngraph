@@ -16,8 +16,7 @@
 
 #include "utils/arg_min_max_factory.hpp"
 #include "default_opset.hpp"
-#include "ngraph/op/get_output_element.hpp"
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "ngraph/validation_util.hpp"
 
 namespace ngraph
@@ -35,12 +34,12 @@ namespace ngraph
 
             std::shared_ptr<ngraph::Node> ArgMinMaxFactory::make_arg_max() const
             {
-                return make_topk_subgraph(default_opset::TopK::Mode::MAX);
+                return make_topk_subgraph(default_opset::TopK::Mode::max);
             }
 
             std::shared_ptr<ngraph::Node> ArgMinMaxFactory::make_arg_min() const
             {
-                return make_topk_subgraph(default_opset::TopK::Mode::MIN);
+                return make_topk_subgraph(default_opset::TopK::Mode::min);
             }
 
             std::shared_ptr<ngraph::Node>
@@ -49,9 +48,9 @@ namespace ngraph
                 const auto k_node =
                     default_opset::Constant::create(ngraph::element::i64, Shape{}, {1});
                 const auto topk = std::make_shared<default_opset::TopK>(
-                    m_input_node, k_node, m_axis, mode, default_opset::TopK::SortType::NONE);
+                    m_input_node, k_node, m_axis, mode, default_opset::TopK::SortType::none);
 
-                const auto indices = std::make_shared<ngraph::opset0::GetOutputElement>(topk, 1);
+                const auto indices = topk->output(1);
 
                 if (m_keep_dims == 0)
                 {

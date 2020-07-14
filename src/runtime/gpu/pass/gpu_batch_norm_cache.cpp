@@ -20,7 +20,6 @@
 #include "gpu_op_annotations.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "op/batch_norm.hpp"
 #include "pass/gpu_batch_norm_cache.hpp"
 
@@ -41,24 +40,19 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
 
             // pass must be run prior to GOE elimination
             // collect all batch norm inputs to batch norm backward op
-            std::vector<std::shared_ptr<op::GetOutputElement>> goes;
+            std::vector<std::shared_ptr<op::BatchNormTraining>> bns;
             for (auto& arg : bnbp->get_arguments())
             {
-                if (auto goe = std::dynamic_pointer_cast<op::GetOutputElement>(arg))
+                if (auto bn = std::dynamic_pointer_cast<op::BatchNormTraining>(arg))
                 {
-                    if (auto bn = std::dynamic_pointer_cast<op::BatchNormTraining>(
-                            goe->get_input_node_shared_ptr(0)))
-                    {
-                        goes.push_back(goe);
-                    }
+                    bns.push_back(bn);
                 }
             }
 
             // only replace if some of the inputs to backprop are from fprop directly
-            if (goes.size())
+            if (bns.size())
             {
-                if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(
-                        goes.front()->get_input_node_shared_ptr(0)))
+                if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(bns.front()))
                 {
                     auto replacement = std::make_shared<op::gpu::BatchNormTrainingWithStats>(
                         target->get_eps_value(),
@@ -67,28 +61,14 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
                         target->get_input_source_output(2));
 
                     // replace all users of old batchnorm with cudnn batchnorm
-                    for (size_t i = 0; i < target->get_outputs().size(); i++)
+                    for (size_t i = 0; i < target->get_output_size(); i++)
                     {
-                        auto& target_output = target->get_outputs().at(i);
-                        std::set<ngraph::descriptor::Input*> copy_inputs{
-                            begin(target_output.get_inputs()), end(target_output.get_inputs())};
+                        Output<Node> target_output = target->output(i);
+                        std::set<ngraph::Input<Node>> copy_inputs =
+                            target_output.get_target_inputs();
                         for (auto input : copy_inputs)
                         {
-                            input->replace_output(replacement->get_outputs().at(i));
-                        }
-                    }
-
-                    // for each output of forward op into backprop op
-                    // use the mean and inverse variance from the forward
-                    // cudnn op to avoid recalculation of batch statistics
-                    for (auto& goe : goes)
-                    {
-                        auto out_idx = goe->get_n();
-                        if (out_idx != 0)
-                        {
-                            auto new_goe =
-                                std::make_shared<op::GetOutputElement>(replacement, out_idx + 2);
-                            ngraph::replace_node(goe, new_goe);
+                            input.replace_source_output(replacement->output(i));
                         }
                     }
                     replaced = true;

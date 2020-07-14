@@ -16,7 +16,7 @@ TEST(opset_transform, opset1_broadcast_upgrade_pass)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
 
     auto bcast_v0 = make_shared<op::v0::Broadcast>(arg, Shape{3, 5, 4, 6}, AxisSet{0, 2});
-    auto f = make_shared<Function>(NodeVector{bcast_v0}, ParameterVector{arg});
+    auto f = make_shared<Function>(OutputVector{bcast_v0}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset1Upgrade>();
@@ -45,7 +45,7 @@ TEST(opset_transform, opset1_broadcast_downgrade_pass)
     auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 3, 4});
 
     auto bcast_v1 = make_shared<op::v1::Broadcast>(arg, target_shape, axes_mapping);
-    auto f = make_shared<Function>(NodeVector{bcast_v1}, ParameterVector{arg});
+    auto f = make_shared<Function>(OutputVector{bcast_v1}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();

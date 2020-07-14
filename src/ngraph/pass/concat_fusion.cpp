@@ -91,21 +91,21 @@ namespace
 void pass::ConcatElimination::construct_concat_elimination()
 {
     auto op_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 3});
-    auto concat = std::make_shared<op::Concat>(NodeVector{op_label}, 0);
-    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, NodeVector{concat});
+    auto concat = std::make_shared<op::Concat>(OutputVector{op_label}, 0);
+    auto concat_label = std::make_shared<pattern::op::Label>(concat, nullptr, OutputVector{concat});
 
     auto callback = [op_label](pattern::Matcher& m) {
         NGRAPH_DEBUG
             << "concat_elimination: In callback for construct_concat_elimination against node = "
             << m.get_match_root()->get_name();
-        auto pattern_map = m.get_pattern_map();
+        auto pattern_map = m.get_pattern_value_map();
         auto op = pattern_map[op_label];
 
-        auto root = as_type_ptr<op::Concat>(m.get_match_root());
+        auto root = m.get_match_root_as<op::Concat>();
         if (root && (root->get_input_shape(0) == root->get_output_shape(0)))
         {
             NGRAPH_DEBUG << " eliminated " << m.get_match_root() << "\n";
-            replace_node(m.get_match_root(), op);
+            m.get_match_value().replace(op);
 
             return true;
         }
@@ -120,9 +120,9 @@ void pass::ConcatElimination::construct_concat_elimination()
 bool ngraph::pass::SelfConcatFusion::run_on_function(std::shared_ptr<Function> function)
 {
     bool modify_graph = false;
-    auto has_multiple_inputs = [](std::shared_ptr<Node> n) {
-        auto input_size = n->get_input_size();
-        auto root = as_type_ptr<op::Concat>(n);
+    auto has_multiple_inputs = [](Output<Node> n) {
+        auto input_size = n.get_node()->get_input_size();
+        auto root = as_type<op::Concat>(n.get_node());
         return (root && input_size > 1);
     };
 
@@ -248,7 +248,6 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_
 {
     auto scalarize_dim = [](std::vector<size_t> concat_axis_vector,
                             const Shape& input_shape) -> Shape {
-
         Shape scalarized_shape;
         for (size_t i = 0; i < input_shape.size(); i++)
         {
@@ -264,14 +263,14 @@ bool ngraph::pass::SelfConcatFusion::replace_patterns(const NodeVector& bounded_
     auto concat_axis_vector = get_concatenation_axis_vector(bounded_concat_ops);
 
     auto& first_bounded_concat = (*bounded_concat_ops.begin());
-    auto driver_op = first_bounded_concat->get_argument(0);
+    auto driver_op = first_bounded_concat->input_value(0);
     const Shape& input_shape = first_bounded_concat->get_input_shape(0);
 
     auto scalarized_shape = scalarize_dim(concat_axis_vector, input_shape);
     AxisVector axis_order = get_default_order(input_shape);
     auto reshape = std::make_shared<op::Reshape>(driver_op, axis_order, scalarized_shape);
     auto last_bounded_concat_op = bounded_concat_ops.back();
-    auto broadcast_out_shape = last_bounded_concat_op->get_shape();
+    auto broadcast_out_shape = last_bounded_concat_op->get_output_shape(0);
     auto broadcast =
         std::make_shared<op::Broadcast>(reshape, broadcast_out_shape, concat_axis_vector);
 

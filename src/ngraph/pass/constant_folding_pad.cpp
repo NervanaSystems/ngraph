@@ -26,7 +26,7 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
                                            shared_ptr<op::Pad> pad,
                                            NodeExecutorTy func)
 {
-    const Shape& out_shape = pad->get_shape();
+    const Shape& out_shape = pad->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
     T* data_ptr = buffer.get_ptr<T>();
     auto pad_value = std::static_pointer_cast<op::Constant>(pad->get_input_node_shared_ptr(1));
@@ -47,14 +47,14 @@ shared_ptr<op::Constant> fold_constant_pad(shared_ptr<op::Constant> constant,
         runtime::reference::pad<T>(constant->get_data_ptr<T>(),
                                    pad_value->get_data_ptr<T>(),
                                    data_ptr,
-                                   constant->get_shape(),
+                                   constant->get_output_shape(0),
                                    out_shape,
                                    pad->get_padding_below(),
                                    pad->get_padding_above(),
                                    pad->get_pad_mode());
     }
 
-    return make_shared<op::Constant>(constant->get_element_type(), out_shape, data_ptr);
+    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_pad()
@@ -78,7 +78,8 @@ void pass::ConstantFolding::construct_constant_pad()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto pad_match = static_pointer_cast<op::Pad>(m.get_match_root());
+        auto pad_match = m.get_match_root_as<op::Pad>();
+        NGRAPH_CHECK(pad_match, "match root node ", *m.get_match_root(), " not of type `op::Pad`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(pad_match));
 
@@ -91,7 +92,7 @@ void pass::ConstantFolding::construct_constant_pad()
         }
 
         std::shared_ptr<Node> replacement;
-        auto type = constant_match->get_element_type();
+        auto type = constant_match->get_output_element_type(0);
         switch (type)
         {
         case element::Type_t::undefined:
@@ -144,7 +145,7 @@ void pass::ConstantFolding::construct_constant_pad()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

@@ -19,31 +19,11 @@
 
 #include "ngraph/log.hpp"
 #include "ngraph/op/constant.hpp"
+#include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/util.hpp"
 
 using namespace ngraph;
 using namespace std;
-
-template <typename T>
-string to_cpp_string(T value)
-{
-    string rc;
-    if (std::isnan(value))
-    {
-        rc = "NAN";
-    }
-    else if (std::isinf(value))
-    {
-        rc = (value > 0 ? "INFINITY" : "-INFINITY");
-    }
-    else
-    {
-        stringstream ss;
-        ss << value;
-        rc = ss.str();
-    }
-    return rc;
-}
 
 constexpr NodeTypeInfo op::Constant::type_info;
 
@@ -323,9 +303,7 @@ op::Constant::Constant(const Constant& other)
     constructor_validate_and_infer_types();
 }
 
-op::Constant::~Constant()
-{
-}
+op::Constant::~Constant() {}
 
 string op::Constant::convert_value_to_string(size_t index) const
 {
@@ -335,7 +313,7 @@ string op::Constant::convert_value_to_string(size_t index) const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean: rc = to_string(get_vector<char>()[index]); break;
     case element::Type_t::bf16:
@@ -375,7 +353,7 @@ vector<string> op::Constant::get_value_strings() const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean:
         for (int value : get_vector<char>())
@@ -480,7 +458,7 @@ Shape op::Constant::get_shape_val() const
 Strides op::Constant::get_strides_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_strides = get_vector<int64_t>();
+    std::vector<int64_t> out_strides = cast_vector<int64_t>();
     Strides output_strides(shape_size(m_shape));
     std::transform(out_strides.begin(),
                    out_strides.end(),
@@ -492,7 +470,7 @@ Strides op::Constant::get_strides_val() const
 Coordinate op::Constant::get_coordinate_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_coordinate = get_vector<int64_t>();
+    std::vector<int64_t> out_coordinate = cast_vector<int64_t>();
     Coordinate output_coordinate(shape_size(m_shape));
     std::transform(out_coordinate.begin(),
                    out_coordinate.end(),
@@ -504,7 +482,7 @@ Coordinate op::Constant::get_coordinate_val() const
 CoordinateDiff op::Constant::get_coordinate_diff_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
-    std::vector<int64_t> out_coordinate_diff = get_vector<int64_t>();
+    std::vector<int64_t> out_coordinate_diff = cast_vector<int64_t>();
     CoordinateDiff output_coordinate_diff(shape_size(m_shape));
     std::transform(out_coordinate_diff.begin(),
                    out_coordinate_diff.end(),
@@ -546,7 +524,7 @@ shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_arg
 template <typename T>
 static bool test_bitwise_identical(const op::Constant* constant)
 {
-    const size_t size = shape_size(constant->get_shape());
+    const size_t size = shape_size(constant->get_output_shape(0));
     bool data_is_constant = true;
     if (size > 0)
     {
@@ -572,7 +550,7 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic error "-Wswitch"
 #pragma GCC diagnostic error "-Wswitch-enum"
 #endif
-    switch (get_element_type())
+    switch (get_output_element_type(0))
     {
     case element::Type_t::boolean:
     case element::Type_t::i8:
@@ -611,6 +589,26 @@ bool op::Constant::are_all_data_elements_bitwise_identical() const
 #pragma GCC diagnostic pop
 #endif
     return rc;
+}
+
+bool op::v0::Constant::visit_attributes(AttributeVisitor& visitor)
+{
+    visitor.on_attribute("element_type", m_element_type);
+    visitor.on_attribute("shape", m_shape);
+    if (m_data == nullptr)
+    {
+        // Filling in a fresh constant
+        allocate_buffer();
+    }
+    visitor.on_attribute("value", m_data);
+    return true;
+}
+
+bool op::v0::Constant::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    auto output = outputs[0];
+    output->write(get_data_ptr(), output->get_size_in_bytes());
+    return true;
 }
 
 constexpr NodeTypeInfo op::ScalarConstantLike::type_info;

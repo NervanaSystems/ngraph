@@ -27,10 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector cos(const Node& node);
+                OutputVector cos(const Node& node);
             }
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

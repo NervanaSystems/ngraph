@@ -54,8 +54,10 @@ namespace ngraph
 
                 virtual bool is_commutative() const override { return true; }
                 bool visit_attributes(AttributeVisitor& visitor) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
-        } // namespace v1
+        }
         namespace v0
         {
             /// \brief Elementwise logical-xor operation.
@@ -84,10 +86,12 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
-        } // namespace v0
+        }
 
         // default opset version
         using v0::Xor;
-    } // namespace op
-} // namespace ngraph
+    }
+}

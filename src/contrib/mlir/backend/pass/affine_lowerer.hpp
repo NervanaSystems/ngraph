@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #pragma once
 
@@ -23,18 +25,14 @@
 
 #include <mlir/Pass/Pass.h>
 
-namespace ngraph
-{
-    namespace runtime
-    {
-        namespace ngmlir
-        {
-            class MLIRCompiler;
-        }
-    }
+namespace ngraph {
+namespace runtime {
+namespace ngmlir {
+class MLIRCompiler;
 }
+} // namespace runtime
+} // namespace ngraph
 
-namespace mlir
-{
-    std::unique_ptr<Pass> createDialectLoweringPass();
+namespace mlir {
+std::unique_ptr<Pass> createDialectLoweringPass();
 }

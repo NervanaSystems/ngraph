@@ -15,7 +15,6 @@
 //*****************************************************************************
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/graph_util.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -37,7 +36,12 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
             // Op supported by backend. Do not decompose
             return modified;
         }
-        auto subgraph_outputs = node->decompose_op();
+        OutputVector output_vector = node->decompose_op();
+        NodeVector subgraph_outputs;
+        for (auto output : output_vector)
+        {
+            subgraph_outputs.push_back(output.get_node_shared_ptr());
+        }
 
         if (ngraph::get_provenance_enabled())
         {
@@ -62,33 +66,14 @@ bool pass::FusedOpDecomposition::run_on_node(shared_ptr<Node> node)
         }
 
         size_t i = 0;
-        for (auto output_node : subgraph_outputs)
+        for (shared_ptr<Node> output_node : subgraph_outputs)
         {
-            for (size_t j = 0; j < output_node->get_outputs().size(); j++, i++)
+            for (size_t j = 0; j < output_node->get_output_size(); j++, i++)
             {
-                set<descriptor::Input*> fop_users{begin(node->get_outputs().at(i).get_inputs()),
-                                                  end(node->get_outputs().at(i).get_inputs())};
-                for (auto fop_user : fop_users)
+                set<Input<Node>> fop_users = node->output(i).get_target_inputs();
+                for (Input<Node> fop_user : fop_users)
                 {
-                    if (auto goe = as_type<op::GetOutputElement>(fop_user->get_raw_pointer_node()))
-                    {
-                        Output<Node> goe_output = goe->get_as_output();
-                        if (goe_output.get_index() == i && !goe->get_output_inputs(0).empty())
-                        {
-                            // Replace GOE users
-                            set<descriptor::Input*> goe_users{
-                                begin(goe->get_outputs().at(0).get_inputs()),
-                                end(goe->get_outputs().at(0).get_inputs())};
-                            for (auto goe_user : goe_users)
-                            {
-                                goe_user->replace_output(output_node->get_outputs().at(j));
-                            }
-                        }
-                    }
-                    else
-                    {
-                        fop_user->replace_output(output_node->get_outputs().at(j));
-                    }
+                    fop_user.replace_source_output(output_node->output(j));
                 }
             }
         }

@@ -28,7 +28,5 @@ namespace ngraph
         {
             OperatorsBridge::register_operator(name, version, domain, std::move(fn));
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

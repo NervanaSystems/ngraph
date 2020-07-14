@@ -18,7 +18,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/broadcast.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/sigmoid.hpp"
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/util.hpp"
@@ -69,9 +68,9 @@ op::SigmoidMultiply::SigmoidMultiply(const Output<Node>& input_0,
     }
     if (input_0.get_shape() != input_1.get_shape())
     {
-        throw ngraph_error("SigmoidMultiply input shape mismatch: " +
-                           vector_to_string(input_0.get_shape()) + " != " +
-                           vector_to_string(input_1.get_shape()));
+        throw ngraph_error(
+            "SigmoidMultiply input shape mismatch: " + vector_to_string(input_0.get_shape()) +
+            " != " + vector_to_string(input_1.get_shape()));
     }
 
     m_input_type[0] = input_0_type;
@@ -102,8 +101,8 @@ void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints,
     auto sigmoid_mul_backprop =
         make_shared<op::SigmoidMultiplyBackprop>(input_0, input_1, delta, m_input_type);
 
-    auto input_0_delta = make_shared<op::GetOutputElement>(sigmoid_mul_backprop, 0);
-    auto input_1_delta = make_shared<op::GetOutputElement>(sigmoid_mul_backprop, 1);
+    auto input_0_delta = sigmoid_mul_backprop->output(0);
+    auto input_1_delta = sigmoid_mul_backprop->output(1);
 
     adjoints.add_delta(input_0, input_0_delta);
     adjoints.add_delta(input_1, input_1_delta);

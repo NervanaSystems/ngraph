@@ -44,7 +44,7 @@ static string s_manifest = "${MANIFEST}";
 class serialized_graph_files : public ::testing::TestWithParam<string>
 {
 public:
-    void compare_results(NodeVector& result_nodes,
+    void compare_results(OutputVector& result_nodes,
                          vector<shared_ptr<runtime::Tensor>> ref_results,
                          vector<shared_ptr<runtime::Tensor>> bk_results,
                          vector<shared_ptr<runtime::Tensor>> bk_isolated_results,
@@ -56,7 +56,7 @@ public:
             const shared_ptr<runtime::Tensor>& bk_data = bk_results.at(i);
             const shared_ptr<runtime::Tensor>& bk_isolated_data = bk_isolated_results.at(i);
 
-            std::shared_ptr<ngraph::Node> result_node = result_nodes.at(i);
+            std::shared_ptr<ngraph::Node> result_node = result_nodes[i].get_node_shared_ptr();
             msg << "Comparing results for " << result_node->get_name() << "\n";
             if (result_node->get_arguments().size() > 0)
             {
@@ -64,7 +64,7 @@ public:
                     << "\n";
                 for (auto& p : result_node->get_arguments())
                 {
-                    msg << "    " << p->get_name() << " " << p->get_element_type() << "\n";
+                    msg << "    " << p->get_name() << " " << p->get_output_element_type(0) << "\n";
                 }
             }
 
@@ -321,7 +321,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     shared_ptr<Function> func = ngraph::deserialize(ss);
 
     // Collect set of results to run two back ends with intermediate results set as outputs
-    NodeVector new_results;
+    OutputVector new_results;
     for (auto n : func->get_ordered_ops())
     {
         // Don't include op::Results otherwise Function c-tor will complain
@@ -336,7 +336,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     // Collect set of parameters and results to run test backend with isolated
     // inputs which will be copied from the reference backend outputs
     ParameterVector isolated_parameters = func->get_parameters();
-    NodeVector isolated_results;
+    OutputVector isolated_results;
     unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> isolated_node_to_original_node;
     for (auto n : func->get_ordered_ops())
     {
@@ -353,8 +353,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                     !(arg->get_output_size() > 1))
                 {
                     // Create new isolated arg which we'll fill in with reference results
-                    auto isolated_param =
-                        make_shared<op::Parameter>(arg->get_element_type(), arg->get_shape());
+                    auto isolated_param = make_shared<op::Parameter>(
+                        arg->get_output_element_type(0), arg->get_output_shape(0));
                     isolated_op_args.push_back(isolated_param);
                     isolated_parameters.push_back(isolated_param);
                     isolated_node_to_original_node[isolated_param.get()] = arg;
@@ -381,11 +381,12 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     default_random_engine engine(2112);
     for (shared_ptr<op::Parameter> param : new_func->get_parameters())
     {
-        auto data =
-            make_shared<ngraph::runtime::HostTensor>(param->get_element_type(), param->get_shape());
+        auto data = make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
+                                                             param->get_output_shape(0));
         random_init(data.get(), engine);
-        auto ref_tensor = ref->create_tensor(param->get_element_type(), param->get_shape());
-        auto bk_tensor = backend->create_tensor(param->get_element_type(), param->get_shape());
+        auto ref_tensor = ref->create_tensor(param->get_element_type(), param->get_output_shape(0));
+        auto bk_tensor =
+            backend->create_tensor(param->get_element_type(), param->get_output_shape(0));
         ref_tensor->write(data->get_data_ptr(),
                           data->get_element_count() * data->get_element_type().size());
         bk_tensor->write(data->get_data_ptr(),
@@ -401,12 +402,12 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     ref_results.reserve(new_results.size());
     bk_results.reserve(new_results.size());
 
-    for (shared_ptr<Node>& out : new_results)
+    for (Output<Node>& out : new_results)
     {
-        auto ref_result = ref->create_tensor(out->get_element_type(), out->get_shape());
+        auto ref_result = ref->create_tensor(out.get_element_type(), out.get_shape());
         ref_results.push_back(ref_result);
-        arg_to_ref_result[out.get()] = ref_result;
-        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        arg_to_ref_result[out.get_node()] = ref_result;
+        auto bk_result = backend->create_tensor(out.get_element_type(), out.get_shape());
         bk_results.push_back(bk_result);
     }
 
@@ -459,9 +460,9 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                 found_reference_data = true;
                 auto ref_tensor = ref_tensor_it->second;
                 auto data = make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
-                                                                     param->get_shape());
+                                                                     param->get_output_shape(0));
                 auto bk_tensor =
-                    backend->create_tensor(param->get_element_type(), param->get_shape());
+                    backend->create_tensor(param->get_element_type(), param->get_output_shape(0));
                 size_t size_in_bytes = ref_tensor->get_size_in_bytes();
                 ref_tensor->read(data->get_data_ptr(), size_in_bytes);
                 bk_tensor->write(data->get_data_ptr(), size_in_bytes);
@@ -472,9 +473,9 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     }
     vector<shared_ptr<runtime::Tensor>> bk_isolated_results;
     bk_isolated_results.reserve(isolated_results.size());
-    for (shared_ptr<Node>& out : isolated_results)
+    for (Output<Node>& out : isolated_results)
     {
-        auto bk_result = backend->create_tensor(out->get_element_type(), out->get_shape());
+        auto bk_result = backend->create_tensor(out.get_element_type(), out.get_shape());
         bk_isolated_results.push_back(bk_result);
     }
     handle = backend->compile(bk_isolated_func);

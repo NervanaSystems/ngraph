@@ -34,7 +34,7 @@ NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
     auto C = A + B;
     auto D = A * B;
     auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
-    auto f = make_shared<Function>(NodeVector{C, C, D, D, C, E, E}, ParameterVector{A, B});
+    auto f = make_shared<Function>(OutputVector{C, C, D, D, C, E, E}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

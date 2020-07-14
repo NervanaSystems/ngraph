@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset0.hpp"
+#include "ngraph/opset/opset0.hpp"
 #include "scatter_nd.hpp"
 
 namespace ngraph
@@ -27,20 +27,16 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector scatter_nd(const Node& node)
+                OutputVector scatter_nd(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    OutputVector ng_inputs{node.get_ng_inputs()};
                     auto data = ng_inputs.at(0);
                     auto indices = ng_inputs.at(1);
                     auto updates = ng_inputs.at(2);
 
                     return {std::make_shared<opset0::ScatterND>(data, indices, updates)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

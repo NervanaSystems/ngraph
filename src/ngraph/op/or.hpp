@@ -53,8 +53,10 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
-        } // namespace v1
+        }
         namespace v0
         {
             /// \brief Elementwise logical-or operation.
@@ -83,9 +85,11 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual bool is_commutative() const override { return true; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
             };
-        } // namespace v0
+        }
 
         using v0::Or;
-    } // namespace op
-} // namespace ngraph
+    }
+}

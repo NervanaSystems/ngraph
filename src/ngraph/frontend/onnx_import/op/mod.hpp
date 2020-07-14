@@ -27,11 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector mod(const Node& node);
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector mod(const Node& node);
+            }
+        }
+    }
+}

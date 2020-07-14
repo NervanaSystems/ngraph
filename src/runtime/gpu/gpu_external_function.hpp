@@ -16,7 +16,7 @@
 
 #pragma once
 
-#if !defined(NGRAPH_DEX_ONLY)
+#if defined(CODEGEN_ENABLE)
 
 #include <functional>
 #include <memory>
@@ -117,4 +117,4 @@ namespace ngraph
         }
     }
 }
-#endif // !defined(NGRAPH_DEX_ONLY)
+#endif // defined(CODEGEN_ENABLE)

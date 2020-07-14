@@ -19,7 +19,7 @@
 #include <functional>
 #include <thread>
 
-#include <mkldnn.hpp>
+#include <dnnl.hpp>
 
 #include "ngraph/runtime/cpu/cpu_runtime_context.hpp"
 
@@ -38,7 +38,7 @@ namespace ngraph
         {
             namespace executor
             {
-                extern mkldnn::engine global_cpu_engine;
+                extern dnnl::engine global_cpu_engine;
 
                 // CPUExecutor owns the resources for executing a graph.
                 class CPUExecutor
@@ -63,6 +63,7 @@ namespace ngraph
 #endif
                     int get_num_thread_pools() { return m_num_thread_pools; }
                     int get_num_cores() { return m_num_cores; }
+
                 private:
                     std::vector<std::unique_ptr<Eigen::ThreadPool>> m_thread_pools;
                     std::vector<std::unique_ptr<Eigen::ThreadPoolDevice>> m_thread_pool_devices;

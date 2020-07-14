@@ -14,8 +14,8 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Enable ExternalProject CMake module
-include(ExternalProject)
+# Enable FetchContent CMake module
+include(FetchContent)
 
 #------------------------------------------------------------------------------
 # Download and install Google Protobuf ...
@@ -25,6 +25,10 @@ include(ExternalProject)
 set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
 
 if(CMAKE_CROSSCOMPILING)
+    # Cross Compiling
+    # Protobuf source version has to match system protoc version
+    # Find system protoc and version
+    # Setup extra protobuf build flags for cross compiling
     find_program(SYSTEM_PROTOC protoc PATHS ENV PATH)
 
     if(SYSTEM_PROTOC)
@@ -44,156 +48,73 @@ if(CMAKE_CROSSCOMPILING)
         message(FATAL_ERROR "System Protobuf is needed while cross-compiling")
     endif()
 else()
-    set(PROTOC_VERSION "3.7.1")
+    set(PROTOC_VERSION "3.11.3")
 endif()
 
 set(NGRAPH_PROTOBUF_GIT_TAG "v${PROTOC_VERSION}")
 
-set(Protobuf_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/protobuf)
-set(Protobuf_PROTOC_EXECUTABLE ${Protobuf_INSTALL_PREFIX}/bin/protoc)
-set(Protobuf_INCLUDE_DIR ${Protobuf_INSTALL_PREFIX}/include)
-if (WIN32)
-    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-        set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobufd.lib)
+FetchContent_Declare(
+    ext_protobuf
+    GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
+    GIT_TAG        ${NGRAPH_PROTOBUF_GIT_TAG}
+    GIT_SHALLOW    1
+)
+
+FetchContent_GetProperties(ext_protobuf)
+if(NOT ext_protobuf_POPULATED)
+    FetchContent_Populate(ext_protobuf)
+endif()
+
+include(ProcessorCount)
+ProcessorCount(N)
+if(N EQUAL 0)
+    set(N 8)
+endif()
+
+# Two ways for building protobuf
+# 1. CMake ( WIN32 or cross compiling )
+# 2. autogen.sh -> configure -> make
+if(WIN32 OR (NOT WIN32 AND NOT APPLE AND (PROTOC_VERSION VERSION_GREATER "3.0") AND CMAKE_CROSSCOMPILING))
+    set(PROTOBUF_CMAKE_ARGS
+        ${NGRAPH_FORWARD_CMAKE_ARGS}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
+        -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
+        -Dprotobuf_WITH_ZLIB=OFF
+        -Dprotobuf_BUILD_TESTS=OFF
+        -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/protobuf)
+    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+        -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+        -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+        ${PROTOBUF_CMAKE_ARGS}
+        "${ext_protobuf_SOURCE_DIR}/cmake"
+        WORKING_DIRECTORY "${ext_protobuf_BINARY_DIR}")
+    if("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles")
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
+            WORKING_DIRECTORY "${ext_protobuf_BINARY_DIR}")
     else()
-        set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.lib)
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build .
+            WORKING_DIRECTORY "${ext_protobuf_BINARY_DIR}")
     endif()
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${EXTERNAL_PROJECTS_ROOT}/protobuf)
 else()
-    set(Protobuf_LIBRARY ${Protobuf_INSTALL_PREFIX}/lib/libprotobuf.a)
-endif()
-
-if ("${CMAKE_GENERATOR}" STREQUAL "Ninja")
-    set(MAKE_UTIL make)
-else()
-    set(MAKE_UTIL $(MAKE))
-endif()
-
-if (WIN32)
-    ExternalProject_Add(
-        ext_protobuf
-        PREFIX protobuf
-        GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-        GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
-        UPDATE_COMMAND ""
-        PATCH_COMMAND ""
-        CMAKE_GENERATOR ${CMAKE_GENERATOR}
-        CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
-        CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
-        CMAKE_ARGS
-            ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-            -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
-            -Dprotobuf_MSVC_STATIC_RUNTIME=OFF
-            -Dprotobuf_WITH_ZLIB=OFF
-            -Dprotobuf_BUILD_TESTS=OFF
-            -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/protobuf
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        SOURCE_SUBDIR "cmake"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/build"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-        EXCLUDE_FROM_ALL TRUE
-        BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
-    )
-elseif (APPLE)
-    # Don't manually set compiler on macos since it causes compile error on macos >= 10.14
-    ExternalProject_Add(
-        ext_protobuf
-        PREFIX protobuf
-        GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-        GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
-        UPDATE_COMMAND ""
-        PATCH_COMMAND ""
-        CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared
-        BUILD_COMMAND $(MAKE) "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC"
-        TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-        STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-        DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-        SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-        INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-        EXCLUDE_FROM_ALL TRUE
-        BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
-        )
-else()
-    if (DEFINED NGRAPH_USE_CXX_ABI)
+    if ((NOT APPLE) AND DEFINED NGRAPH_USE_CXX_ABI)
         set(BUILD_FLAGS "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC -D_GLIBCXX_USE_CXX11_ABI=${NGRAPH_USE_CXX_ABI}")
     else()
         set(BUILD_FLAGS "CXXFLAGS=-std=c++${NGRAPH_CXX_STANDARD} -fPIC")
     endif()
-
-    if(PROTOC_VERSION VERSION_GREATER "3.0" AND CMAKE_CROSSCOMPILING)
-        ExternalProject_Add(
-            ext_protobuf
-            PREFIX protobuf
-            GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-            GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
-            UPDATE_COMMAND ""
-            PATCH_COMMAND ""
-            CMAKE_GENERATOR ${CMAKE_GENERATOR}
-            CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
-            CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
-            CMAKE_ARGS
-                ${NGRAPH_FORWARD_CMAKE_ARGS}
-                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                -DCMAKE_CXX_FLAGS=${CMAKE_ORIGINAL_CXX_FLAGS}
-                -Dprotobuf_WITH_ZLIB=OFF
-                -Dprotobuf_BUILD_TESTS=OFF
-                -DCMAKE_INSTALL_PREFIX=${EXTERNAL_PROJECTS_ROOT}/protobuf
-            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            SOURCE_SUBDIR "cmake"
-            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/build"
-            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-            EXCLUDE_FROM_ALL TRUE
-            BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
-            )
+    execute_process(COMMAND ./autogen.sh WORKING_DIRECTORY ${ext_protobuf_SOURCE_DIR})
+    # Don't manually set compiler on macos since it causes compile error on macos >= 10.14
+    if (APPLE)
+        execute_process(COMMAND ${ext_protobuf_SOURCE_DIR}/configure ${PROTOBUF_SYSTEM_PROTOC} ${PROTOBUF_SYSTEM_PROCESSOR} SDKROOT=${CMAKE_OSX_SYSROOT} --prefix=${ext_protobuf_BINARY_DIR} --disable-shared WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
+        execute_process(COMMAND make -j${N} SDKROOT=${CMAKE_OSX_SYSROOT} "${BUILD_FLAGS}" install WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
     else()
-        ExternalProject_Add(
-            ext_protobuf
-            PREFIX protobuf
-            GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-            GIT_TAG ${NGRAPH_PROTOBUF_GIT_TAG}
-            UPDATE_COMMAND ""
-            PATCH_COMMAND ""
-            CONFIGURE_COMMAND ./autogen.sh COMMAND ./configure ${PROTOBUF_SYSTEM_PROTOC} ${PROTOBUF_SYSTEM_PROCESSOR} CXX=${CMAKE_CXX_COMPILER} --prefix=${EXTERNAL_PROJECTS_ROOT}/protobuf --disable-shared
-            BUILD_COMMAND ${MAKE_UTIL} "${BUILD_FLAGS}"
-            TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/tmp"
-            STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/stamp"
-            DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/download"
-            SOURCE_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf/src"
-            INSTALL_DIR "${EXTERNAL_PROJECTS_ROOT}/protobuf"
-            EXCLUDE_FROM_ALL TRUE
-            BUILD_BYPRODUCTS ${Protobuf_PROTOC_EXECUTABLE} ${Protobuf_LIBRARY}
-            )
+        execute_process(COMMAND ${ext_protobuf_SOURCE_DIR}/configure ${PROTOBUF_SYSTEM_PROTOC} ${PROTOBUF_SYSTEM_PROCESSOR} CXX=${CMAKE_CXX_COMPILER} --prefix=${ext_protobuf_BINARY_DIR} --disable-shared WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
+        execute_process(COMMAND make -j${N} "${BUILD_FLAGS}" install WORKING_DIRECTORY ${ext_protobuf_BINARY_DIR})
     endif()
+    set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${ext_protobuf_BINARY_DIR})
 endif()
-
-# -----------------------------------------------------------------------------
-# Use the interface of FindProtobuf.cmake
-# -----------------------------------------------------------------------------
-
-if (NOT TARGET protobuf::libprotobuf)
-    add_library(protobuf::libprotobuf UNKNOWN IMPORTED)
-    set_target_properties(protobuf::libprotobuf PROPERTIES
-        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_INCLUDE_DIR}"
-        IMPORTED_LOCATION "${Protobuf_LIBRARY}")
-    add_dependencies(protobuf::libprotobuf ext_protobuf)
+find_package(Protobuf ${PROTOC_VERSION} REQUIRED)
+if (NOT Protobuf_FOUND)
+    message(FATAL_ERROR "Protobuf is needed but was not found")
 endif()
-set(Protobuf_LIBRARIES protobuf::libprotobuf)
-
-if (NOT TARGET protobuf::protoc)
-    add_executable(protobuf::protoc IMPORTED)
-    set_target_properties(protobuf::protoc PROPERTIES
-        INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${Protobuf_PROTOC_EXECUTABLE}"
-        IMPORTED_LOCATION "${Protobuf_PROTOC_EXECUTABLE}")
-    add_dependencies(protobuf::protoc ext_protobuf)
-endif()
-
-set(Protobuf_FOUND TRUE)
-set(PROTOBUF_FOUND TRUE)

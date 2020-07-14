@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#include "ngraph/opsets/opset3.hpp"
+#include "ngraph/opset/opset3.hpp"
 #include "roi_align.hpp"
 
 namespace ngraph
@@ -27,7 +27,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector roi_align(const Node& node)
+                OutputVector roi_align(const Node& node)
                 {
                     const auto inputs = node.get_ng_inputs();
 
@@ -56,10 +56,7 @@ namespace ngraph
                                                                        spatial_scale,
                                                                        mode)};
                 }
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

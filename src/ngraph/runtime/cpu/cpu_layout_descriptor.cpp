@@ -19,7 +19,7 @@
 #include <numeric>
 
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 #define UNDEF undef
 #define F32 data_type::f32
@@ -30,15 +30,15 @@ namespace ngraph
     {
         namespace cpu
         {
-            const mkldnn::memory::desc
-                LayoutDescriptor::DummyDesc(mkldnn::memory::dims(TENSOR_MAX_DIMS),
-                                            mkldnn::memory::F32,
-                                            mkldnn::memory::FORMAT::UNDEF);
+            const dnnl::memory::desc
+                LayoutDescriptor::DummyDesc(dnnl::memory::dims(TENSOR_MAX_DIMS),
+                                            dnnl::memory::F32,
+                                            dnnl::memory::FORMAT::UNDEF);
 
             LayoutDescriptor::LayoutDescriptor(const ngraph::descriptor::Tensor& tv)
                 : TensorLayout(tv)
                 , m_offset(0)
-                , m_mkldnn_md(LayoutDescriptor::DummyDesc)
+                , m_dnnl_md(LayoutDescriptor::DummyDesc)
             {
                 auto shape = get_shape();
                 size_t s = 1;
@@ -80,14 +80,14 @@ namespace ngraph
                     return false;
                 }
 
-                if (p_other->is_mkldnn_layout())
+                if (p_other->is_dnnl_layout())
                 {
-                    if (!is_mkldnn_layout())
+                    if (!is_dnnl_layout())
                     {
                         return false;
                     }
-                    return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md,
-                                                                          p_other->get_mkldnn_md());
+                    return runtime::cpu::dnnl_utils::compare_dnnl_mds(m_dnnl_md,
+                                                                      p_other->get_dnnl_md());
                 }
 
                 if (m_strides != p_other->m_strides)
@@ -103,31 +103,31 @@ namespace ngraph
                 return true;
             }
 
-            void LayoutDescriptor::set_mkldnn_md(const mkldnn::memory::desc& md)
+            void LayoutDescriptor::set_dnnl_md(const dnnl::memory::desc& md)
             {
-                m_mkldnn_md = md;
+                m_dnnl_md = md;
 
-                // Since MKLDNN could internally pad the tensor to make blocked layouts
-                // we need to compute MKLDNN memory requirement based on its memory desc
+                // Since DNNL could internally pad the tensor to make blocked layouts
+                // we need to compute DNNL memory requirement based on its memory desc
                 // http://intel.github.io/mkl-dnn/understanding_memory_formats.html
                 try
                 {
                     m_buffer_size = md.get_size();
                 }
-                catch (const mkldnn::error& e)
+                catch (const dnnl::error& e)
                 {
-                    throw ngraph_error("error in computing mkldnn memory size from memory desc: " +
-                                       MKLDNN_ERROR_MESSAGE);
+                    throw ngraph_error("error in computing dnnl memory size from memory desc: " +
+                                       DNNL_ERROR_MESSAGE);
                 }
             }
 
             bool LayoutDescriptor::is_row_major_layout()
             {
-                if (!is_mkldnn_layout())
+                if (!is_dnnl_layout())
                     return true;
-                auto native_md = runtime::cpu::mkldnn_utils::create_blocked_mkldnn_md(
+                auto native_md = runtime::cpu::dnnl_utils::create_blocked_dnnl_md(
                     get_shape(), m_strides, get_element_type());
-                return runtime::cpu::mkldnn_utils::compare_mkldnn_mds(m_mkldnn_md, native_md);
+                return runtime::cpu::dnnl_utils::compare_dnnl_mds(m_dnnl_md, native_md);
             }
         }
     }

@@ -20,9 +20,9 @@
 #include "ngraph/op/quantized_convolution.hpp"
 #include "ngraph/runtime/cpu/cpu_builder.hpp"
 #include "ngraph/runtime/cpu/cpu_executor.hpp"
+#include "ngraph/runtime/cpu/dnnl_invoke.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 #include "ngraph/runtime/cpu/kernel/convolution.hpp"
-#include "ngraph/runtime/cpu/mkldnn_invoke.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -56,21 +56,21 @@ namespace ngraph
 
                 auto scales_size = shape_size(args[2].get_shape());
 
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
                     auto conv_desc =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(node);
                     auto conv_attr =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
-                    size_t conv_index = mkldnn_emitter->convolution_forward_init();
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index = dnnl_emitter->convolution_forward_init();
+                    auto& deps = dnnl_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&,
                                     conv_desc,
@@ -85,7 +85,7 @@ namespace ngraph
                                     arg6_buffer_index,
                                     out0_buffer_index](CPURuntimeContext* ctx,
                                                        CPUExecutionContext* /* ectx */) mutable {
-                        // Create MKLDNN convolution primitive during the first iteration.
+                        // Create DNNL convolution primitive during the first iteration.
                         // Assumes the scales dont change for the duration of the graph
                         if (ctx->first_iteration)
                         {
@@ -97,28 +97,28 @@ namespace ngraph
                                 *(static_cast<float*>(ctx->buffer_data[arg6_buffer_index])));
                             // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
                             conv_attr.set_output_scales(0, dyn_scales);
-                            mkldnn_emitter->build_convolution_forward<false>(
-                                ctx->mkldnn_memories,
-                                ctx->mkldnn_primitives,
-                                ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_convolution_forward<false>(
+                                ctx->dnnl_memories,
+                                ctx->dnnl_primitives,
+                                ctx->dnnl_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTION,
+                            cpu::dnnl_utils::OpType::QUANTIZEDCONVOLUTION,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -329,7 +329,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionRelu)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
                     auto arg0_buffer_index =
@@ -340,22 +340,22 @@ namespace ngraph
                         external_function->get_buffer_index(args[2].get_name());
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto scales_size = shape_size(args[2].get_shape());
 
                     auto conv_desc =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionRelu>(
                                 node);
                     auto conv_attr =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
                                 node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
-                    size_t conv_index = mkldnn_emitter->convolution_forward_init();
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index = dnnl_emitter->convolution_forward_init();
+                    auto& deps = dnnl_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&,
                                     scales_size,
@@ -379,28 +379,28 @@ namespace ngraph
                             // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
-                            mkldnn_emitter->build_convolution_forward<false>(
-                                ctx->mkldnn_memories,
-                                ctx->mkldnn_primitives,
-                                ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_convolution_forward<false>(
+                                ctx->dnnl_memories,
+                                ctx->dnnl_primitives,
+                                ctx->dnnl_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONRELU,
+                            cpu::dnnl_utils::OpType::QUANTIZEDCONVOLUTIONRELU,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -415,7 +415,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionBias)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
                     auto arg0_buffer_index =
@@ -428,22 +428,22 @@ namespace ngraph
                         external_function->get_buffer_index(args[3].get_name());
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto scales_size = shape_size(args[3].get_shape());
 
                     auto conv_desc =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBias>(
                                 node);
                     auto conv_attr =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
                                 node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
-                    size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index = dnnl_emitter->convolution_forward_init(true);
+                    auto& deps = dnnl_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&,
                                     scales_size,
@@ -468,30 +468,30 @@ namespace ngraph
                             // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
-                            mkldnn_emitter->build_convolution_forward<true>(
-                                ctx->mkldnn_memories,
-                                ctx->mkldnn_primitives,
-                                ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_convolution_forward<true>(
+                                ctx->dnnl_memories,
+                                ctx->dnnl_primitives,
+                                ctx->dnnl_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
                                 deps,
                                 conv_index);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIAS,
+                            cpu::dnnl_utils::OpType::QUANTIZEDCONVOLUTIONBIAS,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -506,7 +506,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
                     auto arg0_buffer_index =
@@ -527,21 +527,21 @@ namespace ngraph
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
                     auto conv_desc =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBiasAdd>(
                                 node);
                     auto conv_attr =
-                        mkldnn_emitter
+                        dnnl_emitter
                             ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
                                 node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
-                    size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index = dnnl_emitter->convolution_forward_init(true);
+                    auto& deps = dnnl_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&,
                                     scales_size,
@@ -573,17 +573,17 @@ namespace ngraph
                                 static_cast<float*>(ctx->buffer_data[arg5_buffer_index]) +
                                     sum_scales_size);
                             auto old_pops = conv_attr.get_post_ops();
-                            mkldnn::post_ops new_pops;
+                            dnnl::post_ops new_pops;
                             for (int i = 0; i < old_pops.len(); i++)
                             {
-                                if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
+                                if (old_pops.kind(i) == dnnl::primitive::kind::eltwise)
                                 {
-                                    mkldnn::algorithm alg;
+                                    dnnl::algorithm alg;
                                     float scale, alpha, beta;
                                     old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
                                     new_pops.append_eltwise(scale, alg, alpha, beta);
                                 }
-                                if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
+                                if (old_pops.kind(i) == dnnl::primitive::kind::sum)
                                 {
                                     new_pops.append_sum(dyn_post_op_scales[0]);
                                 }
@@ -592,10 +592,10 @@ namespace ngraph
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
                             conv_attr.set_post_ops(new_pops);
-                            mkldnn_emitter->build_convolution_forward<true>(
-                                ctx->mkldnn_memories,
-                                ctx->mkldnn_primitives,
-                                ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_convolution_forward<true>(
+                                ctx->dnnl_memories,
+                                ctx->dnnl_primitives,
+                                ctx->dnnl_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -610,20 +610,20 @@ namespace ngraph
                                    static_cast<char*>(ctx->buffer_data[arg3_buffer_index]),
                                    arg3_size);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASADD,
+                            cpu::dnnl_utils::OpType::QUANTIZEDCONVOLUTIONBIASADD,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);
@@ -638,7 +638,7 @@ namespace ngraph
             template <>
             void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
             {
-                if (runtime::cpu::mkldnn_utils::use_mkldnn_kernel(node))
+                if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& functors = external_function->get_functors();
                     auto arg0_buffer_index =
@@ -659,17 +659,17 @@ namespace ngraph
                     auto scales_size = shape_size(args[4].get_shape());
                     auto sum_scales_size = shape_size(args[5].get_shape());
 
-                    auto& mkldnn_emitter = external_function->get_mkldnn_emitter();
+                    auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
-                    auto conv_desc = mkldnn_emitter->get_convolution_forward_desc<
+                    auto conv_desc = dnnl_emitter->get_convolution_forward_desc<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
-                    auto conv_attr = mkldnn_emitter->get_convolution_forward_attr<
+                    auto conv_attr = dnnl_emitter->get_convolution_forward_attr<
                         ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
-                    size_t conv_index = mkldnn_emitter->convolution_forward_init(true);
-                    auto& deps = mkldnn_emitter->get_primitive_deps(conv_index);
+                    size_t conv_index = dnnl_emitter->convolution_forward_init(true);
+                    auto& deps = dnnl_emitter->get_primitive_deps(conv_index);
 
                     auto functor = [&,
                                     scales_size,
@@ -701,17 +701,17 @@ namespace ngraph
                                 static_cast<float*>(ctx->buffer_data[arg5_buffer_index]) +
                                     sum_scales_size);
                             auto old_pops = conv_attr.get_post_ops();
-                            mkldnn::post_ops new_pops;
+                            dnnl::post_ops new_pops;
                             for (int i = 0; i < old_pops.len(); i++)
                             {
-                                if (old_pops.kind(i) == mkldnn::primitive::kind::eltwise)
+                                if (old_pops.kind(i) == dnnl::primitive::kind::eltwise)
                                 {
-                                    mkldnn::algorithm alg;
+                                    dnnl::algorithm alg;
                                     float scale, alpha, beta;
                                     old_pops.get_params_eltwise(i, scale, alg, alpha, beta);
                                     new_pops.append_eltwise(scale, alg, alpha, beta);
                                 }
-                                if (old_pops.kind(i) == mkldnn::primitive::kind::sum)
+                                if (old_pops.kind(i) == dnnl::primitive::kind::sum)
                                 {
                                     new_pops.append_sum(dyn_post_op_scales[0]);
                                 }
@@ -720,10 +720,10 @@ namespace ngraph
                             // use conv channelwise (dim 1, mask=2^1) if dyn_scales is a vector
                             const int mask = scales_size == 1 ? 0 : 2;
                             conv_attr.set_output_scales(mask, dyn_scales);
-                            mkldnn_emitter->build_convolution_forward<true>(
-                                ctx->mkldnn_memories,
-                                ctx->mkldnn_primitives,
-                                ctx->mkldnn_scratchpad_mds,
+                            dnnl_emitter->build_convolution_forward<true>(
+                                ctx->dnnl_memories,
+                                ctx->dnnl_primitives,
+                                ctx->dnnl_scratchpad_mds,
                                 conv_desc,
                                 conv_attr,
                                 executor::global_cpu_engine,
@@ -738,20 +738,20 @@ namespace ngraph
                                    static_cast<char*>(ctx->buffer_data[arg3_buffer_index]),
                                    arg3_size);
                         }
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[0], ctx->buffer_data[arg0_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[1], ctx->buffer_data[arg1_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[2], ctx->buffer_data[arg2_buffer_index]);
-                        cpu::mkldnn_utils::set_memory_ptr(
+                        cpu::dnnl_utils::set_memory_ptr(
                             ctx, deps[3], ctx->buffer_data[out0_buffer_index]);
 
-                        cpu::mkldnn_utils::mkldnn_invoke_primitive(
+                        cpu::dnnl_utils::dnnl_invoke_primitive(
                             ctx,
                             conv_index,
                             deps,
-                            cpu::mkldnn_utils::OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD,
+                            cpu::dnnl_utils::OpType::QUANTIZEDCONVOLUTIONBIASSIGNEDADD,
                             scratchpad_size);
                     };
                     functors.emplace_back(functor);

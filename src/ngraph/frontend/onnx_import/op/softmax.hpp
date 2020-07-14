@@ -27,12 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector softmax(const Node& node);
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector softmax(const Node& node);
+            }
+        }
+    }
+}

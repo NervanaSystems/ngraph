@@ -99,7 +99,7 @@ namespace ngraph
             bool operator!=(const Type& other) const { return !(*this == other); }
             bool operator<(const Type& other) const;
             friend NGRAPH_API std::ostream& operator<<(std::ostream&, const Type&);
-            static std::vector<const Type*> get_known_types();
+            static const std::vector<Type>& get_known_types();
 
             /// \brief Checks whether this element type is merge-compatible with `t`.
             /// \param t The element type to compare this element type to.
@@ -128,6 +128,7 @@ namespace ngraph
 
             // \brief This allows switch(element_type)
             operator Type_t() const { return m_type; }
+
         private:
             Type_t m_type{Type_t::undefined};
         };
@@ -201,12 +202,11 @@ namespace ngraph
     };
 
     template <>
-    class NGRAPH_API AttributeAdapter<element::Type> : public ValueReference<element::Type>,
-                                                       public ValueAccessor<std::string>
+    class NGRAPH_API AttributeAdapter<element::Type> : public ValueAccessor<std::string>
     {
     public:
         AttributeAdapter(element::Type& value)
-            : ValueReference<element::Type>(value)
+            : m_ref(value)
         {
         }
 
@@ -215,6 +215,9 @@ namespace ngraph
 
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<element::Type>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
+    protected:
+        element::Type& m_ref;
     };
 
     /// \brief Return the number of bytes in the compile-time representation of the element type.

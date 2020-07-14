@@ -33,12 +33,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector reshape(const Node& node)
+                OutputVector reshape(const Node& node)
                 {
-                    NodeVector ng_inputs{node.get_ng_inputs()};
+                    OutputVector ng_inputs{node.get_ng_inputs()};
                     const auto data = ng_inputs.at(0);
 
-                    std::shared_ptr<ngraph::Node> pattern;
+                    Output<ngraph::Node> pattern;
 
                     // Since opset 5 the target shape is provided as input
                     if (ng_inputs.size() == 2)
@@ -56,11 +56,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Reshape>(data, pattern, true)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

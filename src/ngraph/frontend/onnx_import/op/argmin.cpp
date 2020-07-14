@@ -25,16 +25,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector argmin(const Node& node)
+                OutputVector argmin(const Node& node)
                 {
                     const utils::ArgMinMaxFactory arg_factory(node);
                     return {arg_factory.make_arg_min()};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

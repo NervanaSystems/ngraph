@@ -29,7 +29,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector clip(const Node& node)
+                OutputVector clip(const Node& node)
                 {
                     const auto data = node.get_ng_inputs().at(0);
 
@@ -41,23 +41,22 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Clamp>(data, min_value, max_value)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_11
             {
-                NodeVector clip(const Node& node)
+                OutputVector clip(const Node& node)
                 {
-                    const NodeVector inputs{node.get_ng_inputs()};
-                    const std::shared_ptr<ngraph::Node> data = inputs.at(0);
-                    const element::Type data_type = data->get_element_type();
-                    const Shape data_shape = data->get_shape();
-                    std::shared_ptr<ngraph::Node> min;
-                    std::shared_ptr<ngraph::Node> max;
+                    const OutputVector inputs{node.get_ng_inputs()};
+                    const Output<ngraph::Node> data = inputs.at(0);
+                    const element::Type data_type = data.get_element_type();
+                    const Shape data_shape = data.get_shape();
+                    Output<ngraph::Node> min;
+                    Output<ngraph::Node> max;
 
                     // If second input is provided, assign to min input, otherwise set lowest
                     // numeric limit of double as min input.
-                    if (inputs.size() > 1 && !inputs.at(1)->is_null())
+                    if (inputs.size() > 1 && !inputs.at(1).get_node()->is_null())
                     {
                         min = inputs.at(1);
                     }
@@ -69,7 +68,7 @@ namespace ngraph
 
                     // If third input is provided, assign to max input, otherwise set maximum
                     // numeric limit of double as max input.
-                    if (inputs.size() == 3 && !inputs.at(2)->is_null())
+                    if (inputs.size() == 3 && !inputs.at(2).get_node()->is_null())
                     {
                         max = inputs.at(2);
                     }
@@ -84,11 +83,7 @@ namespace ngraph
 
                     return {std::make_shared<default_opset::Minimum>(max, max_of_min_and_data)};
                 }
-
-            } // namespace set_11
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

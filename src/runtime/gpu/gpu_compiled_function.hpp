@@ -34,8 +34,8 @@
 
 #define EMIT_ARGS                                                                                  \
     runtime::gpu::GPUCompiledFunction *compiled_function, const std::string &function_name,        \
-        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper> &args,                 \
-        const std::vector<runtime::gpu::GPUTensorWrapper> &out
+        const Node *node, const std::vector<runtime::gpu::GPUTensorWrapper>&args,                  \
+        const std::vector<runtime::gpu::GPUTensorWrapper>&out
 
 namespace ngraph
 {
@@ -100,8 +100,7 @@ namespace ngraph
                                                        const std::string& output_name) = 0;
                 std::shared_ptr<ngraph::Function> m_function;
 
-                std::unordered_map<std::shared_ptr<Function>, std::vector<std::shared_ptr<Node>>>
-                    m_function_ordered_ops;
+                std::unordered_map<std::shared_ptr<Function>, NodeVector> m_function_ordered_ops;
 
                 bool m_emit_timing;
                 bool m_is_compiled;

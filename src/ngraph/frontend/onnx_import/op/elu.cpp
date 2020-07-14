@@ -28,18 +28,14 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector elu(const Node& node)
+                OutputVector elu(const Node& node)
                 {
                     auto data = node.get_ng_inputs().at(0);
                     double alpha = node.get_attribute_value<double>("alpha", 1);
 
-                    return NodeVector{std::make_shared<default_opset::Elu>(data, alpha)};
+                    return OutputVector{std::make_shared<default_opset::Elu>(data, alpha)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

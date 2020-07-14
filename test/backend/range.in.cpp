@@ -25,15 +25,18 @@ using namespace ngraph;
 
 static string s_manifest = "${MANIFEST}";
 
-template <typename T>
-struct RangeTest
+namespace
 {
-    T start;
-    T stop;
-    T step;
-    Shape expected_result_shape;
-    std::vector<T> expected_result;
-};
+    template <typename T>
+    struct RangeTest
+    {
+        T start;
+        T stop;
+        T step;
+        Shape expected_result_shape;
+        std::vector<T> expected_result;
+    };
+}
 
 // TODO(amprocte): We should test this with more than just int32, but there is a bug in the
 // handling of element type-changing that is currently blocking doing that easily.
@@ -47,7 +50,7 @@ NGRAPH_TEST(${BACKEND_NAME}, range)
     auto range = make_shared<op::Range>(start, stop, step);
     ASSERT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 
-    auto f = make_shared<Function>(NodeVector{range}, ParameterVector{start, stop, step});
+    auto f = make_shared<Function>(OutputVector{range}, ParameterVector{start, stop, step});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 
