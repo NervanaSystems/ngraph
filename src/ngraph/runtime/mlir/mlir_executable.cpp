@@ -32,42 +32,8 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
-
-#include "ngraph/env_util.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/log.hpp"
-#include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/cpu/cpu_backend.hpp"
-#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
-#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
-// #include "ngraph/runtime/cpu/cpu_external_function.hpp"
-#include "ngraph/runtime/cpu/cpu_tensor.hpp"
-#include "ngraph/runtime/cpu/static_initialize.hpp"
-#include "ngraph/util.hpp"
-
-
-// #include "mlir/IR/MLIRContext.h"
-// #include "mlir/IR/Module.h"
-// #include "mlir/IR/Verifier.h"
-// #include "mlir/Parser.h"
-
-// #include "llvm/ADT/StringRef.h"
-// #include "llvm/Support/CommandLine.h"
-// #include "llvm/Support/ErrorOr.h"
-// #include "llvm/Support/MemoryBuffer.h"
-// #include "llvm/Support/SourceMgr.h"
-// #include "llvm/Support/raw_ostream.h"
-
-
-
-// #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
-// #include "contrib/mlir/core/pass/mlir_subgraph_extraction.hpp"
-// #include "contrib/mlir/core/compiler.hpp"
 #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
 #include "contrib/mlir/core/compiler.hpp"
-// #include "contrib/mlir/backend/backend.hpp"
-
-
 
 using namespace std;
 using namespace ngraph;
