@@ -21,7 +21,7 @@ if (NGRAPH_MLIR_ENABLE)
         set(LIBRARY_TYPE SHARED)
     endif()
 
-    add_library(mlir_backend ${LIBRARY_TYPE} int_backend.cpp int_executable.cpp)
+    add_library(mlir_backend ${LIBRARY_TYPE} mlir_backend.cpp mlir_executable.cpp)
     target_compile_definitions(mlir_backend PRIVATE MLIR_BACKEND_EXPORTS)
     if(NGRAPH_LIB_VERSIONING_ENABLE)
         set_target_properties(mlir_backend PROPERTIES
