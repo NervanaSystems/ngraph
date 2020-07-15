@@ -61,8 +61,6 @@ runtime::mlir::OP_TYPEID runtime::mlir::MlirExecutable::get_typeid(const Node& n
 
 runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
-    : m_is_compiled{true}
-    , m_performance_counters_enabled{enable_performance_collection}
 {
 #ifndef NGRAPH_JSON_DISABLE
     // To verify that the serializer and deserializer work correctly let's just run this
@@ -101,8 +99,6 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
 }
 
 runtime::mlir::MlirExecutable::MlirExecutable(const std::string& model_string)
-    : m_is_compiled{true}
-    , m_performance_counters_enabled{false}
 {
     m_function = deserialize(model_string);
     for (auto node : m_function->get_ordered_ops())
@@ -123,10 +119,6 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
     {
         auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
         func_inputs.push_back(host_tensor);
-    }
-    if (m_nan_check_enabled)
-    {
-        perform_nan_check(func_inputs);
     }
 
     // convert outputs to HostTensor
@@ -221,127 +213,10 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
             type = op->get_output_element_type(0);
         }
 
-        if (m_performance_counters_enabled)
-        {
-            m_timer_map[op].start();
-        }
-        if (!op->evaluate(op_outputs, op_inputs))
-        {
-            generate_calls(type, *op.get(), op_outputs, op_inputs);
-        }
-        if (m_performance_counters_enabled)
-        {
-            m_timer_map[op].stop();
-        }
-        if (m_nan_check_enabled)
-        {
-            perform_nan_check(op_outputs, op.get());
-        }
+        // generate_calls(type, *op.get(), op_outputs, op_inputs);
     }
 
     return true;
-}
-
-void runtime::mlir::MlirExecutable::generate_calls(const element::Type& type,
-                                                   const Node& op,
-                                                   const vector<shared_ptr<HostTensor>>& out,
-                                                   const vector<shared_ptr<HostTensor>>& in)
-{
-    stringstream ss;
-    switch (type)
-    {
-    case element::Type_t::boolean: op_engine<char>(op, out, in); break;
-    case element::Type_t::f32: op_engine<float>(op, out, in); break;
-    case element::Type_t::f64: op_engine<double>(op, out, in); break;
-    case element::Type_t::i8: op_engine<int8_t>(op, out, in); break;
-    case element::Type_t::i16: op_engine<int16_t>(op, out, in); break;
-    case element::Type_t::i32: op_engine<int32_t>(op, out, in); break;
-    case element::Type_t::i64: op_engine<int64_t>(op, out, in); break;
-    case element::Type_t::u8: op_engine<uint8_t>(op, out, in); break;
-    case element::Type_t::u16: op_engine<uint16_t>(op, out, in); break;
-    case element::Type_t::u32: op_engine<uint32_t>(op, out, in); break;
-    case element::Type_t::u64: op_engine<uint64_t>(op, out, in); break;
-    case element::Type_t::undefined:
-    case element::Type_t::dynamic:
-    case element::Type_t::u1:
-    case element::Type_t::bf16:
-    case element::Type_t::f16:
-        ss << "unsupported element type " << type << " op " << op.get_name();
-        throw ngraph_error(ss.str());
-    }
-}
-
-void runtime::mlir::MlirExecutable::set_nan_check(bool enable)
-{
-    m_nan_check_enabled = enable;
-}
-
-vector<runtime::PerformanceCounter> runtime::mlir::MlirExecutable::get_performance_data() const
-{
-    vector<runtime::PerformanceCounter> rc;
-    for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
-    {
-        rc.emplace_back(p.first, p.second.get_total_microseconds(), p.second.get_call_count());
-    }
-    return rc;
-}
-
-void runtime::mlir::MlirExecutable::perform_nan_check(const vector<shared_ptr<HostTensor>>& tensors,
-                                                      const Node* op)
-{
-    size_t arg_number = 1;
-    for (const shared_ptr<HostTensor>& tensor : tensors)
-    {
-        const element::Type& type = tensor->get_element_type();
-        if (type == element::f32)
-        {
-            const float* data = tensor->get_data_ptr<float>();
-            for (size_t i = 0; i < tensor->get_element_count(); i++)
-            {
-                if (std::isnan(data[i]))
-                {
-                    if (op)
-                    {
-                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
-                    }
-                    else
-                    {
-                        throw runtime_error("nan found in function's input tensor number " +
-                                            to_string(arg_number));
-                    }
-                }
-            }
-        }
-        else if (type == element::f64)
-        {
-            const double* data = tensor->get_data_ptr<double>();
-            for (size_t i = 0; i < tensor->get_element_count(); i++)
-            {
-                if (std::isnan(data[i]))
-                {
-                    if (op)
-                    {
-                        throw runtime_error("nan found in op '" + op->get_name() + "' output");
-                    }
-                    else
-                    {
-                        throw runtime_error("nan found in function's input tensor number " +
-                                            to_string(arg_number));
-                    }
-                }
-            }
-        }
-        arg_number++;
-    }
-}
-
-void runtime::mlir::MlirExecutable::save(ostream& out)
-{
-    cpio::Writer writer(out);
-    string si = "INTERPRETER Save File 1.0";
-    writer.write("save_info", si.data(), si.size());
-    string model = serialize(m_function, 0);
-    writer.write("model", model.data(), model.size());
 }
 
 shared_ptr<ngraph::op::Parameter> runtime::mlir::MlirExecutable::get_parameter(size_t index) const
