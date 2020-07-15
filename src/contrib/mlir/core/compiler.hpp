@@ -56,7 +56,7 @@ public:
 
 public:
   MLIRCompiler(const ngraph::op::CompiledKernel *compiled_kernel,
-               mlir::MLIRContext &context)
+               ::mlir::MLIRContext &context)
       : m_compiledKernel(compiled_kernel), m_context(context) {
     NGRAPH_CHECK(initialized,
                  "Cannot instantiate a compiler without initializing MLIR");
@@ -65,7 +65,7 @@ public:
   /// Compiles a subgraph with MLIR
   void compile();
 
-  mlir::OwningModuleRef &get_module() { return m_module; }
+  ::mlir::OwningModuleRef &get_module() { return m_module; }
 
 private:
   // Converts an nGraph sub-graph to MLIR nGraph dialect.
@@ -79,8 +79,8 @@ private:
 
   // MLIR context that holds all the MLIR information related to the sub-graph
   // compilation.
-  mlir::MLIRContext &m_context;
-  mlir::OwningModuleRef m_module;
+  ::mlir::MLIRContext &m_context;
+  ::mlir::OwningModuleRef m_module;
 
   // Global initialization for MLIR compiler
   static bool initialized;

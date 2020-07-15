@@ -32,6 +32,43 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 
+
+#include "ngraph/env_util.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/cpu/cpu_backend.hpp"
+#include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
+#include "ngraph/runtime/cpu/cpu_call_frame.hpp"
+// #include "ngraph/runtime/cpu/cpu_external_function.hpp"
+#include "ngraph/runtime/cpu/cpu_tensor.hpp"
+#include "ngraph/runtime/cpu/static_initialize.hpp"
+#include "ngraph/util.hpp"
+
+
+// #include "mlir/IR/MLIRContext.h"
+// #include "mlir/IR/Module.h"
+// #include "mlir/IR/Verifier.h"
+// #include "mlir/Parser.h"
+
+// #include "llvm/ADT/StringRef.h"
+// #include "llvm/Support/CommandLine.h"
+// #include "llvm/Support/ErrorOr.h"
+// #include "llvm/Support/MemoryBuffer.h"
+// #include "llvm/Support/SourceMgr.h"
+// #include "llvm/Support/raw_ostream.h"
+
+
+
+// #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
+// #include "contrib/mlir/core/pass/mlir_subgraph_extraction.hpp"
+// #include "contrib/mlir/core/compiler.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
+// #include "contrib/mlir/backend/backend.hpp"
+
+
+
 using namespace std;
 using namespace ngraph;
 
@@ -62,6 +99,9 @@ runtime::mlir::OP_TYPEID runtime::mlir::MlirExecutable::get_typeid(const Node& n
 runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
 {
+    ngmlir::MLIRCompiler::init();
+    ngmlir::MLIRCPUBackend::init();
+
 #ifndef NGRAPH_JSON_DISABLE
     // To verify that the serializer and deserializer work correctly let's just run this
     // graph round-trip
@@ -91,16 +131,6 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.run_passes(m_function);
-    for (auto node : m_function->get_ordered_ops())
-    {
-        m_nodes.push_back(node);
-    }
-    set_parameters_and_results(*m_function);
-}
-
-runtime::mlir::MlirExecutable::MlirExecutable(const std::string& model_string)
-{
-    m_function = deserialize(model_string);
     for (auto node : m_function->get_ordered_ops())
     {
         m_nodes.push_back(node);
