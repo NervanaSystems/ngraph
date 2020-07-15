@@ -24,6 +24,7 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
 #include "ngraph/pass/opset1_upgrade.hpp"
+#include "ngraph/pass/constant_folding.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
@@ -88,7 +89,10 @@ namespace
 runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string device)
     : m_device{device}
 {
-#if 0
+    // BANI_DBG: 
+    std::cout << "\nIE_Executable ctor BEGIN " << func->get_friendly_name() << "\n";
+
+#if 1
     const auto& opset = get_opset1();
     pass::Manager passes;
     // passes.register_pass<pass::LikeReplacement>();
@@ -100,6 +104,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     // passes.register_pass<pass::RecurrentReshapeElimination>();
     // passes.register_pass<pass::GetOutputElementElimination>();
     passes.register_pass<pass::Opset1Upgrade>();
+    passes.register_pass<pass::ConstantFolding>();
     passes.run_passes(func);
 
 
@@ -119,6 +124,10 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
             }
         }
     }
+
+    // BANI_DBG: 
+    std::cout << "Performed Opset1Upgrade + Passes After Translation, friendly_name, ngfunc = " << func->get_friendly_name() << ", output_size=" << func->get_output_size() << " ==>>\n";
+    //for (auto aNodeShPtr : func->get_ordered_ops()) { std::cout << aNodeShPtr->get_name() << " (" << aNodeShPtr->get_friendly_name() << ")" << ", "; } std::cout << "\n";
 #endif
 
 
@@ -133,6 +142,24 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 
     set_parameters_and_results(*func);
     m_results_orig = m_results;
+
+#if 0
+    // Check for Zero-dim params, especially coming from Where-ops of another cluster with shape like {0,1} or {0,3}
+    // If first-dim is Zero, we should not have to execute this cluster (true?)
+    for (const auto& ng_param_node : m_parameters) {
+        if (ng_param_node->get_output_partial_shape(0).is_static()) {
+            const auto& shp_dims = ng_param_node->get_output_shape(0);
+            if(shp_dims.size() > 0 && shp_dims[0] == 0) {
+                // ngraph::PartialShape pshape(shp_dims);
+                // pshape[0] = Dimension::dynamic();
+                // ng_param_node->set_partial_shape(pshape);
+                //BANI_DBG: 
+                std::cout << "\nIE_Executable ctor, Zero-dim param not handled !! " << func->get_friendly_name() << "\n";
+                return;
+            }
+        }
+    }
+#endif
 
 #if 1
     // We need to save the mapping from CNN network's Result nodes to the original NG-function's result-contributing nodes
@@ -196,7 +223,25 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 #endif
 
     m_network = InferenceEngine::CNNNetwork(func2);
-    set_parameters_and_results(*func2); // update again
+    ////set_parameters_and_results(*func2); // Don't update again, as we want TF to pass us all inputs & outputs tensors per the original func
+    // But check if OPV/IE has updated any datatype for certain Ops (e.g. we know it converts BOOL to FP32)
+    #if 0
+    for (auto const& pair : m_network.getOutputsInfo()) {
+        const auto& name = pair.first;
+        const auto& data = pair.second; // using InferenceEngine::DataPtr = std::shared_ptr<InferenceEngine::Data>
+        switch() {
+            case 0:
+        }
+    }
+    #endif
+    #if 0
+    // For now, force set any BOOL type to FP32, as we know OPV/IE converts BOOL to FP32
+    for (auto& op : m_results) {
+        if(op->get_element_type() == ngraph::element::boolean) {
+            op->set_output_type(0, ngraph::element::f32, op->get_output_partial_shape(0));
+        }
+    }
+    #endif
 
     if (getenv_bool("NGRAPH_IE_DUMP_GRAPHS"))
     {
@@ -224,7 +269,7 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     }
     //BANI_DBG: 
     std::cout << "\nIE_Executable ctor, m_map_cnnparam_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnparam_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
-
+    NGRAPH_CHECK(m_map_cnnparam_to_tfidx.size()==func->get_parameters().size(), "Mismatching number of param/input items for orig-func and m_network.getFunction()");
 
 #if 1
     // Bani
@@ -233,10 +278,10 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
     // m_network.getOutputsInfo() => Add_359(*), Constant_673, Constant_675, ngraph_output_0(*), ngraph_output_1, ngraph_output_2, ngraph_output_6, ngraph_output_7, ngraph_output_8, ngraph_output_9
     // m_results = Result_349 (0), Result_350 (1), Result_351 (2), Result_352 (3), Result_353 (4), Result_354 (5), Result_355 (6), Result_356 (7), Result_357 (8), Result_358 (9),
     // Also, order of Output TF tensors follow the order of m_results, but *NOT* the order of m_network.getOutputsInfo()
-    NGRAPH_CHECK(m_results.size()==m_network.getOutputsInfo().size(), "Mismatching number of output items");
-    //NGRAPH_CHECK(m_results.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results.size() ,")");
+    NGRAPH_CHECK(m_results.size()>=m_network.getOutputsInfo().size(), "Mismatching number of output items");
+    NGRAPH_CHECK(m_results_orig.size()>=m_results.size(), "m_results_orig must be >= m_results");
     int idx = 0;
-    for(auto aNodeShPtr : m_results) {
+    for(auto aNodeShPtr : m_results_orig) {
         string ng_result_name = aNodeShPtr->get_name(); // e.g. Result_350
         if(m_map_result_to_ngnode.find(ng_result_name) == m_map_result_to_ngnode.end()) {
                 THROW_IE_EXCEPTION << "\n!!! Cannot locate in m_map_result_to_ngnode, ng_result_name = " << ng_result_name << " !!!\n";
@@ -249,13 +294,19 @@ runtime::ie::IE_Executable::IE_Executable(shared_ptr<Function> func, string devi
 
         idx++;
     }
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable ctor, m_map_cnnresult_to_tfidx " << m_network.getFunction()->get_friendly_name() << " ==> "; for (auto const& pair : m_map_cnnresult_to_tfidx) { std::cout << pair.first << "->" << pair.second << ", "; } std::cout << "\n";
 #endif
 
 
     InferenceEngine::Core ie;
     //  Load model to the plugin (BACKEND_NAME)
+    //BANI_DBG: 
+    std::cout << "\nIE_Executable calling LoadNetwork() to create ExecutableNetwork --> " << m_network.getFunction()->get_friendly_name() << "\n";
     InferenceEngine::ExecutableNetwork exe_network = ie.LoadNetwork(m_network, m_device);
+
     //  Create infer request
+    std::cout << "\nIE_Executable calling CreateInferRequest() --> " << m_network.getFunction()->get_friendly_name() << "\n";
     m_infer_req = exe_network.CreateInferRequest();
 
     //BANI_DBG: 
@@ -316,16 +367,20 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     //BANI_DBG: 
     std::cout << "\nIE_Executable::call INPUT SetBlob Done\n";
 
+
+
+
+
     //  Prepare output blobs
     timer.start();
     InferenceEngine::OutputsDataMap output_info = m_network.getOutputsInfo();
-    if (output_info.size() != outputs.size())
+    if (output_info.size() > outputs.size())
     {
         THROW_IE_EXCEPTION << "Function outputs number differ from number of given outputs";
     }
 
-    //NGRAPH_CHECK(m_results_orig.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results_orig.size() ,")");
-    NGRAPH_CHECK(m_results.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results.size() ,")");
+    NGRAPH_CHECK(m_results_orig.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results_orig.size() ,")");
+    //NGRAPH_CHECK(m_results.size()==outputs.size(), "Mismatching number of output items between tensors (", outputs.size(), ") and results (", m_results.size() ,")");
 
     #if 0
     //TODO: Remove this following block after testing
@@ -339,6 +394,23 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
     }
     #endif
 
+    // Shortcut the Const -> Result values
+    for(const auto& it : m_map_cnnconstresult_to_ngnodeptr) {
+        auto output_name = it.first;
+        const ngraph::op::Constant* const_node = (ngraph::op::Constant*)(it.second);
+        if(const_node) {
+            int idx_tensor_output = m_map_cnnresult_to_tfidx.at(output_name);
+            auto num_bytes = shape_size(const_node->get_shape()) * const_node->get_element_type().size();
+            //BANI_DBG: 
+            std::cout << "    ... shortcut value from Const node " << output_name << " to TF Output " << m_nongraph_const_outputs.at(output_name) << ", index=" << ", num_bytes=" << num_bytes << "\n";
+            const void* value = const_node->get_data_ptr();
+            outputs[idx_tensor_output]->write(value, num_bytes);
+        } else {
+            THROW_IE_EXCEPTION << "\n!!! Cannot get const_node = " << output_name << " for value shortcut !!!\n";
+        }
+    }
+
+    // Pass the other output tensors
     for (const auto& it : output_info)
     {
         auto output_name = it.first;
@@ -378,6 +450,9 @@ bool runtime::ie::IE_Executable::call(const vector<shared_ptr<runtime::Tensor>>&
 
     //BANI_DBG: 
     std::cout << "\nIE_Executable::call OUTPUT SetBlob Done\n";
+
+
+
 
     timer.start();
     //BANI_DBG: 
