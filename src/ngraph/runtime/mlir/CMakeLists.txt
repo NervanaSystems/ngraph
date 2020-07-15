@@ -28,10 +28,18 @@ if (NGRAPH_MLIR_ENABLE)
             VERSION ${NGRAPH_VERSION}
             SOVERSION ${NGRAPH_API_VERSION})
     endif()
-    target_link_libraries(mlir_backend PUBLIC ngraph)
+    target_link_libraries(mlir_backend PUBLIC ngraph mlir_llvm_backend)
     if(NGRAPH_MLIR_STATIC_LIB_ENABLE)
         target_compile_definitions(mlir_backend PUBLIC NGRAPH_MLIR_STATIC_LIB_ENABLE)
     endif()
+
+    # TODO: can we get away without LLVM/MLIR include path.
+    # Currently mlir backend compiler.hpp include LLVM/MLIR files
+    get_directory_property(MLIR_LLVM_INCLUDEPATH
+                            DIRECTORY ${NGRAPH_MLIR_SOURCE_DIR}
+                            DEFINITION MLIR_LLVM_INCLUDEPATH)
+    target_include_directories(mlir_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
+
     install(TARGETS mlir_backend
         LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
         ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"

@@ -621,6 +621,7 @@ if (NGRAPH_NOP_ENABLE)
 endif()
 
 if (NGRAPH_MLIR_ENABLE)
+    target_link_libraries(unit-test PRIVATE mlir_backend)
     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
     target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
 endif()
