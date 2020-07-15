@@ -60,7 +60,7 @@ runtime::mlir::OP_TYPEID runtime::mlir::MlirExecutable::get_typeid(const Node& n
 }
 
 runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& function,
-                                                   bool enable_performance_collection)
+                                              bool enable_performance_collection)
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
@@ -113,7 +113,7 @@ runtime::mlir::MlirExecutable::MlirExecutable(const std::string& model_string)
 }
 
 bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
-                                               const vector<shared_ptr<runtime::Tensor>>& inputs)
+                                         const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     event::Duration d1("call", "Interpreter");
 
@@ -243,9 +243,9 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
 }
 
 void runtime::mlir::MlirExecutable::generate_calls(const element::Type& type,
-                                                         const Node& op,
-                                                         const vector<shared_ptr<HostTensor>>& out,
-                                                         const vector<shared_ptr<HostTensor>>& in)
+                                                   const Node& op,
+                                                   const vector<shared_ptr<HostTensor>>& out,
+                                                   const vector<shared_ptr<HostTensor>>& in)
 {
     stringstream ss;
     switch (type)
@@ -276,8 +276,7 @@ void runtime::mlir::MlirExecutable::set_nan_check(bool enable)
     m_nan_check_enabled = enable;
 }
 
-vector<runtime::PerformanceCounter>
-    runtime::mlir::MlirExecutable::get_performance_data() const
+vector<runtime::PerformanceCounter> runtime::mlir::MlirExecutable::get_performance_data() const
 {
     vector<runtime::PerformanceCounter> rc;
     for (const pair<shared_ptr<const Node>, stopwatch> p : m_timer_map)
@@ -287,8 +286,8 @@ vector<runtime::PerformanceCounter>
     return rc;
 }
 
-void runtime::mlir::MlirExecutable::perform_nan_check(
-    const vector<shared_ptr<HostTensor>>& tensors, const Node* op)
+void runtime::mlir::MlirExecutable::perform_nan_check(const vector<shared_ptr<HostTensor>>& tensors,
+                                                      const Node* op)
 {
     size_t arg_number = 1;
     for (const shared_ptr<HostTensor>& tensor : tensors)
@@ -345,8 +344,7 @@ void runtime::mlir::MlirExecutable::save(ostream& out)
     writer.write("model", model.data(), model.size());
 }
 
-shared_ptr<ngraph::op::Parameter>
-    runtime::mlir::MlirExecutable::get_parameter(size_t index) const
+shared_ptr<ngraph::op::Parameter> runtime::mlir::MlirExecutable::get_parameter(size_t index) const
 {
     const ParameterVector& parameters = get_parameters();
     NGRAPH_CHECK(index < parameters.size(), "create_tensor for input out of bounds");
@@ -359,16 +357,14 @@ shared_ptr<ngraph::op::Result> runtime::mlir::MlirExecutable::get_result(size_t 
     NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
     return results[index];
 }
-shared_ptr<runtime::Tensor>
-    runtime::mlir::MlirExecutable::create_input_tensor(size_t input_index)
+shared_ptr<runtime::Tensor> runtime::mlir::MlirExecutable::create_input_tensor(size_t input_index)
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::HostTensor>(parameter->get_output_element_type(0),
                                             parameter->get_output_shape(0));
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::mlir::MlirExecutable::create_output_tensor(size_t output_index)
+shared_ptr<runtime::Tensor> runtime::mlir::MlirExecutable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
     return make_shared<runtime::HostTensor>(result->get_output_element_type(0),
@@ -376,8 +372,7 @@ shared_ptr<runtime::Tensor>
 }
 
 vector<shared_ptr<runtime::Tensor>>
-    runtime::mlir::MlirExecutable::create_input_tensor(size_t input_index,
-                                                             size_t pipeline_depth)
+    runtime::mlir::MlirExecutable::create_input_tensor(size_t input_index, size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
@@ -398,8 +393,7 @@ vector<shared_ptr<runtime::Tensor>>
 }
 
 vector<shared_ptr<runtime::Tensor>>
-    runtime::mlir::MlirExecutable::create_output_tensor(size_t output_index,
-                                                              size_t pipeline_depth)
+    runtime::mlir::MlirExecutable::create_output_tensor(size_t output_index, size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
     shared_ptr<op::Result> result = get_result(output_index);

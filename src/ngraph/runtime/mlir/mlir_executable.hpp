@@ -135,7 +135,7 @@ class MLIR_BACKEND_API ngraph::runtime::mlir::MlirExecutable : public Executable
 
 public:
     MlirExecutable(const std::shared_ptr<Function>& function,
-                  bool enable_performance_collection = false);
+                   bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
               const std::vector<std::shared_ptr<Tensor>>& inputs) override;

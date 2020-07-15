@@ -28,11 +28,10 @@
 using namespace std;
 using namespace ngraph;
 
-extern "C" MLIR_BACKEND_API void ngraph_register_interpreter_backend()
+extern "C" MLIR_BACKEND_API void ngraph_register_mlir_backend()
 {
-    runtime::BackendManager::register_backend("MLIR", [](const std::string&) {
-        return std::make_shared<runtime::mlir::MlirBackend>();
-    });
+    runtime::BackendManager::register_backend(
+        "MLIR", [](const std::string&) { return std::make_shared<runtime::mlir::MlirBackend>(); });
 }
 
 runtime::mlir::MlirBackend::MlirBackend() {}
@@ -47,21 +46,22 @@ shared_ptr<runtime::Tensor> runtime::mlir::MlirBackend::create_tensor()
     return make_shared<runtime::HostTensor>();
 }
 
-shared_ptr<runtime::Tensor>
-    runtime::mlir::MlirBackend::create_tensor(const element::Type& type, const Shape& shape)
+shared_ptr<runtime::Tensor> runtime::mlir::MlirBackend::create_tensor(const element::Type& type,
+                                                                      const Shape& shape)
 {
     return make_shared<runtime::HostTensor>(type, shape);
 }
 
-shared_ptr<runtime::Tensor> runtime::mlir::MlirBackend::create_tensor(
-    const element::Type& type, const Shape& shape, void* memory_pointer)
+shared_ptr<runtime::Tensor> runtime::mlir::MlirBackend::create_tensor(const element::Type& type,
+                                                                      const Shape& shape,
+                                                                      void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
 }
 
 shared_ptr<runtime::Executable>
     runtime::mlir::MlirBackend::compile(shared_ptr<Function> function,
-                                              bool enable_performance_collection)
+                                        bool enable_performance_collection)
 {
     return make_shared<MlirExecutable>(function, enable_performance_collection);
 }
