@@ -238,12 +238,12 @@ void codegen::CompilerCore::initialize()
     // These are the C++ features needed to compile ngraph headers
     // and any dependencies like Eigen
     auto LO = m_compiler->getInvocation().getLangOpts();
-    LO->CPlusPlus = 1;
-    LO->CPlusPlus14 = 1;
+    LO->CPlusPlus = 0;
+    // LO->CPlusPlus14 = 1;
     LO->GNUCVersion = 40201;
     LO->Bool = 1;
     LO->Exceptions = 1;
-    LO->CXXExceptions = 1;
+    LO->CXXExceptions = 0;
     LO->WChar = 1;
     LO->RTTI = 1;
     // Enable OpenMP for Eigen
@@ -252,7 +252,7 @@ void codegen::CompilerCore::initialize()
 
     // CodeGen options
     auto& CGO = m_compiler->getInvocation().getCodeGenOpts();
-    CGO.OptimizationLevel = 3;
+    CGO.OptimizationLevel = 2;
     CGO.RelocationModel = llvm::Reloc::Model::Static;
     // CGO.CodeModel = "medium";
     CGO.ThreadModel = "posix";

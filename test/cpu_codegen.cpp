@@ -65,38 +65,82 @@ TEST(cpu_codegen, abc)
 
 TEST(benchmark, c_compile)
 {
-    string source = R"(#include <stdio.h>
-extern "C" void test()
+//     string source = R"(#include <stdio.h>
+// void test()
+// {
+//     printf("Hello world\n");
+// }
+// )";
+
+string source = R"(
+#include <stdio.h>
+void reshape_in4(const float* in,
+                 float* out,
+                 const size_t* in_shape,
+                 const size_t* in_axis_order,
+                 const size_t* out_shape)
 {
-    printf("Hello world\n");
+    size_t size[4];
+    size_t in_index[4];
+    size_t* map_index[4];
+    for (size_t i = 0; i < 4; i++)
+    {
+        size[i] = in_shape[in_axis_order[i]];
+        map_index[in_axis_order[i]] = &in_index[i];
+    }
+    for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+    {
+        for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+        {
+            for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
+            {
+                for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
+                {
+                    // clang-format off
+                    *out++ =
+                        in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] +
+                            *map_index[1] * in_shape[2] * in_shape[3] +
+                            *map_index[2] * in_shape[3] +
+                            *map_index[3]];
+                    // clang-format on
+                }
+            }
+        }
+    }
 }
 )";
-    NGRAPH_INFO << "\n" << source;
+
+    {
+        // One run to prime the pump
+        unique_ptr<codegen::Compiler> compiler(new codegen::Compiler());
+        auto module = compiler->compile(source);
+    }
 
     stopwatch create;
     create.start();
     unique_ptr<codegen::Compiler> compiler(new codegen::Compiler());
     create.stop();
-    NGRAPH_INFO << "construct compiler: " << create.get_milliseconds() << "ms";
+    NGRAPH_INFO << "construct compiler: " << create.get_microseconds() << "us";
 
     stopwatch compile;
     compile.start();
     auto module = compiler->compile(source);
     compile.stop();
     ASSERT_TRUE(module);
-    NGRAPH_INFO << "compile: " << compile.get_milliseconds() << "ms";
+    NGRAPH_INFO << "compile: " << compile.get_microseconds() << "us";
 
     codegen::ExecutionEngine ee;
     stopwatch create_exec;
     create_exec.start();
     ee.add_module(module);
     ee.finalize();
-    function<void()> test_entry = ee.find_function<void()>("test");
+    function<void()> test_entry = ee.find_function<void()>("reshape_in4");
     create_exec.stop();
-    NGRAPH_INFO << "create_exec: " << create_exec.get_milliseconds() << "ms";
+    NGRAPH_INFO << "create_exec: " << create_exec.get_microseconds() << "us";
 
     ASSERT_TRUE(test_entry);
 
-    test_entry();
+    // test_entry();
 }
+
 
