@@ -40,6 +40,8 @@ namespace ngraph
         {
             const ngraph::element::Type& get_ngraph_element_type(std::int64_t onnx_type);
 
+            const int64_t get_proto_element_type(ngraph::element::Type& ngraph_type);
+
             /// \brief      Return a monotonic sequence.
             ///
             /// \note       Limitations: this function may not work for very large integer values
