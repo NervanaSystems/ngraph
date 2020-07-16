@@ -584,6 +584,10 @@ if (NGRAPH_CPU_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
 endif()
 
+if(NGRAPH_CODEGEN_ENABLE)
+    target_link_libraries(unit-test PRIVATE codegen)
+endif()
+
 if (NGRAPH_TOOLS_ENABLE)
     get_property(NBENCH_PATH TARGET nbench PROPERTY BINARY_DIR)
     set(NBENCH "${NBENCH_PATH}/nbench")

@@ -18,6 +18,8 @@
 #include "ngraph/ngraph.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
+#include "ngraph/codegen/compiler.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -60,3 +62,41 @@ TEST(cpu_codegen, abc)
                                   (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector(),
                                   MIN_FLOAT_TOLERANCE_BITS));
 }
+
+TEST(benchmark, c_compile)
+{
+    string source = R"(#include <stdio.h>
+extern "C" void test()
+{
+    printf("Hello world\n");
+}
+)";
+    NGRAPH_INFO << "\n" << source;
+
+    stopwatch create;
+    create.start();
+    unique_ptr<codegen::Compiler> compiler(new codegen::Compiler());
+    create.stop();
+    NGRAPH_INFO << "construct compiler: " << create.get_milliseconds() << "ms";
+
+    stopwatch compile;
+    compile.start();
+    auto module = compiler->compile(source);
+    compile.stop();
+    ASSERT_TRUE(module);
+    NGRAPH_INFO << "compile: " << compile.get_milliseconds() << "ms";
+
+    codegen::ExecutionEngine ee;
+    stopwatch create_exec;
+    create_exec.start();
+    ee.add_module(module);
+    ee.finalize();
+    function<void()> test_entry = ee.find_function<void()>("test");
+    create_exec.stop();
+    NGRAPH_INFO << "create_exec: " << create_exec.get_milliseconds() << "ms";
+
+    ASSERT_TRUE(test_entry);
+
+    test_entry();
+}
+
