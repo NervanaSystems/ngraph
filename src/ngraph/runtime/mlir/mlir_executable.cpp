@@ -15,10 +15,13 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/mlir/mlir_executable.hpp"
+#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
+#include "contrib/mlir/core/compiler.hpp"
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
@@ -31,9 +34,6 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-
-#include "contrib/mlir/backend/cpu/cpu_backend.hpp"
-#include "contrib/mlir/core/compiler.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -68,13 +68,12 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     ngmlir::MLIRCompiler::init();
     ngmlir::MLIRCPUBackend::init();
 
-#ifndef NGRAPH_JSON_DISABLE
-    // To verify that the serializer and deserializer work correctly let's just run this
-    // graph round-trip
-    m_function = deserialize(serialize(function));
-#else
     m_function = clone_function(*function);
-#endif
+
+    for (auto op : m_function->get_ordered_ops())
+    {
+        NGRAPH_INFO << *op;
+    }
 
     auto is_supported = [](const Node& node) {
         bool retval = false;
@@ -91,7 +90,10 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     };
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
+
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
+
     pass_manager.register_pass<pass::Opset1Downgrade>();
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
