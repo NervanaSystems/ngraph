@@ -81,7 +81,7 @@ namespace ngraph
 
                 // Get vector of nGraph nodes after expanding ONNX function
                 std::vector<std::shared_ptr<ngraph::Node>> nodes =
-                    get_expanded_function(new_node, graph, 11);
+                    get_nodes_from_onnx_function(new_node, graph, 11);
 
                 // Extract inputs from expanded function and names of operators which return final
                 // ouputs
@@ -142,9 +142,9 @@ namespace ngraph
             }
 
             std::vector<std::shared_ptr<ngraph::Node>>
-                get_expanded_function(ONNX_NAMESPACE::NodeProto* new_node,
-                                      ONNX_NAMESPACE::GraphProto graph,
-                                      int opset_version)
+                get_nodes_from_onnx_function(ONNX_NAMESPACE::NodeProto* new_node,
+                                             ONNX_NAMESPACE::GraphProto graph,
+                                             int opset_version)
             {
                 const auto* schema = ONNX_NAMESPACE::OpSchemaRegistry::Schema(
                     new_node->op_type(), opset_version, "");
@@ -152,7 +152,7 @@ namespace ngraph
 
                 FunctionExpandHelper(*new_node, *func, graph);
 
-                // Need to erase the node with expanded function since this Pull Requeest
+                // Need to erase the node with expanded function since this Pull Request
                 // https://github.com/onnx/onnx/pull/2601 is not merged
                 graph.mutable_node()->erase(graph.node().begin());
 

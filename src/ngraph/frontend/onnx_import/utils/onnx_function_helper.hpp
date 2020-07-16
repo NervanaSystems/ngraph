@@ -33,20 +33,40 @@ namespace ngraph
         namespace utils
         {
             ///
-            /// \brief      Return a vector of nGraph nodes obtained by expanding the ONNX fuction.
+            /// \brief      Return a vector of final nGraph nodes obtained by expanding the ONNX
+            /// fuction.
             ///
-            /// \param[in]  node                The node representing incoming ONNX operation.
+            /// \param[in]  node                The node representing incoming ONNX fuction.
             ///
-            /// \return     Vector of nGraph nodes equivalent of the ONNX operation.
+            /// \return     Vector of nGraph nodes equivalent of the final outputs of the ONNX
+            /// fuction.
             ///
             NodeVector expand_onnx_function(const Node& node);
 
+            ///
+            /// \brief      Return Proto Type with set type and shape.
+            ///
+            /// \param[in]  type                The nGraph type that will be translated to a
+            /// suitable Proto Type.
+            /// \param[in]  shape               The shape of tensor for the target Proto Type.
+            ///
+            /// \return     Proto Type equivalent of the given nGraph type and shape.
+            ///
             ONNX_NAMESPACE::TypeProto get_proto_type(element::Type type, Shape shape);
 
+            ///
+            /// \brief      Return a vector of nGraph nodes representing expanded ONNX fuction.
+            ///
+            /// \param[in]  node                The Proto Node representing incoming ONNX fuction.
+            /// \param[in]  graph               The Proto Graph with the node with ONNX fuction.
+            /// \param[in]  opset_version       The opset version of the ONNX function.
+            ///
+            /// \return     Vector of nGraph nodes equivalent of the ONNX fuction.
+            ///
             std::vector<std::shared_ptr<ngraph::Node>>
-                get_expanded_function(ONNX_NAMESPACE::NodeProto* new_node,
-                                      ONNX_NAMESPACE::GraphProto graph,
-                                      int opset_version);
+                get_nodes_from_onnx_function(ONNX_NAMESPACE::NodeProto* node,
+                                             ONNX_NAMESPACE::GraphProto graph,
+                                             int opset_version);
         }
     }
 }
