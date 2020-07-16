@@ -27,7 +27,6 @@ namespace ONNX_NAMESPACE
 {
     // forward declaration
     class NodeProto;
-    class ModelProto;
 }
 
 namespace ngraph

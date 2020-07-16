@@ -18,6 +18,7 @@
 #include <fstream>
 #include <memory>
 
+#include "common.hpp"
 #include "default_opset.hpp"
 #include "ngraph/frontend/onnx_import/onnx.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -129,17 +130,8 @@ namespace ngraph
             ONNX_NAMESPACE::TypeProto get_proto_type(element::Type type, Shape shape)
             {
                 ONNX_NAMESPACE::TypeProto target_type;
-                switch (type)
-                {
-                case element::Type_t::f32:
-                    target_type.mutable_tensor_type()->set_elem_type(
-                        ONNX_NAMESPACE::TensorProto_DataType_FLOAT);
-                    break;
-                case element::Type_t::u8:
-                    target_type.mutable_tensor_type()->set_elem_type(
-                        ONNX_NAMESPACE::TensorProto_DataType_UINT8);
-                    break;
-                }
+                target_type.mutable_tensor_type()->set_elem_type(
+                    common::get_proto_element_type(type));
 
                 for (auto dim : shape)
                 {
@@ -169,8 +161,8 @@ namespace ngraph
                 *graph_ptr = graph;
 
                 std::istringstream model_stream{model.SerializeAsString()};
-
                 auto function = ngraph::onnx_import::import_onnx_model(model_stream);
+
                 return function->get_ordered_ops();
             }
         }

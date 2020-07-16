@@ -17,7 +17,6 @@
 #include <memory>
 
 #include "dynamic_quantize_linear.hpp"
-
 #include "utils/onnx_function_helper.hpp"
 
 namespace ngraph

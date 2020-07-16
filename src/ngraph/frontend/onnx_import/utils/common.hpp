@@ -129,12 +129,6 @@ namespace ngraph
             {
                 return shifted_square_identity(Shape{n, n}, type, 0);
             }
-
-            ONNX_NAMESPACE::TypeProto get_proto_type(element::Type type, Shape shape);
-            std::vector<std::shared_ptr<ngraph::Node>>
-                get_extanded_function(ONNX_NAMESPACE::NodeProto* new_node,
-                                      ONNX_NAMESPACE::GraphProto graph,
-                                      int opset_version);
         }
     }
 }
