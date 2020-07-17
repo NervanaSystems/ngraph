@@ -15,11 +15,11 @@
 //*****************************************************************************
 
 #include "gtest/gtest.h"
+#include "ngraph/codegen/compiler.hpp"
+#include "ngraph/codegen/execution_engine.hpp"
 #include "ngraph/ngraph.hpp"
 #include "util/all_close_f.hpp"
 #include "util/ndarray.hpp"
-#include "ngraph/codegen/compiler.hpp"
-#include "ngraph/codegen/execution_engine.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -65,48 +65,119 @@ TEST(cpu_codegen, abc)
 
 TEST(benchmark, c_compile)
 {
-//     string source = R"(#include <stdio.h>
-// void test()
+    //     string source = R"(#include <stdio.h>
+    // void test()
+    // {
+    //     printf("Hello world\n");
+    // }
+    // )";
+
+//     string source = R"(
+// #include <stdio.h>
+// void reshape_in4(const float* in,
+//                  float* out,
+//                  const size_t* in_shape,
+//                  const size_t* in_axis_order,
+//                  const size_t* out_shape)
 // {
-//     printf("Hello world\n");
+//     size_t size[4];
+//     size_t in_index[4];
+//     size_t* map_index[4];
+//     for (size_t i = 0; i < 4; i++)
+//     {
+//         size[i] = in_shape[in_axis_order[i]];
+//         map_index[in_axis_order[i]] = &in_index[i];
+//     }
+//     for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
+//     {
+//         for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
+//         {
+//             for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
+//             {
+//                 for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
+//                 {
+//                     // clang-format off
+//                     *out++ =
+//                         in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] +
+//                             *map_index[1] * in_shape[2] * in_shape[3] +
+//                             *map_index[2] * in_shape[3] +
+//                             *map_index[3]];
+//                     // clang-format on
+//                 }
+//             }
+//         }
+//     }
 // }
 // )";
 
 string source = R"(
-#include <stdio.h>
-void reshape_in4(const float* in,
-                 float* out,
-                 const size_t* in_shape,
-                 const size_t* in_axis_order,
-                 const size_t* out_shape)
+struct generic_val
 {
-    size_t size[4];
-    size_t in_index[4];
-    size_t* map_index[4];
-    for (size_t i = 0; i < 4; i++)
-    {
-        size[i] = in_shape[in_axis_order[i]];
-        map_index[in_axis_order[i]] = &in_index[i];
-    }
-    for (in_index[0] = 0; in_index[0] < size[0]; ++in_index[0])
-    {
-        for (in_index[1] = 0; in_index[1] < size[1]; ++in_index[1])
-        {
-            for (in_index[2] = 0; in_index[2] < size[2]; ++in_index[2])
-            {
-                for (in_index[3] = 0; in_index[3] < size[3]; ++in_index[3])
-                {
-                    // clang-format off
-                    *out++ =
-                        in[*map_index[0] * in_shape[1] * in_shape[2] * in_shape[3] +
-                            *map_index[1] * in_shape[2] * in_shape[3] +
-                            *map_index[2] * in_shape[3] +
-                            *map_index[3]];
-                    // clang-format on
-                }
-            }
-        }
-    }
+    float* v_ptr;
+};
+
+#define int64_t long
+#define uint64_t unsigned long
+#define int32_t int
+
+void parallel_call_cpu(void (*closure)(int64_t, struct generic_val*), uint64_t, uint64_t, uint64_t, struct generic_val*);
+
+int32_t dnnl_brgemm_init_update_f32(void* A,
+                                    void* B,
+                                    void* C,
+                                    int32_t num,
+                                    int32_t M,
+                                    int32_t N,
+                                    int32_t K,
+                                    int32_t LDA,
+                                    int32_t LDB,
+                                    int32_t LDC,
+                                    int32_t stride_a,
+                                    int32_t stride_b);
+
+static void
+    conv2d0_closure_0(uint64_t fused_0fused_0n__k__p_o, float* input, float* weight, float* output)
+{
+    dnnl_brgemm_init_update_f32((input + ((((fused_0fused_0n__k__p_o / 14UL) / 4UL) * 200704UL) +
+                                          ((fused_0fused_0n__k__p_o % 14UL) * 3584UL))),
+                                (weight + (((fused_0fused_0n__k__p_o / 14UL) % 4UL) * 1024UL)),
+                                (output + ((((fused_0fused_0n__k__p_o / 14UL) / 4UL) * 200704UL) +
+                                           ((((fused_0fused_0n__k__p_o / 14UL) % 4UL) * 50176UL) +
+                                            ((fused_0fused_0n__k__p_o % 14UL) * 3584UL)))),
+                                4,
+                                224,
+                                16,
+                                16,
+                                16,
+                                16,
+                                16,
+                                50176,
+                                256);
+}
+
+void conv2d0_closure_0_0closurewrapper(int64_t i, struct generic_val* args)
+{
+    conv2d0_closure_0(i, (float*)(args[0].v_ptr), (float*)(args[1].v_ptr), (float*)(args[2].v_ptr));
+}
+
+bool conv2d(float* output, float* input, float* weight, float* bias)
+{
+    struct generic_val conv2d0_closure_0args[] = {
+        input,
+        weight,
+        output,
+    };
+    parallel_call_cpu(
+        conv2d0_closure_0_0closurewrapper, 0UL, 1568UL, 1UL, conv2d0_closure_0args);
+    return true;
+}
+
+void conv2d_0wrapper(struct generic_val* args)
+{
+    conv2d((float*)(args[0].v_ptr),
+           (float*)(args[1].v_ptr),
+           (float*)(args[2].v_ptr),
+           (float*)(args[3].v_ptr));
 }
 )";
 
@@ -143,4 +214,32 @@ void reshape_in4(const float* in,
     // test_entry();
 }
 
+extern "C" {
+struct generic_val
+{
+public:
+    float* v_ptr;
+};
 
+void parallel_call_cpu(void (*)(int64_t, generic_val*), uint64_t, uint64_t, uint64_t, generic_val*)
+{
+}
+
+int32_t dnnl_brgemm_init_update_f32(void* A,
+                                               void* B,
+                                               void* C,
+                                               int32_t num,
+                                               int32_t M,
+                                               int32_t N,
+                                               int32_t K,
+                                               int32_t LDA,
+                                               int32_t LDB,
+                                               int32_t LDC,
+                                               int32_t stride_a,
+                                               int32_t stride_b)
+{
+    return 0;
+}
+}
+
+// #include <compiler/codegen/cpu_include.hpp>

@@ -48,7 +48,7 @@
 #include <llvm/Support/Timer.h>
 #include <llvm/Support/raw_ostream.h>
 
-#include "header_resource.hpp"
+// #include "header_resource.hpp"
 #include "ngraph/codegen/compiler.hpp"
 #include "ngraph/env_util.hpp"
 #include "ngraph/file_util.hpp"
@@ -574,31 +574,31 @@ void codegen::CompilerCore::load_headers_from_resource()
     const std::string builtin_root = "";
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
 
-#ifdef _WIN32
-    for (const pair<std::string, vector<std::string>>& header_info : builtin_headers)
-    {
-        std::string absolute_path = header_info.first;
-        std::string builtin = builtin_root + absolute_path;
-        std::string header_content;
-        for (const std::string& line : header_info.second)
-        {
-            header_content += line;
-        }
-        m_header_strings.emplace_back(header_content);
-        std::unique_ptr<llvm::MemoryBuffer> mb(
-            llvm::MemoryBuffer::getMemBuffer(m_header_strings.back(), builtin));
-        preprocessor_options.addRemappedFile(builtin, mb.release());
-    }
-#else
-    for (const pair<std::string, std::string>& header_info : builtin_headers)
-    {
-        std::string absolute_path = header_info.first;
-        std::string builtin = builtin_root + absolute_path;
-        std::unique_ptr<llvm::MemoryBuffer> mb(
-            llvm::MemoryBuffer::getMemBuffer(header_info.second, builtin));
-        preprocessor_options.addRemappedFile(builtin, mb.release());
-    }
-#endif
+    // #ifdef _WIN32
+    //     for (const pair<std::string, vector<std::string>>& header_info : builtin_headers)
+    //     {
+    //         std::string absolute_path = header_info.first;
+    //         std::string builtin = builtin_root + absolute_path;
+    //         std::string header_content;
+    //         for (const std::string& line : header_info.second)
+    //         {
+    //             header_content += line;
+    //         }
+    //         m_header_strings.emplace_back(header_content);
+    //         std::unique_ptr<llvm::MemoryBuffer> mb(
+    //             llvm::MemoryBuffer::getMemBuffer(m_header_strings.back(), builtin));
+    //         preprocessor_options.addRemappedFile(builtin, mb.release());
+    //     }
+    // #else
+    //     for (const pair<std::string, std::string>& header_info : builtin_headers)
+    //     {
+    //         std::string absolute_path = header_info.first;
+    //         std::string builtin = builtin_root + absolute_path;
+    //         std::unique_ptr<llvm::MemoryBuffer> mb(
+    //             llvm::MemoryBuffer::getMemBuffer(header_info.second, builtin));
+    //         preprocessor_options.addRemappedFile(builtin, mb.release());
+    //     }
+    // #endif
 }
 
 void codegen::CompilerCore::set_precompiled_header_source(const std::string& source)
