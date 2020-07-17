@@ -20,71 +20,78 @@
 
 #pragma once
 
-#include "contrib/mlir/backend/backend.hpp"
-#include "ngraph/check.hpp"
-#include "llvm/Support/CodeGen.h"
 #include <memory>
+#include "contrib/mlir/backend/backend.hpp"
+#include "llvm/Support/CodeGen.h"
+#include "ngraph/check.hpp"
 
-namespace llvm {
-class TargetMachine;
+namespace llvm
+{
+    class TargetMachine;
 }
 
-namespace ngraph {
-namespace runtime {
-namespace ngmlir {
-class MLIRCPUBackend : public MLIRBackend {
-public:
-  /// Global Initialization for all CPU backends
-  static void init();
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            class MLIRCPUBackend : public MLIRBackend
+            {
+            public:
+                /// Global Initialization for all CPU backends
+                static void init();
 
-  MLIRCPUBackend(::mlir::OwningModuleRef &module, ::mlir::MLIRContext &context)
-      : MLIRBackend(module, context) {
-    NGRAPH_CHECK(initialized,
-                 "Cannot instantiate CPU MLIR backend without initialization");
-  }
+                MLIRCPUBackend(::mlir::OwningModuleRef& module, ::mlir::MLIRContext& context)
+                    : MLIRBackend(module, context)
+                {
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate CPU MLIR backend without initialization");
+                }
 
-  MLIRCPUBackend(::mlir::ModuleOp &moduleOp, ::mlir::MLIRContext &context)
-      : MLIRBackend(moduleOp, context) {
-    NGRAPH_CHECK(initialized,
-                 "Cannot instantiate CPU MLIR backend without initialization");
-  }
-  // codegen LLVM dialect from nGraph dialect applying CPU backend optimization
-  // passes
-  void codegen() override;
+                MLIRCPUBackend(::mlir::ModuleOp& moduleOp, ::mlir::MLIRContext& context)
+                    : MLIRBackend(moduleOp, context)
+                {
+                    NGRAPH_CHECK(initialized,
+                                 "Cannot instantiate CPU MLIR backend without initialization");
+                }
+                // codegen LLVM dialect from nGraph dialect applying CPU backend optimization
+                // passes
+                void codegen() override;
 
-private:
-  // Apply CPU specific optimizations at nGraph dialect level
-  void optimizeNgDialect();
+            private:
+                // Apply CPU specific optimizations at nGraph dialect level
+                void optimizeNgDialect();
 
-  // Lowers nGraph dialect all the way to Affine dialect.
-  void lowerNgDialect();
+                // Lowers nGraph dialect all the way to Affine dialect.
+                void lowerNgDialect();
 
-  // Lowers standard dialect all the way to LLVM dialect.
-  void lowerStandardDialect();
+                // Lowers standard dialect all the way to LLVM dialect.
+                void lowerStandardDialect();
 
-  // Apply affine dialect optimizations
-  void optimizeAffineDialect();
+                // Apply affine dialect optimizations
+                void optimizeAffineDialect();
 
-public:
-  // JIT optimization level
-  static llvm::CodeGenOpt::Level mlirOptLevel;
+            public:
+                // JIT optimization level
+                static llvm::CodeGenOpt::Level mlirOptLevel;
 
-  // LLVM target machine to be used by this MLIR compiler instance to retrieve
-  // information about target features.
-  // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its
-  // own
-  // target machine for compilation internally. This target machine is for
-  // non-JIT
-  // related stuff. We should change OrcJIT API so that we can pass an external
-  // target
-  // machine or configuration flags.
-  // TODO: Move target machine to external nGraph backend when multiple backends
-  // start
-  // to use MLIR.
-  static std::unique_ptr<llvm::TargetMachine> targetMachine;
-  // Global initialization done for CPU backend
-  static bool initialized;
-};
-} // namespace ngmlir
-} // namespace runtime
-} // namespace ngraph
+                // LLVM target machine to be used by this MLIR compiler instance to retrieve
+                // information about target features.
+                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its
+                // own
+                // target machine for compilation internally. This target machine is for
+                // non-JIT
+                // related stuff. We should change OrcJIT API so that we can pass an external
+                // target
+                // machine or configuration flags.
+                // TODO: Move target machine to external nGraph backend when multiple backends
+                // start
+                // to use MLIR.
+                static std::unique_ptr<llvm::TargetMachine> targetMachine;
+                // Global initialization done for CPU backend
+                static bool initialized;
+            };
+        }
+    }
+}

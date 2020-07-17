@@ -23,26 +23,36 @@
 #include <memory>
 #include <mlir/IR/Module.h>
 
-namespace ngraph {
-namespace runtime {
-namespace ngmlir {
-class MLIRBackend {
-public:
-  MLIRBackend(::mlir::OwningModuleRef &module, ::mlir::MLIRContext &context)
-      : m_module(std::move(module)), m_context(context) {}
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace ngmlir
+        {
+            class MLIRBackend
+            {
+            public:
+                MLIRBackend(::mlir::OwningModuleRef& module, ::mlir::MLIRContext& context)
+                    : m_module(std::move(module))
+                    , m_context(context)
+                {
+                }
 
-  MLIRBackend(::mlir::ModuleOp &moduleOp, ::mlir::MLIRContext &context)
-      : m_module(moduleOp), m_context(context) {}
+                MLIRBackend(::mlir::ModuleOp& moduleOp, ::mlir::MLIRContext& context)
+                    : m_module(moduleOp)
+                    , m_context(context)
+                {
+                }
 
-  /// Generate code for the module
-  virtual void codegen() = 0;
+                /// Generate code for the module
+                virtual void codegen() = 0;
 
-  ::mlir::OwningModuleRef &get_module() { return m_module; }
+                ::mlir::OwningModuleRef& get_module() { return m_module; }
 
-protected:
-  ::mlir::OwningModuleRef m_module;
-  ::mlir::MLIRContext &m_context;
-};
-} // namespace ngmlir
-} // namespace runtime
-} // namespace ngraph
+            protected:
+                ::mlir::OwningModuleRef m_module;
+                ::mlir::MLIRContext& m_context;
+            };
+        }
+    }
+}
