@@ -22,6 +22,7 @@
 
 #include <mlir/Pass/Pass.h>
 
-namespace mlir {
-std::unique_ptr<mlir::Pass> createNgOpFusionPass();
+namespace mlir
+{
+    std::unique_ptr<mlir::Pass> createNgOpFusionPass();
 }

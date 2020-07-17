@@ -46,61 +46,64 @@ using namespace mlir::edsc::op;
 #define PASS_NAME "fuse-ngraph-dialect"
 #define DEBUG_TYPE PASS_NAME
 
-namespace mlir {
-static Value createSgemmOp(PatternRewriter &rewriter, Operation *old_op,
-                           Value input1, Value input2, Value input3) {
-  auto castedOp0 = dyn_cast_or_null<NGAddOp>(old_op);
-  SmallVector<Value, 4> values{input1, input2, input3};
-  SmallVector<NamedAttribute, 4> attrs;
-  attrs.emplace_back(
-      rewriter.getIdentifier("alpha"),
-      rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(),
-                            1.0));
-  attrs.emplace_back(
-      rewriter.getIdentifier("beta"),
-      rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(),
-                            1.0));
-  attrs.emplace_back(rewriter.getIdentifier("transA"),
-                     rewriter.getBoolAttr(false));
-  attrs.emplace_back(rewriter.getIdentifier("transB"),
-                     rewriter.getBoolAttr(false));
-  SmallVector<Type, 4> types;
-  for (auto v : castedOp0.getODSResults(0)) {
-    types.push_back(v.getType());
-  }
-  return rewriter.create<NGGemmOp>(castedOp0.getLoc(), types, values, attrs);
-}
+namespace mlir
+{
+    static Value createSgemmOp(
+        PatternRewriter& rewriter, Operation* old_op, Value input1, Value input2, Value input3)
+    {
+        auto castedOp0 = dyn_cast_or_null<NGAddOp>(old_op);
+        SmallVector<Value, 4> values{input1, input2, input3};
+        SmallVector<NamedAttribute, 4> attrs;
+        attrs.emplace_back(
+            rewriter.getIdentifier("alpha"),
+            rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(), 1.0));
+        attrs.emplace_back(
+            rewriter.getIdentifier("beta"),
+            rewriter.getFloatAttr(mlir::Builder(rewriter.getContext()).getF32Type(), 1.0));
+        attrs.emplace_back(rewriter.getIdentifier("transA"), rewriter.getBoolAttr(false));
+        attrs.emplace_back(rewriter.getIdentifier("transB"), rewriter.getBoolAttr(false));
+        SmallVector<Type, 4> types;
+        for (auto v : castedOp0.getODSResults(0))
+        {
+            types.push_back(v.getType());
+        }
+        return rewriter.create<NGGemmOp>(castedOp0.getLoc(), types, values, attrs);
+    }
 
 #include "fused_ops_pattern.h.inc"
-} // namespace mlir
-namespace {
-class NgDialectFusedOpsPass
-    : public PassWrapper<NgDialectFusedOpsPass, OperationPass<ModuleOp>> {
-public:
-  NgDialectFusedOpsPass() {}
+}
+namespace
+{
+    class NgDialectFusedOpsPass : public PassWrapper<NgDialectFusedOpsPass, OperationPass<ModuleOp>>
+    {
+    public:
+        NgDialectFusedOpsPass() {}
 
-private:
-  void runOnOperation() override;
-};
+    private:
+        void runOnOperation() override;
+    };
 } // namespace
 
-void NgDialectFusedOpsPass::runOnOperation() {
-  OwningRewritePatternList patterns;
-  mlir::populateWithGenerated(&getContext(), &patterns);
+void NgDialectFusedOpsPass::runOnOperation()
+{
+    OwningRewritePatternList patterns;
+    mlir::populateWithGenerated(&getContext(), &patterns);
 
-  // Gather functions to be processed. Note that new functions will be added to
-  // module as part
-  // of the function signature conversion so we have to collect the original
-  // ones before hand.
-  SmallVector<FuncOp, 2> origFuncOps(getOperation().getOps<FuncOp>());
+    // Gather functions to be processed. Note that new functions will be added to
+    // module as part
+    // of the function signature conversion so we have to collect the original
+    // ones before hand.
+    SmallVector<FuncOp, 2> origFuncOps(getOperation().getOps<FuncOp>());
 
-  for (auto origFunc : origFuncOps) {
-    applyPatternsAndFoldGreedily(origFunc, patterns);
-  }
+    for (auto origFunc : origFuncOps)
+    {
+        applyPatternsAndFoldGreedily(origFunc, patterns);
+    }
 }
 
-std::unique_ptr<Pass> ngraph::pass::createNgDialectFusedOpsPass() {
-  return std::make_unique<NgDialectFusedOpsPass>();
+std::unique_ptr<Pass> ngraph::pass::createNgDialectFusedOpsPass()
+{
+    return std::make_unique<NgDialectFusedOpsPass>();
 }
 
 static PassRegistration<NgDialectFusedOpsPass>
