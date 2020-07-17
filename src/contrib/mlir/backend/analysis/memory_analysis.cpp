@@ -597,7 +597,7 @@ namespace
 
         return bufferSize;
     }
-} // namespace
+}
 
 namespace mlir
 {

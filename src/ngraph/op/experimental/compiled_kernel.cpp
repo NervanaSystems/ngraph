@@ -15,9 +15,11 @@
 //*****************************************************************************
 
 #include "ngraph/op/experimental/compiled_kernel.hpp"
-
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/op/parameter.hpp"
+#include "ngraph/type.hpp"
+// #include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -85,6 +87,16 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_node_list(node_list)
     , m_outputs(outputs)
 {
+    ParameterVector inputs;
+    for (auto input : args)
+    {
+        if (!ngraph::is_type<ngraph::op::Parameter>(input.get_node_shared_ptr()))
+        {
+            NGRAPH_INFO << "input is not parameter " << input;
+        }
+        inputs.push_back(dynamic_pointer_cast<ngraph::op::Parameter>(input.get_node_shared_ptr()));
+    }
+    m_function = clone_function(*make_shared<ngraph::Function>(outputs, inputs).get());
     constructor_validate_and_infer_types();
     encapsulate_nodes();
     set_output_size(m_outputs.size());

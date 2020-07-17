@@ -54,12 +54,15 @@ namespace ngraph
                 }
                 void insert_to_input_map(std::shared_ptr<Node>, size_t);
 
+                std::shared_ptr<ngraph::Function> get_function() { return m_function; }
+
             private:
                 NodeVector m_node_list;
                 OutputVector m_outputs;
                 // Used to store the information of internal nodes that have input coming from
                 // outside of CK
                 std::unordered_map<std::shared_ptr<Node>, size_t> m_input_map;
+                std::shared_ptr<ngraph::Function> m_function;
             };
         }
         using v0::CompiledKernel;

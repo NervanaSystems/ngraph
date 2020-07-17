@@ -95,7 +95,7 @@ namespace
         // Hold all the fusion groups created by this pass.
         SmallVector<OpFusionGroup, 64> fusionGroups;
     };
-} // namespace
+}
 
 /// This utility implements the logic to fuse 'op' into the fusion group
 /// 'currGroup'.

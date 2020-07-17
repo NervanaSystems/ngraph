@@ -2972,7 +2972,7 @@ namespace
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }
-} // namespace
+}
 
 namespace mlir
 {

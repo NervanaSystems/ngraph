@@ -115,7 +115,7 @@ void MLIRCompiler::buildNgDialectModule()
     m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     mlir::PassManager pm(&m_context);
-    pm.addPass(ngraph::pass::createNgDialectConversionPass(m_compiledKernel, &m_context));
+    pm.addPass(ngraph::pass::createNgDialectConversionPass(m_function, &m_context));
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);
