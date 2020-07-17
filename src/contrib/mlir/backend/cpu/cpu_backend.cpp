@@ -47,28 +47,32 @@
 // *** Optimization flags ***
 
 static llvm::cl::opt<bool> clEnableNgInPlaceMemoryOpt(
-    "ng-inplace-mem-opt", llvm::cl::init(false),
+    "ng-inplace-mem-opt",
+    llvm::cl::init(false),
     llvm::cl::desc("Enable ngraph dialect in-place memory optimization pass"));
 
-static llvm::cl::opt<bool> clEnableAffineLoopFusion(
-    "ngraph-affine-loop-fusion", llvm::cl::init(false),
-    llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
+static llvm::cl::opt<bool>
+    clEnableAffineLoopFusion("ngraph-affine-loop-fusion",
+                             llvm::cl::init(false),
+                             llvm::cl::desc("Enable loop fusion optimization in Affine dialect"));
 
-static llvm::cl::opt<bool> clEnableAffineLoopTiling(
-    "ngraph-affine-loop-tile", llvm::cl::init(false),
-    llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
+static llvm::cl::opt<bool>
+    clEnableAffineLoopTiling("ngraph-affine-loop-tile",
+                             llvm::cl::init(false),
+                             llvm::cl::desc("Enable loop tiling optimization in Affine dialect"));
 
-static llvm::cl::opt<unsigned> clLoopTilingCacheLevel(
-    "ngraph-affine-loop-tile-cache-level", llvm::cl::init(2),
-    llvm::cl::desc("Cache level to which to apply affine loop tiling."));
+static llvm::cl::opt<unsigned>
+    clLoopTilingCacheLevel("ngraph-affine-loop-tile-cache-level",
+                           llvm::cl::init(2),
+                           llvm::cl::desc("Cache level to which to apply affine loop tiling."));
 
 static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
-    "ngraph-affine-loop-tile-cache-size", llvm::cl::init(0),
-    llvm::cl::desc(
-        "Cache size to use in affine loop tiling. If not zero, it overrides "
-        "the cache-size "
-        "inferred from the host CPU using for the cache level specified by "
-        "-ngraph-loop-tile-cache-level."));
+    "ngraph-affine-loop-tile-cache-size",
+    llvm::cl::init(0),
+    llvm::cl::desc("Cache size to use in affine loop tiling. If not zero, it overrides "
+                   "the cache-size "
+                   "inferred from the host CPU using for the cache level specified by "
+                   "-ngraph-loop-tile-cache-level."));
 
 // Enable the lowering of MemRefs to LLVM bare pointers.
 extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
@@ -77,8 +81,7 @@ using namespace ngraph::runtime::ngmlir;
 using namespace mlir;
 
 // Default optimization level.
-llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel =
-    llvm::CodeGenOpt::Level::Aggressive;
+llvm::CodeGenOpt::Level MLIRCPUBackend::mlirOptLevel = llvm::CodeGenOpt::Level::Aggressive;
 
 std::unique_ptr<llvm::TargetMachine> MLIRCPUBackend::targetMachine;
 
@@ -86,134 +89,150 @@ bool MLIRCPUBackend::initialized = false;
 
 /// Creates target machine for current host.
 static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
-createDefaultTargetMachine(unsigned optLevel) {
-  auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
-  if (!machineBuilder) {
-    return machineBuilder.takeError();
-  }
+    createDefaultTargetMachine(unsigned optLevel)
+{
+    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
+    if (!machineBuilder)
+    {
+        return machineBuilder.takeError();
+    }
 
-  // Relocation model and code model are kept to default values. CodeGen
-  // optimization level
-  // matches LLVM recommendations, i.e.:
-  // enum Level {
-  //   None,        // -O0
-  //   Less,        // -O1
-  //   Default,     // -O2, -Os
-  //   Aggressive   // -O3
-  // };
-  machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)optLevel);
-  return machineBuilder->createTargetMachine();
+    // Relocation model and code model are kept to default values. CodeGen
+    // optimization level
+    // matches LLVM recommendations, i.e.:
+    // enum Level {
+    //   None,        // -O0
+    //   Less,        // -O1
+    //   Default,     // -O2, -Os
+    //   Aggressive   // -O3
+    // };
+    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)optLevel);
+    return machineBuilder->createTargetMachine();
 }
 
 /// Returns the cache level size from `targetInfo` for the `cacheLevel`
 /// provided. If `userCacheSize`
 /// is not zero, it returns `userCacheSize`.
-static unsigned getCacheLevelSize(llvm::TargetTransformInfo &targetInfo,
-                                  unsigned cacheLevel, unsigned userCacheSize) {
-  if (userCacheSize) {
-    return userCacheSize;
-  }
-
-  llvm::Optional<unsigned> optCacheLevelSize;
-  switch (cacheLevel) {
-  case 1:
-    optCacheLevelSize =
-        targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L1D);
-    break;
-  case 2:
-    optCacheLevelSize =
-        targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L2D);
-    break;
-  default:
-    NGRAPH_UNREACHABLE("Unsupported cache level: ", cacheLevel,
-                       ". Only 1 and 2 are supported");
-  }
-
-  NGRAPH_CHECK(optCacheLevelSize.hasValue() &&
-               "Cache level size is not available in TTI");
-  return optCacheLevelSize.getValue();
-}
-
-void MLIRCPUBackend::init() {
-  // Mutex to safely initialize CPU backend
-  static std::mutex mlirInitMutex;
-
-  std::unique_lock<std::mutex> lock(mlirInitMutex);
-
-  if (!initialized) {
-    // Override default optimization level with macro value.
-    int32_t clOptLevel = getenv_int("NGRAPH_MLIR_OPT_LEVEL");
-    // -1 is the value returned if the env variable is not set
-    if (clOptLevel != -1) {
-      NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3,
-                   "Invalid optimization level");
-      mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
+static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
+                                  unsigned cacheLevel,
+                                  unsigned userCacheSize)
+{
+    if (userCacheSize)
+    {
+        return userCacheSize;
     }
 
-    // Initialize LLVM targets and target machine for current host.
-    llvm::InitializeNativeTarget();
-    llvm::InitializeNativeTargetAsmPrinter();
-    auto expectedTargetMachine = createDefaultTargetMachine(mlirOptLevel);
-    NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
-    targetMachine = std::move(*expectedTargetMachine);
+    llvm::Optional<unsigned> optCacheLevelSize;
+    switch (cacheLevel)
+    {
+    case 1:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L1D);
+        break;
+    case 2:
+        optCacheLevelSize = targetInfo.getCacheSize(llvm::TargetTransformInfo::CacheLevel::L2D);
+        break;
+    default:
+        NGRAPH_UNREACHABLE("Unsupported cache level: ", cacheLevel, ". Only 1 and 2 are supported");
+    }
 
-    initialized = true;
-  }
+    NGRAPH_CHECK(optCacheLevelSize.hasValue() && "Cache level size is not available in TTI");
+    return optCacheLevelSize.getValue();
 }
 
-void MLIRCPUBackend::codegen() { lowerNgDialect(); }
+void MLIRCPUBackend::init()
+{
+    // Mutex to safely initialize CPU backend
+    static std::mutex mlirInitMutex;
 
-void MLIRCPUBackend::lowerNgDialect() {
-  // Lower NG dialect to Affine
-  mlir::PassManager pm(&m_context);
-  pm.addPass(mlir::createDialectLoweringPass());
-  pm.addPass(mlir::createCanonicalizerPass());
+    std::unique_lock<std::mutex> lock(mlirInitMutex);
 
-  // Apply any generic pass manager command line options.
-  mlir::applyPassManagerCLOptions(pm);
+    if (!initialized)
+    {
+        // Override default optimization level with macro value.
+        int32_t clOptLevel = getenv_int("NGRAPH_MLIR_OPT_LEVEL");
+        // -1 is the value returned if the env variable is not set
+        if (clOptLevel != -1)
+        {
+            NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
+            mlirOptLevel = (llvm::CodeGenOpt::Level)clOptLevel;
+        }
 
-  if (failed(pm.run(m_module.get()))) {
-    NGRAPH_CHECK(false, "MLIR pass manager failed");
-  }
+        // Initialize LLVM targets and target machine for current host.
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+        auto expectedTargetMachine = createDefaultTargetMachine(mlirOptLevel);
+        NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
+        targetMachine = std::move(*expectedTargetMachine);
 
-  if (failed(m_module->verify())) {
-    NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
-  }
+        initialized = true;
+    }
+}
 
-  optimizeAffineDialect();
+void MLIRCPUBackend::codegen()
+{
+    lowerNgDialect();
+}
 
-  NGRAPH_CHECK(m_module, "MLIR module is not ready.");
+void MLIRCPUBackend::lowerNgDialect()
+{
+    // Lower NG dialect to Affine
+    mlir::PassManager pm(&m_context);
+    pm.addPass(mlir::createDialectLoweringPass());
+    pm.addPass(mlir::createCanonicalizerPass());
 
-  lowerStandardDialect();
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
+
+    if (failed(m_module->verify()))
+    {
+        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
+    }
+
+    optimizeAffineDialect();
+
+    NGRAPH_CHECK(m_module, "MLIR module is not ready.");
+
+    lowerStandardDialect();
 }
 
 // Lower Standard dialect to LLVM dialect
-void MLIRCPUBackend::lowerStandardDialect() {
-  mlir::PassManager pm(&m_context);
-  // We lower memrefs to a fat memref descriptor by default. If
-  // 'clEnableBarePtrMemRefLowering' is
-  // specified, we lower memref arguments to bare pointers to the memref element
-  // type.
-  if (clEnableBarePtrMemRefLowering) {
-    LowerToLLVMOptions llvmOptions;
-    llvmOptions.useBarePtrCallConv = true, llvmOptions.emitCWrappers = false,
-    pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
-  } else {
-    LowerToLLVMOptions llvmOptions;
-    llvmOptions.useBarePtrCallConv = false, llvmOptions.emitCWrappers = true,
-    pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
-  }
+void MLIRCPUBackend::lowerStandardDialect()
+{
+    mlir::PassManager pm(&m_context);
+    // We lower memrefs to a fat memref descriptor by default. If
+    // 'clEnableBarePtrMemRefLowering' is
+    // specified, we lower memref arguments to bare pointers to the memref element
+    // type.
+    if (clEnableBarePtrMemRefLowering)
+    {
+        LowerToLLVMOptions llvmOptions;
+        llvmOptions.useBarePtrCallConv = true, llvmOptions.emitCWrappers = false,
+        pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
+    }
+    else
+    {
+        LowerToLLVMOptions llvmOptions;
+        llvmOptions.useBarePtrCallConv = false, llvmOptions.emitCWrappers = true,
+        pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
+    }
 
-  // Apply any generic pass manager command line options.
-  mlir::applyPassManagerCLOptions(pm);
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
 
-  if (failed(pm.run(m_module.get()))) {
-    NGRAPH_CHECK(false, "MLIR pass manager failed");
-  }
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
 
-  if (failed(m_module->verify())) {
-    NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
-  }
+    if (failed(m_module->verify()))
+    {
+        NGRAPH_CHECK(false, "Incorrect module after dialect lowering");
+    }
 }
 
 // Receives affine dialect as input and applies affine and standard dialect
@@ -221,52 +240,51 @@ void MLIRCPUBackend::lowerStandardDialect() {
 // Lowering from affine dialect to standard dialect happens along the way.
 // Output consists of
 // standard dialect only ops.
-void MLIRCPUBackend::optimizeAffineDialect() {
-  // Create target transform info to obtain some target information to be used
-  // in MLIR
-  // optimizations. This is a temporary attempt to retrieve some target
-  // information by reusing
-  // LLVM TTI infra while MLIR does not have target model.
-  llvm::LLVMContext llvmContext;
-  auto module =
-      std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
-  module->setDataLayout(targetMachine->createDataLayout());
-  auto ttiSetupFunc = llvm::cast<llvm::Function>(
-      module
-          ->getOrInsertFunction(
-              "__ngraph_tti_setup",
-              llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), {}))
-          .getCallee());
-  auto targetInfo = targetMachine->getTargetTransformInfo(*ttiSetupFunc);
+void MLIRCPUBackend::optimizeAffineDialect()
+{
+    // Create target transform info to obtain some target information to be used
+    // in MLIR
+    // optimizations. This is a temporary attempt to retrieve some target
+    // information by reusing
+    // LLVM TTI infra while MLIR does not have target model.
+    llvm::LLVMContext llvmContext;
+    auto module = std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
+    module->setDataLayout(targetMachine->createDataLayout());
+    auto ttiSetupFunc = llvm::cast<llvm::Function>(
+        module
+            ->getOrInsertFunction("__ngraph_tti_setup",
+                                  llvm::FunctionType::get(llvm::Type::getVoidTy(llvmContext), {}))
+            .getCallee());
+    auto targetInfo = targetMachine->getTargetTransformInfo(*ttiSetupFunc);
 
-  // Populate pass manager with affine dialect optimizations.
-  mlir::PassManager pm(&m_context);
-  if (clEnableAffineLoopFusion) {
-    pm.addPass(mlir::createLoopFusionPass());
-  }
+    // Populate pass manager with affine dialect optimizations.
+    mlir::PassManager pm(&m_context);
+    if (clEnableAffineLoopFusion)
+    {
+        pm.addPass(mlir::createLoopFusionPass());
+    }
 
-  if (clEnableAffineLoopTiling) {
-    unsigned cacheLevelSize = getCacheLevelSize(
-        targetInfo, clLoopTilingCacheLevel, clLoopTilingCacheSize);
-    LLVM_DEBUG(llvm::dbgs() << "Enabling Affine Loop Tiling for cache level "
-                            << clLoopTilingCacheLevel << ": " << cacheLevelSize
-                            << " bytes.\n");
-    pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
-  }
+    if (clEnableAffineLoopTiling)
+    {
+        unsigned cacheLevelSize =
+            getCacheLevelSize(targetInfo, clLoopTilingCacheLevel, clLoopTilingCacheSize);
+        LLVM_DEBUG(llvm::dbgs() << "Enabling Affine Loop Tiling for cache level "
+                                << clLoopTilingCacheLevel << ": " << cacheLevelSize << " bytes.\n");
+        pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
+    }
 
-  // Populate pass manager with affine-to-loop and loop-to-std dialect
-  // conversions.
-  pm.addPass(mlir::createLowerAffinePass());
-  pm.addPass(mlir::createLowerToCFGPass());
+    // Populate pass manager with affine-to-loop and loop-to-std dialect
+    // conversions.
+    pm.addPass(mlir::createLowerAffinePass());
+    pm.addPass(mlir::createLowerToCFGPass());
 
-  // Apply any generic pass manager command line options.
-  mlir::applyPassManagerCLOptions(pm);
+    // Apply any generic pass manager command line options.
+    mlir::applyPassManagerCLOptions(pm);
 
-  // Run pass manager passes.
-  auto result = pm.run(m_module.get());
-  NGRAPH_CHECK(succeeded(result),
-               "Affine optimizaitons and convertion to Std dialect failed");
+    // Run pass manager passes.
+    auto result = pm.run(m_module.get());
+    NGRAPH_CHECK(succeeded(result), "Affine optimizaitons and convertion to Std dialect failed");
 
-  // Run Std dialect optimizations.
-  // TODO
+    // Run Std dialect optimizations.
+    // TODO
 }

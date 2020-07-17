@@ -20,24 +20,28 @@
 // MLIR API.
 
 #include "memory_manager.hpp"
-#include "ngraph/ngraph_visibility.hpp"
 #include <memory>
+#include "ngraph/ngraph_visibility.hpp"
 
 using namespace ngraph::runtime::ngmlir;
 
 /// Call back to allocate memory for temps from JIT'ed code
-extern "C" NGRAPH_API void *__mlir_allocate(MLIRMemMgr *memMgr, size_t size) {
-  return memMgr->allocate(size);
+extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* memMgr, size_t size)
+{
+    return memMgr->allocate(size);
 }
 
-void *MLIRMemMgr::allocate(size_t size) {
-  void *ptr = malloc(size);
-  ptrList.push_back(ptr);
-  return ptr;
+void* MLIRMemMgr::allocate(size_t size)
+{
+    void* ptr = malloc(size);
+    ptrList.push_back(ptr);
+    return ptr;
 }
 
-void MLIRMemMgr::freeAll() {
-  for (auto p : ptrList) {
-    free(p);
-  }
+void MLIRMemMgr::freeAll()
+{
+    for (auto p : ptrList)
+    {
+        free(p);
+    }
 }

@@ -33,7 +33,6 @@
 #include "contrib/mlir/utils.hpp"
 #include "ngraph/check.hpp"
 
-#include "llvm/Support/InitLLVM.h"
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/ToolOutputFile.h>
@@ -41,52 +40,56 @@
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Support/FileUtilities.h>
 #include <mlir/Support/MlirOptMain.h>
-
-static llvm::cl::opt<std::string> input_filename(llvm::cl::Positional,
-                                                 llvm::cl::desc("<input file>"),
-                                                 llvm::cl::init("-"));
+#include "llvm/Support/InitLLVM.h"
 
 static llvm::cl::opt<std::string>
-    output_filename("o", llvm::cl::desc("Output filename"),
-                    llvm::cl::value_desc("filename"), llvm::cl::init("-"));
+    input_filename(llvm::cl::Positional, llvm::cl::desc("<input file>"), llvm::cl::init("-"));
 
-static llvm::cl::opt<bool> split_input_file(
-    "split-input-file",
-    llvm::cl::desc("Split the input file into pieces and process each "
-                   "chunk independently"),
-    llvm::cl::init(false));
+static llvm::cl::opt<std::string> output_filename("o",
+                                                  llvm::cl::desc("Output filename"),
+                                                  llvm::cl::value_desc("filename"),
+                                                  llvm::cl::init("-"));
 
-static llvm::cl::opt<bool> verify_diagnostics(
-    "verify-diagnostics",
-    llvm::cl::desc("Check that emitted diagnostics match "
-                   "expected-* lines on the corresponding line"),
-    llvm::cl::init(false));
+static llvm::cl::opt<bool>
+    split_input_file("split-input-file",
+                     llvm::cl::desc("Split the input file into pieces and process each "
+                                    "chunk independently"),
+                     llvm::cl::init(false));
 
-static llvm::cl::opt<bool> verify_passes(
-    "verify-each",
-    llvm::cl::desc("Run the verifier after each transformation pass"),
-    llvm::cl::init(true));
+static llvm::cl::opt<bool>
+    verify_diagnostics("verify-diagnostics",
+                       llvm::cl::desc("Check that emitted diagnostics match "
+                                      "expected-* lines on the corresponding line"),
+                       llvm::cl::init(false));
 
-int main(int argc, char **argv) {
-  llvm::InitLLVM y(argc, argv);
-  ngraph::runtime::ngmlir::initializeNGraphMLIR();
+static llvm::cl::opt<bool>
+    verify_passes("verify-each",
+                  llvm::cl::desc("Run the verifier after each transformation pass"),
+                  llvm::cl::init(true));
 
-  // Register any pass manager command line options.
-  mlir::registerPassManagerCLOptions();
-  mlir::PassPipelineCLParser passPipeline("", "Compiler passes to run");
-  llvm::cl::ParseCommandLineOptions(argc, argv,
-                                    "nGraph MLIR modular optimizer driver\n");
+int main(int argc, char** argv)
+{
+    llvm::InitLLVM y(argc, argv);
+    ngraph::runtime::ngmlir::initializeNGraphMLIR();
 
-  // Set up the input file.
-  std::string error_message;
-  auto file = mlir::openInputFile(input_filename, &error_message);
-  NGRAPH_CHECK(file, error_message);
+    // Register any pass manager command line options.
+    mlir::registerPassManagerCLOptions();
+    mlir::PassPipelineCLParser passPipeline("", "Compiler passes to run");
+    llvm::cl::ParseCommandLineOptions(argc, argv, "nGraph MLIR modular optimizer driver\n");
 
-  auto output = mlir::openOutputFile(output_filename, &error_message);
-  NGRAPH_CHECK(output, error_message);
+    // Set up the input file.
+    std::string error_message;
+    auto file = mlir::openInputFile(input_filename, &error_message);
+    NGRAPH_CHECK(file, error_message);
 
-  return failed(mlir::MlirOptMain(output->os(), std::move(file), passPipeline,
-                                  split_input_file, verify_diagnostics,
-                                  verify_passes,
-                                  /*allowUnregisteredDialects = */ false));
+    auto output = mlir::openOutputFile(output_filename, &error_message);
+    NGRAPH_CHECK(output, error_message);
+
+    return failed(mlir::MlirOptMain(output->os(),
+                                    std::move(file),
+                                    passPipeline,
+                                    split_input_file,
+                                    verify_diagnostics,
+                                    verify_passes,
+                                    /*allowUnregisteredDialects = */ false));
 }
