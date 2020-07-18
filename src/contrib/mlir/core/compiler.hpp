@@ -61,7 +61,7 @@ namespace ngraph
                 static void init();
 
             public:
-                MLIRCompiler(std::shared_ptr<ngraph::Function> function, mlir::MLIRContext& context)
+                MLIRCompiler(std::shared_ptr<ngraph::Function> function, ::mlir::MLIRContext& context)
                     : m_function(function)
                     , m_context(context)
                 {
@@ -76,7 +76,7 @@ namespace ngraph
                 /// Compiles a subgraph with MLIR
                 void compile();
 
-                mlir::OwningModuleRef& get_module() { return m_module; }
+                ::mlir::OwningModuleRef& get_module() { return m_module; }
 
             private:
                 // Converts an nGraph sub-graph to MLIR nGraph dialect.
@@ -90,8 +90,8 @@ namespace ngraph
 
                 // MLIR context that holds all the MLIR information related to the sub-graph
                 // compilation.
-                mlir::MLIRContext& m_context;
-                mlir::OwningModuleRef m_module;
+                ::mlir::MLIRContext& m_context;
+                ::mlir::OwningModuleRef m_module;
 
                 // Global initialization for MLIR compiler
                 static bool initialized;
