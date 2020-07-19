@@ -200,113 +200,87 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
         NGRAPH_INFO;
     }
 
-    // convert inputs to HostTensor
+    std::vector<runtime::ngmlir::MemRefArg> mem_ref_arg_vec;
     NGRAPH_INFO;
-    vector<shared_ptr<HostTensor>> func_inputs;
     for (auto tensor : inputs)
     {
-        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
-        func_inputs.push_back(host_tensor);
+        auto host_tensor = dynamic_pointer_cast<runtime::HostTensor>(tensor);
+        if (!host_tensor)
+        {
+            throw runtime_error("call args are not HostTensor");
+        }
+        runtime::ngmlir::MemRefArg mem_ref_arg;
+        mem_ref_arg.m_tensor = host_tensor->get_data_ptr();
+        mem_ref_arg.m_shape = tensor->get_shape();
+        mem_ref_arg.m_strides = tensor->get_strides();
+        mem_ref_arg_vec.push_back(mem_ref_arg);
     }
 
     // convert outputs to HostTensor
     NGRAPH_INFO;
-    vector<shared_ptr<HostTensor>> func_outputs;
     for (auto tensor : outputs)
     {
-        auto host_tensor = static_pointer_cast<runtime::HostTensor>(tensor);
-        func_outputs.push_back(host_tensor);
+        auto host_tensor = dynamic_pointer_cast<runtime::HostTensor>(tensor);
+        if (!host_tensor)
+        {
+            throw runtime_error("call args are not HostTensor");
+        }
+        runtime::ngmlir::MemRefArg mem_ref_arg;
+        mem_ref_arg.m_tensor = host_tensor->get_data_ptr();
+        mem_ref_arg.m_shape = tensor->get_shape();
+        mem_ref_arg.m_strides = tensor->get_strides();
+        mem_ref_arg_vec.push_back(mem_ref_arg);
     }
 
-    // map function params -> HostTensor
+    static bool first_iteration = true;
+    m_mlir_runtime.run(mem_ref_arg_vec, first_iteration);
+    first_iteration = false;
+
+    // // map function params -> HostTensor
+    // NGRAPH_INFO;
+    // unordered_map<descriptor::Tensor*, shared_ptr<HostTensor>> tensor_map;
+    // size_t input_count = 0;
+    // for (auto param : get_parameters())
+    // {
+    //     NGRAPH_INFO << *param;
+    //     for (size_t i = 0; i < param->get_output_size(); ++i)
+    //     {
+    //         descriptor::Tensor* tensor = &param->output(i).get_tensor();
+    //         NGRAPH_INFO << static_cast<void*>(tensor);
+    //         NGRAPH_INFO << tensor->get_tensor_layout()->get_shape();
+    //         NGRAPH_INFO;
+    //         NGRAPH_INFO << tensor->get_tensor_layout()->get_strides();
+    //         NGRAPH_INFO;
+    //         tensor_map.insert({tensor, func_inputs[input_count++]});
+    //     }
+    // }
+
+    // // map function outputs -> HostTensor
+    // NGRAPH_INFO;
+    // for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
+    // {
+    //     auto output = get_results()[output_count];
+    //     if (!is_type<op::Result>(output))
+    //     {
+    //         throw ngraph_error("One of function's outputs isn't op::Result");
+    //     }
+    //     descriptor::Tensor* tensor = &output->get_output_tensor(0);
+    //     tensor_map.insert({tensor, func_outputs[output_count]});
+    // }
+
     NGRAPH_INFO;
-    unordered_map<descriptor::Tensor*, shared_ptr<HostTensor>> tensor_map;
-    size_t input_count = 0;
-    for (auto param : get_parameters())
-    {
-        for (size_t i = 0; i < param->get_output_size(); ++i)
-        {
-            descriptor::Tensor* tensor = &param->output(i).get_tensor();
-            tensor_map.insert({tensor, func_inputs[input_count++]});
-        }
-    }
-
-    // map function outputs -> HostTensor
-    NGRAPH_INFO;
-    for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
-    {
-        auto output = get_results()[output_count];
-        if (!is_type<op::Result>(output))
-        {
-            throw ngraph_error("One of function's outputs isn't op::Result");
-        }
-        descriptor::Tensor* tensor = &output->get_output_tensor(0);
-        tensor_map.insert({tensor, func_outputs[output_count]});
-    }
-
-    // for each ordered op in the graph
-    NGRAPH_INFO;
-    for (auto op : m_nodes)
-    {
-        event::Duration d2(op->description(), "Interpreter");
-        if (op->is_parameter())
-        {
-            continue;
-        }
-
-        // get op inputs from map
-        vector<shared_ptr<HostTensor>> op_inputs;
-        for (auto input : op->inputs())
-        {
-            descriptor::Tensor* tensor = &input.get_tensor();
-            op_inputs.push_back(tensor_map.at(tensor));
-        }
-
-        // get op outputs from map or create
-        vector<shared_ptr<HostTensor>> op_outputs;
-        for (size_t i = 0; i < op->get_output_size(); ++i)
-        {
-            descriptor::Tensor* tensor = &op->output(i).get_tensor();
-            shared_ptr<HostTensor> host_tensor;
-            auto it = tensor_map.find(tensor);
-            if (it == tensor_map.end())
-            {
-                host_tensor = make_shared<HostTensor>(op->output(i));
-                tensor_map.insert({tensor, host_tensor});
-            }
-            else
-            {
-                host_tensor = it->second;
-            }
-            op_outputs.push_back(host_tensor);
-        }
-
-        // get op type
-        element::Type type;
-        if (is_type<op::Convert>(op) || is_type<op::Quantize>(op) || is_type<op::Dequantize>(op) ||
-            is_type<op::ArgMin>(op) || is_type<op::ArgMax>(op))
-        {
-            type = op->get_input_element_type(0);
-        }
-        else if (is_type<op::Equal>(op) || is_type<op::Greater>(op) || is_type<op::GreaterEq>(op) ||
-                 is_type<op::Less>(op) || is_type<op::LessEq>(op) || is_type<op::NotEqual>(op))
-        {
-            // Get the type of the second input, not the first
-            // All BinaryElementwiseComparision ops have the same type for inputs
-            // Select has bool for first input and the type we are interested in for the second
-            type = op->get_input_element_type(1);
-        }
-        else if (is_type<op::TopK>(op))
-        {
-            type = op->get_output_element_type(1);
-        }
-        else
-        {
-            type = op->get_output_element_type(0);
-        }
-
-        // generate_calls(type, *op.get(), op_outputs, op_inputs);
-    }
+    // MLIR requires a list of type-erased pointer to arguments. Tensors must have
+    // been allocated at this point so we can get rid of the extra reference.
+    int i = 0;
+    // for (auto& buffer_index : buffer_indices)
+    // {
+    //     runtime::ngmlir::MemRefArg mem_ref_arg;
+    //     mem_ref_arg.m_tensor = ctx->buffer_data[buffer_index];
+    //     mem_ref_arg.m_shape = shape_vec[i];
+    //     mem_ref_arg.m_strides = strides_vec[i];
+    //     mem_ref_arg_vec.push_back(mem_ref_arg);
+    //     i++;
+    // }
 
     return true;
 }
@@ -380,8 +354,8 @@ vector<shared_ptr<runtime::Tensor>>
     return result_tensors;
 }
 
-void ngraph::runtime::mlir::MlirRuntime::run(const std::vector<runtime::ngmlir::MemRefArg>& args,
-                                             bool firstIteration)
-{
-    NGRAPH_INFO << "in run";
-}
+// void ngraph::runtime::mlir::MlirRuntime::run(const std::vector<runtime::ngmlir::MemRefArg>& args,
+//                                              bool firstIteration)
+// {
+//     NGRAPH_INFO << "in run";
+// }
