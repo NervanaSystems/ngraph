@@ -26,13 +26,13 @@
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
 #include "ngraph/pass/core_fusion.hpp"
-#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/pass/opset1_downgrade.hpp"
+#include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -67,11 +67,8 @@ runtime::mlir::OP_TYPEID runtime::mlir::MlirExecutable::get_typeid(const Node& n
 runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
 {
-    NGRAPH_INFO;
     ngmlir::MLIRCompiler::init();
-    NGRAPH_INFO;
     ngmlir::MLIRCPUBackend::init();
-    NGRAPH_INFO;
 
     m_function = clone_function(*function);
 
@@ -111,13 +108,10 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
 bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    NGRAPH_INFO;
     event::Duration d1("call", "Interpreter");
 
-    if (!is_compiled)
+    if (m_first_iteration)
     {
-        is_compiled = true;
-
         ::mlir::MLIRContext& context = m_mlir_runtime.get_context();
         runtime::ngmlir::MLIRCompiler mlir_compiler(m_function, context);
         // Compile to NG dialect
@@ -130,7 +124,6 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
         m_mlir_runtime.set_module(mlir_backend.get_module());
     }
 
-    NGRAPH_INFO;
     std::vector<runtime::ngmlir::MemRefArg> mem_ref_arg_vec;
     for (auto tensor : inputs)
     {
@@ -161,9 +154,7 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
         mem_ref_arg_vec.push_back(mem_ref_arg);
     }
 
-    NGRAPH_INFO << m_first_iteration;
     m_mlir_runtime.run(mem_ref_arg_vec, m_first_iteration);
-    NGRAPH_INFO;
     m_first_iteration = false;
 
     return true;

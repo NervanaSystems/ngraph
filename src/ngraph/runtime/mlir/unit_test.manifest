@@ -7,7 +7,7 @@ concat_zero_length_1d_middle
 parameter_as_output
 
 # Fail due to numeric errors
-abs
+#abs
 acos
 acosh
 aliased_output

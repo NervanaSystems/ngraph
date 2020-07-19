@@ -63,10 +63,6 @@ namespace
             , m_context(context)
             , m_builder(context)
         {
-            for (auto node : function->get_ordered_ops())
-            {
-                NGRAPH_INFO << *node;
-            }
         }
 
         NgDialectConversionPass(const NgDialectConversionPass& obj);
@@ -293,10 +289,6 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
     auto& region = function.getBody();
     m_builder.setInsertionPoint(&region.front(), region.front().begin());
     const NodeVector& subGraph = m_function->get_ordered_ops();
-    for (auto np : subGraph)
-    {
-        NGRAPH_INFO << *np;
-    }
 
     auto& opDispatcher = getOpDispatcher();
     for (auto np : subGraph)
