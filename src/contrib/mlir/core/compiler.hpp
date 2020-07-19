@@ -61,7 +61,8 @@ namespace ngraph
                 static void init();
 
             public:
-                MLIRCompiler(std::shared_ptr<ngraph::Function> function, ::mlir::MLIRContext& context)
+                MLIRCompiler(std::shared_ptr<ngraph::Function> function,
+                             ::mlir::MLIRContext& context)
                     : m_function(function)
                     , m_context(context)
                 {
