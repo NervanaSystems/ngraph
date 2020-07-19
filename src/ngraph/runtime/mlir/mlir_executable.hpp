@@ -23,12 +23,12 @@
 #include <string>
 #include <vector>
 
+#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
+#include "contrib/mlir/runtime/runtime.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "contrib/mlir/runtime/runtime.hpp"
-#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
@@ -42,7 +42,6 @@ namespace ngraph
         {
             class MlirBackend;
             class MlirExecutable;
-            class MlirRuntime;
 
             // This expands the op list in op_tbl.hpp into a list of enumerations that look like
             // this:
@@ -59,12 +58,6 @@ namespace ngraph
         }
     }
 }
-
-// class ngraph::runtime::mlir::MlirRuntime : public runtime::ngmlir::MLIRRuntime
-// {
-// public:
-//     void run(const std::vector<runtime::ngmlir::MemRefArg>& args, bool firstIteration) override;
-// };
 
 class MLIR_BACKEND_API ngraph::runtime::mlir::MlirExecutable : public Executable
 {
