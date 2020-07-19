@@ -1332,6 +1332,12 @@ namespace
         return success();
     }
 
+    REWRITER(NGAbsOp)
+    {
+        lowerUnaryElementwise<mlir::NGAbsOp>(op, operands, rewriter, pass);
+        return success();
+    }
+
     REWRITER(NGDotOp)
     {
         auto dot = cast<NGDotOp>(op);
@@ -2580,6 +2586,7 @@ namespace
 
         NGRAPH_CHECK(lhs.getType().isa<MemRefType>());
         Type elemTy = lhs.getType().cast<MemRefType>().getElementType();
+        auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
 
         AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
             Value val = iLHS(ivs);
@@ -2587,6 +2594,11 @@ namespace
             {
                 Value zero = createZeroConstant(elemTy);
                 iRes(ivs) = zero - val;
+            }
+            else if (isa<NGAbsOp>(op))
+            {
+                Value zero = createZeroConstant(elemTy);
+                iRes(ivs) = std_select(lt(val, zero, is_signed(ngTensorType)), zero - val, val);
             }
             else
             {

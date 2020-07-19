@@ -278,17 +278,13 @@ NgDialectConversionPass::TensorInfo
     return it->second;
 }
 
-// MLIR builders
-#define TI(x) std::type_index(typeid(x))
-
 void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
 {
     auto& region = function.getBody();
     m_builder.setInsertionPoint(&region.front(), region.front().begin());
-    const NodeVector& subGraph = m_function->get_ordered_ops();
 
     auto& opDispatcher = getOpDispatcher();
-    for (auto np : subGraph)
+    for (auto np : m_function->get_ordered_ops())
     {
         if (is_type<op::Parameter>(np) || is_type<op::Result>(np))
         {
@@ -477,6 +473,14 @@ mlir::Operation*
                                                             const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGNegOp>(ngNode);
+}
+
+template <>
+mlir::Operation*
+    NgDialectConversionPass::createOp<ngraph::op::Abs>(NgDialectConversionPass& NgDialectObj,
+                                                            const ngraph::Node* ngNode)
+{
+    return NgDialectObj.createGenericOp<mlir::NGAbsOp>(ngNode);
 }
 
 template <>
@@ -681,6 +685,7 @@ mlir::Operation*
     softmaxOp.setAxes(attr);
     return op;
 }
+
 template <typename Op>
 mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode, int inNum)
 {
