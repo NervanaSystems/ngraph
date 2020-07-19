@@ -66,8 +66,11 @@ runtime::mlir::OP_TYPEID runtime::mlir::MlirExecutable::get_typeid(const Node& n
 runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
 {
+    NGRAPH_INFO;
     ngmlir::MLIRCompiler::init();
+    NGRAPH_INFO;
     ngmlir::MLIRCPUBackend::init();
+    NGRAPH_INFO;
 
     m_function = clone_function(*function);
 
@@ -106,9 +109,9 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
 bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO;
     event::Duration d1("call", "Interpreter");
 
-    static bool is_compiled = false;
     if (!is_compiled)
     {
         is_compiled = true;
@@ -125,6 +128,7 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
         m_mlir_runtime.set_module(mlir_backend.get_module());
     }
 
+    NGRAPH_INFO;
     std::vector<runtime::ngmlir::MemRefArg> mem_ref_arg_vec;
     for (auto tensor : inputs)
     {
@@ -155,9 +159,10 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
         mem_ref_arg_vec.push_back(mem_ref_arg);
     }
 
-    static bool first_iteration = true;
-    m_mlir_runtime.run(mem_ref_arg_vec, first_iteration);
-    first_iteration = false;
+    NGRAPH_INFO << m_first_iteration;
+    m_mlir_runtime.run(mem_ref_arg_vec, m_first_iteration);
+    NGRAPH_INFO;
+    m_first_iteration = false;
 
     return true;
 }

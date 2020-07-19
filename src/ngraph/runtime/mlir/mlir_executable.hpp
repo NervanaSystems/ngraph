@@ -88,6 +88,8 @@ protected:
     NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     runtime::ngmlir::MLIRCPURuntime m_mlir_runtime;
+    bool m_first_iteration = true;
+    bool is_compiled = false;
 
     static OP_TYPEID get_typeid(const Node& node);
 };
