@@ -478,7 +478,7 @@ mlir::Operation*
 template <>
 mlir::Operation*
     NgDialectConversionPass::createOp<ngraph::op::Abs>(NgDialectConversionPass& NgDialectObj,
-                                                            const ngraph::Node* ngNode)
+                                                       const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGAbsOp>(ngNode);
 }

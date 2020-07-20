@@ -7,7 +7,6 @@ concat_zero_length_1d_middle
 parameter_as_output
 
 # Fail due to numeric errors
-#abs
 acos
 acosh
 aliased_output
@@ -1107,3 +1106,7 @@ zero_sized_sqrt
 zero_sized_subtract
 zero_sized_tan
 zero_sized_tanh
+
+# Parameterized tests
+dyn_replace_slice
+flatten

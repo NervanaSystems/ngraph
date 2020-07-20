@@ -36,14 +36,6 @@
 
 namespace ngraph
 {
-    namespace descriptor
-    {
-        class Tensor;
-    }
-    namespace element
-    {
-        class Type;
-    }
     namespace runtime
     {
         namespace ngmlir
@@ -66,10 +58,6 @@ namespace ngraph
                     : m_function(function)
                     , m_context(context)
                 {
-                    for (auto node : m_function->get_ordered_ops())
-                    {
-                        NGRAPH_INFO << *node;
-                    }
                     NGRAPH_CHECK(initialized,
                                  "Cannot instantiate a compiler without initializing MLIR");
                 }
