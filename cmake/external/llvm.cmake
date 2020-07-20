@@ -33,7 +33,7 @@ if(NGRAPH_USE_PREBUILT_MLIR)
     set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH}/build)
 endif()
 # TODO: remove this file after CI is updated.
-include(cmake/external/external_mlir.cmake)
+include(cmake/external_mlir.cmake)
 set(MLIR_COMMIT_ID ${MLIR_LLVM_COMMIT_ID})
 set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
 if(EXISTS "${VCSREVISION}")
