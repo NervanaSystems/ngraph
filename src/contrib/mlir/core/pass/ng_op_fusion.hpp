@@ -15,33 +15,14 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style and MLIR naming convention since
-// it does
-// not expose public API to the rest of nGraph codebase and heavily depends on
-// MLIR API.
+// it does not expose public API to the rest of nGraph codebase and heavily
+// depends on MLIR API.
 
-#include "memory_manager.hpp"
-#include <memory>
-#include "ngraph/ngraph_visibility.hpp"
+#pragma once
 
-using namespace ngraph::runtime::ngmlir;
+#include <mlir/Pass/Pass.h>
 
-/// Call back to allocate memory for temps from JIT'ed code
-extern "C" NGRAPH_API void* __mlir_allocate(MLIRMemMgr* memMgr, size_t size)
+namespace mlir
 {
-    return memMgr->allocate(size);
-}
-
-void* MLIRMemMgr::allocate(size_t size)
-{
-    void* ptr = malloc(size);
-    ptrList.push_back(ptr);
-    return ptr;
-}
-
-void MLIRMemMgr::freeAll()
-{
-    for (auto p : ptrList)
-    {
-        free(p);
-    }
+    std::unique_ptr<mlir::Pass> createNgOpFusionPass();
 }

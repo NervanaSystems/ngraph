@@ -21,53 +21,61 @@
 
 #pragma once
 
-#include "ngraph/check.hpp"
 #include <mlir/Pass/Pass.h>
 #include <unordered_map>
+#include "ngraph/check.hpp"
 
-namespace mlir {
-// BufferInfo
-struct BufferInfo {
-  // Buffer Id. If -1 then invalid buffer.
-  int m_bufferId;
-  // Offset into the buffer
-  int m_offset;
-  bool isValid() const { return m_bufferId != -1; }
-};
+namespace mlir
+{
+    // BufferInfo
+    struct BufferInfo
+    {
+        // Buffer Id. If -1 then invalid buffer.
+        int m_bufferId;
+        // Offset into the buffer
+        int m_offset;
+        bool isValid() const { return m_bufferId != -1; }
+    };
 
-struct MemoryAnalysis {
-  using BufferInfoMap = std::unordered_map<Operation *, BufferInfo>;
-  using BufferSizeMap = std::unordered_map<unsigned, unsigned>;
-  // Compute this analysis with the provided operation.
-  MemoryAnalysis(Operation *op);
-  BufferInfo getBufferInfo(Operation *op) {
-    auto it = m_bufferInfo.find(op);
-    if (it == m_bufferInfo.end()) {
-      return {-1, -1};
-    }
-    return it->second;
-  }
-  void setBufferInfo(Operation *op, BufferInfo bufferInfo) {
-    m_bufferInfo[op] = bufferInfo;
-  }
-  void setBufferSize(unsigned bufferId, unsigned size) {
-    auto it = m_bufferSize.find(bufferId);
-    if (it != m_bufferSize.end()) {
-      it->second = (size > it->second) ? size : it->second;
-    } else {
-      m_bufferSize[bufferId] = size;
-    }
-  }
-  unsigned getBufferSize(unsigned bufferId) {
-    auto it = m_bufferSize.find(bufferId);
-    NGRAPH_CHECK(it != m_bufferSize.end(), "Buffer has no size!");
-    return it->second;
-  }
+    struct MemoryAnalysis
+    {
+        using BufferInfoMap = std::unordered_map<Operation*, BufferInfo>;
+        using BufferSizeMap = std::unordered_map<unsigned, unsigned>;
+        // Compute this analysis with the provided operation.
+        MemoryAnalysis(Operation* op);
+        BufferInfo getBufferInfo(Operation* op)
+        {
+            auto it = m_bufferInfo.find(op);
+            if (it == m_bufferInfo.end())
+            {
+                return {-1, -1};
+            }
+            return it->second;
+        }
+        void setBufferInfo(Operation* op, BufferInfo bufferInfo) { m_bufferInfo[op] = bufferInfo; }
+        void setBufferSize(unsigned bufferId, unsigned size)
+        {
+            auto it = m_bufferSize.find(bufferId);
+            if (it != m_bufferSize.end())
+            {
+                it->second = (size > it->second) ? size : it->second;
+            }
+            else
+            {
+                m_bufferSize[bufferId] = size;
+            }
+        }
+        unsigned getBufferSize(unsigned bufferId)
+        {
+            auto it = m_bufferSize.find(bufferId);
+            NGRAPH_CHECK(it != m_bufferSize.end(), "Buffer has no size!");
+            return it->second;
+        }
 
-private:
-  // Records assignment of BufferInfo to each inplace op
-  BufferInfoMap m_bufferInfo;
-  // Records buffer size required for each buffer id in bytes
-  BufferSizeMap m_bufferSize;
-};
-} // namespace mlir
+    private:
+        // Records assignment of BufferInfo to each inplace op
+        BufferInfoMap m_bufferInfo;
+        // Records buffer size required for each buffer id in bytes
+        BufferSizeMap m_bufferSize;
+    };
+}

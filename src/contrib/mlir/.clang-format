@@ -1,1 +1,2 @@
-BasedOnStyle: LLVM
+# This is the MLIR style but will use ngraph style while in ngraph repo
+# BasedOnStyle: LLVM

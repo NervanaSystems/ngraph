@@ -21,14 +21,14 @@
 
 #include "type.hpp"
 
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/StandardTypes.h"
-#include "ngraph/assertion.hpp"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/StandardTypes.h"
+#include "ngraph/assertion.hpp"
 
 using llvm::ArrayRef;
 using llvm::raw_ostream;
@@ -41,41 +41,48 @@ using namespace mlir;
 
 /// Creates TensorType objects. They all point to the same storage if
 /// element type and shape are the same.
-NGTensorType NGTensorType::get(MLIRContext *context, EltType eltType,
-                               Shape shape) {
-  return Base::get(context, NGTypeKind::NG_TENSOR_TYPE_ID, eltType, shape);
+NGTensorType NGTensorType::get(MLIRContext* context, EltType eltType, Shape shape)
+{
+    return Base::get(context, NGTypeKind::NG_TENSOR_TYPE_ID, eltType, shape);
 }
 
-bool NGTensorType::isCompatible(NGTensorType &other) const {
-  // Exact same tensor
-  if (this == &other) {
-    return true;
-  }
-  // different tensors, check if of same element type and compatible shapes
-  if (getElementType() != other.getElementType()) {
-    return false;
-  }
-  // TODO: Handle dynamic ranks
-  // MLIR MemRefType doesn't seem to support it at the moment.
-  return isCompatibleShape(other);
-}
-
-bool NGTensorType::isCompatibleShape(NGTensorType &other) const {
-  auto shape = getShape();
-  auto otherShape = other.getShape();
-
-  if (shape.size() != otherShape.size()) {
-    return false;
-  }
-
-  for (auto i = 0; i < shape.size(); i++) {
-    NGRAPH_CHECK(shape[i] >= -1, "Invalid tensor shape", shape[i]);
-    NGRAPH_CHECK(otherShape[i] >= -1, "Invalid tensor shape", otherShape[i]);
-
-    if (shape[i] == -1 || otherShape[i] == -1 || shape[i] == otherShape[i]) {
-      continue;
+bool NGTensorType::isCompatible(NGTensorType& other) const
+{
+    // Exact same tensor
+    if (this == &other)
+    {
+        return true;
     }
-    return false;
-  }
-  return true;
+    // different tensors, check if of same element type and compatible shapes
+    if (getElementType() != other.getElementType())
+    {
+        return false;
+    }
+    // TODO: Handle dynamic ranks
+    // MLIR MemRefType doesn't seem to support it at the moment.
+    return isCompatibleShape(other);
+}
+
+bool NGTensorType::isCompatibleShape(NGTensorType& other) const
+{
+    auto shape = getShape();
+    auto otherShape = other.getShape();
+
+    if (shape.size() != otherShape.size())
+    {
+        return false;
+    }
+
+    for (auto i = 0; i < shape.size(); i++)
+    {
+        NGRAPH_CHECK(shape[i] >= -1, "Invalid tensor shape", shape[i]);
+        NGRAPH_CHECK(otherShape[i] >= -1, "Invalid tensor shape", otherShape[i]);
+
+        if (shape[i] == -1 || otherShape[i] == -1 || shape[i] == otherShape[i])
+        {
+            continue;
+        }
+        return false;
+    }
+    return true;
 }
