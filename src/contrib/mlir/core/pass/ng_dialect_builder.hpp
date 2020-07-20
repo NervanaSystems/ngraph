@@ -39,4 +39,4 @@ namespace ngraph
             createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
                                           mlir::MLIRContext* context);
     }
-} // namespace ngraph
+}

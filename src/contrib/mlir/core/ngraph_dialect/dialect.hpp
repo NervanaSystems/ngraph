@@ -45,4 +45,4 @@ namespace mlir
     private:
         mlir::Type parseEltType(mlir::DialectAsmParser& parser) const;
     };
-} // namespace mlir
+}

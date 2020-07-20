@@ -119,5 +119,5 @@ namespace ngraph
             // Mutex over sub-graph IDs
             std::mutex m_subgraph_mutex;
         };
-    } // namespace pass
-} // namespace ngraph
+    }
+}

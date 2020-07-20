@@ -78,4 +78,4 @@ namespace mlir
         // Records buffer size required for each buffer id in bytes
         BufferSizeMap m_bufferSize;
     };
-} // namespace mlir
+}

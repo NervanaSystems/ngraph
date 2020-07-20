@@ -28,4 +28,4 @@ namespace ngraph
     {
         std::unique_ptr<mlir::Pass> createNgDialectFusedOpsPass();
     }
-} // namespace ngraph
+}

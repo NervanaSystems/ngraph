@@ -181,4 +181,4 @@ namespace mlir
         /// for llvm RTTI
         static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_TENSOR_TYPE_ID; }
     };
-} // namespace mlir
+}

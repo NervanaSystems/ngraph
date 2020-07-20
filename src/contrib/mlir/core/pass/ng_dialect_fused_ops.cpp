@@ -71,7 +71,7 @@ namespace mlir
     }
 
 #include "fused_ops_pattern.h.inc"
-} // namespace mlir
+}
 namespace
 {
     class NgDialectFusedOpsPass : public PassWrapper<NgDialectFusedOpsPass, OperationPass<ModuleOp>>
@@ -82,7 +82,7 @@ namespace
     private:
         void runOnOperation() override;
     };
-} // namespace
+}
 
 void NgDialectFusedOpsPass::runOnOperation()
 {

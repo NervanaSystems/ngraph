@@ -93,6 +93,6 @@ namespace ngraph
                 // Global initialization for MLIR compiler
                 static bool initialized;
             };
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

@@ -33,8 +33,8 @@ namespace ngraph
         {
             class MLIRCompiler;
         }
-    } // namespace runtime
-} // namespace ngraph
+    }
+}
 
 namespace mlir
 {

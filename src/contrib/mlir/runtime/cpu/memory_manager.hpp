@@ -49,6 +49,6 @@ namespace ngraph
             private:
                 std::vector<void*> ptrList;
             };
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

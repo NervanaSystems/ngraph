@@ -35,6 +35,6 @@ namespace ngraph
 
             /// Helper to dump MLIR module into llvm::dbgs prepended by the message \p msg.
             void dumpMlirModule(const std::string msg, mlir::ModuleOp module);
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

@@ -53,6 +53,6 @@ namespace ngraph
                 mlir::OwningModuleRef m_module;
                 mlir::MLIRContext& m_context;
             };
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}

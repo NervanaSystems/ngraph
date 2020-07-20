@@ -355,7 +355,7 @@ namespace mlir
 
 #define GET_OP_CLASSES
 #include "ops.cpp.inc"
-} // namespace mlir
+}
 
 // Fused Ops decompose
 // Stubs for now

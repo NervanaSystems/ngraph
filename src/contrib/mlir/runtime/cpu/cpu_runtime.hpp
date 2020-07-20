@@ -84,6 +84,6 @@ namespace ngraph
                 std::unique_ptr<mlir::ExecutionEngine> m_engine;
                 std::vector<size_t> m_ranks;
             };
-        } // namespace ngmlir
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
