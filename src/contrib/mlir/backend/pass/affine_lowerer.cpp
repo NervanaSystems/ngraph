@@ -2606,7 +2606,8 @@ namespace
             else if (isa<NGAbsOp>(op))
             {
                 Value zero = createZeroConstant(elemTy);
-                iRes(ivs) = std_select(lt(val, zero, is_signed(ngTensorType)), zero - val, val);
+                iRes(ivs) = std_select(
+                    is_signed(ngTensorType) ? slt(val, zero) : ult(val, zero), zero - val, val);
             }
             else
             {
