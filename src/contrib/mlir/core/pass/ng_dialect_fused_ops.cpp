@@ -82,7 +82,7 @@ namespace
     private:
         void runOnOperation() override;
     };
-} // namespace
+}
 
 void NgDialectFusedOpsPass::runOnOperation()
 {
