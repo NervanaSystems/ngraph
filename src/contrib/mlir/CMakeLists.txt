@@ -63,7 +63,7 @@ target_link_libraries(
     MLIRExecutionEngine
     MLIRIR
     MLIRLLVMIR
-    MLIRLoopToStandard
+    MLIRSCFToStandard
     MLIRStandardToLLVM
     MLIRParser
     MLIRPass

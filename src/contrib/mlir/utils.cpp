@@ -26,7 +26,7 @@
 #include <mlir/Dialect/Affine/IR/AffineOps.h>
 #include <mlir/Dialect/Affine/Passes.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
-#include <mlir/Dialect/LoopOps/LoopOps.h>
+#include <mlir/Dialect/SCF/SCF.h>
 #include <mlir/Dialect/StandardOps/IR/Ops.h>
 #include <mlir/Dialect/Vector/VectorOps.h>
 #include <mlir/IR/Dialect.h>
@@ -56,7 +56,7 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
         // In-tree Dialects.
         registerDialect<AffineDialect>();
         registerDialect<LLVM::LLVMDialect>();
-        registerDialect<loop::LoopOpsDialect>();
+        registerDialect<scf::SCFDialect>();
         registerDialect<StandardOpsDialect>();
         registerDialect<vector::VectorDialect>();
 

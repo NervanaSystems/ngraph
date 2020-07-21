@@ -26,6 +26,8 @@
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 #include "contrib/mlir/runtime/cpu/callback_utils.hpp"
 #include "contrib/mlir/utils.hpp"
+#include "mlir/Dialect/StandardOps/IR/Ops.h"
+#include "mlir/IR/Attributes.h"
 #include "ngraph/assertion.hpp"
 
 #include <llvm/ADT/DenseSet.h>
@@ -151,7 +153,8 @@ namespace
                 FunctionType::get(result.getConvertedTypes(), {/*void*/}, funcOp.getContext()));
 
             // Tell the rewriter to convert the region signature.
-            rewriter.applySignatureConversion(&newFuncOp.getBody(), result);
+            if (failed(rewriter.convertRegionTypes(&newFuncOp.getBody(), converter, &result)))
+                return failure();
             rewriter.replaceOp(op, llvm::None);
             return success();
         }
@@ -433,7 +436,7 @@ namespace
             // in the
             // module. References the original FuncOp are no longer valid after this
             // point.
-            if (failed(applyFullConversion(origFunc, target, std::move(patterns), &converter)))
+            if (failed(applyFullConversion(origFunc, target, std::move(patterns))))
             {
                 emitError(mlir::UnknownLoc::get(&getContext()), "Error lowering nGraph dialect\n");
                 signalPassFailure();
@@ -595,27 +598,18 @@ namespace
         MemRefType memRefType = type.cast<MemRefType>();
         if (buffer)
         {
-            // We have a buffer to map to. Create a view over it.
-
-            // Create the N-D to 1D affine expression mapping the memref shape to the
-            // underlying
-            // linear
-            // buffer
-            // This is simply (d0, d1, d2, .. dN-1) --> d0 * S0 + d1 * S1 ... + dN-1 *
-            // SN-1
-            // Where Si is the stride along the i_th dimension in elements
+            // We have a buffer to map to. Create an multi-dim indentity map view with offset over
+            // it.
             auto shape = memRefType.getShape();
-            SmallVector<int64_t, 4> strides(shape.size(), 0);
-            strides[shape.size() - 1] = 1;
-            for (int64_t i = shape.size() - 2; i >= 0; i--)
-            {
-                strides[i] = strides[i + 1] * shape[i + 1];
-            }
-
-            auto map = makeStridedLinearLayoutMap(strides, offset, rewriter.getContext());
-            MemRefType newMemRefType = MemRefType::get(shape, memRefType.getElementType(), map);
+            auto map = AffineMap::getMultiDimIdentityMap(shape.size(), rewriter.getContext());
+            auto et = memRefType.getElementType();
+            MemRefType newMemRefType = MemRefType::get(shape, et, map);
+            // FixMe : BitWidth may not always be a multiple of 8
+            auto byte_width = (et.getIntOrFloatBitWidth() * offset) / 8;
+            auto byte_shift = rewriter.create<mlir::ConstantIndexOp>(
+                buffer.getDefiningOp()->getLoc(), byte_width);
             auto viewOp = rewriter.create<mlir::ViewOp>(
-                buffer.getDefiningOp()->getLoc(), newMemRefType, buffer, llvm::None);
+                buffer.getDefiningOp()->getLoc(), newMemRefType, buffer, byte_shift, ValueRange{});
             return viewOp.getResult();
         }
 
@@ -1302,8 +1296,6 @@ namespace
         // Bounds Index Handles
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
-        // Loop induction vars
-        SmallVector<Value, 4> ivs(vLHS.rank());
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -1315,10 +1307,12 @@ namespace
         NGRAPH_CHECK(op->getOperands()[0].getType().isa<NGTensorType>());
         auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
 
-        AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
+        affineLoopNestBuilder(lbs, ubs, steps, [&](ValueRange ivRange) {
+            auto ivs = llvm::to_vector<4>(ivRange);
             Value val = iLHS(ivs);
             Value zero = createZeroConstant(elemTy);
-            iRes(ivs) = std_select(gt(val, zero, is_signed(ngTensorType)), val, zero);
+            iRes(ivs) =
+                std_select(is_signed(ngTensorType) ? sgt(val, zero) : ugt(val, zero), val, zero);
         });
 
         rewriter.replaceOp(op, {result});
@@ -1397,14 +1391,14 @@ namespace
 
         {
             Value n, k;
-            makeAffineLoopBuilder(&n, nLb, nUb, nStep)([&] {
-                makeAffineLoopBuilder(&k, kLb, kUb, kStep)([&] { iRes(n, k) = zeroInit; });
+            affineLoopBuilder(nLb, nUb, nStep, [&](Value n) {
+                affineLoopBuilder(kLb, kUb, kStep, [&](Value k) { iRes(n, k) = zeroInit; });
             });
         }
-        makeAffineLoopBuilder(&n, nLb, nUb, nStep)([&] {
-            makeAffineLoopBuilder(&m, mLb, mUb, mStep)([&] {
-                makeAffineLoopBuilder(&k, kLb, kUb, kStep)(
-                    [&] { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
+        affineLoopBuilder(nLb, nUb, nStep, [&](Value n) {
+            affineLoopBuilder(mLb, mUb, mStep, [&](Value m) {
+                affineLoopBuilder(
+                    kLb, kUb, kStep, [&](Value k) { iRes(n, k) += iLhs(n, m) * iRhs(m, k); });
             });
         });
 
@@ -1454,34 +1448,34 @@ namespace
             MemRefBoundsCapture vOperand(operand);
             NGRAPH_CHECK(vOperand.rank() == rank, "Unexpected rank mismatch");
 
-            llvm::SmallVector<Value, 5> indexVars;
             llvm::SmallVector<Value, 5> indexVarLbs;
             llvm::SmallVector<Value, 5> indexVarUbs;
             llvm::SmallVector<int64_t, 5> indexVarSteps;
             for (int i = 0; i < rank; i++)
             {
-                indexVars.push_back(Value());
                 indexVarLbs.push_back(vOperand.lb(i));
                 indexVarUbs.push_back(vOperand.ub(i));
                 indexVarSteps.push_back(vOperand.step(i));
             }
 
-            AffineLoopNestBuilder(indexVars, indexVarLbs, indexVarUbs, indexVarSteps)([&] {
-                AffineIndexedValue ivRes(result);
-                AffineIndexedValue ivOperand(operand);
+            affineLoopNestBuilder(
+                indexVarLbs, indexVarUbs, indexVarSteps, [&](ValueRange indexVarsRange) {
+                    auto indexVars = llvm::to_vector<5>(indexVarsRange);
+                    AffineIndexedValue ivRes(result);
+                    AffineIndexedValue ivOperand(operand);
 
-                // On the LHS of the assignment, adjust the index for the concatenation
-                // axis.
-                llvm::SmallVector<Value, 5> resIndexHandles;
-                for (int i = 0; i < rank; i++)
-                {
-                    resIndexHandles.push_back(i == concatenationAxis
-                                                  ? indexVars[i] + Value(concatenationAxisPos)
-                                                  : indexVars[i]);
-                }
+                    // On the LHS of the assignment, adjust the index
+                    // for the concatenation axis.
+                    llvm::SmallVector<Value, 5> resIndexHandles;
+                    for (int i = 0; i < rank; i++)
+                    {
+                        resIndexHandles.push_back(i == concatenationAxis
+                                                      ? indexVars[i] + Value(concatenationAxisPos)
+                                                      : indexVars[i]);
+                    }
 
-                ivRes(resIndexHandles) = ivOperand(indexVars);
-            });
+                    ivRes(resIndexHandles) = ivOperand(indexVars);
+                });
 
             // Move up concatenation_axis_pos for the next operand.
             concatenationAxisPos = Value(concatenationAxisPos) + vOperand.ub(concatenationAxis);
@@ -1528,13 +1522,9 @@ namespace
                          paramsSteps.size() == paramsLbs.size(),
                      "Incorrect loop nest bounds size for gather params");
 
-        SmallVector<Value, 4> paramsIVs(vParams.rank() - 1);
-
         auto indicesLbs = vIndices.getLbs();
         auto indicesUbs = vIndices.getUbs();
         auto indicesSteps = vIndices.getSteps();
-
-        SmallVector<Value, 4> indicesIVs(vIndices.rank());
 
         SmallVector<Value, 8> paramsIndices, resIndices;
 
@@ -1563,14 +1553,17 @@ namespace
         //                   params[P_0, P_1, .. P_(A-1), indices[I_0, .., I_(M-1)],
         //                          P_(A+1), ... P_(N-1)];
 
-        AffineLoopNestBuilder(indicesIVs, indicesLbs, indicesUbs, indicesSteps)([&] {
+        affineLoopNestBuilder(indicesLbs, indicesUbs, indicesSteps, [&](ValueRange indicesIVRange) {
+            auto indicesIVs = llvm::to_vector<4>(indicesIVRange);
             // Load axis value from indices array and cast it to Index Type
             auto axisIdx =
                 ValueBuilder<IndexCastOp>(Value(iIndices(indicesIVs)), rewriter.getIndexType());
 
-            AffineLoopNestBuilder(paramsIVs, paramsLbs, paramsUbs, paramsSteps)([&] {
+            affineLoopNestBuilder(paramsLbs, paramsUbs, paramsSteps, [&](ValueRange paramsIVRange) {
+                auto paramsIVs = llvm::to_vector<4>(paramsIVRange);
                 // construct indices for param
-                // [P_0, P_1, .. P_axis-1, Indices[I0, I1, .. I_k-1], P_axis+1, P_axis+2,
+                // [P_0, P_1, .. P_axis-1, Indices[I0, I1, .. I_k-1], P_axis+1,
+                // P_axis+2,
                 // .. P_n-1]
                 for (auto i = 0, j = 0; i < vParams.rank(); i++)
                 {
@@ -1585,7 +1578,8 @@ namespace
                 }
 
                 // construct indices for result
-                // [P_0, P_1, .. P_axis-1, I0, I1, .. I_k-1, P_axis+1, P_axis+2, .. P_n-1]
+                // [P_0, P_1, .. P_axis-1, I0, I1, .. I_k-1, P_axis+1, P_axis+2,
+                // .. P_n-1]
                 for (auto i = 0, j = 0; i < vParams.rank() + vIndices.rank() - 1;)
                 {
                     if (i == axis && indicesIVs.size() > 0)
@@ -1652,7 +1646,6 @@ namespace
         NGRAPH_CHECK(groups > 0, "Invalid number of groups");
         // create outer group convolution loop
         // for group = 0 to groups
-        Value iv;
         Value lb = std_constant_index(0);
         Value ub = std_constant_index(groups);
 
@@ -1678,7 +1671,7 @@ namespace
 
         NGRAPH_CHECK(!groupsInFilters || groups == filtersShape[0]);
 
-        makeAffineLoopBuilder(&iv, lb, ub, 1)([&] {
+        affineLoopBuilder(lb, ub, 1, [&](Value iv) {
             // lower/upper bounds on image channel dim and kernels dim
             auto cLb = iv * channelGroupSize;
             auto cUb = cLb + channelGroupSize;
@@ -2284,7 +2277,6 @@ namespace
         unsigned spatialRank = vImages.rank() - 2;
 
         // Result spatial indices and bounds
-        SmallVector<Value, 4> resSpatialIndices(spatialRank);
         SmallVector<int64_t, 4> resSteps, filtersSteps;
         SmallVector<int, 4> padBelowIntValues;
         bool withPadding = false;
@@ -2413,143 +2405,160 @@ namespace
 
         // Initialize output to zero
         {
-            Value n, k, c;
-            SmallVector<Value, 4> resSpatialIndices(spatialRank);
+            Value c;
 
-            makeAffineLoopBuilder(&n, batchLb, batchUb, 1)([&] {
-                makeAffineLoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
-                    AffineLoopNestBuilder(
-                        resSpatialIndices, resSpatialLbs, resSpatialUbs, resSteps)([&] {
-                        SmallVector<Value, 4> resIndices;
-                        // Result indices
-                        resIndices.push_back(n);
-                        if (groupConvolution && groupsInFilters)
-                        {
-                            // compute global C_OUT from gID and k
-                            // gId * C_OUT (num of filters) + k
-                            resIndices.push_back(Value(gId) * numFiltersUb + k);
-                        }
-                        else
-                        {
-                            resIndices.push_back(k);
-                        }
-                        resIndices.insert(
-                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
-                        Value zero = createZeroConstant(elemTy);
-                        iRes(resIndices) = zero;
-                    });
+            affineLoopBuilder(batchLb, batchUb, 1, [&](Value n) {
+                affineLoopBuilder(numFiltersLb, numFiltersUb, 1, [&](Value k) {
+                    affineLoopNestBuilder(
+                        resSpatialLbs,
+                        resSpatialUbs,
+                        resSteps,
+                        [&](ValueRange resSpatialIndicesRange) {
+                            auto resSpatialIndices = llvm::to_vector<4>(resSpatialIndicesRange);
+                            SmallVector<Value, 4> resIndices;
+                            // Result indices
+                            resIndices.push_back(n);
+                            if (groupConvolution && groupsInFilters)
+                            {
+                                // compute global C_OUT from gID and k
+                                // gId * C_OUT (num of filters) + k
+                                resIndices.push_back(Value(gId) * numFiltersUb + k);
+                            }
+                            else
+                            {
+                                resIndices.push_back(k);
+                            }
+                            resIndices.insert(resIndices.end(),
+                                              resSpatialIndices.begin(),
+                                              resSpatialIndices.end());
+                            Value zero = createZeroConstant(elemTy);
+                            iRes(resIndices) = zero;
+                        });
                 });
             });
         }
 
-        Value n, k, c;
         // Convolution loop
-        makeAffineLoopBuilder(&n, batchLb, batchUb, 1)([&] {
+        affineLoopBuilder(batchLb, batchUb, 1, [&](Value n) {
             // Number of filters loop
-            makeAffineLoopBuilder(&k, numFiltersLb, numFiltersUb, 1)([&] {
+            affineLoopBuilder(numFiltersLb, numFiltersUb, 1, [&](Value k) {
                 // Channels loop
-                makeAffineLoopBuilder(&c, numChannelsLb, numChannelsUb, 1)([&] {
+                affineLoopBuilder(numChannelsLb, numChannelsUb, 1, [&](Value c) {
                     // Results loop
-                    AffineLoopNestBuilder(
-                        resSpatialIndices, resSpatialLbs, resSpatialUbs, resSteps)([&] {
-                        // Compute image start indices
-                        SmallVector<Value, 4> imgStartIndices;
-                        for (auto i = 0; i < spatialRank; i++)
-                        {
-                            IntegerAttr iAttr = strides[i].cast<IntegerAttr>();
-                            auto stride = std_constant_index(iAttr.getInt());
-                            imgStartIndices.push_back(resSpatialIndices[i] * stride);
-                        }
-                        SmallVector<Value, 4> resIndices;
-                        // Result indices
-                        resIndices.push_back(n);
-                        if (groupConvolution && groupsInFilters)
-                        {
-                            // gId * C_OUT (num of filters) + k
-                            resIndices.push_back(Value(gId) * numFiltersUb + k);
-                        }
-                        else
-                        {
-                            resIndices.push_back(k);
-                        }
-
-                        resIndices.insert(
-                            resIndices.end(), resSpatialIndices.begin(), resSpatialIndices.end());
-                        // Filters spatial loop
-                        AffineLoopNestBuilder(filtersSpatialIndices,
-                                              filtersSpatialLbs,
-                                              filtersSpatialUbs,
-                                              filtersSteps)([&] {
-                            SmallVector<Value, 4> imgIndices, filtersIndices;
-                            // Image indices
-                            // Here we compute the virtual start index into the padded image.
-                            imgIndices.push_back(n);
-                            imgIndices.push_back(c);
+                    affineLoopNestBuilder(
+                        resSpatialLbs,
+                        resSpatialUbs,
+                        resSteps,
+                        [&](ValueRange resSpatialIndicesRange) {
+                            auto resSpatialIndices = llvm::to_vector<4>(resSpatialIndicesRange);
+                            // Compute image start indices
+                            SmallVector<Value, 4> imgStartIndices;
                             for (auto i = 0; i < spatialRank; i++)
                             {
-                                imgIndices.push_back(imgStartIndices[i] + filtersSpatialIndices[i]);
+                                IntegerAttr iAttr = strides[i].cast<IntegerAttr>();
+                                auto stride = std_constant_index(iAttr.getInt());
+                                imgStartIndices.push_back(resSpatialIndices[i] * stride);
                             }
-                            // Filter indices
-
-                            // If we are doing group convolution and filters shape dim0
-                            // holds the number of groups, we need to use group id as the first
-                            // index
+                            SmallVector<Value, 4> resIndices;
+                            // Result indices
+                            resIndices.push_back(n);
                             if (groupConvolution && groupsInFilters)
                             {
-                                filtersIndices.push_back(Value(gId));
-                            }
-
-                            filtersIndices.push_back(k);
-                            // subtract lower bound of channel
-                            // if we are doing group convolution this bound will advance based
-                            // on the group id. For the filters, it should always start from 0
-                            filtersIndices.push_back(c - numChannelsLb);
-                            filtersIndices.insert(filtersIndices.end(),
-                                                  filtersSpatialIndices.begin(),
-                                                  filtersSpatialIndices.end());
-
-                            if (withPadding)
-                            {
-                                // if args : img dims, img lbs, img ubs
-                                SmallVector<Value, 4>::iterator it = imgIndices.begin();
-                                std::advance(it, 2);
-                                SmallVector<Value, 4> affineIfArgs(it, imgIndices.end());
-                                affineIfArgs.insert(
-                                    affineIfArgs.end(), imgSpatialLbs.begin(), imgSpatialLbs.end());
-                                affineIfArgs.insert(
-                                    affineIfArgs.end(), imgSpatialUbs.begin(), imgSpatialUbs.end());
-
-                                auto affineIfOp =
-                                    rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(),
-                                                                nonPaddedRange,
-                                                                affineIfArgs,
-                                                                /*withElseRegion=*/false);
-                                {
-                                    auto rewriter = affineIfOp.getThenBodyBuilder();
-                                    ScopedContext scope(rewriter, loc);
-                                    // We must subtract pad below before img load, since the
-                                    // physical image is not padded
-                                    SmallVector<Value, 4> adjustedImgIndices;
-                                    adjustedImgIndices.push_back(n);
-                                    adjustedImgIndices.push_back(c);
-                                    for (auto i = 0; i < spatialRank; i++)
-                                    {
-                                        adjustedImgIndices.push_back(
-                                            imgIndices[2 + i] -
-                                            std_constant_index(padBelowIntValues[i]));
-                                    }
-                                    iRes(resIndices) =
-                                        iRes(resIndices) +
-                                        (iImages(adjustedImgIndices) * iFilters(filtersIndices));
-                                }
+                                // gId * C_OUT (num of filters) + k
+                                resIndices.push_back(Value(gId) * numFiltersUb + k);
                             }
                             else
                             {
-                                iRes(resIndices) = iRes(resIndices) +
-                                                   (iImages(imgIndices) * iFilters(filtersIndices));
+                                resIndices.push_back(k);
                             }
+
+                            resIndices.insert(resIndices.end(),
+                                              resSpatialIndices.begin(),
+                                              resSpatialIndices.end());
+                            // Filters spatial loop
+                            affineLoopNestBuilder(
+                                filtersSpatialLbs,
+                                filtersSpatialUbs,
+                                filtersSteps,
+                                [&](ValueRange filtersSpatialIndicesRange) {
+                                    auto filtersSpatialIndices =
+                                        llvm::to_vector<4>(filtersSpatialIndicesRange);
+                                    SmallVector<Value, 4> imgIndices, filtersIndices;
+                                    // Image indices
+                                    // Here we compute the virtual start index into the padded
+                                    // image.
+                                    imgIndices.push_back(n);
+                                    imgIndices.push_back(c);
+                                    for (auto i = 0; i < spatialRank; i++)
+                                    {
+                                        imgIndices.push_back(imgStartIndices[i] +
+                                                             filtersSpatialIndices[i]);
+                                    }
+                                    // Filter indices
+
+                                    // If we are doing group convolution and filters shape dim0
+                                    // holds the number of groups, we need to use group id as
+                                    // the first index
+                                    if (groupConvolution && groupsInFilters)
+                                    {
+                                        filtersIndices.push_back(Value(gId));
+                                    }
+
+                                    filtersIndices.push_back(k);
+                                    // subtract lower bound of channel
+                                    // if we are doing group convolution this bound will advance
+                                    // based on the group id. For the filters, it should always
+                                    // start from 0
+                                    filtersIndices.push_back(c - numChannelsLb);
+                                    filtersIndices.insert(filtersIndices.end(),
+                                                          filtersSpatialIndices.begin(),
+                                                          filtersSpatialIndices.end());
+
+                                    if (withPadding)
+                                    {
+                                        // if args : img dims, img lbs, img ubs
+                                        SmallVector<Value, 4>::iterator it = imgIndices.begin();
+                                        std::advance(it, 2);
+                                        SmallVector<Value, 4> affineIfArgs(it, imgIndices.end());
+                                        affineIfArgs.insert(affineIfArgs.end(),
+                                                            imgSpatialLbs.begin(),
+                                                            imgSpatialLbs.end());
+                                        affineIfArgs.insert(affineIfArgs.end(),
+                                                            imgSpatialUbs.begin(),
+                                                            imgSpatialUbs.end());
+
+                                        auto affineIfOp =
+                                            rewriter.create<AffineIfOp>(rewriter.getUnknownLoc(),
+                                                                        nonPaddedRange,
+                                                                        affineIfArgs,
+                                                                        /*withElseRegion=*/false);
+                                        {
+                                            auto rewriter = affineIfOp.getThenBodyBuilder();
+                                            ScopedContext scope(rewriter, loc);
+                                            // We must subtract pad below before img load, since the
+                                            // physical image is not padded
+                                            SmallVector<Value, 4> adjustedImgIndices;
+                                            adjustedImgIndices.push_back(n);
+                                            adjustedImgIndices.push_back(c);
+                                            for (auto i = 0; i < spatialRank; i++)
+                                            {
+                                                adjustedImgIndices.push_back(
+                                                    imgIndices[2 + i] -
+                                                    std_constant_index(padBelowIntValues[i]));
+                                            }
+                                            iRes(resIndices) =
+                                                iRes(resIndices) + (iImages(adjustedImgIndices) *
+                                                                    iFilters(filtersIndices));
+                                        }
+                                    }
+                                    else
+                                    {
+                                        iRes(resIndices) =
+                                            iRes(resIndices) +
+                                            (iImages(imgIndices) * iFilters(filtersIndices));
+                                    }
+                                });
                         });
-                    });
                 });
             });
         });
@@ -2579,8 +2588,6 @@ namespace
         // Bounds Index Handles
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
-        // Loop induction vars
-        SmallVector<Value, 4> ivs(vLHS.rank());
         // Steps
         auto steps = vLHS.getSteps();
 
@@ -2588,7 +2595,8 @@ namespace
         Type elemTy = lhs.getType().cast<MemRefType>().getElementType();
         auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
 
-        AffineLoopNestBuilder(ivs, lbs, ubs, steps)([&] {
+        affineLoopNestBuilder(lbs, ubs, steps, [&](ValueRange ivRange) {
+            auto ivs = llvm::to_vector<4>(ivRange);
             Value val = iLHS(ivs);
             if (isa<NGNegOp>(op))
             {
@@ -2630,8 +2638,6 @@ namespace
         // Bounds Index Handles
         auto lbs = vLHS.getLbs();
         auto ubs = vLHS.getUbs();
-        // Loop induction vars
-        SmallVector<Value, 4> ivs(vLHS.rank());
         // Steps
         auto steps = vLHS.getSteps();
         // element type of the operand
@@ -2642,9 +2648,13 @@ namespace
         NGRAPH_CHECK(op->getOperands()[0].getType().isa<NGTensorType>());
         auto ngTensorType = op->getOperands()[0].getType().dyn_cast<NGTensorType>();
 
-        AffineLoopNestBuilder(ivs, lbs, ubs, steps)(
+        affineLoopNestBuilder(
+            lbs,
+            ubs,
+            steps,
             // single stmt body
-            [&] {
+            [&](ValueRange ivRange) {
+                auto ivs = llvm::to_vector<4>(ivRange);
                 auto left = Value(iLHS(ivs));
                 auto right = Value(iRHS(ivs));
 
@@ -2673,25 +2683,29 @@ namespace
                 {
                     auto ones = createOneConstant(elemTy);
                     auto zeros = createZeroConstant(elemTy);
-                    iRes(ivs) = std_select(gt(left, right, is_signed(ngTensorType)), ones, zeros);
+                    iRes(ivs) = std_select(
+                        is_signed(ngTensorType) ? sgt(left, right) : ugt(left, right), ones, zeros);
                 }
                 else if (isa<NGLessOp>(op))
                 {
                     auto ones = createOneConstant(elemTy);
                     auto zeros = createZeroConstant(elemTy);
-                    iRes(ivs) = std_select(lt(left, right, is_signed(ngTensorType)), ones, zeros);
+                    iRes(ivs) = std_select(
+                        is_signed(ngTensorType) ? slt(left, right) : ult(left, right), ones, zeros);
                 }
                 else if (isa<NGGreaterEqOp>(op))
                 {
                     auto ones = createOneConstant(elemTy);
                     auto zeros = createZeroConstant(elemTy);
-                    iRes(ivs) = std_select(ge(left, right, is_signed(ngTensorType)), ones, zeros);
+                    iRes(ivs) = std_select(
+                        is_signed(ngTensorType) ? sge(left, right) : uge(left, right), ones, zeros);
                 }
                 else if (isa<NGLessEqOp>(op))
                 {
                     auto ones = createOneConstant(elemTy);
                     auto zeros = createZeroConstant(elemTy);
-                    iRes(ivs) = std_select(le(left, right, is_signed(ngTensorType)), ones, zeros);
+                    iRes(ivs) = std_select(
+                        is_signed(ngTensorType) ? sle(left, right) : ule(left, right), ones, zeros);
                 }
                 else if (isa<NGEqOp>(op))
                 {
@@ -2707,11 +2721,13 @@ namespace
                 }
                 else if (isa<NGMaxOp>(op))
                 {
-                    iRes(ivs) = std_select(gt(left, right, is_signed(ngTensorType)), left, right);
+                    iRes(ivs) = std_select(
+                        is_signed(ngTensorType) ? sgt(left, right) : ugt(left, right), left, right);
                 }
                 else if (isa<NGMinOp>(op))
                 {
-                    iRes(ivs) = std_select(lt(left, right, is_signed(ngTensorType)), left, right);
+                    iRes(ivs) = std_select(
+                        is_signed(ngTensorType) ? slt(left, right) : ult(left, right), left, right);
                 }
                 else
                 {
@@ -2768,16 +2784,16 @@ namespace
         // Generate loop nest that initializes result to lower bound of the axis to be
         // reduced.
         {
-            SmallVector<Value, 4> ivs(vRes.rank());
             auto steps = vRes.getSteps();
             auto initVal = vArg.lb(axis);
-            AffineLoopNestBuilder(ivs, resLbs, resUbs, steps)(
-                [&] { iRes(ivs) = ValueBuilder<IndexCastOp>(initVal, resTy); });
+            affineLoopNestBuilder(resLbs, resUbs, steps, [&](ValueRange ivRange) {
+                auto ivs = llvm::to_vector<4>(ivRange);
+                iRes(ivs) = ValueBuilder<IndexCastOp>(initVal, resTy);
+            });
         }
 
         // Generate loop nest that computes the actual index reduction.
         {
-            SmallVector<Value, 4> allIVs(vArg.rank());
             auto steps = vArg.getSteps();
             SmallVector<Value, 8> nonRedIVs;
             SmallVector<Value, 8> tempIVs;
@@ -2787,7 +2803,8 @@ namespace
                          "Expected integer result type in index reduction");
 
             // iterate over all argument dimensions
-            AffineLoopNestBuilder(allIVs, argLbs, argUbs, steps)([&] {
+            affineLoopNestBuilder(argLbs, argUbs, steps, [&](ValueRange allIVRange) {
+                auto allIVs = llvm::to_vector<4>(allIVRange);
                 // build a list of non-reduction IVs
                 for (auto i = 0; i < vArg.rank(); i++)
                 {
@@ -2797,8 +2814,8 @@ namespace
                     }
                 }
 
-                // Load current min index with integer data type and convert it to index
-                // data type.
+                // Load current min index with integer data type and convert it to
+                // index data type.
                 auto currRedIdx = ValueBuilder<IndexCastOp>(Value(iRes(nonRedIVs)),
                                                             IndexType::get(resTy.getContext()));
 
@@ -2814,16 +2831,17 @@ namespace
                         tempIVs.push_back(currRedIdx);
                     }
                 }
-                Value newRedIdx =
-                    std::is_same<RedOp, NGArgMinRedOp>()
-                        ? std_select(
-                              lt(affineArg(allIVs), stdArg(tempIVs), is_signed(ngTensorType)),
-                              allIVs[axis],
-                              currRedIdx)
-                        : std_select(
-                              lt(stdArg(tempIVs), affineArg(allIVs), is_signed(ngTensorType)),
-                              allIVs[axis],
-                              currRedIdx);
+                Value newRedIdx = std::is_same<RedOp, NGArgMinRedOp>()
+                                      ? std_select(is_signed(ngTensorType)
+                                                       ? slt(affineArg(allIVs), stdArg(tempIVs))
+                                                       : ult(affineArg(allIVs), stdArg(tempIVs)),
+                                                   allIVs[axis],
+                                                   currRedIdx)
+                                      : std_select(is_signed(ngTensorType)
+                                                       ? slt(stdArg(tempIVs), affineArg(allIVs))
+                                                       : ult(stdArg(tempIVs), affineArg(allIVs)),
+                                                   allIVs[axis],
+                                                   currRedIdx);
 
                 iRes(nonRedIVs) = ValueBuilder<IndexCastOp>(newRedIdx, resTy);
             });
@@ -2984,7 +3002,7 @@ namespace
         }
         NGRAPH_UNREACHABLE("Unsupported type");
     }
-} // namespace
+}
 
 namespace mlir
 {
