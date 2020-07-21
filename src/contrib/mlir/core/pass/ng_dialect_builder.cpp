@@ -204,10 +204,6 @@ mlir::ArrayAttr NgDialectConversionPass::getShapeAsAttr(T ngShape)
 ngraph::Node* NgDialectConversionPass::getOriginArg(ngraph::Node* node) const
 {
     return node;
-    // auto inputMap = m_compiledKernel->get_input_map();
-    // auto it = inputMap.find(node->shared_from_this());
-    // NGRAPH_CHECK(it != inputMap.end(), "Parameter not in CK input map");
-    // return m_compiledKernel->input_values().at(it->second).get_node();
 }
 
 // Converts an nGraph Tensor into an MLIR tensor type, including the conversion
