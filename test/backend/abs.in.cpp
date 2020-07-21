@@ -57,7 +57,6 @@ NGRAPH_TEST(${BACKEND_NAME}, abs)
     auto a = backend->create_tensor(element::f32, shape);
     float negative_zero = test::bits_to_float("1  00000000  000 0000 0000 0000 0000 0000");
     copy_data(a, vector<float>{1, -2, 0, -4.75f, negative_zero});
-    NGRAPH_INFO << join(vector<float>{1, -2, 0, -4.75f, negative_zero});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
