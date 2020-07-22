@@ -18,6 +18,7 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -86,8 +87,27 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_outputs(outputs)
 {
     constructor_validate_and_infer_types();
-    encapsulate_nodes();
+    ParameterVector parameters = encapsulate_nodes();
     set_output_size(m_outputs.size());
+
+    for (shared_ptr<Node> node : node_list)
+    {
+        NGRAPH_INFO << *node;
+    }
+    for (Output<Node> o : args)
+    {
+        NGRAPH_INFO << "arg " << o;
+    }
+    for (Output<Node> o : outputs)
+    {
+        NGRAPH_INFO << "out " << o;
+    }
+
+    m_function = clone_function(*make_shared<Function>(outputs, parameters));
+    for (auto op : m_function->get_ordered_ops())
+    {
+        NGRAPH_INFO << *op;
+    }
 
     for (size_t i = 0; i < outputs.size(); ++i)
     {
@@ -100,18 +120,25 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
         }
         set_output_type(i, o.get_element_type(), o.get_partial_shape());
     }
+    for (auto op : m_function->get_ordered_ops())
+    {
+        NGRAPH_INFO << *op;
+    }
 }
 
-void ngraph::op::CompiledKernel::encapsulate_nodes()
+ParameterVector ngraph::op::CompiledKernel::encapsulate_nodes()
 {
     std::unordered_set<std::shared_ptr<Node>> node_set(m_node_list.begin(), m_node_list.end());
 
     // Go through each non-CK user of input to CK
     int ck_arg_idx = 0;
-    for (auto& arg_output : input_values())
+    ParameterVector internal_parameters;
+    for (Output<Node> arg_output : input_values())
     {
-        for (auto& input : arg_output.get_target_inputs())
+        NGRAPH_INFO << arg_output;
+        for (Input<Node> input : arg_output.get_target_inputs())
         {
+            NGRAPH_INFO << input;
             auto user = input.get_node();
             if (!as_type<op::CompiledKernel>(user) &&
                 node_set.find(user->shared_from_this()) != node_set.end())
@@ -123,13 +150,20 @@ void ngraph::op::CompiledKernel::encapsulate_nodes()
                     arg_output.get_element_type(), arg_output.get_partial_shape());
                 input.replace_source_output(temp_input_param->output(0));
                 insert_to_input_map(temp_input_param, ck_arg_idx);
+                internal_parameters.push_back(temp_input_param);
             }
         }
         ck_arg_idx++;
     }
+    return internal_parameters;
 }
 
 void ngraph::op::CompiledKernel::insert_to_input_map(std::shared_ptr<Node> node, size_t ck_arg_idx)
 {
     m_input_map.emplace(node, ck_arg_idx);
+}
+
+std::shared_ptr<ngraph::Function> ngraph::op::CompiledKernel::get_function()
+{
+    return m_function;
 }

@@ -43,8 +43,7 @@ using namespace ngraph::runtime::ngmlir;
 namespace
 {
     /// NgDialectConversionPass is an MLIR Pass Given an nGraph sub-graph,
-    /// represented as
-    /// CompiledKernel node, it
+    /// represented as an ngraph::Function, it
     /// translates the graph down to nGraph dialect
 
     class NgDialectConversionPass

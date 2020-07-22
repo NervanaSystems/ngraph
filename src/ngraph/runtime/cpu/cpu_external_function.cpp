@@ -486,6 +486,7 @@ static void generate_runtime_context_class(CodeWriter& writer)
 
 void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_config)
 {
+    NGRAPH_INFO;
     if (m_is_compiled)
     {
         return;
@@ -509,6 +510,11 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
     pass_manager.register_pass<ngraph::pass::CommonFunctionCollection>(
         femitter, node_function_map, common_function_string);
     pass_manager.run_passes(m_function);
+
+    for (shared_ptr<Node> op :  m_function->get_ordered_ops())
+    {
+        NGRAPH_INFO << *op;
+    }
 
     auto ordered_ops = m_function->get_ordered_ops();
 

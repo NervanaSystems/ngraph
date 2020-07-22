@@ -54,13 +54,7 @@ namespace ngraph
 
             public:
                 MLIRCompiler(std::shared_ptr<ngraph::Function> function,
-                             ::mlir::MLIRContext& context)
-                    : m_function(function)
-                    , m_context(context)
-                {
-                    NGRAPH_CHECK(initialized,
-                                 "Cannot instantiate a compiler without initializing MLIR");
-                }
+                             ::mlir::MLIRContext& context);
 
                 /// Compiles a subgraph with MLIR
                 void compile();

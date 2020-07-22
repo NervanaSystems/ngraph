@@ -21,7 +21,6 @@
 #include "cpu_runtime.hpp"
 #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
 #include "ngraph/check.hpp"
-#include "ngraph/log.hpp"
 
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
