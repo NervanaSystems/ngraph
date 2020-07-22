@@ -81,22 +81,23 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> no
 // - CK will internally have lists record graph nodes, and graph output nodes.
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
-    NGRAPH_INFO;
+    for (std::shared_ptr<Node> op : func->get_ordered_ops())
+    {
+        NGRAPH_INFO << "pre " << *op;
+    }
+
     build_subgraphs(func);
     auto ck_nodes = build_ck_nodes(func);
-    NGRAPH_INFO;
 
 #ifdef NGRAPH_DEBUG_ENABLE
     sanity_check(func, ck_nodes);
-    NGRAPH_INFO;
 #endif
 
     clean_up();
-    NGRAPH_INFO;
 
     for (std::shared_ptr<Node> op : func->get_ordered_ops())
     {
-        NGRAPH_INFO << *op;
+        NGRAPH_INFO << "post " << *op;
     }
 
     return true;
@@ -346,10 +347,6 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     for (auto& node : ck_nodes)
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
-        for (auto node : ck->get_function()->get_ordered_ops())
-        {
-            NGRAPH_INFO << *node;
-        }
         auto& outputs_vector = ck->get_kernel_outputs();
         auto& node_list = ck->get_node_list();
         std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());
@@ -366,18 +363,10 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
                 }
             }
         }
-        for (auto node : ck->get_function()->get_ordered_ops())
-        {
-            NGRAPH_INFO << *node;
-        }
     }
     for (auto& node : ck_nodes)
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
-        for (auto node : ck->get_function()->get_ordered_ops())
-        {
-            NGRAPH_INFO << *node;
-        }
         if (ck->get_output_size() > 1)
         {
             for (auto& old_output : ck->outputs())
@@ -390,11 +379,26 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
                 }
             }
         }
-        for (auto node : ck->get_function()->get_ordered_ops())
+    }
+
+    std::cout << "\n\n";
+    for (auto& node : ck_nodes)
+    {
+        auto ck = std::static_pointer_cast<CompiledKernel>(node);
+        std::cout << "\n\n";
+        NGRAPH_INFO << *node;
+        for (std::shared_ptr<Node> op : ck->get_function()->get_ordered_ops())
         {
-            NGRAPH_INFO << *node;
+            NGRAPH_INFO << *op;
         }
     }
+
+    std::cout << "\n\n";
+    for (std::shared_ptr<Node> op : func->get_ordered_ops())
+    {
+        NGRAPH_INFO << *op;
+    }
+    std::cout << "\n\n";
 
     return ck_nodes;
 }

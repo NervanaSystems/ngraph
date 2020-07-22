@@ -90,21 +90,17 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     ParameterVector parameters = encapsulate_nodes();
     set_output_size(m_outputs.size());
 
-    for (shared_ptr<Node> node : node_list)
+    shared_ptr<Function> original = make_shared<Function>(outputs, parameters);
+    m_function = clone_function(*original);
+    cout << "\n";
+    NGRAPH_INFO << args.size();
+    NGRAPH_INFO << parameters.size();
+    for(shared_ptr<Node> op : original->get_ordered_ops())
     {
-        NGRAPH_INFO << *node;
+        NGRAPH_INFO << *op;
     }
-    for (Output<Node> o : args)
-    {
-        NGRAPH_INFO << "arg " << o;
-    }
-    for (Output<Node> o : outputs)
-    {
-        NGRAPH_INFO << "out " << o;
-    }
-
-    m_function = clone_function(*make_shared<Function>(outputs, parameters));
-    for (auto op : m_function->get_ordered_ops())
+    cout << "\n";
+    for(shared_ptr<Node> op : m_function->get_ordered_ops())
     {
         NGRAPH_INFO << *op;
     }
@@ -120,10 +116,6 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
         }
         set_output_type(i, o.get_element_type(), o.get_partial_shape());
     }
-    for (auto op : m_function->get_ordered_ops())
-    {
-        NGRAPH_INFO << *op;
-    }
 }
 
 ParameterVector ngraph::op::CompiledKernel::encapsulate_nodes()
@@ -136,6 +128,9 @@ ParameterVector ngraph::op::CompiledKernel::encapsulate_nodes()
     for (Output<Node> arg_output : input_values())
     {
         NGRAPH_INFO << arg_output;
+        auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
+            arg_output.get_element_type(), arg_output.get_partial_shape());
+        internal_parameters.push_back(temp_input_param);
         for (Input<Node> input : arg_output.get_target_inputs())
         {
             NGRAPH_INFO << input;
@@ -146,11 +141,8 @@ ParameterVector ngraph::op::CompiledKernel::encapsulate_nodes()
                 arg_output.remove_target_input(input);
                 // Use a dummy Parameter as input for now, will replace later with the correct
                 // one.
-                auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
-                    arg_output.get_element_type(), arg_output.get_partial_shape());
                 input.replace_source_output(temp_input_param->output(0));
                 insert_to_input_map(temp_input_param, ck_arg_idx);
-                internal_parameters.push_back(temp_input_param);
             }
         }
         ck_arg_idx++;
