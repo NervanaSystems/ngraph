@@ -178,7 +178,6 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
                                std::shared_ptr<Node> node,
                                bool use_replace = true)
 {
-    NGRAPH_INFO << *node;
     OutputVector new_args;
     bool replace_node = false;
     uint32_t index = 0;
@@ -221,23 +220,17 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         index++;
     }
 
-    NGRAPH_INFO;
     shared_ptr<Node> new_node;
     if (replace_node)
     {
         new_node = node->copy_with_new_inputs(new_args);
-        NGRAPH_INFO << *new_node;
         if (node->is_output())
         {
-            NGRAPH_INFO;
             external_function->get_function()->replace_node(node, new_node);
-            NGRAPH_INFO;
         }
         else
         {
-            NGRAPH_INFO;
             ngraph::replace_node(node, new_node);
-            NGRAPH_INFO;
         }
         NGRAPH_DEBUG << "Replaced " << node->get_name() << " with " << new_node->get_name();
         auto old_op_annotations = static_pointer_cast<ngraph::op::Op>(node)->get_op_annotations();
@@ -245,7 +238,6 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         node = new_node;
     }
 
-    NGRAPH_INFO;
     for (size_t i = 0; i < node->get_output_size(); ++i)
     {
         auto tv = node->get_output_tensor_ptr(i);
@@ -266,7 +258,6 @@ static void set_native_layouts(runtime::cpu::CPU_ExternalFunction* external_func
         }
         tv->set_tensor_layout(layout);
     }
-    NGRAPH_INFO;
 }
 
 static void set_layouts_unaryeltwise(ngraph::runtime::cpu::CPU_ExternalFunction* external_function,
@@ -2383,7 +2374,6 @@ bool runtime::cpu::pass::CPULayout::run_on_call_graph(const std::list<std::share
         }
         else
         {
-            NGRAPH_INFO;
             set_native_layouts(m_external_function, node);
         }
     }

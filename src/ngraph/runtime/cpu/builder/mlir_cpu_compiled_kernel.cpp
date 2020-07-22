@@ -126,23 +126,16 @@ namespace ngraph
                             ctx->mlir_runtimes.find(compiled_kernel)->second;
                         // Grab the context and initialize a core compiler
                         mlir::MLIRContext& context = mlir_runtime.get_context();
-                        NGRAPH_INFO;
                         MLIRCompiler mlir_compiler(compiled_kernel->get_function(), context);
-                        NGRAPH_INFO;
                         // Compile to NG dialect
                         mlir_compiler.compile();
-                        NGRAPH_INFO;
                         // Grab a context and initialize a CPU backend using same context
                         MLIRCPUBackend mlir_backend(mlir_compiler.get_module(), context);
-                        NGRAPH_INFO;
                         // Codegen to LLVM dialect
                         mlir_backend.codegen();
-                        NGRAPH_INFO;
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
-                        NGRAPH_INFO;
                         mlir_runtime.run(mem_ref_arg_vec, true /*firstIteration*/);
-                        NGRAPH_INFO;
                     }
                     else
                     {

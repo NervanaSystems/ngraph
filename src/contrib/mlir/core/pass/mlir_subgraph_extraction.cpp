@@ -81,11 +81,6 @@ void MLIRSubgraphExtractionPass::MLIRSubgraph::add_node(std::shared_ptr<Node> no
 // - CK will internally have lists record graph nodes, and graph output nodes.
 bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 {
-    for (std::shared_ptr<Node> op : func->get_ordered_ops())
-    {
-        NGRAPH_INFO << "pre " << *op;
-    }
-
     build_subgraphs(func);
     auto ck_nodes = build_ck_nodes(func);
 
@@ -94,11 +89,6 @@ bool MLIRSubgraphExtractionPass::run_on_function(std::shared_ptr<Function> func)
 #endif
 
     clean_up();
-
-    for (std::shared_ptr<Node> op : func->get_ordered_ops())
-    {
-        NGRAPH_INFO << "post " << *op;
-    }
 
     return true;
 }
@@ -379,25 +369,6 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
             }
         }
     }
-
-    std::cout << "\n\n";
-    for (auto& node : ck_nodes)
-    {
-        auto ck = std::static_pointer_cast<CompiledKernel>(node);
-        std::cout << "\n\n";
-        NGRAPH_INFO << *node;
-        for (std::shared_ptr<Node> op : ck->get_function()->get_ordered_ops())
-        {
-            NGRAPH_INFO << *op;
-        }
-    }
-
-    std::cout << "\n\n";
-    for (std::shared_ptr<Node> op : func->get_ordered_ops())
-    {
-        NGRAPH_INFO << *op;
-    }
-    std::cout << "\n\n";
 
     return ck_nodes;
 }

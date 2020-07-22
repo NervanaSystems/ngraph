@@ -130,31 +130,6 @@ CPU_MLIR.debugger_delete_breakpoint
 CPU_MLIR.debugger_while_stepping
 CPU_MLIR.debugger_resume
 
-#CPU_MLIR.cpu_test_convert_layout
-#CPU_MLIR.core_fusion_zero_padded_reshaped_conv
-#CPU_MLIR.cpu_fusion_conv_bias_add
-#CPU_MLIR.cpu_fusion_rnn_matrix_fusion_eval_pass
-#CPU_MLIR.cpu_fusion_convbias_affine_folding1
-#CPU_MLIR.cpu_fusion_convbias_affine_folding2
-#CPU_MLIR.cpu_fusion_rnn_input_fusion_inter_vs_cpu
-#CPU_MLIR.cpu_fusion_fuse_rnn_across_layer_2layer_3timestep
-#CPU_MLIR.cpu_fusion_validate_fuse_gru_inputs
-#CPU_MLIR.rnn_cell_no_bias
-#CPU_MLIR.rnn_cell_bias_clip
-#CPU_MLIR.rnn_cell_activation_function
-#CPU_MLIR.matmul_3x2_3x3_transpose
-#CPU_MLIR.matmul_3x2_2x3_transpose
-#CPU_MLIR.lstm_cell_zero_bias_peepholes
-#CPU_MLIR.lstm_cell_bias_peepholes
-#CPU_MLIR.lstm_cell_bias_peepholes_clip_input_forget
-#CPU_MLIR.lstm_cell_activaction_functions
-#CPU_MLIR.gru_cell_bias_clip
-#CPU_MLIR.gru_cell_linear_before_reset
-#CPU_MLIR.gru_cell_activation_function
-#CPU_MLIR.dyn_group_convolution_backprop_data
-#CPU_MLIR.dyn_group_convolution_backprop_filters
-#CPU_MLIR.backwards_dot_tensor2_tensor2
-
 ################################################################################
 # CODEGEN
 ################################################################################

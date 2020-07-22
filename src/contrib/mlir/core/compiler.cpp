@@ -80,10 +80,6 @@ MLIRCompiler::MLIRCompiler(std::shared_ptr<ngraph::Function> function, ::mlir::M
     : m_function(function)
     , m_context(context)
 {
-    for (auto op : function->get_ordered_ops())
-    {
-        NGRAPH_INFO << *op;
-    }
     NGRAPH_CHECK(initialized, "Cannot instantiate a compiler without initializing MLIR");
 }
 

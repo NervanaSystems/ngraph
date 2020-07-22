@@ -27,59 +27,7 @@ constexpr NodeTypeInfo op::CompiledKernel::type_info;
 shared_ptr<Node>
     ngraph::op::CompiledKernel::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    NGRAPH_INFO << "********************";
-    auto rc = std::make_shared<CompiledKernel>(m_function, new_args);
-    NGRAPH_INFO;
-    return rc;
-    // auto args = input_values();
-    // if (new_args.size() != args.size())
-    // {
-    //     throw ngraph_error("number of arguments don't match");
-    // }
-
-    // // map inputs
-    // map<Output<Node>, Output<Node>> nm;
-    // for (size_t i = 0; i < args.size(); i++)
-    // {
-    //     nm[args[i]] = new_args.at(i);
-    // }
-
-    // NodeVector new_node_list;
-    // for (auto n : m_node_list)
-    // {
-    //     OutputVector cur_args;
-    //     for (auto a : n->input_values())
-    //     {
-    //         if (as_type<op::Parameter>(a.get_node()))
-    //         {
-    //             // dummy parameter
-    //             cur_args.push_back(a);
-    //         }
-    //         else
-    //         {
-    //             cur_args.push_back(nm.at(a));
-    //         }
-    //     }
-    //     auto new_n = n->copy_with_new_inputs(cur_args);
-    //     for (size_t i = 0; i < n->get_output_size(); ++i)
-    //     {
-    //         nm[n->output(i)] = new_n->output(i);
-    //     }
-    //     new_node_list.push_back(new_n);
-    // }
-
-    // OutputVector new_outputs;
-    // for (auto o : m_outputs)
-    // {
-    //     new_outputs.push_back(nm.at(o));
-    // }
-
-    // auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
-    // for (auto it : m_input_map)
-    // {
-    //     ck->insert_to_input_map(it.first, it.second);
-    // }
-    // return std::move(ck);
+    return std::make_shared<CompiledKernel>(m_function, new_args);
 }
 
 ngraph::op::CompiledKernel::CompiledKernel(const std::shared_ptr<Function>& function,
@@ -87,7 +35,6 @@ ngraph::op::CompiledKernel::CompiledKernel(const std::shared_ptr<Function>& func
     : Op(args)
     , m_function(clone_function(*function))
 {
-    NGRAPH_INFO;
     size_t i = 0;
     for (auto o : function->get_results())
     {
@@ -103,27 +50,12 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_node_list(node_list)
     , m_outputs(outputs)
 {
-    NGRAPH_INFO << "********************";
     constructor_validate_and_infer_types();
     ParameterVector parameters = encapsulate_nodes();
     set_output_size(m_outputs.size());
 
     shared_ptr<Function> original = make_shared<Function>(outputs, parameters);
     m_function = clone_function(*original);
-    cout << "\n";
-    NGRAPH_INFO << args.size();
-    NGRAPH_INFO << parameters.size();
-    NGRAPH_INFO << original->get_name();
-    for (shared_ptr<Node> op : original->get_ordered_ops())
-    {
-        NGRAPH_INFO << *op;
-    }
-    cout << "\n";
-    NGRAPH_INFO << m_function->get_name();
-    for (shared_ptr<Node> op : m_function->get_ordered_ops())
-    {
-        NGRAPH_INFO << *op;
-    }
 
     for (size_t i = 0; i < outputs.size(); ++i)
     {
@@ -147,13 +79,11 @@ ParameterVector ngraph::op::CompiledKernel::encapsulate_nodes()
     ParameterVector internal_parameters;
     for (Output<Node> arg_output : input_values())
     {
-        NGRAPH_INFO << arg_output;
         auto temp_input_param = std::make_shared<ngraph::op::Parameter>(
             arg_output.get_element_type(), arg_output.get_partial_shape());
         internal_parameters.push_back(temp_input_param);
         for (Input<Node> input : arg_output.get_target_inputs())
         {
-            NGRAPH_INFO << input;
             auto user = input.get_node();
             if (!as_type<op::CompiledKernel>(user) &&
                 node_set.find(user->shared_from_this()) != node_set.end())
