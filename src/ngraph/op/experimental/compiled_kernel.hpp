@@ -40,6 +40,8 @@ namespace ngraph
                 CompiledKernel(const NodeVector& node_list,
                                const OutputVector& outputs,
                                const OutputVector& args);
+                CompiledKernel(const std::shared_ptr<Function>& function, const OutputVector& args);
+
                 virtual std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 

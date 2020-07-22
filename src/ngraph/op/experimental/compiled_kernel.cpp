@@ -18,7 +18,6 @@
 
 #include "ngraph/graph_util.hpp"
 #include "ngraph/log.hpp"
-#include "ngraph/graph_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -28,55 +27,73 @@ constexpr NodeTypeInfo op::CompiledKernel::type_info;
 shared_ptr<Node>
     ngraph::op::CompiledKernel::clone_with_new_inputs(const OutputVector& new_args) const
 {
-    auto args = input_values();
-    if (new_args.size() != args.size())
-    {
-        throw ngraph_error("number of arguments don't match");
-    }
+    NGRAPH_INFO << "********************";
+    auto rc = std::make_shared<CompiledKernel>(m_function, new_args);
+    NGRAPH_INFO;
+    return rc;
+    // auto args = input_values();
+    // if (new_args.size() != args.size())
+    // {
+    //     throw ngraph_error("number of arguments don't match");
+    // }
 
-    // map inputs
-    map<Output<Node>, Output<Node>> nm;
-    for (size_t i = 0; i < args.size(); i++)
-    {
-        nm[args[i]] = new_args.at(i);
-    }
+    // // map inputs
+    // map<Output<Node>, Output<Node>> nm;
+    // for (size_t i = 0; i < args.size(); i++)
+    // {
+    //     nm[args[i]] = new_args.at(i);
+    // }
 
-    NodeVector new_node_list;
-    for (auto n : m_node_list)
-    {
-        OutputVector cur_args;
-        for (auto a : n->input_values())
-        {
-            if (as_type<op::Parameter>(a.get_node()))
-            {
-                // dummy parameter
-                cur_args.push_back(a);
-            }
-            else
-            {
-                cur_args.push_back(nm.at(a));
-            }
-        }
-        auto new_n = n->copy_with_new_inputs(cur_args);
-        for (size_t i = 0; i < n->get_output_size(); ++i)
-        {
-            nm[n->output(i)] = new_n->output(i);
-        }
-        new_node_list.push_back(new_n);
-    }
+    // NodeVector new_node_list;
+    // for (auto n : m_node_list)
+    // {
+    //     OutputVector cur_args;
+    //     for (auto a : n->input_values())
+    //     {
+    //         if (as_type<op::Parameter>(a.get_node()))
+    //         {
+    //             // dummy parameter
+    //             cur_args.push_back(a);
+    //         }
+    //         else
+    //         {
+    //             cur_args.push_back(nm.at(a));
+    //         }
+    //     }
+    //     auto new_n = n->copy_with_new_inputs(cur_args);
+    //     for (size_t i = 0; i < n->get_output_size(); ++i)
+    //     {
+    //         nm[n->output(i)] = new_n->output(i);
+    //     }
+    //     new_node_list.push_back(new_n);
+    // }
 
-    OutputVector new_outputs;
-    for (auto o : m_outputs)
-    {
-        new_outputs.push_back(nm.at(o));
-    }
+    // OutputVector new_outputs;
+    // for (auto o : m_outputs)
+    // {
+    //     new_outputs.push_back(nm.at(o));
+    // }
 
-    auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
-    for (auto it : m_input_map)
+    // auto ck = std::make_shared<CompiledKernel>(new_node_list, new_outputs, new_args);
+    // for (auto it : m_input_map)
+    // {
+    //     ck->insert_to_input_map(it.first, it.second);
+    // }
+    // return std::move(ck);
+}
+
+ngraph::op::CompiledKernel::CompiledKernel(const std::shared_ptr<Function>& function,
+                                           const OutputVector& args)
+    : Op(args)
+    , m_function(clone_function(*function))
+{
+    NGRAPH_INFO;
+    size_t i = 0;
+    for (auto o : function->get_results())
     {
-        ck->insert_to_input_map(it.first, it.second);
+        set_output_type(i, o->get_output_element_type(0), o->get_output_partial_shape(0));
+        i++;
     }
-    return std::move(ck);
 }
 
 ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
@@ -86,6 +103,7 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     , m_node_list(node_list)
     , m_outputs(outputs)
 {
+    NGRAPH_INFO << "********************";
     constructor_validate_and_infer_types();
     ParameterVector parameters = encapsulate_nodes();
     set_output_size(m_outputs.size());
@@ -95,12 +113,14 @@ ngraph::op::CompiledKernel::CompiledKernel(const NodeVector& node_list,
     cout << "\n";
     NGRAPH_INFO << args.size();
     NGRAPH_INFO << parameters.size();
-    for(shared_ptr<Node> op : original->get_ordered_ops())
+    NGRAPH_INFO << original->get_name();
+    for (shared_ptr<Node> op : original->get_ordered_ops())
     {
         NGRAPH_INFO << *op;
     }
     cout << "\n";
-    for(shared_ptr<Node> op : m_function->get_ordered_ops())
+    NGRAPH_INFO << m_function->get_name();
+    for (shared_ptr<Node> op : m_function->get_ordered_ops())
     {
         NGRAPH_INFO << *op;
     }

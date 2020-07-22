@@ -34,14 +34,15 @@ void pass::ValidateGraph::validate_parameters(const Function& function)
     for (auto node : function.get_ops())
     {
         shared_ptr<op::Parameter> p = as_type_ptr<op::Parameter>(node);
-        if (nullptr != p)
+        if (p)
         {
             auto it = find_if(parameters.begin(),
                               parameters.end(),
                               [p](shared_ptr<op::Parameter> q) { return (p == q); });
             if (it == parameters.end())
             {
-                throw ngraph_error("Function references undeclared parameter");
+                throw ngraph_error("Function references undeclared parameter '" + p->get_name() +
+                                   "' (ValidateGraph::validate_parameters)");
             }
         }
     }
