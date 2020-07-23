@@ -42,22 +42,13 @@ NGRAPH_TEST(${BACKEND_NAME}, abc)
     shared_ptr<runtime::Tensor> c = backend->create_tensor(element::f32, shape);
     shared_ptr<runtime::Tensor> result = backend->create_tensor(element::f32, shape);
 
-    copy_data(a, test::NDArray<float, 2>({{1, 2}, {3, 4}}).get_vector());
-    copy_data(b, test::NDArray<float, 2>({{5, 6}, {7, 8}}).get_vector());
-    copy_data(c, test::NDArray<float, 2>({{9, 10}, {11, 12}}).get_vector());
+    copy_data(a, vector<float>({1, 2, 3, 4}));
+    copy_data(b, vector<float>({5, 6, 7, 8}));
+    copy_data(c, vector<float>({9, 10, 11, 12}));
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a, b, c});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
-
-    handle->call_with_validate({result}, {b, a, c});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                                  (test::NDArray<float, 2>({{54, 80}, {110, 144}})).get_vector()));
-
-    handle->call_with_validate({result}, {a, c, b});
-    EXPECT_TRUE(test::all_close_f(read_vector<float>(result),
-                                  (test::NDArray<float, 2>({{50, 72}, {98, 128}})).get_vector()));
+    EXPECT_TRUE(test::all_close_f(read_vector<float>(result), vector<float>({54, 80, 110, 144})));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, abc_int64)

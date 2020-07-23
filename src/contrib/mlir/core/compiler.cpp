@@ -19,23 +19,6 @@
 // convention.
 
 #include "compiler.hpp"
-
-#include "ngraph_dialect/dialect.hpp"
-#include "ngraph_dialect/ops.hpp"
-#include "ngraph_dialect/type.hpp"
-#include "pass/ng_dialect_builder.hpp"
-#include "pass/ng_dialect_fused_ops.hpp"
-#include "pass/ng_op_fusion.hpp"
-
-#include "ngraph/check.hpp"
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/graph_util.hpp"
-#include "ngraph/node.hpp"
-#include "ngraph/ops.hpp"
-#include "ngraph/type/element_type.hpp"
-
-#include "contrib/mlir/utils.hpp"
-
 #include <llvm/ADT/STLExtras.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
@@ -45,6 +28,7 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
+#include <memory>
 #include <mlir/Conversion/SCFToStandard/SCFToStandard.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
@@ -55,9 +39,21 @@
 #include <mlir/Target/LLVMIR.h>
 #include <mlir/Transforms/DialectConversion.h>
 #include <mlir/Transforms/Passes.h>
-
-#include <memory>
 #include <mutex>
+#include "contrib/mlir/utils.hpp"
+#include "ngraph/check.hpp"
+#include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/ops.hpp"
+#include "ngraph/type/element_type.hpp"
+#include "ngraph_dialect/dialect.hpp"
+#include "ngraph_dialect/ops.hpp"
+#include "ngraph_dialect/type.hpp"
+#include "pass/ng_dialect_builder.hpp"
+#include "pass/ng_dialect_fused_ops.hpp"
+#include "pass/ng_op_fusion.hpp"
 
 // Defines a new LLVM debug type for this file to be used by LLVM_DEBUG macro.
 #define DEBUG_TYPE "mlir-compiler"
@@ -79,6 +75,13 @@ static llvm::cl::opt<bool> clEnableOpFusion("ngraph-op-fusion",
                                             llvm::cl::desc("Enable ngraph dialect op fusion pass"));
 
 bool MLIRCompiler::initialized = false;
+
+MLIRCompiler::MLIRCompiler(std::shared_ptr<ngraph::Function> function, ::mlir::MLIRContext& context)
+    : m_function(function)
+    , m_context(context)
+{
+    NGRAPH_CHECK(initialized, "Cannot instantiate a compiler without initializing MLIR");
+}
 
 void MLIRCompiler::init()
 {
@@ -115,7 +118,7 @@ void MLIRCompiler::buildNgDialectModule()
     m_module = mlir::ModuleOp::create(mlir::UnknownLoc::get(&m_context));
 
     mlir::PassManager pm(&m_context);
-    pm.addPass(ngraph::pass::createNgDialectConversionPass(m_compiledKernel, &m_context));
+    pm.addPass(ngraph::pass::createNgDialectConversionPass(m_function, &m_context));
 
     // Apply any generic pass manager command line options.
     mlir::applyPassManagerCLOptions(pm);

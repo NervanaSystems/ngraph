@@ -14,29 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming
-// convention.
+#define ID_SUFFIX(NAME) NAME
+#include "ngraph/opset/opset0_tbl.hpp"
+#undef ID_SUFFIX
 
-#pragma once
+#define ID_SUFFIX(NAME) NAME##_v1
+NGRAPH_OP(LessEqual, op::v1)
+NGRAPH_OP(LogicalAnd, op::v1)
+NGRAPH_OP(LogicalOr, op::v1)
+NGRAPH_OP(LogicalXor, op::v1)
+NGRAPH_OP(LogicalNot, op::v1)
+NGRAPH_OP(Mod, op::v1)
+#undef ID_SUFFIX
 
-#include "contrib/mlir/core/compiler.hpp"
-
-#include "ngraph/check.hpp"
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/node.hpp"
-
-#include <mlir/Pass/Pass.h>
-
-// TODO: this seems bad to do in an HPP
-using namespace ngraph::runtime::ngmlir;
-
-namespace ngraph
-{
-    namespace pass
-    {
-        std::unique_ptr<mlir::Pass>
-            createNgDialectConversionPass(std::shared_ptr<ngraph::Function> function,
-                                          mlir::MLIRContext* context);
-    }
-}
+#define ID_SUFFIX(NAME) NAME##_v3
+NGRAPH_OP(ShapeOf, op::v3)
+NGRAPH_OP(NonZero, op::v3)
+#undef ID_SUFFIX

@@ -42,14 +42,14 @@ namespace ngraph
                 /// Global Initialization for all CPU backends
                 static void init();
 
-                MLIRCPUBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
+                MLIRCPUBackend(::mlir::OwningModuleRef& module, ::mlir::MLIRContext& context)
                     : MLIRBackend(module, context)
                 {
                     NGRAPH_CHECK(initialized,
                                  "Cannot instantiate CPU MLIR backend without initialization");
                 }
 
-                MLIRCPUBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
+                MLIRCPUBackend(::mlir::ModuleOp& moduleOp, ::mlir::MLIRContext& context)
                     : MLIRBackend(moduleOp, context)
                 {
                     NGRAPH_CHECK(initialized,

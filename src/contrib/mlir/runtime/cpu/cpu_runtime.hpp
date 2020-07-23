@@ -81,7 +81,7 @@ namespace ngraph
                 const std::vector<MemRefArg>* m_externalTensors;
                 // Arguments for the MLIR function generated for the nGraph sub-graph.
                 llvm::SmallVector<void*, 8> m_invokeArgs;
-                std::unique_ptr<mlir::ExecutionEngine> m_engine;
+                std::unique_ptr<::mlir::ExecutionEngine> m_engine;
                 std::vector<size_t> m_ranks;
             };
         }

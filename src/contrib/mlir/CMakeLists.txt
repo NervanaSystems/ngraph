@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NOT NGRAPH_MLIR_ENABLE)
+if (NOT (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE))
     return()
 endif()
 
@@ -48,13 +48,13 @@ set(SRC
     utils.cpp
 )
 
-add_library(mlir_backend SHARED ${SRC})
+add_library(mlir_llvm_backend SHARED ${SRC})
 
 llvm_map_components_to_libnames(llvm_libs support core irreader)
 
 # Link MLIR libs
 target_link_libraries(
-    mlir_backend PRIVATE
+    mlir_llvm_backend PRIVATE
     MLIRAffineOps
     MLIRAffineEDSC
     MLIRAffineToStandard
@@ -95,16 +95,16 @@ set(LIBS
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRAffineOps.a
     ${LLVM_BUILD_LIBRARY_DIR}/libMLIRStandardOps.a
 )
-whole_archive_link(mlir_backend ${LIBS})
+whole_archive_link(mlir_llvm_backend ${LIBS})
 # Link LLVM libs
 target_link_libraries(
-    mlir_backend PRIVATE
+    mlir_llvm_backend PRIVATE
     ${llvm_libs}
 )
 
 # Link ngraph
-target_link_libraries(mlir_backend PUBLIC ngraph libmkl DNNL::dnnl)
-target_include_directories(mlir_backend SYSTEM PUBLIC DNNL::dnnl)
+target_link_libraries(mlir_llvm_backend PUBLIC ngraph libmkl DNNL::dnnl)
+target_include_directories(mlir_llvm_backend SYSTEM PUBLIC DNNL::dnnl)
 
 # table-gen dialect ops
 # include table-gen helpers
@@ -141,8 +141,8 @@ set(LLVM_TARGET_DEFINITIONS core/pass/fused_ops_pattern.td)
 ngraph_tablegen(fused_ops_pattern.h.inc -gen-rewriters)
 add_public_tablegen_target(ngraph_ops_pattern_gen)
 
-add_dependencies(mlir_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_ops_pattern_gen)
+add_dependencies(mlir_llvm_backend ngraph_ops_gen ngraph_ops_interfaces_gen ngraph_ops_attributes_gen ngraph_ops_pattern_gen)
 
-target_include_directories(mlir_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+target_include_directories(mlir_llvm_backend PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
-install(TARGETS mlir_backend DESTINATION ${NGRAPH_INSTALL_LIB})
+install(TARGETS mlir_llvm_backend DESTINATION ${NGRAPH_INSTALL_LIB})

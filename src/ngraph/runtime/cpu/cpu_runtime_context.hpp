@@ -30,10 +30,10 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 
 #ifdef NGRAPH_IN_CODEGEN
-#undef NGRAPH_MLIR_ENABLE
+#undef NGRAPH_CPU_MLIR_ENABLE
 #endif
 
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
 #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #endif
 
@@ -82,7 +82,7 @@ namespace ngraph
                 State* const* states;
                 std::set<size_t> breakpoints;
                 size_t pc;
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
                 /// Maps CompiledKernel nodes to their MLIR compiler
                 /// The MLIR compiler caches the compiled code on the first invocation,
                 /// and may in the future support re-compilation

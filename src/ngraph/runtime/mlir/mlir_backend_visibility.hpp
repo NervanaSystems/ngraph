@@ -14,29 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming
-// convention.
+#include "ngraph/visibility.hpp"
 
-#pragma once
+// Now we use the generic helper definitions above to define MLIR_API
+// MLIR_API is used for the public API symbols. It either DLL imports or DLL exports
+//    (or does nothing for static build)
 
-#include "contrib/mlir/core/compiler.hpp"
-
-#include "ngraph/check.hpp"
-#include "ngraph/descriptor/tensor.hpp"
-#include "ngraph/node.hpp"
-
-#include <mlir/Pass/Pass.h>
-
-// TODO: this seems bad to do in an HPP
-using namespace ngraph::runtime::ngmlir;
-
-namespace ngraph
-{
-    namespace pass
-    {
-        std::unique_ptr<mlir::Pass>
-            createNgDialectConversionPass(std::shared_ptr<ngraph::Function> function,
-                                          mlir::MLIRContext* context);
-    }
-}
+#ifdef MLIR_BACKEND_EXPORTS // defined if we are building the MLIR DLL (instead of using it)
+#define MLIR_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
+#else
+#define MLIR_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
+#endif // MLIR_DLL_EXPORTS

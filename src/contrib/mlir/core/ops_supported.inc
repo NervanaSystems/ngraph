@@ -3,6 +3,7 @@
 #define MLIR_OP
 #endif
 
+MLIR_OP(Abs)
 MLIR_OP(Add)
 MLIR_OP(ArgMin)
 MLIR_OP(ArgMax)
