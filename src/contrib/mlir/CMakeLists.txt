@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NOT NGRAPH_MLIR_ENABLE)
+if (NOT (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE))
     return()
 endif()
 

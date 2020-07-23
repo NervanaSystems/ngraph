@@ -35,7 +35,7 @@
 #include "ngraph/codegen/execution_engine.hpp"
 #endif
 
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
 #include "contrib/mlir/core/pass/mlir_subgraph_extraction.hpp"
 #endif
 
@@ -540,8 +540,8 @@ void runtime::cpu::CPU_ExternalFunction::compile(ngraph::pass::PassConfig& pass_
 #if defined(NGRAPH_TBB_ENABLE)
     writer += "#define NGRAPH_TBB_ENABLE\n";
 #endif
-#if defined(NGRAPH_MLIR_ENABLE)
-    writer += "#define NGRAPH_MLIR_ENABLE\n";
+#if defined(NGRAPH_CPU_MLIR_ENABLE)
+    writer += "#define NGRAPH_CPU_MLIR_ENABLE\n";
 #endif
 
     writer +=
@@ -1205,7 +1205,7 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     auto dex = is_direct_execution();
     auto is_supported = [dex, this](const Node& node) {
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
         if ((m_execution_mode == EXECUTION_MODE::MLIR) && getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             if (typeid(ngraph::op::MatMul) == typeid(node) &&
@@ -1296,19 +1296,19 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
     REGISTER_KNOBBED_PASS(CPUPreFusion, true, runtime::cpu::pass)
 
 // Disable CPUFusion if MLIR is enabled to preserve core ops.
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
     if (m_execution_mode != EXECUTION_MODE::MLIR)
     {
 #endif
         REGISTER_KNOBBED_PASS(CPUFusion, true, runtime::cpu::pass)
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
     }
 #endif
     REGISTER_KNOBBED_PASS(CPUQuantFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUHorizontalFusion, true, runtime::cpu::pass)
     REGISTER_KNOBBED_PASS(CPUCollapseDims, true, runtime::cpu::pass)
 
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
     if (m_execution_mode == EXECUTION_MODE::MLIR)
     {
         REGISTER_KNOBBED_PASS(MLIRSubgraphExtractionPass, /*enable by default*/ true, ngraph::pass)

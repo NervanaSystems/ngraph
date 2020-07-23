@@ -14,7 +14,7 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_MLIR_ENABLE)
+if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     if (NGRAPH_MLIR_STATIC_LIB_ENABLE)
         set(LIBRARY_TYPE STATIC)
     else()

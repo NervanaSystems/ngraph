@@ -33,7 +33,7 @@
 #include "ngraph/runtime/cpu/static_initialize.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
 #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
 #include "contrib/mlir/core/compiler.hpp"
 #endif
