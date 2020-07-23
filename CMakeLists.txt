@@ -641,7 +641,7 @@ if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
     include(cmake/external/eigen.cmake)
 endif()
 if(NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE)
-    include(cmake/external_onednn.cmake)
+    include(cmake/external/onednn.cmake)
 endif()
 
 if(NGRAPH_LLVM_ENABLE)
