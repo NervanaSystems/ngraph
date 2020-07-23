@@ -126,7 +126,7 @@ namespace ngraph
                             ctx->mlir_runtimes.find(compiled_kernel)->second;
                         // Grab the context and initialize a core compiler
                         mlir::MLIRContext& context = mlir_runtime.get_context();
-                        MLIRCompiler mlir_compiler(compiled_kernel, context);
+                        MLIRCompiler mlir_compiler(compiled_kernel->get_function(), context);
                         // Compile to NG dialect
                         mlir_compiler.compile();
                         // Grab a context and initialize a CPU backend using same context

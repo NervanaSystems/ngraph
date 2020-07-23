@@ -143,7 +143,7 @@ if (NGRAPH_CPU_CODEGEN_ENABLE)
         )
 endif()
 
-if (NGRAPH_MLIR_ENABLE)
+if (NGRAPH_CPU_MLIR_ENABLE)
     set(SRC
         ${SRC}
         builder/mlir_cpu_compiled_kernel.cpp
@@ -248,7 +248,7 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET cpu_backend APPEND PROPERTY LINK_FLAGS "-Wl,-Bsymbolic-functions -Wl,--exclude-libs=ALL")
     endif()
 
-    if (NGRAPH_MLIR_ENABLE)
+    if (NGRAPH_CPU_MLIR_ENABLE)
         # TODO: can we get away without LLVM/MLIR include path.
         # Currently mlir backend compiler.hpp include LLVM/MLIR files
         get_directory_property(MLIR_LLVM_INCLUDEPATH
@@ -256,12 +256,12 @@ if (NGRAPH_CPU_ENABLE)
                                DEFINITION MLIR_LLVM_INCLUDEPATH)
 
         message(STATUS "Building CPU backend with MLIR")
-        add_dependencies(cpu_backend mlir_backend)
+        add_dependencies(cpu_backend mlir_llvm_backend)
         target_include_directories(cpu_backend PUBLIC ${MLIR_INCLUDE_PATHS} ${MLIR_LLVM_INCLUDE_PATH})
-        target_link_libraries(cpu_backend PUBLIC mlir_backend)
+        target_link_libraries(cpu_backend PUBLIC mlir_llvm_backend)
         # TODO: Get rid of the compile time def, and move all MLIR code to separate src files
         # and add them to cpu_backend here instead.
-        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_MLIR_ENABLE")
+        target_compile_definitions(cpu_backend PRIVATE "NGRAPH_CPU_MLIR_ENABLE")
     endif()
 
     install(TARGETS cpu_backend DESTINATION ${NGRAPH_INSTALL_LIB})

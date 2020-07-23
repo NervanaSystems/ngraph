@@ -36,7 +36,7 @@ namespace ngraph
     namespace pass
     {
         std::unique_ptr<mlir::Pass>
-            createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
+            createNgDialectConversionPass(std::shared_ptr<ngraph::Function> function,
                                           mlir::MLIRContext* context);
     }
 }

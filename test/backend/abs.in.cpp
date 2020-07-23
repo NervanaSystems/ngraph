@@ -38,6 +38,7 @@
 #include "util/ndarray.hpp"
 #include "util/test_control.hpp"
 #include "util/test_tools.hpp"
+#include "util/float_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -46,7 +47,7 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, abs)
 {
-    Shape shape{2, 2};
+    Shape shape{5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{A});
 
@@ -54,11 +55,12 @@ NGRAPH_TEST(${BACKEND_NAME}, abs)
 
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
-    copy_data(a, vector<float>{1, -2, 0, -4.75f});
+    float negative_zero = test::bits_to_float("1  00000000  000 0000 0000 0000 0000 0000");
+    copy_data(a, vector<float>{1, -2, 0, -4.75f, negative_zero});
     auto result = backend->create_tensor(element::f32, shape);
 
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(test::all_close_f(
-        (vector<float>{1, 2, 0, 4.75f}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
+        (vector<float>{1, 2, 0, 4.75f, 0}), read_vector<float>(result), MIN_FLOAT_TOLERANCE_BITS));
 }

@@ -60,7 +60,7 @@ namespace mlir
     using NGIntegerType = mlir::IntegerType;
 
     /// Boolean Type.
-    class NGBoolType : public mlir::Type::TypeBase<NGBoolType, mlir::Type>
+    class NGBoolType : public mlir::Type::TypeBase<NGBoolType, mlir::Type, mlir::TypeStorage>
     {
     public:
         using Base::Base;

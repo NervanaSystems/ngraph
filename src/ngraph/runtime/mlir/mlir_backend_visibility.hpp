@@ -14,33 +14,14 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since
-// it does
-// not expose public API to the rest of nGraph codebase and heavily depends on
-// MLIR API.
+#include "ngraph/visibility.hpp"
 
-#pragma once
+// Now we use the generic helper definitions above to define MLIR_API
+// MLIR_API is used for the public API symbols. It either DLL imports or DLL exports
+//    (or does nothing for static build)
 
-#include <cstdarg>
-#include "llvm/ADT/STLExtras.h"
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
-#include "mlir/IR/OperationSupport.h"
-#include "mlir/IR/StandardTypes.h"
-#include "mlir/Interfaces/SideEffectInterfaces.h"
-
-// attributes
-// Currently table-gen dictates that enum attributes are in global namespace
-#include "ops_attributes.h.inc"
-
-namespace mlir
-{
-// interfaces
-#include "ops_interfaces.h.inc"
-
-// ops
-#define GET_OP_CLASSES
-#include "ops.h.inc"
-#undef GET_OP_CLASSES
-}
+#ifdef MLIR_BACKEND_EXPORTS // defined if we are building the MLIR DLL (instead of using it)
+#define MLIR_BACKEND_API NGRAPH_HELPER_DLL_EXPORT
+#else
+#define MLIR_BACKEND_API NGRAPH_HELPER_DLL_IMPORT
+#endif // MLIR_DLL_EXPORTS

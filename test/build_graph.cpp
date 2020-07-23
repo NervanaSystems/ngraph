@@ -119,7 +119,11 @@ TEST(build_graph, function_undeclared_parameters)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Function references undeclared parameter"));
+        string msg = error.what();
+        if (msg.find("references undeclared parameter") == string::npos)
+        {
+            FAIL() << "Unexpected error message.";
+        }
     }
     catch (...)
     {

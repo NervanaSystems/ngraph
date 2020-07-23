@@ -332,10 +332,10 @@ ngraph::NodeVector MLIRSubgraphExtractionPass::build_ck_nodes(std::shared_ptr<Fu
     // of the output
     // Do this after all CK nodes are constructed since they add new edges in the
     // graph (CK inputs)
+
     for (auto& node : ck_nodes)
     {
         auto ck = std::static_pointer_cast<CompiledKernel>(node);
-
         auto& outputs_vector = ck->get_kernel_outputs();
         auto& node_list = ck->get_node_list();
         std::unordered_set<std::shared_ptr<Node>> node_set(node_list.begin(), node_list.end());

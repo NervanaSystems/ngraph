@@ -14,33 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since
-// it does
-// not expose public API to the rest of nGraph codebase and heavily depends on
-// MLIR API.
+#define ID_SUFFIX(NAME) NAME
+#include "ngraph/opset/opset0_tbl.hpp"
+#undef ID_SUFFIX
 
-#pragma once
+#define ID_SUFFIX(NAME) NAME##_v1
+NGRAPH_OP(LessEqual, op::v1)
+NGRAPH_OP(LogicalAnd, op::v1)
+NGRAPH_OP(LogicalOr, op::v1)
+NGRAPH_OP(LogicalXor, op::v1)
+NGRAPH_OP(LogicalNot, op::v1)
+NGRAPH_OP(Mod, op::v1)
+#undef ID_SUFFIX
 
-#include <cstdarg>
-#include "llvm/ADT/STLExtras.h"
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
-#include "mlir/IR/OperationSupport.h"
-#include "mlir/IR/StandardTypes.h"
-#include "mlir/Interfaces/SideEffectInterfaces.h"
-
-// attributes
-// Currently table-gen dictates that enum attributes are in global namespace
-#include "ops_attributes.h.inc"
-
-namespace mlir
-{
-// interfaces
-#include "ops_interfaces.h.inc"
-
-// ops
-#define GET_OP_CLASSES
-#include "ops.h.inc"
-#undef GET_OP_CLASSES
-}
+#define ID_SUFFIX(NAME) NAME##_v3
+NGRAPH_OP(ShapeOf, op::v3)
+NGRAPH_OP(NonZero, op::v3)
+#undef ID_SUFFIX
