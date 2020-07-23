@@ -283,7 +283,6 @@ if (NGRAPH_INTERPRETER_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
-message(STATUS "******************************* NGRAPH_CPU_MLIR_ENABLE ${NGRAPH_CPU_MLIR_ENABLE}")
 if (NGRAPH_CPU_ENABLE)
     list(APPEND SRC builder_quantization.cpp)
     list(APPEND SRC backend_performance.cpp)
