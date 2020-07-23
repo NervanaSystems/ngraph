@@ -117,7 +117,7 @@ if(NGRAPH_CODEGEN_ENABLE)
     target_link_libraries(libllvm INTERFACE clangHandleCXX clangHandleLLVM)
 endif()
 
-if(NGRAPH_MLIR_ENABLE)
+if(NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     # MLIR environment variables. Some of them are used by LIT tool.
 
     # Only used in this file
