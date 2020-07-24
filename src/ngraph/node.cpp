@@ -28,6 +28,7 @@
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/pattern/matcher.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;

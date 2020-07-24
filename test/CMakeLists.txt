@@ -310,6 +310,10 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
 endif()
 
+if(NGRAPH_EVAL_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} EVAL)
+endif()
+
 add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
 add_subdirectory(util)
 
@@ -610,6 +614,10 @@ endif()
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gcpu_backend)
+endif()
+
+if (NGRAPH_EVAL_ENABLE)
+    target_link_libraries(unit-test PRIVATE eval_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
