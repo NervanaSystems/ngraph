@@ -37,15 +37,20 @@ include(cmake/external_mlir.cmake)
 set(MLIR_COMMIT_ID ${MLIR_LLVM_COMMIT_ID})
 set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
 if(EXISTS "${VCSREVISION}")
-    message(STATUS "LLVM_Revision found.")
+    message(STATUS "LLVM: VCSRevision.h found.")
     file(READ "${VCSREVISION}" REVISION_FILE)
-    string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
-    set(LONG_REV ${CMAKE_MATCH_1})
-    string(TOLOWER ${LONG_REV} LONG_REV)
-    string(TOLOWER ${MLIR_COMMIT_ID} MLIR_COMMIT_ID)
-    if(LONG_REV STREQUAL MLIR_COMMIT_ID)
-        message(STATUS "SHA1 HASH Matches.")
+    if(${REVISION_FILE} MATCHES "^#undef LLVM_REVISION*")
+        message(STATUS "LLVM: No revision.")
         set(NEED_TO_BUILD_LLVM FALSE)
+    else()
+        string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
+        set(LONG_REV ${CMAKE_MATCH_1})
+        string(TOLOWER ${LONG_REV} LONG_REV)
+        string(TOLOWER ${MLIR_COMMIT_ID} MLIR_COMMIT_ID)
+        if(LONG_REV STREQUAL MLIR_COMMIT_ID)
+            message(STATUS "LLVM: Revision Matches.")
+            set(NEED_TO_BUILD_LLVM FALSE)
+        endif()
     endif()
 endif()
 
@@ -56,15 +61,13 @@ if(NEED_TO_BUILD_LLVM)
     endif()
     message(STATUS "LLVM: Building LLVM from source")
 
-    set(LLVM_GIT_REPOSITORY https://github.com/llvm/llvm-project.git)
-    set(LLVM_GIT_TAG ${MLIR_COMMIT_ID})
-    set(LLVM_GIT_SHALLOW 0)
+    set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${MLIR_COMMIT_ID}.zip)
+    set(LLVM_ARCHIVE_URL_HASH 3423b3d6dd461628c367ac56a5bc351763200c4e)
 
     FetchContent_Declare(
         llvm
-        GIT_REPOSITORY ${LLVM_GIT_REPOSITORY}
-        GIT_TAG ${LLVM_GIT_TAG}
-        GIT_SHALLOW ${LLVM_GIT_SHALLOW}
+        URL ${LLVM_ARCHIVE_URL}
+        URL_HASH SHA1=${LLVM_ARCHIVE_URL_HASH}
         )
 
     FetchContent_GetProperties(llvm)
@@ -79,21 +82,39 @@ if(NEED_TO_BUILD_LLVM)
         file(MAKE_DIRECTORY ${LLVM_ROOT})
     endif()
 
-    execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
-        -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
-        -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
-        ${NGRAPH_FORWARD_CMAKE_ARGS}
-        -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
-        -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp\;mlir
-        -DLLVM_ENABLE_RTTI=ON
-        -DLLVM_ENABLE_TERMINFO=OFF
-        -DLLVM_ENABLE_ZLIB=OFF
-        -DLLVM_BUILD_UTILS=ON
-        -DLLVM_INSTALL_UTILS=ON
-        -DLLVM_TARGETS_TO_BUILD=host
-        ${LLVM_CMAKE_ARGS}
-        ${llvm_SOURCE_DIR}/llvm
-        WORKING_DIRECTORY "${llvm_BINARY_DIR}")
+    if(NGRAPH_CODEGEN_ENABLE)
+        execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+            -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+            -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
+            -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp\;mlir
+            -DLLVM_ENABLE_RTTI=ON
+            -DLLVM_ENABLE_TERMINFO=OFF
+            -DLLVM_ENABLE_ZLIB=OFF
+            -DLLVM_BUILD_UTILS=ON
+            -DLLVM_INSTALL_UTILS=ON
+            -DLLVM_TARGETS_TO_BUILD=host
+            ${LLVM_CMAKE_ARGS}
+            ${llvm_SOURCE_DIR}/llvm
+            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
+    else()
+        execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+            -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+            -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+            ${NGRAPH_FORWARD_CMAKE_ARGS}
+            -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
+            -DLLVM_ENABLE_PROJECTS:STRING=mlir
+            -DLLVM_ENABLE_RTTI=ON
+            -DLLVM_ENABLE_TERMINFO=OFF
+            -DLLVM_ENABLE_ZLIB=OFF
+            -DLLVM_BUILD_UTILS=ON
+            -DLLVM_INSTALL_UTILS=ON
+            -DLLVM_TARGETS_TO_BUILD=host
+            ${LLVM_CMAKE_ARGS}
+            ${llvm_SOURCE_DIR}/llvm
+            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
+    endif()
 
     # clone and build llvm
     include(ProcessorCount)
