@@ -71,7 +71,7 @@ set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADE
 
 # Generate the resource file containing all headers used by the codegen compiler
 add_custom_target(header_resource
-    resource_generator --output ${CMAKE_BINARY_DIR}/header_resource.hpp --base codegen
+    resource_generator --output ${PROJECT_BINARY_DIR}/header_resource.hpp --base codegen
     DEPENDS resource_generator
     BYPRODUCTS
 )
@@ -89,6 +89,6 @@ if (NGRAPH_CPU_ENABLE)
         set_property(TARGET codegen APPEND PROPERTY LINK_FLAGS "-Wl,--exclude-libs=ALL")
     endif()
 endif()
-target_include_directories(codegen SYSTEM PRIVATE ${CMAKE_BINARY_DIR})
+target_include_directories(codegen SYSTEM PRIVATE ${PROJECT_BINARY_DIR})
 target_link_libraries(codegen PRIVATE libllvm ngraph)
 install(TARGETS codegen DESTINATION ${NGRAPH_INSTALL_LIB})
