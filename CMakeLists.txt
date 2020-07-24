@@ -106,7 +106,11 @@ project (ngraph)
 # Tells if ngraph source tree is embedded in some other project
 # TRUE if embedded in source tree
 # FALSE if used standalone or as an external project
-set(NGRAPH_IS_EMBEDDED (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR))
+if(NOT ("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}"))
+    set(NGRAPH_IS_EMBEDDED TRUE)
+else()
+    set(NGRAPH_IS_EMBEDDED FALSE)
+endif()
 
 set(NGRAPH_INCLUDE_PATH
     ${PROJECT_SOURCE_DIR}/src
@@ -139,13 +143,11 @@ option(NGRAPH_CPU_CONV_AUTO_ENABLE "Enable dnnl convolution_auto for CPU" TRUE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
-option(NGRAPH_IE_ENABLE "Enable the Inference Engine backend" FALSE)
 option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
 option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph as a static library" FALSE)
 option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend as a static library" FALSE)
 option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static library" FALSE)
-option(NGRAPH_IE_STATIC_LIB_ENABLE "Enable build Inference Engine backend as a static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
 option(NGRAPH_EXPORT_TARGETS_ENABLE "Enable exporting nGraph cmake export targets" TRUE)
@@ -193,6 +195,10 @@ if (NGRAPH_UNIT_TEST_ENABLE)
     endif()
 endif()
 
+if (NGRAPH_TEST_UTIL_ENABLE AND NGRAPH_IS_EMBEDDED)
+    message(FATAL_ERROR "Test util is unsupported in embedded ngraph!")
+endif()
+
 macro (NORMALIZE_BOOL VAL)
     if (${VAL})
         set(${VAL} ON)
@@ -223,7 +229,6 @@ NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_LLVM)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_MLIR)
-NORMALIZE_BOOL(NGRAPH_IE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_JSON_ENABLE)
 
 NORMALIZE_BOOL(NGRAPH_NATIVE_ARCH_ENABLE)
@@ -255,8 +260,6 @@ message(STATUS "NGRAPH_CPU_CONV_AUTO_ENABLE:          ${NGRAPH_CPU_CONV_AUTO_ENA
 message(STATUS "NGRAPH_EXPORT_TARGETS_ENABLE:         ${NGRAPH_EXPORT_TARGETS_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:            ${NGRAPH_GENERIC_CPU_ENABLE}")
 message(STATUS "NGRAPH_GPU_ENABLE:                    ${NGRAPH_GPU_ENABLE}")
-message(STATUS "NGRAPH_IE_ENABLE:                     ${NGRAPH_IE_ENABLE}")
-message(STATUS "NGRAPH_IE_STATIC_LIB_ENABLE:          ${NGRAPH_IE_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_ENABLE:            ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
@@ -454,10 +457,6 @@ endif()
 
 if (NGRAPH_CPU_ENABLE)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
-endif()
-
-if (NGRAPH_IE_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_IE_ENABLE")
 endif()
 
 if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
@@ -659,11 +658,7 @@ endif()
 add_subdirectory(src)
 
 if (NGRAPH_TEST_UTIL_ENABLE)
-    if (NGRAPH_IS_EMBEDDED)
-        include(cmake/external/gtest.cmake)
-    else()
-        include(cmake/external/fetch_gtest.cmake)
-    endif()
+    include(cmake/external/gtest.cmake)
 endif()
 
 if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
