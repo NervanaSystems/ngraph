@@ -422,17 +422,15 @@ bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensor
 
     NODE_VALIDATION_CHECK(
         this,
-        std::none_of(out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v < -1;
-        }), "Dim size cannot be less than -1 ");
+        std::none_of(out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v < -1; }),
+        "Dim size cannot be less than -1 ");
 
     int zero_dims =
-        std::count_if(out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == 0;
-        });
+        std::count_if(out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == 0; });
     int negative_dims = std::count_if(
         out_shape_val.begin(), out_shape_val.end(), [](int64_t v) { return v == -1; });
     NODE_VALIDATION_CHECK(
-        this, negative_dims <= 1, "More than one dimension has size of -1 (", negative_dims,
-        ")");
+        this, negative_dims <= 1, "More than one dimension has size of -1 (", negative_dims, ")");
 
     if (!(zero_dims && m_special_zero) && !negative_dims)
     {
