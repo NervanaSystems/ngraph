@@ -26,10 +26,6 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
     add_subdirectory(gcpu)
 endif()
 
-if (NGRAPH_IE_ENABLE)
-    add_subdirectory(ie)
-endif()
-
 if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     add_subdirectory(mlir)
 endif()
