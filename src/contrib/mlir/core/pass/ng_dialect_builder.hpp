@@ -28,9 +28,6 @@
 
 #include <mlir/Pass/Pass.h>
 
-// TODO: this seems bad to do in an HPP
-using namespace ngraph::runtime::ngmlir;
-
 namespace ngraph
 {
     namespace pass
