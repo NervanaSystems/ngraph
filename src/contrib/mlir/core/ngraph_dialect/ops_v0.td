@@ -664,15 +664,15 @@ def NgConstantOp : NG_OneResult_Op<"constant", [NoSideEffect, OpVersion0]>
     to the operation as an attribute. For example:
 
       %0 = "ng.constant"()
-         { value = dense<[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]> : tensor<2x3xf32> }
-        : () -> tensor<2x3xf32>
+         { value = dense<[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]> : tensor<2x3xf64> }
+        : () -> tensor<2x3xf64>
   }];
 
   // The constant operation takes an attribute as the only input.
-  // `F32ElementsAttr` corresponds to a 32-bit floating-point ElementsAttr.
-  let arguments = (ins F32ElementsAttr:$value);
+  // `F64ElementsAttr` corresponds to a 64-bit floating-point ElementsAttr.
+  let arguments = (ins F64ElementsAttr:$value);
 
   // The generic call operation returns a single value of TensorType.
-  // F32Tensor corresponds to a 32-bit floating-point TensorType.
-  let results = (outs F32Tensor);
+  // F64Tensor corresponds to a 64-bit floating-point TensorType.
+  let results = (outs F64Tensor);
 }

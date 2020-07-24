@@ -47,11 +47,10 @@ namespace
     // Abs,
     // Acos,
     // ...
-#define ID_SUFFIX(NAME) NAME##_v0
     enum class OP_TYPEID
     {
-#define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
-#include "ngraph/opset/opset0_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION) NAME##_v##VERSION,
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
         UnknownOp
     };
@@ -64,8 +63,8 @@ namespace
         // {Acos::type_info, OP_TYPEID::Acos},
         // ...
         static const std::map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
-#include "ngraph/opset/opset0_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION) {ngraph::op::v##VERSION::NAME::type_info, OP_TYPEID::NAME##_v##VERSION},
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
         };
         OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -317,11 +316,14 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
     auto& opDispatcher = getOpDispatcher();
     for (auto np : m_function->get_ordered_ops())
     {
+        NGRAPH_INFO;
         switch (get_typeid(*np))
         {
         case OP_TYPEID::Abs_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Acos_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Acosh_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Add_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Add_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::All_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::AllReduce_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::And_v0: NGRAPH_INFO << *np; break;
@@ -329,96 +331,147 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
         case OP_TYPEID::ArgMax_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ArgMin_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Asin_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Asinh_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Atan_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Atan2_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Atanh_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::AvgPool_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::AvgPool_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::AvgPoolBackprop_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BatchMatMul_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BatchMatMulTranspose_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BatchNormInference_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BatchNormTraining_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BatchNormTrainingBackprop_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::BatchToSpace_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::BinaryConvolution_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Broadcast_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Broadcast_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Broadcast_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BroadcastDistributed_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::BroadcastLike_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Bucketize_v3: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::CTCGreedyDecoder_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Ceiling_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Clamp_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Concat_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Constant_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Convert_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ConvertLike_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Convolution_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Convolution_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ConvolutionBackpropData_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ConvolutionBackpropData_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ConvolutionBackpropFilters_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ConvolutionBias_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ConvolutionBiasAdd_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ConvolutionBiasBackpropFiltersBias_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Cos_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Cosh_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::CropAndResize_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::CrossEntropy_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::CrossEntropyBackprop_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::CropAndResize_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::CumSum_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::DeformableConvolution_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::DeformablePSROIPooling_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::DepthToSpace_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Dequantize_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::DetectionOutput_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Divide_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Divide_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Dot_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::DynBroadcast_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::DynPad_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::DynReplaceSlice_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::DynSlice_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Elu_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::EmbeddingBagOffsetsSum_v3: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::EmbeddingBagPackedSum_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::EmbeddingLookup_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::EmbeddingSegmentsSum_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Equal_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Equal_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Erf_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Exp_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ExtractImagePatches_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::FakeQuantize_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Floor_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::FloorMod_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GRN_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::GRUCell_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::GRUCell_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Gather_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Gather_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GatherND_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::GatherTree_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Gelu_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GeluBackpropFactor_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Gemm_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GenerateMask_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Greater_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Greater_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GreaterEq_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::GreaterEqual_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GroupConvolution_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::GroupConvolution_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GroupConvolutionBackpropData_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::GroupConvolutionBackpropData_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::GroupConvolutionBackpropFilters_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::HardSigmoid_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Interpolate_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::LayerNorm_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::LayerNormBackprop_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::Less_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::LessEq_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::Log_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Interpolate_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::LRN_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::LSTMCell_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::LSTMSequence_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LayerNorm_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LayerNormBackprop_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Less_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Less_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LessEq_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LessEqual_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Log_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LogicalAnd_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LogicalNot_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LogicalOr_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::LogicalXor_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::MVN_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::MatMul_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::NormalizeL2_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Max_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::Maximum_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::MaxPool_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::MaxPool_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::MaxPoolBackprop_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Maximum_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Maximum_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Min_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Minimum_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Minimum_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Mod_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Multiply_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::MVN_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Multiply_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Negative_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::NonMaxSuppression_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::NonMaxSuppression_v3: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::NonZero_v3: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::NormalizeL2_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Not_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::NotEqual_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::NotEqual_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::OneHot_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::OneHot_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Or_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::PRelu_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::PSROIPooling_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Pad_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Pad_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Parameter_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::PartialSlice_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::PartialSliceBackprop_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Passthrough_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Power_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::PRelu_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Power_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::PriorBox_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::PriorBoxClustered_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Product_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Proposal_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Quantize_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::QuantizedConvolution_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::QuantizedConvolutionBias_v0: NGRAPH_INFO << *np; break;
@@ -427,27 +480,44 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
         case OP_TYPEID::QuantizedConvolutionRelu_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::QuantizedDot_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::QuantizedDotBias_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::RNNCell_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ROIAlign_v3: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ROIPooling_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::RandomUniform_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::Recv_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Range_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Recv_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceLogicalAnd_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceLogicalOr_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceMax_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceMean_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceMin_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceProd_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReduceSum_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::RegionYolo_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Relu_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ReluBackprop_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ReorgYolo_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ReplaceSlice_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Reshape_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Reshape_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Result_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Reverse_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Reverse_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ReverseSequence_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::RNNCell_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Round_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ScalarConstantLike_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ScaleShift_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ScatterAdd_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ScatterElementsUpdate_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ScatterND_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ScatterNDAdd_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ScatterUpdate_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Select_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Select_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Selu_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Send_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ShapeOf_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::ShapeOf_v3: NGRAPH_INFO << *np; break;
         case OP_TYPEID::ShuffleChannels_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Sigmoid_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::SigmoidBackprop_v0: NGRAPH_INFO << *np; break;
@@ -456,23 +526,32 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
         case OP_TYPEID::Sinh_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Slice_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Softmax_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Softmax_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::SoftmaxCrossEntropy_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::SoftmaxCrossEntropyBackprop_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::SpaceToBatch_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::SpaceToDepth_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Split_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Split_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Sqrt_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::SquaredDifference_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Squeeze_v0: NGRAPH_INFO << *np; break;
-        case OP_TYPEID::StopGradient_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Stack_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::StopGradient_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::StridedSlice_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Subtract_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Subtract_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Sum_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Tan_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Tanh_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::TensorIterator_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Tile_v0: NGRAPH_INFO << *np; break;
         case OP_TYPEID::TopK_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::TopK_v1: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::TopK_v3: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::Transpose_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Unsqueeze_v0: NGRAPH_INFO << *np; break;
+        case OP_TYPEID::VariadicSplit_v1: NGRAPH_INFO << *np; break;
         case OP_TYPEID::Xor_v0: NGRAPH_INFO << *np; break;
         }
 
