@@ -16,7 +16,7 @@
 
 find_package(Doxygen REQUIRED)
 # include(FetchContent)
-# include(${CMAKE_SOURCE_DIR}/cmake/doxygen.cmake)
+# include(${PROJECT_SOURCE_DIR}/cmake/doxygen.cmake)
 
 if (NGRAPH_DOXYGEN_WARN_IF_UNDOCUMENTED)
     set(DOXYGEN_WARN_IF_UNDOCUMENTED YES)

@@ -2,15 +2,15 @@ PROJECT_NAME     = "Intel® nGraph™ library"
 PROJECT_BRIEF    = "Intel® nGraph™ library"
 
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@
-INPUT            = @CMAKE_SOURCE_DIR@/src
-INCLUDE_PATH     = @CMAKE_SOURCE_DIR@/src
+INPUT            = @PROJECT_SOURCE_DIR@/src
+INCLUDE_PATH     = @PROJECT_SOURCE_DIR@/src
 RECURSIVE        = YES
 
 USE_MATHJAX      = YES
 
 GENERATE_XML     = YES
 
-IMAGE_PATH       = @CMAKE_SOURCE_DIR@/doc/doxygen/images/
+IMAGE_PATH       = @PROJECT_SOURCE_DIR@/doc/doxygen/images/
 
 WARN_IF_UNDOCUMENTED = @DOXYGEN_WARN_IF_UNDOCUMENTED@
 QUIET                = @DOXYGEN_QUIET@
