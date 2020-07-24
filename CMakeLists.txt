@@ -659,11 +659,7 @@ endif()
 add_subdirectory(src)
 
 if (NGRAPH_TEST_UTIL_ENABLE)
-    if (NGRAPH_IS_EMBEDDED)
-        include(cmake/external/gtest.cmake)
-    else()
-        include(cmake/external/fetch_gtest.cmake)
-    endif()
+    include(cmake/external/fetch_gtest.cmake)
 endif()
 
 if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
