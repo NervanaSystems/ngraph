@@ -14,18 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-add_subdirectory(interpreter)
-add_subdirectory(eval)
+if (NGRAPH_EVAL_ENABLE)
+    add_library(eval_backend SHARED eval_backend.cpp eval_executable.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(eval_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    target_link_libraries(eval_backend PRIVATE ngraph)
+    target_compile_definitions(eval_backend PRIVATE EVAL_BACKEND_DLL_EXPORTS)
 
-# With CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS, when creating cpu_backend.dll, link reports error: library limit of 65535 objects exceeded
-if (NGRAPH_CPU_ENABLE)
-    add_subdirectory(cpu)
-endif()
-
-if (NGRAPH_GENERIC_CPU_ENABLE)
-    add_subdirectory(gcpu)
-endif()
-
-if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
-    add_subdirectory(mlir)
+    install(TARGETS eval_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
 endif()
