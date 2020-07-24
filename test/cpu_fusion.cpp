@@ -158,7 +158,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_input_node_shared_ptr(0)), nullptr);
 }
 
 TEST(cpu_fusion, matmul_f64)
@@ -177,7 +177,7 @@ TEST(cpu_fusion, matmul_f64)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_input_node_shared_ptr(0)), nullptr);
 }
 
 TEST(cpu_fusion, commutative_matmul_bias)
@@ -198,7 +198,7 @@ TEST(cpu_fusion, commutative_matmul_bias)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
     pass_manager.run_passes(func);
-    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_argument(0)), nullptr);
+    ASSERT_NE(as_type_ptr<op::MatmulBias>(graph->get_input_node_shared_ptr(0)), nullptr);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
@@ -220,9 +220,9 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{W, x, b});
     pass_manager.run_passes(func);
-    auto gmm = graph->get_argument(0);
+    auto gmm = graph->get_input_node_shared_ptr(0);
     ASSERT_TRUE(as_type_ptr<op::MatmulBias>(gmm));
-    ASSERT_EQ(gmm->get_argument(2), b);
+    ASSERT_EQ(gmm->get_input_node_shared_ptr(2), b);
 }
 
 TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
@@ -402,10 +402,11 @@ TEST(cpu_fusion, weight_fusion)
     pass_manager.register_pass<runtime::cpu::pass::CPUPostLayoutOptimizations>();
     pass_manager.run_passes(f);
 
-    auto new_conv_bprop_data = conv_bprop_abs->get_argument(0);
-    auto new_convert_layout = new_conv_bprop_data->get_argument(0);
+    auto new_conv_bprop_data = conv_bprop_abs->get_input_node_shared_ptr(0);
+    auto new_convert_layout = new_conv_bprop_data->get_input_node_shared_ptr(0);
 
-    ASSERT_EQ(as_type_ptr<runtime::cpu::op::ConvertLayout>(new_convert_layout->get_argument(0)),
+    ASSERT_EQ(as_type_ptr<runtime::cpu::op::ConvertLayout>(
+                  new_convert_layout->get_input_node_shared_ptr(0)),
               cvt_lt_conv);
 }
 
@@ -435,7 +436,7 @@ TEST(cpu_fusion, max_pool_with_indices)
     size_t index = f->get_results().at(0)->input(0).get_source_output().get_index();
     EXPECT_EQ(index, 0);
 
-    auto maxpool_with_indices = df->get_results().at(0)->get_argument(0);
+    auto maxpool_with_indices = df->get_results().at(0)->get_input_node_shared_ptr(0);
     index = maxpool_with_indices->input(2).get_source_output().get_index();
     EXPECT_EQ(index, 1);
 }
@@ -503,7 +504,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
         OutputVector new_outputs;
         for (auto r : f->get_results())
         {
-            new_outputs.push_back(r->get_argument(0));
+            new_outputs.push_back(r->get_input_node_shared_ptr(0));
         }
 
         new_outputs.insert(new_outputs.end(), nv_cwi.begin(), nv_cwi.end());
@@ -513,7 +514,7 @@ void optimize_graph(std::shared_ptr<ngraph::Function>& f, std::shared_ptr<ngraph
     ngraph::NodeVector dYdXs;
     for (size_t i = 0; i < bf->get_output_size(); ++i)
     {
-        dYdXs.push_back(bf->get_output_op(i)->get_argument(0));
+        dYdXs.push_back(bf->get_output_op(i)->get_input_node_shared_ptr(0));
     }
 
     ngraph::OutputVector combined_outputs;
@@ -547,9 +548,9 @@ TEST(cpu_fusion, maxpool_with_indices_in_mxnet)
     optimize_graph(f, maybe_bf);
     auto fprop_cache = ngraph::cache_fprop(f, maybe_bf);
 
-    auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_argument(0);
-    ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_argument(0)));
-    ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_argument(2)));
+    auto mpwi_bprop = fprop_cache.bprop->get_results().at(0)->get_input_node_shared_ptr(0);
+    ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_input_node_shared_ptr(0)));
+    ASSERT_TRUE(as_type_ptr<op::Parameter>(mpwi_bprop->get_input_node_shared_ptr(2)));
 }
 
 static std::shared_ptr<Function>

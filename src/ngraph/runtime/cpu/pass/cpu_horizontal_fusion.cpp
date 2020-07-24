@@ -135,7 +135,7 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
                 NGRAPH_DEBUG << "conv_horizontal_fusion: not conv_bias node\n";
                 continue;
             }
-            if (u->get_argument(0) != m.get_pattern_map()[data_conv])
+            if (u->get_input_node_shared_ptr(0) != m.get_pattern_map()[data_conv])
             {
                 NGRAPH_DEBUG << "conv_horizontal_fusion: data_conv is not input 0 for "
                              << u->get_name() << "\n";
@@ -148,8 +148,8 @@ void ngraph::runtime::cpu::pass::CPUHorizontalFusion::cpu_conv_horizontal_fusion
                 continue;
             }
 
-            weights_nodes.push_back(u->get_argument(1));
-            bias_nodes.push_back(u->get_argument(2));
+            weights_nodes.push_back(u->get_input_node_shared_ptr(1));
+            bias_nodes.push_back(u->get_input_node_shared_ptr(2));
             conv_bias_nodes.push_back(u);
         }
 

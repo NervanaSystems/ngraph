@@ -1759,7 +1759,7 @@ namespace ngraph
                 const ngraph::op::EmbeddingLookup* embed =
                     static_cast<const ngraph::op::EmbeddingLookup*>(node);
                 auto index_type_name =
-                    embed->get_argument(0)->get_output_element_type(0).c_type_string();
+                    embed->get_input_node_shared_ptr(0)->get_output_element_type(0).c_type_string();
                 auto type_name = embed->get_output_element_type(0).c_type_string();
                 auto element_count = shape_size(embed->get_input_shape(0));
 

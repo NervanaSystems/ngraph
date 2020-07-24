@@ -802,11 +802,11 @@ namespace ngraph
                     (void)external_function;
                     auto qconv = static_cast<ngraph::op::QuantizedConvolution*>(node);
                     auto input_zero_point =
-                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(3));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_input_node_shared_ptr(3));
                     auto filter_zero_point =
-                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(5));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_input_node_shared_ptr(5));
                     auto output_zero_point =
-                        as_type_ptr<ngraph::op::Constant>(qconv->get_argument(7));
+                        as_type_ptr<ngraph::op::Constant>(qconv->get_input_node_shared_ptr(7));
                     if (node->get_input_element_type(0) == element::u8 &&
                         node->get_input_element_type(1) == element::i8)
                     {
@@ -896,12 +896,12 @@ namespace ngraph
                     auto dequantize = static_cast<ngraph::op::Dequantize*>(node);
                     // TODO(nbpatel): Support dynamic offset via dnnl
                     // Go through reference if the offset is not a constant
-                    if (!dequantize->get_argument(2)->is_constant())
+                    if (!dequantize->get_input_node_shared_ptr(2)->is_constant())
                     {
                         return;
                     }
-                    auto offset_const_op =
-                        std::static_pointer_cast<ngraph::op::Constant>(dequantize->get_argument(2));
+                    auto offset_const_op = std::static_pointer_cast<ngraph::op::Constant>(
+                        dequantize->get_input_node_shared_ptr(2));
                     // TODO: DNNL only handles float / not double
                     if (node->get_output_element_type(0) != element::f32)
                     {
@@ -935,12 +935,12 @@ namespace ngraph
                     auto quantize = static_cast<ngraph::op::Quantize*>(node);
                     // TODO(nbpatel): Support dynamic offset via dnnl
                     // Go through reference if the offset is not a constant
-                    if (!quantize->get_argument(2)->is_constant())
+                    if (!quantize->get_input_node_shared_ptr(2)->is_constant())
                     {
                         return;
                     }
-                    auto offset_const_op =
-                        std::static_pointer_cast<ngraph::op::Constant>(quantize->get_argument(2));
+                    auto offset_const_op = std::static_pointer_cast<ngraph::op::Constant>(
+                        quantize->get_input_node_shared_ptr(2));
                     ngraph::op::Quantize::RoundMode round_mode = quantize->get_round_mode();
                     if (round_mode != ngraph::op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN)
                     {

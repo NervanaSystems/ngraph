@@ -61,8 +61,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
         NGRAPH_DEBUG << "In a callback for construct_weight against "
                      << m.get_match_root()->get_name();
 
-        auto m_cvt_lt = m.get_match_value().get_node()->get_argument(1);
-        auto m_reshape_conv = m_cvt_lt->get_argument(0);
+        auto m_cvt_lt = m.get_match_value().get_node()->get_input_node_shared_ptr(1);
+        auto m_reshape_conv = m_cvt_lt->get_input_node_shared_ptr(0);
 
         std::shared_ptr<Node> m_conv_bprop;
 
@@ -108,10 +108,11 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
             return false;
         }
 
-        auto m_cvt_lt_bprop = m_conv_bprop->get_argument(0);
-        auto m_reshape_bprop = m_cvt_lt_bprop->get_argument(0);
+        auto m_cvt_lt_bprop = m_conv_bprop->get_input_node_shared_ptr(0);
+        auto m_reshape_bprop = m_cvt_lt_bprop->get_input_node_shared_ptr(0);
 
-        NGRAPH_DEBUG << "Replacing input " << m_cvt_lt_bprop->get_argument(0)->get_name() << " to "
+        NGRAPH_DEBUG << "Replacing input "
+                     << m_cvt_lt_bprop->get_input_node_shared_ptr(0)->get_name() << " to "
                      << m_cvt_lt_bprop->get_name() << " with " << m_cvt_lt->get_name();
         m_cvt_lt_bprop->input(0).replace_source_output(m_cvt_lt->output(0));
 
@@ -137,7 +138,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
                      << m.get_match_root()->get_name();
 
         auto m_cvt_lt = m.get_match_value();
-        auto m_slice = m_cvt_lt.get_node()->get_argument(0);
+        auto m_slice = m_cvt_lt.get_node()->get_input_node_shared_ptr(0);
         auto slice_ptr = static_cast<const ngraph::op::Slice*>(m_slice.get());
         // do the fusion if slice has 1 user and uses dnnl kernel.
         if (!runtime::cpu::dnnl_utils::use_dnnl_kernel(slice_ptr) ||
@@ -204,7 +205,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
                      "match root node ",
                      *m.get_match_root(),
                      " not of type `runtime::cpu::op::ConvertLayout`");
-        auto reshape_m = static_pointer_cast<ngraph::op::Reshape>(cvt_lt_m->get_argument(0));
+        auto reshape_m =
+            static_pointer_cast<ngraph::op::Reshape>(cvt_lt_m->get_input_node_shared_ptr(0));
 
         if (reshape_m->get_users().size() > 1)
         {
@@ -247,7 +249,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
         }
         auto rotated_md = runtime::cpu::dnnl_utils::rotate_blocked_md(out_md, inverse_order);
         auto rotated_lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(
-            *reshape_m->get_argument(0)->get_output_tensor_ptr(0));
+            *reshape_m->get_input_node_shared_ptr(0)->get_output_tensor_ptr(0));
         rotated_lt_desc->set_dnnl_md(rotated_md);
 
         auto cvt_lt_n = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_m->input_value(0),

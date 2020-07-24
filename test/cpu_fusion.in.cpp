@@ -1811,10 +1811,12 @@ namespace
         auto input_1_type = op::SigmoidMultiply::identify_node_type(input_1_node);
         // for Identity functions, we use the node itself, otherwise use its input
         // where we will apply the function of input node
-        auto input_0_alt =
-            (input_0_type == FunctionType::Identity) ? input_0_node : input_0_node->get_argument(0);
-        auto input_1_alt =
-            (input_1_type == FunctionType::Identity) ? input_1_node : input_1_node->get_argument(0);
+        auto input_0_alt = (input_0_type == FunctionType::Identity)
+                               ? input_0_node
+                               : input_0_node->get_input_node_shared_ptr(0);
+        auto input_1_alt = (input_1_type == FunctionType::Identity)
+                               ? input_1_node
+                               : input_1_node->get_input_node_shared_ptr(0);
         auto sigmoid_mul =
             make_shared<op::SigmoidMultiply>(input_0_alt, input_1_alt, input_0_type, input_1_type);
 

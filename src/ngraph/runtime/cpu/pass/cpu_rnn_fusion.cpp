@@ -190,9 +190,9 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_onnx_lstmcell_fprop()
         auto src_iter = std::make_shared<ngraph::op::Concat>(
             OutputVector{pattern_map[H_t], pattern_map[C_t]}, 0);
 
-        auto W_ifco = lstmcell_op->get_argument(3);
-        auto R_ifco = lstmcell_op->get_argument(4);
-        auto bias_ifco = lstmcell_op->get_argument(5);
+        auto W_ifco = lstmcell_op->get_input_node_shared_ptr(3);
+        auto R_ifco = lstmcell_op->get_input_node_shared_ptr(4);
+        auto bias_ifco = lstmcell_op->get_input_node_shared_ptr(5);
 
         // We need to reorder W, R and bias to IFCO gate order.
         // Note: ie.: ONNX runtime provides W, R and bias in the gate order [IOFC] but
@@ -568,15 +568,15 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
         auto check_const_input = [&](std::shared_ptr<Node> n) {
             if (is_type<ngraph::op::Constant>(n) ||
                 (is_type<ngraph::op::Broadcast>(n) &&
-                 is_type<ngraph::op::Constant>(n->get_argument(0))))
+                 is_type<ngraph::op::Constant>(n->get_input_node_shared_ptr(0))))
             {
                 return true;
             }
             return false;
         };
 
-        if (!check_const_input(rnn_src_iter.get_node()->get_argument(0)) ||
-            !check_const_input(rnn_src_iter_c.get_node()->get_argument(0)))
+        if (!check_const_input(rnn_src_iter.get_node()->get_input_node_shared_ptr(0)) ||
+            !check_const_input(rnn_src_iter_c.get_node()->get_input_node_shared_ptr(0)))
         {
             NGRAPH_DEBUG << "Non const input for RNN state initializer";
             return false;
@@ -960,8 +960,8 @@ void ngraph::runtime::cpu::pass::BiDirectionalRnn::construct_bidirectional_rnn()
             ngraph::runtime::cpu::rnn_utils::rnntype::vanilla_lstm;
 
         auto construct_birnn_inputs = [&](int index) {
-            auto nodes = OutputVector{rnn_ltor_node->get_argument(index),
-                                      rnn_rtol_node->get_argument(index)};
+            auto nodes = OutputVector{rnn_ltor_node->get_input_node_shared_ptr(index),
+                                      rnn_rtol_node->get_input_node_shared_ptr(index)};
             return std::make_shared<ngraph::op::Concat>(nodes, 0);
         };
 

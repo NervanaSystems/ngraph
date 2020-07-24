@@ -393,7 +393,7 @@ void pass::CoreFusion::construct_folded_batch_norm()
         auto m_bn = m.get_match_root_as<op::BatchNormInference>();
         NGRAPH_CHECK(
             m_bn, "match root node ", *m.get_match_root(), " not of type `op::BatchNormInference`");
-        auto m_conv = static_pointer_cast<op::Convolution>(m_bn->get_argument(2));
+        auto m_conv = static_pointer_cast<op::Convolution>(m_bn->get_input_node_shared_ptr(2));
 
         if (m_conv->get_users().size() > 1)
         {
@@ -620,7 +620,8 @@ void pass::CoreFusion::construct_reshape_broadcast()
         auto broadcast_m = m.get_match_root_as<op::Broadcast>();
         NGRAPH_CHECK(
             broadcast_m, "match root node ", *m.get_match_root(), " not of type `op::Broadcast`");
-        auto reshape1_m = static_pointer_cast<op::Reshape>(broadcast_m->get_argument(0));
+        auto reshape1_m =
+            static_pointer_cast<op::Reshape>(broadcast_m->get_input_node_shared_ptr(0));
         auto input_m = m.get_pattern_value_map()[input];
 
         // it doesn't seem to make sense to support shapes : [0] or [1]
@@ -772,7 +773,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         NodeVector sconvs;
         for (auto sc : strided_convs)
         {
-            if (sc->get_argument(0) != m_eltwise)
+            if (sc->get_input_node_shared_ptr(0) != m_eltwise)
             {
                 NGRAPH_DEBUG << "element-wise isn't data";
                 return false;
@@ -883,8 +884,8 @@ void pass::CoreFusion::construct_reshape_softmax_reshape()
         auto reshape2_m = m.get_match_root_as<op::Reshape>();
         NGRAPH_CHECK(
             reshape2_m, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
-        auto softmax_m = static_pointer_cast<op::Softmax>(reshape2_m->get_argument(0));
-        auto reshape1_m = static_pointer_cast<op::Reshape>(softmax_m->get_argument(0));
+        auto softmax_m = static_pointer_cast<op::Softmax>(reshape2_m->get_input_node_shared_ptr(0));
+        auto reshape1_m = static_pointer_cast<op::Reshape>(softmax_m->get_input_node_shared_ptr(0));
         auto input_m = m.get_pattern_value_map()[input];
 
         if (!reshape2_m->get_is_transpose() || !reshape1_m->get_is_transpose())
@@ -1247,12 +1248,13 @@ void pass::CoreFusion::construct_conv_bias()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        auto conv_m = as_type_ptr<op::Convolution>(m.get_match_value().get_node()->get_argument(0));
+        auto conv_m = as_type_ptr<op::Convolution>(
+            m.get_match_value().get_node()->get_input_node_shared_ptr(0));
 
         if (conv_m == nullptr)
         {
             conv_m = static_pointer_cast<op::Convolution>(
-                m.get_match_value().get_node()->get_argument(1));
+                m.get_match_value().get_node()->get_input_node_shared_ptr(1));
         }
 
         if (conv_m->get_output_shape(0).size() > 5 ||
@@ -1321,12 +1323,12 @@ void pass::CoreFusion::construct_conv_bias_add()
                      << m.get_match_root()->get_name();
 
         auto add_m = m.get_match_root();
-        auto conv_m = as_type_ptr<op::ConvolutionBias>(add_m->get_argument(1));
+        auto conv_m = as_type_ptr<op::ConvolutionBias>(add_m->get_input_node_shared_ptr(1));
         auto add_input_m = add_m->input_value(0);
 
         if (!conv_m)
         {
-            conv_m = static_pointer_cast<op::ConvolutionBias>(add_m->get_argument(0));
+            conv_m = static_pointer_cast<op::ConvolutionBias>(add_m->get_input_node_shared_ptr(0));
             add_input_m = add_m->input_value(1);
         }
 

@@ -92,7 +92,7 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 
         auto r2 = m.get_match_root_as<op::Reshape>();
         NGRAPH_CHECK(r2, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
-        auto r1 = static_pointer_cast<op::Reshape>(r2->get_argument(0));
+        auto r1 = static_pointer_cast<op::Reshape>(r2->get_input_node_shared_ptr(0));
 
         if (gop.get_shape() != m.get_match_value().get_shape())
         {
@@ -173,7 +173,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
             return false;
         }
 
-        auto mdot = mtranspose->get_argument(0);
+        auto mdot = mtranspose->get_input_node_shared_ptr(0);
         if (mdot->get_output_shape(0).size() != 2)
         {
             NGRAPH_DEBUG << "Dot has the wrong shape. "
@@ -181,7 +181,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
             return false;
         }
 
-        auto arg0 = mdot->get_argument(0);
+        auto arg0 = mdot->get_input_node_shared_ptr(0);
         if (arg0->get_output_shape(0).size() != 2)
         {
             NGRAPH_DEBUG << "Arg0 has the wrong shape. "
@@ -192,7 +192,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
             Shape{arg0->get_output_shape(0).at(1), arg0->get_output_shape(0).at(0)};
         auto reshape0 = make_shared<op::Reshape>(arg0, AxisVector{1, 0}, reshape0_shape);
 
-        auto arg1 = mdot->get_argument(1);
+        auto arg1 = mdot->get_input_node_shared_ptr(1);
         if (arg1->get_output_shape(0).size() != 2)
         {
             NGRAPH_DEBUG << "Arg1 has the wrong shape. "
@@ -224,7 +224,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
 
     auto callback = [op, reshape_label](pattern::RecurrentMatcher& m) {
         NGRAPH_DEBUG << "In callback for construct_recurrent_reshape against node = "
-                     << reshape_label->get_argument(0)->get_name();
+                     << reshape_label->get_input_node_shared_ptr(0)->get_name();
         auto reshape_node_vector = m.get_bound_values_for_pattern(reshape_label);
 
         // The bound node vector is in reverse order. It is convenient to have the
@@ -232,7 +232,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         std::reverse(std::begin(reshape_node_vector), std::end(reshape_node_vector));
 
         auto first_bound_reshape_op = reshape_node_vector.front();
-        auto driver_op = first_bound_reshape_op.get_node()->get_argument(0);
+        auto driver_op = first_bound_reshape_op.get_node()->get_input_node_shared_ptr(0);
         auto last_bound_reshape_op = reshape_node_vector.back();
 
         // Need to check if the user of the last bound op is a reshape since the last reshape is
@@ -294,7 +294,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
 
             auto first_reshape =
                 as_type_ptr<op::Reshape>(sub_pattern.front().get_node_shared_ptr());
-            auto input_to_first_reshape = first_reshape->get_argument(0);
+            auto input_to_first_reshape = first_reshape->get_input_node_shared_ptr(0);
             auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back().get_node_shared_ptr());
 
             auto new_input_order = first_reshape->get_input_order();

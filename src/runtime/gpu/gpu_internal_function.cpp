@@ -282,7 +282,7 @@ void runtime::gpu::GPUInternalFunction::build_functions()
             // keep assigning different outputs to a result descriptor
             // op::Result emitter will check if in and out descriptors are the same
             // and skip a copy
-            auto input_node = res->get_argument(0);
+            auto input_node = res->get_input_node_shared_ptr(0);
             if (!input_node->is_constant() && !input_node->is_parameter())
             {
                 const descriptor::Tensor& it = res->get_input_tensor(0);

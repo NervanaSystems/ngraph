@@ -40,7 +40,7 @@ TEST(build_graph, build_simple)
 
     auto cluster_0 = make_shared<Function>(dot, ParameterVector{arg0, arg1, arg2, arg3});
 
-    ASSERT_EQ(cluster_0->get_output_op(0)->get_argument(0), dot);
+    ASSERT_EQ(cluster_0->get_output_op(0)->get_input_node_shared_ptr(0), dot);
 }
 
 // Check node comparisons
@@ -67,8 +67,8 @@ TEST(build_graph, literal)
     ASSERT_EQ(float0->get_output_element_type(0), element::f32);
     ASSERT_EQ(float0->get_output_shape(0), Shape{});
     auto d = make_shared<op::Dot>(float0, float0);
-    ASSERT_EQ(d->get_argument(0), float0);
-    ASSERT_EQ(d->get_argument(1), float0);
+    ASSERT_EQ(d->get_input_node_shared_ptr(0), float0);
+    ASSERT_EQ(d->get_input_node_shared_ptr(1), float0);
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
@@ -87,8 +87,8 @@ TEST(build_graph, tensor)
     ASSERT_EQ(float0->get_output_element_type(0), element::f32);
     ASSERT_EQ(float0->get_output_shape(0), shape);
     auto d = make_shared<op::Add>(float0, float0);
-    ASSERT_EQ(d->get_argument(0), float0);
-    ASSERT_EQ(d->get_argument(1), float0);
+    ASSERT_EQ(d->get_input_node_shared_ptr(0), float0);
+    ASSERT_EQ(d->get_input_node_shared_ptr(1), float0);
 
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);

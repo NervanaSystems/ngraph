@@ -186,7 +186,8 @@ size_t DNNLEmitter::build_dequantization(const ngraph::Node* node,
                                          const dnnl::memory::desc& result_desc)
 {
     auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-    auto scale_const_op = as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
+    auto scale_const_op =
+        as_type_ptr<ngraph::op::Constant>(dequantize->get_input_node_shared_ptr(1));
     std::vector<float> scale = {1.0f};
     if (scale_const_op != nullptr)
     {

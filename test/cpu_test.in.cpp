@@ -1093,7 +1093,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        as_type_ptr<op::Constant>(f->get_results().at(0)->get_input_node_shared_ptr(0));
     ASSERT_TRUE(new_const);
     const vector<float> values_out = new_const->get_vector<float>();
 
@@ -1120,7 +1121,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape_permute)
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        as_type_ptr<op::Constant>(f->get_results().at(0)->get_input_node_shared_ptr(0));
     ASSERT_TRUE(new_const);
     const vector<double> values_out = new_const->get_vector<double>();
 
@@ -1148,7 +1150,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_broadcast)
     ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        as_type_ptr<op::Constant>(f->get_results().at(0)->get_input_node_shared_ptr(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1180,7 +1183,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_pad_exterior)
     ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const =
+        as_type_ptr<op::Constant>(f->get_results().at(0)->get_input_node_shared_ptr(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1191,7 +1195,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_pad_exterior)
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    auto new_const =
+        as_type_ptr<op::Constant>(f->get_results().at(pos)->get_input_node_shared_ptr(0));
     return new_const->get_vector<T>();
 }
 

@@ -95,8 +95,8 @@ void op::SigmoidMultiply::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
-    auto input_0 = get_argument(0);
-    auto input_1 = get_argument(1);
+    auto input_0 = get_input_node_shared_ptr(0);
+    auto input_1 = get_input_node_shared_ptr(1);
 
     auto sigmoid_mul_backprop =
         make_shared<op::SigmoidMultiplyBackprop>(input_0, input_1, delta, m_input_type);

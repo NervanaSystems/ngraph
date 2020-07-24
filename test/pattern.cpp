@@ -98,10 +98,11 @@ public:
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.get_match_root()->get_argument(0) == pattern_map[pattern];
-            auto const_node =
-                as_type_ptr<op::Constant>(m.get_match_root()->get_argument(const_node_index));
-            auto second_node = m.get_match_root()->get_argument(const_node_index);
+            size_t const_node_index =
+                m.get_match_root()->get_input_node_shared_ptr(0) == pattern_map[pattern];
+            auto const_node = as_type_ptr<op::Constant>(
+                m.get_match_root()->get_input_node_shared_ptr(const_node_index));
+            auto second_node = m.get_match_root()->get_input_node_shared_ptr(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
@@ -144,10 +145,11 @@ public:
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index = m.get_match_root()->get_argument(0) == pattern_map[pattern];
-            auto const_node =
-                as_type_ptr<op::Constant>(m.get_match_root()->get_argument(const_node_index));
-            auto second_node = m.get_match_root()->get_argument(const_node_index);
+            size_t const_node_index =
+                m.get_match_root()->get_input_node_shared_ptr(0) == pattern_map[pattern];
+            auto const_node = as_type_ptr<op::Constant>(
+                m.get_match_root()->get_input_node_shared_ptr(const_node_index));
+            auto second_node = m.get_match_root()->get_input_node_shared_ptr(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
@@ -224,7 +226,7 @@ TEST(pattern, graph_rewrite)
         auto sum = (a + iconst0);
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->get_input_node_shared_ptr(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->output(0)
                         .get_target_inputs()
@@ -240,7 +242,7 @@ TEST(pattern, graph_rewrite)
         auto mul = (a * iconst1);
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->get_input_node_shared_ptr(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(mul->output(0)
                         .get_target_inputs()
@@ -255,7 +257,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_argument(0), a);
+        ASSERT_EQ(graph->get_input_node_shared_ptr(0), a);
         ASSERT_EQ(graph->input_value(0), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(0))); // a's output feeds into graph's input
@@ -268,7 +270,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->get_input_node_shared_ptr(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
@@ -280,7 +282,7 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->get_input_node_shared_ptr(1), a);
         ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
@@ -699,12 +701,12 @@ TEST(pattern, recurrent_graph_rewrite)
         auto f = std::make_shared<Function>(ngraph::OutputVector{graph}, ParameterVector{a, b});
         pass_manager.run_passes(f);
 
-        auto left_abs = graph->get_argument(0);
-        auto add_a = left_abs->get_argument(0);
+        auto left_abs = graph->get_input_node_shared_ptr(0);
+        auto add_a = left_abs->get_input_node_shared_ptr(0);
         ASSERT_EQ(add_a, a);
 
-        auto right_abs = graph->get_argument(1);
-        auto add_b = right_abs->get_argument(0);
+        auto right_abs = graph->get_input_node_shared_ptr(1);
+        auto add_b = right_abs->get_input_node_shared_ptr(0);
         ASSERT_EQ(add_b, b);
     }
 }

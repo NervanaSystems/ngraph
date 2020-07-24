@@ -213,8 +213,8 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
                         }
                     }
                     // branch to either input 0 or 1 depending on which one we are traversing
-                    iter =
-                        iter->get_input_size() > 1 ? iter->get_argument(i) : iter->get_argument(0);
+                    iter = iter->get_input_size() > 1 ? iter->get_input_node_shared_ptr(i)
+                                                      : iter->get_input_node_shared_ptr(0);
                 } while (iter != input_node);
             }
             // keep track of the input data, make sure they all match

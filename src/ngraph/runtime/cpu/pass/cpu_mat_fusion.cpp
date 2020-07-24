@@ -103,7 +103,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
     // we don't really need a broadcast node but
     // labelling a Broadcast allows us to extract
     // params from all 3 labels in the same fashion
-    //(i.e. via get_argument(0))
+    //(i.e. via get_input_node_shared_ptr(0))
     auto bias_broadcast = std::make_shared<pattern::op::Label>(
         element::f32, Shape{2, 1}, pattern::has_class<op::Broadcast>());
     auto bias_pattern = construct_bias_pattern(bias_broadcast);
@@ -146,9 +146,9 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
         // checks if the graph matches to pattern defined in the matcher_v2
         if (matcher_v2->match(n))
         {
-            auto matched_weight = matcher_v2->get_pattern_map()[W]->get_argument(0);
+            auto matched_weight = matcher_v2->get_pattern_map()[W]->get_input_node_shared_ptr(0);
             auto matched_data = matcher_v2->get_pattern_map()[input_data];
-            auto matched_bias = matcher_v2->get_pattern_map()[b]->get_argument(0);
+            auto matched_bias = matcher_v2->get_pattern_map()[b]->get_input_node_shared_ptr(0);
             std::vector<size_t> supported_ranks{2, 3};
 
             if (!ngraph::is_valid_rank(matcher_v2->get_match_root(), supported_ranks))
@@ -183,7 +183,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
                 // in the right spots (e.g. DATA, WEIGHTS, BIAS) since matchers are ordered
                 // if we have less than 3 matches we skip this node anyways
                 auto matched = matcher->get_pattern_map()[labels_v1[i]];
-                params.push_back(matched->get_argument(0));
+                params.push_back(matched->get_input_node_shared_ptr(0));
                 matched_nodes.push_back(matched);
             }
 

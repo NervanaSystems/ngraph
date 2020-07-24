@@ -213,7 +213,7 @@ void ngraph::pass::SelfConcatFusion::update_concat_pattern_vectors(
     for (auto& concat_pattern_vec : this->m_concat_pattern_vectors)
     {
         auto last_op_in_pattern_vec = concat_pattern_vec.back();
-        if ((concat_op->get_argument(0) == last_op_in_pattern_vec) &&
+        if ((concat_op->get_input_node_shared_ptr(0) == last_op_in_pattern_vec) &&
             (check_concat_has_no_fan_out(last_op_in_pattern_vec)))
         {
             concat_pattern_vec.push_back(concat_op);

@@ -86,7 +86,7 @@ namespace ngraph
                     auto topk = std::dynamic_pointer_cast<ngraph::op::TopK>(node);
                     auto topk_axis = topk->get_top_k_axis();
                     auto topk_k = topk->get_k();
-                    auto parent_node = topk->get_argument(0);
+                    auto parent_node = topk->get_input_node_shared_ptr(0);
                     auto in_shape = topk->get_input_shape(0);
                     size_t ndim = in_shape.size();
                     if (in_shape.size() <= 2 && topk_axis == ndim - 1)

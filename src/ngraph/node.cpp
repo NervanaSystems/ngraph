@@ -422,24 +422,21 @@ void Node::transfer_provenance_tags(const shared_ptr<Node>& replacement)
     traverse_nodes({replacement}, set_prov_new_nodes, common_args);
 }
 
-std::shared_ptr<Node> Node::get_argument(size_t index) const
-{
-    NGRAPH_CHECK(
-        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
-    return input_value(index).get_node_shared_ptr();
-}
-
 Node* Node::get_input_node_ptr(size_t index) const
 {
-    NGRAPH_CHECK(
-        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    NGRAPH_CHECK(index < m_inputs.size(),
+                 "index '",
+                 index,
+                 "' out of range in get_input_node_ptr(size_t index)");
     return m_inputs[index].get_output().get_node().get();
 }
 
 std::shared_ptr<Node> Node::get_input_node_shared_ptr(size_t index) const
 {
-    NGRAPH_CHECK(
-        index < m_inputs.size(), "index '", index, "' out of range in get_argument(size_t index)");
+    NGRAPH_CHECK(index < m_inputs.size(),
+                 "index '",
+                 index,
+                 "' out of range in get_input_node_shared_ptr(size_t index)");
     return m_inputs[index].get_output().get_node();
 }
 
@@ -454,7 +451,7 @@ NodeVector Node::get_arguments() const
     for (size_t i = 0; i < get_input_size(); ++i)
     {
         {
-            result.push_back(get_argument(i));
+            result.push_back(get_input_node_shared_ptr(i));
         }
     }
     return result;

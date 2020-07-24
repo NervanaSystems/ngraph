@@ -1233,7 +1233,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
             // TODO (pthoreho) : For DNNL > V1.0, change dnnl kernel integration to compute for
             // LSTMCell with peephole as well.
             // Not supported on codegen
-            return m_direct_execution && is_type<ngraph::op::Constant>(node.get_argument(6));
+            return m_direct_execution &&
+                   is_type<ngraph::op::Constant>(node.get_input_node_shared_ptr(6));
         }
         else if (typeid(ngraph::op::GeluBackpropFactor) == typeid(node))
         {

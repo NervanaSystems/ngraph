@@ -96,11 +96,11 @@ bool runtime::cpu::pass::CPUWorkspaceInsertion::run_on_function(std::shared_ptr<
 bool runtime::cpu::pass::CPUWorkspaceInsertion::transform(pattern::Matcher& m)
 {
     auto data = std::static_pointer_cast<pattern::op::Label>(
-        m.get_pattern_value().get_node()->get_argument(0));
+        m.get_pattern_value().get_node()->get_input_node_shared_ptr(0));
     auto delta = std::static_pointer_cast<pattern::op::Label>(
-        m.get_pattern_value().get_node()->get_argument(1));
+        m.get_pattern_value().get_node()->get_input_node_shared_ptr(1));
     auto max_pool = std::static_pointer_cast<pattern::op::Label>(
-        m.get_pattern_value().get_node()->get_argument(2));
+        m.get_pattern_value().get_node()->get_input_node_shared_ptr(2));
     NGRAPH_DEBUG << "In a callback for construct_max_pool_with_indices against "
                  << m.get_match_root()->get_name();
 

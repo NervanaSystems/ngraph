@@ -386,8 +386,6 @@ namespace ngraph
         std::unordered_set<descriptor::Tensor*> liveness_free_list;
 
         virtual NodeVector get_arguments() const NGRAPH_DEPRECATED("Use input_values().");
-        std::shared_ptr<Node> get_argument(size_t index) const
-            NGRAPH_DEPRECATED("use input_value(i).");
 
         Node* get_input_node_ptr(size_t index) const;
         std::shared_ptr<Node> get_input_node_shared_ptr(size_t index) const;
