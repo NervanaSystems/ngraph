@@ -35,11 +35,6 @@ extern "C" EVAL_BACKEND_API void ngraph_register_eval_backend()
 
 runtime::eval::EVALBackend::EVALBackend() {}
 
-runtime::eval::EVALBackend::EVALBackend(const vector<string>& unsupported_op_name_list)
-    : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
-{
-}
-
 shared_ptr<runtime::Tensor> runtime::eval::EVALBackend::create_tensor()
 {
     return make_shared<runtime::HostTensor>();
@@ -63,9 +58,4 @@ shared_ptr<runtime::Executable>
                                         bool enable_performance_collection)
 {
     return make_shared<EVALExecutable>(function, enable_performance_collection);
-}
-
-bool runtime::eval::EVALBackend::is_supported(const Node& node) const
-{
-    return m_unsupported_op_name_list.find(node.description()) == m_unsupported_op_name_list.end();
 }

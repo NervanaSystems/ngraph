@@ -42,7 +42,6 @@ class ngraph::runtime::eval::EVALBackend : public Backend
 {
 public:
     EVALBackend();
-    EVALBackend(const std::vector<std::string>& unsupported_op_name_list);
     EVALBackend(const EVALBackend&) = delete;
     EVALBackend(EVALBackend&&) = delete;
     EVALBackend& operator=(const EVALBackend&) = delete;
@@ -56,9 +55,4 @@ public:
 
     std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
                                         bool enable_performance_data = false) override;
-
-    bool is_supported(const Node& node) const override;
-
-private:
-    std::set<std::string> m_unsupported_op_name_list;
 };

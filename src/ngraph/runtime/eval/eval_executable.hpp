@@ -73,5 +73,4 @@ private:
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;
     static OP_TYPEID get_typeid(const Node& node);
-    int get_alignment() const { return 64; }
 };
