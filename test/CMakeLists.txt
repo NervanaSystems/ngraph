@@ -263,18 +263,6 @@ endif()
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
-# if (NGRAPH_IE_ENABLE)
-#     if (ENABLE_MKL_DNN)
-#         message(STATUS "NGRAPH_TESTS: IE:CPU enabled")
-#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:CPU")
-#     endif()
-
-#     if (ENABLE_CLDNN)
-#         message(STATUS "NGRAPH_TESTS: IE:GPU enabled")
-#         set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} "IE:GPU")
-#     endif()
-# endif()
-
 if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
@@ -308,6 +296,10 @@ endif()
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} GCPU)
+endif()
+
+if(NGRAPH_EVAL_ENABLE)
+    set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} EVAL)
 endif()
 
 add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
@@ -595,10 +587,6 @@ if (NGRAPH_TOOLS_ENABLE)
     add_dependencies(unit-test nbench)
 endif()
 
-if (NGRAPH_IE_ENABLE)
-    target_link_libraries(unit-test PRIVATE ie_backend)
-endif()
-
 if (NGRAPH_TBB_ENABLE)
     target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
 endif()
@@ -610,6 +598,10 @@ endif()
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gcpu_backend)
+endif()
+
+if (NGRAPH_EVAL_ENABLE)
+    target_link_libraries(unit-test PRIVATE eval_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
@@ -626,24 +618,22 @@ if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
 endif()
 
-if (NOT NGRAPH_IE_ENABLE)
-    # If all the runtime libraries are installed into one location, that will make life easier.
-    if (MSVC)
-        add_custom_target(unit-test-check
-            COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
-            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
-            DEPENDS unit-test
-        )
-    else()
-        add_custom_target(unit-test-check
-            COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
-            DEPENDS unit-test
-        )
-    endif()
-
-    add_custom_target(check
-        DEPENDS
-        style-check
-        unit-test-check
+# If all the runtime libraries are installed into one location, that will make life easier.
+if (MSVC)
+    add_custom_target(unit-test-check
+        COMMAND set "PATH=${EXTERNAL_PROJECTS_ROOT}/src/ngraph/Release;${EXTERNAL_PROJECTS_ROOT}/dnnl/lib/;${EXTERNAL_PROJECTS_ROOT}/mkl/src/ext_mkl/lib/;${EXTERNAL_PROJECTS_ROOT}/ext_tbb-prefix/src/ext_tbb/tbb2019_20181203oss/bin/intel64/vc14;%PATH%"
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test \${ARGS}
+        DEPENDS unit-test
+    )
+else()
+    add_custom_target(unit-test-check
+        COMMAND ${PROJECT_BINARY_DIR}/test/unit-test --cpath ${EXTERNAL_PROJECTS_ROOT}/src/ngraph/ \${ARGS}
+        DEPENDS unit-test
     )
 endif()
+
+add_custom_target(check
+    DEPENDS
+    style-check
+    unit-test-check
+)

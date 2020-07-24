@@ -14,29 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_IE_STATIC_LIB_ENABLE)
-    set(LIBRARY_TYPE STATIC)
-else()
-    set(LIBRARY_TYPE SHARED)
+if (NGRAPH_EVAL_ENABLE)
+    add_library(eval_backend SHARED eval_backend.cpp eval_executable.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(eval_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    target_link_libraries(eval_backend PRIVATE ngraph)
+    target_compile_definitions(eval_backend PRIVATE EVAL_BACKEND_DLL_EXPORTS)
+
+    install(TARGETS eval_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
 endif()
-
-set(SRC
-    ie_backend.cpp
-    ie_backend.hpp
-    ie_backend_visibility.hpp
-    ie_tensor.cpp
-    ie_tensor.hpp
-    ie_executable.cpp
-    ie_executable.hpp
-)
-
-add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
-add_dependencies(ie_backend inference_engine)
-target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
-target_include_directories(ie_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
-target_link_libraries(ie_backend PUBLIC ngraph inference_engine)
-
-install(TARGETS ie_backend
-    LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-)

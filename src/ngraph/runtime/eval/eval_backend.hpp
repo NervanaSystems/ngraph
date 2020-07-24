@@ -16,33 +16,43 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <vector>
 
-#include <ie_core.hpp>
-#include "ngraph/runtime/executable.hpp"
+#include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/reference/allreduce.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace ie
+        namespace eval
         {
-            // A Inference Engine executable object produced by compiling an nGraph function.
-            class IE_Executable final : public Executable
-            {
-            public:
-                IE_Executable(std::shared_ptr<Function> func, std::string device);
-                virtual ~IE_Executable() {}
-                bool call(const std::vector<std::shared_ptr<runtime::Tensor>>& outputs,
-                          const std::vector<std::shared_ptr<runtime::Tensor>>& inputs) final;
-
-            private:
-                InferenceEngine::CNNNetwork m_network;
-                std::string m_device;
-            };
+            class EVALBackend;
+            class EVALExecutable;
         }
     }
 }
+
+class ngraph::runtime::eval::EVALBackend : public Backend
+{
+public:
+    EVALBackend();
+    EVALBackend(const EVALBackend&) = delete;
+    EVALBackend(EVALBackend&&) = delete;
+    EVALBackend& operator=(const EVALBackend&) = delete;
+
+    std::shared_ptr<Tensor> create_tensor() override;
+
+    std::shared_ptr<Tensor>
+        create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
+
+    std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
+
+    std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
+                                        bool enable_performance_data = false) override;
+};
