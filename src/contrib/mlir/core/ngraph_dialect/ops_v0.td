@@ -653,3 +653,26 @@ def NGTopKOp :
       void setSortType(const Attribute& attr)   { this->setAttr("sortType", attr); }
     }];
 }
+
+def NgConstantOp : NG_OneResult_Op<"constant", [NoSideEffect, OpVersion0]>
+{
+  // Provide a summary and description for this operation. This can be used to
+  // auto-generate documentation of the operations within our dialect.
+  let summary = "Constant operation";
+  let description = [{
+    Constant operation turns a literal into an SSA value. The data is attached
+    to the operation as an attribute. For example:
+
+      %0 = "ng.constant"()
+         { value = dense<[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]> : tensor<2x3xf32> }
+        : () -> tensor<2x3xf32>
+  }];
+
+  // The constant operation takes an attribute as the only input.
+  // `F32ElementsAttr` corresponds to a 32-bit floating-point ElementsAttr.
+  let arguments = (ins F32ElementsAttr:$value);
+
+  // The generic call operation returns a single value of TensorType.
+  // F32Tensor corresponds to a 32-bit floating-point TensorType.
+  let results = (outs F32Tensor);
+}

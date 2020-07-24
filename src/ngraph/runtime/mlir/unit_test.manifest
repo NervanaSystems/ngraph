@@ -177,8 +177,8 @@ clamp_uint64
 clamp_uint8
 computation_reuse
 concat_zero_zero
-constant_equality_bool
-constant_multi_use
+#constant_equality_bool
+#constant_multi_use
 conv_bias_1d
 conv_bias_2d
 conv_bias_3d
