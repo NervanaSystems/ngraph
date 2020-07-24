@@ -150,8 +150,8 @@ namespace ngraph
 
                 bool get_special_zero() const { return m_special_zero; }
                 void set_special_zero(bool special_zero) { m_special_zero = special_zero; }
-                bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                // bool evaluate(const HostTensorVector& outputs,
+                //               const HostTensorVector& inputs) override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

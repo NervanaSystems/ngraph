@@ -147,43 +147,7 @@ bool runtime::eval::EVALExecutable::call(const vector<shared_ptr<runtime::Tensor
             op_outputs.push_back(host_tensor);
         }
 
-        // get op type
-        element::Type type;
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-#endif
-        switch (type_id)
-        {
-        case ngraph::runtime::eval::OP_TYPEID::Convert_v0:
-        case ngraph::runtime::eval::OP_TYPEID::Quantize_v0:
-        case ngraph::runtime::eval::OP_TYPEID::Dequantize_v0:
-        case ngraph::runtime::eval::OP_TYPEID::ArgMin_v0:
-        case ngraph::runtime::eval::OP_TYPEID::ArgMax_v0:
-            type = op->get_input_element_type(0);
-            break;
-        case ngraph::runtime::eval::OP_TYPEID::Equal_v0:
-        case ngraph::runtime::eval::OP_TYPEID::Greater_v0:
-        case ngraph::runtime::eval::OP_TYPEID::GreaterEq_v0:
-        case ngraph::runtime::eval::OP_TYPEID::Less_v0:
-        case ngraph::runtime::eval::OP_TYPEID::LessEq_v0:
-        case ngraph::runtime::eval::OP_TYPEID::NotEqual_v0:
-            // Get the type of the second input, not the first
-            // All BinaryElementwiseComparision ops have the same type for inputs
-            // Select has bool for first input and the type we are interested in for the second
-            type = op->get_input_element_type(1);
-            break;
-        case ngraph::runtime::eval::OP_TYPEID::TopK_v0:
-            type = op->get_output_element_type(1);
-            break;
-        default: type = op->get_output_element_type(0); break;
-        }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic pop
-#endif
-
         string name = op->description() + "_v" + to_string(op->get_type_info().version);
-        NGRAPH_INFO << name;
         if (!op->evaluate(op_outputs, op_inputs))
         {
             throw unsupported_op("Unsupported op '" + name + "'");

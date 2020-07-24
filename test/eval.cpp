@@ -612,7 +612,7 @@ TEST(eval, test_op_multi_out)
     ASSERT_EQ(result_val2, arg_val2);
 }
 
-TEST(eval, evaluate_reshape_v1)
+TEST(eval, DISABLED_evaluate_reshape_v1)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});
     auto pattern = make_shared<op::Parameter>(element::i64, Shape{2});
@@ -630,7 +630,7 @@ TEST(eval, evaluate_reshape_v1)
     ASSERT_EQ(computed_val, expected_val);
 }
 
-TEST(eval, evaluate_reshape_v1_negative_index)
+TEST(eval, DISABLED_evaluate_reshape_v1_negative_index)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});
     auto pattern = make_shared<op::Parameter>(element::i64, Shape{2});
@@ -648,7 +648,7 @@ TEST(eval, evaluate_reshape_v1_negative_index)
     ASSERT_EQ(computed_val, expected_val);
 }
 
-TEST(eval, evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
+TEST(eval, DISABLED_evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
     auto pattern = make_shared<op::Parameter>(element::i64, Shape{6});
@@ -667,7 +667,7 @@ TEST(eval, evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
     ASSERT_EQ(computed_val, expected_val);
 }
 
-TEST(eval, evaluate_reshape_v1_pattern_int16)
+TEST(eval, DISABLED_evaluate_reshape_v1_pattern_int16)
 {
     auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
     auto pattern = make_shared<op::Parameter>(element::i16, Shape{6});
