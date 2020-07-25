@@ -64,7 +64,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
-#ifdef NGRAPH_JSON_DISABLE
+#ifndef NGRAPH_JSON_DISABLE
     // To verify that the serializer and deserializer work correctly let's just run this
     // graph round-trip
     m_function = deserialize(serialize(function));
@@ -78,7 +78,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         {
         case OP_TYPEID::Clamp:
         case OP_TYPEID::MatMul:
-        case OP_TYPEID::Mod_v1:
+        // case OP_TYPEID::Mod_v1:
         case OP_TYPEID::Squeeze:
         case OP_TYPEID::Unsqueeze: retval = true; break;
         default: break;
