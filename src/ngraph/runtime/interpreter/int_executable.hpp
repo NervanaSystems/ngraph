@@ -27,9 +27,7 @@
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#ifdef INTERPRETER_USE_HYBRID
-#include "ngraph/runtime/hybrid/op/function_call.hpp"
-#endif
+#include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
@@ -118,6 +116,104 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
+#include "ngraph/runtime/reference/abs.hpp
+#include "ngraph/runtime/reference/acosh.hpp
+#include "ngraph/runtime/reference/acos.hpp
+#include "ngraph/runtime/reference/add.hpp
+#include "ngraph/runtime/reference/all.hpp
+#include "ngraph/runtime/reference/allreduce.hpp
+#include "ngraph/runtime/reference/and.hpp
+#include "ngraph/runtime/reference/any.hpp
+#include "ngraph/runtime/reference/argmax.hpp
+#include "ngraph/runtime/reference/argmin.hpp
+#include "ngraph/runtime/reference/asinh.hpp
+#include "ngraph/runtime/reference/asin.hpp
+#include "ngraph/runtime/reference/atan2.hpp
+#include "ngraph/runtime/reference/atanh.hpp
+#include "ngraph/runtime/reference/atan.hpp
+#include "ngraph/runtime/reference/autobroadcast_binop.hpp
+#include "ngraph/runtime/reference/avg_pool.hpp
+#include "ngraph/runtime/reference/batch_mat_mul.hpp
+#include "ngraph/runtime/reference/batch_norm.hpp
+#include "ngraph/runtime/reference/broadcast_distributed.hpp
+#include "ngraph/runtime/reference/broadcast.hpp
+#include "ngraph/runtime/reference/ceiling.hpp
+#include "ngraph/runtime/reference/clamp.hpp
+#include "ngraph/runtime/reference/concat.hpp
+#include "ngraph/runtime/reference/constant.hpp
+#include "ngraph/runtime/reference/convert.hpp
+#include "ngraph/runtime/reference/convolution.hpp
+#include "ngraph/runtime/reference/copy.hpp
+#include "ngraph/runtime/reference/cosh.hpp
+#include "ngraph/runtime/reference/cos.hpp
+#include "ngraph/runtime/reference/cum_sum.hpp
+#include "ngraph/runtime/reference/dequantize.hpp
+#include "ngraph/runtime/reference/divide.hpp
+#include "ngraph/runtime/reference/dot.hpp
+#include "ngraph/runtime/reference/embedding_lookup.hpp
+#include "ngraph/runtime/reference/equal.hpp
+#include "ngraph/runtime/reference/erf.hpp
+#include "ngraph/runtime/reference/exp.hpp
+#include "ngraph/runtime/reference/floor.hpp
+#include "ngraph/runtime/reference/gather.hpp
+#include "ngraph/runtime/reference/gather_nd.hpp
+#include "ngraph/runtime/reference/generate_mask.hpp
+#include "ngraph/runtime/reference/greater_eq.hpp
+#include "ngraph/runtime/reference/greater.hpp
+#include "ngraph/runtime/reference/less_eq.hpp
+#include "ngraph/runtime/reference/less.hpp
+#include "ngraph/runtime/reference/log.hpp
+#include "ngraph/runtime/reference/lrn.hpp
+#include "ngraph/runtime/reference/matmul.hpp
+#include "ngraph/runtime/reference/max.hpp
+#include "ngraph/runtime/reference/maximum.hpp
+#include "ngraph/runtime/reference/max_pool.hpp
+#include "ngraph/runtime/reference/mean.hpp
+#include "ngraph/runtime/reference/min.hpp
+#include "ngraph/runtime/reference/minimum.hpp
+#include "ngraph/runtime/reference/mod.hpp
+#include "ngraph/runtime/reference/multiply.hpp
+#include "ngraph/runtime/reference/negate.hpp
+#include "ngraph/runtime/reference/non_zero.hpp
+#include "ngraph/runtime/reference/not_equal.hpp
+#include "ngraph/runtime/reference/not.hpp
+#include "ngraph/runtime/reference/one_hot.hpp
+#include "ngraph/runtime/reference/or.hpp
+#include "ngraph/runtime/reference/pad.hpp
+#include "ngraph/runtime/reference/power.hpp
+#include "ngraph/runtime/reference/product.hpp
+#include "ngraph/runtime/reference/quantize.hpp
+#include "ngraph/runtime/reference/random_uniform.hpp
+#include "ngraph/runtime/reference/range.hpp
+#include "ngraph/runtime/reference/recv.hpp
+#include "ngraph/runtime/reference/relu.hpp
+#include "ngraph/runtime/reference/replace_slice.hpp
+#include "ngraph/runtime/reference/reshape.hpp
+#include "ngraph/runtime/reference/result.hpp
+#include "ngraph/runtime/reference/reverse.hpp
+#include "ngraph/runtime/reference/reverse_sequence.hpp
+#include "ngraph/runtime/reference/round.hpp
+#include "ngraph/runtime/reference/scatter_add.hpp
+#include "ngraph/runtime/reference/scatter_elements_update.hpp
+#include "ngraph/runtime/reference/scatter_nd_add.hpp
+#include "ngraph/runtime/reference/select.hpp
+#include "ngraph/runtime/reference/send.hpp
+#include "ngraph/runtime/reference/shape_of.hpp
+#include "ngraph/runtime/reference/sigmoid.hpp
+#include "ngraph/runtime/reference/sign.hpp
+#include "ngraph/runtime/reference/sinh.hpp
+#include "ngraph/runtime/reference/sin.hpp
+#include "ngraph/runtime/reference/slice.hpp
+#include "ngraph/runtime/reference/softmax.hpp
+#include "ngraph/runtime/reference/sqrt.hpp
+#include "ngraph/runtime/reference/strided_slice.hpp
+#include "ngraph/runtime/reference/subtract.hpp
+#include "ngraph/runtime/reference/sum.hpp
+#include "ngraph/runtime/reference/tanh.hpp
+#include "ngraph/runtime/reference/tan.hpp
+#include "ngraph/runtime/reference/tile.hpp
+#include "ngraph/runtime/reference/topk.hpp
+#include "ngraph/runtime/reference/xor.hpp
 
 namespace ngraph
 {
@@ -140,11 +236,11 @@ namespace ngraph
 #undef NGRAPH_OP
                 UnknownOp
             };
-        } // namespace interpreter
-    }     // namespace runtime
-} // namespace ngraph
+        }
+    }
+}
 
-class ngraph::runtime::interpreter::INTExecutable : public Executable
+class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTExecutable : public Executable
 {
     friend class INTBackend;
 
@@ -182,7 +278,7 @@ protected:
     bool m_performance_counters_enabled = false;
     std::shared_ptr<Function> m_function;
     std::unordered_map<std::shared_ptr<const Node>, stopwatch> m_timer_map;
-    std::vector<std::shared_ptr<Node>> m_nodes;
+    NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     std::set<std::string> m_unsupported_op_name_list;
 
