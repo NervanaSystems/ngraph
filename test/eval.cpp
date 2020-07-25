@@ -195,7 +195,7 @@ TEST(eval, evaluate_dynamic_range_sum)
 }
 
 #ifdef NGRAPH_EVAL_ENABLE
-TEST(eval, EVAL_dynamic_range_sum)
+TEST(eval, DISABLED_EVAL_dynamic_range_sum)
 {
     auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
     auto p_stop = make_shared<op::Parameter>(element::f32, PartialShape{});
