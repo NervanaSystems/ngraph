@@ -394,13 +394,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::GetOutputElement:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t num_bytes = element_count * node.get_output_element_type(0).size();
-            std::memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), num_bytes);
-            break;
-        }
         case OP_TYPEID::BatchMatMul:
         {
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
@@ -546,7 +539,7 @@ protected:
         case OP_TYPEID::Convert:
         {
             // const op::Convert* c = static_cast<const op::Convert*>(&node);
-            element::Type type = node.get_element_type();
+            element::Type type = node.get_output_element_type(0);
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
             switch (type)
@@ -713,7 +706,7 @@ protected:
         case OP_TYPEID::Dequantize:
         {
             const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
-            auto type = dequantize->get_element_type();
+            auto type = dequantize->get_output_element_type(0);
 
             if (type == element::f32)
             {
@@ -782,8 +775,8 @@ protected:
         case OP_TYPEID::EmbeddingLookup:
         {
             const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
-            auto type = embed->get_argument(0)->get_element_type();
-            size_t element_count = shape_size(embed->get_argument(0)->get_shape());
+            auto type = embed->input(0).get_element_type();
+            size_t element_count = shape_size(embed->get_input_shape(0));
 
             if (type == element::f32)
             {
@@ -791,7 +784,7 @@ protected:
                                                args[1]->get_data_ptr<const T>(),
                                                out[0]->get_data_ptr<T>(),
                                                element_count,
-                                               embed->get_shape());
+                                               embed->get_output_shape(0));
             }
             else if (type == element::f64)
             {
@@ -799,7 +792,7 @@ protected:
                                                 args[1]->get_data_ptr<const T>(),
                                                 out[0]->get_data_ptr<T>(),
                                                 element_count,
-                                                embed->get_shape());
+                                                embed->get_output_shape(0));
             }
             else if (type == element::i32)
             {
@@ -807,7 +800,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else if (type == element::i64)
             {
@@ -815,7 +808,7 @@ protected:
                                                  args[1]->get_data_ptr<const T>(),
                                                  out[0]->get_data_ptr<T>(),
                                                  element_count,
-                                                 embed->get_shape());
+                                                 embed->get_output_shape(0));
             }
             else
             {
@@ -1050,7 +1043,6 @@ protected:
             reference::max<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
-                              node.get_output_shape(0),
                               max->get_reduction_axes());
             break;
         }
@@ -1101,7 +1093,6 @@ protected:
             reference::min<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
-                              node.get_output_shape(0),
                               min->get_reduction_axes());
             break;
         }
@@ -1211,14 +1202,13 @@ protected:
             reference::product<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
-                                  node.get_output_shape(0),
                                   product->get_reduction_axes());
             break;
         }
         case OP_TYPEID::Quantize:
         {
             const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
-            auto type = quantize->get_element_type();
+            auto type = quantize->get_output_element_type(0);
 
             if (type == element::u8)
             {
@@ -1558,7 +1548,7 @@ protected:
             const op::Result* res = static_cast<const op::Result*>(&node);
             reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              shape_size(res->get_shape()));
+                              shape_size(res->get_output_shape(0)));
             break;
         }
         case OP_TYPEID::Reverse:
@@ -1771,7 +1761,6 @@ protected:
             reference::sum<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
-                              node.get_output_shape(0),
                               sum->get_reduction_axes());
             break;
         }
