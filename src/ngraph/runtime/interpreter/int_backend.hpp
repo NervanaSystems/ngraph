@@ -40,7 +40,7 @@ namespace ngraph
     }
 }
 
-class INTERPRETER_BACKEND_API ngraph::runtime::interpreter::INTBackend : public Backend
+class ngraph::runtime::interpreter::INTBackend : public Backend
 {
 public:
     INTBackend();
@@ -48,8 +48,6 @@ public:
     INTBackend(const INTBackend&) = delete;
     INTBackend(INTBackend&&) = delete;
     INTBackend& operator=(const INTBackend&) = delete;
-
-    std::shared_ptr<Tensor> create_tensor() override;
 
     std::shared_ptr<Tensor>
         create_tensor(const element::Type& type, const Shape& shape, void* memory_pointer) override;
@@ -61,6 +59,8 @@ public:
     std::shared_ptr<Executable> load(std::istream& input_stream) override;
 
     bool is_supported(const Node& node) const override;
+
+    bool set_config(const std::map<std::string, std::string>& config, std::string& error) override;
 
 private:
     std::set<std::string> m_unsupported_op_name_list;

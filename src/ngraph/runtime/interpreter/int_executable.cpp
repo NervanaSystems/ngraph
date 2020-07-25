@@ -27,7 +27,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -64,34 +63,21 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     : m_is_compiled{true}
     , m_performance_counters_enabled{enable_performance_collection}
 {
-#ifndef NGRAPH_JSON_DISABLE
-    // To verify that the serializer and deserializer work correctly let's just run this
-    // graph round-trip
-    m_function = deserialize(serialize(function));
+#ifdef INTERPRETER_FORCE_SERIALIZE
+    // To verify that the serializer works correctly let's just run this graph round-trip
+    string ser = serialize(function);
+    m_function = deserialize(ser);
 #else
     m_function = clone_function(*function);
 #endif
-
-    auto is_supported = [](const Node& node) {
-        bool retval = false;
-        switch (INTExecutable::get_typeid(node))
-        {
-        case OP_TYPEID::Clamp:
-        case OP_TYPEID::MatMul:
-        case OP_TYPEID::Mod_v1:
-        case OP_TYPEID::Squeeze:
-        case OP_TYPEID::Unsqueeze: retval = true; break;
-        default: break;
-        }
-        return retval;
-    };
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
-    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
-    pass_manager.register_pass<pass::Opset1Downgrade>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
-    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<pass::FusedOpDecomposition>();
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {
@@ -115,7 +101,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    event::Duration d1("call", "Interpreter");
+    runtime::event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -157,14 +143,14 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->get_output_tensor(0);
+        descriptor::Tensor* tensor = &output->output(0).get_tensor();
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
     // for each ordered op in the graph
     for (auto op : m_nodes)
     {
-        event::Duration d2(op->description(), "Interpreter");
+        runtime::event::Duration d2(op->description(), "Interpreter");
         if (op->is_parameter())
         {
             continue;
@@ -187,7 +173,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                host_tensor = make_shared<HostTensor>(op->output(i));
+                const Shape& shape = op->get_output_shape(i);
+                const element::Type& type = op->get_output_element_type(i);
+                string name = op->output(i).get_tensor().get_name();
+                host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tensor, host_tensor});
             }
             else
@@ -225,10 +214,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             m_timer_map[op].start();
         }
-        if (!op->evaluate(op_outputs, op_inputs))
-        {
-            generate_calls(type, *op.get(), op_outputs, op_inputs);
-        }
+        generate_calls(type, *op.get(), op_outputs, op_inputs);
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();
@@ -363,16 +349,14 @@ shared_ptr<runtime::Tensor>
     runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
 {
     shared_ptr<op::Parameter> parameter = get_parameter(input_index);
-    return make_shared<runtime::HostTensor>(parameter->get_output_element_type(0),
-                                            parameter->get_output_shape(0));
+    return make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
 }
 
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
 {
     shared_ptr<op::Result> result = get_result(output_index);
-    return make_shared<runtime::HostTensor>(result->get_output_element_type(0),
-                                            result->get_output_shape(0));
+    return make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
 }
 
 vector<shared_ptr<runtime::Tensor>>
@@ -384,8 +368,8 @@ vector<shared_ptr<runtime::Tensor>>
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
-        auto t = make_shared<runtime::HostTensor>(parameter->get_output_element_type(0),
-                                                  parameter->get_output_shape(0));
+        auto t =
+            make_shared<runtime::HostTensor>(parameter->get_element_type(), parameter->get_shape());
         tensor = static_pointer_cast<runtime::HostTensor>(t);
         tensors.push_back(tensor);
     }
@@ -406,8 +390,7 @@ vector<shared_ptr<runtime::Tensor>>
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
-        auto t = make_shared<runtime::HostTensor>(result->get_output_element_type(0),
-                                                  result->get_output_shape(0));
+        auto t = make_shared<runtime::HostTensor>(result->get_element_type(), result->get_shape());
         tensor = static_pointer_cast<runtime::HostTensor>(t);
         tensors.push_back(tensor);
     }
