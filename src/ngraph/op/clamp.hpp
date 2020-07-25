@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -53,8 +54,28 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
-                double get_min() const { return m_min; }
-                double get_max() const { return m_max; }
+                template <typename T>
+                T get_min() const
+                {
+                    T min = m_min;
+                    if (std::is_integral<T>::value)
+                    {
+                        min = double_to_int<T>(m_min, [](double x) { return ceil(x); });
+                    }
+                    return min;
+                }
+
+                template <typename T>
+                T get_max() const
+                {
+                    T max = m_max;
+                    if (std::is_integral<T>::value)
+                    {
+                        max = double_to_int<T>(m_max, [](double x) { return floor(x); });
+                    }
+                    return max;
+                }
+
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
 

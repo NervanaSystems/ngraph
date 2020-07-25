@@ -2801,8 +2801,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Clamp:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
-        node["min"] = to_cpp_string<double>(tmp->get_min());
-        node["max"] = to_cpp_string<double>(tmp->get_max());
+        node["min"] = to_cpp_string<double>(tmp->get_min<double>());
+        node["max"] = to_cpp_string<double>(tmp->get_max<double>());
         break;
     }
     case OP_TYPEID::Concat:
