@@ -931,6 +931,7 @@ using namespace ngraph;
                                         t_out_attrs,
                                         t_in_attrs);
             }
+#if defined(NGRAPH_TBB_ENABLE)
             if (m_use_tbb)
             {
                 writer << "tbb::flow::continue_node<tbb::flow::continue_msg>* "
@@ -940,6 +941,7 @@ using namespace ngraph;
                           "(*(cg_ctx->tbb_graph), [&](const tbb::flow::continue_msg &msg)\n{\n";
                 writer.indent++;
             }
+#endif
             if (runtime::cpu::IsTracingEnabled() && m_function->get_name() == m_function_name)
             {
                 writer << "start_ts = cpu::Clock::now();\n";
