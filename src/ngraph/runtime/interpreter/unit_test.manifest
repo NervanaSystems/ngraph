@@ -1,8 +1,21 @@
 tile_3d_small_data_rank
 tile_3d_few_repeats
 fake_quantize_pdpd
+
 convert_float32_bf16
 convert_bf16_float32
+clamp_float16
+clamp_bfloat16
 
-onnx_INTERPRETER.model_quant_conv_linear
-onnx_INTERPRETER.top_k_opset_10
+unhandled_op
+shape_of_matrix_v3
+shape_of_5d_v3
+round_int64
+non_zero
+non_zero_all_1s
+non_zero_all_0s
+floor_int64
+ceiling_int64
+atanh
+asinh
+acosh

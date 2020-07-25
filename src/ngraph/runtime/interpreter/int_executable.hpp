@@ -46,6 +46,7 @@
 #include "ngraph/runtime/reference/broadcast.hpp"
 #include "ngraph/runtime/reference/broadcast_distributed.hpp"
 #include "ngraph/runtime/reference/ceiling.hpp"
+#include "ngraph/runtime/reference/clamp.hpp"
 #include "ngraph/runtime/reference/concat.hpp"
 #include "ngraph/runtime/reference/constant.hpp"
 #include "ngraph/runtime/reference/convert.hpp"
@@ -71,6 +72,7 @@
 #include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
+#include "ngraph/runtime/reference/matmul.hpp"
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
@@ -116,6 +118,7 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -366,34 +369,6 @@ protected:
                                    avg_pool->get_include_padding_in_avg_computation());
             break;
         }
-        case OP_TYPEID::GenerateMask:
-        {
-            bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
-            if (m_states.count(&node) == 0)
-            {
-                const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
-                auto seed = use_seed ? gm->get_seed() : 0;
-                m_states[&node] =
-                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
-            }
-
-            bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
-            auto state = static_cast<BernoulliRNGState*>(m_states.at(&node).get());
-            size_t element_count = shape_size(node.get_output_shape(0));
-            if (!use_seed)
-            {
-                reference::generate_mask<T>(
-                    out[0]->get_data_ptr<T>(), element_count, state, training);
-            }
-            else
-            {
-                uint64_t seed = static_cast<uint64_t>(args[3]->get_data_ptr<const T>()[0]);
-                double prob = static_cast<double>(args[4]->get_data_ptr<const T>()[0]);
-                reference::generate_mask_no_state<T>(
-                    out[0]->get_data_ptr<T>(), element_count, training, seed, prob);
-            }
-            break;
-        }
         case OP_TYPEID::BatchMatMul:
         {
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
@@ -510,6 +485,24 @@ protected:
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::ceiling<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::Clamp:
+        {
+            const op::Clamp* clamp = static_cast<const op::Clamp*>(&node);
+            size_t element_count = shape_size(node.get_output_shape(0));
+            T min = clamp->get_min();
+            T max = clamp->get_max();
+            if (std::is_integral<T>::value)
+            {
+                min = double_to_int<T>(clamp->get_min(), [](double x) { return ceil(x); });
+                max = double_to_int<T>(clamp->get_max(), [](double x) { return floor(x); });
+            }
+            reference::clamp<T>(args[0]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                min,
+                                max,
+                                element_count);
             break;
         }
         case OP_TYPEID::Concat:
@@ -924,6 +917,34 @@ protected:
             }
             break;
         }
+        case OP_TYPEID::GenerateMask:
+        {
+            bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
+            if (m_states.count(&node) == 0)
+            {
+                const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
+                auto seed = use_seed ? gm->get_seed() : 0;
+                m_states[&node] =
+                    std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
+            }
+
+            bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
+            auto state = static_cast<BernoulliRNGState*>(m_states.at(&node).get());
+            size_t element_count = shape_size(node.get_output_shape(0));
+            if (!use_seed)
+            {
+                reference::generate_mask<T>(
+                    out[0]->get_data_ptr<T>(), element_count, state, training);
+            }
+            else
+            {
+                uint64_t seed = static_cast<uint64_t>(args[3]->get_data_ptr<const T>()[0]);
+                double prob = static_cast<double>(args[4]->get_data_ptr<const T>()[0]);
+                reference::generate_mask_no_state<T>(
+                    out[0]->get_data_ptr<T>(), element_count, training, seed, prob);
+            }
+            break;
+        }
         case OP_TYPEID::Greater:
         {
             auto greater = static_cast<const op::Greater*>(&node);
@@ -1030,6 +1051,19 @@ protected:
                               lrn->get_beta(),
                               lrn->get_bias(),
                               lrn->get_nsize());
+            break;
+        }
+        case OP_TYPEID::MatMul:
+        {
+            const op::MatMul* op = static_cast<const op::MatMul*>(&node);
+            reference::matmul<T>(args[0]->get_data_ptr<const T>(),
+                                 args[1]->get_data_ptr<const T>(),
+                                 out[0]->get_data_ptr<T>(),
+                                 args[0]->get_shape(),
+                                 args[1]->get_shape(),
+                                 out[0]->get_shape(),
+                                 op->get_transpose_a(),
+                                 op->get_transpose_b());
             break;
         }
         case OP_TYPEID::Max:
@@ -1669,7 +1703,12 @@ protected:
         }
         case OP_TYPEID::ShapeOf:
         {
-            reference::shape_of(node.get_input_shape(0), out[0]->get_data_ptr<uint64_t>());
+            reference::shape_of(args[0]->get_shape(), out[0]->get_data_ptr<uint64_t>());
+            break;
+        }
+        case OP_TYPEID::ShapeOf_v3:
+        {
+            reference::shape_of(args[0]->get_shape(), out[0]->get_data_ptr<uint64_t>());
             break;
         }
         case OP_TYPEID::Sigmoid:
@@ -1819,8 +1858,6 @@ protected:
         }
 
         // Fused Ops are not supported in interpreter. They need to be decomposed before execution
-        case OP_TYPEID::Clamp:
-        case OP_TYPEID::MatMul:
         case OP_TYPEID::Split:
         case OP_TYPEID::DynBroadcast:
         case OP_TYPEID::DynPad:

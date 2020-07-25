@@ -194,8 +194,8 @@ TEST(eval, evaluate_dynamic_range_sum)
     ASSERT_EQ(cval, seq);
 }
 
-#ifdef NGRAPH_INTERPRETER_ENABLE
-TEST(eval, interpret_dynamic_range_sum)
+#ifdef NGRAPH_EVAL_ENABLE
+TEST(eval, EVAL_dynamic_range_sum)
 {
     auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
     auto p_stop = make_shared<op::Parameter>(element::f32, PartialShape{});
@@ -205,7 +205,7 @@ TEST(eval, interpret_dynamic_range_sum)
     auto add = make_shared<op::v1::Add>(range, p1);
     auto fun =
         make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
-    auto backend = runtime::Backend::create("INTERPRETER");
+    auto backend = runtime::Backend::create("EVAL");
     auto p_start_val = backend->create_tensor(element::f32, Shape{});
     copy_data(p_start_val, vector<float>{1.0f});
     auto p_stop_val = backend->create_tensor(element::f32, Shape{});
