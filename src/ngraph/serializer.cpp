@@ -1500,7 +1500,6 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::GetOutputElement:
         {
-            size_t n = node_js.at("n").get<size_t>();
             m_goe_alias.insert({node_name, args[0]});
             break;
         }
@@ -2801,8 +2800,8 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Clamp:
     {
         auto tmp = static_cast<const op::Clamp*>(&n);
-        node["min"] = to_cpp_string<double>(tmp->get_min());
-        node["max"] = to_cpp_string<double>(tmp->get_max());
+        node["min"] = to_cpp_string<double>(tmp->get_min<double>());
+        node["max"] = to_cpp_string<double>(tmp->get_max<double>());
         break;
     }
     case OP_TYPEID::Concat:
