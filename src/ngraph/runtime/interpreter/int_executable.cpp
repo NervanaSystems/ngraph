@@ -45,8 +45,9 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
     // {Acos::type_info, OP_TYPEID::Acos},
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
-#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION)                                                                   \
+    {ngraph::op::v##VERSION::NAME::type_info, OP_TYPEID::NAME##_v##VERSION},
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -76,8 +77,8 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
         {
-        case OP_TYPEID::Clamp:
-        case OP_TYPEID::MatMul:
+        case OP_TYPEID::Clamp_v0:
+        case OP_TYPEID::MatMul_v0:
         {
             retval = true;
             break;
