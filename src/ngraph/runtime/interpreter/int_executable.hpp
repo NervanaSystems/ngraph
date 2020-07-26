@@ -491,19 +491,11 @@ protected:
         case OP_TYPEID::Clamp_v0:
         {
             const op::Clamp* clamp = static_cast<const op::Clamp*>(&node);
-            size_t element_count = shape_size(node.get_output_shape(0));
-            T min = clamp->get_min();
-            T max = clamp->get_max();
-            if (std::is_integral<T>::value)
-            {
-                min = double_to_int<T>(clamp->get_min(), [](double x) { return ceil(x); });
-                max = double_to_int<T>(clamp->get_max(), [](double x) { return floor(x); });
-            }
             reference::clamp<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
-                                min,
-                                max,
-                                element_count);
+                                clamp->get_min<T>(),
+                                clamp->get_max<T>(),
+                                shape_size(node.get_output_shape(0)));
             break;
         }
         case OP_TYPEID::Concat_v0:
