@@ -74,7 +74,7 @@ namespace
     }
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_double)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_double_static)
 {
     auto type = element::f64;
     typedef double ctype;
@@ -126,47 +126,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_double)
         ninf,
         20.0,
         {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
-                                  0.2,
-                                  0.6,
-                                  {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6}));
-
-    EXPECT_TRUE(
-        clamp_test<ctype>("${BACKEND_NAME}",
-                          type,
-                          dshape,
-                          sshape,
-                          input,
-                          10.0,
-                          20.0,
-                          {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
-    EXPECT_TRUE(clamp_test<ctype>(
-        "${BACKEND_NAME}",
-        type,
-        dshape,
-        sshape,
-        input,
-        10.0,
-        pinf,
-        {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001}));
-    EXPECT_TRUE(clamp_test<ctype>(
-        "${BACKEND_NAME}",
-        type,
-        dshape,
-        sshape,
-        input,
-        ninf,
-        20.0,
-        {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_float)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_float_static)
 {
     auto type = element::f32;
     typedef float ctype;
@@ -218,47 +180,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_float)
         ninf,
         20.0,
         {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
-                                  0.2,
-                                  0.6,
-                                  {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6}));
-
-    EXPECT_TRUE(
-        clamp_test<ctype>("${BACKEND_NAME}",
-                          type,
-                          dshape,
-                          sshape,
-                          input,
-                          10.0,
-                          20.0,
-                          {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
-    EXPECT_TRUE(clamp_test<ctype>(
-        "${BACKEND_NAME}",
-        type,
-        dshape,
-        sshape,
-        input,
-        10.0,
-        pinf,
-        {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001}));
-    EXPECT_TRUE(clamp_test<ctype>(
-        "${BACKEND_NAME}",
-        type,
-        dshape,
-        sshape,
-        input,
-        ninf,
-        20.0,
-        {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_int8)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int8_static)
 {
     auto type = element::i8;
     typedef int8_t ctype;
@@ -298,35 +222,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_int8)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_int16)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int16_static)
 {
     auto type = element::i16;
     typedef int16_t ctype;
@@ -366,35 +264,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_int16)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_int32)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int32_static)
 {
     auto type = element::i32;
     typedef int32_t ctype;
@@ -434,35 +306,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_int32)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_int64)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int64_static)
 {
     auto type = element::i64;
     typedef int64_t ctype;
@@ -502,35 +348,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_int64)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_uint8)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint8_static)
 {
     auto type = element::u8;
     typedef uint8_t ctype;
@@ -570,35 +390,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_uint8)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_uint16)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint16_static)
 {
     auto type = element::u16;
     typedef uint16_t ctype;
@@ -638,35 +432,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_uint16)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_uint32)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint32_static)
 {
     auto type = element::u32;
     typedef uint32_t ctype;
@@ -706,35 +474,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_uint32)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_uint64)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint64_static)
 {
     auto type = element::u64;
     typedef uint64_t ctype;
@@ -774,35 +516,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_uint64)
                                   ninf,
                                   20.0,
                                   {min, 20, 9, 10, 11, 19, 20, 20}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  20.0,
-                                  {10, 20, 10, 10, 11, 19, 20, 20}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  10.0,
-                                  pinf,
-                                  {10, max, 10, 10, 11, 19, 20, 21}));
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  input,
-                                  ninf,
-                                  20.0,
-                                  {min, 20, 9, 10, 11, 19, 20, 20}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_float16)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_float16_static)
 {
     auto type = element::f16;
     typedef float16 ctype;
@@ -854,47 +570,9 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_float16)
         ninf,
         20.0,
         {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
-
-    // dynamic shape
-    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
-                                  type,
-                                  dshape,
-                                  sshape,
-                                  {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
-                                  0.2,
-                                  0.6,
-                                  {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6}));
-
-    EXPECT_TRUE(
-        clamp_test<ctype>("${BACKEND_NAME}",
-                          type,
-                          dshape,
-                          sshape,
-                          input,
-                          10.0,
-                          20.0,
-                          {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
-    EXPECT_TRUE(clamp_test<ctype>(
-        "${BACKEND_NAME}",
-        type,
-        dshape,
-        sshape,
-        input,
-        10.0,
-        pinf,
-        {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001}));
-    EXPECT_TRUE(clamp_test<ctype>(
-        "${BACKEND_NAME}",
-        type,
-        dshape,
-        sshape,
-        input,
-        ninf,
-        20.0,
-        {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
 }
 
-NGRAPH_TEST(${BACKEND_NAME}, clamp_bfloat16)
+NGRAPH_TEST(${BACKEND_NAME}, clamp_bfloat16_static)
 {
     auto type = element::bf16;
     typedef bfloat16 ctype;
@@ -946,6 +624,548 @@ NGRAPH_TEST(${BACKEND_NAME}, clamp_bfloat16)
         ninf,
         20.0,
         {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+}
+
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_double_dynamic)
+{
+    auto type = element::f64;
+    typedef double ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                                  0.2,
+                                  0.6,
+                                  {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6}));
+
+    EXPECT_TRUE(
+        clamp_test<ctype>("${BACKEND_NAME}",
+                          type,
+                          dshape,
+                          sshape,
+                          input,
+                          10.0,
+                          20.0,
+                          {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+    EXPECT_TRUE(clamp_test<ctype>(
+        "${BACKEND_NAME}",
+        type,
+        dshape,
+        sshape,
+        input,
+        10.0,
+        pinf,
+        {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001}));
+    EXPECT_TRUE(clamp_test<ctype>(
+        "${BACKEND_NAME}",
+        type,
+        dshape,
+        sshape,
+        input,
+        ninf,
+        20.0,
+        {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_float_dynamic)
+{
+    auto type = element::f32;
+    typedef float ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                                  0.2,
+                                  0.6,
+                                  {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6}));
+
+    EXPECT_TRUE(
+        clamp_test<ctype>("${BACKEND_NAME}",
+                          type,
+                          dshape,
+                          sshape,
+                          input,
+                          10.0,
+                          20.0,
+                          {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+    EXPECT_TRUE(clamp_test<ctype>(
+        "${BACKEND_NAME}",
+        type,
+        dshape,
+        sshape,
+        input,
+        10.0,
+        pinf,
+        {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001}));
+    EXPECT_TRUE(clamp_test<ctype>(
+        "${BACKEND_NAME}",
+        type,
+        dshape,
+        sshape,
+        input,
+        ninf,
+        20.0,
+        {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int8_dynamic)
+{
+    auto type = element::i8;
+    typedef int8_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int16_dynamic)
+{
+    auto type = element::i16;
+    typedef int16_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int32_dynamic)
+{
+    auto type = element::i32;
+    typedef int32_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_int64_dynamic)
+{
+    auto type = element::i64;
+    typedef int64_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint8_dynamic)
+{
+    auto type = element::u8;
+    typedef uint8_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint16_dynamic)
+{
+    auto type = element::u16;
+    typedef uint16_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint32_dynamic)
+{
+    auto type = element::u32;
+    typedef uint32_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_uint64_dynamic)
+{
+    auto type = element::u64;
+    typedef uint64_t ctype;
+
+    auto sshape = Shape{4, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<double>::infinity();
+    auto ninf = -numeric_limits<double>::infinity();
+
+    vector<ctype> input{min, max, 9, 10, 11, 19, 20, 21};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  20.0,
+                                  {10, 20, 10, 10, 11, 19, 20, 20}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  10.0,
+                                  pinf,
+                                  {10, max, 10, 10, 11, 19, 20, 21}));
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  input,
+                                  ninf,
+                                  20.0,
+                                  {min, 20, 9, 10, 11, 19, 20, 20}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_float16_dynamic)
+{
+    auto type = element::f16;
+    typedef float16 ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
+
+    // dynamic shape
+    EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",
+                                  type,
+                                  dshape,
+                                  sshape,
+                                  {-0.1, 0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8},
+                                  0.2,
+                                  0.6,
+                                  {0.2, 0.2, 0.2, 0.2, 0.3, 0.4, 0.5, 0.6, 0.6, 0.6}));
+
+    EXPECT_TRUE(
+        clamp_test<ctype>("${BACKEND_NAME}",
+                          type,
+                          dshape,
+                          sshape,
+                          input,
+                          10.0,
+                          20.0,
+                          {10.0, 20.0, 10.0, 20.0, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+    EXPECT_TRUE(clamp_test<ctype>(
+        "${BACKEND_NAME}",
+        type,
+        dshape,
+        sshape,
+        input,
+        10.0,
+        pinf,
+        {10.0, max, 10.0, pinf, 10.0, 10.0, 10.000001, 19.999999, 20.0, 20.000001}));
+    EXPECT_TRUE(clamp_test<ctype>(
+        "${BACKEND_NAME}",
+        type,
+        dshape,
+        sshape,
+        input,
+        ninf,
+        20.0,
+        {min, 20.0, ninf, 20.0, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.0}));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, clamp_bfloat16_dynamic)
+{
+    auto type = element::bf16;
+    typedef bfloat16 ctype;
+
+    auto sshape = Shape{5, 2};
+    auto dshape = PartialShape::dynamic();
+
+    auto min = numeric_limits<ctype>::min();
+    auto max = numeric_limits<ctype>::max();
+    auto pinf = numeric_limits<float>::infinity();
+    auto ninf = -numeric_limits<float>::infinity();
+
+    vector<ctype> input{min, max, ninf, pinf, 9.99999, 10.0, 10.000001, 19.999999, 20.0, 20.000001};
 
     // dynamic shape
     EXPECT_TRUE(clamp_test<ctype>("${BACKEND_NAME}",

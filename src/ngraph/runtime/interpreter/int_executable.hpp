@@ -89,6 +89,7 @@
 #include "ngraph/runtime/reference/product.hpp"
 #include "ngraph/runtime/reference/quantize.hpp"
 #include "ngraph/runtime/reference/random_uniform.hpp"
+#include "ngraph/runtime/reference/range.hpp"
 #include "ngraph/runtime/reference/recv.hpp"
 #include "ngraph/runtime/reference/relu.hpp"
 #include "ngraph/runtime/reference/replace_slice.hpp"
@@ -1530,7 +1531,11 @@ protected:
         }
         case OP_TYPEID::Range_v0:
         {
-            throw unsupported_op("Unsupported op 'Range_v0'");
+            const op::Range* op = static_cast<const op::Range*>(&node);
+            reference::range<T>(args[0]->get_data_ptr<const T>(),
+                                args[1]->get_data_ptr<const T>(),
+                                out[0]->get_shape(),
+                                out[0]->get_data_ptr<T>());
             break;
         }
         case OP_TYPEID::Relu_v0:
