@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -491,11 +492,12 @@ protected:
         case OP_TYPEID::Clamp_v0:
         {
             const op::Clamp* clamp = static_cast<const op::Clamp*>(&node);
+            out[0]->set_shape(args[0]->get_shape());
             reference::clamp<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 clamp->get_min<T>(),
                                 clamp->get_max<T>(),
-                                shape_size(node.get_output_shape(0)));
+                                shape_size(args[0]->get_shape()));
             break;
         }
         case OP_TYPEID::Concat_v0:
@@ -1572,9 +1574,10 @@ protected:
         case OP_TYPEID::Result_v0:
         {
             const op::Result* res = static_cast<const op::Result*>(&node);
+            out[0]->set_shape(args[0]->get_shape());
             reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              shape_size(res->get_output_shape(0)));
+                              shape_size(out[0]->get_shape()));
             break;
         }
         case OP_TYPEID::Reverse_v0:

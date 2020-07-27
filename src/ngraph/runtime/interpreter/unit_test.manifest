@@ -30,16 +30,6 @@ builder_opset1_mean_dynamic
 builder_opset1_mean_dynamic_2
 clamp_float16_static
 clamp_bfloat16_static
-clamp_double_dynamic
-clamp_float_dynamic
-clamp_int8_dynamic
-clamp_int16_dynamic
-clamp_int32_dynamic
-clamp_int64_dynamic
-clamp_uint8_dynamic
-clamp_uint16_dynamic
-clamp_uint32_dynamic
-clamp_uint64_dynamic
 clamp_float16_dynamic
 clamp_bfloat16_dynamic
 concat_negative_axis
