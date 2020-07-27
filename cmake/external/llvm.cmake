@@ -62,7 +62,7 @@ if(NEED_TO_BUILD_LLVM)
     message(STATUS "LLVM: Building LLVM from source")
 
     set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${MLIR_COMMIT_ID}.zip)
-    set(LLVM_ARCHIVE_URL_HASH eeab666e7513269552468e405d5d1040a33b9377)
+    set(LLVM_ARCHIVE_URL_HASH 719d6700244afbef751f9bea0afe88c581aa3e70)
 
     FetchContent_Declare(
         llvm
