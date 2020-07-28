@@ -22,7 +22,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -55,7 +54,6 @@ runtime::HostTensor::HostTensor(const element::Type& element_type,
     : runtime::Tensor(
           std::make_shared<ngraph::descriptor::Tensor>(element_type, partial_shape, name))
 {
-    NGRAPH_INFO << partial_shape;
     // Defer allocation until ptr is requested
 }
 

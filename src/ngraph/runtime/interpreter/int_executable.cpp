@@ -119,7 +119,6 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
-    NGRAPH_INFO << outputs[0]->get_partial_shape();
     event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
@@ -428,7 +427,7 @@ Coordinate runtime::interpreter::INTExecutable::to_coordinate(const HostTensor* 
 {
     const int64_t* p = tensor->get_data_ptr<const int64_t>();
     vector<size_t> coordinate_data;
-    for (size_t i=0; i<tensor->get_element_count(); ++i)
+    for (size_t i = 0; i < tensor->get_element_count(); ++i)
     {
         coordinate_data.push_back(p[i]);
     }
@@ -439,11 +438,8 @@ Strides runtime::interpreter::INTExecutable::to_strides(const HostTensor* tensor
 {
     const int64_t* p = tensor->get_data_ptr<const int64_t>();
     vector<size_t> stride_data;
-    NGRAPH_INFO << tensor->get_element_count();
-    NGRAPH_INFO << tensor->get_size_in_bytes();
-    for (size_t i=0; i<tensor->get_element_count(); ++i)
+    for (size_t i = 0; i < tensor->get_element_count(); ++i)
     {
-        NGRAPH_INFO << p[i];
         stride_data.push_back(p[i]);
     }
     return Strides(stride_data);

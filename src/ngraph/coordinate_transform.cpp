@@ -26,7 +26,6 @@
 #include "ngraph/shape.hpp"
 #include "ngraph/strides.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 
@@ -51,8 +50,6 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
 {
     if (m_n_axes != source_start_corner.size())
     {
-        NGRAPH_INFO << m_n_axes;
-        NGRAPH_INFO << source_start_corner.size();
         throw std::domain_error(
             "Source start corner does not have the same number of axes as the source space shape");
     }

@@ -23,9 +23,9 @@
 #include <string>
 #include <vector>
 
+#include "ngraph/coordinate.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
-#include "ngraph/coordinate.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
@@ -216,7 +216,6 @@ protected:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        NGRAPH_INFO << node;
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -766,28 +765,27 @@ protected:
         case OP_TYPEID::DynSlice_v0:
         {
             const op::DynSlice* op = static_cast<const op::DynSlice*>(&node);
-            NGRAPH_INFO << op->get_lower_bounds_mask();
-            NGRAPH_INFO << op->get_upper_bounds_mask();
-            NGRAPH_INFO << op->get_new_axis();
-            NGRAPH_INFO << op->get_shrink_axis();
-            NGRAPH_INFO << op->get_ellipsis_mask();
+            // NGRAPH_INFO << op->get_lower_bounds_mask();
+            // NGRAPH_INFO << op->get_upper_bounds_mask();
+            // NGRAPH_INFO << op->get_new_axis();
+            // NGRAPH_INFO << op->get_shrink_axis();
+            // NGRAPH_INFO << op->get_ellipsis_mask();
 
             Coordinate lower_bounds = to_coordinate(args[1].get());
             Coordinate upper_bounds = to_coordinate(args[2].get());
             Strides strides = to_strides(args[3].get());
 
-            NGRAPH_INFO << lower_bounds;
-            NGRAPH_INFO << upper_bounds;
-            NGRAPH_INFO << strides;
+            // NGRAPH_INFO << lower_bounds;
+            // NGRAPH_INFO << upper_bounds;
+            // NGRAPH_INFO << strides;
 
             Shape output_shape = op->compute_output_shape(args[0]->get_shape(),
                                                           to_vector<int64_t>(args[1].get()),
                                                           to_vector<int64_t>(args[2].get()),
                                                           to_vector<int64_t>(args[3].get()));
-            NGRAPH_INFO << args[0]->get_shape();
-            NGRAPH_INFO << output_shape;
+            // NGRAPH_INFO << args[0]->get_shape();
+            // NGRAPH_INFO << output_shape;
             out[0]->set_shape(output_shape);
-            NGRAPH_INFO;
 
             reference::slice<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
@@ -796,7 +794,6 @@ protected:
                                 upper_bounds,
                                 strides,
                                 output_shape);
-            NGRAPH_INFO;
             break;
         }
         case OP_TYPEID::EmbeddingLookup_v0:
