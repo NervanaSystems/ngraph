@@ -685,8 +685,6 @@ bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVec
 {
     Shape arg_shape = inputs[0]->get_shape();
     // 1. get axis, mode (max/min), sort_type
-    // set_axis(arg_shape.size(), m_axis);
-    // size_t axis = get_axis();
     Rank input_rank = arg_shape.size();
     size_t axis;
     if (input_rank.is_static())
