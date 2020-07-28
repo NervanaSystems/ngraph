@@ -43,10 +43,20 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
     const ResultVector& results = get_results();
     for (size_t i=0; i<outputs.size(); ++i)
     {
+        NGRAPH_INFO;
+        NGRAPH_INFO << *results[i];
         // Need to reset the partial shapes of the output Tensors to their initial partial shape
-        std::shared_ptr<runtime::Tensor> t = outputs[i];
-        t->set_partial_shape(parameters[i]->get_partial_shape());
+        if (results[i]->is_dynamic())
+        {
+            NGRAPH_INFO;
+            std::shared_ptr<runtime::Tensor> t = outputs[i];
+            NGRAPH_INFO;
+            t->set_partial_shape(results[i]->get_input_partial_shape(0));
+            NGRAPH_INFO;
+        }
+        NGRAPH_INFO;
     }
+        NGRAPH_INFO;
     if (parameters.size() != inputs.size())
     {
         stringstream ss;
@@ -54,6 +64,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
            << parameters.size();
         throw runtime_error(ss.str());
     }
+        NGRAPH_INFO;
     if (results.size() != outputs.size())
     {
         stringstream ss;
@@ -62,6 +73,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
         throw runtime_error(ss.str());
     }
 
+        NGRAPH_INFO;
     for (size_t i = 0; i < parameters.size(); i++)
     {
         if (parameters[i]->get_output_element_type(0).is_static() &&
@@ -82,6 +94,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
         }
     }
 
+        NGRAPH_INFO;
     for (size_t i = 0; i < results.size(); i++)
     {
         if (outputs[i]->get_element_type().is_static() &&
@@ -102,6 +115,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
             throw runtime_error(ss.str());
         }
     }
+        NGRAPH_INFO;
 }
 
 const ngraph::ParameterVector& runtime::Executable::get_parameters() const
