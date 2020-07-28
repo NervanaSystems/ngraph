@@ -393,8 +393,7 @@ string(REPLACE ";" " " CMAKE_ORIGINAL_CXX_FLAGS "${NGRAPH_COMMON_CXX_FLAGS}")
 # Compile Flags for nGraph...
 #-----------------------------------------------------------------------------------------------
 
-# Prevent Eigen from using any LGPL3 code
-set(CMAKE_CXX_FLAGS "${CMAKE_ORIGINAL_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
+add_compile_options(${NGRAPH_COMMON_FLAGS})
 
 if (WIN32)
     string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -402,14 +401,14 @@ endif()
 
 # Compiler-specific logic...
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
+    add_compile_options(/EHsc /MP)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+        add_compile_options(/bigobj)
         # C4251 needs to have dll-interface to be used by clients of class
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
+        add_compile_options(/wd4251)
         # C4275 non dll-interface class used as base for dll-interface class
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+        add_compile_options(/wd4275)
     endif()
 else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
@@ -425,11 +424,11 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$" AND NOT NGRAPH_BUI
 endif()
 
 if (NOT WIN32 AND ${NGRAPH_WARNINGS_AS_ERRORS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    add_compile_options(-Werror)
 endif()
 
 if (NGRAPH_CODE_COVERAGE_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    add_compile_options(--coverage)
 endif()
 
 # Enable build target CPU features
@@ -442,36 +441,22 @@ if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
             "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
     endif()
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
+    add_compile_options(-march=${NGRAPH_TARGET_ARCH})
 endif()
 
 if (DEFINED NGRAPH_TUNE_ARCH)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
+    add_compile_options(-mtune=${NGRAPH_TUNE_ARCH})
 endif()
 
 if (NGRAPH_USE_GOLD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    add_compile_options(-fuse-ld=gold)
 endif()
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
+    add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS)
 endif()
 
 if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     set(NGRAPH_MLIR_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/contrib/mlir)
-endif()
-
-if (NGRAPH_STATIC_LIB_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_STATIC_LIB_ENABLE")
-endif()
-
-if (NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DYNAMIC_COMPONENTS_ENABLE")
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
@@ -484,19 +469,19 @@ if(NGRAPH_ADDRESS_SANITIZER_ENABLE)
     else()
         set(ADDRESS_SANITIZER_FLAGS "-fsanitize=address -fsanitize=leak")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDRESS_SANITIZER_FLAGS}")
+    add_compile_options(${ADDRESS_SANITIZER_FLAGS})
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ADDRESS_SANITIZER_FLAGS}")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${ADDRESS_SANITIZER_FLAGS}")
 endif()
 
 if(NGRAPH_THREAD_SANITIZER_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+    add_compile_options(-fsanitize=thread)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
 endif()
 
 if(NGRAPH_UB_SANITIZER_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie")
+    add_compile_options(-fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie")
 endif()
@@ -505,7 +490,7 @@ if(NGRAPH_ADDRESS_SANITIZER_ENABLE OR NGRAPH_THREAD_SANITIZER_ENABLE OR NGRAPH_U
     if (LINUX AND NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "^Clang$")
         message(FATAL_ERROR "Sanitizers only work with the clang compiler")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fno-omit-frame-pointer")
+    add_compile_options(-g -fno-omit-frame-pointer)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g -fno-omit-frame-pointer")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -g -fno-omit-frame-pointer")
 endif()
@@ -582,10 +567,13 @@ add_definitions(-DPROJECT_ROOT_DIR="${PROJECT_SOURCE_DIR}")
 #-----------------------------------------------------------------------------------------------
 # Print Global Options
 #-----------------------------------------------------------------------------------------------
-message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
+get_directory_property(NGRAPH_COMPILE_OPTIONS COMPILE_OPTIONS)
+message(STATUS "Compile Flags: ${NGRAPH_COMPILE_OPTIONS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 
 #-----------------------------------------------------------------------------------------------
 # External projects install directory
