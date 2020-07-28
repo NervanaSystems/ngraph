@@ -49,6 +49,7 @@ namespace ngraph
             /// \brief Get tensor partial shape
             /// \return const reference to a PartialShape
             const ngraph::PartialShape& get_partial_shape() const;
+            void set_partial_shape(const ngraph::PartialShape& shape);
 
             /// \brief Get tensor strides
             /// \return Strides

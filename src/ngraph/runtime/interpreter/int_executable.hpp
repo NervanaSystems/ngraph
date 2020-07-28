@@ -216,6 +216,7 @@ protected:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
+        NGRAPH_INFO << node;
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -243,11 +244,12 @@ protected:
         case OP_TYPEID::Add_v0:
         {
             const op::Add* add = static_cast<const op::Add*>(&node);
+            out[0]->set_broadcast(add->get_autob(), args[0], args[1]);
             reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
-                              node.get_input_shape(1),
+                              args[0]->get_shape(),
+                              args[1]->get_shape(),
                               add->get_autob());
             break;
         }
@@ -256,7 +258,7 @@ protected:
             const op::All* all = static_cast<const op::All*>(&node);
             reference::all(args[0]->get_data_ptr<const char>(),
                            out[0]->get_data_ptr<char>(),
-                           node.get_input_shape(0),
+                           args[0]->get_shape(),
                            node.get_output_shape(0),
                            all->get_reduction_axes());
             break;
@@ -269,7 +271,7 @@ protected:
                                     out[0]->get_data_ptr<T>(),
                                     node.get_input_element_type(0),
                                     allreduce->get_reduce_type(),
-                                    static_cast<int>(shape_size(node.get_input_shape(0))));
+                                    static_cast<int>(shape_size(args[0]->get_shape())));
             break;
         }
         case OP_TYPEID::And_v0:
@@ -278,8 +280,8 @@ protected:
             reference::logical_and(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
                                    logical_and->get_autob());
             break;
         }
@@ -288,7 +290,7 @@ protected:
             const op::Any* any = static_cast<const op::Any*>(&node);
             reference::any(args[0]->get_data_ptr<const char>(),
                            out[0]->get_data_ptr<char>(),
-                           node.get_input_shape(0),
+                           args[0]->get_shape(),
                            node.get_output_shape(0),
                            any->get_reduction_axes());
             break;
@@ -301,7 +303,7 @@ protected:
             {
                 reference::argmin<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int64_t>(),
-                                              node.get_input_shape(0),
+                                              args[0]->get_shape(),
                                               node.get_output_shape(0),
                                               argmin->get_reduction_axis());
             }
@@ -309,7 +311,7 @@ protected:
             {
                 reference::argmin<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int32_t>(),
-                                              node.get_input_shape(0),
+                                              args[0]->get_shape(),
                                               node.get_output_shape(0),
                                               argmin->get_reduction_axis());
             }
@@ -327,7 +329,7 @@ protected:
             {
                 reference::argmax<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int64_t>(),
-                                              node.get_input_shape(0),
+                                              args[0]->get_shape(),
                                               node.get_output_shape(0),
                                               argmax->get_reduction_axis());
             }
@@ -335,7 +337,7 @@ protected:
             {
                 reference::argmax<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                               out[0]->get_data_ptr<int32_t>(),
-                                              node.get_input_shape(0),
+                                              args[0]->get_shape(),
                                               node.get_output_shape(0),
                                               argmax->get_reduction_axis());
             }
@@ -374,7 +376,7 @@ protected:
 
             reference::avg_pool<T>(args[0]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
+                                   args[0]->get_shape(),
                                    node.get_output_shape(0),
                                    avg_pool->get_window_shape(),
                                    avg_pool->get_window_movement_strides(),
@@ -388,8 +390,8 @@ protected:
             reference::batch_mat_mul(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<T>(),
-                                     node.get_input_shape(0),
-                                     node.get_input_shape(1),
+                                     args[0]->get_shape(),
+                                     args[1]->get_shape(),
                                      node.get_output_shape(0));
             break;
         }
@@ -444,7 +446,7 @@ protected:
             const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
             reference::avg_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
+                                            args[0]->get_shape(),
                                             node.get_output_shape(0),
                                             apb->get_window_shape(),
                                             apb->get_window_movement_strides(),
@@ -456,7 +458,7 @@ protected:
         case OP_TYPEID::Broadcast_v0:
         {
             const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
-            Shape in_shape = node.get_input_shape(0);
+            Shape in_shape = args[0]->get_shape();
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
             reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
@@ -478,9 +480,9 @@ protected:
                 reference::broadcastdistributed<T>(
                     args[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0),
-                    static_cast<int>(shape_size(node.get_input_shape(0))),
+                    static_cast<int>(shape_size(args[0]->get_shape())),
                     root_id);
-                auto memSize = static_cast<int>(shape_size(node.get_input_shape(0))) * sizeof(T);
+                auto memSize = static_cast<int>(shape_size(args[0]->get_shape())) * sizeof(T);
                 memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
             }
             else
@@ -488,7 +490,7 @@ protected:
                 reference::broadcastdistributed<T>(
                     out[0]->get_data_ptr<T>(),
                     node.get_input_element_type(0),
-                    static_cast<int>(shape_size(node.get_input_shape(0))),
+                    static_cast<int>(shape_size(args[0]->get_shape())),
                     root_id);
             }
             break;
@@ -613,8 +615,8 @@ protected:
             reference::convolution<T>(args[0]->get_data_ptr<const T>(),
                                       args[1]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<T>(),
-                                      node.get_input_shape(0),
-                                      node.get_input_shape(1),
+                                      args[0]->get_shape(),
+                                      args[1]->get_shape(),
                                       node.get_output_shape(0),
                                       c->get_window_movement_strides(),
                                       c->get_window_dilation_strides(),
@@ -683,7 +685,7 @@ protected:
                 reference::cumsum<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                               args[1]->get_data_ptr<const int32_t>(),
                                               out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
+                                              args[0]->get_shape(),
                                               cumsum->is_exclusive(),
                                               cumsum->is_reverse());
             }
@@ -692,7 +694,7 @@ protected:
                 reference::cumsum<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                               args[1]->get_data_ptr<const int64_t>(),
                                               out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
+                                              args[0]->get_shape(),
                                               cumsum->is_exclusive(),
                                               cumsum->is_reverse());
             }
@@ -714,8 +716,8 @@ protected:
                                          args[1]->get_data_ptr<const float>(),
                                          args[2]->get_data_ptr<const T>(),
                                          out[0]->get_data_ptr<float>(),
-                                         node.get_input_shape(0),
-                                         node.get_input_shape(1),
+                                         args[0]->get_shape(),
+                                         args[1]->get_shape(),
                                          dequantize->get_axes());
             }
             else if (type == element::f64)
@@ -724,8 +726,8 @@ protected:
                                          args[1]->get_data_ptr<const double>(),
                                          args[2]->get_data_ptr<const T>(),
                                          out[0]->get_data_ptr<double>(),
-                                         node.get_input_shape(0),
-                                         node.get_input_shape(1),
+                                         args[0]->get_shape(),
+                                         args[1]->get_shape(),
                                          dequantize->get_axes());
             }
             else
@@ -743,8 +745,8 @@ protected:
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
-                                 node.get_input_shape(0),
-                                 node.get_input_shape(1),
+                                 args[0]->get_shape(),
+                                 args[1]->get_shape(),
                                  divop->get_autob(),
                                  divop->is_pythondiv());
             break;
@@ -756,8 +758,8 @@ protected:
             reference::dot(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.get_input_shape(0),
-                           node.get_input_shape(1),
+                           args[0]->get_shape(),
+                           args[1]->get_shape(),
                            node.get_output_shape(0),
                            dot->get_reduction_axes_count());
             break;
@@ -847,8 +849,8 @@ protected:
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
-                                node.get_input_shape(0),
-                                node.get_input_shape(1),
+                                args[0]->get_shape(),
+                                args[1]->get_shape(),
                                 equal->get_autob());
             break;
         }
@@ -906,8 +908,8 @@ protected:
                 reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
                                               args[1]->get_data_ptr<int64_t>(),
                                               out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
-                                              node.get_input_shape(1),
+                                              args[0]->get_shape(),
+                                              args[1]->get_shape(),
                                               node.get_output_shape(0),
                                               gather->get_axis());
             }
@@ -916,8 +918,8 @@ protected:
                 reference::gather<T, int32_t>(args[0]->get_data_ptr<T>(),
                                               args[1]->get_data_ptr<int32_t>(),
                                               out[0]->get_data_ptr<T>(),
-                                              node.get_input_shape(0),
-                                              node.get_input_shape(1),
+                                              args[0]->get_shape(),
+                                              args[1]->get_shape(),
                                               node.get_output_shape(0),
                                               gather->get_axis());
             }
@@ -934,8 +936,8 @@ protected:
                 reference::gather_nd<T, int64_t>(args[0]->get_data_ptr<T>(),
                                                  args[1]->get_data_ptr<int64_t>(),
                                                  out[0]->get_data_ptr<T>(),
-                                                 node.get_input_shape(0),
-                                                 node.get_input_shape(1),
+                                                 args[0]->get_shape(),
+                                                 args[1]->get_shape(),
                                                  node.get_output_shape(0));
             }
             else if (node.get_input_element_type(1) == element::i32)
@@ -943,8 +945,8 @@ protected:
                 reference::gather_nd<T, int32_t>(args[0]->get_data_ptr<T>(),
                                                  args[1]->get_data_ptr<int32_t>(),
                                                  out[0]->get_data_ptr<T>(),
-                                                 node.get_input_shape(0),
-                                                 node.get_input_shape(1),
+                                                 args[0]->get_shape(),
+                                                 args[1]->get_shape(),
                                                  node.get_output_shape(0));
             }
             else
@@ -987,8 +989,8 @@ protected:
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   greater->get_autob());
             break;
         }
@@ -998,8 +1000,8 @@ protected:
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
-                                     node.get_input_shape(0),
-                                     node.get_input_shape(1),
+                                     args[0]->get_shape(),
+                                     args[1]->get_shape(),
                                      greater_eq->get_autob());
             break;
         }
@@ -1009,8 +1011,8 @@ protected:
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
-                               node.get_input_shape(0),
-                               node.get_input_shape(1),
+                               args[0]->get_shape(),
+                               args[1]->get_shape(),
                                less->get_autob());
             break;
         }
@@ -1020,8 +1022,8 @@ protected:
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   less_eq->get_autob());
             break;
         }
@@ -1031,8 +1033,8 @@ protected:
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   less_eq->get_autob());
             break;
         }
@@ -1049,8 +1051,8 @@ protected:
             reference::logical_and(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
                                    logical_and->get_autob());
             break;
         }
@@ -1060,8 +1062,8 @@ protected:
             reference::logical_or(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   logical_or->get_autob());
             break;
         }
@@ -1071,8 +1073,8 @@ protected:
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
                                    logical_xor->get_autob());
             break;
         }
@@ -1082,7 +1084,7 @@ protected:
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
                               lrn->get_reduction_axes(),
                               out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
+                              args[0]->get_shape(),
                               lrn->get_alpha(),
                               lrn->get_beta(),
                               lrn->get_bias(),
@@ -1107,7 +1109,7 @@ protected:
             const op::Max* max = static_cast<const op::Max*>(&node);
             reference::max<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
+                              args[0]->get_shape(),
                               max->get_reduction_axes());
             break;
         }
@@ -1117,8 +1119,8 @@ protected:
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   maximum->get_autob());
             break;
         }
@@ -1128,7 +1130,7 @@ protected:
 
             reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
+                                   args[0]->get_shape(),
                                    node.get_output_shape(0),
                                    max_pool->get_window_shape(),
                                    max_pool->get_window_movement_strides(),
@@ -1144,7 +1146,7 @@ protected:
             reference::max_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
                                             args[1]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<T>(),
-                                            node.get_input_shape(1),
+                                            args[1]->get_shape(),
                                             node.get_output_shape(0),
                                             max_pool_backprop->get_window_shape(),
                                             max_pool_backprop->get_window_movement_strides(),
@@ -1157,7 +1159,7 @@ protected:
             const op::Min* min = static_cast<const op::Min*>(&node);
             reference::min<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
+                              args[0]->get_shape(),
                               min->get_reduction_axes());
             break;
         }
@@ -1167,19 +1169,20 @@ protected:
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   minimum->get_autob());
             break;
         }
         case OP_TYPEID::Multiply_v0:
         {
             auto multiply = static_cast<const op::Multiply*>(&node);
+            out[0]->set_broadcast(multiply->get_autob(), args[0], args[1]);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
                                    multiply->get_autob());
             break;
         }
@@ -1204,8 +1207,8 @@ protected:
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
-                                    node.get_input_shape(0),
-                                    node.get_input_shape(1),
+                                    args[0]->get_shape(),
+                                    args[1]->get_shape(),
                                     not_equal->get_autob());
             break;
         }
@@ -1214,7 +1217,7 @@ protected:
             const op::OneHot* oh = static_cast<const op::OneHot*>(&node);
             reference::one_hot<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
+                                  args[0]->get_shape(),
                                   node.get_output_shape(0),
                                   oh->get_one_hot_axis());
             break;
@@ -1225,8 +1228,8 @@ protected:
             reference::logical_or(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
+                                  args[0]->get_shape(),
+                                  args[1]->get_shape(),
                                   logical_or->get_autob());
             break;
         }
@@ -1243,7 +1246,7 @@ protected:
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
                            out[0]->get_data_ptr<T>(),
-                           node.get_input_shape(0),
+                           args[0]->get_shape(),
                            node.get_output_shape(0),
                            pad->get_padding_below(),
                            pad->get_padding_above(),
@@ -1256,8 +1259,8 @@ protected:
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
-                                node.get_input_shape(0),
-                                node.get_input_shape(1),
+                                args[0]->get_shape(),
+                                args[1]->get_shape(),
                                 power->get_autob());
             break;
         }
@@ -1266,7 +1269,7 @@ protected:
             const op::Product* product = static_cast<const op::Product*>(&node);
             reference::product<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
+                                  args[0]->get_shape(),
                                   product->get_reduction_axes());
             break;
         }
@@ -1281,8 +1284,8 @@ protected:
                                        args[1]->get_data_ptr<const T>(),
                                        args[2]->get_data_ptr<const uint8_t>(),
                                        out[0]->get_data_ptr<uint8_t>(),
-                                       node.get_input_shape(0),
-                                       node.get_input_shape(1),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
                                        quantize->get_axes(),
                                        quantize->get_round_mode());
             }
@@ -1292,8 +1295,8 @@ protected:
                                        args[1]->get_data_ptr<const T>(),
                                        args[2]->get_data_ptr<const int8_t>(),
                                        out[0]->get_data_ptr<int8_t>(),
-                                       node.get_input_shape(0),
-                                       node.get_input_shape(1),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
                                        quantize->get_axes(),
                                        quantize->get_round_mode());
             }
@@ -1303,8 +1306,8 @@ protected:
                                        args[1]->get_data_ptr<const T>(),
                                        args[2]->get_data_ptr<const int32_t>(),
                                        out[0]->get_data_ptr<int32_t>(),
-                                       node.get_input_shape(0),
-                                       node.get_input_shape(1),
+                                       args[0]->get_shape(),
+                                       args[1]->get_shape(),
                                        quantize->get_axes(),
                                        quantize->get_round_mode());
             }
@@ -1334,8 +1337,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int8_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     qc->get_window_movement_strides(),
                     qc->get_window_dilation_strides(),
@@ -1356,8 +1359,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<uint8_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     qc->get_window_movement_strides(),
                     qc->get_window_dilation_strides(),
@@ -1378,8 +1381,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     qc->get_window_movement_strides(),
                     qc->get_window_dilation_strides(),
@@ -1400,8 +1403,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     qc->get_window_movement_strides(),
                     qc->get_window_dilation_strides(),
@@ -1445,8 +1448,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int8_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     1,
                     args[2]->get_data_ptr<const float>(),
@@ -1463,8 +1466,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<uint8_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     1,
                     args[2]->get_data_ptr<const float>(),
@@ -1481,8 +1484,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const uint8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     1,
                     args[2]->get_data_ptr<const float>(),
@@ -1499,8 +1502,8 @@ protected:
                     args[0]->get_data_ptr<const uint8_t>(),
                     args[1]->get_data_ptr<const int8_t>(),
                     out[0]->get_data_ptr<int32_t>(),
-                    node.get_input_shape(0),
-                    node.get_input_shape(1),
+                    args[0]->get_shape(),
+                    args[1]->get_shape(),
                     node.get_output_shape(0),
                     1,
                     args[2]->get_data_ptr<const float>(),
@@ -1595,7 +1598,7 @@ protected:
             reference::replace_slice<T>(args[0]->get_data_ptr<const T>(),
                                         args[1]->get_data_ptr<const T>(),
                                         out[0]->get_data_ptr<T>(),
-                                        node.get_input_shape(1),
+                                        args[1]->get_shape(),
                                         slice->get_lower_bounds(),
                                         slice->get_upper_bounds(),
                                         slice->get_strides(),
@@ -1607,14 +1610,16 @@ protected:
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
             reference::reshape(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
+                               args[0]->get_shape(),
                                reshape->get_input_order(),
                                node.get_output_shape(0));
             break;
         }
         case OP_TYPEID::Result_v0:
         {
+            NGRAPH_INFO;
             const op::Result* res = static_cast<const op::Result*>(&node);
+            NGRAPH_INFO << out[0]->get_partial_shape();
             out[0]->set_shape(args[0]->get_shape());
             reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
@@ -1626,7 +1631,7 @@ protected:
             const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
             reference::reverse(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
+                               args[0]->get_shape(),
                                node.get_output_shape(0),
                                reverse->get_reversed_axes());
             break;
@@ -1639,7 +1644,7 @@ protected:
             {
                 reference::reverse_sequence<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                                         out[0]->get_data_ptr<T>(),
-                                                        node.get_input_shape(0),
+                                                        args[0]->get_shape(),
                                                         reverse->get_batch_axis(),
                                                         reverse->get_sequence_axis(),
                                                         args[1]->get_data_ptr<const int32_t>());
@@ -1665,8 +1670,8 @@ protected:
                                                    args[1]->get_data_ptr<int64_t>(),
                                                    args[2]->get_data_ptr<T>(),
                                                    out[0]->get_data_ptr<T>(),
-                                                   node.get_input_shape(0),
-                                                   node.get_input_shape(1),
+                                                   args[0]->get_shape(),
+                                                   args[1]->get_shape(),
                                                    node.get_input_shape(2),
                                                    node.get_output_shape(0));
             }
@@ -1676,8 +1681,8 @@ protected:
                                                    args[1]->get_data_ptr<int32_t>(),
                                                    args[2]->get_data_ptr<T>(),
                                                    out[0]->get_data_ptr<T>(),
-                                                   node.get_input_shape(0),
-                                                   node.get_input_shape(1),
+                                                   args[0]->get_shape(),
+                                                   args[1]->get_shape(),
                                                    node.get_input_shape(2),
                                                    node.get_output_shape(0));
             }
@@ -1695,8 +1700,8 @@ protected:
                                                       args[1]->get_data_ptr<int64_t>(),
                                                       args[2]->get_data_ptr<T>(),
                                                       out[0]->get_data_ptr<T>(),
-                                                      node.get_input_shape(0),
-                                                      node.get_input_shape(1),
+                                                      args[0]->get_shape(),
+                                                      args[1]->get_shape(),
                                                       node.get_input_shape(2),
                                                       node.get_output_shape(0));
             }
@@ -1706,8 +1711,8 @@ protected:
                                                       args[1]->get_data_ptr<int32_t>(),
                                                       args[2]->get_data_ptr<T>(),
                                                       out[0]->get_data_ptr<T>(),
-                                                      node.get_input_shape(0),
-                                                      node.get_input_shape(1),
+                                                      args[0]->get_shape(),
+                                                      args[1]->get_shape(),
                                                       node.get_input_shape(2),
                                                       node.get_output_shape(0));
             }
@@ -1794,7 +1799,7 @@ protected:
             const op::Slice* slice = static_cast<const op::Slice*>(&node);
             reference::slice<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
-                                node.get_input_shape(0),
+                                args[0]->get_shape(),
                                 slice->get_lower_bounds(),
                                 slice->get_upper_bounds(),
                                 slice->get_strides(),
@@ -1825,8 +1830,8 @@ protected:
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
                                    subtract->get_autob());
             break;
         }
@@ -1835,7 +1840,7 @@ protected:
             const op::Sum* sum = static_cast<const op::Sum*>(&node);
             reference::sum<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
-                              node.get_input_shape(0),
+                              args[0]->get_shape(),
                               sum->get_reduction_axes());
             break;
         }
@@ -1861,7 +1866,7 @@ protected:
                 reference::topk<T, int64_t>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<int64_t>(),
                                             out[1]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
+                                            args[0]->get_shape(),
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
@@ -1873,7 +1878,7 @@ protected:
                 reference::topk<T, int32_t>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<int32_t>(),
                                             out[1]->get_data_ptr<T>(),
-                                            node.get_input_shape(0),
+                                            args[0]->get_shape(),
                                             node.get_output_shape(0),
                                             topk->get_top_k_axis(),
                                             topk->get_k(),
@@ -1892,8 +1897,8 @@ protected:
             reference::logical_xor(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
+                                   args[0]->get_shape(),
+                                   args[1]->get_shape(),
                                    logical_xor->get_autob());
             break;
         }

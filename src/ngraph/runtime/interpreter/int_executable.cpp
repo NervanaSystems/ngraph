@@ -119,7 +119,14 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO << "call begin";
     event::Duration d1("call", "Interpreter");
+
+    for (size_t i=0; i<outputs.size(); ++i)
+    {
+        NGRAPH_INFO << outputs[0]->get_partial_shape();
+        NGRAPH_INFO << m_function->get_results()[i]->get_output_partial_shape(0);
+    }
 
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
@@ -242,6 +249,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             perform_nan_check(op_outputs, op.get());
         }
     }
+    NGRAPH_INFO << "call end";
 
     return true;
 }

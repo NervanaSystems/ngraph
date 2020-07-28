@@ -22,6 +22,7 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -34,6 +35,7 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 const string& name)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , m_memory_pointer(memory_pointer)
+    , m_buffer_size(0)
 {
     if (get_partial_shape().is_static() && get_element_type().is_static())
     {
@@ -53,6 +55,7 @@ runtime::HostTensor::HostTensor(const element::Type& element_type,
                                 const std::string& name)
     : runtime::Tensor(
           std::make_shared<ngraph::descriptor::Tensor>(element_type, partial_shape, name))
+    , m_buffer_size(0)
 {
     // Defer allocation until ptr is requested
 }
@@ -123,10 +126,23 @@ runtime::HostTensor::~HostTensor()
 
 void* runtime::HostTensor::get_data_ptr()
 {
+    NGRAPH_INFO << "buffer size " << m_buffer_size;
+    if (m_descriptor)
+    {
+        NGRAPH_INFO;
+        NGRAPH_INFO << shape_size(m_descriptor->get_shape()) * get_element_type().size();
+    }
     if (!m_aligned_buffer_pool)
     {
         allocate_buffer();
     }
+    else if (shape_size(m_descriptor->get_shape()) * get_element_type().size() != m_buffer_size)
+    {
+        // A buffer is allocated but is the wrong size
+        ngraph_free(m_allocated_buffer_pool);
+        allocate_buffer();
+    }
+    NGRAPH_INFO << "buffer size " << m_buffer_size;
     return m_aligned_buffer_pool;
 }
 
@@ -156,6 +172,7 @@ void runtime::HostTensor::write(const void* source, size_t n)
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
+    NGRAPH_INFO << n << " of " << m_buffer_size;
     event::Duration d1("read", "HostTensor");
     const void* source = get_data_ptr();
     if (n != m_buffer_size)

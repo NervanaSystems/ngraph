@@ -20,6 +20,7 @@
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/util.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -38,8 +39,17 @@ bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Te
 void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>>& outputs,
                                    const vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO << "validate";
     const ParameterVector& parameters = get_parameters();
     const ResultVector& results = get_results();
+    // Need to reset the partial shapes of the outputs
+    for (size_t i=0; i<outputs.size(); ++i)
+    {
+        std::shared_ptr<runtime::Tensor> t = outputs[i];
+        NGRAPH_INFO << t->get_partial_shape();
+        t->set_partial_shape(parameters[i]->get_partial_shape());
+        NGRAPH_INFO << t->get_partial_shape();
+    }
     if (parameters.size() != inputs.size())
     {
         stringstream ss;
@@ -91,7 +101,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
             stringstream ss;
             ss << "Output " << i << " shape " << outputs[i]->get_partial_shape()
                << " does not match max Result shape "
-               << results[i]->get_output_partial_shape(0).get_max_shape();
+               << results[i]->get_output_partial_shape(0);
             throw runtime_error(ss.str());
         }
     }
