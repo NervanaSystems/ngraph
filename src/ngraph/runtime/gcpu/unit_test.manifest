@@ -4,8 +4,9 @@ fake_quantize_pdpd
 convert_float32_bf16
 convert_bf16_float32
 
-GCPU.onnx_model_quant_conv_linear
-GCPU.onnx_top_k_opset_10
+onnx_model_quant_conv_linear
+onnx_top_k_opset_10
+onnx_dyn_shapes_slice_10_3d_input_12_axes
 
 # Need use evaluate, only applicable to INTERPRETER
 non_zero

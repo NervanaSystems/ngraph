@@ -46,14 +46,18 @@ CPU.matmul_2x2x3_2x1x3_transpose_int64
 CPU.matmul_2x2x3_2x3x1_int64
 
 # no support for f16, bf16
-CPU.clamp_float16
-CPU.clamp_bfloat16
+CPU.clamp_float16_static
+CPU.clamp_bfloat16_static
+CPU.clamp_float16_dynamic
+CPU.clamp_bfloat16_dynamic
 
 CPU.lstm_cell_no_bias_no_peepholes
 CPU.lstm_cell_zero_bias_peepholes_constant
 CPU.lstm_cell_fixed_no_bias_no_peepholes
 
 CPU.cpu_fusion_fuse_dropout
+
+CPU.onnx_dyn_shapes_slice_10_3d_input_12_axes
 
 ################################################################################
 # MLIR
@@ -102,8 +106,10 @@ CPU_MLIR.matmul_2x2x3_2x1x3_transpose_int64
 CPU_MLIR.matmul_2x2x3_2x3x1_int64
 
 # no support for f16, bf16
-CPU_MLIR.clamp_float16
-CPU_MLIR.clamp_bfloat16
+CPU_MLIR.clamp_float16_static
+CPU_MLIR.clamp_bfloat16_static
+CPU_MLIR.clamp_float16_dynamic
+CPU_MLIR.clamp_bfloat16_dynamic
 
 CPU_MLIR.lstm_cell_no_bias_no_peepholes
 CPU_MLIR.lstm_cell_zero_bias_peepholes_constant
@@ -145,8 +151,10 @@ CPU_CODEGEN.topk_v1_invalid_k
 CPU_CODEGEN.non_zero
 CPU_CODEGEN.non_zero_all_0s
 CPU_CODEGEN.non_zero_all_1s
-CPU_CODEGEN.clamp_float16
-CPU_CODEGEN.clamp_bfloat16
+CPU_CODEGEN.clamp_float16_static
+CPU_CODEGEN.clamp_bfloat16_static
+CPU_CODEGEN.clamp_float16_dynamic
+CPU_CODEGEN.clamp_bfloat16_dynamic
 
 CPU_CODEGEN.cpu_fusion_fuse_dropout
 CPU_CODEGEN.cpu_fusion_vanilla_rnn_cpu_vs_inter

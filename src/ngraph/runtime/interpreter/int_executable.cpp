@@ -45,8 +45,9 @@ runtime::interpreter::OP_TYPEID runtime::interpreter::INTExecutable::get_typeid(
     // {Acos::type_info, OP_TYPEID::Acos},
     // ...
     static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
-#define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, OP_TYPEID::ID_SUFFIX(NAME)},
-#include "ngraph/runtime/interpreter/opset_int_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION)                                                                   \
+    {ngraph::op::v##VERSION::NAME::type_info, OP_TYPEID::NAME##_v##VERSION},
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
     };
     OP_TYPEID rc = OP_TYPEID::UnknownOp;
@@ -76,11 +77,12 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
         bool retval = false;
         switch (INTExecutable::get_typeid(node))
         {
-        case OP_TYPEID::Clamp:
-        case OP_TYPEID::MatMul:
-        case OP_TYPEID::Mod_v1:
-        case OP_TYPEID::Squeeze:
-        case OP_TYPEID::Unsqueeze: retval = true; break;
+        case OP_TYPEID::Clamp_v0:
+        case OP_TYPEID::MatMul_v0:
+        {
+            retval = true;
+            break;
+        }
         default: break;
         }
         return retval;
@@ -92,6 +94,8 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass_manager.register_pass<pass::Opset0Downgrade>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {
@@ -187,7 +191,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                host_tensor = make_shared<HostTensor>(op->output(i));
+                const Shape& shape = op->get_output_shape(i);
+                const element::Type& type = op->get_output_element_type(i);
+                string name = op->output(i).get_tensor().get_name();
+                host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
                 tensor_map.insert({tensor, host_tensor});
             }
             else
@@ -225,10 +232,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         {
             m_timer_map[op].start();
         }
-        if (!op->evaluate(op_outputs, op_inputs))
-        {
-            generate_calls(type, *op.get(), op_outputs, op_inputs);
-        }
+        generate_calls(type, *op.get(), op_outputs, op_inputs);
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();
