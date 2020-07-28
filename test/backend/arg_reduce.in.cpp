@@ -240,6 +240,26 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
               read_vector<int>(result));
 }
 
+NGRAPH_TEST(${BACKEND_NAME}, argmin_unsigned_max)
+{
+    Shape shape{4, 3};
+    Shape rshape{3};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    // Create some tensors for input/output
+    auto a = backend->create_tensor(element::u32, shape);
+    auto mx = numeric_limits<uint32_t>::max();
+    copy_data(a, vector<uint32_t>{mx, 2, mx, 9, 8, 4, 6, 1, 5, 3, mx, 7});
+    auto result = backend->create_tensor(element::i32, rshape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int>{3, 2, 1}), read_vector<int>(result));
+}
+
 NGRAPH_TEST(${BACKEND_NAME}, argmax_trivial)
 {
     Shape shape{4, 3}; // HW -> (0,1)
@@ -583,6 +603,25 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3_i64_in_i32)
                                           {{1, 2, 4, 3, 0}, {0, 1, 2, 0, 4}}}) // ch1
                    .get_vector()),
               read_vector<int64_t>(result));
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, argmax_unsigned_max)
+{
+    Shape shape{4, 3};
+    Shape rshape{3};
+    auto A = make_shared<op::Parameter>(element::u32, shape);
+    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 0, element::i32), ParameterVector{A});
+
+    auto backend = runtime::Backend::create("${BACKEND_NAME}");
+
+    auto a = backend->create_tensor(element::u32, shape);
+    auto mx = numeric_limits<uint32_t>::max();
+    copy_data(a, vector<uint32_t>{9, 2, mx, mx, 8, 4, 6, 1, 5, 3, mx, 7});
+    auto result = backend->create_tensor(element::i32, rshape);
+
+    auto handle = backend->compile(f);
+    handle->call_with_validate({result}, {a});
+    EXPECT_EQ((vector<int>{1, 3, 0}), read_vector<int>(result));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_double)

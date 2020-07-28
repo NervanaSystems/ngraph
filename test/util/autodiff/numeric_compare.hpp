@@ -97,7 +97,7 @@ template <typename T>
     const std::vector<bool>& indep_param_mask)
 {
     // Use INTERPRETER to compute numerical derivatives
-    std::vector<std::shared_ptr<ngraph::op::Parameter>> f_indep_params;
+    ngraph::ParameterVector f_indep_params;
 
     size_t i = 0;
 
@@ -133,7 +133,7 @@ template <typename T>
         interpreter_backend.get(), f, interpreter_args, .001f, f_indep_params);
 
     // Use the backend being tested to compute symbolic derivatives
-    std::vector<std::shared_ptr<ngraph::op::Parameter>> g_indep_params;
+    ngraph::ParameterVector g_indep_params;
 
     i = 0;
 

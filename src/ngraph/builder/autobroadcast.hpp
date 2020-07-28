@@ -27,7 +27,7 @@ namespace ngraph
 {
     namespace builder
     {
-        class numpy_autobroadcast_incompatible_shapes : public ngraph::ngraph_error
+        class NGRAPH_API numpy_autobroadcast_incompatible_shapes : public ngraph::ngraph_error
         {
         public:
             numpy_autobroadcast_incompatible_shapes(const ngraph::Shape& shape1,
@@ -54,6 +54,7 @@ namespace ngraph
         ///
         /// \return     Vector of broadcasted values.
         ///
+        NGRAPH_API
         OutputVector numpy_broadcast_outputs(const OutputVector& values);
 
         ///
@@ -65,6 +66,7 @@ namespace ngraph
         ///
         /// \return     Node producing values with requested shape.
         ///
+        NGRAPH_API
         std::shared_ptr<Node> numpy_broadcast(const Output<Node>& value, const Shape& shape);
 
         /// \brief Wrap two graph values, if necessary, to obtain values with identical shapes,
@@ -95,7 +97,8 @@ namespace ngraph
         ///   elements point to ngraph::Node objects whose output values have the same shape.
         ///
         /// \exception ngraph::builder::numpy_autobroadcast_incompatible_shapes
-        std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>>
+        NGRAPH_API
+        std::pair<Output<Node>, Output<Node>>
             numpy_broadcast(const std::pair<Output<Node>, Output<Node>>& args);
 
         /// Create a new \p NodeType node, and any additional nodes required to simulate NumPy-style
@@ -168,6 +171,7 @@ namespace ngraph
         ///
         /// \return     Left and right node after broadcasting.
         ///
+        NGRAPH_API
         OutputVector legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                            const Output<Node>& right,
                                                            size_t start_match_axis);
@@ -188,6 +192,7 @@ namespace ngraph
         ///
         /// \return     The vector containing both outputs broadcasted.
         ///
+        NGRAPH_API
         OutputVector numpy_broadcast_for_matmul_operation(const Output<Node>& left,
                                                           const Output<Node>& right);
 
@@ -198,6 +203,7 @@ namespace ngraph
         /// \param axis Index starting to align
         ///
         /// \return pdpd-style broadcasted list of nodes.
+        NGRAPH_API
         OutputVector pdpd_broadcast(const OutputVector& inputs, int64_t axis);
 
         /// \brief Generate a list of broadcast axes.
@@ -214,9 +220,30 @@ namespace ngraph
         ///                          matches the desired new shape.
         ///
         /// \return The indices of added axes.
+        NGRAPH_API
         AxisSet calculate_broadcast_axes(const Shape& output_shape,
                                          const Shape& input_shape,
                                          std::size_t start_match_axis);
+
+        ///
+        /// \brief      Calculate the output shape of numpy-style broadcast operation for all input
+        ///             shapes.
+        ///
+        ///             This function finds the maximum tensor shape that will be the result of
+        ///             element-wise operation that will be applied to the input shapes vector.
+        ///             The function also prepares the shape of each input for the element-wise
+        ///             operation by left-padding those shapes so that their rank is equal to the
+        ///             left_shape's rank.
+        ///
+        /// \param      input_shapes  A vector of input shapes for which a common shape should be
+        ///                           found
+        ///
+        /// \return     A pair that contains the target shape as its first object and a vector of
+        ///             padded input shapes ready to be broadcasted as the second object
+        ///
+        NGRAPH_API
+        std::pair<Shape, std::vector<Shape>>
+            get_numpy_broadcast_shapes(const std::vector<Shape>& input_shapes);
 
         /// \brief Generate a list of broadcast along axes.
         ///
@@ -268,6 +295,7 @@ namespace ngraph
             ///
             /// \return     The Output object connected to node producing broadcasted right node.
             ///
+            NGRAPH_API
             Output<Node> legacy_broadcast_for_binary_operation(const Output<Node>& left,
                                                                const Output<Node>& right,
                                                                size_t start_match_axis);
@@ -280,6 +308,7 @@ namespace ngraph
             ///
             /// \return     The vector with axes indexes mapping .
             ///
+            NGRAPH_API
             std::vector<std::size_t> get_axes_mapping(const Shape& output_shape,
                                                       const AxisSet& broadcast_axes);
 
@@ -293,6 +322,7 @@ namespace ngraph
             ///
             /// \return     Returns the Output object pointing to node with the axes mapping.
             ///
+            NGRAPH_API
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const Shape& input_shape,
                                                  std::size_t start_match_axis);
@@ -305,17 +335,19 @@ namespace ngraph
             ///
             /// \return     The Output object with Node returning axes mapping.
             ///
+            NGRAPH_API
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const AxisSet& broadcast_axes);
 
+            NGRAPH_API
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
                                         const AxisSet& broadcast_axes);
 
+            NGRAPH_API
             Output<Node> make_broadcast(const Output<Node>& node,
                                         const Shape& target_shape,
                                         std::size_t start_match_axis);
-
-        } // namespace opset1
-    }     // namespace builder
-} // namespace ngraph
+        }
+    }
+}

@@ -24,7 +24,7 @@
 
 namespace ngraph
 {
-    class BernoulliRNGState : public State
+    class NGRAPH_API BernoulliRNGState : public State
     {
     public:
         BernoulliRNGState(unsigned int seed, double probability)
@@ -38,6 +38,7 @@ namespace ngraph
         virtual ~BernoulliRNGState() override {}
         std::mt19937& get_generator() { return m_generator; }
         std::bernoulli_distribution& get_distribution() { return m_distribution; }
+
     protected:
         std::mt19937 m_generator;
         std::bernoulli_distribution m_distribution;

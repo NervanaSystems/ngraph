@@ -19,7 +19,8 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/slice.hpp"
-
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/concat.hpp"
 using namespace std;
 using namespace ngraph;
 
@@ -30,11 +31,6 @@ op::Concat::Concat(const OutputVector& args, int64_t axis)
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
-}
-
-op::Concat::Concat(const NodeVector& args, int64_t axis)
-    : Concat(as_output_vector(args), axis)
-{
 }
 
 bool op::Concat::visit_attributes(AttributeVisitor& visitor)
@@ -62,13 +58,12 @@ void op::Concat::validate_and_infer_types()
         {
             if (get_concatenation_axis() < 0)
             {
-                set_concatenation_axis(get_axis() < 0
-                                           ? get_axis() + static_cast<int64_t>(this_input_rank)
-                                           : get_axis());
+                set_concatenation_axis(get_axis() < 0 ? get_axis() + this_input_rank.get_length()
+                                                      : get_axis());
             }
             auto concat_axis = get_concatenation_axis();
             NODE_VALIDATION_CHECK(this,
-                                  concat_axis < static_cast<int64_t>(this_input_rank),
+                                  concat_axis < this_input_rank.get_length(),
                                   "Concatenation axis (",
                                   concat_axis,
                                   ") is out of bounds for ",
@@ -107,7 +102,7 @@ void op::Concat::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Concat::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Concat::clone_with_new_inputs(const OutputVector& new_args) const
 {
     // TODO(amprocte): Should we check the new_args count here?
     return make_shared<Concat>(new_args, m_axis);
@@ -142,4 +137,67 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 
         pos = next_pos;
     }
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    inline bool
+        evaluate(const HostTensorVector& args, const HostTensorPtr& out, int64_t concatenation_axis)
+    {
+        using T = typename element_type_traits<ET>::value_type;
+        std::vector<const T*> arg_bufs;
+        std::vector<Shape> arg_shapes;
+        Shape out_shape(args[0]->get_shape());
+        out_shape[concatenation_axis] = 0;
+        for (auto& input : args)
+        {
+            arg_bufs.push_back(input->get_data_ptr<ET>());
+            arg_shapes.push_back(input->get_shape());
+            out_shape[concatenation_axis] += arg_shapes.back()[concatenation_axis];
+        }
+        out->set_shape(out_shape);
+        runtime::reference::concat<T>(
+            arg_bufs, out->get_data_ptr<ET>(), arg_shapes, out_shape, concatenation_axis);
+        return true;
+    }
+
+    bool evaluate_concat(const HostTensorVector& args,
+                         const HostTensorPtr& out,
+                         int64_t concatenation_axis)
+    {
+        bool rc = true;
+
+        switch (out->get_element_type())
+        {
+            TYPE_CASE(i8)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(i16)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(i32)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(i64)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u8)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u16)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u32)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(u64)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(f32)(args, out, concatenation_axis);
+            break;
+            TYPE_CASE(f64)(args, out, concatenation_axis);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::Concat::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    auto concat_axis = get_axis() < 0 ? get_axis() + inputs[0]->get_shape().size() : get_axis();
+    return evaluate_concat(inputs, outputs[0], concat_axis);
 }

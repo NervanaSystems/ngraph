@@ -81,13 +81,12 @@ namespace
             auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
                                                              get_default_order(output_shape),
                                                              reshaped_output_shape);
-            replace_node(node, reshaped_product);
+            return reshaped_product;
         }
         else
         {
-            replace_node(node, replacement_node);
+            return replacement_node;
         }
-        return replacement_node;
     }
 
     // Default is that we did nothing
@@ -237,8 +236,8 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ConvolutionBackpropData> node)
     {
-        const auto data_arg = node->input(0).get_source_output();
-        const auto filters_arg = node->input(1).get_source_output();
+        const auto data_arg = node->input_value(0);
+        const auto filters_arg = node->input_value(1);
 
         auto data_pshape = data_arg.get_partial_shape();
         auto filters_pshape = filters_arg.get_partial_shape();
@@ -251,7 +250,7 @@ namespace
 
         const size_t num_spatial_dims = data_pshape.rank().get_length() - 2;
 
-        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        const PartialShape output_pshape{node->get_output_partial_shape(0)};
         NGRAPH_CHECK(output_pshape.is_static(),
                      "Unable to convert ConvolutionBackpropData:v1 to ConvolutionBackpropData:v0 "
                      "if output shape is dynamic. Node: ",
@@ -320,8 +319,7 @@ namespace
         }
         else
         {
-            replacement_node = make_shared<op::v0::DynReshape>(
-                node->input_value(0), node->input_value(1), node->get_special_zero());
+            NGRAPH_CHECK(replacement_node, "Unable to convert Reshape:v1 with dynamic shape.");
         }
 
         replace_node(node, replacement_node);
@@ -342,7 +340,7 @@ namespace
                      *node);
 
         NGRAPH_CHECK(
-            axis_node->get_element_type() == element::i64,
+            axis_node->get_output_element_type(0) == element::i64,
             "Unable to convert Gather:v1 to Gather:v0 with axis other type than int64. Node: ",
             *node);
 
@@ -363,7 +361,7 @@ namespace
         auto seed = node->get_seed();
         auto use_seed = node->get_use_seed();
         auto probability = node->get_probability();
-        auto et = node->get_element_type();
+        auto et = node->get_output_element_type(0);
 
         auto replacement_node = make_shared<op::v0::GenerateMask>(
             node->input_value(0), mask_shape, et, seed, probability, use_seed);
@@ -418,7 +416,7 @@ namespace
         auto filters_shape = filters_arg.get_shape();
         const size_t groups = filters_shape.at(0);
 
-        const PartialShape output_pshape{node->output(0).get_partial_shape()};
+        const PartialShape output_pshape{node->get_output_partial_shape(0)};
         NGRAPH_CHECK(output_pshape.is_static(),
                      "Unable to convert GroupConvolutionBackpropData:v1 to "
                      "GroupConvolutionBackpropData:v0 "
@@ -608,22 +606,63 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMax> node)
     {
-        return op_cast_reduction_node<op::v0::Max, op::v1::ReduceMax>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Max, op::v1::ReduceMax>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
+    }
+
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMean> node)
+    {
+        // ReduceMean = Sum / Count
+        auto sum_node = op_cast_reduction_node<op::v0::Sum, op::v1::ReduceMean>(node);
+
+        // Count = Sum(Constant(1, shape=data.shape))
+        const auto data = node->input_value(0);
+        const auto axes = node->input_value(1);
+        const auto const_node =
+            op::v0::Constant::create(data.get_element_type(), data.get_shape(), {1});
+        std::shared_ptr<Node> count_node = std::make_shared<op::v0::Sum>(const_node, axes);
+
+        // Support keep_dims attribute
+        if (node->get_keep_dims())
+        {
+            // In order to keep the original dimensions we need to reshape the Count node
+            // before we use it in Divide with NUMPY broadcast
+            auto output_shape = count_node->get_output_shape(0);
+            auto reshaped_output_shape = output_shape;
+            for (const auto& axis : node->get_reduction_axes())
+            {
+                reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
+            }
+            count_node = make_shared<op::Reshape>(
+                count_node->output(0), get_default_order(output_shape), reshaped_output_shape);
+        }
+
+        const auto replacement_node =
+            std::make_shared<op::v0::Divide>(sum_node, count_node, op::AutoBroadcastSpec::NUMPY);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMin> node)
     {
-        return op_cast_reduction_node<op::v0::Min, op::v1::ReduceMin>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Min, op::v1::ReduceMin>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceProd> node)
     {
-        return op_cast_reduction_node<op::v0::Product, op::v1::ReduceProd>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Product, op::v1::ReduceProd>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceSum> node)
     {
-        return op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
+        auto replacement_node = op_cast_reduction_node<op::v0::Sum, op::v1::ReduceSum>(node);
+        replace_node(node, replacement_node);
+        return replacement_node;
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Reverse> node)
@@ -733,12 +772,12 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Softmax> node)
     {
-        auto axis = node->get_axis();
-        auto data = node->input(0);
-        auto data_shape = data.get_shape();
+        const auto axis = node->get_axis();
+        const auto data = node->input(0);
+        const auto data_shape = data.get_shape();
         std::vector<size_t> axes(data_shape.size() - axis);
         std::iota(std::begin(axes), std::end(axes), axis);
-        auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
+        const auto replacement_node = make_shared<op::v0::Softmax>(node->input_value(0), axes);
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -768,8 +807,8 @@ namespace
         bool compute_max;
         switch (node->get_mode())
         {
-        case op::v1::TopK::Mode::MAX: compute_max = true; break;
-        case op::v1::TopK::Mode::MIN: compute_max = false; break;
+        case op::v1::TopK::Mode::max: compute_max = true; break;
+        case op::v1::TopK::Mode::min: compute_max = false; break;
         default: break;
         }
 
@@ -832,7 +871,7 @@ namespace
                      "if 'split_lengths' input is not constant. Node: ",
                      *node);
 
-        const auto splits = as_type_ptr<op::Constant>(split_lengths)->get_vector<int64_t>();
+        const auto splits = as_type_ptr<op::Constant>(split_lengths)->cast_vector<int64_t>();
         const std::vector<size_t> splits_unsigned{splits.begin(), splits.end()};
 
         auto replacement_node =
@@ -865,14 +904,14 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-#include "ngraph/opsets/opset1_tbl.hpp"
+#include "ngraph/opset/opset1_tbl.hpp"
             NGRAPH_OP(AvgPoolBackprop, op::v1) NGRAPH_OP(ConvolutionBackpropFilters, op::v1)
                 NGRAPH_OP(GenerateMask, op::v1) NGRAPH_OP(MaxPoolBackprop, op::v1)
 #undef NGRAPH_OP
         };
         return dispatch_map;
     }
-} // namespace
+}
 
 bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
 {

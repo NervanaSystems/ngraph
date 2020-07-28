@@ -20,14 +20,13 @@
 #include "ngraph/op/broadcast.hpp"
 #include "ngraph/op/experimental/dyn_broadcast.hpp"
 #include "ngraph/op/experimental/dyn_replace_slice.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/experimental/dyn_slice.hpp"
-#include "ngraph/op/experimental/range.hpp"
-#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/range.hpp"
 #include "ngraph/op/replace_slice.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/reverse.hpp"
 #include "ngraph/op/slice.hpp"
+#include "ngraph/op/transpose.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/pattern/op/label.hpp"
 #include "ngraph/runtime/reference/range.hpp"
@@ -43,7 +42,6 @@ pass::DynElimination::DynElimination()
     construct_dyn_broadcast();
     construct_dyn_replace_slice();
     construct_dyn_slice();
-    construct_dyn_reshape();
     construct_range();
 }
 
@@ -86,7 +84,7 @@ void pass::DynElimination::construct_transpose()
 
         auto replacement = std::make_shared<op::Reshape>(data_arg, perm, output_shape);
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 
@@ -109,7 +107,7 @@ void pass::DynElimination::construct_dyn_broadcast()
         [data_arg_label, shape_arg_label, axes_arg_label](pattern::Matcher& m) {
             auto pattern_map = m.get_pattern_map();
 
-            auto data_arg = pattern_map[data_arg_label];
+            auto data_arg = m.get_pattern_value_map()[data_arg_label];
             auto shape_arg = static_pointer_cast<op::Constant>(pattern_map[shape_arg_label]);
             auto axes_arg = static_pointer_cast<op::Constant>(pattern_map[axes_arg_label]);
 
@@ -131,7 +129,7 @@ void pass::DynElimination::construct_dyn_broadcast()
 
             auto replacement = std::make_shared<op::Broadcast>(data_arg, shape, axes);
 
-            replace_node(m.get_match_root(), replacement);
+            m.get_match_value().replace(replacement->output(0));
             return true;
         };
 
@@ -160,24 +158,26 @@ void pass::DynElimination::construct_dyn_slice()
                                                    AxisSet{},
                                                    AxisSet{});
     auto dyn_slice_callback = [data_arg_label, begins_arg_label, ends_arg_label, strides_arg_label](
-        pattern::Matcher& m) {
+                                  pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
 
-        auto data_arg = pattern_map[data_arg_label];
+        auto data_arg = m.get_pattern_value_map()[data_arg_label];
         auto begins_arg = static_pointer_cast<op::Constant>(pattern_map[begins_arg_label]);
         auto ends_arg = static_pointer_cast<op::Constant>(pattern_map[ends_arg_label]);
         auto strides_arg = static_pointer_cast<op::Constant>(pattern_map[strides_arg_label]);
-        auto dyn_slice = static_pointer_cast<op::DynSlice>(m.get_match_root());
+        auto dyn_slice = m.get_match_root_as<op::DynSlice>();
+        NGRAPH_CHECK(
+            dyn_slice, "match root node ", *m.get_match_root(), " not of type `op::DynSlice`");
 
-        if (data_arg->get_output_partial_shape(0).is_dynamic() ||
-            begins_arg->get_element_type() != element::i64 ||
-            ends_arg->get_element_type() != element::i64 ||
-            strides_arg->get_element_type() != element::i64)
+        if (data_arg.get_partial_shape().is_dynamic() ||
+            begins_arg->get_output_element_type(0) != element::i64 ||
+            ends_arg->get_output_element_type(0) != element::i64 ||
+            strides_arg->get_output_element_type(0) != element::i64)
         {
             return false;
         }
 
-        SlicePlan p = make_slice_plan(data_arg->get_output_shape(0),
+        SlicePlan p = make_slice_plan(data_arg.get_shape(),
                                       begins_arg->get_vector<int64_t>(),
                                       ends_arg->get_vector<int64_t>(),
                                       strides_arg->get_vector<int64_t>(),
@@ -204,7 +204,7 @@ void pass::DynElimination::construct_dyn_slice()
             replacement = make_shared<op::Reverse>(replacement, p.reverse_axes);
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 
@@ -240,24 +240,29 @@ void pass::DynElimination::construct_dyn_replace_slice()
                                        ends_arg_label,
                                        strides_arg_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();
+        auto pvm = m.get_pattern_value_map();
 
-        auto data_arg = pattern_map[data_arg_label];
-        auto replacement_arg = pattern_map[replacement_arg_label];
+        auto data_arg = pvm[data_arg_label];
+        auto replacement_arg = pvm[replacement_arg_label];
         auto begins_arg = static_pointer_cast<op::Constant>(pattern_map[begins_arg_label]);
         auto ends_arg = static_pointer_cast<op::Constant>(pattern_map[ends_arg_label]);
         auto strides_arg = static_pointer_cast<op::Constant>(pattern_map[strides_arg_label]);
-        auto dyn_replace_slice = static_pointer_cast<op::DynReplaceSlice>(m.get_match_root());
+        auto dyn_replace_slice = m.get_match_root_as<op::DynReplaceSlice>();
+        NGRAPH_CHECK(dyn_replace_slice,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::DynReplaceSlice`");
 
-        if (data_arg->get_output_partial_shape(0).is_dynamic() ||
-            replacement_arg->get_output_partial_shape(0).is_dynamic() ||
-            begins_arg->get_element_type() != element::i64 ||
-            ends_arg->get_element_type() != element::i64 ||
-            strides_arg->get_element_type() != element::i64)
+        if (data_arg.get_partial_shape().is_dynamic() ||
+            replacement_arg.get_partial_shape().is_dynamic() ||
+            begins_arg->get_output_element_type(0) != element::i64 ||
+            ends_arg->get_output_element_type(0) != element::i64 ||
+            strides_arg->get_output_element_type(0) != element::i64)
         {
             return false;
         }
 
-        SlicePlan p = make_slice_plan(data_arg->get_output_shape(0),
+        SlicePlan p = make_slice_plan(data_arg.get_shape(),
                                       begins_arg->get_vector<int64_t>(),
                                       ends_arg->get_vector<int64_t>(),
                                       strides_arg->get_vector<int64_t>(),
@@ -267,7 +272,7 @@ void pass::DynElimination::construct_dyn_replace_slice()
                                       dyn_replace_slice->get_shrink_axis(),
                                       dyn_replace_slice->get_ellipsis_mask());
 
-        shared_ptr<Node> substitute_replacement_arg = replacement_arg;
+        Output<Node> substitute_replacement_arg = replacement_arg;
 
         if (!p.reverse_axes.empty())
         {
@@ -290,56 +295,13 @@ void pass::DynElimination::construct_dyn_replace_slice()
                                           Coordinate(p.ends.begin(), p.ends.end()),
                                           Strides(p.strides.begin(), p.strides.end()));
 
-        replace_node(m.get_match_root(), substitute_rsl);
+        m.get_match_value().replace(substitute_rsl->output(0));
         return true;
     };
 
     auto dyn_replace_slice_matcher =
         make_shared<pattern::Matcher>(dyn_replace_slice_pat, "DynElimination.DynReplaceShape");
     add_matcher(dyn_replace_slice_matcher, dyn_replace_slice_callback, all_pass_property_off);
-}
-
-void pass::DynElimination::construct_dyn_reshape()
-{
-    auto data_arg_label = make_shared<pattern::op::Label>(element::f32, Shape{1, 2, 3});
-    auto shape_arg_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
-
-    auto dyn_reshape = make_shared<op::DynReshape>(data_arg_label, shape_arg_label);
-
-    auto dyn_reshape_callback = [data_arg_label, shape_arg_label](pattern::Matcher& m) {
-        auto pattern_map = m.get_pattern_map();
-
-        auto data_arg = pattern_map[data_arg_label];
-        auto shape_arg = static_pointer_cast<op::Constant>(pattern_map[shape_arg_label]);
-        auto dyn_reshape_node = static_pointer_cast<op::DynReshape>(m.get_match_root());
-
-        // TODO(amprocte): Can't handle the case where data rank is dynamic even if we know the
-        // output shape, because static Reshape requries an axis permutation (here an identity) to
-        // be given. See if we can come up with a workaround.
-        if (data_arg->get_output_partial_shape(0).rank().is_dynamic())
-        {
-            return false;
-        }
-
-        if (dyn_reshape_node->get_output_partial_shape(0).is_dynamic())
-        {
-            return false;
-        }
-
-        auto& result_shape = dyn_reshape_node->get_output_shape(0);
-        AxisVector perm(data_arg->get_output_partial_shape(0).rank().get_length());
-        std::iota(perm.begin(), perm.end(), 0);
-
-        auto replacement = std::make_shared<op::Reshape>(data_arg, perm, result_shape);
-
-        replace_node(dyn_reshape_node, replacement);
-        return true;
-    };
-
-    auto dyn_reshape_matcher =
-        make_shared<pattern::Matcher>(dyn_reshape, "DynElimination.DynReshape");
-    add_matcher(dyn_reshape_matcher, dyn_reshape_callback, all_pass_property_off);
 }
 
 template <typename T>
@@ -375,7 +337,9 @@ void pass::DynElimination::construct_range()
 
         auto start_arg = static_pointer_cast<op::Constant>(pattern_map[start_arg_label]);
         auto step_arg = static_pointer_cast<op::Constant>(pattern_map[step_arg_label]);
-        auto range_node = static_pointer_cast<op::Range>(m.get_match_root());
+        auto range_node = m.get_match_root_as<op::Range>();
+        NGRAPH_CHECK(
+            range_node, "match root node ", *m.get_match_root(), " not of type `op::Range`");
 
         NGRAPH_CHECK(start_arg->get_output_partial_shape(0).rank().compatible(0) &&
                      step_arg->get_output_partial_shape(0).rank().compatible(0));

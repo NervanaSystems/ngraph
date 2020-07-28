@@ -30,6 +30,8 @@
 #endif
 #include <vector>
 
+#include <ngraph/ngraph_visibility.hpp>
+
 namespace ngraph
 {
     class ConstString
@@ -48,6 +50,7 @@ namespace ngraph
         }
         constexpr const char* get_ptr(size_t offset) const { return &m_string[offset]; }
         constexpr size_t size() const { return m_size; }
+
     private:
         const char* m_string;
         size_t m_size;
@@ -55,8 +58,9 @@ namespace ngraph
 
     constexpr const char* find_last(ConstString s, size_t offset, char ch)
     {
-        return offset == 0 ? s.get_ptr(0) : (s[offset] == ch ? s.get_ptr(offset + 1)
-                                                             : find_last(s, offset - 1, ch));
+        return offset == 0
+                   ? s.get_ptr(0)
+                   : (s[offset] == ch ? s.get_ptr(offset + 1) : find_last(s, offset - 1, ch));
     }
 
     constexpr const char* find_last(ConstString s, char ch)
@@ -77,7 +81,7 @@ namespace ngraph
         _LOG_TYPE_DEBUG,
     };
 
-    class LogHelper
+    class NGRAPH_API LogHelper
     {
     public:
         LogHelper(LOG_TYPE,
@@ -87,6 +91,7 @@ namespace ngraph
         ~LogHelper();
 
         std::ostream& stream() { return m_stream; }
+
     private:
         std::function<void(const std::string&)> m_handler_func;
         std::stringstream m_stream;
@@ -109,6 +114,7 @@ namespace ngraph
         static std::deque<std::string> m_queue;
     };
 
+    NGRAPH_API
     void default_logger_handler_func(const std::string& s);
 
 #define NGRAPH_ERR                                                                                 \

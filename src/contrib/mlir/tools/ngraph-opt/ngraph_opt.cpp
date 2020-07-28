@@ -14,14 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 //
-/// \file `ngraph-opt` is a driver for MLIR back-end in nGraph, similar to `opt` and `mlir-opt` for
-/// LLVM and MLIR, respectively. It allows invoking a sequence of arbitrary MLIR passes on a given
-/// input IR. For example, `ngraph-opt my_test.mlir -optA -optC` will run `optA` and `optC`, in that
-/// particular order, on the input IR in file `my_test.mlir` and dump the resulting IR to the
+/// \file `ngraph-opt` is a driver for MLIR back-end in nGraph, similar to `opt`
+/// and `mlir-opt` for
+/// LLVM and MLIR, respectively. It allows invoking a sequence of arbitrary MLIR
+/// passes on a given
+/// input IR. For example, `ngraph-opt my_test.mlir -optA -optC` will run `optA`
+/// and `optC`, in that
+/// particular order, on the input IR in file `my_test.mlir` and dump the
+/// resulting IR to the
 /// standard output.
 ///
-/// `ngraph-opt` is used in LLVM-style LIT tests since it allows invoking a single MLIR pass or a
-/// small sequence of passes without running the whole compiler pipeline. Please, refer to
+/// `ngraph-opt` is used in LLVM-style LIT tests since it allows invoking a
+/// single MLIR pass or a
+/// small sequence of passes without running the whole compiler pipeline.
+/// Please, refer to
 /// ngraph_repo_path/tests/mlir/ for examples.
 
 #include "contrib/mlir/utils.hpp"
@@ -84,5 +90,6 @@ int main(int argc, char** argv)
                                     passPipeline,
                                     split_input_file,
                                     verify_diagnostics,
-                                    verify_passes));
+                                    verify_passes,
+                                    /*allowUnregisteredDialects = */ false));
 }

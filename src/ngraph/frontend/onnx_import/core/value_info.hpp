@@ -40,8 +40,8 @@ namespace ngraph
                     {
                     }
                 };
-            } // namespace value_info
-        }     // namespace error
+            }
+        }
 
         class ValueInfo
         {
@@ -50,7 +50,7 @@ namespace ngraph
             ValueInfo(const ValueInfo&) = default;
 
             ValueInfo() = delete;
-            explicit ValueInfo(const onnx::ValueInfoProto& value_info_proto)
+            explicit ValueInfo(const ONNX_NAMESPACE::ValueInfoProto& value_info_proto)
                 : m_value_info_proto{&value_info_proto}
             {
                 if (value_info_proto.type().has_tensor_type())
@@ -99,7 +99,9 @@ namespace ngraph
         protected:
             std::shared_ptr<op::Parameter> get_ng_parameter() const
             {
-                return std::make_shared<op::Parameter>(get_element_type(), get_shape());
+                auto parameter = std::make_shared<op::Parameter>(get_element_type(), get_shape());
+                parameter->set_friendly_name(get_name());
+                return parameter;
             }
 
             std::shared_ptr<op::Constant> get_ng_constant(const Tensor& tensor) const
@@ -107,7 +109,7 @@ namespace ngraph
                 return tensor.get_ng_constant();
             }
 
-            PartialShape to_ng_shape(const onnx::TensorShapeProto& onnx_shape) const
+            PartialShape to_ng_shape(const ONNX_NAMESPACE::TensorShapeProto& onnx_shape) const
             {
                 if (onnx_shape.dim_size() == 0)
                 {
@@ -130,7 +132,7 @@ namespace ngraph
             }
 
         private:
-            const onnx::ValueInfoProto* m_value_info_proto;
+            const ONNX_NAMESPACE::ValueInfoProto* m_value_info_proto;
             PartialShape m_partial_shape;
         };
 
@@ -138,7 +140,5 @@ namespace ngraph
         {
             return (outs << "<ValueInfo: " << info.get_name() << ">");
         }
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+    }
+}

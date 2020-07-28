@@ -27,6 +27,7 @@ namespace ngraph
         namespace op
         {
             class Label;
+            class Pattern;
         }
 
         class Matcher;
@@ -42,52 +43,50 @@ namespace ngraph
         PatternValueMap as_pattern_value_map(const PatternMap& pattern_map);
 
         template <typename T>
-        std::function<bool(std::shared_ptr<Node>)> has_class()
+        std::function<bool(Output<Node>)> has_class()
         {
-            auto pred = [](std::shared_ptr<Node> node) -> bool { return is_type<T>(node); };
+            auto pred = [](Output<Node> node) -> bool {
+                return is_type<T>(node.get_node_shared_ptr());
+            };
 
             return pred;
         }
 
         namespace op
         {
-            using NodePredicate = std::function<bool(std::shared_ptr<Node>)>;
             using ValuePredicate = std::function<bool(const Output<Node>& value)>;
-
-            ValuePredicate as_value_predicate(NodePredicate pred);
-
-            class NGRAPH_API Pattern : public Node
-            {
-            public:
-                /// \brief \p a base class for \sa Skip and \sa Label
-                ///
-                Pattern(const OutputVector& patterns, ValuePredicate pred)
-                    : Node(patterns)
-                    , m_predicate(pred)
-                {
-                    if (!m_predicate)
-                    {
-                        m_predicate = [](const Output<Node>&) { return true; };
-                    }
-                }
-
-                Pattern(const OutputVector& patterns)
-                    : Pattern(patterns, nullptr)
-                {
-                }
-
-                virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& /* new_args */) const override
-                {
-                    throw ngraph_error("Uncopyable");
-                }
-
-                ValuePredicate get_predicate() const;
-
-                bool is_pattern() const override { return true; }
-            protected:
-                ValuePredicate m_predicate;
-            };
         }
     }
 }
+
+class NGRAPH_API ngraph::pattern::op::Pattern : public Node
+{
+public:
+    /// \brief \p a base class for all patterns
+    ///
+    Pattern(const OutputVector& patterns, ValuePredicate pred)
+        : Node(patterns)
+        , m_predicate(pred)
+    {
+        if (!m_predicate)
+        {
+            m_predicate = [](const Output<Node>&) { return true; };
+        }
+    }
+
+    Pattern(const OutputVector& patterns)
+        : Pattern(patterns, nullptr)
+    {
+    }
+
+    ValuePredicate get_predicate() const;
+
+    bool is_pattern() const override { return true; }
+    std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& new_args) const override
+    {
+        throw std::runtime_error("Patterns do not support cloning");
+    }
+
+protected:
+    ValuePredicate m_predicate;
+};

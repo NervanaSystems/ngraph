@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #pragma once
 
@@ -39,6 +41,7 @@ namespace mlir
         void printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const override;
 
         static StringRef getDialectNamespace() { return "ng"; }
+
     private:
         mlir::Type parseEltType(mlir::DialectAsmParser& parser) const;
     };

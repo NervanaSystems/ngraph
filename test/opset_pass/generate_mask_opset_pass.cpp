@@ -20,7 +20,7 @@ TEST(opset_transform, opset1_generate_mask_downgrade_pass)
         make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
     auto gen_mask2 =
         make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
-    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{gen_mask, gen_mask2}, ParameterVector{});
 
     ngraph::pass::Manager pass_manager;
     pass_manager.register_pass<pass::Opset0Downgrade>();

@@ -19,6 +19,7 @@
 #include <cstring>
 
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/output_vector.hpp"
 #include "ngraph/partial_shape.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -39,6 +40,8 @@ namespace ngraph
     template <>
     class NGRAPH_API Output<Node>
     {
+        friend class Node;
+
     public:
         /// \brief Constructs a Output.
         /// \param node A pointer to the node for the output handle.
@@ -56,7 +59,7 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node, 0)
+            : Output(node ? node->get_default_output() : Output<Node>())
         {
         }
 
@@ -73,9 +76,6 @@ namespace ngraph
         ///
         /// TODO: Make a plan to deprecate this.
         std::shared_ptr<Node> get_node_shared_ptr() const;
-        /// \return A useable shared pointer to this output. If index 0, the node,
-        /// otherwise find or create a GOE.
-        std::shared_ptr<Node> as_single_output_node(bool for_get_output_element = true) const;
 
         /// \return The index of the output referred to by this output handle.
         size_t get_index() const;
@@ -110,6 +110,8 @@ namespace ngraph
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
 
+        NodeVector get_users(bool check_is_used = false) const;
+
     private:
         std::shared_ptr<Node> m_node;
         size_t m_index{0};
@@ -135,7 +137,7 @@ namespace ngraph
         /// \param node A `shared_ptr` to the node for the output handle.
         template <typename T>
         Output(const std::shared_ptr<T>& node)
-            : Output(node, 0)
+            : Output(node ? node->get_default_output() : Output<const Node>())
         {
         }
 
@@ -176,6 +178,8 @@ namespace ngraph
         bool operator>(const Output& other) const;
         bool operator<=(const Output& other) const;
         bool operator>=(const Output& other) const;
+
+        NodeVector get_users(bool check_is_used = false) const;
 
     private:
         std::shared_ptr<const Node> m_node;

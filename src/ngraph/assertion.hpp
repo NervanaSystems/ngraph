@@ -40,7 +40,7 @@
 namespace ngraph
 {
     /// Base class for ngraph assertion failure exceptions.
-    class AssertionFailure : public ngraph_error
+    class NGRAPH_API AssertionFailure : public ngraph_error
     {
     public:
         AssertionFailure(const std::string& what_arg)
@@ -55,7 +55,8 @@ namespace ngraph
         {
         }
 
-        const char* what() const noexcept override { return m_what.c_str(); }
+        const char* what() const noexcept override;
+
     private:
         std::string m_what;
     };
@@ -157,6 +158,7 @@ namespace ngraph
         /// Returns an ostream to which additional error details can be written. The returned
         /// stream has the lifetime of the AssertionHelper.
         std::ostream& get_stream() { return m_stream; }
+
     private:
         std::stringstream m_stream;
         std::string m_file;
@@ -177,6 +179,7 @@ namespace ngraph
         /// to this stream will be ignored. The returned stream has the lifetime of the
         /// DummyAssertionHelper.
         std::ostream& get_stream() { return m_stream; }
+
     private:
         std::stringstream m_stream;
     };

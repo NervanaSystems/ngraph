@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <ngraph/ngraph_visibility.hpp>
+
 namespace ngraph
 {
     class State
@@ -28,6 +30,7 @@ namespace ngraph
         bool is_active() const { return m_is_active; }
         void set_active(bool flag) { m_is_active = flag; }
         virtual ~State() {}
+
     protected:
         bool m_is_active = false;
     };

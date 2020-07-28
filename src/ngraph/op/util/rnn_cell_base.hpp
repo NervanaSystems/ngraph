@@ -119,7 +119,7 @@ namespace ngraph
                 ///
                 /// \return     Node with element-wise clip operation.
                 ///
-                std::shared_ptr<Node> clip(const Output<Node>& data) const;
+                Output<Node> clip(const Output<Node>& data) const;
 
             protected:
                 std::size_t m_hidden_size;
@@ -128,6 +128,6 @@ namespace ngraph
                 std::vector<float> m_activations_alpha;
                 std::vector<float> m_activations_beta;
             };
-        } // namespace util
-    }     // namespace op
-} // namespace ngraph
+        }
+    }
+}

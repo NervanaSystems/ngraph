@@ -33,7 +33,6 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/op/sum.hpp"
 #include "ngraph/pass/graph_rewrite.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pattern/matcher.hpp"
@@ -67,7 +66,7 @@ static std::shared_ptr<pattern::op::Label> construct_variance_graph()
     auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
     auto variance = std::make_shared<op::Divide>(xmu, N);
     auto variance_label =
-        std::make_shared<pattern::op::Label>(variance, nullptr, NodeVector{variance});
+        std::make_shared<pattern::op::Label>(variance, nullptr, OutputVector{variance});
 
     return variance_label;
 }
@@ -79,7 +78,7 @@ static std::shared_ptr<pattern::op::Label> construct_mean_graph()
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
     auto mean = std::make_shared<op::Divide>(sum_input1, N);
-    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, NodeVector{mean});
+    auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, OutputVector{mean});
     return mean_label;
 }
 
@@ -99,16 +98,16 @@ public:
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index =
-                m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.get_match_root()->get_argument(0) == pattern_map[pattern];
             auto const_node =
-                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
+                as_type_ptr<op::Constant>(m.get_match_root()->get_argument(const_node_index));
+            auto second_node = m.get_match_root()->get_argument(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
-                pattern_map[pattern]->get_shape() != const_node->get_shape())
+            if (pattern_map[pattern]->get_output_element_type(0) !=
+                    const_node->get_output_element_type(0) ||
+                pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
                 return false;
@@ -124,7 +123,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -145,16 +144,16 @@ public:
 
             auto pattern_map = m.get_pattern_map();
 
-            size_t const_node_index =
-                m.get_match_root()->get_arguments().at(0) == pattern_map[pattern];
+            size_t const_node_index = m.get_match_root()->get_argument(0) == pattern_map[pattern];
             auto const_node =
-                as_type_ptr<op::Constant>(m.get_match_root()->get_arguments().at(const_node_index));
-            auto second_node = m.get_match_root()->get_arguments().at(const_node_index);
+                as_type_ptr<op::Constant>(m.get_match_root()->get_argument(const_node_index));
+            auto second_node = m.get_match_root()->get_argument(const_node_index);
             NGRAPH_DEBUG << "second_node = " << second_node->get_name()
                          << " , pattern = " << pattern_map[pattern]->get_name();
 
-            if (pattern_map[pattern]->get_element_type() != const_node->get_element_type() ||
-                pattern_map[pattern]->get_shape() != const_node->get_shape())
+            if (pattern_map[pattern]->get_output_element_type(0) !=
+                    const_node->get_output_element_type(0) ||
+                pattern_map[pattern]->get_output_shape(0) != const_node->get_output_shape(0))
             {
                 NGRAPH_DEBUG << "Operands' types and/or shape don't match";
                 return false;
@@ -170,7 +169,7 @@ public:
                 return false;
             }
 
-            ngraph::replace_node(m.get_match_root(), pattern_map[pattern]);
+            m.get_match_value().replace(pattern_map[pattern]->output(0));
             return true;
         };
 
@@ -187,9 +186,7 @@ public:
     }
 };
 
-static void run_passes(pass::Manager& pass_manager,
-                       shared_ptr<Node> graph,
-                       std::vector<shared_ptr<op::Parameter>> parms)
+static void run_passes(pass::Manager& pass_manager, shared_ptr<Node> graph, ParameterVector parms)
 {
     auto func = make_shared<Function>(graph, ParameterVector{parms});
     pass_manager.run_passes(func);
@@ -209,12 +206,12 @@ TEST(pattern, graph_rewrite)
         auto graph_a = a + iconst0;
         auto graph_b = b + iconst0;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{a, b, graph_a, c, graph_b},
+        auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, graph_a, c, graph_b},
                                             ParameterVector{a, b, c});
         pass_manager.run_passes(f);
 
-        ASSERT_TRUE(graph_a->output(0).get_target_inputs().empty());
-        ASSERT_TRUE(graph_b->output(0).get_target_inputs().empty());
+        ASSERT_TRUE(graph_a->get_output_target_inputs(0).empty());
+        ASSERT_TRUE(graph_b->get_output_target_inputs(0).empty());
 
         auto expected = ngraph::NodeVector{a, b, a, c, b};
         ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
@@ -227,13 +224,12 @@ TEST(pattern, graph_rewrite)
         auto sum = (a + iconst0);
         auto graph = b + sum;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(sum->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inptus
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 
@@ -244,13 +240,12 @@ TEST(pattern, graph_rewrite)
         auto mul = (a * iconst1);
         auto graph = b + mul;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
+        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
         ASSERT_TRUE(mul->output(0)
                         .get_target_inputs()
                         .empty()); // graph's input is removed from sum's target inputs
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 
@@ -260,10 +255,9 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = ((((a * iconst1) * iconst1) * iconst1) * iconst1) + b;
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(0), a);
-        ASSERT_EQ(graph->input(0).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_EQ(graph->get_argument(0), a);
+        ASSERT_EQ(graph->input_value(0), a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(0))); // a's output feeds into graph's input
     }
 
@@ -274,10 +268,9 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst0 + ((a + iconst0) * iconst1));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 
@@ -287,10 +280,9 @@ TEST(pattern, graph_rewrite)
         auto iconst1 = construct_constant_node(1);
         auto graph = b + (iconst1 * (iconst1 * (iconst1 * (iconst1 * a))));
         run_passes(pass_manager, graph, {a, b});
-        ASSERT_EQ(graph->get_arguments().at(1), a);
-        ASSERT_EQ(graph->input(1).get_source_output(),
-                  a->output(0)); // graph's input points to a's output
-        ASSERT_TRUE(a->output(0).get_target_inputs().count(
+        ASSERT_EQ(graph->get_argument(1), a);
+        ASSERT_EQ(graph->input_value(1), a->output(0)); // graph's input points to a's output
+        ASSERT_TRUE(a->get_output_target_inputs(0).count(
             graph->input(1))); // a's output feeds into graph's input
     }
 }
@@ -301,59 +293,60 @@ TEST(pattern, matcher)
     auto a = make_shared<op::Parameter>(element::i32, shape);
     TestMatcher n;
     ASSERT_TRUE(n.match(a, a));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{a}));
 
     auto abs = make_shared<op::Abs>(a);
     auto any = std::make_shared<pattern::op::Skip>(a);
     ASSERT_TRUE(n.match(any, abs));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{abs, a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{abs, a}));
 
-    auto false_pred = [](std::shared_ptr<Node> /* no */) { return false; };
+    auto false_pred = [](Output<Node>) { return false; };
     auto any_false = std::make_shared<pattern::op::Skip>(a, false_pred);
     ASSERT_TRUE(n.match(any_false, a));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a, a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{a, a}));
 
     auto pattern = std::make_shared<pattern::op::Label>(a);
     ASSERT_TRUE(n.match(pattern, a));
     ASSERT_EQ(n.get_pattern_map()[pattern], a);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{a}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{a}));
 
     auto pattern_false = std::make_shared<pattern::op::Label>(a, false_pred);
     ASSERT_FALSE(n.match(pattern_false, a));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{}));
 
     auto b = make_shared<op::Parameter>(element::i32, shape);
 
-    auto is_bea = [](std::shared_ptr<Node> node) -> bool {
-        return node->is_binary_elementwise_arithmetic();
+    auto is_bea = [](Output<Node> node) -> bool {
+        return node.get_node()->is_binary_elementwise_arithmetic();
     };
-    auto bea = std::make_shared<pattern::op::Any>(a, is_bea, NodeVector{a, b});
+    auto bea = std::make_shared<pattern::op::Any>(a, is_bea, OutputVector{a, b});
     auto add_ab = a + b;
     ASSERT_TRUE(n.match(bea, add_ab));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_ab, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_ab, a, b}));
     ASSERT_TRUE(n.match(bea, b + a));
 
-    auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, NodeVector{a, b});
+    auto bea_false = std::make_shared<pattern::op::Any>(a, false_pred, OutputVector{a, b});
     ASSERT_FALSE(n.match(bea_false, a + b));
 
     auto add_abs_b = abs + b;
-    auto bea_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs});
+    auto bea_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, OutputVector{abs});
     ASSERT_TRUE(n.match(bea_any_of, add_abs_b));
 
     auto add_b_abs = b + abs;
     ASSERT_TRUE(n.match(bea_any_of, add_b_abs));
 
     auto bea_any_of_label =
-        std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea_any_of});
+        std::make_shared<pattern::op::Label>(a, nullptr, OutputVector{bea_any_of});
     ASSERT_TRUE(n.match(bea_any_of_label, add_b_abs));
     ASSERT_EQ(n.get_pattern_map()[bea_any_of_label], add_b_abs);
 
-    auto abs_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{abs});
-    auto bea_label_any_of = std::make_shared<pattern::op::AnyOf>(a, is_bea, NodeVector{abs_label});
+    auto abs_label = std::make_shared<pattern::op::Label>(a, nullptr, OutputVector{abs});
+    auto bea_label_any_of =
+        std::make_shared<pattern::op::AnyOf>(a, is_bea, OutputVector{abs_label});
     ASSERT_TRUE(n.match(bea_label_any_of, add_b_abs));
     ASSERT_EQ(n.get_pattern_map()[abs_label], abs);
 
-    auto bea_label = std::make_shared<pattern::op::Label>(a, nullptr, NodeVector{bea});
+    auto bea_label = std::make_shared<pattern::op::Label>(a, nullptr, OutputVector{bea});
     auto ab = a + b;
     ASSERT_TRUE(n.match(bea_label, ab));
     ASSERT_EQ(n.get_pattern_map()[bea_label], ab);
@@ -362,33 +355,33 @@ TEST(pattern, matcher)
     ASSERT_FALSE(n.match(d, b));
 
     ASSERT_FALSE(n.match(abs + b, b + b));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{}));
 
     auto add_absb = abs + b;
     ASSERT_TRUE(n.match(any + b, add_absb));
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_absb, abs, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_absb, abs, a, b}));
 
     ASSERT_TRUE(n.match(pattern + b, add_absb));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_absb, abs, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_absb, abs, b}));
 
     ASSERT_TRUE(n.match(b + pattern, add_absb));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add_absb, abs, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add_absb, abs, b}));
 
     auto c = make_shared<op::Parameter>(element::i32, shape);
     auto mul_add_absb = c * (add_absb);
     ASSERT_TRUE(n.match(c * (b + pattern), mul_add_absb));
     ASSERT_EQ(n.get_pattern_map()[pattern], abs);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_add_absb, c, add_absb, abs, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{mul_add_absb, c, add_absb, abs, b}));
 
     ASSERT_TRUE(n.match(c * (any + b), mul_add_absb)); // nested any
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_add_absb, c, add_absb, abs, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{mul_add_absb, c, add_absb, abs, a, b}));
     ASSERT_TRUE(n.match(c * (any + b), (b + abs) * c)); // permutations w/ any
     auto mul_c_add_ab = c * add_ab;
     ASSERT_TRUE(n.match(c * (any_false + b), c * (a + b)));  // nested any
     ASSERT_TRUE(n.match(c * (any_false + b), mul_c_add_ab)); // permutations w/ any_false
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{mul_c_add_ab, c, add_ab, a, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{mul_c_add_ab, c, add_ab, a, a, b}));
 
     auto iconst1_0 = construct_constant_node(1);
     auto iconst1_1 = construct_constant_node(1);
@@ -400,10 +393,10 @@ TEST(pattern, matcher)
 
     // Subgraph labels
     auto add = a + b;
-    auto label = std::make_shared<pattern::op::Label>(add, nullptr, NodeVector{add});
+    auto label = std::make_shared<pattern::op::Label>(add, nullptr, OutputVector{add});
     ASSERT_TRUE(n.match(label, add));
     ASSERT_EQ(n.get_pattern_map()[label], add);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{add, add, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{add, add, a, b}));
 
     ASSERT_FALSE(n.match(label, a - b));
 
@@ -423,13 +416,13 @@ TEST(pattern, matcher)
     // Correlations
     auto label1 = std::make_shared<pattern::op::Label>(a);
     auto tmp = label1 + b;
-    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, NodeVector{tmp});
+    auto label2 = std::make_shared<pattern::op::Label>(tmp, nullptr, OutputVector{tmp});
     auto sub_label1 = label1 - label2;
     auto sub_add = a - add;
     ASSERT_TRUE(n.match(sub_label1, sub_add));
     ASSERT_EQ(n.get_pattern_map()[label1], a);
     ASSERT_EQ(n.get_pattern_map()[label2], add);
-    ASSERT_EQ(n.get_matched_nodes(), (NodeVector{sub_add, a, add, add, a, b}));
+    ASSERT_EQ(n.get_matched_values(), (OutputVector{sub_add, a, add, add, a, b}));
 
     ASSERT_FALSE(n.match(sub_label1, add - a));
 
@@ -450,7 +443,7 @@ TEST(pattern, matcher)
         auto pattern = star + star;
         branch->set_destination(pattern);
         ASSERT_TRUE(n.match(pattern, ((a + b) + (b + a) + a)));
-        ASSERT_EQ(n.get_matched_nodes().size(), 4);
+        ASSERT_EQ(n.get_matched_values().size(), 4);
     }
 
     // strict mode
@@ -515,7 +508,7 @@ TEST(pattern, previous_matches)
 {
     using ngraph::pattern::Matcher;
     Shape shape{};
-    Matcher::PatternMap previous_matches;
+    Matcher::PatternValueMap previous_matches;
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto pattern = std::make_shared<pattern::op::Label>(b);
@@ -579,25 +572,26 @@ TEST(pattern, recurrent_pattern)
     RecurrentMatcher rm(padd, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm.match(add3));
     ASSERT_EQ(rm.get_number_of_bound_labels(), 1);
-    auto recurrent_matches = rm.get_bound_nodes_for_pattern(rpattern);
+    auto recurrent_matches = rm.get_bound_values_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
 
     // Multiple labels in a reccuring pattern
     auto iconst1 = construct_constant_node(1);
-    auto iconst_label = std::make_shared<pattern::op::Label>(iconst1, nullptr, NodeVector{iconst1});
+    auto iconst_label =
+        std::make_shared<pattern::op::Label>(iconst1, nullptr, OutputVector{iconst1});
     auto add2_2 = iconst1 + add1;
     auto add3_2 = iconst0 + add2_2;
     auto padd2 = iconst_label + rpattern;
     RecurrentMatcher rm2(padd2, rpattern, empty_correlated_matches);
     ASSERT_TRUE(rm2.match(add3_2));
     ASSERT_EQ(rm2.get_number_of_bound_labels(), 2);
-    recurrent_matches = rm2.get_bound_nodes_for_pattern(rpattern);
+    recurrent_matches = rm2.get_bound_values_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2_2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
-    auto iconst_matches = rm2.get_bound_nodes_for_pattern(iconst_label);
+    auto iconst_matches = rm2.get_bound_values_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
     ASSERT_EQ(iconst_matches.at(1), iconst1);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
@@ -608,7 +602,7 @@ TEST(pattern, recurrent_pattern)
     RecurrentMatcher rm3(padd2, rpattern, correlated_matches);
     ASSERT_TRUE(rm3.match(add3_2));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
-    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
+    iconst_matches = rm3.get_bound_values_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.size(), 1);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
 
@@ -616,11 +610,11 @@ TEST(pattern, recurrent_pattern)
     // testing if RecurrentMatcher can be reused for different nodes
     ASSERT_TRUE(rm3.match(add3));
     ASSERT_EQ(rm3.get_number_of_bound_labels(), 2);
-    recurrent_matches = rm3.get_bound_nodes_for_pattern(rpattern);
+    recurrent_matches = rm3.get_bound_values_for_pattern(rpattern);
     ASSERT_EQ(recurrent_matches.at(0), add2);
     ASSERT_EQ(recurrent_matches.at(1), add1);
     ASSERT_EQ(recurrent_matches.at(2), b);
-    iconst_matches = rm3.get_bound_nodes_for_pattern(iconst_label);
+    iconst_matches = rm3.get_bound_values_for_pattern(iconst_label);
     ASSERT_EQ(iconst_matches.at(0), iconst0);
     ASSERT_EQ(iconst_matches.at(1), iconst0);
     ASSERT_EQ(iconst_matches.at(2), iconst0);
@@ -634,7 +628,7 @@ public:
         Shape shape{};
         auto iconst0 = construct_constant_node(0);
         auto iconst_label =
-            std::make_shared<pattern::op::Label>(iconst0, nullptr, NodeVector{iconst0});
+            std::make_shared<pattern::op::Label>(iconst0, nullptr, OutputVector{iconst0});
         auto rpattern = std::make_shared<pattern::op::Label>(element::i32, shape);
         auto padd = iconst_label + rpattern;
 
@@ -642,11 +636,12 @@ public:
             NGRAPH_DEBUG << "In a callback for construct_recurrent_add against "
                          << rm.get_match_root()->get_name();
 
-            auto iconst_matches = rm.get_bound_nodes_for_pattern(iconst_label);
+            auto iconst_matches = rm.get_bound_values_for_pattern(iconst_label);
 
-            auto is_iconst_zero = [](std::shared_ptr<Node> n) {
+            auto is_iconst_zero = [](Output<Node> n) {
                 bool result = ngraph::is_zero(n);
-                NGRAPH_DEBUG << n->get_name() << " is " << (result ? " a zero " : " not a zero");
+                NGRAPH_DEBUG << n.get_node()->get_name() << " is "
+                             << (result ? " a zero " : " not a zero");
                 return ngraph::is_zero(n);
             };
 
@@ -661,10 +656,10 @@ public:
             auto number_of_adds = rm.get_number_of_recurrent_matches();
             // replace the topmost add with the seed (i.e. the first parameter to add)
             // matches are added in reverse order (i.e. the first match is the topmost node)
-            auto arg = rm.get_bound_nodes_for_pattern(rpattern).at(number_of_adds - 1);
+            auto arg = rm.get_bound_values_for_pattern(rpattern).at(number_of_adds - 1);
             NGRAPH_DEBUG << "Replacing " << rm.get_match_root()->get_name() << " with "
-                         << arg->get_name();
-            ngraph::replace_node(rm.get_match_root(), arg);
+                         << arg.get_node()->get_name();
+            rm.get_match_value().replace(arg);
             return true;
         };
 
@@ -701,7 +696,7 @@ TEST(pattern, recurrent_graph_rewrite)
 
         auto graph = abs_add_a3 * abs_add_b2;
 
-        auto f = std::make_shared<Function>(ngraph::NodeVector{graph}, ParameterVector{a, b});
+        auto f = std::make_shared<Function>(ngraph::OutputVector{graph}, ParameterVector{a, b});
         pass_manager.run_passes(f);
 
         auto left_abs = graph->get_argument(0);
@@ -722,14 +717,12 @@ TEST(pattern, label_on_skip)
     auto iconst = ngraph::make_zero(element::i32, Shape{});
     auto label = std::make_shared<pattern::op::Label>(iconst);
     auto const_label =
-        std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, NodeVector{iconst});
+        std::make_shared<pattern::op::Label>(iconst, ngraph::is_zero, OutputVector{iconst});
 
-    auto bcst_pred = [](std::shared_ptr<Node> n) {
-        return as_type_ptr<op::Broadcast>(n) != nullptr;
-    };
+    auto bcst_pred = [](Output<Node> n) { return as_type<op::Broadcast>(n.get_node()) != nullptr; };
 
     auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
-    auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, NodeVector{bcst});
+    auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, OutputVector{bcst});
     auto matcher = std::make_shared<pattern::Matcher>(
         std::make_shared<op::Multiply>(label, bcst_label), "label_on_skip");
 

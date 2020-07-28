@@ -88,10 +88,6 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
     for (auto n : f->get_ordered_ops())
     {
         // don't try to replace `op::Result`
-        // all multi-output feed into `GetOutputElement`
-        // if any `GetOutputElement` is zero-length
-        // we replace it w/ a signalling constant
-        // so we don't have to deal w/ multi-output nodes directly
         if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
@@ -101,7 +97,8 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
         {
             // we don't have to create constants every time but this is the easiest
             // and it's CSE's job to eliminate the same ones
-            auto constant = make_shared<op::Constant>(n->get_element_type(), n->get_shape(), cvals);
+            auto constant = make_shared<op::Constant>(
+                n->get_output_element_type(0), n->get_output_shape(0), cvals);
             replace_node(n, constant);
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << constant->get_name();
             replaced = true;
@@ -115,7 +112,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 
         if (auto concat = as_type_ptr<op::Concat>(n))
         {
-            NodeVector non_zero_dim_args;
+            OutputVector non_zero_dim_args;
             for (auto arg : concat->get_arguments())
             {
                 if (!has_zero_dim(arg))
@@ -126,7 +123,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
 
             if (non_zero_dim_args.size() < concat->get_input_size())
             {
-                auto new_concat = concat->copy_with_new_args(non_zero_dim_args);
+                auto new_concat = concat->clone_with_new_inputs(non_zero_dim_args);
                 NGRAPH_DEBUG << " Replacing " << n->get_name() << " with "
                              << new_concat->get_name();
                 replace_node(concat, new_concat);
@@ -139,7 +136,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             if (shape_size(replacement_shape) == 0)
             {
                 // Op is a noop
-                Output<Node> source_output = replace_slice->input(0).get_source_output();
+                Output<Node> source_output = replace_slice->input_value(0);
                 Output<Node> output = replace_slice->output(0);
                 for (Input<Node> input : output.get_target_inputs())
                 {
@@ -148,7 +145,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             }
         }
 
-        auto source_output = n->input(0).get_source_output();
+        auto source_output = n->input_value(0);
 
         if (source_output.get_node()->get_output_size() != 1 || !has_zero_dim(source_output))
         {

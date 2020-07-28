@@ -38,7 +38,7 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask)
         make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
     auto gen_mask2 =
         make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
-    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{gen_mask, gen_mask2}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -71,7 +71,7 @@ NGRAPH_TEST(${BACKEND_NAME}, generate_mask2)
         make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
     auto gen_mask2 =
         make_shared<op::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
-    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{gen_mask, gen_mask2}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -107,7 +107,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_generate_mask)
         make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
     auto gen_mask2 =
         make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, true);
-    auto f = make_shared<Function>(NodeVector{gen_mask, gen_mask2}, ParameterVector{result_shape});
+    auto f =
+        make_shared<Function>(OutputVector{gen_mask, gen_mask2}, ParameterVector{result_shape});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
 

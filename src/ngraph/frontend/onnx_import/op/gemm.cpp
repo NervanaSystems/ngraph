@@ -21,7 +21,7 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/matmul.hpp"
+#include "ngraph/op/matmul.hpp"
 #include "ngraph/op/multiply.hpp"
 
 namespace ngraph
@@ -32,12 +32,12 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector gemm(const Node& node)
+                OutputVector gemm(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
-                    std::shared_ptr<ngraph::Node> input_a = inputs.at(0);
-                    std::shared_ptr<ngraph::Node> input_b = inputs.at(1);
-                    std::shared_ptr<ngraph::Node> input_c;
+                    OutputVector inputs{node.get_ng_inputs()};
+                    Output<ngraph::Node> input_a = inputs.at(0);
+                    Output<ngraph::Node> input_b = inputs.at(1);
+                    Output<ngraph::Node> input_c;
 
                     if (inputs.size() == 3)
                     {
@@ -46,7 +46,7 @@ namespace ngraph
                     else
                     {
                         input_c = default_opset::Constant::create(
-                            input_b->get_element_type(), ngraph::Shape{}, {0});
+                            input_b.get_element_type(), ngraph::Shape{}, {0});
                     }
 
                     const auto alpha = node.get_attribute_value<float>("alpha", 1);
@@ -85,20 +85,19 @@ namespace ngraph
                     auto beta_times_input_c =
                         std::make_shared<default_opset::Multiply>(beta_node, input_c);
 
-                    return NodeVector{
+                    return OutputVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_6
             {
-                NodeVector gemm(const Node& node)
+                OutputVector gemm(const Node& node)
                 {
-                    NodeVector inputs{node.get_ng_inputs()};
-                    std::shared_ptr<ngraph::Node> input_a = inputs.at(0);
-                    std::shared_ptr<ngraph::Node> input_b = inputs.at(1);
-                    std::shared_ptr<ngraph::Node> input_c;
+                    OutputVector inputs{node.get_ng_inputs()};
+                    Output<ngraph::Node> input_a = inputs.at(0);
+                    Output<ngraph::Node> input_b = inputs.at(1);
+                    Output<ngraph::Node> input_c;
 
                     if (inputs.size() == 3)
                     {
@@ -107,7 +106,7 @@ namespace ngraph
                     else
                     {
                         input_c = default_opset::Constant::create(
-                            input_b->get_element_type(), ngraph::Shape{}, {0});
+                            input_b.get_element_type(), ngraph::Shape{}, {0});
                     }
 
                     const auto alpha = node.get_attribute_value<float>("alpha", 1);
@@ -133,14 +132,10 @@ namespace ngraph
                     auto beta_times_input_c =
                         std::make_shared<default_opset::Multiply>(beta_node, input_c);
 
-                    return NodeVector{
+                    return OutputVector{
                         std::make_shared<default_opset::Add>(matmul_node, beta_times_input_c)};
                 }
-
-            } // namespace set_6
-
-        } // namespace op
-
-    } // namespace  onnx_import
-
-} // namespace  ngraph
+            }
+        }
+    }
+}

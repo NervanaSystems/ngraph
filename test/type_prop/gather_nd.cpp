@@ -29,8 +29,8 @@ TEST(type_prop, gather_nd_scalar_from_2d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_1d_from_2d)
@@ -41,8 +41,8 @@ TEST(type_prop, gather_nd_1d_from_2d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_scalar_from_3d)
@@ -53,8 +53,8 @@ TEST(type_prop, gather_nd_scalar_from_3d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_1d_from_3d)
@@ -65,8 +65,8 @@ TEST(type_prop, gather_nd_1d_from_3d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_2d_from_3d)
@@ -77,8 +77,8 @@ TEST(type_prop, gather_nd_2d_from_3d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_batch_scalar_from_2d)
@@ -89,8 +89,8 @@ TEST(type_prop, gather_nd_batch_scalar_from_2d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_batch_1d_from_2d)
@@ -101,8 +101,8 @@ TEST(type_prop, gather_nd_batch_1d_from_2d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_batch_scalar_from_3d)
@@ -113,8 +113,8 @@ TEST(type_prop, gather_nd_batch_scalar_from_3d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_batch_1d_from_3d)
@@ -125,8 +125,8 @@ TEST(type_prop, gather_nd_batch_1d_from_3d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_batch_2d_from_3d)
@@ -137,8 +137,8 @@ TEST(type_prop, gather_nd_batch_2d_from_3d)
     auto P = make_shared<op::Parameter>(element::f32, params_shape);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto G = make_shared<op::GatherND>(P, I);
-    ASSERT_EQ(G->get_element_type(), element::f32);
-    ASSERT_EQ(G->get_shape(), out_shape);
+    ASSERT_EQ(G->get_output_element_type(0), element::f32);
+    ASSERT_EQ(G->get_output_shape(0), out_shape);
 }
 
 TEST(type_prop, gather_nd_fail_params_rank)

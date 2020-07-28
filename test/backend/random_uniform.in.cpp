@@ -41,7 +41,7 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_seed_unused)
     auto ru =
         make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
-    auto f = make_shared<Function>(NodeVector{ru}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{ru}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -81,7 +81,7 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_seed_used)
     auto ru =
         make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
-    auto f = make_shared<Function>(NodeVector{ru}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{ru}, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -118,7 +118,7 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_seed_use_dynamic)
     auto ru =
         make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
-    auto f = make_shared<Function>(NodeVector{ru}, ParameterVector{use_fixed_seed});
+    auto f = make_shared<Function>(OutputVector{ru}, ParameterVector{use_fixed_seed});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -179,7 +179,7 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_all_static_range_dynamic)
     auto ru =
         make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
-    auto f = make_shared<Function>(NodeVector{ru}, ParameterVector{min_val, max_val});
+    auto f = make_shared<Function>(OutputVector{ru}, ParameterVector{min_val, max_val});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -243,7 +243,7 @@ NGRAPH_TEST(${BACKEND_NAME}, random_uniform_dynamic_shapes)
     auto ru =
         make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
-    auto f = make_shared<Function>(NodeVector{ru},
+    auto f = make_shared<Function>(OutputVector{ru},
                                    ParameterVector{min_val, max_val, result_shape, use_fixed_seed});
 
     // Getting a dynamic backend here.

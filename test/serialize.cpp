@@ -20,10 +20,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+#include "ngraph/coordinate_transform.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
+#include "ngraph/op/interpolate.hpp"
 #include "ngraph/op/passthrough.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -32,6 +33,7 @@
 #include "nlohmann/json.hpp"
 #include "util/all_close_f.hpp"
 #include "util/test_tools.hpp"
+#include "util/visitor.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -114,11 +116,7 @@ TEST(serialize, friendly_name)
     product->set_friendly_name("Product");
 
     string js = serialize(f, 4);
-    ofstream out("serialize_function.js");
-    out << js;
-
-    istringstream in(js);
-    shared_ptr<Function> sfunc = deserialize(in);
+    shared_ptr<Function> sfunc = deserialize(js);
     auto backend = runtime::Backend::create("INTERPRETER");
     auto handle = backend->compile(sfunc);
 
@@ -209,7 +207,6 @@ TEST(benchmark, serialize)
     timer.stop();
     cout << "deserialize took " << timer.get_milliseconds() << "ms\n";
 
-    WithSerializeOutputShapesEnabled serialize_outputs(true);
     ofstream out("test.json");
     out << serialize(f, 4);
 }
@@ -230,12 +227,10 @@ TEST(serialize, passthrough)
         "SerializationTest",
         "Plain",
         "Hello, world!",
-        NodeVector{},
+        OutputVector{},
         std::vector<estuple>{estuple{element::f32, PartialShape{2, 3}},
                              estuple{element::i8, PartialShape{4, 5}}});
-    auto f = make_shared<Function>(NodeVector{std::make_shared<op::GetOutputElement>(p, 0),
-                                              std::make_shared<op::GetOutputElement>(p, 1)},
-                                   ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{p->output(0), p->output(1)}, ParameterVector{});
     serialize(tmp_file, f);
 
     auto g = deserialize(tmp_file);
@@ -275,7 +270,7 @@ TEST(serialize, constant_infinity_nan)
     B->set_friendly_name("B");
     C->set_friendly_name("C");
     D->set_friendly_name("D");
-    auto f = make_shared<Function>(NodeVector{A, B, C, D}, ParameterVector{});
+    auto f = make_shared<Function>(OutputVector{A, B, C, D}, ParameterVector{});
 
     string s = serialize(f, 4);
     shared_ptr<Function> g = deserialize(s);
@@ -496,6 +491,33 @@ TEST(serialize, tensor_iterator_raw)
     auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
+
+    ngraph::test::NodeBuilder builder;
+    // Uncomment to see serialization
+    // builder.set_print(true);
+    builder.save_node(tensor_iterator);
+    auto g_tensor_iterator = as_type_ptr<op::v0::TensorIterator>(builder.create());
+    ASSERT_TRUE(g_tensor_iterator);
+    auto& inputs = tensor_iterator->get_input_descriptions();
+    auto& g_inputs = g_tensor_iterator->get_input_descriptions();
+    ASSERT_EQ(inputs.size(), g_inputs.size());
+    for (size_t i = 0; i < tensor_iterator->get_input_descriptions().size(); ++i)
+    {
+        auto& val = inputs[i];
+        auto& g_val = g_inputs[i];
+        ASSERT_EQ(val->get_type_info(), g_val->get_type_info());
+        ASSERT_EQ(val->m_input_index, g_val->m_input_index);
+        ASSERT_EQ(val->m_body_parameter_index, g_val->m_body_parameter_index);
+    }
+    auto& outputs = tensor_iterator->get_output_descriptions();
+    auto& g_outputs = g_tensor_iterator->get_output_descriptions();
+    ASSERT_EQ(outputs.size(), g_outputs.size());
+    for (size_t i = 0; i < tensor_iterator->get_output_descriptions().size(); ++i)
+    {
+        auto& val = outputs[i];
+        auto& g_val = g_outputs[i];
+        ASSERT_EQ(val->get_type_info(), g_val->get_type_info());
+    }
 }
 
 TEST(serialize, tensor_iterator_lstm)
@@ -738,7 +760,7 @@ TEST(serialize, opset1_binary_convolution)
     const CoordinateDiff pads_begin{0, 0};
     const CoordinateDiff pads_end{0, 0};
     const Strides dilations{1, 1};
-    const std::string mode = "xnor-popcount";
+    auto mode = op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT;
     const float pad_value = 2.1f;
     const auto auto_pad = op::PadType::NOTSET;
 
@@ -763,6 +785,73 @@ TEST(serialize, opset1_binary_convolution)
               op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
     EXPECT_EQ(binary_conv_out->get_pad_value(), pad_value);
     EXPECT_EQ(binary_conv_out->get_auto_pad(), auto_pad);
+}
+
+TEST(serialize, opset1_interpolate)
+{
+    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+    op::InterpolateAttrs attrs;
+    attrs.axes = {2, 3};
+    attrs.mode = "linear";
+    attrs.align_corners = true;
+    attrs.antialias = false;
+    attrs.pads_begin = {0, 0, 0, 0};
+    attrs.pads_end = {0, 0, 0, 0};
+
+    auto op = make_shared<op::Interpolate>(image, output_shape, attrs);
+    auto result = make_shared<op::Result>(op);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_interpolate = g_result->get_input_node_shared_ptr(0);
+    auto g_op = as_type_ptr<op::Interpolate>(g_interpolate);
+    ASSERT_TRUE(g_op);
+    op::InterpolateAttrs g_attrs = g_op->get_attrs();
+    EXPECT_EQ(g_attrs.axes, attrs.axes);
+    EXPECT_EQ(g_attrs.mode, attrs.mode);
+    EXPECT_EQ(g_attrs.align_corners, attrs.align_corners);
+    EXPECT_EQ(g_attrs.antialias, attrs.antialias);
+    EXPECT_EQ(g_attrs.pads_begin, attrs.pads_begin);
+    EXPECT_EQ(g_attrs.pads_end, attrs.pads_end);
+}
+
+TEST(serialize, opset3_interpolate)
+{
+    using op::v3::Interpolate;
+    using InterpolateMode = op::v3::Interpolate::InterpolateMode;
+    using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
+    using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
+
+    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+    InterpolateAttrs attrs;
+    attrs.axes = {2, 3};
+    attrs.mode = InterpolateMode::linear;
+    attrs.coordinate_transformation_mode = CoordinateTransformMode::half_pixel;
+    attrs.antialias = false;
+    attrs.pads_begin = {0, 0, 0, 0};
+    attrs.pads_end = {0, 0, 0, 0};
+
+    auto op = make_shared<Interpolate>(image, output_shape, attrs);
+    auto result = make_shared<op::Result>(op);
+    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
+    string s = serialize(f);
+
+    shared_ptr<Function> g = deserialize(s);
+    auto g_result = g->get_results().at(0);
+    auto g_interpolate = g_result->get_input_node_shared_ptr(0);
+    auto g_op = as_type_ptr<op::v3::Interpolate>(g_interpolate);
+    ASSERT_TRUE(g_op);
+    InterpolateAttrs g_attrs = g_op->get_attrs();
+    EXPECT_EQ(g_attrs.axes, attrs.axes);
+    EXPECT_EQ(g_attrs.mode, attrs.mode);
+    EXPECT_EQ(g_attrs.coordinate_transformation_mode, attrs.coordinate_transformation_mode);
+    EXPECT_EQ(g_attrs.antialias, attrs.antialias);
+    EXPECT_EQ(g_attrs.pads_begin, attrs.pads_begin);
+    EXPECT_EQ(g_attrs.pads_end, attrs.pads_end);
 }
 
 TEST(serialize, depth_to_space)
@@ -851,4 +940,25 @@ TEST(serialize, deformable_psroi_pooling)
     EXPECT_EQ(def_psroi_pool_out->get_spatial_bins_y(), spatial_bins_y);
     EXPECT_EQ(def_psroi_pool_out->get_trans_std(), trans_std);
     EXPECT_EQ(def_psroi_pool_out->get_part_size(), part_size);
+}
+
+TEST(serialize, strip_goe)
+{
+    // Shape input_shape{2, 3};
+    // Shape channel_shape{input_shape[1]};
+    // auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    // auto gamma = make_shared<op::Parameter>(element::f32, channel_shape);
+    // auto beta = make_shared<op::Parameter>(element::f32, channel_shape);
+    // auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, 0.0);
+    // auto goe0 = make_shared<op::GetOutputElement>(bn, 0);
+    // auto goe1 = make_shared<op::GetOutputElement>(bn, 1);
+    // auto goe2 = make_shared<op::GetOutputElement>(bn, 2);
+    // auto result0 = make_shared<op::Result>(goe0->output(0));
+    // auto result1 = make_shared<op::Result>(goe1->output(0));
+    // auto result2 = make_shared<op::Result>(goe2->output(0));
+    // auto function = make_shared<Function>(ResultVector{result0, result1, result2},
+    // ParameterVector{input, gamma, beta}); string s = serialize(function); cout << s << endl;
+
+    const string test_file = file_util::path_join(TEST_FILES, "graph_with_goe.json");
+    EXPECT_NO_THROW(deserialize(test_file));
 }

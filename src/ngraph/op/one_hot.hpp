@@ -62,12 +62,13 @@ namespace ngraph
                 OneHot(const Output<Node>& arg, const PartialShape& shape, size_t one_hot_axis);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
 
                 /// \return The index of the one-hot axis.
                 size_t get_one_hot_axis() const { return m_one_hot_axis; }
                 void set_one_hot_axis(size_t one_hot_axis) { m_one_hot_axis = one_hot_axis; }
+
             protected:
                 PartialShape m_shape;
                 size_t m_one_hot_axis;
@@ -100,12 +101,13 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
 
                 /// \return The index of the one-hot axis.
                 int64_t get_axis() const { return m_axis; }
                 void set_axis(int64_t axis) { m_axis = axis; }
+
             protected:
                 int64_t m_axis;
             };

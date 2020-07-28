@@ -25,7 +25,8 @@ namespace ngraph
 {
     namespace pass
     {
-        /// This pass creates CompiledKernel ops enclosing maximal sub-graphs of ops that are
+        /// This pass creates CompiledKernel ops enclosing maximal sub-graphs of ops
+        /// that are
         /// supported by MLIR
         class MLIRSubgraphExtractionPass : public ngraph::pass::FunctionPass
         {
@@ -100,6 +101,7 @@ namespace ngraph
             }
             /// Stores a sub-graph in the map
             void add_subgraph(MLIRSubgraph& sg) { m_id_to_graph.emplace(sg.get_id(), sg); }
+
         private:
             void build_subgraphs(std::shared_ptr<Function> func);
             NodeVector build_ck_nodes(std::shared_ptr<Function> func);

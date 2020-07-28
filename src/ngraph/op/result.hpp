@@ -42,11 +42,16 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual bool is_output() const override { return true; }
                 void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
                 bool needs_default_layout() const { return m_needs_default_layout; }
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) override;
+                bool constant_fold(OutputVector& output_values,
+                                   const OutputVector& inputs_values) override;
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -59,4 +64,19 @@ namespace ngraph
         using v0::Result;
     }
     using ResultVector = std::vector<std::shared_ptr<op::Result>>;
+
+    template <>
+    class NGRAPH_API AttributeAdapter<ResultVector> : public VisitorAdapter
+    {
+    public:
+        AttributeAdapter(ResultVector& ref);
+
+        bool visit_attributes(AttributeVisitor& visitor) override;
+
+        static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<ResultVector>", 0};
+        const DiscreteTypeInfo& get_type_info() const override { return type_info; }
+
+    protected:
+        ResultVector& m_ref;
+    };
 }

@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #pragma once
 
@@ -36,7 +38,8 @@ namespace ngraph
             {
             public:
                 /// Allocates data for temporary tensor. Currently, it is called for each
-                /// temp tensor defintion. Keeps track of each pointer and free them during cleanup.
+                /// temp tensor defintion. Keeps track of each pointer and free them during
+                /// cleanup.
                 // TODO: Use pre-allocation from framework memory manager
                 void* allocate(size_t size);
 

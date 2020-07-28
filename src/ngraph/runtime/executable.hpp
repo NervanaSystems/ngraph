@@ -20,6 +20,7 @@
 
 #include "ngraph/function.hpp"
 #include "ngraph/runtime/performance_counter.hpp"
+#include "ngraph/runtime/tensor.hpp"
 #include "ngraph/shape.hpp"
 #include "ngraph/type/element_type.hpp"
 
@@ -27,7 +28,6 @@ namespace ngraph
 {
     namespace runtime
     {
-        class Tensor;
         class Executable;
     }
 }

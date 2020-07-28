@@ -82,7 +82,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             throw ngraph_error("One of function's outputs isn't op::Result");
         }
-        descriptor::Tensor* tensor = &output->output(0).get_tensor();
+        descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});
     }
 
@@ -90,7 +90,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (auto& op : m_nodes)
     {
         auto type_id = get_typeid(*op);
-        if (type_id == ngraph::runtime::interpreter::OP_TYPEID::Parameter)
+        if (type_id == ngraph::runtime::interpreter::OP_TYPEID::Parameter_v0)
         {
             continue;
         }
@@ -133,25 +133,25 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
 #endif
         switch (type_id)
         {
-        case ngraph::runtime::interpreter::OP_TYPEID::Convert:
-        case ngraph::runtime::interpreter::OP_TYPEID::Quantize:
-        case ngraph::runtime::interpreter::OP_TYPEID::Dequantize:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMin:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax:
+        case ngraph::runtime::interpreter::OP_TYPEID::Convert_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::Quantize_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::Dequantize_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::ArgMin_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax_v0:
             type = op->get_input_element_type(0);
             break;
-        case ngraph::runtime::interpreter::OP_TYPEID::Equal:
-        case ngraph::runtime::interpreter::OP_TYPEID::Greater:
-        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq:
-        case ngraph::runtime::interpreter::OP_TYPEID::Less:
-        case ngraph::runtime::interpreter::OP_TYPEID::LessEq:
-        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual:
+        case ngraph::runtime::interpreter::OP_TYPEID::Equal_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::Greater_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::Less_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::LessEq_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual_v0:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
             break;
-        case ngraph::runtime::interpreter::OP_TYPEID::TopK:
+        case ngraph::runtime::interpreter::OP_TYPEID::TopK_v0:
             type = op->get_output_element_type(1);
             break;
         default: type = op->get_output_element_type(0); break;
@@ -164,7 +164,10 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         {
             m_timer_map[op].start();
         }
-        generate_calls(type, *op, op_outputs, op_inputs);
+        if (!op->evaluate(op_outputs, op_inputs))
+        {
+            generate_calls(type, *op, op_outputs, op_inputs);
+        }
         if (m_performance_counters_enabled)
         {
             m_timer_map[op].stop();

@@ -14,18 +14,21 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #include "utils.hpp"
 
 #include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 
-#include <mlir/Dialect/AffineOps/AffineOps.h>
+#include <mlir/Dialect/Affine/IR/AffineOps.h>
+#include <mlir/Dialect/Affine/Passes.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
-#include <mlir/Dialect/LoopOps/LoopOps.h>
-#include <mlir/Dialect/StandardOps/Ops.h>
-#include <mlir/Dialect/VectorOps/VectorOps.h>
+#include <mlir/Dialect/SCF/SCF.h>
+#include <mlir/Dialect/StandardOps/IR/Ops.h>
+#include <mlir/Dialect/Vector/VectorOps.h>
 #include <mlir/IR/Dialect.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/Pass/Pass.h>
@@ -34,26 +37,28 @@
 
 #include <llvm/Support/CommandLine.h>
 #include <llvm/Support/Debug.h>
+#include <llvm/Transforms/Vectorize.h>
 
 using namespace mlir;
 
-static llvm::cl::opt<bool> clPrintIRAfterAll(
-    "ngraph-print-ir-after-all",
-    llvm::cl::init(false),
-    llvm::cl::desc(
-        "Print IR after transformation that are not implemented as passes in the MLIRCompiler. It "
-        "complements MLIR -print-ir-after-all and LLVM -print-after-all flags"));
+static llvm::cl::opt<bool>
+    clPrintIRAfterAll("ngraph-print-ir-after-all",
+                      llvm::cl::init(false),
+                      llvm::cl::desc("Print IR after transformation that are not implemented as "
+                                     "passes in the MLIRCompiler. It "
+                                     "complements MLIR -print-ir-after-all and LLVM "
+                                     "-print-after-all flags"));
 
 void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 {
     // Initialize MLIR dialects and passes only once.
     static bool init_once = []() {
         // In-tree Dialects.
-        registerDialect<AffineOpsDialect>();
+        registerDialect<AffineDialect>();
         registerDialect<LLVM::LLVMDialect>();
-        registerDialect<loop::LoopOpsDialect>();
+        registerDialect<scf::SCFDialect>();
         registerDialect<StandardOpsDialect>();
-        registerDialect<vector::VectorOpsDialect>();
+        registerDialect<vector::VectorDialect>();
 
         // nGraph dialects.
         registerDialect<mlir::NGraphOpsDialect>();
@@ -65,7 +70,7 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 
         createCanonicalizerPass();
         createCSEPass();
-        createVectorizePass({});
+        llvm::createLoopVectorizePass();
         createLoopUnrollPass();
         createLoopUnrollAndJamPass();
         createSimplifyAffineStructuresPass();

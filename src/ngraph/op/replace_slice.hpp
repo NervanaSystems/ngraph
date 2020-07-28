@@ -87,7 +87,7 @@ namespace ngraph
                              const Coordinate& upper_bounds);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
 
                 /// \return The inclusive lower-bound coordinates.
@@ -105,6 +105,7 @@ namespace ngraph
                 /// \return The slicing strides.
                 const Strides& get_strides() const { return m_strides; }
                 void set_strides(const Strides& strides) { m_strides = strides; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

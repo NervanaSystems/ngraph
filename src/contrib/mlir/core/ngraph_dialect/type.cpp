@@ -14,18 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #include "type.hpp"
 
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Regex.h"
 #include "llvm/Support/raw_ostream.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/StandardTypes.h"
-#include "mlir/Support/STLExtras.h"
 #include "ngraph/assertion.hpp"
 
 using llvm::ArrayRef;
@@ -36,40 +38,6 @@ using llvm::StringRef;
 using llvm::Twine;
 
 using namespace mlir;
-
-unsigned NGIntegerType::getWidth() const
-{
-    switch (getKind())
-    {
-    case NG_I8_TYPE_ID:
-    case NG_U8_TYPE_ID: return 8;
-    case NG_I16_TYPE_ID:
-    case NG_U16_TYPE_ID: return 16;
-    case NG_I32_TYPE_ID:
-    case NG_U32_TYPE_ID: return 32;
-    case NG_I64_TYPE_ID:
-    case NG_U64_TYPE_ID: return 64;
-    default: NGRAPH_CHECK(false, "Invalid type ID");
-    }
-    return 0;
-}
-
-bool NGIntegerType::isSigned() const
-{
-    switch (getKind())
-    {
-    case NG_I8_TYPE_ID:
-    case NG_I16_TYPE_ID:
-    case NG_I32_TYPE_ID:
-    case NG_I64_TYPE_ID: return true;
-    case NG_U8_TYPE_ID:
-    case NG_U16_TYPE_ID:
-    case NG_U32_TYPE_ID:
-    case NG_U64_TYPE_ID: return false;
-    default: NGRAPH_CHECK(false, "Invalid type ID");
-    }
-    return false;
-}
 
 /// Creates TensorType objects. They all point to the same storage if
 /// element type and shape are the same.

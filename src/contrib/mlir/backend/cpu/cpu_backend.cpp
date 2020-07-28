@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #include "cpu_backend.hpp"
 #include "contrib/mlir/backend/pass/affine_lowerer.hpp"
@@ -30,9 +31,10 @@
 #include <llvm/Support/SourceMgr.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
-#include <mlir/Conversion/LoopToStandard/ConvertLoopToStandard.h>
+#include <mlir/Conversion/SCFToStandard/SCFToStandard.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h>
 #include <mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h>
+#include <mlir/Dialect/Affine/Passes.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
 #include <mlir/IR/StandardTypes.h>
 #include <mlir/Pass/PassManager.h>
@@ -67,10 +69,10 @@ static llvm::cl::opt<unsigned>
 static llvm::cl::opt<unsigned> clLoopTilingCacheSize(
     "ngraph-affine-loop-tile-cache-size",
     llvm::cl::init(0),
-    llvm::cl::desc(
-        "Cache size to use in affine loop tiling. If not zero, it overrides the cache-size "
-        "inferred from the host CPU using for the cache level specified by "
-        "-ngraph-loop-tile-cache-level."));
+    llvm::cl::desc("Cache size to use in affine loop tiling. If not zero, it overrides "
+                   "the cache-size "
+                   "inferred from the host CPU using for the cache level specified by "
+                   "-ngraph-loop-tile-cache-level."));
 
 // Enable the lowering of MemRefs to LLVM bare pointers.
 extern llvm::cl::opt<bool> clEnableBarePtrMemRefLowering;
@@ -95,7 +97,8 @@ static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
         return machineBuilder.takeError();
     }
 
-    // Relocation model and code model are kept to default values. CodeGen optimization level
+    // Relocation model and code model are kept to default values. CodeGen
+    // optimization level
     // matches LLVM recommendations, i.e.:
     // enum Level {
     //   None,        // -O0
@@ -107,7 +110,8 @@ static llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
     return machineBuilder->createTargetMachine();
 }
 
-/// Returns the cache level size from `targetInfo` for the `cacheLevel` provided. If `userCacheSize`
+/// Returns the cache level size from `targetInfo` for the `cacheLevel`
+/// provided. If `userCacheSize`
 /// is not zero, it returns `userCacheSize`.
 static unsigned getCacheLevelSize(llvm::TargetTransformInfo& targetInfo,
                                   unsigned cacheLevel,
@@ -200,18 +204,21 @@ void MLIRCPUBackend::lowerNgDialect()
 void MLIRCPUBackend::lowerStandardDialect()
 {
     mlir::PassManager pm(&m_context);
-    // We lower memrefs to a fat memref descriptor by default. If 'clEnableBarePtrMemRefLowering' is
-    // specified, we lower memref arguments to bare pointers to the memref element type.
+    // We lower memrefs to a fat memref descriptor by default. If
+    // 'clEnableBarePtrMemRefLowering' is
+    // specified, we lower memref arguments to bare pointers to the memref element
+    // type.
     if (clEnableBarePtrMemRefLowering)
     {
-        pm.addPass(mlir::createLowerToLLVMPass(/*useAlloca=*/false,
-                                               /*useBarePtrCallConv=*/true,
-                                               /*emitCWrappers=*/false));
+        LowerToLLVMOptions llvmOptions;
+        llvmOptions.useBarePtrCallConv = true, llvmOptions.emitCWrappers = false,
+        pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
     }
     else
     {
-        pm.addPass(mlir::createLowerToLLVMPass(
-            /*useAlloca=*/false, /*useBarePtrCallConv=*/false, /*emitCWrappers=*/true));
+        LowerToLLVMOptions llvmOptions;
+        llvmOptions.useBarePtrCallConv = false, llvmOptions.emitCWrappers = true,
+        pm.addPass(mlir::createLowerToLLVMPass(llvmOptions));
     }
 
     // Apply any generic pass manager command line options.
@@ -228,13 +235,17 @@ void MLIRCPUBackend::lowerStandardDialect()
     }
 }
 
-// Receives affine dialect as input and applies affine and standard dialect based optimizations.
-// Lowering from affine dialect to standard dialect happens along the way. Output consists of
+// Receives affine dialect as input and applies affine and standard dialect
+// based optimizations.
+// Lowering from affine dialect to standard dialect happens along the way.
+// Output consists of
 // standard dialect only ops.
 void MLIRCPUBackend::optimizeAffineDialect()
 {
-    // Create target transform info to obtain some target information to be used in MLIR
-    // optimizations. This is a temporary attempt to retrieve some target information by reusing
+    // Create target transform info to obtain some target information to be used
+    // in MLIR
+    // optimizations. This is a temporary attempt to retrieve some target
+    // information by reusing
     // LLVM TTI infra while MLIR does not have target model.
     llvm::LLVMContext llvmContext;
     auto module = std::unique_ptr<llvm::Module>(new llvm::Module("test", llvmContext));
@@ -258,14 +269,12 @@ void MLIRCPUBackend::optimizeAffineDialect()
         unsigned cacheLevelSize =
             getCacheLevelSize(targetInfo, clLoopTilingCacheLevel, clLoopTilingCacheSize);
         LLVM_DEBUG(llvm::dbgs() << "Enabling Affine Loop Tiling for cache level "
-                                << clLoopTilingCacheLevel
-                                << ": "
-                                << cacheLevelSize
-                                << " bytes.\n");
+                                << clLoopTilingCacheLevel << ": " << cacheLevelSize << " bytes.\n");
         pm.addPass(mlir::createLoopTilingPass(cacheLevelSize));
     }
 
-    // Populate pass manager with affine-to-loop and loop-to-std dialect conversions.
+    // Populate pass manager with affine-to-loop and loop-to-std dialect
+    // conversions.
     pm.addPass(mlir::createLowerAffinePass());
     pm.addPass(mlir::createLowerToCFGPass());
 

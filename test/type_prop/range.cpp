@@ -29,7 +29,7 @@ TEST(type_prop, range_nonconst_ok)
 
     auto range = make_shared<op::Range>(start, stop, step);
 
-    EXPECT_EQ(range->get_element_type(), element::i32);
+    EXPECT_EQ(range->get_output_element_type(0), element::i32);
     EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -41,7 +41,7 @@ TEST(type_prop, range_nonconst_some_dyn_et_ok)
 
     auto range = make_shared<op::Range>(start, stop, step);
 
-    EXPECT_EQ(range->get_element_type(), element::i32);
+    EXPECT_EQ(range->get_output_element_type(0), element::i32);
     EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -53,7 +53,7 @@ TEST(type_prop, range_nonconst_all_dyn_et_ok)
 
     auto range = make_shared<op::Range>(start, stop, step);
 
-    EXPECT_EQ(range->get_element_type(), element::dynamic);
+    EXPECT_EQ(range->get_output_element_type(0), element::dynamic);
     EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -65,7 +65,7 @@ TEST(type_prop, range_nonconst_f32_ok)
 
     auto range = make_shared<op::Range>(start, stop, step);
 
-    EXPECT_EQ(range->get_element_type(), element::f32);
+    EXPECT_EQ(range->get_output_element_type(0), element::f32);
     EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -99,7 +99,7 @@ TEST(type_prop, range_some_const_ok)
 
     auto range = make_shared<op::Range>(start, stop, step);
 
-    EXPECT_EQ(range->get_element_type(), element::i32);
+    EXPECT_EQ(range->get_output_element_type(0), element::i32);
     EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(1)));
 }
 
@@ -116,7 +116,7 @@ TEST(type_prop, range_some_const_zero_stride_fails)
     }
     catch (const NodeValidationFailure& error)
     {
-        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero.");
+        EXPECT_HAS_SUBSTRING(error.what(), "'step' cannot be zero");
     }
     catch (...)
     {
@@ -359,7 +359,7 @@ void run_range_test(const element::Type& et, const RangeParams& params)
 
     auto range = make_shared<op::Range>(start, stop, step);
 
-    EXPECT_EQ(range->get_element_type(), et);
+    EXPECT_EQ(range->get_output_element_type(0), et);
     EXPECT_TRUE(range->get_output_partial_shape(0).same_scheme(params.expected_shape))
         << "Expected shape " << params.expected_shape << " but got "
         << range->get_output_partial_shape(0);

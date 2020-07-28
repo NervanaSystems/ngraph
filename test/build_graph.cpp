@@ -64,17 +64,17 @@ TEST(build_graph, literal)
     vector<float> float_t{3.0};
     auto float0 = make_shared<op::Constant>(element::f32, Shape{}, float_t);
     ASSERT_EQ(float0->get_vector<float>(), std::vector<float>{3.0});
-    ASSERT_EQ(float0->get_element_type(), element::f32);
-    ASSERT_EQ(float0->get_shape(), Shape{});
+    ASSERT_EQ(float0->get_output_element_type(0), element::f32);
+    ASSERT_EQ(float0->get_output_shape(0), Shape{});
     auto d = make_shared<op::Dot>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_argument(0), float0);
+    ASSERT_EQ(d->get_argument(1), float0);
 
     vector<int32_t> int32{3};
     auto int32_0 = make_shared<op::Constant>(element::i32, Shape{}, int32);
     ASSERT_EQ(int32_0->get_vector<int32_t>(), std::vector<int>{3});
-    ASSERT_EQ(int32_0->get_element_type(), element::i32);
-    ASSERT_EQ(int32_0->get_shape(), Shape{});
+    ASSERT_EQ(int32_0->get_output_element_type(0), element::i32);
+    ASSERT_EQ(int32_0->get_output_shape(0), Shape{});
 }
 
 TEST(build_graph, tensor)
@@ -84,17 +84,17 @@ TEST(build_graph, tensor)
     Shape shape{2, 3};
     vector<float> float_t(shape_size(shape), 0);
     auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
-    ASSERT_EQ(float0->get_element_type(), element::f32);
-    ASSERT_EQ(float0->get_shape(), shape);
+    ASSERT_EQ(float0->get_output_element_type(0), element::f32);
+    ASSERT_EQ(float0->get_output_shape(0), shape);
     auto d = make_shared<op::Add>(float0, float0);
-    ASSERT_EQ(d->get_arguments().at(0), float0);
-    ASSERT_EQ(d->get_arguments().at(1), float0);
+    ASSERT_EQ(d->get_argument(0), float0);
+    ASSERT_EQ(d->get_argument(1), float0);
 
     Shape ishape{3, 5};
     vector<int32_t> idata(shape_size(ishape), 0);
     auto int32_0 = make_shared<op::Constant>(element::i32, ishape, idata);
-    ASSERT_EQ(int32_0->get_element_type(), element::i32);
-    ASSERT_EQ(int32_0->get_shape(), ishape);
+    ASSERT_EQ(int32_0->get_output_element_type(0), element::i32);
+    ASSERT_EQ(int32_0->get_output_shape(0), ishape);
 }
 
 // Check functions with undeclared parameters
@@ -119,7 +119,11 @@ TEST(build_graph, function_undeclared_parameters)
     }
     catch (const ngraph_error& error)
     {
-        EXPECT_EQ(error.what(), std::string("Function references undeclared parameter"));
+        string msg = error.what();
+        if (msg.find("references undeclared parameter") == string::npos)
+        {
+            FAIL() << "Unexpected error message.";
+        }
     }
     catch (...)
     {
@@ -165,7 +169,7 @@ TEST(build_graph, multi_output_split)
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1},
                                                   2);
-    EXPECT_EQ(conv->get_shape(), (Shape{64, 128, 91, 131}));
+    EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91, 131}));
 }
 
 TEST(build_graph, multi_output_split_dynamic)
@@ -176,11 +180,13 @@ TEST(build_graph, multi_output_split_dynamic)
     auto abs = make_shared<op::Abs>(split->output(1));
     EXPECT_TRUE(abs->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 
-    auto f = make_shared<Function>(abs, ParameterVector{data});
     auto new_parameter = make_shared<op::Parameter>(element::f32, Shape{2, 4});
     split->input(0).replace_source_output(new_parameter->output(0));
+
+    auto f = make_shared<Function>(abs, ParameterVector{new_parameter});
+
     f->validate_nodes_and_infer_types();
-    EXPECT_EQ(abs->get_shape(), (Shape{2, 2}));
+    EXPECT_EQ(abs->get_output_shape(0), (Shape{2, 2}));
 }
 
 TEST(build_graph, function_revalidate_and_infer)
@@ -188,7 +194,7 @@ TEST(build_graph, function_revalidate_and_infer)
     auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto pattern = op::Constant::create(element::i64, Shape{6}, {1, 3, 16, 2, 2, 2});
 
-    auto r = make_shared<op::DynReshape>(arg, pattern);
+    auto r = make_shared<op::v1::Reshape>(arg, pattern, true);
     auto relu = make_shared<op::Relu>(r);
     auto f = make_shared<Function>(relu, ParameterVector{arg});
 
@@ -207,17 +213,29 @@ TEST(build_graph, function_revalidate_and_infer)
 TEST(build_graph, validate_function_for_dynamic_shape)
 {
     auto make_function = [&](bool dynamic_shape) {
-
         auto param1_shape =
             dynamic_shape ? PartialShape{Dimension::dynamic(), 2, 3} : Shape{5, 4, 2};
         auto param2_shape = dynamic_shape ? PartialShape::dynamic() : Shape{5, 2, 3};
         auto param_1 = std::make_shared<op::Parameter>(element::f32, param1_shape);
         auto param_2 = std::make_shared<op::Parameter>(element::f32, param2_shape);
         auto batch_dot = make_shared<op::BatchMatMul>(param_1, param_2);
-        auto f = make_shared<Function>(NodeVector{batch_dot}, ParameterVector{param_1, param_2});
+        auto f = make_shared<Function>(OutputVector{batch_dot}, ParameterVector{param_1, param_2});
         return f;
     };
 
     EXPECT_TRUE(make_function(true)->is_dynamic());
     EXPECT_FALSE(make_function(false)->is_dynamic());
+}
+
+TEST(build_graph, default_output_checks)
+{
+    try
+    {
+        std::shared_ptr<Node> empty;
+        auto nullout = Output<Node>(empty);
+    }
+    catch (...)
+    {
+        FAIL() << "nullptr initialization of Output failed";
+    }
 }

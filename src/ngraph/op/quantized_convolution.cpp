@@ -171,26 +171,26 @@ void op::QuantizedConvolution::validate_and_infer_types()
     set_output_type(0, m_output_type, result_shape);
 }
 
-shared_ptr<Node> op::QuantizedConvolution::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::QuantizedConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return shared_ptr<Node>(new QuantizedConvolution(new_args.at(0),
-                                                     new_args.at(1),
-                                                     get_window_movement_strides(),
-                                                     get_window_dilation_strides(),
-                                                     get_padding_below(),
-                                                     get_padding_above(),
-                                                     get_data_dilation_strides(),
-                                                     new_args.at(2),
-                                                     new_args.at(3),
-                                                     new_args.at(4),
-                                                     new_args.at(5),
-                                                     new_args.at(6),
-                                                     new_args.at(7),
-                                                     m_output_type,
-                                                     m_input_axes,
-                                                     m_filter_axes,
-                                                     m_output_axes));
+    return make_shared<QuantizedConvolution>(new_args.at(0),
+                                             new_args.at(1),
+                                             get_window_movement_strides(),
+                                             get_window_dilation_strides(),
+                                             get_padding_below(),
+                                             get_padding_above(),
+                                             get_data_dilation_strides(),
+                                             new_args.at(2),
+                                             new_args.at(3),
+                                             new_args.at(4),
+                                             new_args.at(5),
+                                             new_args.at(6),
+                                             new_args.at(7),
+                                             m_output_type,
+                                             m_input_axes,
+                                             m_filter_axes,
+                                             m_output_axes);
 }
 
 void op::QuantizedConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,

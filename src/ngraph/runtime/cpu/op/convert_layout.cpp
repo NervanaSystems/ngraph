@@ -16,7 +16,7 @@
 
 #include "ngraph/runtime/cpu/op/convert_layout.hpp"
 #include "ngraph/runtime/cpu/cpu_layout_descriptor.hpp"
-#include "ngraph/runtime/cpu/mkldnn_utils.hpp"
+#include "ngraph/runtime/cpu/dnnl_utils.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -25,13 +25,16 @@ constexpr NodeTypeInfo runtime::cpu::op::ConvertLayout::type_info;
 
 runtime::cpu::op::ConvertLayout::ConvertLayout(
     const Output<Node>& arg, const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : ConvertLayout(arg, 0, layout)
+    : Op({arg})
+    , arg_output_index(arg.get_index())
+    , output_layout(layout)
 {
-    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
+    runtime::cpu::dnnl_utils::assign_dnnl_kernel(this);
+    constructor_validate_and_infer_types();
 }
 
 shared_ptr<Node>
-    runtime::cpu::op::ConvertLayout::copy_with_new_args(const NodeVector& new_args) const
+    runtime::cpu::op::ConvertLayout::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -40,23 +43,11 @@ shared_ptr<Node>
     return make_shared<ConvertLayout>(new_args.at(0), output_layout);
 }
 
-runtime::cpu::op::ConvertLayout::ConvertLayout(
-    const Output<Node>& arg,
-    size_t output_index,
-    const shared_ptr<runtime::cpu::LayoutDescriptor>& layout)
-    : Op({arg})
-    , arg_output_index(output_index)
-    , output_layout(layout)
-{
-    runtime::cpu::mkldnn_utils::assign_mkldnn_kernel(this);
-    constructor_validate_and_infer_types();
-}
-
 void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
 {
-    const auto& arg = get_argument(0);
+    Input<Node> arg = input(0);
 
-    const auto& arg_tensor = arg->get_output_tensor_ptr(arg_output_index);
+    shared_ptr<descriptor::Tensor> arg_tensor = arg.get_tensor_ptr();
     const auto& arg_layout = arg_tensor->get_tensor_layout();
 
     if (!arg_layout)
@@ -65,5 +56,5 @@ void runtime::cpu::op::ConvertLayout::validate_and_infer_types()
     }
 
     set_output_type(0, output_layout->get_element_type(), output_layout->get_shape());
-    get_output_tensor_ptr()->set_tensor_layout(output_layout);
+    get_output_tensor_ptr(0)->set_tensor_layout(output_layout);
 }

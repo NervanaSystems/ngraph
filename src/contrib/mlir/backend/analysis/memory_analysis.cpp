@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #include "memory_analysis.hpp"
 #include "contrib/mlir/core/compiler.hpp"
@@ -26,7 +28,6 @@
 #include <llvm/ADT/DenseSet.h>
 #include <map>
 #include <mlir/EDSC/Builders.h>
-#include <mlir/EDSC/Intrinsics.h>
 #include <mlir/IR/AffineExpr.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
@@ -331,7 +332,8 @@ namespace
                 //    b. is unassigned a buffer/offset, and the computed offset is valid
                 //       (non-negative), and no other live tensor aliases the chunk
                 //       of the buffer we want to assign.
-                //       To achieve this, we need to track buffer->{tensor,offset,size} and
+                //       To achieve this, we need to track buffer->{tensor,offset,size}
+                //       and
                 //       perform the check
                 //
                 // Example:
@@ -340,8 +342,10 @@ namespace
                 // R2   = ...
                 // V2   = Concat    R0{0, 0}, S1 {0,16}, R2{0,32}
                 //
-                // For the first concat, we could use the assignment of S1 (from second concat)
-                // to define assignments for S0 and S2, and since R0, R2 are dead, no live tensors
+                // For the first concat, we could use the assignment of S1 (from second
+                // concat)
+                // to define assignments for S0 and S2, and since R0, R2 are dead, no live
+                // tensors
                 // alias into the buffer, and the assignment is valid.
                 //
                 // On the other hand, the following is invalid
@@ -350,7 +354,8 @@ namespace
                 // V1   = Concat    S0(?), S1(0,16), S2(?)
                 // R2   = ...
                 // V2   = Concat    R0, S1{0,16}, R2
-                // Reusing assignment of S1 in the first concat will cause S0 and R0 to alias.
+                // Reusing assignment of S1 in the first concat will cause S0 and R0 to
+                // alias.
                 // And since R0 is alive the write to R0 will overwrite S0.
                 // For now, assign only if all srcs have no prior assignments
                 for (auto opnd : op->getOperands())
@@ -373,7 +378,8 @@ namespace
             bufferSize = getBufferSizeForOperand(op->getResult(0), baseOffset);
             m_memAnalysis->setBufferSize(bufferId, bufferSize);
 
-            // Update analysis map. No need to check if we are over-writing previous entries
+            // Update analysis map. No need to check if we are over-writing previous
+            // entries
             // since they should all match.
             m_memAnalysis->setBufferInfo(op, {bufferId, baseOffset});
             for (auto i = 0; i < op->getNumOperands(); i++)
@@ -398,7 +404,8 @@ namespace
             // dst is output, bail out
             return;
         };
-        // pick a dead operand that is not an input or output with the least number of uses
+        // pick a dead operand that is not an input or output with the least number of
+        // uses
         for (auto opnd : op->getOperands())
         {
             if (!m_liveness.isLive(opnd) && !isInputOrOutputValue(opnd))
@@ -446,9 +453,12 @@ namespace
         auto defOp = value.getDefiningOp();
         // If no defining op, then this is a block arg, skip operand
         //
-        // TODO: This check is assuming single BB function, improve to handle control-flow.
-        // In which case, we have to track block args to all pred branches that feed them,
-        // all the way up to the initial def, if any, or entry block arg. This is preferably
+        // TODO: This check is assuming single BB function, improve to handle
+        // control-flow.
+        // In which case, we have to track block args to all pred branches that feed
+        // them,
+        // all the way up to the initial def, if any, or entry block arg. This is
+        // preferably
         // done as a pre-pass to capture all inputs/output values.
         if (!defOp)
         {
@@ -456,7 +466,8 @@ namespace
         }
         // If the defined value is an output of the sub-graph, cannot do it in place
         //
-        // TODO: Improve to support control flow. Track value use-chain along branches/block-args,
+        // TODO: Improve to support control flow. Track value use-chain along
+        // branches/block-args,
         // if we hit a use in a return, it is an output value.
         for (auto& use : value.getUses())
         {
@@ -586,7 +597,7 @@ namespace
 
         return bufferSize;
     }
-}
+} // namespace
 
 namespace mlir
 {
@@ -597,4 +608,4 @@ namespace mlir
         NGRAPH_CHECK(moduleOp != nullptr, "Expecting FuncOp for anaylsis");
         memoryAssignment.run(&moduleOp);
     }
-} // namespace mlir
+}

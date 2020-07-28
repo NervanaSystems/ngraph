@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #pragma once
 
@@ -41,20 +42,21 @@ namespace ngraph
                 /// Global Initialization for all CPU backends
                 static void init();
 
-                MLIRCPUBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
+                MLIRCPUBackend(::mlir::OwningModuleRef& module, ::mlir::MLIRContext& context)
                     : MLIRBackend(module, context)
                 {
                     NGRAPH_CHECK(initialized,
                                  "Cannot instantiate CPU MLIR backend without initialization");
                 }
 
-                MLIRCPUBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
+                MLIRCPUBackend(::mlir::ModuleOp& moduleOp, ::mlir::MLIRContext& context)
                     : MLIRBackend(moduleOp, context)
                 {
                     NGRAPH_CHECK(initialized,
                                  "Cannot instantiate CPU MLIR backend without initialization");
                 }
-                // codegen LLVM dialect from nGraph dialect applying CPU backend optimization passes
+                // codegen LLVM dialect from nGraph dialect applying CPU backend optimization
+                // passes
                 void codegen() override;
 
             private:
@@ -76,11 +78,15 @@ namespace ngraph
 
                 // LLVM target machine to be used by this MLIR compiler instance to retrieve
                 // information about target features.
-                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its own
-                // target machine for compilation internally. This target machine is for non-JIT
-                // related stuff. We should change OrcJIT API so that we can pass an external target
+                // TODO: Note that, unfortunatelly, MLIR/OrcJIT execution engine creates its
+                // own
+                // target machine for compilation internally. This target machine is for
+                // non-JIT
+                // related stuff. We should change OrcJIT API so that we can pass an external
+                // target
                 // machine or configuration flags.
-                // TODO: Move target machine to external nGraph backend when multiple backends start
+                // TODO: Move target machine to external nGraph backend when multiple backends
+                // start
                 // to use MLIR.
                 static std::unique_ptr<llvm::TargetMachine> targetMachine;
                 // Global initialization done for CPU backend

@@ -32,10 +32,11 @@ namespace ngraph
             {
             public:
                 CPUOpAnnotations() {}
-                bool is_mkldnn_op() { return m_mkldnn_op; }
-                void set_mkldnn_op(bool val) { m_mkldnn_op = val; }
+                bool is_dnnl_op() { return m_dnnl_op; }
+                void set_dnnl_op(bool val) { m_dnnl_op = val; }
+
             private:
-                bool m_mkldnn_op = false;
+                bool m_dnnl_op = false;
             };
 
             std::function<std::shared_ptr<ngraph::op::util::OpAnnotations>(void)>

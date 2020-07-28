@@ -45,16 +45,16 @@ bool pattern::op::Label::match_value(Matcher* matcher,
 {
     if (m_predicate(graph_value))
     {
-        auto& pattern_map = matcher->get_pattern_value_map();
+        auto& pvm = matcher->get_pattern_value_map();
         auto saved = matcher->start_match();
         matcher->add_node(graph_value);
-        if (pattern_map.count(shared_from_this()))
+        if (pvm.count(shared_from_this()))
         {
-            return saved.finish(pattern_map[shared_from_this()] == graph_value);
+            return saved.finish(pvm[shared_from_this()] == graph_value);
         }
         else
         {
-            pattern_map[shared_from_this()] = graph_value;
+            pvm[shared_from_this()] = graph_value;
             return saved.finish(matcher->match_value(input_value(0), graph_value));
         }
     }

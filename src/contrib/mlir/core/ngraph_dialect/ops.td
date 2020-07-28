@@ -23,6 +23,7 @@
 
 include "core/ngraph_dialect/ops_interfaces.td"
 include "mlir/IR/OpBase.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
 // nGraph Dialect operations definitions
 //

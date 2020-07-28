@@ -17,6 +17,9 @@
 #include "ngraph/op/sum.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/op/broadcast.hpp"
+#include "ngraph/runtime/host_tensor.hpp"
+#include "ngraph/runtime/reference/sum.hpp"
+#include "ngraph/shape_util.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -35,7 +38,7 @@ op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Sum::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::Sum::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Sum>(new_args.at(0), new_args.at(1));
@@ -53,5 +56,52 @@ void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
 shared_ptr<Node> op::v0::Sum::get_default_value() const
 {
-    return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+    return ngraph::make_constant_from_string("0", get_output_element_type(0), get_output_shape(0));
+}
+
+namespace
+{
+    template <element::Type_t ET>
+    bool evaluate(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        out->set_shape(reduce(arg->get_shape(), axes));
+        runtime::reference::sum(
+            arg->get_data_ptr<ET>(), out->get_data_ptr<ET>(), arg->get_shape(), axes);
+        return true;
+    }
+
+    bool evaluate_sum(const HostTensorPtr& arg, const HostTensorPtr& out, const AxisSet& axes)
+    {
+        bool rc = true;
+        switch (arg->get_element_type())
+        {
+            TYPE_CASE(i8)(arg, out, axes);
+            break;
+            TYPE_CASE(i16)(arg, out, axes);
+            break;
+            TYPE_CASE(i32)(arg, out, axes);
+            break;
+            TYPE_CASE(i64)(arg, out, axes);
+            break;
+            TYPE_CASE(u8)(arg, out, axes);
+            break;
+            TYPE_CASE(u16)(arg, out, axes);
+            break;
+            TYPE_CASE(u32)(arg, out, axes);
+            break;
+            TYPE_CASE(u64)(arg, out, axes);
+            break;
+            TYPE_CASE(f32)(arg, out, axes);
+            break;
+            TYPE_CASE(f64)(arg, out, axes);
+            break;
+        default: rc = false; break;
+        }
+        return rc;
+    }
+}
+
+bool op::v0::Sum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+{
+    return evaluate_sum(inputs[0], outputs[0], get_reduction_axes());
 }

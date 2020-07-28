@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #include "ng_dialect_fused_ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
@@ -23,7 +24,7 @@
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 
 #include <llvm/IR/Module.h>
-#include <mlir/Dialect/AffineOps/EDSC/Builders.h>
+#include <mlir/Dialect/Affine/EDSC/Builders.h>
 #include <mlir/IR/IntegerSet.h>
 #include <mlir/IR/MLIRContext.h>
 #include <mlir/IR/StandardTypes.h>
@@ -33,9 +34,9 @@
 
 #include <iostream>
 
+using llvm::ArrayRef;
 using llvm::SmallVector;
 using llvm::StringRef;
-using llvm::ArrayRef;
 
 using namespace ngraph;
 using namespace mlir;
@@ -73,27 +74,30 @@ namespace mlir
 }
 namespace
 {
-    class NgDialectFusedOpsPass : public mlir::ModulePass<NgDialectFusedOpsPass>
+    class NgDialectFusedOpsPass : public PassWrapper<NgDialectFusedOpsPass, OperationPass<ModuleOp>>
     {
     public:
         NgDialectFusedOpsPass() {}
+
     private:
-        void runOnModule() override;
+        void runOnOperation() override;
     };
 }
 
-void NgDialectFusedOpsPass::runOnModule()
+void NgDialectFusedOpsPass::runOnOperation()
 {
     OwningRewritePatternList patterns;
     mlir::populateWithGenerated(&getContext(), &patterns);
 
-    // Gather functions to be processed. Note that new functions will be added to module as part
-    // of the function signature conversion so we have to collect the original ones before hand.
-    SmallVector<FuncOp, 2> origFuncOps(getModule().getOps<FuncOp>());
+    // Gather functions to be processed. Note that new functions will be added to
+    // module as part
+    // of the function signature conversion so we have to collect the original
+    // ones before hand.
+    SmallVector<FuncOp, 2> origFuncOps(getOperation().getOps<FuncOp>());
 
     for (auto origFunc : origFuncOps)
     {
-        applyPatternsGreedily(origFunc, patterns);
+        applyPatternsAndFoldGreedily(origFunc, patterns);
     }
 }
 

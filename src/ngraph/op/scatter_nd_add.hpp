@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/util/scatter_nd_base.hpp"
 
 namespace ngraph
 {
@@ -25,7 +26,7 @@ namespace ngraph
         namespace v0
         {
             /// \brief Add updates to slices from inputs addressed by indices
-            class NGRAPH_API ScatterNDAdd : public Op
+            class NGRAPH_API ScatterNDAdd : public util::ScatterNDBase
             {
             public:
                 static constexpr NodeTypeInfo type_info{"ScatterNDAdd", 0};
@@ -37,21 +38,12 @@ namespace ngraph
                 ScatterNDAdd(const Output<Node>& inputs,
                              const Output<Node>& indices,
                              const Output<Node>& updates)
-                    : Op({inputs, indices, updates})
+                    : util::ScatterNDBase(inputs, indices, updates)
                 {
-                    constructor_validate_and_infer_types();
-                }
-
-                void validate_and_infer_types() override;
-
-                void generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                       const OutputVector& /* deltas */) override
-                {
-                    throw ngraph_error("Not yet implemented");
                 }
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
         using v0::ScatterNDAdd;

@@ -39,8 +39,8 @@ namespace ngraph
                 auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
                 auto broadcast_axes = broadcast->get_broadcast_axes();
 
-                auto arg_shape = broadcast->get_argument(0)->get_shape();
-                out_shape = broadcast->get_shape();
+                auto arg_shape = broadcast->get_input_shape(0);
+                out_shape = broadcast->get_output_shape(0);
 
                 // TODO(jmenon): Shape transformations, rank reduction etc. needs to be general
                 // and not in any one builder.
@@ -127,7 +127,7 @@ namespace ngraph
 
                 if (broadcast_axes.empty())
                 {
-                    size = shape_size(out_shape) * broadcast->get_element_type().size();
+                    size = shape_size(out_shape) * broadcast->get_output_element_type(0).size();
                     return;
                 }
 
@@ -173,7 +173,7 @@ namespace ngraph
                 if (kernel)
                 {
                     functor = [kernel, expanded_input_shape, out_shape](
-                        const std::vector<void*> inputs, std::vector<void*> outputs) {
+                                  const std::vector<void*> inputs, std::vector<void*> outputs) {
                         kernel(inputs[0], outputs[0], expanded_input_shape, out_shape, 0);
                     };
                 }
@@ -221,7 +221,7 @@ namespace ngraph
                 else
                 {
                     functor = [&, size, arg_buffer_index, out_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
+                                  CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
                         memcpy(ctx->buffer_data[out_buffer_index],
                                ctx->buffer_data[arg_buffer_index],
                                size);

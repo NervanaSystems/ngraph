@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include "constant_folding.hpp"
-#include "ngraph/op/experimental/transpose.hpp"
+#include "ngraph/op/transpose.hpp"
 #include "ngraph/runtime/opt_kernel/reshape.hpp"
 
 using namespace std;
@@ -26,18 +26,19 @@ shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> consta
                                                  shared_ptr<op::Constant> constant_perm,
                                                  shared_ptr<op::Transpose> transpose)
 {
-    const Shape& out_shape = transpose->get_shape();
+    const Shape& out_shape = transpose->get_output_shape(0);
     auto input_order = constant_perm->get_axis_vector_val();
 
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
 
     runtime::opt_kernel::reshape<T>(constant_data->get_data_ptr<T>(),
                                     buffer.get_ptr<T>(),
-                                    constant_data->get_shape(),
+                                    constant_data->get_output_shape(0),
                                     input_order,
                                     out_shape);
 
-    return make_shared<op::Constant>(transpose->get_element_type(), out_shape, buffer.get_ptr<T>());
+    return make_shared<op::Constant>(
+        transpose->get_output_element_type(0), out_shape, buffer.get_ptr<T>());
 }
 
 void pass::ConstantFolding::construct_constant_transpose()
@@ -59,12 +60,16 @@ void pass::ConstantFolding::construct_constant_transpose()
             static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
         auto constant_perm_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_perm_label]);
-        auto transpose_match = static_pointer_cast<op::Transpose>(m.get_match_root());
+        auto transpose_match = m.get_match_root_as<op::Transpose>();
+        NGRAPH_CHECK(transpose_match,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::Transpose`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(transpose_match));
 
         std::shared_ptr<Node> replacement;
-        auto type = transpose_match->get_element_type();
+        auto type = transpose_match->get_output_element_type(0);
         switch (type)
         {
         case element::Type_t::undefined:
@@ -132,7 +137,7 @@ void pass::ConstantFolding::construct_constant_transpose()
             break;
         }
 
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 

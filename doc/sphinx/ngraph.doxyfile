@@ -19,7 +19,7 @@ PROJECT_NAME     = "Intel® nGraph Compiler stack and API docs"
 PROJECT_BRIEF    = "Code reference for the Intel® nGraph C++ Library"
 
 OUTPUT_DIRECTORY = @CMAKE_CURRENT_BINARY_DIR@
-INPUT            = @CMAKE_SOURCE_DIR@/src
+INPUT            = @PROJECT_SOURCE_DIR@/src
 RECURSIVE        = YES
 EXCLUDE_PATTERNS = json.hpp
 

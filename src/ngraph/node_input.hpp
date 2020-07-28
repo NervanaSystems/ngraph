@@ -37,7 +37,7 @@ namespace ngraph
 
     /// \brief A handle for one of a node's inputs.
     template <>
-    class Input<Node>
+    class NGRAPH_API Input<Node>
     {
     public:
         /// \brief Constructs a Input.

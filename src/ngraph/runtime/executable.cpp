@@ -24,13 +24,9 @@
 using namespace std;
 using namespace ngraph;
 
-runtime::Executable::Executable()
-{
-}
+runtime::Executable::Executable() {}
 
-runtime::Executable::~Executable()
-{
-}
+runtime::Executable::~Executable() {}
 
 bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                              const vector<shared_ptr<runtime::Tensor>>& inputs)
@@ -61,12 +57,13 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
 
     for (size_t i = 0; i < parameters.size(); i++)
     {
-        if (parameters[i]->get_element_type().is_static() &&
-            parameters[i]->get_element_type() != inputs[i]->get_element_type())
+        if (parameters[i]->get_output_element_type(0).is_static() &&
+            parameters[i]->get_output_element_type(0) != inputs[i]->get_element_type())
         {
             stringstream ss;
             ss << "Input " << i << " type '" << inputs[i]->get_element_type()
-               << "' does not match Parameter type '" << parameters[i]->get_element_type() << "'";
+               << "' does not match Parameter type '" << parameters[i]->get_output_element_type(0)
+               << "'";
             throw runtime_error(ss.str());
         }
         if (!(parameters[i]->get_output_partial_shape(0).relaxes(inputs[i]->get_partial_shape())))
@@ -81,19 +78,20 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
     for (size_t i = 0; i < results.size(); i++)
     {
         if (outputs[i]->get_element_type().is_static() &&
-            results[i]->get_element_type().is_static() &&
-            results[i]->get_element_type() != outputs[i]->get_element_type())
+            results[i]->get_output_element_type(0).is_static() &&
+            results[i]->get_output_element_type(0) != outputs[i]->get_element_type())
         {
             stringstream ss;
             ss << "Output " << i << " type '" << outputs[i]->get_element_type()
-               << "' does not match Result type '" << results[i]->get_element_type() << "'";
+               << "' does not match Result type '" << results[i]->get_output_element_type(0) << "'";
             throw runtime_error(ss.str());
         }
-        if (!(outputs[i]->get_partial_shape()).relaxes(results[i]->get_output_partial_shape(0)))
+        if (!outputs[i]->get_partial_shape().relaxes(results[i]->get_output_partial_shape(0)))
         {
             stringstream ss;
             ss << "Output " << i << " shape " << outputs[i]->get_partial_shape()
-               << " does not match Result shape " << results[i]->get_output_partial_shape(0);
+               << " does not match max Result shape "
+               << results[i]->get_output_partial_shape(0).get_max_shape();
             throw runtime_error(ss.str());
         }
     }

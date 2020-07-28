@@ -21,6 +21,7 @@
 #include "ngraph/cpio.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/runtime/aligned_buffer.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -42,25 +43,25 @@ TEST(cpio, read)
 
     {
         int index = 0;
-        auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
-        reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
-        string content = string(data.get(), file_info[index].get_size());
+        runtime::AlignedBuffer data(file_info[index].get_size());
+        reader.read(file_info[index].get_name(), data.get_ptr(), file_info[index].get_size());
+        string content = string(data.get_ptr<char>(), file_info[index].get_size());
         EXPECT_STREQ(content.c_str(), "12345");
     }
 
     {
         int index = 1;
-        auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
-        reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
-        string content = string(data.get(), file_info[index].get_size());
+        runtime::AlignedBuffer data(file_info[index].get_size());
+        reader.read(file_info[index].get_name(), data.get_ptr(), file_info[index].get_size());
+        string content = string(data.get_ptr<char>(), file_info[index].get_size());
         EXPECT_STREQ(content.c_str(), "this is a test");
     }
 
     {
         int index = 2;
-        auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
-        reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
-        string content = string(data.get(), file_info[index].get_size());
+        runtime::AlignedBuffer data(file_info[index].get_size());
+        reader.read(file_info[index].get_name(), data.get_ptr(), file_info[index].get_size());
+        string content = string(data.get_ptr<char>(), file_info[index].get_size());
         EXPECT_STREQ(content.c_str(), "the quick brown fox jumped over the lazy dog");
     }
 }
@@ -92,17 +93,17 @@ TEST(cpio, write)
 
         {
             int index = 0;
-            auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
-            reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
-            string content = string(data.get(), file_info[index].get_size());
+            runtime::AlignedBuffer data(file_info[index].get_size());
+            reader.read(file_info[index].get_name(), data.get_ptr(), file_info[index].get_size());
+            string content = string(data.get_ptr<char>(), file_info[index].get_size());
             EXPECT_STREQ(content.c_str(), s1.c_str());
         }
 
         {
             int index = 1;
-            auto data = unique_ptr<char>(new char[file_info[index].get_size()]);
-            reader.read(file_info[index].get_name(), data.get(), file_info[index].get_size());
-            string content = string(data.get(), file_info[index].get_size());
+            runtime::AlignedBuffer data(file_info[index].get_size());
+            reader.read(file_info[index].get_name(), data.get_ptr(), file_info[index].get_size());
+            string content = string(data.get_ptr<char>(), file_info[index].get_size());
             EXPECT_STREQ(content.c_str(), s2.c_str());
         }
     }

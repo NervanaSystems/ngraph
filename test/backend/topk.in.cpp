@@ -24,7 +24,6 @@
 
 #include "gtest/gtest.h"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/result.hpp"
 #include "ngraph/op/topk.hpp"
@@ -63,11 +62,11 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_resnet50)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true);
     auto C = make_shared<op::TopK>(A, 1, element::i32, 1, true);
-    auto out5_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out5_index = make_shared<op::GetOutputElement>(B, 0);
-    auto out1_value = make_shared<op::GetOutputElement>(C, 1);
-    auto out1_index = make_shared<op::GetOutputElement>(C, 0);
-    auto f = make_shared<Function>(NodeVector{out5_value, out5_index, out1_value, out1_index},
+    auto out5_value = B->output(1);
+    auto out5_index = B->output(0);
+    auto out1_value = C->output(1);
+    auto out1_index = C->output(0);
+    auto f = make_shared<Function>(OutputVector{out5_value, out5_index, out1_value, out1_index},
                                    ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -130,10 +129,10 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_none)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::NONE);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::none);
+    auto out_value = B->output(1);
+    auto out_index = B->output(0);
+    auto f = make_shared<Function>(OutputVector{out_value, out_index}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -181,10 +180,10 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_none)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::NONE);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::none);
+    auto out_value = B->output(1);
+    auto out_index = B->output(0);
+    auto f = make_shared<Function>(OutputVector{out_value, out_index}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -232,10 +231,10 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_value)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::SORT_VALUES);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::value);
+    auto out_value = B->output(1);
+    auto out_index = B->output(0);
+    auto f = make_shared<Function>(OutputVector{out_value, out_index}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -279,10 +278,10 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_value)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::SORT_VALUES);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::value);
+    auto out_value = B->output(1);
+    auto out_index = B->output(0);
+    auto f = make_shared<Function>(OutputVector{out_value, out_index}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -330,10 +329,10 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_max_sort_index)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::SORT_INDICES);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, true, op::TopK::SortType::index);
+    auto out_value = B->output(1);
+    auto out_index = B->output(0);
+    auto f = make_shared<Function>(OutputVector{out_value, out_index}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -381,10 +380,10 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_min_sort_index)
     Shape shape{128, 1000};
     Shape rshape{128, 5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::SORT_INDICES);
-    auto out_value = make_shared<op::GetOutputElement>(B, 1);
-    auto out_index = make_shared<op::GetOutputElement>(B, 0);
-    auto f = make_shared<Function>(NodeVector{out_value, out_index}, ParameterVector{A});
+    auto B = make_shared<op::TopK>(A, 1, element::i32, 5, false, op::TopK::SortType::index);
+    auto out_value = B->output(1);
+    auto out_index = B->output(0);
+    auto f = make_shared<Function>(OutputVector{out_value, out_index}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -433,8 +432,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_all)
     Shape rshape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 0, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -459,8 +458,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_i32_max_all)
     Shape rshape{6};
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 0, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -484,8 +483,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_partial)
     Shape rshape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 3, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -510,8 +509,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_max_one)
     Shape rshape{1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 1, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -536,8 +535,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_all)
     Shape rshape{6};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 0, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -562,8 +561,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_partial)
     Shape rshape{3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 3, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -588,8 +587,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_1d_min_one)
     Shape rshape{1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 1, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -614,8 +613,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_all)
     Shape rshape{2, 3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 0, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -641,8 +640,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_int64)
     Shape rshape{2, 3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i64, 0, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -668,8 +667,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_5d_max_partial)
     Shape rshape{2, 2, 3, 2, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 2, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -732,8 +731,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_partial)
     Shape rshape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 2, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -759,8 +758,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_max_one)
     Shape rshape{2, 1, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 1, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -785,8 +784,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_all)
     Shape rshape{2, 3, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 0, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -812,8 +811,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_partial)
     Shape rshape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 2, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -839,8 +838,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_min_one)
     Shape rshape{2, 1, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 1, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -865,8 +864,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_all)
     Shape rshape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 4, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -892,8 +891,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_partial)
     Shape rshape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 2, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -919,8 +918,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one)
     Shape rshape{1, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 1, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -945,8 +944,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_max_one_with_equal_values)
     Shape rshape{2, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 1, true);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -971,8 +970,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_all)
     Shape rshape{4, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 4, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -998,8 +997,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_partial)
     Shape rshape{2, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 2, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1024,8 +1023,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_2d_min_one)
     Shape rshape{1, 3};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 0, element::i32, 1, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto f1 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto f1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1051,17 +1050,15 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_max)
 
     auto B = make_shared<op::TopK>(A, 1, element::i32, 10, true);
 
-    auto interp_f_0 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto interp_f_1 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto interp_f_0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto interp_f_1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
     auto gpu_f_0 = ngraph::clone_function(*interp_f_0);
     auto gpu_f_1 = ngraph::clone_function(*interp_f_1);
 
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         iota(tensor_val.begin(), tensor_val.end(), 0.0f);
         args.push_back(tensor_val);
     }
@@ -1090,17 +1087,15 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_large_input_min)
 
     auto B = make_shared<op::TopK>(A, 1, element::i32, 10, false);
 
-    auto interp_f_0 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
-    auto interp_f_1 =
-        make_shared<Function>(make_shared<op::GetOutputElement>(B, 1), ParameterVector{A});
+    auto interp_f_0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
+    auto interp_f_1 = make_shared<Function>(OutputVector{B->output(1)}, ParameterVector{A});
     auto gpu_f_0 = ngraph::clone_function(*interp_f_0);
     auto gpu_f_1 = ngraph::clone_function(*interp_f_1);
 
     vector<vector<float>> args;
     for (shared_ptr<op::Parameter> param : interp_f_0->get_parameters())
     {
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         iota(tensor_val.begin(), tensor_val.end(), 0.0f);
         args.push_back(tensor_val);
     }
@@ -1128,7 +1123,7 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_3d_single_output)
     Shape rshape{2, 2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::TopK>(A, 1, element::i32, 2, false);
-    auto f0 = make_shared<Function>(make_shared<op::GetOutputElement>(B, 0), ParameterVector{A});
+    auto f0 = make_shared<Function>(OutputVector{B->output(0)}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -1146,8 +1141,8 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_strings)
 {
     const auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
     const auto k = op::Constant::create(element::i64, Shape{}, {1});
-    EXPECT_THROW(op::v1::TopK(data, k, 0, "invalid_mode", "max"), ngraph::NodeValidationFailure);
-    EXPECT_THROW(op::v1::TopK(data, k, 0, "index", "invalid_sort"), ngraph::NodeValidationFailure);
+    EXPECT_THROW(op::v1::TopK(data, k, 0, "max", "invalid_mode"), ngraph::CheckFailure);
+    EXPECT_THROW(op::v1::TopK(data, k, 0, "invalid_sort", "index"), ngraph::CheckFailure);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_k)
@@ -1156,14 +1151,14 @@ NGRAPH_TEST(${BACKEND_NAME}, topk_v1_invalid_k)
 
     // K must be a scalar
     const auto k_non_scalar = op::Constant::create(element::i64, Shape{2}, {1, 2});
-    EXPECT_THROW(op::v1::TopK(data, k_non_scalar, 0, "index", "max"),
+    EXPECT_THROW(op::v1::TopK(data, k_non_scalar, 0, "max", "index"),
                  ngraph::NodeValidationFailure);
 
     // K can only be i8, i32 or i64
     const auto k_float = op::Constant::create(element::f32, Shape{}, {1.0f});
-    EXPECT_THROW(op::v1::TopK(data, k_float, 0, "index", "max"), ngraph::NodeValidationFailure);
+    EXPECT_THROW(op::v1::TopK(data, k_float, 0, "max", "index"), ngraph::NodeValidationFailure);
 
     // the value of K must be positive
     const auto k_negative = op::Constant::create(element::i8, Shape{}, {-1});
-    EXPECT_THROW(op::v1::TopK(data, k_negative, 0, "index", "max"), ngraph::NodeValidationFailure);
+    EXPECT_THROW(op::v1::TopK(data, k_negative, 0, "max", "index"), ngraph::NodeValidationFailure);
 }

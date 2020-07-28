@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include <mkldnn.hpp>
+#include <dnnl.hpp>
 
 #include "cpu_backend_visibility.h"
 #include "ngraph/descriptor/layout/tensor_layout.hpp"
@@ -46,31 +46,27 @@ namespace ngraph
                 void set_strides(Strides& strides) { m_strides = strides; }
                 bool operator==(const TensorLayout& other) const override;
 
-                const mkldnn::memory::desc& get_mkldnn_md() const { return m_mkldnn_md; }
-                void set_mkldnn_md(const mkldnn::memory::desc& md);
-                bool is_mkldnn_layout() const
+                const dnnl::memory::desc& get_dnnl_md() const { return m_dnnl_md; }
+                void set_dnnl_md(const dnnl::memory::desc& md);
+                bool is_dnnl_layout() const
                 {
-#if MKLDNN_VERSION_MAJOR < 1
-                    return m_mkldnn_md.data.format != mkldnn::memory::format::format_undef;
-#else
-                    return static_cast<mkldnn::memory::format_kind>(m_mkldnn_md.data.format_kind) !=
-                           mkldnn::memory::format_kind::undef;
-#endif
+                    return static_cast<dnnl::memory::format_kind>(m_dnnl_md.data.format_kind) !=
+                           dnnl::memory::format_kind::undef;
                 }
                 bool is_row_major_layout();
 
-                static const mkldnn::memory::desc DummyDesc;
+                static const dnnl::memory::desc DummyDesc;
 
             private:
                 // Native row-major layout for now
                 Strides m_strides;
                 size_t m_offset;
 
-                // For tensor views that can be tracked with MKLDNN memory
+                // For tensor views that can be tracked with DNNL memory
                 // descriptors, this holds the physical layout information
                 // Otherwise, physical layout is assumed to be in row-major
                 // format represented by m_strides
-                mkldnn::memory::desc m_mkldnn_md;
+                dnnl::memory::desc m_dnnl_md;
                 size_t m_buffer_size;
             };
 

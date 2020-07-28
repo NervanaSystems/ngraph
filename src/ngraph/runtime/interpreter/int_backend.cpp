@@ -16,7 +16,6 @@
 
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 
-#include "ngraph/component_manager.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
@@ -36,13 +35,16 @@ extern "C" INTERPRETER_BACKEND_API void ngraph_register_interpreter_backend()
     });
 }
 
-runtime::interpreter::INTBackend::INTBackend()
-{
-}
+runtime::interpreter::INTBackend::INTBackend() {}
 
 runtime::interpreter::INTBackend::INTBackend(const vector<string>& unsupported_op_name_list)
     : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
 {
+}
+
+shared_ptr<runtime::Tensor> runtime::interpreter::INTBackend::create_tensor()
+{
+    return make_shared<runtime::HostTensor>();
 }
 
 shared_ptr<runtime::Tensor>
@@ -98,17 +100,4 @@ std::shared_ptr<runtime::Executable> runtime::interpreter::INTBackend::load(istr
         }
     }
     return exec;
-}
-
-bool runtime::interpreter::INTBackend::set_config(const map<string, string>& config, string& error)
-{
-    bool rc = false;
-    auto it = config.find("test_echo");
-    error = "";
-    if (it != config.end())
-    {
-        error = it->second;
-        rc = true;
-    }
-    return rc;
 }

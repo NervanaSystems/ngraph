@@ -17,7 +17,6 @@
 #include <numeric>
 
 #include "constant_folding.hpp"
-#include "ngraph/op/experimental/dyn_reshape.hpp"
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/runtime/reference/reshape.hpp"
 #include "ngraph/type/element_type.hpp"
@@ -30,8 +29,8 @@ shared_ptr<op::Constant> fold_constant_dyn_reshape(shared_ptr<op::Constant> cons
                                                    R dyn_reshape)
 {
     // v1::Reshape and v0::DynReshape do not allow data transposes.
-    return make_shared<op::Constant>(dyn_reshape->get_element_type(),
-                                     dyn_reshape->get_shape(),
+    return make_shared<op::Constant>(dyn_reshape->get_output_element_type(0),
+                                     dyn_reshape->get_output_shape(0),
                                      constant_data->get_data_ptr<T>());
 }
 
@@ -39,7 +38,7 @@ template <typename R>
 std::shared_ptr<Node> do_fold(R dyn_reshape_match, shared_ptr<op::Constant> constant_data_match)
 {
     std::shared_ptr<Node> replacement;
-    auto type = dyn_reshape_match->get_element_type();
+    auto type = dyn_reshape_match->get_output_element_type(0);
     switch (type)
     {
     case element::Type_t::undefined:
@@ -103,8 +102,6 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
     auto reshape_v1 =
         make_shared<op::v1::Reshape>(constant_data_label, constant_shape_label, false);
-    auto dyn_reshape =
-        make_shared<op::v0::DynReshape>(constant_data_label, constant_shape_label, false);
 
     // Note: No need to capture or consider constant_shape_label, because
     // shape propagation will have transferred the info to dyn_reshape's
@@ -122,7 +119,7 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         shared_ptr<Node> replacement;
         replacement =
             do_fold(static_pointer_cast<op::v1::Reshape>(match_root), constant_data_match);
-        replace_node(m.get_match_root(), replacement);
+        m.get_match_value().replace(replacement->output(0));
         return true;
     };
 
@@ -130,26 +127,4 @@ void pass::ConstantFolding::construct_constant_dyn_reshape()
         make_shared<pattern::Matcher>(reshape_v1, "ConstantFolding.ConstantReshapev1");
     this->add_matcher(
         reshape_v1_matcher, constant_reshape_v1_callback, PassProperty::CHANGE_DYNAMIC_STATE);
-
-    auto constant_dyn_reshape_callback = [constant_data_label](pattern::Matcher& m) {
-        NGRAPH_DEBUG << "In callback for constant_dyn_reshape_callback against node = "
-                     << m.get_match_root()->get_name();
-
-        auto pattern_map = m.get_pattern_map();
-
-        auto constant_data_match =
-            static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
-        auto match_root = m.get_match_root();
-        NGRAPH_CHECK(revalidate_and_ensure_static(match_root));
-        shared_ptr<Node> replacement;
-        replacement =
-            do_fold(static_pointer_cast<op::v0::DynReshape>(match_root), constant_data_match);
-        replace_node(m.get_match_root(), replacement);
-        return true;
-    };
-
-    auto dyn_reshape_matcher =
-        make_shared<pattern::Matcher>(dyn_reshape, "ConstantFolding.ConstantDynReshape");
-    this->add_matcher(
-        dyn_reshape_matcher, constant_dyn_reshape_callback, PassProperty::CHANGE_DYNAMIC_STATE);
 }

@@ -30,11 +30,11 @@
 
 #include "benchmark.hpp"
 #include "benchmark_pipelined.hpp"
-#include "ngraph/component_manager.hpp"
 #include "ngraph/distributed.hpp"
 #include "ngraph/except.hpp"
 #include "ngraph/file_util.hpp"
 #include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -44,27 +44,9 @@
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/utils.hpp"
-#endif
 
 using namespace std;
 using namespace ngraph;
-
-static void configure_static_backends()
-{
-#ifdef NGRAPH_CPU_ENABLE
-    ngraph_register_cpu_backend();
-#endif
-#ifdef NGRAPH_INTERPRETER_ENABLE
-    ngraph_register_interpreter_backend();
-#endif
-
-#ifdef NGRAPH_MLIR_ENABLE
-    // Initialize MLIR
-    ngraph::runtime::ngmlir::initializeNGraphMLIR();
-#endif
-}
 
 class PerfShape : public ngraph::runtime::PerformanceCounter
 {
@@ -184,10 +166,11 @@ int main(int argc, char** argv)
     bool visualize = false;
     int warmup_iterations = 1;
     bool copy_data = true;
+    bool dump_results = false;
     bool dot_file = false;
     bool double_buffer = false;
+    string visualize_output_format = ".pdf";
 
-    configure_static_backends();
     for (int i = 1; i < argc; i++)
     {
         string arg = argv[i];
@@ -223,9 +206,23 @@ int main(int argc, char** argv)
         {
             copy_data = false;
         }
+        else if (arg == "--dump_results")
+        {
+            dump_results = true;
+        }
         else if (arg == "-v" || arg == "--visualize")
         {
             visualize = true;
+            if (i < argc - 1)
+            {
+                arg = argv[i + 1];
+                if (arg[0] != '-')
+                {
+                    // Option for -v arg
+                    visualize_output_format = (arg[0] == '.' ? arg : "." + arg);
+                    i++; // Skip to the next arg
+                }
+            }
         }
         else if (arg == "--dot")
         {
@@ -289,9 +286,11 @@ OPTIONS
         -i|--iterations           Iterations (default: 10)
         -s|--statistics           Display op statistics
         -v|--visualize            Visualize a model (WARNING: requires Graphviz installed)
+                                  Default pdf but takes optional arg to specify output extension
         --timing_detail           Gather detailed timing
         -w|--warmup_iterations    Number of warm-up iterations
         --no_copy_data            Disable copy of input/result data every iteration
+        --dump_results            Dump result tensors to standard output.
         --dot                     Generate Graphviz dot file
         --double_buffer           Double buffer inputs and outputs
 )###";
@@ -330,11 +329,13 @@ OPTIONS
             if (visualize)
             {
                 shared_ptr<Function> f = deserialize(model);
-                auto model_file_name = ngraph::file_util::get_file_name(model) +
-                                       (dot_file ? ".dot" : ngraph::file_util::get_file_ext(model));
+                string file_name = ngraph::file_util::get_file_name(model);
+                string file_ext = ngraph::file_util::get_file_ext(model);
+                file_name = file_name.substr(0, file_name.size() - file_ext.size());
+                string model_file_name = file_name + (dot_file ? ".dot" : visualize_output_format);
 
                 pass::Manager pass_manager;
-                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, true);
+                pass_manager.register_pass<pass::VisualizeTree>(model_file_name, nullptr, dot_file);
                 pass_manager.run_passes(f);
             }
 
@@ -378,7 +379,7 @@ OPTIONS
                     {
                         total_constant_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t const_size = node->output(0).get_element_type().size();
+                        size_t const_size = node->get_output_element_type(0).size();
                         if (shape.size() == 0)
                         {
                             total_constant_bytes += const_size;
@@ -393,7 +394,7 @@ OPTIONS
                     {
                         total_parameter_count++;
                         const Shape& shape = node->get_output_shape(0);
-                        size_t size = node->output(0).get_element_type().size() * shape_size(shape);
+                        size_t size = node->get_output_element_type(0).size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
                     else if (is_type<op::Result>(node))
@@ -441,13 +442,20 @@ OPTIONS
                 vector<runtime::PerformanceCounter> perf_data;
                 if (double_buffer)
                 {
+                    NGRAPH_CHECK(!dump_results,
+                                 "'dump_results' not implemented in double buffer mode");
                     perf_data = run_benchmark_pipelined(
                         f, backend, iterations, timing_detail, warmup_iterations, copy_data);
                 }
                 else
                 {
-                    perf_data = run_benchmark(
-                        f, backend, iterations, timing_detail, warmup_iterations, copy_data);
+                    perf_data = run_benchmark(f,
+                                              backend,
+                                              iterations,
+                                              timing_detail,
+                                              warmup_iterations,
+                                              copy_data,
+                                              dump_results);
                 }
                 auto perf_shape = to_perf_shape(f, perf_data);
                 aggregate_perf_data.insert(

@@ -86,9 +86,8 @@ namespace ngraph
                 {
                     m_deformable_group = deformable_group;
                 }
-
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
             protected:
                 Strides m_strides;

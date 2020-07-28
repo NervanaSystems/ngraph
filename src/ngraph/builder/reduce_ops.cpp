@@ -26,7 +26,7 @@
 #include "ngraph/op/sqrt.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/opsets/opset1.hpp"
+#include "ngraph/opset/opset1.hpp"
 #include "ngraph/util.hpp"
 
 namespace ngraph
@@ -41,6 +41,19 @@ namespace ngraph
                 N *= shape[a];
             }
             return N;
+        }
+
+        std::shared_ptr<Node> get_num_elements(const Output<Node>& value,
+                                               const Output<Node>& reduction_axes)
+        {
+            const auto value_shape = std::make_shared<ngraph::opset1::ShapeOf>(value);
+            const auto dim_values = std::make_shared<ngraph::opset1::Gather>(
+                value_shape,
+                reduction_axes,
+                ngraph::opset1::Constant::create(element::i64, {}, {0}));
+
+            return std::make_shared<ngraph::opset1::ReduceProd>(
+                dim_values, ngraph::opset1::Constant::create(element::i64, {}, {0}));
         }
 
         std::shared_ptr<Node> l2_norm(const Output<Node>& node, const AxisSet& reduction_axes)
@@ -58,7 +71,7 @@ namespace ngraph
             auto N = get_num_elements(value.get_shape(), reduction_axes);
             const auto& et = value.get_element_type();
 
-            auto divisor = op::Constant::create(et, xsum->get_shape(), {N});
+            auto divisor = op::Constant::create(et, xsum->get_output_shape(0), {N});
 
             return (xsum / divisor)->add_provenance_group_members_above({value});
         }
@@ -87,7 +100,7 @@ namespace ngraph
                 reshape[i] = 1;
             }
 
-            ngraph::AxisVector order = ngraph::get_default_order(mu->get_shape());
+            ngraph::AxisVector order = ngraph::get_default_order(mu->get_output_shape(0));
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 
@@ -116,18 +129,26 @@ namespace ngraph
                                                     const AxisSet& reduction_axes,
                                                     bool keep_dims)
         {
-            const auto xsum = std::make_shared<ngraph::opset1::ReduceSum>(
-                value,
-                ngraph::opset1::Constant::create(
-                    element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector()),
-                keep_dims);
+            std::shared_ptr<Node> elems_number;
+            const auto value_elem_type = value.get_element_type();
+            const auto reduction_axes_const = ngraph::opset1::Constant::create(
+                element::i64, Shape{reduction_axes.size()}, reduction_axes.to_vector());
+            const auto value_elems_sum =
+                std::make_shared<ngraph::opset1::ReduceSum>(value, reduction_axes_const, keep_dims);
+            if (value.get_partial_shape().is_static())
+            {
+                const auto elems_number_value = get_num_elements(value.get_shape(), reduction_axes);
+                elems_number = ngraph::opset1::Constant::create(
+                    value_elem_type, Shape{}, {elems_number_value});
+            }
+            else
+            {
+                elems_number = get_num_elements(value, reduction_axes_const);
+                elems_number =
+                    std::make_shared<ngraph::opset1::Convert>(elems_number, value_elem_type);
+            }
 
-            const auto N = get_num_elements(value.get_shape(), reduction_axes);
-            const auto& et = value.get_element_type();
-
-            const auto divisor = ngraph::opset1::Constant::create(et, Shape{}, {N});
-
-            return std::make_shared<ngraph::opset1::Divide>(xsum, divisor)
+            return std::make_shared<ngraph::opset1::Divide>(value_elems_sum, elems_number)
                 ->add_provenance_group_members_above({value});
         }
 
@@ -162,6 +183,5 @@ namespace ngraph
             }
             return result->add_provenance_group_members_above({value});
         }
-
-    } // namespace builder
-} // namespace ngraph
+    }
+}

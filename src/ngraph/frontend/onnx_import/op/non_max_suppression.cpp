@@ -21,6 +21,7 @@
 #include "ngraph/op/non_max_suppression.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "non_max_suppression.hpp"
+#include "utils/reshape.hpp"
 
 namespace ngraph
 {
@@ -30,19 +31,20 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector non_max_suppression(const Node& node)
+                OutputVector non_max_suppression(const Node& node)
                 {
                     // TODO: this op will not be tested until at least
                     //       a reference implementation is added
 
                     const auto ng_inputs = node.get_ng_inputs();
-                    const std::shared_ptr<ngraph::Node> boxes = ng_inputs.at(0);
-                    const std::shared_ptr<ngraph::Node> scores = ng_inputs.at(1);
+                    const Output<ngraph::Node> boxes = ng_inputs.at(0);
+                    const Output<ngraph::Node> scores = ng_inputs.at(1);
 
-                    std::shared_ptr<ngraph::Node> max_output_boxes_per_class;
+                    Output<ngraph::Node> max_output_boxes_per_class;
                     if (ng_inputs.size() > 2)
                     {
-                        max_output_boxes_per_class = ng_inputs.at(2);
+                        max_output_boxes_per_class =
+                            ngraph::onnx_import::reshape::interpret_as_scalar(ng_inputs.at(2));
                     }
                     else
                     {
@@ -50,10 +52,11 @@ namespace ngraph
                             default_opset::Constant::create(element::i64, Shape{}, {0});
                     }
 
-                    std::shared_ptr<ngraph::Node> iou_threshold;
+                    Output<ngraph::Node> iou_threshold;
                     if (ng_inputs.size() > 3)
                     {
-                        iou_threshold = ng_inputs.at(3);
+                        iou_threshold =
+                            ngraph::onnx_import::reshape::interpret_as_scalar(ng_inputs.at(3));
                     }
                     else
                     {
@@ -61,10 +64,11 @@ namespace ngraph
                             default_opset::Constant::create(element::f32, Shape{}, {.0f});
                     }
 
-                    std::shared_ptr<ngraph::Node> score_threshold;
+                    Output<ngraph::Node> score_threshold;
                     if (ng_inputs.size() > 4)
                     {
-                        score_threshold = ng_inputs.at(4);
+                        score_threshold =
+                            ngraph::onnx_import::reshape::interpret_as_scalar(ng_inputs.at(4));
                     }
                     else
                     {
@@ -92,11 +96,7 @@ namespace ngraph
                         box_encoding,
                         false)};
                 }
-
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}

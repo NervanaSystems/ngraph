@@ -41,7 +41,6 @@
 #include "ngraph/op/exp.hpp"
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/floor.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_eq.hpp"
 #include "ngraph/op/less.hpp"
@@ -114,7 +113,7 @@
 #include "ngraph/type/element_type.hpp"
 #include "ngraph/util.hpp"
 
-#ifdef NGRAPH_MLIR_ENABLE
+#ifdef NGRAPH_CPU_MLIR_ENABLE
 #include "contrib/mlir/core/compiler.hpp"
 #endif
 
@@ -401,7 +400,7 @@ namespace ngraph
                     auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
                     auto functor = [&, kernel, element_count, arg0_buffer_index, out0_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
+                                       CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                         kernel(ctx->buffer_data[arg0_buffer_index],
                                ctx->buffer_data[out0_buffer_index],
                                element_count,
@@ -522,10 +521,10 @@ namespace ngraph
                 const ngraph::op::Divide* divop = static_cast<const ngraph::op::Divide*>(node);
                 std::function<void(void*, void*, void*, size_t, bool, int)> kernel;
                 SELECT_KERNEL(kernel, node->get_input_element_type(0), runtime::cpu::kernel::divide)
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
                 bool pythondiv = divop->is_pythondiv();
                 auto functor = [&, kernel, element_count, pythondiv](
-                    const std::vector<void*>& inputs, std::vector<void*>& outputs) {
+                                   const std::vector<void*>& inputs, std::vector<void*>& outputs) {
                     kernel(inputs[0], inputs[1], outputs[0], element_count, pythondiv, 0);
                 };
                 return functor;
@@ -564,7 +563,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Sqrt)
             {
-                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::sqrt);
+                BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::checked_sqrt);
             }
 
             template <>
@@ -624,7 +623,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::And)
             {
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
                                                   std::vector<void*>& outputs) {
@@ -637,7 +636,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Or)
             {
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
                                                   std::vector<void*>& outputs) {
@@ -650,7 +649,7 @@ namespace ngraph
             template <>
             NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Xor)
             {
-                auto element_count = shape_size(node->get_shape());
+                auto element_count = shape_size(node->get_output_shape(0));
 
                 auto functor = [&, element_count](const std::vector<void*>& inputs,
                                                   std::vector<void*>& outputs) {

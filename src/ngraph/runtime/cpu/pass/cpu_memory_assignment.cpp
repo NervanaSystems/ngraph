@@ -18,7 +18,6 @@
 #include <sstream>
 
 #include "ngraph/log.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
 #include "ngraph/op/constant.hpp"
 #include "ngraph/op/slice.hpp"
@@ -55,8 +54,7 @@ size_t runtime::cpu::pass::CPUMemoryAssignment::get_bufferID(descriptor::Tensor*
     return tensor_it->second;
 }
 
-void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
-    std::vector<std::shared_ptr<Node>> nodes)
+void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(NodeVector nodes)
 {
     for (shared_ptr<Node> node : nodes)
     {
@@ -88,7 +86,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(
                     // start from the last concat
                     if (found_last_concat)
                     {
-                        auto output_tensor = &concat->output(0).get_tensor();
+                        auto output_tensor = &concat->get_output_tensor(0);
                         auto output_bufferID = get_bufferID(output_tensor);
 
                         auto offset = output_tensor->get_pool_offset();
@@ -136,7 +134,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Ou
     auto op = output.get_node_shared_ptr();
     if (is_type<op::Concat>(op))
     {
-        auto output_tensor = &op->output(0).get_tensor();
+        auto output_tensor = &op->get_output_tensor(0);
         auto output_bufferID = get_bufferID(output_tensor);
 
         auto offset = output_tensor->get_pool_offset();
@@ -214,8 +212,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Ou
 }
 
 // slice
-void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
-    std::vector<std::shared_ptr<Node>> nodes)
+void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(NodeVector nodes)
 {
     for (shared_ptr<Node>& node : nodes)
     {
@@ -230,7 +227,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                     auto arg = input.get_node_shared_ptr();
                     auto input_tensor = &input.get_tensor();
                     auto input_bufferID = get_bufferID(input_tensor);
-                    auto output_tensor = &slice->output(0).get_tensor();
+                    auto output_tensor = &slice->get_output_tensor(0);
                     auto output_bufferID = get_bufferID(output_tensor);
 
                     // same set, in place slice allowed
@@ -249,7 +246,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(
                         }
 
                         auto old_offset = output_tensor->get_pool_offset();
-                        offset += slice->get_element_type().size() * start;
+                        offset += slice->get_output_element_type(0).size() * start;
                         output_tensor->set_pool_offset(offset);
                         NGRAPH_DEBUG
                             << "cpu_memory_assignment: slice, change offset, old offset is "
@@ -328,7 +325,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(const Inp
 // new set is created. bufferID_to_tensorSets maps bufferID to the pair of TensorRole and buffer
 // set. TensorRole is INPUT, CONSTANT, OUTPUT, or INTERMEDIATE, which tells from where the memory
 // buffer comes. tensor_to_bufferID maps tensor to the ID of the buffer set it belongs to.
-void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shared_ptr<Node>>& ops)
+void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(NodeVector& ops)
 {
     unordered_set<descriptor::Tensor*> in_place_slice_chain;
     size_t count = 0;
@@ -337,7 +334,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         const shared_ptr<Node>& node = *it;
         if (node->is_parameter())
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                 TensorRole::INPUT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -346,7 +343,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         }
         else if (is_type<op::Constant>(node))
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                 TensorRole::CONSTANT, unordered_set<descriptor::Tensor*>({output_tensor}));
             m_bufferID_to_tensorSets[count] = ele;
@@ -355,7 +352,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
         }
         else if (node->is_output())
         {
-            auto output_tensor = &node->output(0).get_tensor();
+            auto output_tensor = &node->get_output_tensor(0);
             auto input_tensor = &node->get_input_tensor(0);
             auto bufferID = get_bufferID(input_tensor);
             NGRAPH_CHECK(bufferID <= count);
@@ -397,7 +394,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
                     // in place concat
                     if (is_type<op::Concat>(node))
                     {
-                        auto output_tensor = &node->output(0).get_tensor();
+                        auto output_tensor = &node->get_output_tensor(0);
                         auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
                             TensorRole::INTERMEDIATE,
                             unordered_set<descriptor::Tensor*>({output_tensor}));
@@ -544,8 +541,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(vector<shar
     }
 }
 
-void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(
-    std::vector<std::shared_ptr<Node>>& ops)
+void runtime::cpu::pass::CPUMemoryAssignment::liveness_analysis(NodeVector& ops)
 {
     auto find_role = [](TensorRole tensor_role) -> string {
         switch (tensor_role)

@@ -40,7 +40,7 @@ namespace ngraph
                                  bool with_relu = false);
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override
+                    clone_with_new_inputs(const OutputVector& new_args) const override
                 {
                     check_new_args_count(this, new_args);
                     return std::make_shared<QuantizedDotBias>(new_args.at(0),
@@ -52,6 +52,7 @@ namespace ngraph
                 }
                 bool with_relu() const { return m_with_relu; }
                 bool requantize() const { return m_requantize; }
+
             protected:
                 bool m_requantize;
                 bool m_with_relu;

@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #pragma once
 
@@ -31,13 +32,13 @@ namespace ngraph
             class MLIRBackend
             {
             public:
-                MLIRBackend(mlir::OwningModuleRef& module, mlir::MLIRContext& context)
+                MLIRBackend(::mlir::OwningModuleRef& module, ::mlir::MLIRContext& context)
                     : m_module(std::move(module))
                     , m_context(context)
                 {
                 }
 
-                MLIRBackend(mlir::ModuleOp& moduleOp, mlir::MLIRContext& context)
+                MLIRBackend(::mlir::ModuleOp& moduleOp, ::mlir::MLIRContext& context)
                     : m_module(moduleOp)
                     , m_context(context)
                 {
@@ -46,10 +47,11 @@ namespace ngraph
                 /// Generate code for the module
                 virtual void codegen() = 0;
 
-                mlir::OwningModuleRef& get_module() { return m_module; }
+                ::mlir::OwningModuleRef& get_module() { return m_module; }
+
             protected:
-                mlir::OwningModuleRef m_module;
-                mlir::MLIRContext& m_context;
+                ::mlir::OwningModuleRef m_module;
+                ::mlir::MLIRContext& m_context;
             };
         }
     }

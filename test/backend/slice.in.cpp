@@ -33,7 +33,7 @@ NGRAPH_TEST(${BACKEND_NAME}, slice_scalar)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     Shape shape_r{};
     auto r = make_shared<op::Slice>(A, Coordinate{}, Coordinate{});
-    auto f = make_shared<Function>(r, ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(r), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

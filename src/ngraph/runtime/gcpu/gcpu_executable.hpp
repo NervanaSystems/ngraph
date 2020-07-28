@@ -51,7 +51,7 @@ namespace ngraph
                 enum class OP_TYPEID
                 {
 #define NGRAPH_OP(NAME, NAMESPACE) NAME,
-#include "ngraph/opsets/opset0_tbl.hpp"
+#include "ngraph/opset/opset0_tbl.hpp"
 #undef NGRAPH_OP
                     UnknownOp
                 };
@@ -89,27 +89,27 @@ private:
 #endif
         switch (INTExecutable::get_typeid(node))
         {
-        case ngraph::runtime::interpreter::OP_TYPEID::Broadcast:
+        case ngraph::runtime::interpreter::OP_TYPEID::Broadcast_v0:
         {
             const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
             Shape in_shape = node.get_input_shape(0);
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
-            reference::broadcast<T>(args[0]->get_data_ptr<const T>(),
-                                    out[0]->get_data_ptr<T>(),
-                                    in_shape,
-                                    out_shape,
-                                    broadcast_axes);
+            opt_kernel::broadcast<T>(args[0]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<T>(),
+                                     in_shape,
+                                     out_shape,
+                                     broadcast_axes);
             break;
         }
-        case ngraph::runtime::interpreter::OP_TYPEID::Reshape:
+        case ngraph::runtime::interpreter::OP_TYPEID::Reshape_v0:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
-            reference::reshape(args[0]->get_data_ptr<const T>(),
-                               out[0]->get_data_ptr<T>(),
-                               node.get_input_shape(0),
-                               reshape->get_input_order(),
-                               node.get_output_shape(0));
+            opt_kernel::reshape(args[0]->get_data_ptr<const T>(),
+                                out[0]->get_data_ptr<T>(),
+                                node.get_input_shape(0),
+                                reshape->get_input_order(),
+                                node.get_output_shape(0));
             break;
         }
         default: op_engine<T>(node, out, args); break;

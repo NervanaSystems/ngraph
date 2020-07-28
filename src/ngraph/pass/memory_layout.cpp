@@ -18,9 +18,7 @@
 #include <sstream>
 
 #include "ngraph/log.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/op/concat.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/slice.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
@@ -65,7 +63,6 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
                         // For destructive kernel, this should be the last use
                         // Non-destructive kernels can pass through if memory sharing is disabled
                         if ((node->liveness_free_list.count(input) != 0 ||
-                             is_type<op::GetOutputElement>(node) ||
                              (m_disable_memory_sharing && !oi_pair.destructive &&
                               !input_node->is_parameter() && !input_node->is_constant())) &&
                             node->liveness_new_list.count(output) != 0)

@@ -90,8 +90,7 @@ namespace ngraph
                 // Create functor that will be executed to compile and run this CompiledKernel.
                 // Note that 'double_ptr_args' must be captured by value since it's a local var.
                 auto functor = [node, buffer_indices, shape_vec, strides_vec](
-                    CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-
+                                   CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
                     // MLIR requires a list of type-erased pointer to arguments. Tensors must have
                     // been allocated at this point so we can get rid of the extra reference.
                     std::vector<MemRefArg> mem_ref_arg_vec;
@@ -127,7 +126,7 @@ namespace ngraph
                             ctx->mlir_runtimes.find(compiled_kernel)->second;
                         // Grab the context and initialize a core compiler
                         mlir::MLIRContext& context = mlir_runtime.get_context();
-                        MLIRCompiler mlir_compiler(compiled_kernel, context);
+                        MLIRCompiler mlir_compiler(compiled_kernel->get_function(), context);
                         // Compile to NG dialect
                         mlir_compiler.compile();
                         // Grab a context and initialize a CPU backend using same context
@@ -136,13 +135,13 @@ namespace ngraph
                         mlir_backend.codegen();
                         // Store module into runtime, and invoke.
                         mlir_runtime.set_module(mlir_backend.get_module());
-                        mlir_runtime.run(mem_ref_arg_vec);
+                        mlir_runtime.run(mem_ref_arg_vec, true /*firstIteration*/);
                     }
                     else
                     {
                         // We have found a cached runtime, just invoke.
                         MLIRCPURuntime& mlir_runtime = it->second;
-                        mlir_runtime.run(mem_ref_arg_vec);
+                        mlir_runtime.run(mem_ref_arg_vec, false /*firstIteration*/);
                     }
                 };
 

@@ -27,11 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector qlinear_matmul(const Node& node);
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector qlinear_matmul(const Node& node);
+            }
+        }
+    }
+}

@@ -33,13 +33,16 @@ extern "C" GCPU_BACKEND_API void ngraph_register_gcpu_backend()
     });
 }
 
-runtime::gcpu::GCPUBackend::GCPUBackend()
-{
-}
+runtime::gcpu::GCPUBackend::GCPUBackend() {}
 
 runtime::gcpu::GCPUBackend::GCPUBackend(const vector<string>& unsupported_op_name_list)
     : m_unsupported_op_name_list{unsupported_op_name_list.begin(), unsupported_op_name_list.end()}
 {
+}
+
+shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor()
+{
+    return make_shared<runtime::HostTensor>();
 }
 
 shared_ptr<runtime::Tensor> runtime::gcpu::GCPUBackend::create_tensor(const element::Type& type,

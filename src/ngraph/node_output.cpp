@@ -15,8 +15,9 @@
 //*****************************************************************************
 
 #include "ngraph/node_output.hpp"
+#include "ngraph/graph_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/get_output_element.hpp"
 
 namespace ngraph
 {
@@ -44,11 +45,6 @@ namespace ngraph
     }
     Node* Output<Node>::get_node() const { return m_node.get(); }
     std::shared_ptr<Node> Output<Node>::get_node_shared_ptr() const { return m_node; }
-    std::shared_ptr<Node> Output<Node>::as_single_output_node(bool for_get_output_element) const
-    {
-        return m_node->get_output_as_single_output_node(m_index, for_get_output_element);
-    }
-
     size_t Output<Node>::get_index() const { return m_index; }
     descriptor::Tensor& Output<Node>::get_tensor() const
     {
@@ -90,11 +86,7 @@ namespace ngraph
     {
         for (auto& input : get_target_inputs())
         {
-            // GOEs are used as handles in passes
-            if (!is_type<op::GetOutputElement>(input.get_node()))
-            {
-                input.replace_source_output(replacement);
-            }
+            input.replace_source_output(replacement);
         }
     }
 
@@ -113,6 +105,21 @@ namespace ngraph
     }
     bool Output<Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<Node>::operator>=(const Output& other) const { return !(*this < other); }
+
+    NodeVector Output<Node>::get_users(bool check_is_used) const
+    {
+        NodeVector result;
+        for (auto input : get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
+        return result;
+    }
+
     Output<const Node>::Output(const Node* node, size_t index)
         : m_node(node->shared_from_this())
         , m_index(index)
@@ -184,17 +191,32 @@ namespace ngraph
     }
     bool Output<const Node>::operator<=(const Output& other) const { return !(*this > other); }
     bool Output<const Node>::operator>=(const Output& other) const { return !(*this < other); }
+
+    NodeVector Output<const Node>::get_users(bool check_is_used) const
+    {
+        NodeVector result;
+        for (auto input : get_target_inputs())
+        {
+            Node* input_node = input.get_node();
+            if (!check_is_used || is_used(input_node))
+            {
+                result.push_back(input_node->shared_from_this());
+            }
+        }
+        return result;
+    }
+
     std::ostream& operator<<(std::ostream& out, const Output<Node>& output)
     {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
+        // Convert Output<Node> to Output<const Node> so we only have one operator<< implementation
+        return out << Output<const Node>(static_cast<const Node*>(output.get_node()),
+                                         output.get_index());
     }
 
     std::ostream& operator<<(std::ostream& out, const Output<const Node>& output)
     {
-        return output.get_node()->write_description(out, 0) << "[" << output.get_index()
-                                                            << "]:" << output.get_element_type()
-                                                            << output.get_partial_shape();
+        return output.get_node()->write_description(out, 0)
+               << ".O(" << output.get_index() << "):" << output.get_element_type()
+               << output.get_partial_shape();
     }
 }

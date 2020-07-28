@@ -19,6 +19,7 @@
 #include <string>
 
 #include "ngraph/ngraph_visibility.hpp"
+#include "ngraph/node.hpp"
 #include "ngraph/type.hpp"
 
 namespace ngraph
@@ -30,6 +31,16 @@ namespace ngraph
     public:
         virtual ~Variant() {}
         virtual const VariantTypeInfo& get_type_info() const = 0;
+
+        virtual std::shared_ptr<ngraph::Variant> init(const std::shared_ptr<ngraph::Node>& node)
+        {
+            return nullptr;
+        }
+
+        virtual std::shared_ptr<ngraph::Variant> merge(const ngraph::NodeVector& nodes)
+        {
+            return nullptr;
+        }
     };
 
     template <typename VT>
@@ -45,6 +56,7 @@ namespace ngraph
         const value_type& get() const { return m_value; }
         value_type& get() { return m_value; }
         void set(const value_type& value) { m_value = value; }
+
     protected:
         value_type m_value;
     };
@@ -55,10 +67,9 @@ namespace ngraph
     };
 
     template <>
-    class VariantWrapper<std::string> : public VariantImpl<std::string>
+    class NGRAPH_API VariantWrapper<std::string> : public VariantImpl<std::string>
     {
     public:
-        NGRAPH_API
         static constexpr VariantTypeInfo type_info{"Variant::std::string", 0};
         const VariantTypeInfo& get_type_info() const override { return type_info; }
         VariantWrapper(const value_type& value)
@@ -68,10 +79,9 @@ namespace ngraph
     };
 
     template <>
-    class VariantWrapper<int64_t> : public VariantImpl<int64_t>
+    class NGRAPH_API VariantWrapper<int64_t> : public VariantImpl<int64_t>
     {
     public:
-        NGRAPH_API
         static constexpr VariantTypeInfo type_info{"Variant::int64_t", 0};
         const VariantTypeInfo& get_type_info() const override { return type_info; }
         VariantWrapper(const value_type& value)

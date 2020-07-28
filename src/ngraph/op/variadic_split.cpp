@@ -59,14 +59,14 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
         auto axis_input = input_value(1).get_node_shared_ptr();
         auto split_lengths_input = input_value(2).get_node_shared_ptr();
         auto data_shape = data.get_partial_shape();
-        auto data_type = data.get_element_type();
+        const auto& data_type = data.get_element_type();
 
         set_output_size(num_outputs);
-        if (data_shape.is_static() && axis_input->is_constant() &&
+        if (data_shape.rank().is_static() && axis_input->is_constant() &&
             split_lengths_input->is_constant())
         {
-            const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
-            auto axis_val = axis_input->cast_vector<int64_t>()[0];
+            const auto axis_input_constant = as_type_ptr<op::Constant>(axis_input);
+            auto axis_val = axis_input_constant->cast_vector<int64_t>()[0];
 
             // Adjust split axis in case of negatives
             int64_t axis = ngraph::normalize_axis(this, axis_val, data_shape.rank());
@@ -99,25 +99,31 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
                     sum_of_splits += split_lengths[i];
                 }
             }
+            auto data_shape_dims = vector<Dimension>{data.get_partial_shape()};
+            auto dimension_at_axis = data_shape_dims.at(axis);
 
-            if (negative_one > 0)
+            if (negative_one >= 0 && dimension_at_axis.is_static())
             {
-                split_lengths[negative_one] = data_shape[axis].get_length() - sum_of_splits;
+                split_lengths[negative_one] = dimension_at_axis.get_length() - sum_of_splits;
                 sum_of_splits += split_lengths[negative_one];
             }
-
-            NODE_VALIDATION_CHECK(this,
-                                  sum_of_splits == data_shape[axis].get_length(),
-                                  "Total length of splits: ",
-                                  sum_of_splits,
-                                  " must match the length of the chosen axis: ",
-                                  data_shape[axis].get_length());
+            if (data_shape[axis].is_static())
+            {
+                NODE_VALIDATION_CHECK(this,
+                                      sum_of_splits == data_shape[axis].get_length(),
+                                      "Total length of splits: ",
+                                      sum_of_splits,
+                                      " must match the length of the chosen axis: ",
+                                      data_shape[axis]);
+            }
 
             for (size_t output{0}; output < num_outputs; ++output)
             {
-                auto tmp_shape = data_shape.to_shape();
-                tmp_shape.at(axis) = split_lengths.at(output);
-                set_output_type(output, data_type, tmp_shape);
+                auto output_split_dim = split_lengths.at(output) == -1 ? Dimension::dynamic()
+                                                                       : split_lengths.at(output);
+                auto tmp_shape = data_shape_dims;
+                tmp_shape.at(axis) = output_split_dim;
+                set_output_type(output, data_type, PartialShape{tmp_shape});
             }
         }
         else
@@ -130,7 +136,7 @@ void ngraph::op::v1::VariadicSplit::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::v1::VariadicSplit::copy_with_new_args(const NodeVector& new_args) const
+shared_ptr<Node> op::v1::VariadicSplit::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<v1::VariadicSplit>(new_args.at(0), new_args.at(1), new_args.at(2));

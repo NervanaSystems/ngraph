@@ -17,6 +17,7 @@
 #pragma once
 
 #include "ngraph/op/op.hpp"
+#include "ngraph/op/parameter.hpp"
 
 namespace ngraph
 {
@@ -37,32 +38,35 @@ namespace ngraph
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 CompiledKernel() = default;
                 CompiledKernel(const NodeVector& node_list,
-                               const NodeVector& outputs,
-                               const NodeVector& args);
-                CompiledKernel(const OutputVector& node_list,
                                const OutputVector& outputs,
                                const OutputVector& args);
+                CompiledKernel(const std::shared_ptr<Function>& function, const OutputVector& args);
+
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const NodeVector& get_node_list() const { return m_node_list; }
-                const NodeVector& get_kernel_outputs() const { return m_output_nodes; }
-                // For node B inside CompiledKernel ck such that A->B and A is outside of ck:
-                // replace input to B with a dummy Parameter Op and add an entry to ck's
-                // m_input_map.
-                void encapsulate_nodes();
+                const OutputVector& get_kernel_outputs() const { return m_outputs; }
                 const std::unordered_map<std::shared_ptr<Node>, size_t>& get_input_map() const
                 {
                     return m_input_map;
                 }
                 void insert_to_input_map(std::shared_ptr<Node>, size_t);
 
+                std::shared_ptr<ngraph::Function> get_function();
+
             private:
+                // For node B inside CompiledKernel ck such that A->B and A is outside of ck:
+                // replace input to B with a dummy Parameter Op and add an entry to ck's
+                // m_input_map.
+                ParameterVector encapsulate_nodes();
+
                 NodeVector m_node_list;
-                NodeVector m_output_nodes;
+                OutputVector m_outputs;
                 // Used to store the information of internal nodes that have input coming from
                 // outside of CK
                 std::unordered_map<std::shared_ptr<Node>, size_t> m_input_map;
+                std::shared_ptr<ngraph::Function> m_function;
             };
         }
         using v0::CompiledKernel;

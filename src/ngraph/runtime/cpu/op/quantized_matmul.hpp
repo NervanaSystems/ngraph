@@ -36,15 +36,16 @@ namespace ngraph
                             const Output<Node>& scale,
                             const element::Type& output_type);
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override
+                clone_with_new_inputs(const OutputVector& new_args) const override
             {
                 check_new_args_count(this, new_args);
                 return std::make_shared<QuantizedMatmul>(
                     new_args.at(0), new_args.at(1), new_args.at(2), m_output_type);
             }
             const ngraph::element::Type& get_output_type() const { return m_output_type; }
+
         protected:
             ngraph::element::Type m_output_type;
         };
-    } // namespace op
-} // namespace ngraph
+    }
+}

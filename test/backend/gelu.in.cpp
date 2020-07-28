@@ -59,7 +59,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_f32)
     for (shared_ptr<op::Parameter> param : f->get_parameters())
     {
         auto name = param->get_name();
-        vector<float> tensor_val(shape_size(param->get_shape()));
+        vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
         args.push_back(tensor_val);
     }
@@ -128,7 +128,7 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f32)
     auto handle = backend->compile(f);
     handle->call_with_validate({result}, {a});
     EXPECT_TRUE(
-        test::all_close_f(input, read_vector<float>(result), DEFAULT_FLOAT_TOLERANCE_BITS + 6));
+        test::all_close_f(input, read_vector<float>(result), DEFAULT_FLOAT_TOLERANCE_BITS + 7));
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f64)

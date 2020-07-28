@@ -15,17 +15,17 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #pragma once
-
-#include "contrib/mlir/backend/backend.hpp"
 
 #include <memory>
 #include <mlir/ExecutionEngine/ExecutionEngine.h>
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Module.h>
 #include <mlir/IR/Types.h>
+#include "contrib/mlir/backend/backend.hpp"
 
 namespace ngraph
 {
@@ -40,24 +40,27 @@ namespace ngraph
                 std::vector<size_t> m_strides;
             };
 
-            /// Base class for an MLIR runtime. An MLIR runtime owns the MLIR Context and owns
-            /// the final compiled module. It supports invoking the module with specific arguments
+            /// Base class for an MLIR runtime. An MLIR runtime owns the MLIR Context and
+            /// owns
+            /// the final compiled module. It supports invoking the module with specific
+            /// arguments
             class MLIRRuntime
             {
             public:
                 /// Sets the MLIR module that this runtime will own
-                void set_module(mlir::OwningModuleRef& module) { m_module = std::move(module); }
+                void set_module(::mlir::OwningModuleRef& module) { m_module = std::move(module); }
                 /// Overload with module op
-                void set_module(mlir::ModuleOp& module) { m_module = module; }
+                void set_module(::mlir::ModuleOp& module) { m_module = module; }
                 /// Executes a pre-compiled subgraph
-                virtual void run(const std::vector<MemRefArg>& args) = 0;
+                virtual void run(const std::vector<MemRefArg>& args, bool firstIteration) = 0;
 
                 /// Get the MLIR module that this runtime owns
-                mlir::OwningModuleRef& get_module() { return m_module; }
-                mlir::MLIRContext& get_context() { return m_context; }
+                ::mlir::OwningModuleRef& get_module() { return m_module; }
+                ::mlir::MLIRContext& get_context() { return m_context; }
+
             protected:
-                mlir::OwningModuleRef m_module;
-                mlir::MLIRContext m_context;
+                ::mlir::OwningModuleRef m_module;
+                ::mlir::MLIRContext m_context;
             };
         }
     }

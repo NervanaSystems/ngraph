@@ -32,7 +32,7 @@ namespace ngraph
     }
 }
 
-class ngraph::pass::MemoryLayout : public FunctionPass
+class NGRAPH_API ngraph::pass::MemoryLayout : public FunctionPass
 {
 public:
     MemoryLayout(size_t alignment = 1, bool disable_memory_sharing = false);
@@ -43,7 +43,7 @@ private:
     bool m_disable_memory_sharing;
 };
 
-class ngraph::pass::MemoryManager
+class NGRAPH_API ngraph::pass::MemoryManager
 {
 public:
     enum class block_state
@@ -85,6 +85,7 @@ public:
     std::list<node>::const_iterator end() const { return m_node_list.cend(); }
     const std::list<node>& get_node_list() const { return m_node_list; }
     size_t max_allocated() const { return m_max_allocated; }
+
 private:
     size_t first_fit(size_t size);
     size_t best_fit(size_t size);

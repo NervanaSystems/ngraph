@@ -27,7 +27,6 @@
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
 #include "ngraph/op/batch_norm.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/visualize_tree.hpp"
@@ -49,14 +48,14 @@ class ControlDependencyOp : public ngraph::op::Op
 public:
     static constexpr NodeTypeInfo type_info{"ControlDependencyOp", 0};
     const NodeTypeInfo& get_type_info() const override { return type_info; }
-    virtual std::shared_ptr<Node> copy_with_new_args(const NodeVector& new_args) const override
+    virtual std::shared_ptr<Node> clone_with_new_inputs(const OutputVector& new_args) const override
     {
         auto clone = make_shared<ControlDependencyOp>(new_args, std::set<std::shared_ptr<Node>>{});
         return move(clone);
     }
 
-    ControlDependencyOp(const NodeVector& args, const std::set<std::shared_ptr<Node>>& deps)
-        : Op("ControlDependencyOp", args)
+    ControlDependencyOp(const OutputVector& args, const std::set<std::shared_ptr<Node>>& deps)
+        : Op(args)
     {
         if (args.size() == 0 && deps.size() == 0)
         {
@@ -70,12 +69,12 @@ public:
 
         if (args.size() != 0)
         {
-            set_output_type(0, args.at(0)->get_element_type(), args.at(0)->get_shape());
+            set_output_type(0, args.at(0).get_element_type(), args.at(0).get_shape());
         }
         else
         {
             auto dn = *(deps.begin());
-            set_output_type(0, dn->get_element_type(), dn->get_shape());
+            set_output_type(0, dn->get_output_element_type(0), dn->get_output_shape(0));
         }
     }
 };
@@ -87,7 +86,7 @@ TEST(control_dependencies, cdep_ops)
     auto B = make_shared<op::Parameter>(element::f32, Shape{});
     auto absn = make_shared<op::Abs>(A);
     auto cdop =
-        make_shared<ControlDependencyOp>(NodeVector{A}, std::set<std::shared_ptr<Node>>{absn});
+        make_shared<ControlDependencyOp>(OutputVector{A}, std::set<std::shared_ptr<Node>>{absn});
 
     auto f = make_shared<Function>(cdop, ParameterVector{A, B});
     test_ordered_ops(f, NodeVector{absn});
@@ -100,7 +99,7 @@ TEST(control_dependencies, two_cdep_ops)
     auto absn = make_shared<op::Abs>(A);
     auto C = make_shared<op::Parameter>(element::f32, Shape{});
     auto absn_c = make_shared<op::Abs>(C);
-    auto cdop = make_shared<ControlDependencyOp>(NodeVector{A},
+    auto cdop = make_shared<ControlDependencyOp>(OutputVector{A},
                                                  std::set<std::shared_ptr<Node>>{absn, absn_c});
 
     auto f = make_shared<Function>(cdop, ParameterVector{A, B, C});
@@ -113,7 +112,7 @@ TEST(control_dependencies, two_cdep_ops_op_on_top)
     auto absn = make_shared<op::Abs>(A);
     auto B = make_shared<op::Parameter>(element::f32, Shape{});
     auto absn_b = make_shared<op::Abs>(B);
-    auto cdop = make_shared<ControlDependencyOp>(NodeVector{A},
+    auto cdop = make_shared<ControlDependencyOp>(OutputVector{A},
                                                  std::set<std::shared_ptr<Node>>{absn, absn_b});
     auto absn_cdop = make_shared<op::Abs>(cdop);
 
@@ -126,7 +125,7 @@ TEST(control_dependencies, clone_function_cdop)
     auto A = make_shared<op::Parameter>(element::f32, Shape{});
     auto absn = make_shared<op::Abs>(A);
     auto cdop =
-        make_shared<ControlDependencyOp>(NodeVector{A}, std::set<std::shared_ptr<Node>>{absn});
+        make_shared<ControlDependencyOp>(OutputVector{A}, std::set<std::shared_ptr<Node>>{absn});
 
     auto f = make_shared<Function>(cdop, ParameterVector{A});
     test_ordered_ops(f, NodeVector{absn});
@@ -146,7 +145,7 @@ TEST(control_dependencies, clone_function_cdop_abs)
     auto absn = make_shared<op::Abs>(A);
     auto B = make_shared<op::Parameter>(element::f32, Shape{});
     auto absn_b = make_shared<op::Abs>(B);
-    auto cdop = make_shared<ControlDependencyOp>(NodeVector{A},
+    auto cdop = make_shared<ControlDependencyOp>(OutputVector{A},
                                                  std::set<std::shared_ptr<Node>>{absn, absn_b});
     auto absn_cdop = make_shared<op::Abs>(cdop);
 

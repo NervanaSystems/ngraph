@@ -28,7 +28,7 @@ namespace ngraph
         // The first output is equivalent to what MaxPool produces
         // The second one contains the indices of the maximum numbers
         // for each window in input (arg)
-        // These indices are used by MKLDNN for a back propagation pass
+        // These indices are used by DNNL for a back propagation pass
         class MaxPoolWithIndices : public Op
         {
         public:
@@ -42,7 +42,7 @@ namespace ngraph
                                                const Shape& padding_above);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
@@ -50,7 +50,8 @@ namespace ngraph
             const Shape& get_padding_above() const { return m_padding_above; }
             virtual std::shared_ptr<Node> get_default_value() const override
             {
-                return ngraph::make_constant_from_string("0", get_element_type(), get_shape());
+                return ngraph::make_constant_from_string(
+                    "0", get_output_element_type(0), get_output_shape(0));
             }
 
         protected:
@@ -64,7 +65,7 @@ namespace ngraph
         };
 
         // MaxPoolWithIndicesBackprop takes MaxPoolWithIndices' outputs and
-        // pass the indices directly to MKLDNN to avoid max indices recomputation
+        // pass the indices directly to DNNL to avoid max indices recomputation
         class MaxPoolWithIndicesBackprop : public Op
         {
         public:
@@ -79,12 +80,13 @@ namespace ngraph
                                                        const Shape& padding_above);
 
             virtual std::shared_ptr<Node>
-                copy_with_new_args(const NodeVector& new_args) const override;
+                clone_with_new_inputs(const OutputVector& new_args) const override;
 
             const Shape& get_window_shape() const { return m_window_shape; }
             const Strides& get_window_movement_strides() const { return m_window_movement_strides; }
             const Shape& get_padding_below() const { return m_padding_below; }
             const Shape& get_padding_above() const { return m_padding_above; }
+
         protected:
             Shape m_window_shape;
             Strides m_window_movement_strides;

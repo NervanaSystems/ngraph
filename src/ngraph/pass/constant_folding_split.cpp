@@ -17,7 +17,7 @@
 #include "constant_folding.hpp"
 #include "ngraph/builder/split.hpp"
 #include "ngraph/op/constant.hpp"
-#include "ngraph/op/fused/split.hpp"
+#include "ngraph/op/split.hpp"
 #include "ngraph/validation_util.hpp"
 
 using namespace std;
@@ -38,7 +38,9 @@ void pass::ConstantFolding::construct_constant_split()
 
         const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
         const auto axis_node = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-        const auto split = static_pointer_cast<op::v1::Split>(m.get_match_root());
+        const auto split = m.get_match_root_as<op::v1::Split>();
+        NGRAPH_CHECK(
+            split, "match root node ", *m.get_match_root(), " not of type `op::v1::Split`");
 
         const auto axis_val = axis_node->cast_vector<int64_t>()[0];
         const auto norm_axis_val = ngraph::normalize_axis(
@@ -48,7 +50,7 @@ void pass::ConstantFolding::construct_constant_split()
         int index = 0;
         for (auto& output : split->outputs())
         {
-            output.replace(slices[index++]->output(0));
+            output.replace(slices[index++]);
         }
         split->outputs().clear();
         construct_constant_slice();

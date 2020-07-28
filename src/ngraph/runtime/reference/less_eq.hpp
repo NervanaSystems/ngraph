@@ -18,6 +18,10 @@
 
 #include <cstddef>
 
+#include "ngraph/op/util/attr_types.hpp"
+#include "ngraph/runtime/reference/autobroadcast_binop.hpp"
+#include "ngraph/shape.hpp"
+
 namespace ngraph
 {
     namespace runtime
@@ -36,10 +40,10 @@ namespace ngraph
                 }
             }
 
-            template <typename T>
+            template <typename T, typename U>
             void less_eq(const T* arg0,
                          const T* arg1,
-                         char* out,
+                         U* out,
                          const Shape& arg0_shape,
                          const Shape& arg1_shape,
                          const op::AutoBroadcastSpec& broadcast_spec)

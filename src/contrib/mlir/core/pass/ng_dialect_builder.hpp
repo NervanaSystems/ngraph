@@ -15,7 +15,8 @@
 //*****************************************************************************
 
 // NOTE: This file follows nGraph format style.
-// Follows nGraph naming convention for public APIs only, else MLIR naming convention.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
 
 #pragma once
 
@@ -27,14 +28,12 @@
 
 #include <mlir/Pass/Pass.h>
 
-using namespace ngraph::runtime::ngmlir;
-
 namespace ngraph
 {
     namespace pass
     {
         std::unique_ptr<mlir::Pass>
-            createNgDialectConversionPass(const ngraph::op::CompiledKernel* compiledKernel,
+            createNgDialectConversionPass(std::shared_ptr<ngraph::Function> function,
                                           mlir::MLIRContext* context);
     }
 }

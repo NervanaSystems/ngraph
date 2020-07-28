@@ -80,15 +80,15 @@ namespace ngraph
                 const CoordinateDiff& get_padding_below() const { return m_padding_below; }
                 const CoordinateDiff& get_padding_above() const { return m_padding_above; }
                 const Strides& get_data_dilation_strides() const { return m_data_dilation_strides; }
-                std::shared_ptr<Node> get_filters() { return get_argument(1); }
-                std::shared_ptr<Node> get_data_batch() { return get_argument(0); }
+                Output<Node> get_filters() { return input_value(1); }
+                Output<Node> get_data_batch() { return input_value(0); }
                 const ngraph::element::Type& get_output_type() const { return m_output_type; }
                 const ngraph::AxisSet& get_input_axes() const { return m_input_axes; }
                 const ngraph::AxisSet& get_filter_axes() const { return m_filter_axes; }
                 const ngraph::AxisSet& get_output_axes() const { return m_output_axes; }
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

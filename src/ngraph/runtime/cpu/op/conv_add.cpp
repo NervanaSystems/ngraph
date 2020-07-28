@@ -19,7 +19,6 @@
 #include "conv_add.hpp"
 
 #include "ngraph/op/convolution.hpp"
-#include "ngraph/op/get_output_element.hpp"
 #include "ngraph/util.hpp"
 
 using namespace std;
@@ -44,7 +43,7 @@ constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
 op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
                                    const Output<Node>& sum_input,
                                    bool with_relu)
-    : Op({conv->input(0).get_source_output(), conv->input(1).get_source_output(), sum_input})
+    : Op({conv->input_value(0), conv->input_value(1), sum_input})
     , m_window_movement_strides(conv->get_window_movement_strides())
     , m_window_dilation_strides(conv->get_window_dilation_strides())
     , m_padding_below(conv->get_padding_below())
@@ -54,7 +53,7 @@ op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
 {
     constructor_validate_and_infer_types();
     util::validate_conv_shapes(this, conv->get_input_shape(0), conv->get_input_shape(1));
-    set_output_type(0, conv->get_element_type(), conv->get_shape());
+    set_output_type(0, conv->get_output_element_type(0), conv->get_output_shape(0));
 }
 
 op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
@@ -113,7 +112,7 @@ op::ConvolutionAdd::ConvolutionAdd(const Output<Node>& data_batch,
                                                          ));
 }
 
-std::shared_ptr<Node> op::ConvolutionAdd::copy_with_new_args(const NodeVector& new_args) const
+std::shared_ptr<Node> op::ConvolutionAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 3,
@@ -121,13 +120,13 @@ std::shared_ptr<Node> op::ConvolutionAdd::copy_with_new_args(const NodeVector& n
                           new_args.size(),
                           ").");
 
-    return std::shared_ptr<Node>(new ConvolutionAdd(new_args.at(0),
-                                                    new_args.at(1),
-                                                    new_args.at(2),
-                                                    get_window_movement_strides(),
-                                                    get_window_dilation_strides(),
-                                                    get_padding_below(),
-                                                    get_padding_above(),
-                                                    get_data_dilation_strides(),
-                                                    m_with_relu));
+    return std::make_shared<ConvolutionAdd>(new_args.at(0),
+                                            new_args.at(1),
+                                            new_args.at(2),
+                                            get_window_movement_strides(),
+                                            get_window_dilation_strides(),
+                                            get_padding_below(),
+                                            get_padding_above(),
+                                            get_data_dilation_strides(),
+                                            m_with_relu);
 }

@@ -14,8 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-// NOTE: This file follows nGraph format style and MLIR naming convention since it does
-// not expose public API to the rest of nGraph codebase and heavily depends on MLIR API.
+// NOTE: This file follows nGraph format style and MLIR naming convention since
+// it does
+// not expose public API to the rest of nGraph codebase and heavily depends on
+// MLIR API.
 
 #include "ops.hpp"
 #include "assertion.hpp"
@@ -35,10 +37,13 @@ using namespace mlir;
 
 #include "ops_attributes.cpp.inc"
 // TODO:
-// - Move verifiers and other OP helpers (e.g. getSomeAttribute()) to separate files
+// - Move verifiers and other OP helpers (e.g. getSomeAttribute()) to separate
+// files
 //
-// - Op helpers: Since it is not possible to add arbitrary code (and would complicate the .td file)
-// to Ops classes, we will add helper classes with static methods for each Op that needs it
+// - Op helpers: Since it is not possible to add arbitrary code (and would
+// complicate the .td file)
+// to Ops classes, we will add helper classes with static methods for each Op
+// that needs it
 // Additional verification methods
 // Tensor type checks are already verified by the caller of these methods
 
@@ -172,7 +177,7 @@ static mlir::LogicalResult verifyCmpOp(T op)
 
     // result of same shape as input and has bool type
     if (!resType.isCompatibleShape(opType0) ||
-        !resType.getElementType().cast<NGIntegerType>().isUInt8())
+        !resType.getElementType().cast<mlir::IntegerType>().isUnsignedInteger(8))
     {
         return op.emitOpError("Incompatible result shape or type for comparison op");
     }
@@ -200,7 +205,7 @@ mlir::LogicalResult verifyOp(NGGatherOp op)
         return op.emitOpError("Indices tensor is not of Integer type");
 
     NGIntegerType indicesEltType = ty.cast<NGIntegerType>();
-    if (!indicesEltType.isInt32() && !indicesEltType.isInt64())
+    if (!indicesEltType.isSignedInteger(32) && !indicesEltType.isSignedInteger(64))
         return op.emitOpError("Indices tensor is not of I32 or I64 type");
 
     mlir::Type r0 = op.res().getType();
@@ -355,96 +360,34 @@ namespace mlir
 // Fused Ops decompose
 // Stubs for now
 // TODO: Implement and move to another file
-void mlir::NGSpaceToDepthOp::decompose()
-{
-}
-void mlir::NGSplitOp::decompose()
-{
-}
-void mlir::NGScaleShiftOp::decompose()
-{
-}
-void mlir::NGUnSqueezeOp::decompose()
-{
-}
-void mlir::NGSquaredDiffOp::decompose()
-{
-}
-void mlir::NGSqueezeOp::decompose()
-{
-}
-void mlir::NGShuffleChannelsOp::decompose()
-{
-}
-void mlir::NGRNNCellOp::decompose()
-{
-}
-void mlir::NGFakeQuantOp::decompose()
-{
-}
-void mlir::NGMVN::decompose()
-{
-}
-void mlir::NGHardSigmoid::decompose()
-{
-}
-void mlir::NGGRNOp::decompose()
-{
-}
-void mlir::NGNormalizeL2Op::decompose()
-{
-}
-void mlir::NGConvBiasBackpropFiltersBias::decompose()
-{
-}
-void mlir::NGPrelu::decompose()
-{
-}
-void mlir::NGLayerNormBackpropOp::decompose()
-{
-}
-void mlir::NGGemmOp::decompose()
-{
-}
-void mlir::NGClampOp::decompose()
-{
-}
-void mlir::NGGroupConvTransposeOp::decompose()
-{
-}
-void mlir::NGConvBiasOp::decompose()
-{
-}
-void mlir::NGConvBiasAddOp::decompose()
-{
-}
-void mlir::NGGRUCellOp::decompose()
-{
-}
-void mlir::NGGroupConvOp::decompose()
-{
-}
-void mlir::NGGeluOp::decompose()
-{
-}
-void mlir::NGGeluBackpropFactorOp::decompose()
-{
-}
-void mlir::NGLSTMCellOp::decompose()
-{
-}
-void mlir::NGLSTMSequenceOp::decompose()
-{
-}
-void mlir::NGMatMulOp::decompose()
-{
-}
-void mlir::NGLayerNormOp::decompose()
-{
-}
-void mlir::NGDepthToSpaceOp::decompose()
-{
-}
-void mlir::NGEluOp::decompose()
-{
-}
+void mlir::NGSpaceToDepthOp::decompose() {}
+void mlir::NGSplitOp::decompose() {}
+void mlir::NGScaleShiftOp::decompose() {}
+void mlir::NGUnSqueezeOp::decompose() {}
+void mlir::NGSquaredDiffOp::decompose() {}
+void mlir::NGSqueezeOp::decompose() {}
+void mlir::NGShuffleChannelsOp::decompose() {}
+void mlir::NGRNNCellOp::decompose() {}
+void mlir::NGFakeQuantOp::decompose() {}
+void mlir::NGMVN::decompose() {}
+void mlir::NGHardSigmoid::decompose() {}
+void mlir::NGGRNOp::decompose() {}
+void mlir::NGNormalizeL2Op::decompose() {}
+void mlir::NGConvBiasBackpropFiltersBias::decompose() {}
+void mlir::NGPrelu::decompose() {}
+void mlir::NGLayerNormBackpropOp::decompose() {}
+void mlir::NGGemmOp::decompose() {}
+void mlir::NGClampOp::decompose() {}
+void mlir::NGGroupConvTransposeOp::decompose() {}
+void mlir::NGConvBiasOp::decompose() {}
+void mlir::NGConvBiasAddOp::decompose() {}
+void mlir::NGGRUCellOp::decompose() {}
+void mlir::NGGroupConvOp::decompose() {}
+void mlir::NGGeluOp::decompose() {}
+void mlir::NGGeluBackpropFactorOp::decompose() {}
+void mlir::NGLSTMCellOp::decompose() {}
+void mlir::NGLSTMSequenceOp::decompose() {}
+void mlir::NGMatMulOp::decompose() {}
+void mlir::NGLayerNormOp::decompose() {}
+void mlir::NGDepthToSpaceOp::decompose() {}
+void mlir::NGEluOp::decompose() {}

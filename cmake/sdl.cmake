@@ -24,7 +24,7 @@ set(SDL_cmake_included true)
 
 if(UNIX)
     list(APPEND NGRAPH_COMMON_FLAGS -Wformat -Wformat-security)
-    list(APPEND NGRAPH_COMMON_FLAGS -O2 -D_FORTIFY_SOURCE=2)
+    list(APPEND NGRAPH_COMMON_FLAGS -O2 -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2)
     if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 4.9)
             list(APPEND NGRAPH_COMMON_FLAGS -fstack-protector-all)

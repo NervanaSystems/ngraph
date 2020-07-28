@@ -53,12 +53,13 @@ namespace ngraph
                 void validate_and_infer_types() override;
 
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 const AxisSet& get_axes() const { return m_axes; }
                 void set_axes(const AxisSet& axes) { m_axes = axes; }
                 const element::Type& get_type() const { return m_type; }
                 void set_type(const element::Type& type) { m_type = type; }
+
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

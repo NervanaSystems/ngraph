@@ -58,8 +58,8 @@ namespace ngraph
                              const AxisSet& input1_axes = ngraph::AxisSet{},
                              const AxisSet& output_axes = ngraph::AxisSet{});
 
-                std::shared_ptr<Node> get_input0() { return get_argument(0); }
-                std::shared_ptr<Node> get_input1() { return get_argument(1); }
+                Output<Node> get_input0() { return input_value(0); }
+                Output<Node> get_input1() { return input_value(1); }
                 const ngraph::element::Type& get_output_type() const { return m_output_type; }
                 const ngraph::AxisSet& get_input0_axes() const { return m_input0_axes; }
                 const ngraph::AxisSet& get_input1_axes() const { return m_input1_axes; }
@@ -71,7 +71,7 @@ namespace ngraph
                 }
                 void validate_and_infer_types() override;
                 virtual std::shared_ptr<Node>
-                    copy_with_new_args(const NodeVector& new_args) const override;
+                    clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;

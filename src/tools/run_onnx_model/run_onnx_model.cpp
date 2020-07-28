@@ -46,7 +46,7 @@ SYNOPSIS
 OPTIONS
         -m or --model    Path to ONNX protobuf file with extension .onnx or .prototext  
         -i or --input    Path to a raw binary file with an array of input data. If not provided, model will be executed with random data.
-        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, NNP, PlaidML, INTELGPU, where available. Default backend: CPU
+        -b or --backend  nGraph backend name, such as INTERPRETER, CPU, GPU, NNP, INTELGPU, where available. Default backend: CPU
 
 )###";
 }
@@ -76,8 +76,8 @@ vector<shared_ptr<runtime::Tensor>> load_inputs(std::shared_ptr<runtime::Backend
     for (int i = 0; i < input_paths.size(); i++)
     {
         cout << "Input " << i << " file path:" << input_paths.at(i) << endl;
-        auto tensor =
-            backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
+        auto tensor = backend->create_tensor(params.at(i)->get_element_type(),
+                                             params.at(i)->get_output_shape(0));
         const string input_path = input_paths.at(i);
         const size_t data_size =
             shape_size(tensor->get_shape()) * tensor->get_element_type().size();
@@ -99,8 +99,8 @@ vector<shared_ptr<runtime::Tensor>> random_inputs(std::shared_ptr<runtime::Backe
 
     for (int i = 0; i < params.size(); i++)
     {
-        auto tensor =
-            backend->create_tensor(params.at(i)->get_element_type(), params.at(i)->get_shape());
+        auto tensor = backend->create_tensor(params.at(i)->get_element_type(),
+                                             params.at(i)->get_output_shape(0));
         const size_t data_size =
             shape_size(tensor->get_shape()) * tensor->get_element_type().size();
         unique_ptr<char[]> data(new char[data_size]());

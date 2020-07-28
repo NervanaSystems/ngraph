@@ -27,11 +27,8 @@ namespace ngraph
         {
             namespace set_1
             {
-                NodeVector asinh(const Node& node);
-            } // namespace set_1
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+                OutputVector asinh(const Node& node);
+            }
+        }
+    }
+}

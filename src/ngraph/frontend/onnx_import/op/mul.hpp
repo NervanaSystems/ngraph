@@ -33,7 +33,7 @@ namespace ngraph
         {
             namespace set_1
             {
-                inline NodeVector mul(const Node& node)
+                inline OutputVector mul(const Node& node)
                 {
                     const Output<ngraph::Node> lhs_node = node.get_ng_inputs().at(0);
                     Output<ngraph::Node> rhs_node = node.get_ng_inputs().at(1);
@@ -46,21 +46,16 @@ namespace ngraph
                     return {std::make_shared<default_opset::Multiply>(
                         lhs_node, rhs_node, ngraph::op::AutoBroadcastSpec::NONE)};
                 }
-
-            } // namespace set_1
+            }
 
             namespace set_7
             {
-                inline NodeVector mul(const Node& node)
+                inline OutputVector mul(const Node& node)
                 {
                     return {std::make_shared<default_opset::Multiply>(node.get_ng_inputs().at(0),
                                                                       node.get_ng_inputs().at(1))};
                 }
-
-            } // namespace set_7
-
-        } // namespace op
-
-    } // namespace onnx_import
-
-} // namespace ngraph
+            }
+        }
+    }
+}
