@@ -591,6 +591,7 @@ def test_bucketize():
     assert node.get_output_element_type(0) == Type.i32
 
 
+@pytest.mark.skip_on_interpreter
 def test_range():
     start = 5
     stop = 35
