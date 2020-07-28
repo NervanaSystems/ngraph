@@ -50,8 +50,8 @@ namespace ngraph
             // ...
             enum class OP_TYPEID
             {
-#define NGRAPH_OP(NAME, NAMESPACE) ID_SUFFIX(NAME),
-#include "ngraph/runtime/mlir/opset_mlir_tbl.hpp"
+#define NGRAPH_OP(NAME, VERSION) NAME##_v##VERSION,
+#include "ngraph/op_version_tbl.hpp"
 #undef NGRAPH_OP
                 UnknownOp
             };

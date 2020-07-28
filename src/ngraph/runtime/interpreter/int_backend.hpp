@@ -62,6 +62,8 @@ public:
 
     bool is_supported(const Node& node) const override;
 
+    bool supports_dynamic_tensors() override { return true; }
+
 private:
     std::set<std::string> m_unsupported_op_name_list;
 };
