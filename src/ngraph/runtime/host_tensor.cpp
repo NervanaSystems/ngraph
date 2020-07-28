@@ -22,7 +22,6 @@
 #include "ngraph/op/constant.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/log.hpp"
 
 using namespace ngraph;
 using namespace std;
@@ -126,12 +125,6 @@ runtime::HostTensor::~HostTensor()
 
 void* runtime::HostTensor::get_data_ptr()
 {
-    NGRAPH_INFO << "buffer size " << m_buffer_size;
-    if (m_descriptor)
-    {
-        NGRAPH_INFO;
-        NGRAPH_INFO << shape_size(m_descriptor->get_shape()) * get_element_type().size();
-    }
     if (!m_aligned_buffer_pool)
     {
         allocate_buffer();
@@ -142,7 +135,6 @@ void* runtime::HostTensor::get_data_ptr()
         ngraph_free(m_allocated_buffer_pool);
         allocate_buffer();
     }
-    NGRAPH_INFO << "buffer size " << m_buffer_size;
     return m_aligned_buffer_pool;
 }
 
@@ -172,7 +164,6 @@ void runtime::HostTensor::write(const void* source, size_t n)
 
 void runtime::HostTensor::read(void* target, size_t n) const
 {
-    NGRAPH_INFO << n << " of " << m_buffer_size;
     event::Duration d1("read", "HostTensor");
     const void* source = get_data_ptr();
     if (n != m_buffer_size)

@@ -216,7 +216,6 @@ protected:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        NGRAPH_INFO << node;
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -1617,9 +1616,7 @@ protected:
         }
         case OP_TYPEID::Result_v0:
         {
-            NGRAPH_INFO;
             const op::Result* res = static_cast<const op::Result*>(&node);
-            NGRAPH_INFO << out[0]->get_partial_shape();
             out[0]->set_shape(args[0]->get_shape());
             reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),

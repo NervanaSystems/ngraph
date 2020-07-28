@@ -39,16 +39,13 @@ bool runtime::Executable::call_with_validate(const vector<shared_ptr<runtime::Te
 void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>>& outputs,
                                    const vector<std::shared_ptr<runtime::Tensor>>& inputs)
 {
-    NGRAPH_INFO << "validate";
     const ParameterVector& parameters = get_parameters();
     const ResultVector& results = get_results();
-    // Need to reset the partial shapes of the outputs
     for (size_t i=0; i<outputs.size(); ++i)
     {
+        // Need to reset the partial shapes of the output Tensors to their initial partial shape
         std::shared_ptr<runtime::Tensor> t = outputs[i];
-        NGRAPH_INFO << t->get_partial_shape();
         t->set_partial_shape(parameters[i]->get_partial_shape());
-        NGRAPH_INFO << t->get_partial_shape();
     }
     if (parameters.size() != inputs.size())
     {
