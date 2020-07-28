@@ -228,7 +228,6 @@ dyn_slice_184
 dyn_slice_185
 dyn_slice_186
 dyn_slice_187
-dynamic_axpy
 dynamic_reverse_shape
 dynamic_to_vector
 partial_slice_bprop_unknown_rank

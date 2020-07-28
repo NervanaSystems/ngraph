@@ -766,28 +766,16 @@ protected:
         case OP_TYPEID::DynSlice_v0:
         {
             const op::DynSlice* op = static_cast<const op::DynSlice*>(&node);
-            // NGRAPH_INFO << op->get_lower_bounds_mask();
-            // NGRAPH_INFO << op->get_upper_bounds_mask();
-            // NGRAPH_INFO << op->get_new_axis();
-            // NGRAPH_INFO << op->get_shrink_axis();
-            // NGRAPH_INFO << op->get_ellipsis_mask();
 
             Coordinate lower_bounds = to_coordinate(args[1].get());
             Coordinate upper_bounds = to_coordinate(args[2].get());
             Strides strides = to_strides(args[3].get());
 
-            // NGRAPH_INFO << lower_bounds;
-            // NGRAPH_INFO << upper_bounds;
-            // NGRAPH_INFO << strides;
-
             Shape output_shape = op->compute_output_shape(args[0]->get_shape(),
                                                           to_vector<int64_t>(args[1].get()),
                                                           to_vector<int64_t>(args[2].get()),
                                                           to_vector<int64_t>(args[3].get()));
-            // NGRAPH_INFO << args[0]->get_shape();
-            // NGRAPH_INFO << output_shape;
             out[0]->set_shape(output_shape);
-
             reference::slice<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 args[0]->get_shape(),
@@ -1614,6 +1602,13 @@ protected:
                                node.get_output_shape(0));
             break;
         }
+        case OP_TYPEID::Reshape_v1:
+        {
+            throw unsupported_op("Unsupported op 'Reshape_v1'");
+            // const op::v1::Reshape* reshape = static_cast<const op::v1::Reshape*>(&node);
+            // reshape->evaluate(out, args);
+            break;
+        }
         case OP_TYPEID::Result_v0:
         {
             const op::Result* res = static_cast<const op::Result*>(&node);
@@ -1988,7 +1983,6 @@ protected:
         case OP_TYPEID::ReduceSum_v1:
         case OP_TYPEID::RegionYolo_v0:
         case OP_TYPEID::ReorgYolo_v0:
-        case OP_TYPEID::Reshape_v1:
         case OP_TYPEID::Reverse_v1:
         case OP_TYPEID::RNNCell_v0:
         case OP_TYPEID::ROIAlign_v3:
