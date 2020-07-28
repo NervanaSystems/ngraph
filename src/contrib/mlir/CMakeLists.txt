@@ -104,7 +104,6 @@ target_link_libraries(
 
 # Link ngraph
 target_link_libraries(mlir_llvm_backend PUBLIC ngraph libmkl DNNL::dnnl)
-target_include_directories(mlir_llvm_backend SYSTEM PUBLIC DNNL::dnnl)
 
 # table-gen dialect ops
 # include table-gen helpers

@@ -37,4 +37,6 @@ endif()
 
 add_library(libeigen INTERFACE)
 target_include_directories(libeigen INTERFACE ${ext_eigen_SOURCE_DIR})
+# Prevent Eigen from using any LGPL3 code
+target_compile_definitions(libeigen INTERFACE EIGEN_MPL2_ONLY)
 add_library(Eigen3::Eigen ALIAS libeigen)
