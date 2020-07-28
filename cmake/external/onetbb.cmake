@@ -36,6 +36,8 @@ endif()
 
 include(FetchContent)
 
+message(STATUS "Fetching oneTBB")
+
 if(WIN32 OR APPLE)
     FetchContent_Declare(
         ngraphtbb

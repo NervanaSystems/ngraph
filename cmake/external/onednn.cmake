@@ -121,6 +121,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     endif()
 endif()
 
+message(STATUS "Fetching MKL")
+
 FetchContent_Declare(
     ext_mkl
     URL ${MKLURL}
