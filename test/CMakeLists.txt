@@ -601,6 +601,7 @@ if (NGRAPH_GENERIC_CPU_ENABLE)
 endif()
 
 if (NGRAPH_EVAL_ENABLE)
+    target_compile_definitions(unit-test PRIVATE NGRAPH_EVAL_ENABLE)
     target_link_libraries(unit-test PRIVATE eval_backend)
 endif()
 
