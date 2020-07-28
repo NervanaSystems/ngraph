@@ -107,7 +107,8 @@ void op::DynSlice::validate_and_infer_types()
     }
     else
     {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
+        // set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 }
 
@@ -129,4 +130,22 @@ void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                      const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
+}
+
+Shape op::DynSlice::compute_output_shape(const PartialShape& input_shape,
+                                         const vector<int64_t>& lower_bounds,
+                                         const vector<int64_t>& upper_bounds,
+                                         const vector<int64_t>& strides) const
+{
+    return infer_slice_shape(this,
+                             input_shape,
+                             lower_bounds,
+                             upper_bounds,
+                             strides,
+                             m_lower_bounds_mask,
+                             m_upper_bounds_mask,
+                             m_new_axis,
+                             m_shrink_axis,
+                             m_ellipsis_mask)
+        .to_shape();
 }

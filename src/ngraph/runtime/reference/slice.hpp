@@ -19,6 +19,7 @@
 #include <cmath>
 
 #include "ngraph/check.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/coordinate_transform.hpp"
 
 namespace ngraph
@@ -36,8 +37,15 @@ namespace ngraph
                        const Strides& strides,
                        const Shape& out_shape)
             {
+                NGRAPH_INFO << arg_shape;
+                NGRAPH_INFO << lower_bounds;
+                NGRAPH_INFO << upper_bounds;
+                NGRAPH_INFO << strides;
+                NGRAPH_INFO << out_shape;
                 CoordinateTransform input_transform(arg_shape, lower_bounds, upper_bounds, strides);
                 CoordinateTransform output_transform(out_shape);
+                NGRAPH_INFO << input_transform.get_target_shape();
+                NGRAPH_INFO << output_transform.get_target_shape();
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
 

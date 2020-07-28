@@ -119,6 +119,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const std::string& model_stri
 bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                                const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO << outputs[0]->get_partial_shape();
     event::Duration d1("call", "Interpreter");
 
     // convert inputs to HostTensor
@@ -194,7 +195,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
                 const PartialShape& shape = op->get_output_partial_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
                 string name = op->output(i).get_tensor().get_name();
+                NGRAPH_INFO << *op;
+                NGRAPH_INFO << shape;
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
+                NGRAPH_INFO << host_tensor->get_partial_shape();
                 tensor_map.insert({tensor, host_tensor});
             }
             else
@@ -421,4 +425,29 @@ vector<shared_ptr<runtime::Tensor>>
         result_tensors.push_back(tensor);
     }
     return result_tensors;
+}
+
+Coordinate runtime::interpreter::INTExecutable::to_coordinate(const HostTensor* tensor)
+{
+    const int64_t* p = tensor->get_data_ptr<const int64_t>();
+    vector<size_t> coordinate_data;
+    for (size_t i=0; i<tensor->get_element_count(); ++i)
+    {
+        coordinate_data.push_back(p[i]);
+    }
+    return Coordinate(coordinate_data);
+}
+
+Strides runtime::interpreter::INTExecutable::to_strides(const HostTensor* tensor)
+{
+    const int64_t* p = tensor->get_data_ptr<const int64_t>();
+    vector<size_t> stride_data;
+    NGRAPH_INFO << tensor->get_element_count();
+    NGRAPH_INFO << tensor->get_size_in_bytes();
+    for (size_t i=0; i<tensor->get_element_count(); ++i)
+    {
+        NGRAPH_INFO << p[i];
+        stride_data.push_back(p[i]);
+    }
+    return Strides(stride_data);
 }
