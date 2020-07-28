@@ -115,7 +115,8 @@ namespace
     }
 }
 
-bool op::v0::Minimum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Minimum::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_minimum(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -156,7 +157,8 @@ void op::v1::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
         y, delta * make_shared<op::Convert>(make_shared<op::v1::Less>(y, x), y.get_element_type()));
 }
 
-bool op::v1::Minimum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Minimum::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_minimum(inputs[0], inputs[1], outputs[0], get_autob());
 }

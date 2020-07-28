@@ -204,7 +204,7 @@ namespace
     }
 }
 
-bool op::Slice::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::Slice::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_slice(inputs[0], outputs[0], m_lower_bounds, m_upper_bounds, m_strides);
 }

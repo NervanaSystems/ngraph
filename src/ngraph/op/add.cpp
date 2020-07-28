@@ -118,7 +118,7 @@ namespace
     }
 }
 
-bool op::v0::Add::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Add::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -163,7 +163,7 @@ void op::v1::Add::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     adjoints.add_delta(y, delta);
 }
 
-bool op::v1::Add::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Add::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_add(inputs[0], inputs[1], outputs[0], get_autob());
 }

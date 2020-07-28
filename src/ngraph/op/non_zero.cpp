@@ -166,7 +166,8 @@ namespace
     }
 }
 
-bool op::v3::NonZero::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v3::NonZero::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_nonzero(inputs[0], outputs[0]);
 }

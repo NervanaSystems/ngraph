@@ -62,7 +62,7 @@ void op::Result::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
     adjoints.add_delta(input_value(0), delta);
 }
 
-bool op::Result::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::Result::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     outputs[0]->set_unary(inputs[0]);
     void* output = outputs[0]->get_data_ptr();
