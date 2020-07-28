@@ -25,7 +25,7 @@ namespace ngraph
     {
         namespace opt_kernel
         {
-            class NGRAPH_API ReshapeIndexer
+            class NGRAPH_API CoordinateIterator
             {
             public:
                 class Indexer
