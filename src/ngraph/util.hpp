@@ -245,6 +245,9 @@ namespace ngraph
     extern template NGRAPH_API Coordinate apply_permutation<Coordinate>(Coordinate input,
                                                                         AxisVector order);
 
+    extern template NGRAPH_API CoordinateDiff
+        apply_permutation<CoordinateDiff>(CoordinateDiff input, AxisVector order);
+
     extern template NGRAPH_API Strides apply_permutation<Strides>(Strides input, AxisVector order);
 
     extern template NGRAPH_API Shape apply_permutation<Shape>(Shape input, AxisVector order);
