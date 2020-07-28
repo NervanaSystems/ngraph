@@ -505,12 +505,19 @@ protected:
         case OP_TYPEID::Clamp_v0:
         {
             const op::Clamp* clamp = static_cast<const op::Clamp*>(&node);
+<<<<<<< HEAD
             out[0]->set_shape(args[0]->get_shape());
+=======
+>>>>>>> master
             reference::clamp<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 clamp->get_min<T>(),
                                 clamp->get_max<T>(),
+<<<<<<< HEAD
                                 shape_size(args[0]->get_shape()));
+=======
+                                shape_size(node.get_output_shape(0)));
+>>>>>>> master
             break;
         }
         case OP_TYPEID::Concat_v0:
@@ -1618,10 +1625,16 @@ protected:
         case OP_TYPEID::Result_v0:
         {
             const op::Result* res = static_cast<const op::Result*>(&node);
+<<<<<<< HEAD
             out[0]->set_shape(args[0]->get_shape());
             reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               shape_size(out[0]->get_shape()));
+=======
+            reference::result(args[0]->get_data_ptr<const T>(),
+                              out[0]->get_data_ptr<T>(),
+                              shape_size(res->get_output_shape(0)));
+>>>>>>> master
             break;
         }
         case OP_TYPEID::Reverse_v0:

@@ -192,13 +192,10 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                const PartialShape& shape = op->get_output_partial_shape(i);
+                const Shape& shape = op->get_output_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
                 string name = op->output(i).get_tensor().get_name();
-                NGRAPH_INFO << *op;
-                NGRAPH_INFO << shape;
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
-                NGRAPH_INFO << host_tensor->get_partial_shape();
                 tensor_map.insert({tensor, host_tensor});
             }
             else
