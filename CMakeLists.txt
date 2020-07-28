@@ -389,6 +389,95 @@ message(STATUS "NGRAPH_COMMON_C_FLAGS ${NGRAPH_COMMON_C_FLAGS}")
 # Set baseline flags for nGraph source files
 string(REPLACE ";" " " CMAKE_ORIGINAL_CXX_FLAGS "${NGRAPH_COMMON_CXX_FLAGS}")
 
+if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
+    set(NGRAPH_TARGET_ARCH native CACHE
+        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
+
+    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
+        message(WARNING
+            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+    endif()
+endif()
+
+#-----------------------------------------------------------------------------------------------
+# External projects install directory
+#-----------------------------------------------------------------------------------------------
+
+if (NOT NGRAPH_BUILD_DIR)
+    set(NGRAPH_BUILD_DIR ${PROJECT_BINARY_DIR}/src/ngraph)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    if(WIN32)
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    else()
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
+    endif()
+endif()
+
+# Build destination directory for nGraph binaries and tools.
+set(NGRAPH_BUILD_BIN ${PROJECT_BINARY_DIR}/bin)
+
+set(EXTERNAL_INSTALL_DIR ${PROJECT_BINARY_DIR}/external)
+
+if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
+    set(EXTERNAL_PROJECTS_ROOT ${PROJECT_BINARY_DIR})
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    if (MSVC)
+        # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
+        # These two options can't be mixed, because they requires link two imcompatiable runtime.
+        set(ONNX_USE_MSVC_STATIC_RUNTIME OFF)
+        set(protobuf_WITH_ZLIB  OFF CACHE BOOL "" FORCE)
+        set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "Link protobuf to static runtime libraries" FORCE)
+    endif()
+    if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
+        include(cmake/external/protobuf.cmake)
+    else()
+        find_package(Protobuf 2.6.1 REQUIRED)
+    endif()
+    include(cmake/external/onnx.cmake)
+    if (TARGET ext_protobuf)
+        add_dependencies(onnx ext_protobuf)
+    endif()
+endif()
+
+if(NGRAPH_JSON_ENABLE)
+    include(cmake/external/json.cmake)
+endif()
+if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
+    include(cmake/external/eigen.cmake)
+endif()
+if(NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE)
+    include(cmake/external/onednn.cmake)
+endif()
+
+if(NGRAPH_LLVM_ENABLE)
+    if (NOT MSVC)
+        include(cmake/external/llvm.cmake)
+    else()
+        message(FATAL_ERROR "LLVM is not supported on Windows!")
+    endif()
+endif()
+
+if(NGRAPH_TBB_ENABLE)
+    include(cmake/external/onetbb.cmake)
+endif()
+
+if (NGRAPH_TEST_UTIL_ENABLE)
+    include(cmake/external/gtest.cmake)
+endif()
+
+if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
+    include(cmake/external/pybind11.cmake)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # Compile Flags for nGraph...
 #-----------------------------------------------------------------------------------------------
@@ -432,16 +521,10 @@ if (NGRAPH_CODE_COVERAGE_ENABLE)
 endif()
 
 # Enable build target CPU features
-if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
-    set(NGRAPH_TARGET_ARCH native CACHE
-        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
-
-    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
-        message(WARNING
-            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
-    endif()
-
+if(DEFINED NGRAPH_TARGET_ARCH)
     add_compile_options(-march=${NGRAPH_TARGET_ARCH})
+elseif(NOT WIN32)
+    add_compile_options(-march=core2 -msse4.1)
 endif()
 
 if (DEFINED NGRAPH_TUNE_ARCH)
@@ -576,85 +659,10 @@ message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}
 message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 
 #-----------------------------------------------------------------------------------------------
-# External projects install directory
+# nGraph source tree
 #-----------------------------------------------------------------------------------------------
 
-if (NOT NGRAPH_BUILD_DIR)
-    set(NGRAPH_BUILD_DIR ${PROJECT_BINARY_DIR}/src/ngraph)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    if(WIN32)
-        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
-        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-        set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
-        set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-        set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    else()
-        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
-    endif()
-endif()
-
-# Build destination directory for nGraph binaries and tools.
-set(NGRAPH_BUILD_BIN ${PROJECT_BINARY_DIR}/bin)
-
-set(EXTERNAL_INSTALL_DIR ${PROJECT_BINARY_DIR}/external)
-
-if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
-    set(EXTERNAL_PROJECTS_ROOT ${PROJECT_BINARY_DIR})
-endif()
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    if (MSVC)
-        # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
-        # These two options can't be mixed, because they requires link two imcompatiable runtime.
-        set(ONNX_USE_MSVC_STATIC_RUNTIME OFF)
-        set(protobuf_WITH_ZLIB  OFF CACHE BOOL "" FORCE)
-        set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "Link protobuf to static runtime libraries" FORCE)
-    endif()
-    if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-        include(cmake/external/protobuf.cmake)
-    else()
-        find_package(Protobuf 2.6.1 REQUIRED)
-    endif()
-    include(cmake/external/onnx.cmake)
-    if (TARGET ext_protobuf)
-        add_dependencies(onnx ext_protobuf)
-    endif()
-endif()
-
-if(NGRAPH_JSON_ENABLE)
-    include(cmake/external/json.cmake)
-endif()
-if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
-    include(cmake/external/eigen.cmake)
-endif()
-if(NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE)
-    include(cmake/external/onednn.cmake)
-endif()
-
-if(NGRAPH_LLVM_ENABLE)
-    if (NOT MSVC)
-        include(cmake/external/llvm.cmake)
-    else()
-        message(FATAL_ERROR "LLVM is not supported on Windows!")
-    endif()
-endif()
-
-if(NGRAPH_TBB_ENABLE)
-    include(cmake/external/onetbb.cmake)
-endif()
-
 add_subdirectory(src)
-
-if (NGRAPH_TEST_UTIL_ENABLE)
-    include(cmake/external/gtest.cmake)
-endif()
-
-if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
-    include(cmake/external/pybind11.cmake)
-endif()
 
 add_subdirectory(test)
 
