@@ -14,10 +14,10 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
-#include <string>
 #include <fstream>
+#include <iostream>
 #include <regex>
+#include <string>
 
 using namespace std;
 
@@ -90,7 +90,7 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v@V
 
 int main(int argc, const char** argv)
 {
-#define NGRAPH_OP(OP,VER) generate_file(#OP,#VER);
+#define NGRAPH_OP(OP, VER) generate_file(#OP, #VER);
 #include "ngraph/op_version_tbl.hpp"
     return 0;
 }

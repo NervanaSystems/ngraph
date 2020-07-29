@@ -18,10 +18,15 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::ConvolutionBiasBackpropFiltersBias>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<
+    ngraph::op::v0::ConvolutionBiasBackpropFiltersBias>(NgDialectConversionPass& NgDialectObj,
+                                                        const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v0::ConvolutionBiasBackpropFiltersBias*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::ConvolutionBiasBackpropFiltersBias");
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::ConvolutionBiasBackpropFiltersBias");
     throw unsupported_op("Unsupported op 'v0::ConvolutionBiasBackpropFiltersBias'");
 }

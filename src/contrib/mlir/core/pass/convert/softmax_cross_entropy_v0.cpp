@@ -18,10 +18,15 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::SoftmaxCrossEntropy>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation*
+    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::SoftmaxCrossEntropy>(
+        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v0::SoftmaxCrossEntropy*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::SoftmaxCrossEntropy");
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::SoftmaxCrossEntropy");
     throw unsupported_op("Unsupported op 'v0::SoftmaxCrossEntropy'");
 }

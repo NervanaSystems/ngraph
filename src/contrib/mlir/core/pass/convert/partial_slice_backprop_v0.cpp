@@ -18,10 +18,15 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::PartialSliceBackprop>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation*
+    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::PartialSliceBackprop>(
+        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v0::PartialSliceBackprop*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::PartialSliceBackprop");
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::PartialSliceBackprop");
     throw unsupported_op("Unsupported op 'v0::PartialSliceBackprop'");
 }

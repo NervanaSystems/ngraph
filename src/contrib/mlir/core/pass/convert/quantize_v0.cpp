@@ -22,6 +22,7 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0:
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v0::Quantize*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Quantize");
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Quantize");
     throw unsupported_op("Unsupported op 'v0::Quantize'");
 }

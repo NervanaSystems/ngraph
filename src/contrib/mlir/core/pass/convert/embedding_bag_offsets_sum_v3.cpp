@@ -18,10 +18,15 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::EmbeddingBagOffsetsSum>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation*
+    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::EmbeddingBagOffsetsSum>(
+        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v3::EmbeddingBagOffsetsSum*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::EmbeddingBagOffsetsSum");
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v3::EmbeddingBagOffsetsSum");
     throw unsupported_op("Unsupported op 'v3::EmbeddingBagOffsetsSum'");
 }

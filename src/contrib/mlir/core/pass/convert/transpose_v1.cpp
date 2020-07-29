@@ -22,6 +22,7 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v1:
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v1::Transpose*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::Transpose");
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::Transpose");
     throw unsupported_op("Unsupported op 'v1::Transpose'");
 }

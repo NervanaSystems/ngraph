@@ -22,6 +22,7 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3:
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v3::GRUCell*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::GRUCell");
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::GRUCell");
     throw unsupported_op("Unsupported op 'v3::GRUCell'");
 }

@@ -22,6 +22,7 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v1:
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v1::Convolution*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::Convolution");
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::Convolution");
     throw unsupported_op("Unsupported op 'v1::Convolution'");
 }
