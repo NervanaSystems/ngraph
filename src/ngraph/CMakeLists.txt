@@ -740,6 +740,10 @@ set_target_properties(ngraph PROPERTIES
                       C_VISIBILITY_PRESET hidden
                       VISIBILITY_INLINES_HIDDEN ON)
 
+if(NGRAPH_STL_DEBUG_ENABLE)
+    target_compile_definitions(ngraph PUBLIC ${NGRAPH_STL_DEBUG_DEFINITION})
+endif()
+
 if(NOT NGRAPH_JSON_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_JSON_DISABLE)
 endif()
@@ -751,6 +755,14 @@ endif()
 if(NGRAPH_CPU_STATIC_LIB_ENABLE)
     target_compile_definitions(ngraph PUBLIC NGRAPH_CPU_STATIC_LIB_ENABLE)
 endif()
+
+if(NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+    set_property(SOURCE runtime/backend.cpp APPEND PROPERTY COMPILE_DEFINITIONS NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+    set_property(SOURCE runtime/backend_manager.cpp APPEND PROPERTY COMPILE_DEFINITIONS NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
+endif()
+
+set_property(SOURCE runtime/backend_manager.cpp APPEND PROPERTY COMPILE_DEFINITIONS SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}")
+set_property(SOURCE runtime/backend_manager.cpp APPEND PROPERTY COMPILE_DEFINITIONS SHARED_LIB_SUFFIX="${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
 add_subdirectory(frontend)
 
@@ -767,11 +779,6 @@ endif()
 add_subdirectory(codegen)
 add_subdirectory(runtime)
 
-target_compile_definitions(ngraph
-    PRIVATE
-        SHARED_LIB_PREFIX="${CMAKE_SHARED_LIBRARY_PREFIX}"
-        SHARED_LIB_SUFFIX="${IE_BUILD_POSTFIX}${CMAKE_SHARED_LIBRARY_SUFFIX}"
-)
 if(NGRAPH_LIB_VERSIONING_ENABLE)
     set_target_properties(ngraph PROPERTIES
         VERSION ${NGRAPH_VERSION}
