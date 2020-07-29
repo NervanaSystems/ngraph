@@ -22,7 +22,7 @@
 
 #include <numeric>
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/reference/broadcast.hpp"
+#include "ngraph/runtime/opt_kernel/broadcast.hpp"
 
 using namespace std;
 using namespace ngraph;
@@ -366,11 +366,11 @@ namespace
                             const AxisSet& broadcast_axes)
     {
         using T = typename element_type_traits<ET>::value_type;
-        runtime::reference::broadcast<T>((arg0->get_data_ptr<ET>()),
-                                         (out->get_data_ptr<ET>()),
-                                         arg0->get_shape(),
-                                         out->get_shape(),
-                                         broadcast_axes);
+        runtime::opt_kernel::broadcast<T>((arg0->get_data_ptr<ET>()),
+                                          (out->get_data_ptr<ET>()),
+                                          arg0->get_shape(),
+                                          out->get_shape(),
+                                          broadcast_axes);
         return true;
     }
 
