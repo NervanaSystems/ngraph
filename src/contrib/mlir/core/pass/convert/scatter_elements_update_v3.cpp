@@ -18,15 +18,10 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::ScatterElementsUpdate>(
-        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::ScatterElementsUpdate>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v3::ScatterElementsUpdate*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 node != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v3::ScatterElementsUpdate");
+    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::ScatterElementsUpdate");
     throw unsupported_op("Unsupported op 'v3::ScatterElementsUpdate'");
 }

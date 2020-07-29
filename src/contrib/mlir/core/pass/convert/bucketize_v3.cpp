@@ -22,7 +22,6 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3:
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v3::Bucketize*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::Bucketize");
+    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::Bucketize");
     throw unsupported_op("Unsupported op 'v3::Bucketize'");
 }

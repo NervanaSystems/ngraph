@@ -14,14 +14,5 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(LINUX)
-    set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
-endif()
-
-add_subdirectory(nbench)
-add_subdirectory(reserialize)
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    add_subdirectory(serialize_onnx)
-    add_subdirectory(run_onnx_model)
-endif()
-add_subdirectory(op2filename)
+add_executable(op2filename main.cpp)
+target_include_directories(op2filename PRIVATE ${PROJECT_BINARY_DIR}/src)
