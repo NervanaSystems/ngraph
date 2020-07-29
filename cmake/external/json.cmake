@@ -20,6 +20,8 @@ endif()
 
 include(FetchContent)
 
+message(STATUS "Fetching nlohmann json")
+
 # Hedley annotations introduced in v3.7.0 causes build failure on MSVC 2017 + ICC 18
 if(WIN32 AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"))
     SET(JSON_GIT_LABEL v3.6.1)
