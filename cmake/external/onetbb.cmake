@@ -36,6 +36,8 @@ endif()
 
 include(FetchContent)
 
+message(STATUS "Fetching oneTBB")
+
 if(WIN32 OR APPLE)
     FetchContent_Declare(
         ngraphtbb
@@ -72,6 +74,8 @@ if (NOT TBB_FOUND)
 else()
     message(STATUS "Found TBB and imported target ${TBB_IMPORTED_TARGETS}")
 endif()
+
+target_compile_definitions(TBB::tbb INTERFACE TBB_USE_THREADING_TOOLS)
 
 set_source_files_properties(cpu_external_function.cpp
     PROPERTIES COMPILE_DEFINITIONS "NGRAPH_TBB_ENABLE")

@@ -26,6 +26,8 @@ set(ONNX_VERSION 1.7.0)
 # Download and install libonnx ...
 #------------------------------------------------------------------------------
 
+message(STATUS "Fetching ONNX")
+
 # Since this file is going to be modifying CMAKE_CXX_FLAGS we need to preserve
 # it so we won't overwrite the caller's CMAKE_CXX_FLAGS
 set(PUSH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})

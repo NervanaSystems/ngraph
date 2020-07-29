@@ -15,6 +15,7 @@
 # ******************************************************************************
 
 include(ExternalProject)
+include(FetchContent)
 
 # Includes blas 3.8.0 in dnnl
 set(NGRAPH_DNNL_SHORT_VERSION 1)
@@ -120,70 +121,29 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     endif()
 endif()
 
-ExternalProject_Add(
+message(STATUS "Fetching MKL")
+
+FetchContent_Declare(
     ext_mkl
-    PREFIX mkl
     URL ${MKLURL}
     URL_HASH SHA1=${MKL_SHA1_HASH}
-    CONFIGURE_COMMAND ""
-    BUILD_COMMAND ""
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    DOWNLOAD_NO_PROGRESS TRUE
-    EXCLUDE_FROM_ALL TRUE
-    BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
-                     ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
 )
 
-set(DNNL_DEPENDS ext_mkl)
-ExternalProject_Get_Property(ext_mkl source_dir)
-set(MKL_ROOT ${EXTERNAL_PROJECTS_ROOT}/dnnl/src/external/mkl)
-set(MKL_SOURCE_DIR ${source_dir})
-
-ExternalProject_Add_Step(
-    ext_mkl
-    CopyMKL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
-    COMMENT "Copy mklml runtime libraries to ngraph build directory."
-    DEPENDEES download
-    )
-
-ExternalProject_Add_Step(
-    ext_mkl
-    CopyOMP
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_LIB} ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB}
-    COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
-    DEPENDEES download
-    )
-
-if(WIN32)
-    ExternalProject_Add_Step(
-        ext_mkl
-        CopyMKLIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${MKLML_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
-        COMMENT "Copy mklml runtime libraries to ngraph build directory."
-        DEPENDEES download
-        )
-
-    ExternalProject_Add_Step(
-        ext_mkl
-        CopyOMPIMP
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${MKL_SOURCE_DIR}/lib/${OMP_IMPLIB} ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB}
-        COMMENT "Copy OpenMP runtime libraries to ngraph build directory."
-        DEPENDEES download
-        )
+FetchContent_GetProperties(ext_mkl)
+if(NOT ext_mkl_POPULATED)
+    FetchContent_Populate(ext_mkl)
 endif()
 
 add_library(libmkl INTERFACE)
 add_dependencies(libmkl ext_mkl)
 if(WIN32)
     target_link_libraries(libmkl INTERFACE
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${MKLML_IMPLIB}
-        ${NGRAPH_ARCHIVE_OUTPUT_DIRECTORY}/${OMP_IMPLIB})
+        ${ext_mkl_SOURCE_DIR}/lib/${MKLML_IMPLIB}
+        ${ext_mkl_SOURCE_DIR}/lib/${OMP_IMPLIB})
 else()
     target_link_libraries(libmkl INTERFACE
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${MKLML_LIB}
-        ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${OMP_LIB})
+        ${ext_mkl_SOURCE_DIR}/lib/${MKLML_LIB}
+        ${ext_mkl_SOURCE_DIR}/lib/${OMP_LIB})
 endif()
 
 set(DNNL_GIT_REPO_URL https://github.com/oneapi-src/oneDNN)
@@ -230,6 +190,10 @@ else()
     if(LINUX)
         set(DNNL_RPATH "-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
     endif()
+    if(NGRAPH_NATIVE_ARCH_ENABLE)
+        set(NGRAPH_DNNL_ARCH_OPT_FLAGS
+             "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${DNNL_FLAG}")
+    endif()
     ExternalProject_Add(
         ext_dnnl
         PREFIX dnnl
@@ -253,7 +217,7 @@ else()
             -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DDNNL_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
             -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
-            "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${DNNL_FLAG}"
+            "${NGRAPH_DNNL_ARCH_OPT_FLAGS}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/download"
@@ -264,14 +228,6 @@ else()
         BUILD_BYPRODUCTS ${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}/${DNNL_LIB}
         )
 endif()
-
-ExternalProject_Add_Step(
-    ext_dnnl
-    PrepareMKL
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${MKL_SOURCE_DIR} ${MKL_ROOT}
-    DEPENDEES download
-    DEPENDERS configure
-    )
 
 add_library(libdnnl INTERFACE)
 add_dependencies(libdnnl ext_dnnl)
@@ -291,10 +247,10 @@ endif()
 if(WIN32)
     install(
         FILES
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLML_LIB}
-            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${MKLML_IMPLIB}
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
-            ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${OMP_IMPLIB}
+            ${ext_mkl_SOURCE_DIR}/lib/${MKLML_LIB}
+            ${ext_mkl_SOURCE_DIR}/lib/${MKLML_IMPLIB}
+            ${ext_mkl_SOURCE_DIR}/lib/${OMP_LIB}
+            ${ext_mkl_SOURCE_DIR}/lib/${OMP_IMPLIB}
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${DNNL_LIB}
             ${NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY}/${DNNL_IMPLIB}
         DESTINATION
@@ -304,8 +260,8 @@ if(WIN32)
 else()
     install(
         FILES
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${MKLML_LIB}
-            ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${OMP_LIB}
+            ${ext_mkl_SOURCE_DIR}/lib/${MKLML_LIB}
+            ${ext_mkl_SOURCE_DIR}/lib/${OMP_LIB}
             ${NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY}/${DNNL_LIB}
         DESTINATION
             ${NGRAPH_INSTALL_LIB}
