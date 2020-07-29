@@ -190,6 +190,10 @@ else()
     if(LINUX)
         set(DNNL_RPATH "-DCMAKE_INSTALL_RPATH=${CMAKE_INSTALL_RPATH}")
     endif()
+    if(NGRAPH_NATIVE_ARCH_ENABLE)
+        set(NGRAPH_DNNL_ARCH_OPT_FLAGS
+             "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${DNNL_FLAG}")
+    endif()
     ExternalProject_Add(
         ext_dnnl
         PREFIX dnnl
@@ -213,7 +217,7 @@ else()
             -DDNNL_ENABLE_CONCURRENT_EXEC=ON
             -DDNNL_LIB_VERSIONING_ENABLE=${NGRAPH_LIB_VERSIONING_ENABLE}
             -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=${NGRAPH_LIBRARY_OUTPUT_DIRECTORY}
-            "-DDNNL_ARCH_OPT_FLAGS=-march=${NGRAPH_TARGET_ARCH} -mtune=${NGRAPH_TARGET_ARCH} ${DNNL_FLAG}"
+            "${NGRAPH_DNNL_ARCH_OPT_FLAGS}"
         TMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/tmp"
         STAMP_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/stamp"
         DOWNLOAD_DIR "${EXTERNAL_PROJECTS_ROOT}/dnnl/download"
