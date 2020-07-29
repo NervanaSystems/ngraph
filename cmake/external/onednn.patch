@@ -28,7 +28,7 @@ index 26dea5cc8..c2cda06e7 100644
 +    find_library(IOMP5LIB
 +                NAMES "iomp5" "iomp5md" "libiomp5" "libiomp5md"
 +                PATHS
-+                    ${CMAKE_CURRENT_SOURCE_DIR}/external/mkl/lib
++                    ${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/ext_mkl-src/lib
 +                    NO_DEFAULT_PATH)
 +    if(IOMP5LIB)
 +        forbid_link_compiler_omp_rt()
@@ -36,7 +36,7 @@ index 26dea5cc8..c2cda06e7 100644
 +            find_file(IOMP5DLL
 +                NAMES "libiomp5.dll" "libiomp5md.dll"
 +                PATHS
-+                    ${CMAKE_CURRENT_SOURCE_DIR}/external/mkl/lib
++                    ${CMAKE_CURRENT_SOURCE_DIR}/../../_deps/ext_mkl-src/lib
 +                    NO_DEFAULT_PATH)
 +        endif()
 +        list(APPEND EXTRA_SHARED_LIBS ${IOMP5LIB})
