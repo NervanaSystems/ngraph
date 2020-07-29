@@ -23,25 +23,24 @@
 #include <string>
 #include <vector>
 
-#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
-#include "contrib/mlir/runtime/runtime.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
+#include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
+#include "ngraph/runtime/opt_kernel/broadcast.hpp"
+#include "ngraph/runtime/opt_kernel/reshape.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/state/bernoulli_rng_state.hpp"
-#include "ngraph/state/uniform_rng_state.hpp"
 
 namespace ngraph
 {
     namespace runtime
     {
-        namespace mlir
+        namespace eval
         {
-            class MlirBackend;
-            class MlirExecutable;
+            class EVALBackend;
+            class EVALExecutable;
 
             // This expands the op list in op_tbl.hpp into a list of enumerations that look like
             // this:
@@ -59,36 +58,19 @@ namespace ngraph
     }
 }
 
-class MLIR_BACKEND_API ngraph::runtime::mlir::MlirExecutable : public Executable
+class ngraph::runtime::eval::EVALExecutable : public runtime::Executable
 {
-    friend class MlirBackend;
+    friend class EVALBackend;
 
 public:
-    MlirExecutable(const std::shared_ptr<Function>& function,
+    EVALExecutable(const std::shared_ptr<Function>& function,
                    bool enable_performance_collection = false);
 
     bool call(const std::vector<std::shared_ptr<Tensor>>& outputs,
-              const std::vector<std::shared_ptr<Tensor>>& inputs) override;
+              const std::vector<std::shared_ptr<Tensor>>& intputs) override;
 
-    std::shared_ptr<runtime::Tensor> create_input_tensor(size_t input_index) override;
-
-    std::shared_ptr<runtime::Tensor> create_output_tensor(size_t output_index) override;
-
-    std::vector<std::shared_ptr<runtime::Tensor>>
-        create_input_tensor(size_t input_index, size_t pipeline_depth) override;
-
-    std::vector<std::shared_ptr<runtime::Tensor>>
-        create_output_tensor(size_t output_index, size_t pipeline_depth) override;
-
-protected:
-    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
-    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
-    int get_alignment() const { return 64; }
+private:
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
-    runtime::ngmlir::MLIRCPURuntime m_mlir_runtime;
-    bool m_first_iteration = true;
-
     static OP_TYPEID get_typeid(const Node& node);
 };

@@ -36,79 +36,35 @@ namespace
         return true;
     }
 
-    bool evaluate_clamp(
-        const HostTensorPtr& arg, const HostTensorPtr& out, double min, double max, size_t count)
+    bool evaluate_clamp(const HostTensorPtr& arg, const HostTensorPtr& out, const op::Clamp* op)
     {
-        auto ceil_func = [](double x) { return ceil(x); };
-        auto floor_func = [](double x) { return floor(x); };
-
         bool rc = true;
+        size_t count = shape_size(op->get_input_shape(0));
         switch (arg->get_element_type())
         {
-            TYPE_CASE(i8)
-            (arg,
-             out,
-             double_to_int<int8_t>(min, ceil_func),
-             double_to_int<int8_t>(max, floor_func),
-             count);
+            TYPE_CASE(i8)(arg, out, op->get_min<int8_t>(), op->get_max<int8_t>(), count);
             break;
-            TYPE_CASE(i16)
-            (arg,
-             out,
-             double_to_int<int16_t>(min, ceil_func),
-             double_to_int<int16_t>(max, floor_func),
-             count);
+            TYPE_CASE(i16)(arg, out, op->get_min<int16_t>(), op->get_max<int16_t>(), count);
             break;
-            TYPE_CASE(i32)
-            (arg,
-             out,
-             double_to_int<int32_t>(min, ceil_func),
-             double_to_int<int32_t>(max, floor_func),
-             count);
+            TYPE_CASE(i32)(arg, out, op->get_min<int32_t>(), op->get_max<int32_t>(), count);
             break;
-            TYPE_CASE(i64)
-            (arg,
-             out,
-             double_to_int<int64_t>(min, ceil_func),
-             double_to_int<int64_t>(max, floor_func),
-             count);
+            TYPE_CASE(i64)(arg, out, op->get_min<int64_t>(), op->get_max<int64_t>(), count);
             break;
-            TYPE_CASE(u8)
-            (arg,
-             out,
-             double_to_int<uint8_t>(min, ceil_func),
-             double_to_int<uint8_t>(max, floor_func),
-             count);
+            TYPE_CASE(u8)(arg, out, op->get_min<uint8_t>(), op->get_max<uint8_t>(), count);
             break;
-            TYPE_CASE(u16)
-            (arg,
-             out,
-             double_to_int<uint16_t>(min, ceil_func),
-             double_to_int<uint16_t>(max, floor_func),
-             count);
+            TYPE_CASE(u16)(arg, out, op->get_min<uint16_t>(), op->get_max<uint16_t>(), count);
             break;
-            TYPE_CASE(u32)
-            (arg,
-             out,
-             double_to_int<uint32_t>(min, ceil_func),
-             double_to_int<uint32_t>(max, floor_func),
-             count);
+            TYPE_CASE(u32)(arg, out, op->get_min<uint32_t>(), op->get_max<uint32_t>(), count);
             break;
-            TYPE_CASE(u64)
-            (arg,
-             out,
-             double_to_int<uint64_t>(min, ceil_func),
-             double_to_int<uint64_t>(max, floor_func),
-             count);
+            TYPE_CASE(u64)(arg, out, op->get_min<uint64_t>(), op->get_max<uint64_t>(), count);
             break;
-            TYPE_CASE(f16)(arg, out, static_cast<float16>(min), static_cast<float16>(max), count);
+            TYPE_CASE(f16)(arg, out, op->get_min<float16>(), op->get_max<float16>(), count);
             break;
-            TYPE_CASE(bf16)
-            (arg, out, static_cast<bfloat16>(min), static_cast<bfloat16>(max), count);
+            TYPE_CASE(bf16)(arg, out, op->get_min<bfloat16>(), op->get_max<bfloat16>(), count);
             break;
-            TYPE_CASE(f32)(arg, out, static_cast<float>(min), static_cast<float>(max), count);
+            TYPE_CASE(f32)(arg, out, op->get_min<float>(), op->get_max<float>(), count);
             break;
-            TYPE_CASE(f64)(arg, out, min, max, count);
+            TYPE_CASE(f64)(arg, out, op->get_min<double>(), op->get_max<double>(), count);
             break;
         default: rc = false; break;
         }
@@ -118,8 +74,7 @@ namespace
 
 bool op::v0::Clamp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
 {
-    return evaluate_clamp(
-        inputs[0], outputs[0], get_min(), get_max(), shape_size(get_input_shape(0)));
+    return evaluate_clamp(inputs[0], outputs[0], this);
 }
 
 op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
@@ -143,18 +98,6 @@ OutputVector op::Clamp::decompose_op() const
     const auto type = data.get_element_type();
     const auto shape = data.get_shape();
 
-    // the clamp op is defined with doubles (attributes) for min/max
-    // this means the user can create a clamp op with ...
-    // 1. an integer type input and
-    // 2. non-integral min/max values
-    // this forces us to have a policy for dealing with this situation
-    // the policy is to use ceil for min, floor for max when converting
-    //  from type double to an integer type T
-    // in this way we select the nearest integer value between min and max
-    //  for both min and max
-    auto ceil_func = [](double x) { return ceil(x); };
-    auto floor_func = [](double x) { return floor(x); };
-
     shared_ptr<Node> clamp_min;
     shared_ptr<Node> clamp_max;
 
@@ -162,89 +105,74 @@ OutputVector op::Clamp::decompose_op() const
     {
     case element::Type_t::i8:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, double_to_int<int8_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<int8_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<int8_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<int8_t>());
         break;
     }
     case element::Type_t::i16:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<int16_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<int16_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<int16_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<int16_t>());
         break;
     }
     case element::Type_t::i32:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<int32_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<int32_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<int32_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<int32_t>());
         break;
     }
     case element::Type_t::i64:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<int64_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<int64_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<int64_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<int64_t>());
         break;
     }
     case element::Type_t::u8:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<uint8_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<uint8_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint8_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint8_t>());
         break;
     }
     case element::Type_t::u16:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<uint16_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<uint16_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint16_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint16_t>());
         break;
     }
     case element::Type_t::u32:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<uint32_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<uint32_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint32_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint32_t>());
         break;
     }
     case element::Type_t::u64:
     {
-        clamp_min =
-            make_shared<op::Constant>(type, shape, double_to_int<uint64_t>(m_min, ceil_func));
-        clamp_max =
-            make_shared<op::Constant>(type, shape, double_to_int<uint64_t>(m_max, floor_func));
+        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint64_t>());
+        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint64_t>());
         break;
     }
     case element::Type_t::f16:
     {
-        clamp_min = builder::make_constant(type, shape, static_cast<float16>(m_min));
-        clamp_max = builder::make_constant(type, shape, static_cast<float16>(m_max));
+        clamp_min = builder::make_constant(type, shape, get_min<float16>());
+        clamp_max = builder::make_constant(type, shape, get_max<float16>());
         break;
     }
     case element::Type_t::bf16:
     {
-        clamp_min = builder::make_constant(type, shape, static_cast<bfloat16>(m_min));
-        clamp_max = builder::make_constant(type, shape, static_cast<bfloat16>(m_max));
+        clamp_min = builder::make_constant(type, shape, get_min<bfloat16>());
+        clamp_max = builder::make_constant(type, shape, get_max<bfloat16>());
         break;
     }
     case element::Type_t::f32:
     {
-        clamp_min = builder::make_constant(type, shape, static_cast<float>(m_min));
-        clamp_max = builder::make_constant(type, shape, static_cast<float>(m_max));
+        clamp_min = builder::make_constant(type, shape, get_min<float>());
+        clamp_max = builder::make_constant(type, shape, get_max<float>());
         break;
     }
     case element::Type_t::f64:
     {
-        clamp_min = builder::make_constant(type, shape, m_min);
-        clamp_max = builder::make_constant(type, shape, m_max);
+        clamp_min = builder::make_constant(type, shape, get_min<double>());
+        clamp_max = builder::make_constant(type, shape, get_max<double>());
         break;
     }
     default: throw runtime_error("Unsupported data type in op Clamp"); break;

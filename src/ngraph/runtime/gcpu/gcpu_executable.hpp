@@ -89,7 +89,7 @@ private:
 #endif
         switch (INTExecutable::get_typeid(node))
         {
-        case ngraph::runtime::interpreter::OP_TYPEID::Broadcast:
+        case ngraph::runtime::interpreter::OP_TYPEID::Broadcast_v0:
         {
             const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
             Shape in_shape = node.get_input_shape(0);
@@ -102,7 +102,7 @@ private:
                                      broadcast_axes);
             break;
         }
-        case ngraph::runtime::interpreter::OP_TYPEID::Reshape:
+        case ngraph::runtime::interpreter::OP_TYPEID::Reshape_v0:
         {
             const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
             opt_kernel::reshape(args[0]->get_data_ptr<const T>(),

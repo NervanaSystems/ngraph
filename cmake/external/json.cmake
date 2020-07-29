@@ -14,27 +14,31 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(TARGET Eigen3::Eigen)
+if(TARGET nlohmann_json::nlohmann_json)
     return()
 endif()
 
 include(FetchContent)
 
-set(EIGEN_GIT_TAG dcf7655b3d469a399c1182f350c9009e13ad8654)
-set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen.git)
+message(STATUS "Fetching nlohmann json")
 
-FetchContent_Declare(ext_eigen
-    GIT_REPOSITORY ${EIGEN_GIT_URL}
-    GIT_TAG ${EIGEN_GIT_TAG}
-    )
-
-set(BUILD_TESTING OFF CACHE INTERNAL "")
-
-FetchContent_GetProperties(ext_eigen)
-if(NOT ext_eigen_POPULATED)
-    FetchContent_Populate(ext_eigen)
+# Hedley annotations introduced in v3.7.0 causes build failure on MSVC 2017 + ICC 18
+if(WIN32 AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"))
+    SET(JSON_GIT_LABEL v3.6.1)
+else()
+    SET(JSON_GIT_LABEL v3.8.0)
 endif()
 
-add_library(libeigen INTERFACE)
-target_include_directories(libeigen INTERFACE ${ext_eigen_SOURCE_DIR})
-add_library(Eigen3::Eigen ALIAS libeigen)
+FetchContent_Declare(json
+    GIT_REPOSITORY https://github.com/nlohmann/json
+    GIT_TAG        ${JSON_GIT_LABEL}
+    GIT_SHALLOW    1)
+
+set(JSON_BuildTests OFF CACHE INTERNAL "")
+set(JSON_Install OFF CACHE INTERNAL "")
+
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+    FetchContent_Populate(json)
+    add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()

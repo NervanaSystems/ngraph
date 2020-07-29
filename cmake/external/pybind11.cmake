@@ -14,29 +14,26 @@
 # limitations under the License.
 # ******************************************************************************
 
-if (NGRAPH_IE_STATIC_LIB_ENABLE)
-    set(LIBRARY_TYPE STATIC)
-else()
-    set(LIBRARY_TYPE SHARED)
+if(TARGET pybind11::pybind11)
+    return()
 endif()
 
-set(SRC
-    ie_backend.cpp
-    ie_backend.hpp
-    ie_backend_visibility.hpp
-    ie_tensor.cpp
-    ie_tensor.hpp
-    ie_executable.cpp
-    ie_executable.hpp
+include(FetchContent)
+
+message(STATUS "Fetching pybind11")
+
+set(PYBIND11_GIT_TAG v2.5.0)
+set(PYBIND11_GIT_URL https://github.com/pybind/pybind11.git)
+
+FetchContent_Declare(
+    ext_pybind11
+    GIT_REPOSITORY ${PYBIND11_GIT_URL}
+    GIT_TAG        ${PYBIND11_GIT_TAG}
+    GIT_SHALLOW    1
 )
 
-add_library(ie_backend ${LIBRARY_TYPE} ${SRC})
-add_dependencies(ie_backend inference_engine)
-target_compile_definitions(ie_backend PRIVATE IE_BACKEND_DLL_EXPORTS)
-target_include_directories(ie_backend PUBLIC ${IE_MAIN_SOURCE_DIR}/include)
-target_link_libraries(ie_backend PUBLIC ngraph inference_engine)
-
-install(TARGETS ie_backend
-    LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
-    ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
-)
+FetchContent_GetProperties(ext_pybind11)
+if(NOT ext_pybind11_POPULATED)
+    FetchContent_Populate(ext_pybind11)
+    add_subdirectory(${ext_pybind11_SOURCE_DIR} ${ext_pybind11_BINARY_DIR})
+endif()

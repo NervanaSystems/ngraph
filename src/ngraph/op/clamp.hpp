@@ -19,6 +19,7 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/op.hpp"
 #include "ngraph/op/util/fused_op.hpp"
+#include "ngraph/util.hpp"
 
 namespace ngraph
 {
@@ -53,8 +54,37 @@ namespace ngraph
 
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
-                double get_min() const { return m_min; }
-                double get_max() const { return m_max; }
+                // the clamp op is defined with doubles (attributes) for min/max
+                // this means the user can create a clamp op with ...
+                // 1. an integer type input and
+                // 2. non-integral min/max values
+                // this forces us to have a policy for dealing with this situation
+                // the policy is to use ceil for min, floor for max when converting
+                //  from type double to an integer type T
+                // in this way we select the nearest integer value between min and max
+                //  for both min and max
+
+                template <typename T>
+                T get_min() const
+                {
+                    T min = m_min;
+                    if (std::is_integral<T>::value)
+                    {
+                        min = double_to_int<T>(m_min, [](double x) { return ceil(x); });
+                    }
+                    return min;
+                }
+
+                template <typename T>
+                T get_max() const
+                {
+                    T max = m_max;
+                    if (std::is_integral<T>::value)
+                    {
+                        max = double_to_int<T>(m_max, [](double x) { return floor(x); });
+                    }
+                    return max;
+                }
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) override;
 

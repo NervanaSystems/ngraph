@@ -17,7 +17,7 @@
 cmake_minimum_required (VERSION 3.12)
 
 # set directory where the custom finders live
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
 
 if (CMAKE_BUILD_TYPE)
     set(RELEASE_TYPES Debug Release RelWithDebInfo MinSizeRel)
@@ -106,7 +106,11 @@ project (ngraph)
 # Tells if ngraph source tree is embedded in some other project
 # TRUE if embedded in source tree
 # FALSE if used standalone or as an external project
-set(NGRAPH_IS_EMBEDDED (NOT CMAKE_SOURCE_DIR STREQUAL PROJECT_SOURCE_DIR))
+if(NOT ("${CMAKE_SOURCE_DIR}" STREQUAL "${PROJECT_SOURCE_DIR}"))
+    set(NGRAPH_IS_EMBEDDED TRUE)
+else()
+    set(NGRAPH_IS_EMBEDDED FALSE)
+endif()
 
 set(NGRAPH_INCLUDE_PATH
     ${PROJECT_SOURCE_DIR}/src
@@ -131,7 +135,8 @@ option(NGRAPH_MLIR_ENABLE "Control the building of the MLIR backend" FALSE)
 option(NGRAPH_GPU_ENABLE "Control the building of the GPU backend" FALSE)
 option(NGRAPH_INTERPRETER_ENABLE "Control the building of the INTERPRETER backend" TRUE)
 option(NGRAPH_NOP_ENABLE "Control the building of the NOP backend" TRUE)
-option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" TRUE)
+option(NGRAPH_GENERIC_CPU_ENABLE "Enable build nGraph for generic CPU backend" FALSE)
+option(NGRAPH_EVAL_ENABLE "Enable build nGraph for EVAL backend" TRUE)
 option(NGRAPH_DEBUG_ENABLE "Enable output for NGRAPH_DEBUG statements" FALSE)
 option(NGRAPH_DEPRECATED_ENABLE "Enable compiler deprecation pragmas for deprecated APIs (recommended only for development use)" FALSE)
 option(NGRAPH_ONNX_IMPORT_ENABLE "Enable ONNX importer" FALSE)
@@ -139,13 +144,11 @@ option(NGRAPH_CPU_CONV_AUTO_ENABLE "Enable dnnl convolution_auto for CPU" TRUE)
 option(NGRAPH_CODE_COVERAGE_ENABLE "Enable code coverage data collection" FALSE)
 option(NGRAPH_LIB_VERSIONING_ENABLE "Enable shared library versioning" FALSE)
 option(NGRAPH_PYTHON_BUILD_ENABLE "Enable build nGraph python package wheel" FALSE)
-option(NGRAPH_IE_ENABLE "Enable the Inference Engine backend" FALSE)
 option(NGRAPH_FAST_MATH_ENABLE "Enable fast math" ON)
 option(NGRAPH_JSON_ENABLE "Enable JSON based serialization and tracing features" TRUE)
 option(NGRAPH_STATIC_LIB_ENABLE "Enable build nGraph as a static library" FALSE)
 option(NGRAPH_INTERPRETER_STATIC_LIB_ENABLE "Enable build INTERPRETER backend as a static library" FALSE)
 option(NGRAPH_CPU_STATIC_LIB_ENABLE "Enable build CPU backend as a static library" FALSE)
-option(NGRAPH_IE_STATIC_LIB_ENABLE "Enable build Inference Engine backend as a static library" FALSE)
 option(NGRAPH_DYNAMIC_COMPONENTS_ENABLE "Enable dynamic loading of components" TRUE)
 option(NGRAPH_NATIVE_ARCH_ENABLE "Enable build for native archtecture" TRUE)
 option(NGRAPH_EXPORT_TARGETS_ENABLE "Enable exporting nGraph cmake export targets" TRUE)
@@ -193,6 +196,10 @@ if (NGRAPH_UNIT_TEST_ENABLE)
     endif()
 endif()
 
+if (NGRAPH_TEST_UTIL_ENABLE AND NGRAPH_IS_EMBEDDED)
+    message(FATAL_ERROR "Test util is unsupported in embedded ngraph!")
+endif()
+
 macro (NORMALIZE_BOOL VAL)
     if (${VAL})
         set(${VAL} ON)
@@ -214,6 +221,7 @@ NORMALIZE_BOOL(NGRAPH_GPU_ENABLE)
 NORMALIZE_BOOL(NGRAPH_INTERPRETER_ENABLE)
 NORMALIZE_BOOL(NGRAPH_NOP_ENABLE)
 NORMALIZE_BOOL(NGRAPH_GENERIC_CPU_ENABLE)
+NORMALIZE_BOOL(NGRAPH_EVAL_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEBUG_ENABLE)
 NORMALIZE_BOOL(NGRAPH_DEPRECATED_ENABLE)
 NORMALIZE_BOOL(NGRAPH_ONNX_IMPORT_ENABLE)
@@ -223,7 +231,6 @@ NORMALIZE_BOOL(NGRAPH_LIB_VERSIONING_ENABLE)
 NORMALIZE_BOOL(NGRAPH_PYTHON_BUILD_ENABLE)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_LLVM)
 NORMALIZE_BOOL(NGRAPH_USE_PREBUILT_MLIR)
-NORMALIZE_BOOL(NGRAPH_IE_ENABLE)
 NORMALIZE_BOOL(NGRAPH_JSON_ENABLE)
 
 NORMALIZE_BOOL(NGRAPH_NATIVE_ARCH_ENABLE)
@@ -243,20 +250,19 @@ NORMALIZE_BOOL(NGRAPH_UB_SANITIZER_ENABLE)
 
 message(STATUS "NGRAPH_ADDRESS_SANITIZER_ENABLE:      ${NGRAPH_ADDRESS_SANITIZER_ENABLE}")
 message(STATUS "NGRAPH_CODE_COVERAGE_ENABLE:          ${NGRAPH_CODE_COVERAGE_ENABLE}")
-message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
 message(STATUS "NGRAPH_CPU_CODEGEN_ENABLE:            ${NGRAPH_CPU_CODEGEN_ENABLE}")
+message(STATUS "NGRAPH_CPU_CONV_AUTO_ENABLE:          ${NGRAPH_CPU_CONV_AUTO_ENABLE}")
+message(STATUS "NGRAPH_CPU_ENABLE:                    ${NGRAPH_CPU_ENABLE}")
 message(STATUS "NGRAPH_CPU_MLIR_ENABLE:               ${NGRAPH_CPU_MLIR_ENABLE}")
 message(STATUS "NGRAPH_CPU_STATIC_LIB_ENABLE:         ${NGRAPH_CPU_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_DEBUG_ENABLE:                  ${NGRAPH_DEBUG_ENABLE}")
 message(STATUS "NGRAPH_DEPRECATED_ENABLE:             ${NGRAPH_DEPRECATED_ENABLE}")
 message(STATUS "NGRAPH_DOC_BUILD_ENABLE:              ${NGRAPH_DOC_BUILD_ENABLE}")
 message(STATUS "NGRAPH_DYNAMIC_COMPONENTS_ENABLE:     ${NGRAPH_DYNAMIC_COMPONENTS_ENABLE}")
-message(STATUS "NGRAPH_CPU_CONV_AUTO_ENABLE:          ${NGRAPH_CPU_CONV_AUTO_ENABLE}")
+message(STATUS "NGRAPH_EVAL_ENABLE:                   ${NGRAPH_EVAL_ENABLE}")
 message(STATUS "NGRAPH_EXPORT_TARGETS_ENABLE:         ${NGRAPH_EXPORT_TARGETS_ENABLE}")
 message(STATUS "NGRAPH_GENERIC_CPU_ENABLE:            ${NGRAPH_GENERIC_CPU_ENABLE}")
 message(STATUS "NGRAPH_GPU_ENABLE:                    ${NGRAPH_GPU_ENABLE}")
-message(STATUS "NGRAPH_IE_ENABLE:                     ${NGRAPH_IE_ENABLE}")
-message(STATUS "NGRAPH_IE_STATIC_LIB_ENABLE:          ${NGRAPH_IE_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_ENABLE:            ${NGRAPH_INTERPRETER_ENABLE}")
 message(STATUS "NGRAPH_INTERPRETER_STATIC_LIB_ENABLE: ${NGRAPH_INTERPRETER_STATIC_LIB_ENABLE}")
 message(STATUS "NGRAPH_JSON_ENABLE:                   ${NGRAPH_JSON_ENABLE}")
@@ -383,12 +389,100 @@ message(STATUS "NGRAPH_COMMON_C_FLAGS ${NGRAPH_COMMON_C_FLAGS}")
 # Set baseline flags for nGraph source files
 string(REPLACE ";" " " CMAKE_ORIGINAL_CXX_FLAGS "${NGRAPH_COMMON_CXX_FLAGS}")
 
+if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
+    set(NGRAPH_TARGET_ARCH native CACHE
+        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
+
+    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
+        message(WARNING
+            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
+    endif()
+endif()
+
+#-----------------------------------------------------------------------------------------------
+# External projects install directory
+#-----------------------------------------------------------------------------------------------
+
+if (NOT NGRAPH_BUILD_DIR)
+    set(NGRAPH_BUILD_DIR ${PROJECT_BINARY_DIR}/src/ngraph)
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    if(WIN32)
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
+        set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
+        set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
+    else()
+        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
+    endif()
+endif()
+
+# Build destination directory for nGraph binaries and tools.
+set(NGRAPH_BUILD_BIN ${PROJECT_BINARY_DIR}/bin)
+
+set(EXTERNAL_INSTALL_DIR ${PROJECT_BINARY_DIR}/external)
+
+if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
+    set(EXTERNAL_PROJECTS_ROOT ${PROJECT_BINARY_DIR})
+endif()
+
+if (NGRAPH_ONNX_IMPORT_ENABLE)
+    if (MSVC)
+        # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
+        # These two options can't be mixed, because they requires link two imcompatiable runtime.
+        set(ONNX_USE_MSVC_STATIC_RUNTIME OFF)
+        set(protobuf_WITH_ZLIB  OFF CACHE BOOL "" FORCE)
+        set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "Link protobuf to static runtime libraries" FORCE)
+    endif()
+    if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
+        include(cmake/external/protobuf.cmake)
+    else()
+        find_package(Protobuf 2.6.1 REQUIRED)
+    endif()
+    include(cmake/external/onnx.cmake)
+    if (TARGET ext_protobuf)
+        add_dependencies(onnx ext_protobuf)
+    endif()
+endif()
+
+if(NGRAPH_JSON_ENABLE)
+    include(cmake/external/json.cmake)
+endif()
+if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
+    include(cmake/external/eigen.cmake)
+endif()
+if(NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE)
+    include(cmake/external/onednn.cmake)
+endif()
+
+if(NGRAPH_LLVM_ENABLE)
+    if (NOT MSVC)
+        include(cmake/external/llvm.cmake)
+    else()
+        message(FATAL_ERROR "LLVM is not supported on Windows!")
+    endif()
+endif()
+
+if(NGRAPH_TBB_ENABLE)
+    include(cmake/external/onetbb.cmake)
+endif()
+
+if (NGRAPH_TEST_UTIL_ENABLE)
+    include(cmake/external/gtest.cmake)
+endif()
+
+if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
+    include(cmake/external/pybind11.cmake)
+endif()
+
 #-----------------------------------------------------------------------------------------------
 # Compile Flags for nGraph...
 #-----------------------------------------------------------------------------------------------
 
-# Prevent Eigen from using any LGPL3 code
-set(CMAKE_CXX_FLAGS "${CMAKE_ORIGINAL_CXX_FLAGS} -DEIGEN_MPL2_ONLY -DTBB_USE_THREADING_TOOLS")
+add_compile_options(${NGRAPH_COMMON_FLAGS})
 
 if (WIN32)
     string(REPLACE "/W3" "/W0" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -396,14 +490,14 @@ endif()
 
 # Compiler-specific logic...
 if (WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /MP")
+    add_compile_options(/EHsc /MP)
 
     if (CMAKE_CXX_COMPILER_ID MATCHES MSVC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+        add_compile_options(/bigobj)
         # C4251 needs to have dll-interface to be used by clients of class
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251")
+        add_compile_options(/wd4251)
         # C4275 non dll-interface class used as base for dll-interface class
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4275")
+        add_compile_options(/wd4275)
     endif()
 else()
     set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g")
@@ -419,57 +513,33 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "^(AppleClang)?Clang$" AND NOT NGRAPH_BUI
 endif()
 
 if (NOT WIN32 AND ${NGRAPH_WARNINGS_AS_ERRORS})
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+    add_compile_options(-Werror)
 endif()
 
 if (NGRAPH_CODE_COVERAGE_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    add_compile_options(--coverage)
 endif()
 
 # Enable build target CPU features
-if(NOT WIN32 AND NGRAPH_NATIVE_ARCH_ENABLE)
-    set(NGRAPH_TARGET_ARCH native CACHE
-        STRING "Target CPU architecture to build for. Defaults to the native CPU architecture")
-
-    if (NOT "${NGRAPH_TARGET_ARCH}" STREQUAL "native")
-        message(WARNING
-            "Build target architecture was overridden. The resulting build might not work correctly on the host CPU.")
-    endif()
-
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=${NGRAPH_TARGET_ARCH}")
+if(DEFINED NGRAPH_TARGET_ARCH)
+    add_compile_options(-march=${NGRAPH_TARGET_ARCH})
+elseif(NOT WIN32)
+    add_compile_options(-march=core2 -msse4.1)
 endif()
 
 if (DEFINED NGRAPH_TUNE_ARCH)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mtune=${NGRAPH_TUNE_ARCH}")
+    add_compile_options(-mtune=${NGRAPH_TUNE_ARCH})
 endif()
 
 if (NGRAPH_USE_GOLD)
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
+    add_compile_options(-fuse-ld=gold)
 endif()
 if(WIN32)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNOMINMAX")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_CRT_SECURE_NO_WARNINGS")
-endif()
-
-if (NGRAPH_CPU_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_CPU_ENABLE")
-endif()
-
-if (NGRAPH_IE_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_IE_ENABLE")
+    add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS)
 endif()
 
 if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     set(NGRAPH_MLIR_SOURCE_DIR ${PROJECT_SOURCE_DIR}/src/contrib/mlir)
-endif()
-
-if (NGRAPH_STATIC_LIB_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_STATIC_LIB_ENABLE")
-endif()
-
-if (NGRAPH_DYNAMIC_COMPONENTS_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNGRAPH_DYNAMIC_COMPONENTS_ENABLE")
 endif()
 
 if (NOT DEFINED NGRAPH_TBB_ENABLE)
@@ -482,19 +552,19 @@ if(NGRAPH_ADDRESS_SANITIZER_ENABLE)
     else()
         set(ADDRESS_SANITIZER_FLAGS "-fsanitize=address -fsanitize=leak")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDRESS_SANITIZER_FLAGS}")
+    add_compile_options(${ADDRESS_SANITIZER_FLAGS})
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ADDRESS_SANITIZER_FLAGS}")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} ${ADDRESS_SANITIZER_FLAGS}")
 endif()
 
 if(NGRAPH_THREAD_SANITIZER_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
+    add_compile_options(-fsanitize=thread)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=thread")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=thread")
 endif()
 
 if(NGRAPH_UB_SANITIZER_ENABLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie")
+    add_compile_options(-fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fsanitize=float-divide-by-zero -fsanitize=undefined -fsanitize=float-cast-overflow -fPIE -pie")
 endif()
@@ -503,7 +573,7 @@ if(NGRAPH_ADDRESS_SANITIZER_ENABLE OR NGRAPH_THREAD_SANITIZER_ENABLE OR NGRAPH_U
     if (LINUX AND NOT "${CMAKE_CXX_COMPILER_ID}" MATCHES "^Clang$")
         message(FATAL_ERROR "Sanitizers only work with the clang compiler")
     endif()
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fno-omit-frame-pointer")
+    add_compile_options(-g -fno-omit-frame-pointer)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -g -fno-omit-frame-pointer")
     set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -g -fno-omit-frame-pointer")
 endif()
@@ -580,95 +650,19 @@ add_definitions(-DPROJECT_ROOT_DIR="${PROJECT_SOURCE_DIR}")
 #-----------------------------------------------------------------------------------------------
 # Print Global Options
 #-----------------------------------------------------------------------------------------------
-message(STATUS "Compile Flags: ${CMAKE_CXX_FLAGS}")
+get_directory_property(NGRAPH_COMPILE_OPTIONS COMPILE_OPTIONS)
+message(STATUS "Compile Flags: ${NGRAPH_COMPILE_OPTIONS}")
 message(STATUS "Shared Link Flags: ${CMAKE_SHARED_LINKER_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE ${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG}")
+message(STATUS "CMAKE_CXX_FLAGS_RELWITHDEBINFO ${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+message(STATUS "CMAKE_CXX_FLAGS_MINSIZEREL ${CMAKE_CXX_FLAGS_MINSIZEREL}")
 
 #-----------------------------------------------------------------------------------------------
-# External projects install directory
+# nGraph source tree
 #-----------------------------------------------------------------------------------------------
-
-if (NOT NGRAPH_BUILD_DIR)
-    set(NGRAPH_BUILD_DIR ${PROJECT_BINARY_DIR}/src/ngraph)
-    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    if(WIN32)
-        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_CFG_INTDIR})
-        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-        set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-        set(NGRAPH_ARCHIVE_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR}/${CMAKE_CFG_INTDIR})
-        set(NGRAPH_ARCHIVE_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR}/\${CMAKE_INSTALL_CONFIG_NAME})
-        set(CMAKE_PDB_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-        set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${NGRAPH_BUILD_DIR})
-    else()
-        set(NGRAPH_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-        set(NGRAPH_LIBRARY_INSTALL_SRC_DIRECTORY ${NGRAPH_BUILD_DIR})
-    endif()
-endif()
-
-# Build destination directory for nGraph binaries and tools.
-set(NGRAPH_BUILD_BIN ${PROJECT_BINARY_DIR}/bin)
-
-set(EXTERNAL_INSTALL_DIR ${PROJECT_BINARY_DIR}/external)
-
-if(NOT DEFINED EXTERNAL_PROJECTS_ROOT)
-    set(EXTERNAL_PROJECTS_ROOT ${PROJECT_BINARY_DIR})
-endif()
-
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    if (MSVC)
-        # When we build dll libraries. These flags make sure onnx and protobuf build with /MD, not /MT.
-        # These two options can't be mixed, because they requires link two imcompatiable runtime.
-        set(ONNX_USE_MSVC_STATIC_RUNTIME OFF)
-        set(protobuf_WITH_ZLIB  OFF CACHE BOOL "" FORCE)
-        set(protobuf_MSVC_STATIC_RUNTIME OFF CACHE BOOL "Link protobuf to static runtime libraries" FORCE)
-    endif()
-    if (NOT NGRAPH_USE_SYSTEM_PROTOBUF)
-        include(cmake/external_protobuf.cmake)
-    else()
-        find_package(Protobuf 2.6.1 REQUIRED)
-    endif()
-    include(cmake/external_onnx.cmake)
-    if (TARGET ext_protobuf)
-        add_dependencies(onnx ext_protobuf)
-    endif()
-endif()
-
-if(NGRAPH_JSON_ENABLE)
-    include(cmake/external_json.cmake)
-endif()
-if(NGRAPH_CPU_ENABLE OR NGRAPH_GENERIC_CPU_ENABLE)
-    include(cmake/external_eigen.cmake)
-endif()
-if(NGRAPH_CPU_ENABLE OR NGRAPH_MLIR_ENABLE)
-    include(cmake/external_onednn.cmake)
-endif()
-
-if(NGRAPH_LLVM_ENABLE)
-    if (NOT MSVC)
-        include(cmake/external_llvm.cmake)
-    else()
-        message(FATAL_ERROR "LLVM is not supported on Windows!")
-    endif()
-endif()
-
-if(NGRAPH_TBB_ENABLE)
-    include(cmake/external_onetbb.cmake)
-endif()
 
 add_subdirectory(src)
-
-if (NGRAPH_TEST_UTIL_ENABLE)
-    if (NGRAPH_IS_EMBEDDED)
-        include(cmake/external_gtest.cmake)
-    else()
-        include(cmake/fetch_gtest.cmake)
-    endif()
-endif()
-
-if (NGRAPH_UNIT_TEST_NUMPY_ENABLE OR NGRAPH_PYTHON_BUILD_ENABLE)
-    include(cmake/external_pybind11.cmake)
-endif()
 
 add_subdirectory(test)
 

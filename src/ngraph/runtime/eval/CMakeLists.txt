@@ -14,24 +14,18 @@
 # limitations under the License.
 # ******************************************************************************
 
-if(TARGET pybind11::pybind11)
-    return()
-endif()
+if (NGRAPH_EVAL_ENABLE)
+    add_library(eval_backend SHARED eval_backend.cpp eval_executable.cpp)
+    if(NGRAPH_LIB_VERSIONING_ENABLE)
+        set_target_properties(eval_backend PROPERTIES
+            VERSION ${NGRAPH_VERSION}
+            SOVERSION ${NGRAPH_API_VERSION})
+    endif()
+    target_link_libraries(eval_backend PRIVATE ngraph)
+    target_compile_definitions(eval_backend PRIVATE EVAL_BACKEND_DLL_EXPORTS)
 
-include(FetchContent)
-
-set(PYBIND11_GIT_TAG v2.5.0)
-set(PYBIND11_GIT_URL https://github.com/pybind/pybind11.git)
-
-FetchContent_Declare(
-    ext_pybind11
-    GIT_REPOSITORY ${PYBIND11_GIT_URL}
-    GIT_TAG        ${PYBIND11_GIT_TAG}
-    GIT_SHALLOW    1
-)
-
-FetchContent_GetProperties(ext_pybind11)
-if(NOT ext_pybind11_POPULATED)
-    FetchContent_Populate(ext_pybind11)
-    add_subdirectory(${ext_pybind11_SOURCE_DIR} ${ext_pybind11_BINARY_DIR})
+    install(TARGETS eval_backend
+        LIBRARY DESTINATION "${NGRAPH_INSTALL_LIB}"
+        ARCHIVE DESTINATION "${NGRAPH_INSTALL_LIB}"
+    )
 endif()

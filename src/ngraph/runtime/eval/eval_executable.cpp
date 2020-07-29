@@ -14,7 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/runtime/gcpu/gcpu_executable.hpp"
+#include "ngraph/runtime/eval/eval_executable.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
 #include "ngraph/except.hpp"
@@ -27,7 +27,6 @@
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -37,13 +36,36 @@ using namespace ngraph;
 
 using descriptor::layout::DenseTensorLayout;
 
-runtime::gcpu::GCPUExecutable::GCPUExecutable(const shared_ptr<Function>& function,
+runtime::eval::EVALExecutable::EVALExecutable(const shared_ptr<Function>& function,
                                               bool enable_performance_collection)
-    : INTExecutable(function, enable_performance_collection)
 {
+    m_function = clone_function(*function);
+
+    auto is_supported = [](const Node& node) {
+        bool retval = false;
+        switch (EVALExecutable::get_typeid(node))
+        {
+        case OP_TYPEID::Clamp_v0:
+        case OP_TYPEID::MatMul_v0:
+        case OP_TYPEID::Mod_v1:
+        case OP_TYPEID::Squeeze_v0:
+        case OP_TYPEID::Unsqueeze_v0: retval = true; break;
+        default: break;
+        }
+        return retval;
+    };
+    pass::Manager pass_manager;
+    pass_manager.register_pass<pass::LikeReplacement>();
+    pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
+    pass_manager.run_passes(m_function);
+    for (auto node : m_function->get_ordered_ops())
+    {
+        m_nodes.push_back(node);
+    }
+    set_parameters_and_results(*m_function);
 }
 
-bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
+bool runtime::eval::EVALExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
     // convert inputs to HostTensor
@@ -90,7 +112,7 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (auto& op : m_nodes)
     {
         auto type_id = get_typeid(*op);
-        if (type_id == ngraph::runtime::interpreter::OP_TYPEID::Parameter_v0)
+        if (type_id == OP_TYPEID::Parameter_v0)
         {
             continue;
         }
@@ -125,83 +147,35 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
             op_outputs.push_back(host_tensor);
         }
 
-        // get op type
-        element::Type type;
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wswitch-enum"
-#endif
-        switch (type_id)
-        {
-        case ngraph::runtime::interpreter::OP_TYPEID::Convert_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::Quantize_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::Dequantize_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMin_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::ArgMax_v0:
-            type = op->get_input_element_type(0);
-            break;
-        case ngraph::runtime::interpreter::OP_TYPEID::Equal_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::Greater_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::Less_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::LessEq_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual_v0:
-            // Get the type of the second input, not the first
-            // All BinaryElementwiseComparision ops have the same type for inputs
-            // Select has bool for first input and the type we are interested in for the second
-            type = op->get_input_element_type(1);
-            break;
-        case ngraph::runtime::interpreter::OP_TYPEID::TopK_v0:
-            type = op->get_output_element_type(1);
-            break;
-        default: type = op->get_output_element_type(0); break;
-        }
-#if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
-#pragma GCC diagnostic pop
-#endif
-
-        if (m_performance_counters_enabled)
-        {
-            m_timer_map[op].start();
-        }
+        string name = op->description() + "_v" + to_string(op->get_type_info().version);
         if (!op->evaluate(op_outputs, op_inputs))
         {
-            generate_calls(type, *op, op_outputs, op_inputs);
-        }
-        if (m_performance_counters_enabled)
-        {
-            m_timer_map[op].stop();
+            throw unsupported_op("Unsupported op '" + name + "'");
         }
     }
 
     return true;
 }
 
-void runtime::gcpu::GCPUExecutable::generate_calls(const element::Type& type,
-                                                   const Node& op,
-                                                   const vector<shared_ptr<HostTensor>>& out,
-                                                   const vector<shared_ptr<HostTensor>>& in)
+runtime::eval::OP_TYPEID runtime::eval::EVALExecutable::get_typeid(const Node& node)
 {
-    stringstream ss;
-    switch (type)
+    const NodeTypeInfo& type_info = node.get_type_info();
+    // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
+    // {Abs::type_info, OP_TYPEID::Abs},
+    // {Acos::type_info, OP_TYPEID::Acos},
+    // ...
+    static const map<NodeTypeInfo, OP_TYPEID> type_info_map{
+#define NGRAPH_OP(NAME, VERSION)                                                                   \
+    {ngraph::op::v##VERSION::NAME::type_info, OP_TYPEID::NAME##_v##VERSION},
+#include "ngraph/op_version_tbl.hpp"
+#undef NGRAPH_OP
+    };
+    OP_TYPEID rc = OP_TYPEID::UnknownOp;
+
+    auto it = type_info_map.find(type_info);
+    if (it != type_info_map.end())
     {
-    case element::Type_t::boolean: gop_engine<char>(op, out, in); break;
-    case element::Type_t::f32: gop_engine<float>(op, out, in); break;
-    case element::Type_t::f64: gop_engine<double>(op, out, in); break;
-    case element::Type_t::i8: gop_engine<int8_t>(op, out, in); break;
-    case element::Type_t::i16: gop_engine<int16_t>(op, out, in); break;
-    case element::Type_t::i32: gop_engine<int32_t>(op, out, in); break;
-    case element::Type_t::i64: gop_engine<int64_t>(op, out, in); break;
-    case element::Type_t::u8: gop_engine<uint8_t>(op, out, in); break;
-    case element::Type_t::u16: gop_engine<uint16_t>(op, out, in); break;
-    case element::Type_t::u32: gop_engine<uint32_t>(op, out, in); break;
-    case element::Type_t::u64: gop_engine<uint64_t>(op, out, in); break;
-    case element::Type_t::undefined:
-    case element::Type_t::dynamic:
-    case element::Type_t::u1:
-    case element::Type_t::bf16:
-    case element::Type_t::f16:
-        ss << "unsupported element type " << type << " op " << op.get_name();
-        throw ngraph_error(ss.str());
+        rc = it->second;
     }
+    return rc;
 }
