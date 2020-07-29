@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
