@@ -60,6 +60,7 @@ if(NEED_TO_BUILD_LLVM)
             "Set NGRAPH_OVERWRITE_LLVM_ROOT to ON if you would like to overwrite.")
     endif()
     message(STATUS "LLVM: Building LLVM from source")
+    message(STATUS "LLVM: Fetching source")
 
     set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${MLIR_COMMIT_ID}.zip)
     set(LLVM_ARCHIVE_URL_HASH 3423b3d6dd461628c367ac56a5bc351763200c4e)

@@ -21,6 +21,8 @@ include(FetchContent)
 # Download and install Google Protobuf ...
 #------------------------------------------------------------------------------
 
+message(STATUS "Fetching Google Protobuf")
+
 # This version of PROTOBUF is required by Microsoft ONNX Runtime.
 set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
 
