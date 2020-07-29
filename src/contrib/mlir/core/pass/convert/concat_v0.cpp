@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,7 +22,12 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Concat>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Concat*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Concat");
-    throw unsupported_op("Unsupported op 'v0::Concat'");
+    auto concat = dynamic_cast<const ngraph::op::v0::Concat*>(ngNode);
+    NGRAPH_CHECK(
+        ngNode, concat != nullptr, "ngNode ", ngNode->description(), " is not a v0::Concat");
+
+    auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
+    op->setAttr("concatenation_axis",
+                NgDialectObj.m_builder.getI64IntegerAttr(concat->get_concatenation_axis()));
+    return op;
 }

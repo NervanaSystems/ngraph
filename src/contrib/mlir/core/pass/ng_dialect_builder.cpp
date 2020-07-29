@@ -128,24 +128,6 @@ void pass::NgDialectConversionPass::runOnOperation()
     module.push_back(function);
 }
 
-template <typename T>
-void pass::NgDialectConversionPass::getMlirShape(T ngShape,
-                                                 llvm::SmallVectorImpl<int64_t>& mlirShape)
-{
-    for (auto dim : ngShape)
-    {
-        mlirShape.push_back(dim);
-    }
-}
-
-template <typename T>
-mlir::ArrayAttr pass::NgDialectConversionPass::getShapeAsAttr(T ngShape)
-{
-    SmallVector<int64_t, 4> mlirShape;
-    getMlirShape(ngShape, mlirShape);
-    return m_builder.getI64ArrayAttr(mlirShape);
-}
-
 ngraph::Node* pass::NgDialectConversionPass::getOriginArg(ngraph::Node* node) const
 {
     return node;
@@ -497,390 +479,38 @@ void pass::NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
     createReturn();
 }
 
-template <>
-mlir::Operation*
-    pass::NgDialectConversionPass::createOp<ngraph::op::Add>(NgDialectConversionPass& NgDialectObj,
-                                                             const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGAddOp>(ngNode);
-}
+// template <typename Op>
+// mlir::Operation* pass::NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode,
+//                                                                 int inNum)
+// {
+//     std::vector<mlir::Value> argValues;
+//     std::vector<mlir::Type> resTypes;
+//     std::shared_ptr<descriptor::Tensor> argTensor;
+//     int i = 0;
+//     for (auto& argOutput : ngNode->input_values())
+//     {
+//         if (inNum != -1 && i == inNum)
+//         {
+//             break;
+//         }
+//         argTensor = argOutput.get_tensor_ptr();
+//         auto argV = getTensorValue(argTensor.get()).m_value;
+//         argValues.push_back(argV);
+//         i++;
+//     }
 
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Subtract>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGSubOp>(ngNode);
-}
+//     for (auto& output : ngNode->outputs())
+//     {
+//         resTypes.push_back(getMlirType(output.get_tensor_ptr().get()));
+//     }
 
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Multiply>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGMulOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Divide>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGDivOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Greater>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGGreaterOp>(ngNode);
-}
-
-template <>
-mlir::Operation*
-    pass::NgDialectConversionPass::createOp<ngraph::op::Less>(NgDialectConversionPass& NgDialectObj,
-                                                              const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::GreaterEq>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGGreaterEqOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::LessEq>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGLessEqOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Equal>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGEqOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::NotEqual>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGNotEqOp>(ngNode);
-}
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Maximum>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGMaxOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Minimum>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGMinOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::ArgMax>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createIndexReduction<mlir::NGArgMaxRedOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::ArgMin>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createIndexReduction<mlir::NGArgMinRedOp>(ngNode);
-}
-
-template <>
-mlir::Operation*
-    pass::NgDialectConversionPass::createOp<ngraph::op::Dot>(NgDialectConversionPass& NgDialectObj,
-                                                             const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGDotOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Concat>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    auto concat = static_cast<const ngraph::op::Concat*>(ngNode);
-    auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
-    op->setAttr("concatenation_axis",
-                NgDialectObj.m_builder.getI64IntegerAttr(concat->get_concatenation_axis()));
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Gather>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    auto gather = static_cast<const ngraph::op::Gather*>(ngNode);
-    auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(ngNode);
-    op->setAttr("axis", NgDialectObj.m_builder.getI64IntegerAttr(gather->get_axis()));
-    return op;
-}
-
-template <>
-mlir::Operation*
-    pass::NgDialectConversionPass::createOp<ngraph::op::Relu>(NgDialectConversionPass& NgDialectObj,
-                                                              const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGReluOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Negative>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGNegOp>(ngNode);
-}
-
-template <>
-mlir::Operation*
-    pass::NgDialectConversionPass::createOp<ngraph::op::Abs>(NgDialectConversionPass& NgDialectObj,
-                                                             const ngraph::Node* ngNode)
-{
-    return NgDialectObj.createGenericOp<mlir::NGAbsOp>(ngNode);
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Convolution>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvolutionOp>(ngNode);
-    auto convNode = static_cast<const ngraph::op::Convolution*>(ngNode);
-    auto convOp = llvm::cast<mlir::NGConvolutionOp>(op);
-
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides());
-    convOp.setStrides(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_below());
-    convOp.setPadBelow(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(convNode->get_padding_above());
-    convOp.setPadAbove(attr);
-
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::GroupConvolution>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvOp>(ngNode);
-    auto gConvNode = static_cast<const ngraph::op::GroupConvolution*>(ngNode);
-    auto gConvOp = llvm::cast<mlir::NGGroupConvOp>(op);
-
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(gConvNode->get_window_movement_strides());
-    gConvOp.setStrides(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_below());
-    gConvOp.setPadBelow(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
-    gConvOp.setPadAbove(attr);
-
-    gConvOp.setGroups(NgDialectObj.getBuilder().getI64IntegerAttr(gConvNode->get_groups()));
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::ConvolutionBias>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(ngNode);
-    auto convNode = static_cast<const ngraph::op::ConvolutionBias*>(ngNode);
-    auto convOp = llvm::cast<mlir::NGConvBiasOp>(op);
-
-    convOp.setStrides(NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides()));
-    convOp.setDilation(NgDialectObj.getShapeAsAttr(convNode->get_window_dilation_strides()));
-    convOp.setPadBelow(NgDialectObj.getShapeAsAttr(convNode->get_padding_below()));
-    convOp.setPadAbove(NgDialectObj.getShapeAsAttr(convNode->get_padding_above()));
-    convOp.setWithRelu(NgDialectObj.m_builder.getBoolAttr(convNode->with_relu()));
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::AvgPool>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
-    auto avgPoolNode = static_cast<const ngraph::op::AvgPool*>(ngNode);
-    auto avgPoolOp = llvm::cast<mlir::NGAvgPoolOp>(op);
-
-    mlir::BoolAttr boolAttr =
-        NgDialectObj.m_builder.getBoolAttr(avgPoolNode->get_include_padding_in_avg_computation());
-    avgPoolOp.setIncludePadding(boolAttr);
-
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_shape());
-    avgPoolOp.setWindowShape(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_movement_strides());
-    avgPoolOp.setWindowMovementStrides(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_below());
-    avgPoolOp.setPadBelow(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_above());
-    avgPoolOp.setPadAbove(attr);
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::AvgPoolBackprop>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolBackpropOp>(ngNode);
-    auto avgPoolBackpropNode = static_cast<const ngraph::op::AvgPoolBackprop*>(ngNode);
-    auto avgPoolBackpropOp = llvm::cast<mlir::NGAvgPoolBackpropOp>(op);
-
-    mlir::BoolAttr boolAttr = NgDialectObj.m_builder.getBoolAttr(
-        avgPoolBackpropNode->get_include_padding_in_avg_computation());
-    avgPoolBackpropOp.setIncludePadding(boolAttr);
-
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_shape());
-    avgPoolBackpropOp.setWindowShape(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_movement_strides());
-    avgPoolBackpropOp.setWindowMovementStrides(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_below());
-    avgPoolBackpropOp.setPadBelow(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_above());
-    avgPoolBackpropOp.setPadAbove(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_forward_arg_shape());
-    avgPoolBackpropOp.setForwardArgShape(attr);
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::MaxPool>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolOp>(ngNode);
-    auto maxPoolNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
-    auto maxPoolOp = llvm::cast<mlir::NGMaxPoolOp>(op);
-
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_shape());
-    maxPoolOp.setWindowShape(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_movement_strides());
-    maxPoolOp.setWindowMovementStrides(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_below());
-    maxPoolOp.setPadBelow(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_above());
-    maxPoolOp.setPadAbove(attr);
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::MaxPoolBackprop>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode, 2);
-    auto maxPoolBackpropNode = static_cast<const ngraph::op::MaxPool*>(ngNode);
-    auto maxPoolBackpropOp = llvm::cast<mlir::NGMaxPoolBackpropOp>(op);
-
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_shape());
-    maxPoolBackpropOp.setWindowShape(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_movement_strides());
-    maxPoolBackpropOp.setWindowMovementStrides(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_below());
-    maxPoolBackpropOp.setPadBelow(attr);
-
-    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_above());
-    maxPoolBackpropOp.setPadAbove(attr);
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::MatMul>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    auto matmulNode = static_cast<const ngraph::op::MatMul*>(ngNode);
-    auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(ngNode);
-    auto matmulOp = llvm::cast<mlir::NGMatMulOp>(op);
-    matmulOp.setTransposeA(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_a()));
-    matmulOp.setTransposeB(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_b()));
-    return op;
-}
-
-template <>
-mlir::Operation*
-    pass::NgDialectConversionPass::createOp<ngraph::op::Gemm>(NgDialectConversionPass& NgDialectObj,
-                                                              const ngraph::Node* ngNode)
-{
-    auto gemmNode = static_cast<const ngraph::op::Gemm*>(ngNode);
-    auto op = NgDialectObj.createGenericOp<mlir::NGGemmOp>(ngNode);
-    auto gemmOp = llvm::cast<mlir::NGGemmOp>(op);
-    gemmOp.setTransA(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transA()));
-    gemmOp.setTransB(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transB()));
-    gemmOp.setAlpha(NgDialectObj.m_builder.getF32FloatAttr(gemmNode->get_alpha()));
-    gemmOp.setBeta(NgDialectObj.m_builder.getF32FloatAttr(gemmNode->get_beta()));
-    return op;
-}
-
-template <>
-mlir::Operation* pass::NgDialectConversionPass::createOp<ngraph::op::Softmax>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
-{
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode, 1);
-    auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
-
-    auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node());
-    auto const_op = as_type<ngraph::op::Constant>(originArg);
-    NGRAPH_INFO << "**********************************";
-    NGRAPH_CHECK(ngNode, const_op != nullptr, "Input to softmax is not a Constant");
-
-    AxisSet axes = const_op->get_axis_set_val();
-    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(axes);
-    softmaxOp.setAxes(attr);
-    return op;
-}
-
-template <typename Op>
-mlir::Operation* pass::NgDialectConversionPass::createGenericOp(const ngraph::Node* ngNode,
-                                                                int inNum)
-{
-    std::vector<mlir::Value> argValues;
-    std::vector<mlir::Type> resTypes;
-    std::shared_ptr<descriptor::Tensor> argTensor;
-    int i = 0;
-    for (auto& argOutput : ngNode->input_values())
-    {
-        if (inNum != -1 && i == inNum)
-        {
-            break;
-        }
-        argTensor = argOutput.get_tensor_ptr();
-        auto argV = getTensorValue(argTensor.get()).m_value;
-        argValues.push_back(argV);
-        i++;
-    }
-
-    for (auto& output : ngNode->outputs())
-    {
-        resTypes.push_back(getMlirType(output.get_tensor_ptr().get()));
-    }
-
-    return (m_builder.create<Op,
-                             ArrayRef<mlir::Type>,
-                             ArrayRef<mlir::Value>,
-                             ArrayRef<mlir::NamedAttribute>>(
-                mlir::UnknownLoc::get(m_context), resTypes, argValues, {/* no attrs */}))
-        .getOperation();
-}
+//     return (m_builder.create<Op,
+//                              ArrayRef<mlir::Type>,
+//                              ArrayRef<mlir::Value>,
+//                              ArrayRef<mlir::NamedAttribute>>(
+//                 mlir::UnknownLoc::get(m_context), resTypes, argValues, {/* no attrs */}))
+//         .getOperation();
+// }
 
 const pass::NgDialectConversionPass::MLIRCompOpMap& pass::NgDialectConversionPass::getOpDispatcher()
 {
@@ -900,17 +530,6 @@ void pass::NgDialectConversionPass::createReturn()
         valueList.push_back(getTensorValue(&output->get_input_tensor(0)).m_value);
     }
     m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
-}
-
-template <typename RedOp>
-mlir::Operation* pass::NgDialectConversionPass::createIndexReduction(const ngraph::Node* ngNode)
-{
-    auto* idxRed = static_cast<const ngraph::op::util::IndexReduction*>(ngNode);
-    auto op = createGenericOp<RedOp>(ngNode);
-    mlir::ArrayAttr redAxesAttr =
-        m_builder.getI64ArrayAttr({(int64_t)idxRed->get_reduction_axis()});
-    op->setAttr("axes", redAxesAttr);
-    return op;
 }
 
 std::unique_ptr<mlir::Pass>

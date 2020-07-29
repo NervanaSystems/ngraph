@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,8 +22,26 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::MaxPoolBackprop>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::MaxPoolBackprop*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::MaxPoolBackprop");
-    throw unsupported_op("Unsupported op 'v0::MaxPoolBackprop'");
+    auto maxPoolBackpropNode = dynamic_cast<const ngraph::op::v0::MaxPoolBackprop*>(ngNode);
+    NGRAPH_CHECK(ngNode,
+                 maxPoolBackpropNode != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::MaxPoolBackprop");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode, 2);
+    auto maxPoolBackpropOp = llvm::cast<mlir::NGMaxPoolBackpropOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_shape());
+    maxPoolBackpropOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_movement_strides());
+    maxPoolBackpropOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_below());
+    maxPoolBackpropOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_padding_above());
+    maxPoolBackpropOp.setPadAbove(attr);
+    return op;
 }

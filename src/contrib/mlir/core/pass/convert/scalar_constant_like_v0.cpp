@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 

@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,8 +22,33 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::AvgPoolBackprop>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::AvgPoolBackprop*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::AvgPoolBackprop");
-    throw unsupported_op("Unsupported op 'v0::AvgPoolBackprop'");
+    auto avgPoolBackpropNode = dynamic_cast<const ngraph::op::v0::AvgPoolBackprop*>(ngNode);
+    NGRAPH_CHECK(ngNode,
+                 avgPoolBackpropNode != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::AvgPoolBackprop");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolBackpropOp>(ngNode);
+    auto avgPoolBackpropOp = llvm::cast<mlir::NGAvgPoolBackpropOp>(op);
+
+    mlir::BoolAttr boolAttr = NgDialectObj.m_builder.getBoolAttr(
+        avgPoolBackpropNode->get_include_padding_in_avg_computation());
+    avgPoolBackpropOp.setIncludePadding(boolAttr);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_shape());
+    avgPoolBackpropOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_window_movement_strides());
+    avgPoolBackpropOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_below());
+    avgPoolBackpropOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_padding_above());
+    avgPoolBackpropOp.setPadAbove(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolBackpropNode->get_forward_arg_shape());
+    avgPoolBackpropOp.setForwardArgShape(attr);
+    return op;
 }

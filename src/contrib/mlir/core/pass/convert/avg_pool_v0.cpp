@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,8 +22,27 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::AvgPool>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::AvgPool*>(ngNode);
+    auto avgPoolNode = dynamic_cast<const ngraph::op::v0::AvgPool*>(ngNode);
     NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::AvgPool");
-    throw unsupported_op("Unsupported op 'v0::AvgPool'");
+        ngNode, avgPoolNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::AvgPool");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
+    auto avgPoolOp = llvm::cast<mlir::NGAvgPoolOp>(op);
+
+    mlir::BoolAttr boolAttr =
+        NgDialectObj.m_builder.getBoolAttr(avgPoolNode->get_include_padding_in_avg_computation());
+    avgPoolOp.setIncludePadding(boolAttr);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_shape());
+    avgPoolOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_window_movement_strides());
+    avgPoolOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_below());
+    avgPoolOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(avgPoolNode->get_padding_above());
+    avgPoolOp.setPadAbove(attr);
+    return op;
 }

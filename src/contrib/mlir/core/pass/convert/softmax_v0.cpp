@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -24,5 +25,17 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0:
     auto node = dynamic_cast<const ngraph::op::v0::Softmax*>(ngNode);
     NGRAPH_CHECK(
         ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Softmax");
-    throw unsupported_op("Unsupported op 'v0::Softmax'");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode, 1);
+    auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
+
+    auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node());
+    auto const_op = as_type<ngraph::op::Constant>(originArg);
+    NGRAPH_INFO << "**********************************";
+    NGRAPH_CHECK(ngNode, const_op != nullptr, "Input to softmax is not a Constant");
+
+    AxisSet axes = const_op->get_axis_set_val();
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(axes);
+    softmaxOp.setAxes(attr);
+    return op;
 }

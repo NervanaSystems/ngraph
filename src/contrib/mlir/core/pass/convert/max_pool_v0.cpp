@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,8 +22,23 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::MaxPool>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::MaxPool*>(ngNode);
+    auto maxPoolNode = dynamic_cast<const ngraph::op::v0::MaxPool*>(ngNode);
     NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::MaxPool");
-    throw unsupported_op("Unsupported op 'v0::MaxPool'");
+        ngNode, maxPoolNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::MaxPool");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolOp>(ngNode);
+    auto maxPoolOp = llvm::cast<mlir::NGMaxPoolOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_shape());
+    maxPoolOp.setWindowShape(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_movement_strides());
+    maxPoolOp.setWindowMovementStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_below());
+    maxPoolOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_padding_above());
+    maxPoolOp.setPadAbove(attr);
+    return op;
 }

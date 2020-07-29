@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -23,5 +24,6 @@ mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0:
 {
     auto node = dynamic_cast<const ngraph::op::v0::Dot*>(ngNode);
     NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Dot");
-    throw unsupported_op("Unsupported op 'v0::Dot'");
+
+    return NgDialectObj.createGenericOp<mlir::NGDotOp>(ngNode);
 }

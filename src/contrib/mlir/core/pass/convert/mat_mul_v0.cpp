@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,7 +22,13 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::MatMul>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::MatMul*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::MatMul");
-    throw unsupported_op("Unsupported op 'v0::MatMul'");
+    auto matmulNode = dynamic_cast<const ngraph::op::v0::MatMul*>(ngNode);
+    NGRAPH_CHECK(
+        ngNode, matmulNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::MatMul");
+
+    auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(ngNode);
+    auto matmulOp = llvm::cast<mlir::NGMatMulOp>(op);
+    matmulOp.setTransposeA(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_a()));
+    matmulOp.setTransposeB(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_b()));
+    return op;
 }

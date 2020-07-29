@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,7 +22,11 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Gather>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Gather*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Gather");
-    throw unsupported_op("Unsupported op 'v0::Gather'");
+    auto gather = dynamic_cast<const ngraph::op::v0::Gather*>(ngNode);
+    NGRAPH_CHECK(
+        ngNode, gather != nullptr, "ngNode ", ngNode->description(), " is not a v0::Gather");
+
+    auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(ngNode);
+    op->setAttr("axis", NgDialectObj.m_builder.getI64IntegerAttr(gather->get_axis()));
+    return op;
 }

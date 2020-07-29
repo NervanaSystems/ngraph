@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,8 +22,20 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::ConvolutionBias>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::ConvolutionBias*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::ConvolutionBias");
-    throw unsupported_op("Unsupported op 'v0::ConvolutionBias'");
+    auto convNode = dynamic_cast<const ngraph::op::v0::ConvolutionBias*>(ngNode);
+    NGRAPH_CHECK(ngNode,
+                 convNode != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::ConvolutionBias");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(ngNode);
+    auto convOp = llvm::cast<mlir::NGConvBiasOp>(op);
+
+    convOp.setStrides(NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides()));
+    convOp.setDilation(NgDialectObj.getShapeAsAttr(convNode->get_window_dilation_strides()));
+    convOp.setPadBelow(NgDialectObj.getShapeAsAttr(convNode->get_padding_below()));
+    convOp.setPadAbove(NgDialectObj.getShapeAsAttr(convNode->get_padding_above()));
+    convOp.setWithRelu(NgDialectObj.m_builder.getBoolAttr(convNode->with_relu()));
+    return op;
 }

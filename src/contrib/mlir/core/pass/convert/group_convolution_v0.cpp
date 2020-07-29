@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
@@ -21,11 +22,25 @@ template <>
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::GroupConvolution>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::GroupConvolution*>(ngNode);
+    auto gConvNode = dynamic_cast<const ngraph::op::v0::GroupConvolution*>(ngNode);
     NGRAPH_CHECK(ngNode,
-                 node != nullptr,
+                 gConvNode != nullptr,
                  "ngNode ",
                  ngNode->description(),
                  " is not a v0::GroupConvolution");
-    throw unsupported_op("Unsupported op 'v0::GroupConvolution'");
+
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGGroupConvOp>(ngNode);
+    auto gConvOp = llvm::cast<mlir::NGGroupConvOp>(op);
+
+    mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(gConvNode->get_window_movement_strides());
+    gConvOp.setStrides(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_below());
+    gConvOp.setPadBelow(attr);
+
+    attr = NgDialectObj.getShapeAsAttr(gConvNode->get_padding_above());
+    gConvOp.setPadAbove(attr);
+
+    gConvOp.setGroups(NgDialectObj.getBuilder().getI64IntegerAttr(gConvNode->get_groups()));
+    return op;
 }
