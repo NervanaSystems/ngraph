@@ -116,7 +116,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 
     Coordinate arg_delta_slice_lower = Coordinate(concat_result_shape.size(), 0);
     Coordinate arg_delta_slice_upper = concat_result_shape;
-    Coordinate arg_delta_slice_strides = Coordinate(concat_result_shape.size(), 1);
+    Strides arg_delta_slice_strides = Strides(concat_result_shape.size(), 1);
 
     size_t pos = 0;
 

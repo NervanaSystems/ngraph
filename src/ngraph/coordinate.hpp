@@ -26,7 +26,7 @@
 namespace ngraph
 {
     /// \brief Coordinates for a tensor element
-    class Coordinate : public std::vector<size_t>
+    class Coordinate
     {
     public:
         NGRAPH_API Coordinate();
@@ -44,13 +44,30 @@ namespace ngraph
 
         template <class InputIterator>
         Coordinate(InputIterator first, InputIterator last)
-            : std::vector<size_t>(first, last)
+            : m_data(first, last)
         {
         }
 
         NGRAPH_API Coordinate& operator=(const Coordinate& v);
 
         NGRAPH_API Coordinate& operator=(Coordinate&& v) noexcept;
+
+        size_t& operator[](size_t index) { return m_data[index]; }
+        size_t operator[](size_t index) const { return m_data[index]; }
+        size_t& at(size_t index) { return m_data.at(index); }
+        const size_t& at(size_t index)const { return m_data.at(index); }
+        std::vector<size_t>::iterator begin() { return m_data.begin(); }
+        std::vector<size_t>::iterator end() { return m_data.end(); }
+        std::vector<size_t>::const_iterator begin() const { return m_data.begin(); }
+        std::vector<size_t>::const_iterator end() const { return m_data.end(); }
+        size_t size() const { return m_data.size(); }
+        void push_back(size_t value) { m_data.push_back(value); }
+
+    friend NGRAPH_API
+    std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
+
+    private:
+        std::vector<size_t> m_data;
     };
 
     template <>
@@ -66,7 +83,4 @@ namespace ngraph
         static constexpr DiscreteTypeInfo type_info{"AttributeAdapter<Coordinate>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
-
-    NGRAPH_API
-    std::ostream& operator<<(std::ostream& s, const Coordinate& coordinate);
 }

@@ -23,7 +23,7 @@ using namespace ngraph;
 std::ostream& ngraph::operator<<(std::ostream& s, const Coordinate& coordinate)
 {
     s << "Coordinate{";
-    s << ngraph::join(coordinate);
+    s << ngraph::join(coordinate.m_data);
     s << "}";
     return s;
 }
@@ -31,27 +31,31 @@ std::ostream& ngraph::operator<<(std::ostream& s, const Coordinate& coordinate)
 ngraph::Coordinate::Coordinate() {}
 
 ngraph::Coordinate::Coordinate(const std::initializer_list<size_t>& axes)
-    : std::vector<size_t>(axes)
+    : m_data{axes}
 {
 }
 
 ngraph::Coordinate::Coordinate(const Shape& shape)
-    : std::vector<size_t>(static_cast<const std::vector<size_t>&>(shape))
+    : m_data()
 {
+    for (auto s : shape)
+    {
+        m_data.push_back(s);
+    }
 }
 
 ngraph::Coordinate::Coordinate(const std::vector<size_t>& axes)
-    : std::vector<size_t>(axes)
+    : m_data(axes)
 {
 }
 
 ngraph::Coordinate::Coordinate(const Coordinate& axes)
-    : std::vector<size_t>(axes)
+    : m_data(axes.m_data)
 {
 }
 
 ngraph::Coordinate::Coordinate(size_t n, size_t initial_value)
-    : std::vector<size_t>(n, initial_value)
+    : m_data(n, initial_value)
 {
 }
 
@@ -59,13 +63,13 @@ ngraph::Coordinate::~Coordinate() {}
 
 ngraph::Coordinate& ngraph::Coordinate::operator=(const Coordinate& v)
 {
-    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    m_data = v.m_data;
     return *this;
 }
 
 ngraph::Coordinate& ngraph::Coordinate::operator=(Coordinate&& v) noexcept
 {
-    static_cast<std::vector<size_t>*>(this)->operator=(v);
+    m_data = v.m_data;
     return *this;
 }
 
