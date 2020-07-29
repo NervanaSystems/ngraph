@@ -18,9 +18,10 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Tanh>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Tanh>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v0::Tanh*>(ngNode);
+    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Tanh");
     throw unsupported_op("Unsupported op 'v0::Tanh'");
 }

@@ -19,8 +19,14 @@
 
 template <>
 mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::BatchNormTrainingBackprop>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::BatchNormTrainingBackprop>(
+        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v0::BatchNormTrainingBackprop*>(ngNode);
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v0::BatchNormTrainingBackprop");
     throw unsupported_op("Unsupported op 'v0::BatchNormTrainingBackprop'");
 }

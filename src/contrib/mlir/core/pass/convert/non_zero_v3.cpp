@@ -18,9 +18,11 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::NonZero>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::NonZero>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v3::NonZero*>(ngNode);
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::NonZero");
     throw unsupported_op("Unsupported op 'v3::NonZero'");
 }

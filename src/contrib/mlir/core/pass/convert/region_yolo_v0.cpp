@@ -18,9 +18,11 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::RegionYolo>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::RegionYolo>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v0::RegionYolo*>(ngNode);
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::RegionYolo");
     throw unsupported_op("Unsupported op 'v0::RegionYolo'");
 }

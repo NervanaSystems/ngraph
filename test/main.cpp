@@ -88,6 +88,8 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v@VER::@OP>
         (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v@VER::@OP*>(ngNode);
+    NGRAPH_CHECK(ngNode, node!=nullptr, "ngNode ", ngNode->description(), " is not a v@VER::@OP");
     throw unsupported_op("Unsupported op 'v@VER::@OP'");
 }
 )";

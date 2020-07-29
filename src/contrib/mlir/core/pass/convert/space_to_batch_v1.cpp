@@ -18,9 +18,11 @@
 #include "ngraph/ops.hpp"
 
 template <>
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v1::SpaceToBatch>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v1::SpaceToBatch>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v1::SpaceToBatch*>(ngNode);
+    NGRAPH_CHECK(
+        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::SpaceToBatch");
     throw unsupported_op("Unsupported op 'v1::SpaceToBatch'");
 }

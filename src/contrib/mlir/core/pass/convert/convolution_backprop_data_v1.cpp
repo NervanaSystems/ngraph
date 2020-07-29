@@ -19,8 +19,14 @@
 
 template <>
 mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v1::ConvolutionBackpropData>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v1::ConvolutionBackpropData>(
+        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v1::ConvolutionBackpropData*>(ngNode);
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v1::ConvolutionBackpropData");
     throw unsupported_op("Unsupported op 'v1::ConvolutionBackpropData'");
 }

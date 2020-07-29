@@ -19,8 +19,14 @@
 
 template <>
 mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::EmbeddingBagPackedSum>
-        (NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+    ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v3::EmbeddingBagPackedSum>(
+        NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
+    auto node = dynamic_cast<const ngraph::op::v3::EmbeddingBagPackedSum*>(ngNode);
+    NGRAPH_CHECK(ngNode,
+                 node != nullptr,
+                 "ngNode ",
+                 ngNode->description(),
+                 " is not a v3::EmbeddingBagPackedSum");
     throw unsupported_op("Unsupported op 'v3::EmbeddingBagPackedSum'");
 }
