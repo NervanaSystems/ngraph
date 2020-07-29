@@ -947,7 +947,9 @@ mlir::Operation*
     auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
 
     auto originArg = NgDialectObj.getOriginArg(ngNode->input_value(1).get_node());
-    auto const_op = static_cast<ngraph::op::Constant*>(originArg);
+    auto const_op = as_type<ngraph::op::Constant>(originArg);
+    NGRAPH_INFO << "**********************************";
+    NGRAPH_CHECK(ngNode, const_op!=nullptr, "Input to softmax is not a Constant");
 
     AxisSet axes = const_op->get_axis_set_val();
     mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(axes);
