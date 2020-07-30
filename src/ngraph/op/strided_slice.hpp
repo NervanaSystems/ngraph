@@ -102,8 +102,8 @@ namespace ngraph
                 std::shared_ptr<Node>
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
-                bool evaluate(const HostTensorVector& output_values,
-                              const HostTensorVector& input_values) override;
+                bool evaluate(const HostTensorVector& outputs,
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,

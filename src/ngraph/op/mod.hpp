@@ -50,7 +50,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
                 const AutoBroadcastSpec& get_auto_broadcast() const { return m_auto_broadcast; }
 

@@ -97,7 +97,8 @@ namespace
     }
 }
 
-bool op::v1::LogicalAnd::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::LogicalAnd::evaluate(const HostTensorVector& outputs,
+                                  const HostTensorVector& inputs) const
 {
     return evaluate_logand(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -124,7 +125,7 @@ shared_ptr<Node> op::v0::And::clone_with_new_inputs(const OutputVector& new_args
     return make_shared<v0::And>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
-bool op::v0::And::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::And::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_logand(inputs[0], inputs[1], outputs[0], get_autob());
 }

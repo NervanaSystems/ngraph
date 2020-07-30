@@ -110,7 +110,7 @@ void op::v0::MaxPool::validate_and_infer_types()
 
 void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape,
                                           Shape& new_padding_above,
-                                          Shape& new_padding_below)
+                                          Shape& new_padding_below) const
 {
     if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
     {
@@ -132,7 +132,7 @@ void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape,
 
 void op::v1::MaxPool::update_auto_padding(const PartialShape& in_shape,
                                           Shape& new_pads_end,
-                                          Shape& new_pads_begin)
+                                          Shape& new_pads_begin) const
 {
     if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
     {
@@ -572,7 +572,8 @@ namespace
     }
 }
 
-bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     auto arg_shape = inputs[0]->get_partial_shape();
     auto padding_below_s = get_padding_below();
@@ -597,7 +598,8 @@ bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensor
                             get_padding_above());
 }
 
-bool op::v1::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::MaxPool::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     auto arg_shape = inputs[0]->get_partial_shape();
     auto pads_begin_s = get_pads_begin();

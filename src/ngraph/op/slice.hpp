@@ -70,7 +70,7 @@ namespace ngraph
                 const Strides& get_strides() const { return m_strides; }
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,

@@ -86,7 +86,8 @@ namespace
     }
 }
 
-bool op::v1::ReduceProd::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::ReduceProd::evaluate(const HostTensorVector& outputs,
+                                  const HostTensorVector& inputs) const
 {
     return evaluate_product(inputs[0], outputs[0], get_reduction_axes());
 }
