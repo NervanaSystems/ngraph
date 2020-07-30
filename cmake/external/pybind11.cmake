@@ -23,13 +23,13 @@ include(FetchContent)
 message(STATUS "Fetching pybind11")
 
 set(PYBIND11_GIT_TAG v2.5.0)
-set(PYBIND11_GIT_URL https://github.com/pybind/pybind11.git)
+set(PYBIND11_ARCHIVE_HASH 8c78b412bed8b47210e74824d0bd8892f00aa023)
+set(PYBIND11_ARCHIVE_URL https://github.com/pybind/pybind11/archive/${PYBIND11_GIT_TAG}.zip)
 
 FetchContent_Declare(
     ext_pybind11
-    GIT_REPOSITORY ${PYBIND11_GIT_URL}
-    GIT_TAG        ${PYBIND11_GIT_TAG}
-    GIT_SHALLOW    1
+    URL            ${PYBIND11_ARCHIVE_URL}
+    URL_HASH       SHA1=${PYBIND11_ARCHIVE_HASH}
 )
 
 FetchContent_GetProperties(ext_pybind11)
