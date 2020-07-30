@@ -1435,4 +1435,4 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
 }
 
 // avg_pool_3d case generation
-NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME}, include_pad, avg_pool_3d_params, testing::Bool());
+NGRAPH_INSTANTIATE_TEST_SUITE_P(${BACKEND_NAME}, include_pad, avg_pool_3d_params, testing::Bool());

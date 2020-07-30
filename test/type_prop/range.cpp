@@ -429,15 +429,15 @@ TEST_P(RangeTest, deduce_shape_f64)
     run_range_test<double>(element::f64, GetParam());
 }
 
-INSTANTIATE_TEST_CASE_P(type_prop,
-                        RangeTest,
-                        ::testing::Values(RangeParams{0, 5, 1, PartialShape{5}},
-                                          RangeParams{0, 22, 2, PartialShape{11}},
-                                          RangeParams{1, 23, 2, PartialShape{11}},
-                                          RangeParams{1, 22, 2, PartialShape{11}},
-                                          RangeParams{0, 0, 1, PartialShape{0}},
-                                          RangeParams{1, 0, 2, PartialShape{0}}),
-                        PrintToDummyParamName());
+INSTANTIATE_TEST_SUITE_P(type_prop,
+                         RangeTest,
+                         ::testing::Values(RangeParams{0, 5, 1, PartialShape{5}},
+                                           RangeParams{0, 22, 2, PartialShape{11}},
+                                           RangeParams{1, 23, 2, PartialShape{11}},
+                                           RangeParams{1, 22, 2, PartialShape{11}},
+                                           RangeParams{0, 0, 1, PartialShape{0}},
+                                           RangeParams{1, 0, 2, PartialShape{0}}),
+                         PrintToDummyParamName());
 
 struct RangeTestWithNegatives : ::testing::TestWithParam<RangeParams>
 {
@@ -483,14 +483,14 @@ TEST_P(RangeTestWithNegatives, deduce_shape_f64)
     run_range_test<double>(element::f64, GetParam());
 }
 
-INSTANTIATE_TEST_CASE_P(type_prop,
-                        RangeTestWithNegatives,
-                        ::testing::Values(RangeParams{2, 0, -2, PartialShape{1}},
-                                          RangeParams{2, 0, -1, PartialShape{2}},
-                                          RangeParams{-19, 19, 1, PartialShape{38}},
-                                          RangeParams{-19, 19, 3, PartialShape{13}},
-                                          RangeParams{20, -19, 1, PartialShape{0}}),
-                        PrintToDummyParamName());
+INSTANTIATE_TEST_SUITE_P(type_prop,
+                         RangeTestWithNegatives,
+                         ::testing::Values(RangeParams{2, 0, -2, PartialShape{1}},
+                                           RangeParams{2, 0, -1, PartialShape{2}},
+                                           RangeParams{-19, 19, 1, PartialShape{38}},
+                                           RangeParams{-19, 19, 3, PartialShape{13}},
+                                           RangeParams{20, -19, 1, PartialShape{0}}),
+                         PrintToDummyParamName());
 
 struct RangeTestFloating : ::testing::TestWithParam<RangeParams>
 {
@@ -516,9 +516,9 @@ TEST_P(RangeTestFloating, deduce_shape_f64)
     run_range_test<double>(element::f64, GetParam());
 }
 
-INSTANTIATE_TEST_CASE_P(type_prop,
-                        RangeTestFloating,
-                        ::testing::Values(RangeParams{0, 1, 0.25, PartialShape{4}},
-                                          RangeParams{-1, 1, 0.25, PartialShape{8}},
-                                          RangeParams{-1, 0.875, 0.25, PartialShape{8}}),
-                        PrintToDummyParamName());
+INSTANTIATE_TEST_SUITE_P(type_prop,
+                         RangeTestFloating,
+                         ::testing::Values(RangeParams{0, 1, 0.25, PartialShape{4}},
+                                           RangeParams{-1, 1, 0.25, PartialShape{8}},
+                                           RangeParams{-1, 0.875, 0.25, PartialShape{8}}),
+                         PrintToDummyParamName());
