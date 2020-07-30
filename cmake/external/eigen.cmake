@@ -20,6 +20,8 @@ endif()
 
 include(FetchContent)
 
+message(STATUS "Fetching Eigen3")
+
 set(EIGEN_GIT_TAG dcf7655b3d469a399c1182f350c9009e13ad8654)
 set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen.git)
 
