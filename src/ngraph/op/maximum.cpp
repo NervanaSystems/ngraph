@@ -116,7 +116,8 @@ namespace
     }
 }
 
-bool op::v0::Maximum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Maximum::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_maximum(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -158,7 +159,8 @@ void op::v1::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
         delta * make_shared<op::Convert>(make_shared<op::v1::Greater>(y, x), y.get_element_type()));
 }
 
-bool op::v1::Maximum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Maximum::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_maximum(inputs[0], inputs[1], outputs[0], get_autob());
 }

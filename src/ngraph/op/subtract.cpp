@@ -113,7 +113,8 @@ namespace
     }
 }
 
-bool op::v0::Subtract::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Subtract::evaluate(const HostTensorVector& outputs,
+                                const HostTensorVector& inputs) const
 {
     return evaluate_subtract(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -152,7 +153,8 @@ void op::v1::Subtract::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     adjoints.add_delta(y, -delta);
 }
 
-bool op::v1::Subtract::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Subtract::evaluate(const HostTensorVector& outputs,
+                                const HostTensorVector& inputs) const
 {
     return evaluate_subtract(inputs[0], inputs[1], outputs[0], get_autob());
 }

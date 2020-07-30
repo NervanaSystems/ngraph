@@ -95,7 +95,7 @@ namespace
     }
 }
 
-bool op::Round::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::Round::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_round(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
