@@ -24,42 +24,15 @@ include(FetchContent)
 message(STATUS "Fetching Google Protobuf")
 
 # This version of PROTOBUF is required by Microsoft ONNX Runtime.
-set(NGRAPH_PROTOBUF_GIT_REPO_URL "https://github.com/protocolbuffers/protobuf")
+set(PROTOC_VERSION "3.11.3")
+set(NGRAPH_PROTOBUF_ARCHIVE_URL "https://github.com/protocolbuffers/protobuf/archive/v${PROTOC_VERSION}.zip")
+set(NGRAPH_PROTOBUF_ARCHIVE_HASH 0ed29c0ce0549e5f8b6954dfb0e7b9c65549f115)
 
-if(CMAKE_CROSSCOMPILING)
-    # Cross Compiling
-    # Protobuf source version has to match system protoc version
-    # Find system protoc and version
-    # Setup extra protobuf build flags for cross compiling
-    find_program(SYSTEM_PROTOC protoc PATHS ENV PATH)
-
-    if(SYSTEM_PROTOC)
-        execute_process(COMMAND ${SYSTEM_PROTOC} --version OUTPUT_VARIABLE PROTOC_VERSION)
-        string(REPLACE " " ";" PROTOC_VERSION ${PROTOC_VERSION})
-        list(GET PROTOC_VERSION -1 PROTOC_VERSION)
-        message("Detected system protoc version: ${PROTOC_VERSION}")
-
-        if(${PROTOC_VERSION} VERSION_EQUAL "3.0.0")
-            message(WARNING "Protobuf 3.0.0 detected switching to 3.0.2 due to bug in gmock url")
-            set(PROTOC_VERSION "3.0.2")
-        endif()
-
-        set(PROTOBUF_SYSTEM_PROTOC --with-protoc=${SYSTEM_PROTOC})
-        set(PROTOBUF_SYSTEM_PROCESSOR --host=${CMAKE_HOST_SYSTEM_PROCESSOR})
-    else()
-        message(FATAL_ERROR "System Protobuf is needed while cross-compiling")
-    endif()
-else()
-    set(PROTOC_VERSION "3.11.3")
-endif()
-
-set(NGRAPH_PROTOBUF_GIT_TAG "v${PROTOC_VERSION}")
 
 FetchContent_Declare(
     ext_protobuf
-    GIT_REPOSITORY ${NGRAPH_PROTOBUF_GIT_REPO_URL}
-    GIT_TAG        ${NGRAPH_PROTOBUF_GIT_TAG}
-    GIT_SHALLOW    1
+    URL       ${NGRAPH_PROTOBUF_ARCHIVE_URL}
+    URL_HASH  SHA1=${NGRAPH_PROTOBUF_ARCHIVE_HASH}
 )
 
 FetchContent_GetProperties(ext_protobuf)
@@ -76,7 +49,7 @@ endif()
 # Two ways for building protobuf
 # 1. CMake ( WIN32 or cross compiling )
 # 2. autogen.sh -> configure -> make
-if(WIN32 OR (NOT WIN32 AND NOT APPLE AND (PROTOC_VERSION VERSION_GREATER "3.0") AND CMAKE_CROSSCOMPILING))
+if(WIN32)
     set(PROTOBUF_CMAKE_ARGS
         ${NGRAPH_FORWARD_CMAKE_ARGS}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
