@@ -32,8 +32,9 @@ message(STATUS "Fetching ONNX")
 # it so we won't overwrite the caller's CMAKE_CXX_FLAGS
 set(PUSH_CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 
-set(ONNX_GIT_REPO_URL https://github.com/onnx/onnx.git)
 set(ONNX_GIT_BRANCH rel-${ONNX_VERSION})
+set(ONNX_ARCHIVE_URL https://github.com/onnx/onnx/archive/${ONNX_GIT_BRANCH}.zip)
+set(ONNX_ARCHIVE_HASH d22c32afbf277ec5de6e32249792a93b95f6b445)
 set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
 
 add_definitions(-DONNX_BUILD_SHARED_LIBS=ON)
@@ -48,9 +49,8 @@ endif()
 
 FetchContent_Declare(
     ext_onnx
-    GIT_REPOSITORY ${ONNX_GIT_REPO_URL}
-    GIT_TAG ${ONNX_GIT_BRANCH}
-    GIT_SHALLOW 1
+    URL ${ONNX_ARCHIVE_URL}
+    URL_HASH SHA1=${ONNX_ARCHIVE_HASH}
 )
 
 FetchContent_GetProperties(ext_onnx)
