@@ -25,17 +25,15 @@ message(STATUS "Fetching nlohmann json")
 # Hedley annotations introduced in v3.7.0 causes build failure on MSVC 2017 + ICC 18
 if(WIN32 AND ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel"))
     SET(JSON_GIT_LABEL v3.6.1)
+    SET(JSON_ARCHIVE_HASH db708c298f9e6fc2a48875125df1880302016c26)
 else()
     SET(JSON_GIT_LABEL v3.8.0)
+    SET(JSON_ARCHIVE_HASH f4d9fa55341a53c398d42e100f26e28afd55634c)
 endif()
 
 FetchContent_Declare(json
-    GIT_REPOSITORY https://github.com/nlohmann/json
-    GIT_TAG        ${JSON_GIT_LABEL}
-    GIT_SHALLOW    1)
-
-set(JSON_BuildTests OFF CACHE INTERNAL "")
-set(JSON_Install OFF CACHE INTERNAL "")
+    URL            https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent/archive/${JSON_GIT_LABEL}.zip
+    URL_HASH       SHA1=${JSON_ARCHIVE_HASH})
 
 FetchContent_GetProperties(json)
 if(NOT json_POPULATED)
