@@ -223,7 +223,8 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     adjoints.add_delta(input_value(0), reshape);
 }
 
-bool op::v0::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Reshape::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_reshape(inputs[0], outputs[0], get_input_order());
 }
@@ -384,7 +385,8 @@ void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("generate_adjoints not implemented for Reshape");
 }
 
-bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Reshape::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     // infer and set output shape if the output shape contain -1
     // and zero value dimension

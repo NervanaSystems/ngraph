@@ -135,7 +135,7 @@ namespace
     }
 }
 
-bool op::v0::Divide::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Divide::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_divide(inputs[0], inputs[1], outputs[0], get_autob(), is_pythondiv());
 }
@@ -192,7 +192,7 @@ void op::v1::Divide::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
     adjoints.add_delta(y, -delta * shared_from_this() / y);
 }
 
-bool op::v1::Divide::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Divide::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_divide(inputs[0], inputs[1], outputs[0], get_autob(), is_pythondiv());
 }

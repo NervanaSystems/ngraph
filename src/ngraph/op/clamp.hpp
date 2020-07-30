@@ -86,7 +86,7 @@ namespace ngraph
                     return max;
                 }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             private:
                 double m_min;

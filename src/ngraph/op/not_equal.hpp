@@ -46,7 +46,7 @@ namespace ngraph
 
                 virtual bool is_commutative() const override { return true; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
             };
         }
 
@@ -75,7 +75,7 @@ namespace ngraph
 
                 virtual bool is_commutative() const override { return true; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
             };
         }
 

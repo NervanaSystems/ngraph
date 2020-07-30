@@ -40,7 +40,7 @@ else()
                 OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/dist/
                 POST_BUILD
                 WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-                COMMAND ${CMAKE_BUILD_TOOL} -C ../ DESTDIR=python/_install install && bash build_wheel.sh
+                COMMAND ${CMAKE_BUILD_TOOL} -C ../ install && bash build_wheel.sh
         )
 endif()
 

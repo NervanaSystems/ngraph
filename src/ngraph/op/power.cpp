@@ -112,7 +112,7 @@ namespace
     }
 }
 
-bool op::v0::Power::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Power::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_power(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -153,7 +153,7 @@ void op::v1::Power::generate_adjoints(autodiff::Adjoints& adjoints, const Output
     adjoints.add_delta(y, delta * shared_from_this() * log_x);
 }
 
-bool op::v1::Power::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Power::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_power(inputs[0], inputs[1], outputs[0], get_autob());
 }

@@ -108,7 +108,7 @@ namespace
     }
 }
 
-bool op::Acos::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::Acos::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_acos(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
