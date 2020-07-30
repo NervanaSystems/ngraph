@@ -18,18 +18,12 @@
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::MaxPoolBackprop* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp(
+    NgDialectConversionPass& NgDialectObj,
+    const ngraph::op::v0::MaxPoolBackprop* maxPoolBackpropNode)
 {
-    auto maxPoolBackpropNode = dynamic_cast<const ngraph::op::v0::MaxPoolBackprop*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 maxPoolBackpropNode != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v0::MaxPoolBackprop");
-
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(ngNode, 2);
+    mlir::Operation* op =
+        NgDialectObj.createGenericOp<mlir::NGMaxPoolBackpropOp>(maxPoolBackpropNode, 2);
     auto maxPoolBackpropOp = llvm::cast<mlir::NGMaxPoolBackpropOp>(op);
 
     mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolBackpropNode->get_window_shape());

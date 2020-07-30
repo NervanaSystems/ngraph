@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::Less* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Less*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Less");
-
     return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
 }

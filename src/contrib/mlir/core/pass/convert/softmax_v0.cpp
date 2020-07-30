@@ -22,10 +22,6 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::Softmax* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Softmax*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Softmax");
-
     mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGSoftMaxOp>(ngNode, 1);
     auto softmaxOp = llvm::cast<mlir::NGSoftMaxOp>(op);
 

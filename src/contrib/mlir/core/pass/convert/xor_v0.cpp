@@ -22,7 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::Xor* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Xor*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Xor");
     throw unsupported_op("Unsupported op 'v0::Xor'");
 }

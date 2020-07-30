@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::MaxPool* ngNode)
+                                                    const ngraph::op::v0::MaxPool* maxPoolNode)
 {
-    auto maxPoolNode = dynamic_cast<const ngraph::op::v0::MaxPool*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, maxPoolNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::MaxPool");
-
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGMaxPoolOp>(maxPoolNode);
     auto maxPoolOp = llvm::cast<mlir::NGMaxPoolOp>(op);
 
     mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(maxPoolNode->get_window_shape());

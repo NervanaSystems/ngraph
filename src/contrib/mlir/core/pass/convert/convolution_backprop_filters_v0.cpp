@@ -21,11 +21,5 @@
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp(
     NgDialectConversionPass& NgDialectObj, const ngraph::op::v0::ConvolutionBackpropFilters* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::ConvolutionBackpropFilters*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 node != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v0::ConvolutionBackpropFilters");
     throw unsupported_op("Unsupported op 'v0::ConvolutionBackpropFilters'");
 }

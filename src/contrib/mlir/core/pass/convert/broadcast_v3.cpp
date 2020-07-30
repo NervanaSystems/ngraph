@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v3::Broadcast* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v3::Broadcast*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v3::Broadcast");
     throw unsupported_op("Unsupported op 'v3::Broadcast'");
 }

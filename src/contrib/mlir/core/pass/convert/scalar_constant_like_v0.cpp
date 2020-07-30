@@ -21,11 +21,5 @@
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp(
     NgDialectConversionPass& NgDialectObj, const ngraph::op::v0::ScalarConstantLike* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::ScalarConstantLike*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 node != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v0::ScalarConstantLike");
     throw unsupported_op("Unsupported op 'v0::ScalarConstantLike'");
 }

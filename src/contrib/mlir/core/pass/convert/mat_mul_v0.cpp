@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::MatMul* ngNode)
+                                                    const ngraph::op::v0::MatMul* matmulNode)
 {
-    auto matmulNode = dynamic_cast<const ngraph::op::v0::MatMul*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, matmulNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::MatMul");
-
-    auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGMatMulOp>(matmulNode);
     auto matmulOp = llvm::cast<mlir::NGMatMulOp>(op);
     matmulOp.setTransposeA(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_a()));
     matmulOp.setTransposeB(NgDialectObj.m_builder.getBoolAttr(matmulNode->get_transpose_b()));

@@ -20,16 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::ConvolutionBias* ngNode)
+                                                    const ngraph::op::v0::ConvolutionBias* convNode)
 {
-    auto convNode = dynamic_cast<const ngraph::op::v0::ConvolutionBias*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 convNode != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v0::ConvolutionBias");
-
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvBiasOp>(convNode);
     auto convOp = llvm::cast<mlir::NGConvBiasOp>(op);
 
     convOp.setStrides(NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides()));

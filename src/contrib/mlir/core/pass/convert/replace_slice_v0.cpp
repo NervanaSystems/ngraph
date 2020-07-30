@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::ReplaceSlice* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::ReplaceSlice*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::ReplaceSlice");
     throw unsupported_op("Unsupported op 'v0::ReplaceSlice'");
 }

@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::Gemm* ngNode)
+                                                    const ngraph::op::v0::Gemm* gemmNode)
 {
-    auto gemmNode = dynamic_cast<const ngraph::op::v0::Gemm*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, gemmNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::Gemm");
-
-    auto op = NgDialectObj.createGenericOp<mlir::NGGemmOp>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGGemmOp>(gemmNode);
     auto gemmOp = llvm::cast<mlir::NGGemmOp>(op);
     gemmOp.setTransA(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transA()));
     gemmOp.setTransB(NgDialectObj.m_builder.getBoolAttr(gemmNode->get_transB()));

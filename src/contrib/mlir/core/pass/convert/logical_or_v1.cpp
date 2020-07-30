@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v1::LogicalOr* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v1::LogicalOr*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::LogicalOr");
     throw unsupported_op("Unsupported op 'v1::LogicalOr'");
 }

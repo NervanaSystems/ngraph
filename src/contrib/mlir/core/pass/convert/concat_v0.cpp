@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::Concat* ngNode)
+                                                    const ngraph::op::v0::Concat* concat)
 {
-    auto concat = dynamic_cast<const ngraph::op::v0::Concat*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, concat != nullptr, "ngNode ", ngNode->description(), " is not a v0::Concat");
-
-    auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGConcatOp>(concat);
     op->setAttr("concatenation_axis",
                 NgDialectObj.m_builder.getI64IntegerAttr(concat->get_concatenation_axis()));
     return op;

@@ -76,14 +76,6 @@ namespace ngraph
             TensorInfo getTensorValue(descriptor::Tensor* tensor);
             void updateTensorValue(descriptor::Tensor* tensor, mlir::Value value);
 
-            // template <typename Op>
-            // static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,
-            //                                  const ngraph::Node* ngNode)
-            // {
-            //     throw std::runtime_error("Unimplemented op '" + ngNode->description() +
-            //                              "' in MLIR Compiler");
-            // }
-
 #define NGRAPH_OP(NAME, VER)                                                                       \
     static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,                        \
                                      const ngraph::op::v##VER::NAME* ngNode);
@@ -91,8 +83,7 @@ namespace ngraph
 #undef NGRAPH_OP
 
             // Generic op lowerer to ng dialect.
-            // Simply maps ngraph tensors to values and generate an OP. No op-specific
-            // logic.
+            // Simply maps ngraph tensors to values and generate an OP. No op-specific logic.
             // Use inNum when mlir OP needs less input than its corresponding ngraph OP.
             template <typename Op>
             mlir::Operation* createGenericOp(const ngraph::Node* ngNode, int inNum = -1)
@@ -176,14 +167,10 @@ namespace ngraph
 
             using TensorToInfo = std::pair<descriptor::Tensor*, TensorInfo>;
             using TensorToInfoMap = std::unordered_map<descriptor::Tensor*, TensorInfo>;
-            using MLIRCompOpFunction = std::function<mlir::Operation*(
-                NgDialectConversionPass& NgDialectObj, const ngraph::Node*)>;
-            using MLIRCompOpMap = std::unordered_map<Node::type_info_t, MLIRCompOpFunction>;
 
             // Maps tensor to the value it represents in the IR
             // use for MLIR dialect gen
             TensorToInfoMap m_tensorToValueMap;
-            static const MLIRCompOpMap& getOpDispatcher();
         };
     }
 }

@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::Gather* ngNode)
+                                                    const ngraph::op::v0::Gather* gather)
 {
-    auto gather = dynamic_cast<const ngraph::op::v0::Gather*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, gather != nullptr, "ngNode ", ngNode->description(), " is not a v0::Gather");
-
-    auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(ngNode);
+    auto op = NgDialectObj.createGenericOp<mlir::NGGatherOp>(gather);
     op->setAttr("axis", NgDialectObj.m_builder.getI64IntegerAttr(gather->get_axis()));
     return op;
 }

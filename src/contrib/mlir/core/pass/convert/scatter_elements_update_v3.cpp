@@ -21,11 +21,5 @@
 mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp(
     NgDialectConversionPass& NgDialectObj, const ngraph::op::v3::ScatterElementsUpdate* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v3::ScatterElementsUpdate*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 node != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v3::ScatterElementsUpdate");
     throw unsupported_op("Unsupported op 'v3::ScatterElementsUpdate'");
 }

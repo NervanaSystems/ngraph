@@ -18,18 +18,12 @@
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
-mlir::Operation*
-    ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::AvgPoolBackprop* ngNode)
+mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp(
+    NgDialectConversionPass& NgDialectObj,
+    const ngraph::op::v0::AvgPoolBackprop* avgPoolBackpropNode)
 {
-    auto avgPoolBackpropNode = dynamic_cast<const ngraph::op::v0::AvgPoolBackprop*>(ngNode);
-    NGRAPH_CHECK(ngNode,
-                 avgPoolBackpropNode != nullptr,
-                 "ngNode ",
-                 ngNode->description(),
-                 " is not a v0::AvgPoolBackprop");
-
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolBackpropOp>(ngNode);
+    mlir::Operation* op =
+        NgDialectObj.createGenericOp<mlir::NGAvgPoolBackpropOp>(avgPoolBackpropNode);
     auto avgPoolBackpropOp = llvm::cast<mlir::NGAvgPoolBackpropOp>(op);
 
     mlir::BoolAttr boolAttr = NgDialectObj.m_builder.getBoolAttr(

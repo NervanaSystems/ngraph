@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::ArgMax* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::ArgMax*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::ArgMax");
-
     return NgDialectObj.createIndexReduction<mlir::NGArgMaxRedOp>(ngNode);
 }

@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::Divide* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Divide*>(ngNode);
-    NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Divide");
-
     return NgDialectObj.createGenericOp<mlir::NGDivOp>(ngNode);
 }

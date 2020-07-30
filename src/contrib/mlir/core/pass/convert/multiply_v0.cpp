@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v0::Multiply* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v0::Multiply*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Multiply");
     return NgDialectObj.createGenericOp<mlir::NGMulOp>(ngNode);
 }

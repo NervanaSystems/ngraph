@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::AvgPool* ngNode)
+                                                    const ngraph::op::v0::AvgPool* avgPoolNode)
 {
-    auto avgPoolNode = dynamic_cast<const ngraph::op::v0::AvgPool*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, avgPoolNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::AvgPool");
-
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGAvgPoolOp>(avgPoolNode);
     auto avgPoolOp = llvm::cast<mlir::NGAvgPoolOp>(op);
 
     mlir::BoolAttr boolAttr =

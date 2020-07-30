@@ -22,8 +22,5 @@ mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
                                                     const ngraph::op::v1::ReduceProd* ngNode)
 {
-    auto node = dynamic_cast<const ngraph::op::v1::ReduceProd*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v1::ReduceProd");
     throw unsupported_op("Unsupported op 'v1::ReduceProd'");
 }

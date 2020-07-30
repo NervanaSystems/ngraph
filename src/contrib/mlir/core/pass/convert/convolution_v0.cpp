@@ -20,13 +20,9 @@
 
 mlir::Operation*
     ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
-                                                    const ngraph::op::v0::Convolution* ngNode)
+                                                    const ngraph::op::v0::Convolution* convNode)
 {
-    auto convNode = dynamic_cast<const ngraph::op::v0::Convolution*>(ngNode);
-    NGRAPH_CHECK(
-        ngNode, convNode != nullptr, "ngNode ", ngNode->description(), " is not a v0::Convolution");
-
-    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvolutionOp>(ngNode);
+    mlir::Operation* op = NgDialectObj.createGenericOp<mlir::NGConvolutionOp>(convNode);
     auto convOp = llvm::cast<mlir::NGConvolutionOp>(op);
 
     mlir::ArrayAttr attr = NgDialectObj.getShapeAsAttr(convNode->get_window_movement_strides());
