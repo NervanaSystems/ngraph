@@ -147,7 +147,7 @@ namespace
     }
 }
 
-bool op::v1::Mod::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Mod::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_mod(inputs[0], inputs[1], outputs[0], get_auto_broadcast());
 }
