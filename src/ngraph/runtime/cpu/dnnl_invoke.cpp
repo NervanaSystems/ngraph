@@ -158,7 +158,6 @@ extern "C" void ngraph::runtime::cpu::dnnl_utils::dnnl_invoke_primitive(CPURunti
                      {DNNL_ARG_DST_ITER, *ctx->dnnl_memories[deps[7]]},
                      {DNNL_ARG_DST_ITER_C, *ctx->dnnl_memories[deps[8]]},
                      {DNNL_ARG_WORKSPACE, *ctx->dnnl_memories[deps[9]]}};
-
         break;
     case OpType::VANILLA_RNN:
         exec_args = {{DNNL_ARG_SRC_LAYER, *ctx->dnnl_memories[deps[0]]},

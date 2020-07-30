@@ -18,9 +18,9 @@
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
-template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Split>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation*
+    ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
+                                                    const ngraph::op::v0::Split* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v0::Split*>(ngNode);
     NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Split");

@@ -76,13 +76,19 @@ namespace ngraph
             TensorInfo getTensorValue(descriptor::Tensor* tensor);
             void updateTensorValue(descriptor::Tensor* tensor, mlir::Value value);
 
-            template <typename Op>
-            static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,
-                                             const ngraph::Node* ngNode)
-            {
-                throw std::runtime_error("Unimplemented op '" + ngNode->description() +
-                                         "' in MLIR Compiler");
-            }
+            // template <typename Op>
+            // static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,
+            //                                  const ngraph::Node* ngNode)
+            // {
+            //     throw std::runtime_error("Unimplemented op '" + ngNode->description() +
+            //                              "' in MLIR Compiler");
+            // }
+
+#define NGRAPH_OP(NAME, VER)                                                                       \
+    static mlir::Operation* createOp(NgDialectConversionPass& NgDialectObj,                        \
+                                     const ngraph::op::v##VER::NAME* ngNode);
+#include "ngraph/op_version_tbl.hpp"
+#undef NGRAPH_OP
 
             // Generic op lowerer to ng dialect.
             // Simply maps ngraph tensors to values and generate an OP. No op-specific

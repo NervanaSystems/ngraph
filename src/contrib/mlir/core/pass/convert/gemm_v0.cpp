@@ -18,9 +18,9 @@
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
-template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Gemm>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation*
+    ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
+                                                    const ngraph::op::v0::Gemm* ngNode)
 {
     auto gemmNode = dynamic_cast<const ngraph::op::v0::Gemm*>(ngNode);
     NGRAPH_CHECK(

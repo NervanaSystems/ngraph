@@ -18,9 +18,9 @@
 #include "contrib/mlir/core/pass/ng_dialect_builder.hpp"
 #include "ngraph/ops.hpp"
 
-template <>
-mlir::Operation* ngraph::pass::NgDialectConversionPass::createOp<ngraph::op::v0::Sum>(
-    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
+mlir::Operation*
+    ngraph::pass::NgDialectConversionPass::createOp(NgDialectConversionPass& NgDialectObj,
+                                                    const ngraph::op::v0::Sum* ngNode)
 {
     auto node = dynamic_cast<const ngraph::op::v0::Sum*>(ngNode);
     NGRAPH_CHECK(ngNode, node != nullptr, "ngNode ", ngNode->description(), " is not a v0::Sum");
