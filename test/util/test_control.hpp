@@ -180,7 +180,7 @@ namespace ngraph
     static ::std::string gtest_##prefix##backend_name##test_case_name##_EvalGenerateName_(         \
         const ::testing::TestParamInfo<test_case_name::ParamType>& info)                           \
     {                                                                                              \
-        return ::testing::internal::GetParamNameGen<test_case_name::ParamType>()(info);            \
+        return ::testing::internal::DefaultParamName<test_case_name::ParamType>(info);             \
     }                                                                                              \
     static int gtest_##prefix##backend_name##test_case_name##_dummy_ GTEST_ATTRIBUTE_UNUSED_ =     \
         ::testing::UnitTest::GetInstance()                                                         \
@@ -188,7 +188,7 @@ namespace ngraph
             .GetTestCasePatternHolder<test_case_name>(                                             \
                 #backend_name "/" #test_case_name,                                                 \
                 ::testing::internal::CodeLocation(__FILE__, __LINE__))                             \
-            ->AddTestCaseInstantiation(                                                            \
+            ->AddTestSuiteInstantiation(                                                           \
                 #prefix[0] != '\0' ? #backend_name "/" #prefix : "",                               \
                 &gtest_##prefix##backend_name##test_case_name##_EvalGenerator_,                    \
                 &gtest_##prefix##backend_name##test_case_name##_EvalGenerateName_,                 \
