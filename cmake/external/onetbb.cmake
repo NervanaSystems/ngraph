@@ -45,12 +45,12 @@ if(WIN32 OR APPLE)
         URL_HASH       SHA1=${TBB_SHA1_HASH}
     )
 else()
-    set(TBB_GIT_REPO_URL https://github.com/oneapi-src/oneTBB.git)
+    set(TBB_ARCHIVE_URL https://github.com/oneapi-src/oneTBB/archive/v${NGRAPH_TBB_VERSION}.zip)
+    set(TBB_ARCHIVE_HASH 986849aa8b96a04a430bdb28d7a97a60908c3253)
     FetchContent_Declare(
         ngraphtbb
-        GIT_REPOSITORY ${TBB_GIT_REPO_URL}
-        GIT_TAG        v${NGRAPH_TBB_VERSION}
-        GIT_SHALLOW    1
+        URL           ${TBB_ARCHIVE_URL}
+        URL_HASH      SHA1=${TBB_ARCHIVE_HASH}
     )
 endif()
 
