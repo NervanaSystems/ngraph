@@ -14,84 +14,31 @@
 # limitations under the License.
 # ******************************************************************************
 
-# Enable ExternalProject CMake module
-include(ExternalProject)
+# Enable FetchContent CMake module
+include(FetchContent)
 
 #------------------------------------------------------------------------------
 # Download and install GoogleTest ...
 #------------------------------------------------------------------------------
 
-SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
 SET(GTEST_GIT_LABEL release-1.8.1)
+#SET(GTEST_GIT_LABEL release-1.10.0)
+SET(GTEST_ARCHIVE_URL https://github.com/google/googletest/archive/${GTEST_GIT_LABEL}.zip)
+SET(GTEST_ARCHIVE_HASH 9ea36bf6dd6383beab405fd619bdce05e66a6535)
 
-set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock)
-set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR}/gtest)
+message(STATUS "Fetching googletest")
 
-if(WIN32)
-    list(APPEND GTEST_CMAKE_ARGS
-        -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE=${GTEST_OUTPUT_DIR}
-        -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG=${GTEST_OUTPUT_DIR}
-        -Dgtest_force_shared_crt=TRUE
-    )
-    set(GMOCK_OUTPUT_DIR ${GTEST_OUTPUT_DIR})
-endif()
-
-if(CMAKE_BUILD_TYPE)
-    list(APPEND GTEST_CMAKE_ARGS
-        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-    )
-endif()
-
-if(UNIX)
-    # workaround for compile error
-    # related: https://github.com/intel/mkl-dnn/issues/55
-    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef")
-else()
-    set(GTEST_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
-endif()
-
-#Build for ninja
-SET(GTEST_PATHS ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
-    ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
-
-ExternalProject_Add(
+FetchContent_Declare(
     ext_gtest
-    PREFIX gtest
-    GIT_REPOSITORY ${GTEST_GIT_REPO_URL}
-    GIT_TAG ${GTEST_GIT_LABEL}
-    # Disable install step
-    INSTALL_COMMAND ""
-    UPDATE_COMMAND ""
-    CMAKE_GENERATOR ${CMAKE_GENERATOR}
-    CMAKE_GENERATOR_PLATFORM ${CMAKE_GENERATOR_PLATFORM}
-    CMAKE_GENERATOR_TOOLSET ${CMAKE_GENERATOR_TOOLSET}
-    CMAKE_ARGS
-        ${NGRAPH_FORWARD_CMAKE_ARGS}
-        -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
-        ${GTEST_CMAKE_ARGS}
-    BINARY_DIR "${EXTERNAL_PROJECTS_ROOT}/gtest/build"
-    EXCLUDE_FROM_ALL TRUE
-    BUILD_BYPRODUCTS ${GTEST_PATHS}
-    )
+    URL      ${GTEST_ARCHIVE_URL}
+    #URL_HASH SHA1=${GTEST_ARCHIVE_HASH}
+)
 
-#------------------------------------------------------------------------------
-
-ExternalProject_Get_Property(ext_gtest SOURCE_DIR BINARY_DIR)
+FetchContent_GetProperties(ext_gtest)
+if(NOT ext_gtest_POPULATED)
+    FetchContent_Populate(ext_gtest)
+    add_subdirectory(${ext_gtest_SOURCE_DIR} ${ext_gtest_BINARY_DIR} EXCLUDE_FROM_ALL)
+endif()
 
 add_library(libgtest INTERFACE)
-add_dependencies(libgtest ext_gtest ext_gmock)
-target_include_directories(libgtest SYSTEM INTERFACE
-    ${SOURCE_DIR}/googletest/include
-    ${SOURCE_DIR}/googlemock/include)
-
-if(LINUX OR APPLE OR WIN32)
-    target_link_libraries(libgtest INTERFACE
-        debug ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtestd${CMAKE_STATIC_LIBRARY_SUFFIX}
-        debug ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
-        optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
-        optimized ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
-else()
-    message(FATAL_ERROR "libgtest: Unsupported platform.")
-endif()
+target_link_libraries(libgtest INTERFACE gtest gmock)
