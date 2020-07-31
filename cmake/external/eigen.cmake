@@ -23,11 +23,11 @@ include(FetchContent)
 message(STATUS "Fetching Eigen3")
 
 set(EIGEN_GIT_TAG dcf7655b3d469a399c1182f350c9009e13ad8654)
-set(EIGEN_GIT_URL https://gitlab.com/libeigen/eigen.git)
+set(EIGEN_ARCHIVE_HASH 15866b9373b1c28623d78d745004fff6eb40b4b4)
 
 FetchContent_Declare(ext_eigen
-    GIT_REPOSITORY ${EIGEN_GIT_URL}
-    GIT_TAG ${EIGEN_GIT_TAG}
+    URL       "https://gitlab.com/api/v4/projects/15462818/repository/archive?sha=${EIGEN_GIT_TAG}"
+    URL_HASH  SHA1=${EIGEN_ARCHIVE_HASH}
     )
 
 set(BUILD_TESTING OFF CACHE INTERNAL "")
