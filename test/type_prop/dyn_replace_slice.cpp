@@ -467,7 +467,7 @@ TEST_P(DeduceDynReplaceSliceTest, output_shape)
     EXPECT_EQ(r->get_output_shape(0), tp.arg_shape);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     type_prop,
     DeduceDynReplaceSliceTest,
     ::testing::Values(
