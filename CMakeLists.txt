@@ -539,6 +539,8 @@ endif()
 # nGraph source tree
 #-----------------------------------------------------------------------------------------------
 
+add_definitions(-DPROJECT_ROOT_DIR="${PROJECT_SOURCE_DIR}")
+
 add_subdirectory(src)
 
 add_subdirectory(test)

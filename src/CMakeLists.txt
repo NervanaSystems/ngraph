@@ -128,8 +128,6 @@ if(NGRAPH_DEPRECATED_ENABLE)
     add_definitions(-DNGRAPH_DEPRECATED_ENABLE)
 endif()
 
-add_definitions(-DPROJECT_ROOT_DIR="${PROJECT_SOURCE_DIR}")
-
 #-----------------------------------------------------------------------------------------------
 # Print Options
 #-----------------------------------------------------------------------------------------------
