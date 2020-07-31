@@ -489,7 +489,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
 
 // The set of graphs tested is not currently significant. These graphs were
 // chosen because they're already availabe and demonstrate the technique.
-NGRAPH_INSTANTIATE_TEST_CASE_P(
+NGRAPH_INSTANTIATE_TEST_SUITE_P(
     ${BACKEND_NAME},
     tf_resnet8_files,
     serialized_graph_files,

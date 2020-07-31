@@ -175,7 +175,7 @@ TEST_P(DeduceDynSliceTest, output_shape)
     EXPECT_EQ(r->get_output_shape(0), tp.shapes[4]);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     type_prop,
     DeduceDynSliceTest,
     ::testing::Values(

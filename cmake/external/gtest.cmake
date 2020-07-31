@@ -21,17 +21,19 @@ include(FetchContent)
 # Download and install GoogleTest ...
 #------------------------------------------------------------------------------
 
-SET(GTEST_GIT_LABEL release-1.8.1)
-#SET(GTEST_GIT_LABEL release-1.10.0)
+SET(GTEST_GIT_LABEL release-1.10.0)
 SET(GTEST_ARCHIVE_URL https://github.com/google/googletest/archive/${GTEST_GIT_LABEL}.zip)
 SET(GTEST_ARCHIVE_HASH 9ea36bf6dd6383beab405fd619bdce05e66a6535)
 
+
 message(STATUS "Fetching googletest")
+set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/lib)
+set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR})
 
 FetchContent_Declare(
     ext_gtest
     URL      ${GTEST_ARCHIVE_URL}
-    #URL_HASH SHA1=${GTEST_ARCHIVE_HASH}
+    URL_HASH SHA1=${GTEST_ARCHIVE_HASH}
 )
 
 FetchContent_GetProperties(ext_gtest)
