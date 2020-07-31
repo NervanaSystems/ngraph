@@ -46,7 +46,7 @@ if(WIN32 OR APPLE)
     )
 else()
     set(TBB_ARCHIVE_URL https://github.com/oneapi-src/oneTBB/archive/v${NGRAPH_TBB_VERSION}.zip)
-    set(TBB_ARCHIVE_HASH 986849aa8b96a04a430bdb28d7a97a60908c3253)
+    set(TBB_ARCHIVE_HASH 8247c2854fe9326f02cb826718d991013a472bb7)
     FetchContent_Declare(
         ngraphtbb
         URL           ${TBB_ARCHIVE_URL}
