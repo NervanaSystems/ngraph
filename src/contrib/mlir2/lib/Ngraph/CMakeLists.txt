@@ -4,7 +4,7 @@ add_mlir_dialect_library(MLIRNgraph
         NgraphOps.cpp
 
         ADDITIONAL_HEADER_DIRS
-        ${PROJECT_SOURCE_DIR}/include/Ngraph
+        ${CMAKE_CURRENT_SOURCE_DIR}/../../include/Ngraph
 
         DEPENDS
         MLIRNgraphOpsIncGen

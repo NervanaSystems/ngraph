@@ -21,6 +21,8 @@ include(HandleLLVMOptions)
 
 include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})
+message("INCLUDE 1 ${CMAKE_CURRENT_SOURCE_DIR}/include")
+message("INCLUDE 2 ${CMAKE_CURRENT_BINARY_DIR}/include")
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
 link_directories(${LLVM_BUILD_LIBRARY_DIR})
