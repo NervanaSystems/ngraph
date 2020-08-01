@@ -84,7 +84,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten)
     }
 }
 
-NGRAPH_INSTANTIATE_TEST_CASE_P(
+NGRAPH_INSTANTIATE_TEST_SUITE_P(
     ${BACKEND_NAME},
     flatten,
     FlattenTest,

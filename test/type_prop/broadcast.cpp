@@ -204,7 +204,7 @@ template <typename T>
 class BroadcastTests : public ::testing::Test
 {
 };
-TYPED_TEST_CASE_P(BroadcastTests);
+TYPED_TEST_SUITE_P(BroadcastTests);
 
 TYPED_TEST_P(BroadcastTests, broadcast_numpy)
 {
@@ -460,25 +460,25 @@ TYPED_TEST_P(BroadcastTests, broadcast_axes_et_wrong)
     }
 }
 
-REGISTER_TYPED_TEST_CASE_P(BroadcastTests,
-                           broadcast_numpy,
-                           broadcast_axes_mapping,
-                           broadcast_target_shape_as_concat_with_constants,
-                           broadcast_target_shape_as_concat_with_node,
-                           broadcast_fail_rank,
-                           broadcast_fail_transpose,
-                           broadcast_fail_axes_map,
-                           broadcast_fail_axes_map_shape,
-                           broadcast_shape_wrong_rank,
-                           broadcast_axes_wrong_rank,
-                           broadcast_fully_dynamic_target_shape,
-                           broadcast_broadcast_shape_et_wrong,
-                           broadcast_axes_et_wrong);
+REGISTER_TYPED_TEST_SUITE_P(BroadcastTests,
+                            broadcast_numpy,
+                            broadcast_axes_mapping,
+                            broadcast_target_shape_as_concat_with_constants,
+                            broadcast_target_shape_as_concat_with_node,
+                            broadcast_fail_rank,
+                            broadcast_fail_transpose,
+                            broadcast_fail_axes_map,
+                            broadcast_fail_axes_map_shape,
+                            broadcast_shape_wrong_rank,
+                            broadcast_axes_wrong_rank,
+                            broadcast_fully_dynamic_target_shape,
+                            broadcast_broadcast_shape_et_wrong,
+                            broadcast_axes_et_wrong);
 
 typedef ::testing::Types<op::v1::Broadcast, op::v3::Broadcast> BroadcastTypes;
 // the last empty argument resolves compiler warning on MAC:
 // `must specify at least one argument for '...'` (variadic macro)
-INSTANTIATE_TYPED_TEST_CASE_P(type_prop, BroadcastTests, BroadcastTypes, );
+INSTANTIATE_TYPED_TEST_SUITE_P(type_prop, BroadcastTests, BroadcastTypes, );
 
 // changing AutoBroadcastSpec to BroadcastModeSpec forces runing pdpd tests separately
 TEST(type_prop, broadcast_v1_pdpd)
