@@ -17,9 +17,9 @@
 #include <chrono>
 #include <iostream>
 
-#ifdef NGRAPH_MLIR_ENABLE
-#include "contrib/mlir/utils.hpp"
-#endif
+// #ifdef NGRAPH_MLIR_ENABLE
+// #include "contrib/mlir/utils.hpp"
+// #endif
 #include "gtest/gtest.h"
 #include "ngraph/log.hpp"
 #include "ngraph/ngraph.hpp"
@@ -58,10 +58,10 @@ int main(int argc, char** argv)
         }
     }
     ngraph::runtime::Backend::set_backend_shared_library_search_directory(cpath);
-#ifdef NGRAPH_MLIR_ENABLE
-    // Initialize MLIR
-    ngraph::runtime::ngmlir::initializeNGraphMLIR();
-#endif
+// #ifdef NGRAPH_MLIR_ENABLE
+//     // Initialize MLIR
+//     ngraph::runtime::ngmlir::initializeNGraphMLIR();
+// #endif
 
 #ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
     // Setup embedded python interpreter and import numpy

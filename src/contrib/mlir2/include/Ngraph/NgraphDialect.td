@@ -39,4 +39,23 @@ def Ngraph_Dialect : Dialect {
 class Ngraph_Op<string mnemonic, list<OpTrait> traits = []> :
         Op<Ngraph_Dialect, mnemonic, traits>;
 
+def Ngraph_AddOp : Ngraph_Op<"Add", [NoSideEffect]> {
+  let summary = "Performs elementwise addition on the inputs.";
+
+  let description = [{
+Add tensorsxxxx
+  }];
+
+  let arguments = (ins
+    Ngraph_Tensor:$value,
+    Ngraph_Tensor:$value,
+  );
+
+  let results = (outs
+    Ngraph_Tensor:$output
+  );
+
+  Ngraph_DerivedOperandTypeAttr T = Ngraph_DerivedOperandTypeAttr<0>;
+}
+
 #endif // NGRAPH_DIALECT

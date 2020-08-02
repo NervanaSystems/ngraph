@@ -27,10 +27,10 @@ endif()
 
 message(STATUS "unit tests enabled")
 
-if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
-    add_subdirectory(mlir)
-    message(STATUS "MLIR LIT tests enabled")
-endif()
+# if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
+#     add_subdirectory(mlir)
+#     message(STATUS "MLIR LIT tests enabled")
+# endif()
 
 if(LINUX)
     set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
@@ -387,7 +387,7 @@ set(MULTI_TEST_SRC
     backend/max.in.cpp
     backend/minimum.in.cpp
     backend/min.in.cpp
-    backend/mlir.in.cpp
+    # backend/mlir.in.cpp
     backend/mod.in.cpp
     backend/multiple_backends.in.cpp
     backend/multiple_result.in.cpp
@@ -454,10 +454,10 @@ set(MULTI_TEST_SRC
     backend/zero_sized.in.cpp
 )
 
-if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
-    list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
-    list(APPEND SRC mlir/ops_test.cpp)
-endif()
+# if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
+#     list(APPEND MULTI_TEST_SRC backend/mlir.in.cpp)
+#     list(APPEND SRC mlir/ops_test.cpp)
+# endif()
 
 if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
     list(APPEND MULTI_TEST_SRC backend/numpy.in.cpp)
@@ -613,11 +613,11 @@ if (NGRAPH_NOP_ENABLE)
     target_link_libraries(unit-test PRIVATE nop_backend)
 endif()
 
-if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
-    target_link_libraries(unit-test PRIVATE mlir_backend)
-    target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
-endif()
+# if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
+#     target_link_libraries(unit-test PRIVATE mlir_backend)
+#     target_include_directories(unit-test PRIVATE ${CMAKE_BINARY_DIR}/src/contrib/mlir)
+#     target_compile_definitions(unit-test PRIVATE NGRAPH_MLIR_ENABLE)
+# endif()
 
 # If all the runtime libraries are installed into one location, that will make life easier.
 if (MSVC)

@@ -42,19 +42,6 @@ namespace ngraph
         {
             class MlirBackend;
             class MlirExecutable;
-
-            // This expands the op list in op_tbl.hpp into a list of enumerations that look like
-            // this:
-            // Abs,
-            // Acos,
-            // ...
-            enum class OP_TYPEID
-            {
-#define NGRAPH_OP(NAME, VERSION) NAME##_v##VERSION,
-#include "ngraph/op_version_tbl.hpp"
-#undef NGRAPH_OP
-                UnknownOp
-            };
         }
     }
 }
@@ -89,6 +76,4 @@ protected:
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
     runtime::ngmlir::MLIRCPURuntime m_mlir_runtime;
     bool m_first_iteration = true;
-
-    static OP_TYPEID get_typeid(const Node& node);
 };
