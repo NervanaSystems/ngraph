@@ -16,6 +16,7 @@
 
 #include "ngraph/runtime/mlir/mlir_ngraph_convert.hpp"
 #include "ngraph/log.hpp"
+#include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 
 #include "Ngraph/NgraphDialect.h"
 
@@ -111,7 +112,11 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
 
     for (shared_ptr<Node> op : ngraph_function->get_ordered_ops())
     {
-        NGRAPH_INFO << *op;
+        switch (get_typeid(*op))
+        {
+        case runtime::mlir::OP_TYPEID::Add_v0: NGRAPH_INFO << *op; break;
+        default: NGRAPH_INFO << *op; break;
+        }
     }
 
     // Create return
