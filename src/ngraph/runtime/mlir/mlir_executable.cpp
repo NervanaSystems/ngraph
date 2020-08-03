@@ -34,12 +34,15 @@
 #include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/zero_dim_tensor_elimination.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
-#include "ngraph/runtime/mlir/pass/ngraph_dialect_lower.hpp"
+#include "ngraph/runtime/mlir/mlir_ngraph_convert.hpp"
+#include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
-#include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
-#include "ngraph/runtime/mlir/mlir_ngraph_convert.hpp"
 
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/ToolOutputFile.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Diagnostics.h"
 #include "mlir/IR/MLIRContext.h"
@@ -49,10 +52,6 @@
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Support/ToolUtilities.h"
 #include "mlir/Translation.h"
-#include "llvm/Support/InitLLVM.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/ToolOutputFile.h"
 
 #include "Ngraph/NgraphDialect.h"
 
@@ -98,7 +97,6 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     // pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     pass_manager.register_pass<pass::ZeroDimTensorElimination>();
-    pass_manager.register_pass<pass::NgraphDialectLower>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
     {

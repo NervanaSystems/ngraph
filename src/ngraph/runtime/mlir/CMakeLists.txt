@@ -26,7 +26,6 @@ if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
         mlir_executable.cpp
         mlir_ngraph_ops.cpp
         mlir_ngraph_convert.cpp
-        pass/ngraph_dialect_lower.cpp
     )
 
     add_library(mlir_backend ${LIBRARY_TYPE} ${SOURCE})

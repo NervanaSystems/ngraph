@@ -18,9 +18,11 @@
 #include "Ngraph/NgraphDialect.h"
 #include "mlir/IR/OpImplementation.h"
 
-namespace mlir {
-namespace ngraph {
+namespace mlir
+{
+    namespace ngraph
+    {
 #define GET_OP_CLASSES
 #include "Ngraph/NgraphOps.cpp.inc"
-} // namespace ngraph
+    } // namespace ngraph
 } // namespace mlir

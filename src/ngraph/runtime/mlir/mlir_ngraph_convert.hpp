@@ -16,7 +16,10 @@
 
 #pragma once
 
-#include "ngraph/function.hpp"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/ToolOutputFile.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Diagnostics.h"
 #include "mlir/IR/MLIRContext.h"
@@ -26,11 +29,8 @@
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Support/ToolUtilities.h"
 #include "mlir/Translation.h"
-#include "llvm/Support/InitLLVM.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/ToolOutputFile.h"
 #include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/function.hpp"
 
 namespace ngraph
 {
@@ -49,8 +49,11 @@ public:
     static void convert_function(const ngraph::Function* function);
 
 private:
+    NgraphToMlir(::mlir::MLIRContext* context);
     void convert(const ngraph::Function* function);
     // ::mlir::Type get_mlir_type(const descriptor::Tensor* tensor);
-    // ::mlir::Type get_mlir_type(const element::Type& type);
+    ::mlir::Type get_mlir_type(const element::Type& type);
     // llvm::SmallVectorImpl<int64_t> get_mlir_shape(const ngraph::Shape& ngraph_shape);
+
+    ::mlir::MLIRContext* m_context;
 };
