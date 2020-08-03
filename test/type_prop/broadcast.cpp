@@ -199,7 +199,7 @@ TEST(type_prop, broadcast_partial_rank_static_dynamic_shape_mismatch_wrong_size)
     }
 }
 
-// Because v3::Broadcast is backward compatible to v1::Broadcast all v1::Broadcast tests should pass
+// Because v2::Broadcast is backward compatible to v1::Broadcast all v1::Broadcast tests should pass
 template <typename T>
 class BroadcastTests : public ::testing::Test
 {
@@ -475,7 +475,7 @@ REGISTER_TYPED_TEST_SUITE_P(BroadcastTests,
                             broadcast_broadcast_shape_et_wrong,
                             broadcast_axes_et_wrong);
 
-typedef ::testing::Types<op::v1::Broadcast, op::v3::Broadcast> BroadcastTypes;
+typedef ::testing::Types<op::v1::Broadcast, op::v2::Broadcast> BroadcastTypes;
 // the last empty argument resolves compiler warning on MAC:
 // `must specify at least one argument for '...'` (variadic macro)
 INSTANTIATE_TYPED_TEST_SUITE_P(type_prop, BroadcastTests, BroadcastTypes, );
@@ -492,29 +492,29 @@ TEST(type_prop, broadcast_v1_pdpd)
     ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 3, 6}));
 }
 
-TEST(type_prop, broadcast_v3_pdpd)
+TEST(type_prop, broadcast_v2_pdpd)
 {
     auto param = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
 
-    auto bc = make_shared<op::v3::Broadcast>(
+    auto bc = make_shared<op::v2::Broadcast>(
         param, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
     ASSERT_EQ(bc->get_output_element_type(0), element::f32);
     ASSERT_EQ(bc->get_output_shape(0), (Shape{2, 3, 6}));
 }
 
-TEST(type_prop, broadcast_v3_bidirectional_mode_string)
+TEST(type_prop, broadcast_v2_bidirectional_mode_string)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = make_shared<op::Parameter>(element::i32, Shape{2});
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, "BIDIRECTIONAL");
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, "BIDIRECTIONAL");
 
-    ASSERT_EQ(broadcast_v3->get_broadcast_spec(), op::BroadcastType::BIDIRECTIONAL);
-    ASSERT_EQ(broadcast_v3->get_version(), 3);
+    ASSERT_EQ(broadcast_v2->get_broadcast_spec(), op::BroadcastType::BIDIRECTIONAL);
+    ASSERT_EQ(broadcast_v2->get_version(), 3);
 }
 
-TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
+TEST(type_prop, broadcast_v2_shape_unexpected_axes_mapping_input)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = make_shared<op::Parameter>(element::i16, Shape{2});
@@ -523,8 +523,8 @@ TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
 
     try
     {
-        const auto broadcast_v3 =
-            make_shared<op::v3::Broadcast>(arg, shape, axes_mapping, broadcast_spec);
+        const auto broadcast_v2 =
+            make_shared<op::v2::Broadcast>(arg, shape, axes_mapping, broadcast_spec);
         FAIL() << "Unexpected axes mapping input exception not thrown";
     }
     catch (const NodeValidationFailure& error)
@@ -539,7 +539,7 @@ TEST(type_prop, broadcast_v3_shape_unexpected_axes_mapping_input)
     }
 }
 
-TEST(type_prop, broadcast_v3_not_provided_axes_input_for_explicit_mode)
+TEST(type_prop, broadcast_v2_not_provided_axes_input_for_explicit_mode)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = make_shared<op::Parameter>(element::i16, Shape{2});
@@ -547,7 +547,7 @@ TEST(type_prop, broadcast_v3_not_provided_axes_input_for_explicit_mode)
 
     try
     {
-        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+        const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
         FAIL() << "axes_mapping input should be provided if explicit mode is used";
     }
     catch (const NodeValidationFailure& error)
@@ -562,99 +562,99 @@ TEST(type_prop, broadcast_v3_not_provided_axes_input_for_explicit_mode)
     }
 }
 
-TEST(type_prop, broadcast_v3_shape)
+TEST(type_prop, broadcast_v2_shape)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1});
     const auto shape = op::Constant::create(element::i64, {2}, {1, 4});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{1, 4, 4}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{2})));
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::f32);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{1, 4, 4}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{2})));
 }
 
-TEST(type_prop, broadcast_v3_shape_2)
+TEST(type_prop, broadcast_v2_shape_2)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{3, 1});
     const auto shape = op::Constant::create(element::i64, {3}, {2, 1, 6});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{2, 3, 6}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::f32);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{2, 3, 6}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }
 
-TEST(type_prop, broadcast_v3_shape_3)
+TEST(type_prop, broadcast_v2_shape_3)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 1});
     const auto shape = op::Constant::create(element::i64, {2}, {2, 4});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{2, 4}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{1})));
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::f32);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{2, 4}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{1})));
 }
 
-TEST(type_prop, broadcast_v3_shape_4)
+TEST(type_prop, broadcast_v2_shape_4)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1});
     const auto shape = op::Constant::create(element::i64, {2}, {3, 1});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{1, 3, 1}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{})));
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::f32);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{1, 3, 1}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{})));
 }
 
-TEST(type_prop, broadcast_v3_shape_5)
+TEST(type_prop, broadcast_v2_shape_5)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{16, 1, 1});
     const auto shape = op::Constant::create(element::i64, {4}, {1, 1, 50, 50});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{1, 16, 50, 50}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(),
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::f32);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{1, 16, 50, 50}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(),
               (make_pair<bool, AxisSet>(true, AxisSet{0, 2, 3})));
 }
 
-TEST(type_prop, broadcast_v3_shape_6)
+TEST(type_prop, broadcast_v2_shape_6)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1});
     const auto shape = op::Constant::create(element::i64, {3}, {3, 1, 3});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::f32);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{3, 3, 3}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::f32);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{3, 3, 3}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }
 
-TEST(type_prop, broadcast_v3_shape_6_type_infer)
+TEST(type_prop, broadcast_v2_shape_6_type_infer)
 {
     const auto arg = make_shared<op::Parameter>(element::u16, Shape{1, 3, 1});
     const auto shape = op::Constant::create(element::i64, {3}, {3, 1, 3});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
 
-    ASSERT_EQ(broadcast_v3->get_output_element_type(0), element::u16);
-    ASSERT_EQ(broadcast_v3->get_output_shape(0), (Shape{3, 3, 3}));
-    ASSERT_EQ(broadcast_v3->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
+    ASSERT_EQ(broadcast_v2->get_output_element_type(0), element::u16);
+    ASSERT_EQ(broadcast_v2->get_output_shape(0), (Shape{3, 3, 3}));
+    ASSERT_EQ(broadcast_v2->get_broadcast_axes(), (make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
 }
 
-TEST(type_prop, broadcast_v3_incorrect_target_shape)
+TEST(type_prop, broadcast_v2_incorrect_target_shape)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2});
     const auto shape = op::Constant::create(element::i64, {3}, {8, 6, 4});
@@ -662,7 +662,7 @@ TEST(type_prop, broadcast_v3_incorrect_target_shape)
 
     try
     {
-        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+        const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
         FAIL() << "Not applicable breadcast exception not thrown";
     }
     catch (const NodeValidationFailure& error)
@@ -677,7 +677,7 @@ TEST(type_prop, broadcast_v3_incorrect_target_shape)
     }
 }
 
-TEST(type_prop, broadcast_v3_incorrect_target_shape_2)
+TEST(type_prop, broadcast_v2_incorrect_target_shape_2)
 {
     const auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2});
     const auto shape = op::Constant::create(element::i64, {2}, {2, 3});
@@ -685,7 +685,7 @@ TEST(type_prop, broadcast_v3_incorrect_target_shape_2)
 
     try
     {
-        const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
+        const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
         FAIL() << "Not applicable breadcast exception not thrown";
     }
     catch (const NodeValidationFailure& error)

@@ -225,13 +225,13 @@ TEST(eval, DISABLED_EVAL_dynamic_range_sum)
 }
 #endif
 
-TEST(eval, evaluate_broadcast_v3_bidirectional)
+TEST(eval, evaluate_broadcast_v2_bidirectional)
 {
     Shape shape_a{4, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = op::Constant::create<int32_t>(element::i32, Shape{3}, {2, 1, 4});
     auto bcast_v3 =
-        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+        make_shared<op::v2::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
 
     auto result = make_shared<HostTensor>();
@@ -245,13 +245,13 @@ TEST(eval, evaluate_broadcast_v3_bidirectional)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_bidirectional_dyn)
+TEST(eval, evaluate_broadcast_v2_bidirectional_dyn)
 {
     Shape shape_a{4, 1};
     auto A = make_shared<op::Parameter>(element::i32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
     auto bcast_v3 =
-        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+        make_shared<op::v2::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
 
     auto result = make_shared<HostTensor>();
@@ -266,12 +266,12 @@ TEST(eval, evaluate_broadcast_v3_bidirectional_dyn)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_numpy)
+TEST(eval, evaluate_broadcast_v2_numpy)
 {
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
-    auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
+    auto bcast_v3 = make_shared<op::v2::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
 
     auto result = make_shared<HostTensor>();
@@ -287,12 +287,12 @@ TEST(eval, evaluate_broadcast_v3_numpy)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_numpy_dyn)
+TEST(eval, evaluate_broadcast_v2_numpy_dyn)
 {
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
-    auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
+    auto bcast_v3 = make_shared<op::v2::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
 
     auto result = make_shared<HostTensor>();
@@ -310,13 +310,13 @@ TEST(eval, evaluate_broadcast_v3_numpy_dyn)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
+TEST(eval, evaluate_broadcast_v2_numpy_vs_bidi)
 {
     Shape in_shape{1, 4, 1};
 
     auto A = make_shared<op::Parameter>(element::f32, in_shape);
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 4});
-    auto bcast_v3_num = make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::NUMPY);
+    auto bcast_v3_num = make_shared<op::v2::Broadcast>(A, target_shape, op::BroadcastType::NUMPY);
     auto fun_num = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
 
     auto result = make_shared<HostTensor>();
@@ -330,7 +330,7 @@ TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
 
     auto target_shape2 = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 4});
     auto bcast_v3 =
-        make_shared<op::v3::Broadcast>(A, target_shape2, op::BroadcastType::BIDIRECTIONAL);
+        make_shared<op::v2::Broadcast>(A, target_shape2, op::BroadcastType::BIDIRECTIONAL);
     auto fun_bidi = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
 
     auto result2 = make_shared<HostTensor>();
@@ -343,7 +343,7 @@ TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
     ASSERT_EQ(expec2, result_val2);
 }
 
-TEST(eval, evaluate_broadcast_v3_bidi_4d)
+TEST(eval, evaluate_broadcast_v2_bidi_4d)
 {
     Shape in_shape{4, 1, 1};
     Shape expec_shape{1, 4, 2, 2};
@@ -351,7 +351,7 @@ TEST(eval, evaluate_broadcast_v3_bidi_4d)
     auto A = make_shared<op::Parameter>(element::f32, in_shape);
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{4}, {1, 1, 2, 2});
     auto bcast_v3 =
-        make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
+        make_shared<op::v2::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
 
     auto result = make_shared<HostTensor>();
@@ -364,12 +364,12 @@ TEST(eval, evaluate_broadcast_v3_bidi_4d)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_pdpd)
+TEST(eval, evaluate_broadcast_v2_pdpd)
 {
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
-    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+    auto bcast_v3 = make_shared<op::v2::Broadcast>(
         A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
 
@@ -386,12 +386,12 @@ TEST(eval, evaluate_broadcast_v3_pdpd)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_pdpd_dyn)
+TEST(eval, evaluate_broadcast_v2_pdpd_dyn)
 {
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
-    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+    auto bcast_v3 = make_shared<op::v2::Broadcast>(
         A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
 
@@ -545,14 +545,14 @@ TEST(eval, evaluate_broadcast_v1_explicit_dyn)
     ASSERT_EQ(result_val, expec);
 }
 
-TEST(eval, evaluate_broadcast_v3_explicit_dyn)
+TEST(eval, evaluate_broadcast_v2_explicit_dyn)
 {
     Shape shape_a{3, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
     auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
 
-    auto bcast_v3 = make_shared<op::v3::Broadcast>(
+    auto bcast_v3 = make_shared<op::v2::Broadcast>(
         A, target_shape, axes_mapping, op::BroadcastModeSpec(op::BroadcastType::EXPLICIT));
     auto fun = make_shared<Function>(OutputVector{bcast_v3},
                                      ParameterVector{A, target_shape, axes_mapping});

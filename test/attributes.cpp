@@ -957,18 +957,18 @@ TEST(attributes, fake_quantize_op)
     EXPECT_EQ(g_fake_quantize->get_auto_broadcast(), fake_quantize->get_auto_broadcast());
 }
 
-TEST(attributes, broadcast_v3)
+TEST(attributes, broadcast_v2)
 {
     FactoryRegistry<Node>::get().register_factory<opset3::Broadcast>();
     const auto arg = make_shared<op::Parameter>(element::i64, Shape{1, 3, 1});
     const auto shape = make_shared<op::Parameter>(element::i64, Shape{3});
     const auto broadcast_spec = op::BroadcastType::BIDIRECTIONAL;
 
-    const auto broadcast_v3 = make_shared<op::v3::Broadcast>(arg, shape, broadcast_spec);
-    NodeBuilder builder(broadcast_v3);
-    auto g_broadcast_v3 = as_type_ptr<opset3::Broadcast>(builder.create());
+    const auto broadcast_v2 = make_shared<op::v2::Broadcast>(arg, shape, broadcast_spec);
+    NodeBuilder builder(broadcast_v2);
+    auto g_broadcast_v2 = as_type_ptr<opset3::Broadcast>(builder.create());
 
-    EXPECT_EQ(g_broadcast_v3->get_broadcast_spec(), broadcast_spec);
+    EXPECT_EQ(g_broadcast_v2->get_broadcast_spec(), broadcast_spec);
 }
 
 TEST(attributes, grn_op)

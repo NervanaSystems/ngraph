@@ -25,14 +25,14 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v2
         {
             /// \brief Operation which "adds" axes to an input tensor, replicating elements from the
             ///        input as needed along the new axes.
             class NGRAPH_API Broadcast : public util::BroadcastBase
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Broadcast", 3};
+                static constexpr NodeTypeInfo type_info{"Broadcast", 2};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a broadcast operation.
                 Broadcast() = default;

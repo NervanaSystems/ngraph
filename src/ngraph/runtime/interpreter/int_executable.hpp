@@ -1863,7 +1863,7 @@ protected:
         case OP_TYPEID::BatchToSpace_v0:
         case OP_TYPEID::BinaryConvolution_v0:
         case OP_TYPEID::Broadcast_v1:
-        case OP_TYPEID::Broadcast_v3:
+        case OP_TYPEID::Broadcast_v2:
         case OP_TYPEID::Bucketize_v3:
         case OP_TYPEID::ConvertLike_v1:
         case OP_TYPEID::Convolution_v1:

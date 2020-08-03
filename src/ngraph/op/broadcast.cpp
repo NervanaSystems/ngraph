@@ -27,9 +27,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v3::Broadcast::type_info;
+constexpr NodeTypeInfo op::v2::Broadcast::type_info;
 
-op::v3::Broadcast::Broadcast(const Output<Node>& arg,
+op::v2::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const Output<Node>& axes_mapping,
                              const BroadcastModeSpec& broadcast_spec)
@@ -38,7 +38,7 @@ op::v3::Broadcast::Broadcast(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::v3::Broadcast::Broadcast(const Output<Node>& arg,
+op::v2::Broadcast::Broadcast(const Output<Node>& arg,
                              const Output<Node>& target_shape,
                              const BroadcastModeSpec& broadcast_spec)
     : util::BroadcastBase{arg, target_shape, broadcast_spec}
@@ -67,7 +67,7 @@ namespace
     }
 }
 
-std::pair<bool, AxisSet> op::v3::Broadcast::get_broadcast_axes() const
+std::pair<bool, AxisSet> op::v2::Broadcast::get_broadcast_axes() const
 {
     if (m_mode.m_type == BroadcastType::BIDIRECTIONAL)
     {
@@ -120,7 +120,7 @@ namespace
     }
 }
 
-void op::v3::Broadcast::validate_and_infer_types()
+void op::v2::Broadcast::validate_and_infer_types()
 {
     if (m_mode.m_type == BroadcastType::NONE)
     {
@@ -163,16 +163,16 @@ void op::v3::Broadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
-shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v2::Broadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 2)
     {
-        return make_shared<v3::Broadcast>(new_args.at(0), new_args.at(1), m_mode);
+        return make_shared<v2::Broadcast>(new_args.at(0), new_args.at(1), m_mode);
     }
     else if (new_args.size() == 3)
     {
-        return make_shared<v3::Broadcast>(new_args.at(0), new_args.at(1), new_args.at(2), m_mode);
+        return make_shared<v2::Broadcast>(new_args.at(0), new_args.at(1), new_args.at(2), m_mode);
     }
     else
     {
@@ -180,14 +180,14 @@ shared_ptr<Node> op::v3::Broadcast::clone_with_new_inputs(const OutputVector& ne
     }
 }
 
-bool op::v3::Broadcast::visit_attributes(AttributeVisitor& visitor)
+bool op::v2::Broadcast::visit_attributes(AttributeVisitor& visitor)
 {
     BroadcastBase::visit_attributes(visitor);
     visitor.on_attribute("broadcast_spec", m_mode);
     return true;
 }
 
-bool op::v3::Broadcast::evaluate(const HostTensorVector& outputs,
+bool op::v2::Broadcast::evaluate(const HostTensorVector& outputs,
                                  const HostTensorVector& inputs) const
 {
     if (get_broadcast_spec().m_type == op::BroadcastType::BIDIRECTIONAL)

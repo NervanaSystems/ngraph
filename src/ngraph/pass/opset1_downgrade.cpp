@@ -27,7 +27,7 @@ using namespace ngraph;
 
 namespace
 {
-    shared_ptr<Node> op_cast(shared_ptr<op::v3::Broadcast> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v2::Broadcast> node)
     {
         const auto data = node->input_value(0).get_node_shared_ptr();
         const auto target_shape = node->input_value(1).get_node_shared_ptr();
@@ -113,7 +113,7 @@ namespace
     {
         static DispatchMap dispatch_map{
 #define NGRAPH_OP(NAME, NAMESPACE) {NAMESPACE::NAME::type_info, op_cast_thunk<NAMESPACE::NAME>},
-            NGRAPH_OP(Broadcast, op::v3) NGRAPH_OP(TopK, op::v3)
+            NGRAPH_OP(Broadcast, op::v2) NGRAPH_OP(TopK, op::v3)
 #undef NGRAPH_OP
         };
         return dispatch_map;
