@@ -1860,7 +1860,7 @@ protected:
         case OP_TYPEID::Atanh_v0:
         case OP_TYPEID::AvgPool_v1:
         case OP_TYPEID::BatchMatMulTranspose_v0:
-        case OP_TYPEID::BatchToSpace_v1:
+        case OP_TYPEID::BatchToSpace_v0:
         case OP_TYPEID::BinaryConvolution_v0:
         case OP_TYPEID::Broadcast_v1:
         case OP_TYPEID::Broadcast_v3:
@@ -1958,7 +1958,7 @@ protected:
         case OP_TYPEID::Softmax_v1:
         case OP_TYPEID::SoftmaxCrossEntropy_v0:
         case OP_TYPEID::SoftmaxCrossEntropyBackprop_v0:
-        case OP_TYPEID::SpaceToBatch_v1:
+        case OP_TYPEID::SpaceToBatch_v0:
         case OP_TYPEID::SpaceToDepth_v0:
         case OP_TYPEID::Split_v0:
         case OP_TYPEID::Split_v1:

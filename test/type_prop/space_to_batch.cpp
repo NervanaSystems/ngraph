@@ -29,7 +29,7 @@ TEST(type_prop, space_to_batch_output_shape_2D)
     auto pads_end = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 0});
 
     auto space_to_batch =
-        make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0), (Shape{2 * 5, (128 + 2) / 5}));
@@ -45,7 +45,7 @@ TEST(type_prop, space_to_batch_output_shape_4D)
     auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 3, 0, 0});
 
     auto space_to_batch =
-        make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0),
@@ -63,7 +63,7 @@ TEST(type_prop, space_to_batch_output_shape_5D)
         make_shared<op::Constant>(element::i32, Shape{5}, vector<int64_t>{0, 2, 1, 0, 0});
 
     auto space_to_batch =
-        make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0),
@@ -80,14 +80,14 @@ TEST(type_prop, space_to_batch_and_batch_to_space)
     auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 5, 38, 0});
 
     auto space_to_batch =
-        make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
 
     ASSERT_EQ(space_to_batch->get_output_element_type(0), element::f32);
     ASSERT_EQ(space_to_batch->get_output_shape(0),
               (Shape{2 * 12 * 100 * 2, (100 + 3 + 5) / 12, (1024 + 38 + 38) / 100, (3 + 1) / 2}));
 
     auto batch_to_space =
-        make_shared<op::v1::BatchToSpace>(space_to_batch, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::BatchToSpace>(space_to_batch, block_shape, pads_begin, pads_end);
     ASSERT_EQ(batch_to_space->get_output_element_type(0), element::f32);
     ASSERT_EQ(batch_to_space->get_output_shape(0), (Shape{2, 100, 1024, 3}));
 }

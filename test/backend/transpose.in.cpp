@@ -102,7 +102,7 @@ NGRAPH_TEST(${BACKEND_NAME}, space_to_batch)
         make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
     auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
     auto space_to_batch =
-        make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
     auto function = make_shared<Function>(OutputVector{space_to_batch}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     test_case.add_input<float>({0.f, 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 11.f});
@@ -124,7 +124,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_to_space)
         make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
     auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
     auto batch_to_space =
-        make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
+        make_shared<op::v0::BatchToSpace>(data, block_shape, pads_begin, pads_end);
     auto function = make_shared<Function>(OutputVector{batch_to_space}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");

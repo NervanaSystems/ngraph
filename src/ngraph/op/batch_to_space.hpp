@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief BatchToSpace permutes data from the batch dimension of the data tensor into
             ///        spatial dimensions.
@@ -39,7 +39,7 @@ namespace ngraph
             class NGRAPH_API BatchToSpace : public ngraph::op::util::FusedOp
             {
             public:
-                static constexpr NodeTypeInfo type_info{"BatchToSpace", 1};
+                static constexpr NodeTypeInfo type_info{"BatchToSpace", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 BatchToSpace() = default;
                 /// \brief Constructs a BatchToSpace operation.

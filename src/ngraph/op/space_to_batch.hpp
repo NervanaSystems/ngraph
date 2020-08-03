@@ -23,7 +23,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief SpaceToBatch permutes data tensor blocks of spatial data into batch
             /// dimension.
@@ -39,7 +39,7 @@ namespace ngraph
             class NGRAPH_API SpaceToBatch : public ngraph::op::util::FusedOp
             {
             public:
-                static constexpr NodeTypeInfo type_info{"SpaceToBatch", 1};
+                static constexpr NodeTypeInfo type_info{"SpaceToBatch", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 SpaceToBatch() = default;
 
@@ -63,6 +63,6 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
-        using v1::SpaceToBatch;
+        using v0::SpaceToBatch;
     }
 }

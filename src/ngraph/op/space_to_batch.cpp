@@ -27,9 +27,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::SpaceToBatch::type_info;
+constexpr NodeTypeInfo op::v0::SpaceToBatch::type_info;
 
-ngraph::op::v1::SpaceToBatch::SpaceToBatch(const ngraph::Output<ngraph::Node>& data,
+ngraph::op::v0::SpaceToBatch::SpaceToBatch(const ngraph::Output<ngraph::Node>& data,
                                            const ngraph::Output<ngraph::Node>& block_shape,
                                            const ngraph::Output<ngraph::Node>& pads_begin,
                                            const ngraph::Output<ngraph::Node>& pads_end)
@@ -38,7 +38,7 @@ ngraph::op::v1::SpaceToBatch::SpaceToBatch(const ngraph::Output<ngraph::Node>& d
     constructor_validate_and_infer_types();
 }
 
-OutputVector op::v1::SpaceToBatch::decompose_op() const
+OutputVector op::v0::SpaceToBatch::decompose_op() const
 {
     auto data = input_value(0);
     auto block = input_value(1);
@@ -127,7 +127,7 @@ OutputVector op::v1::SpaceToBatch::decompose_op() const
     return OutputVector{flat_node};
 }
 
-void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
+void ngraph::op::v0::SpaceToBatch::pre_validate_and_infer_types()
 {
     PartialShape data_pshape = get_input_partial_shape(0);
 
@@ -173,14 +173,14 @@ void ngraph::op::v1::SpaceToBatch::pre_validate_and_infer_types()
 }
 
 std::shared_ptr<Node>
-    ngraph::op::v1::SpaceToBatch::clone_with_new_inputs(const OutputVector& new_args) const
+    ngraph::op::v0::SpaceToBatch::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<SpaceToBatch>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
-bool ngraph::op::v1::SpaceToBatch::visit_attributes(ngraph::AttributeVisitor& visitor)
+bool ngraph::op::v0::SpaceToBatch::visit_attributes(ngraph::AttributeVisitor& visitor)
 {
     return true;
 }
