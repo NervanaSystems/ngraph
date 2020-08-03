@@ -1887,7 +1887,7 @@ protected:
         case OP_TYPEID::EmbeddingBagPackedSum_v0:
         case OP_TYPEID::EmbeddingSegmentsSum_v0:
         case OP_TYPEID::Equal_v1:
-        case OP_TYPEID::ExtractImagePatches_v3:
+        case OP_TYPEID::ExtractImagePatches_v0:
         case OP_TYPEID::FakeQuantize_v0:
         case OP_TYPEID::FloorMod_v1:
         case OP_TYPEID::Gather_v1:

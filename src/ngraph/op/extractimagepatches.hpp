@@ -22,12 +22,12 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v0
         {
             class NGRAPH_API ExtractImagePatches : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ExtractImagePatches", 3};
+                static constexpr NodeTypeInfo type_info{"ExtractImagePatches", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ExtractImagePatches() = default;
                 /// \brief Constructs a ExtractImagePatches operation
@@ -67,6 +67,6 @@ namespace ngraph
                 PadType m_padding;
             };
         }
-        using v3::ExtractImagePatches;
+        using v0::ExtractImagePatches;
     }
 }

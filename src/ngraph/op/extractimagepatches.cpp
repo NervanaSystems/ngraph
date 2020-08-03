@@ -22,9 +22,9 @@ using namespace ngraph;
 
 // ExtractImagePatches v3
 
-constexpr NodeTypeInfo op::v3::ExtractImagePatches::type_info;
+constexpr NodeTypeInfo op::v0::ExtractImagePatches::type_info;
 
-op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
+op::v0::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
                                                  const Shape& sizes,
                                                  const Strides& strides,
                                                  const Shape& rates,
@@ -38,7 +38,7 @@ op::v3::ExtractImagePatches::ExtractImagePatches(const Output<Node>& image,
     constructor_validate_and_infer_types();
 }
 
-void op::v3::ExtractImagePatches::validate_and_infer_types()
+void op::v0::ExtractImagePatches::validate_and_infer_types()
 {
     const PartialShape input_Pshape = get_input_partial_shape(0);
 
@@ -146,7 +146,7 @@ void op::v3::ExtractImagePatches::validate_and_infer_types()
     }
 }
 
-bool op::v3::ExtractImagePatches::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::ExtractImagePatches::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("sizes", m_patch_sizes);
     visitor.on_attribute("strides", m_patch_movement_strides);
@@ -156,10 +156,10 @@ bool op::v3::ExtractImagePatches::visit_attributes(AttributeVisitor& visitor)
 }
 
 shared_ptr<Node>
-    op::v3::ExtractImagePatches::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::ExtractImagePatches::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::v3::ExtractImagePatches>(new_args.at(0),
+    return make_shared<op::v0::ExtractImagePatches>(new_args.at(0),
                                                     m_patch_sizes,
                                                     m_patch_movement_strides,
                                                     m_patch_selection_rates,
