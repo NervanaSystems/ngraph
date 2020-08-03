@@ -1864,8 +1864,8 @@ protected:
         case OP_TYPEID::BinaryConvolution_v0:
         case OP_TYPEID::Broadcast_v1:
         case OP_TYPEID::Broadcast_v2:
-        case OP_TYPEID::Bucketize_v3:
-        case OP_TYPEID::ConvertLike_v1:
+        case OP_TYPEID::Bucketize_v0:
+        case OP_TYPEID::ConvertLike_v0:
         case OP_TYPEID::Convolution_v1:
         case OP_TYPEID::ConvolutionBackpropData_v1:
         case OP_TYPEID::ConvolutionBias_v0:

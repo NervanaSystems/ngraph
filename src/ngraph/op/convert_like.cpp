@@ -21,34 +21,34 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::ConvertLike::type_info;
+constexpr NodeTypeInfo op::v0::ConvertLike::type_info;
 
-op::v1::ConvertLike::ConvertLike(const Output<Node>& data, const Output<Node>& like)
+op::v0::ConvertLike::ConvertLike(const Output<Node>& data, const Output<Node>& like)
     : Op({data, like})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::v1::ConvertLike::validate_and_infer_types()
+void op::v0::ConvertLike::validate_and_infer_types()
 {
     set_output_type(0, get_input_element_type(1), get_input_partial_shape(0));
 }
 
-bool op::v1::ConvertLike::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::ConvertLike::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
 
-shared_ptr<Node> op::v1::ConvertLike::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ConvertLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ConvertLike>(new_args.at(0), new_args.at(1));
 }
 
-void op::v1::ConvertLike::generate_adjoints(autodiff::Adjoints& adjoints,
+void op::v0::ConvertLike::generate_adjoints(autodiff::Adjoints& adjoints,
                                             const OutputVector& deltas)
 {
     const auto delta = deltas.at(0);
 
-    adjoints.add_delta(input_value(0), make_shared<op::v1::ConvertLike>(delta, input_value(1)));
+    adjoints.add_delta(input_value(0), make_shared<op::v0::ConvertLike>(delta, input_value(1)));
 }

@@ -19,9 +19,9 @@
 using namespace ngraph;
 using namespace std;
 
-constexpr NodeTypeInfo op::v3::Bucketize::type_info;
+constexpr NodeTypeInfo op::v0::Bucketize::type_info;
 
-op::v3::Bucketize::Bucketize(const Output<Node>& data,
+op::v0::Bucketize::Bucketize(const Output<Node>& data,
                              const Output<Node>& buckets,
                              const element::Type output_type,
                              const bool with_right_bound)
@@ -32,14 +32,14 @@ op::v3::Bucketize::Bucketize(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-bool op::v3::Bucketize::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Bucketize::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("output_type", m_output_type);
     visitor.on_attribute("with_right_bound", m_with_right_bound);
     return true;
 }
 
-void op::v3::Bucketize::validate_and_infer_types()
+void op::v0::Bucketize::validate_and_infer_types()
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     const PartialShape& buckets_pshape = get_input_partial_shape(1);
@@ -63,10 +63,10 @@ void op::v3::Bucketize::validate_and_infer_types()
     set_output_type(0, m_output_type, data_pshape);
 }
 
-shared_ptr<Node> op::v3::Bucketize::clone_with_new_inputs(const OutputVector& inputs) const
+shared_ptr<Node> op::v0::Bucketize::clone_with_new_inputs(const OutputVector& inputs) const
 {
     check_new_args_count(this, inputs);
 
-    return make_shared<v3::Bucketize>(
+    return make_shared<v0::Bucketize>(
         inputs.at(0), inputs.at(1), m_output_type, m_with_right_bound);
 }

@@ -22,13 +22,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v0
         {
             /// \brief Operation that bucketizes the input based on boundaries
             class NGRAPH_API Bucketize : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Bucketize", 3};
+                static constexpr NodeTypeInfo type_info{"Bucketize", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Bucketize() = default;
                 /// \brief Constructs a Bucketize node
@@ -65,6 +65,6 @@ namespace ngraph
                 bool m_with_right_bound;
             };
         }
-        using v3::Bucketize;
+        using v0::Bucketize;
     }
 }

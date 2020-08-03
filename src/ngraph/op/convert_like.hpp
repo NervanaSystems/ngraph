@@ -22,13 +22,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief Elementwise type conversion operation.
             class NGRAPH_API ConvertLike : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"ConvertLike", 1};
+                static constexpr NodeTypeInfo type_info{"ConvertLike", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a conversion operation.
                 ConvertLike() = default;
