@@ -1903,7 +1903,7 @@ protected:
         case OP_TYPEID::GroupConvolutionBackpropData_v0:
         case OP_TYPEID::GroupConvolutionBackpropData_v1:
         case OP_TYPEID::GroupConvolutionBackpropFilters_v0:
-        case OP_TYPEID::GRUCell_v3:
+        case OP_TYPEID::GRUCell_v0:
         case OP_TYPEID::HardSigmoid_v0:
         case OP_TYPEID::Interpolate_v0:
         case OP_TYPEID::Interpolate_v3:

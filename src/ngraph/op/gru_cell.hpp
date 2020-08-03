@@ -30,7 +30,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v0
         {
             ///
             /// \brief      Class for GRU cell node.
@@ -43,7 +43,7 @@ namespace ngraph
             class NGRAPH_API GRUCell : public util::FusedOp, public util::RNNCellBase
             {
             public:
-                static constexpr NodeTypeInfo type_info{"GRUCell", 3};
+                static constexpr NodeTypeInfo type_info{"GRUCell", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GRUCell();
                 ///
@@ -178,6 +178,6 @@ namespace ngraph
                 bool m_linear_before_reset;
             };
         }
-        using v3::GRUCell;
+        using v0::GRUCell;
     }
 }

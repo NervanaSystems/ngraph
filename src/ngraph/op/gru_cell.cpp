@@ -28,9 +28,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v3::GRUCell::type_info;
+constexpr NodeTypeInfo op::v0::GRUCell::type_info;
 
-op::v3::GRUCell::GRUCell()
+op::v0::GRUCell::GRUCell()
     : m_linear_before_reset(false)
 {
     m_activations = {"sigmoid", "tanh"};
@@ -38,7 +38,7 @@ op::v3::GRUCell::GRUCell()
     m_activation_g = get_activation_function(1);
 }
 
-op::v3::GRUCell::GRUCell(const Output<Node>& X,
+op::v0::GRUCell::GRUCell(const Output<Node>& X,
                          const Output<Node>& initial_hidden_state,
                          const Output<Node>& W,
                          const Output<Node>& R,
@@ -56,7 +56,7 @@ op::v3::GRUCell::GRUCell(const Output<Node>& X,
 {
 }
 
-op::v3::GRUCell::GRUCell(const Output<Node>& X,
+op::v0::GRUCell::GRUCell(const Output<Node>& X,
                          const Output<Node>& initial_hidden_state,
                          const Output<Node>& W,
                          const Output<Node>& R,
@@ -76,7 +76,7 @@ op::v3::GRUCell::GRUCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::v3::GRUCell::GRUCell(const Output<Node>& X,
+op::v0::GRUCell::GRUCell(const Output<Node>& X,
                          const Output<Node>& initial_hidden_state,
                          const Output<Node>& W,
                          const Output<Node>& R,
@@ -96,13 +96,13 @@ op::v3::GRUCell::GRUCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-bool op::v3::GRUCell::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::GRUCell::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("linear_before_reset", m_linear_before_reset);
     return op::util::RNNCellBase::visit_attributes(visitor);
 }
 
-void op::v3::GRUCell::pre_validate_and_infer_types()
+void op::v0::GRUCell::pre_validate_and_infer_types()
 {
     const auto& x_pshape = get_input_partial_shape(0);
     const auto& ht_pshape = get_input_partial_shape(1);
@@ -168,7 +168,7 @@ void op::v3::GRUCell::pre_validate_and_infer_types()
         ".");
 }
 
-OutputVector op::v3::GRUCell::decompose_op() const
+OutputVector op::v0::GRUCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -251,7 +251,7 @@ OutputVector op::v3::GRUCell::decompose_op() const
     return {H_t.get_node_shared_ptr()};
 }
 
-void op::v3::GRUCell::add_default_bias_input()
+void op::v0::GRUCell::add_default_bias_input()
 {
     Output<Node> B = op::Constant::create(
         get_input_element_type(0),
@@ -260,7 +260,7 @@ void op::v3::GRUCell::add_default_bias_input()
     set_argument(4, B);
 }
 
-shared_ptr<Node> op::v3::GRUCell::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::GRUCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)
