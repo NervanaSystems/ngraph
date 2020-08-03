@@ -23,8 +23,8 @@
 #include <string>
 #include <vector>
 
-#include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
-#include "contrib/mlir/runtime/runtime.hpp"
+// #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
+// #include "contrib/mlir/runtime/runtime.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -74,6 +74,6 @@ protected:
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;
     std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
-    runtime::ngmlir::MLIRCPURuntime m_mlir_runtime;
+    // runtime::ngmlir::MLIRCPURuntime m_mlir_runtime;
     bool m_first_iteration = true;
 };
