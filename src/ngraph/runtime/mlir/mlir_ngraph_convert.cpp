@@ -25,6 +25,7 @@ using namespace ngraph;
 
 runtime::mlir::NgraphToMlir::NgraphToMlir(::mlir::MLIRContext* context)
     : m_context(context)
+    , m_builder(context)
 {
 }
 
@@ -107,8 +108,6 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
     auto mlir_function =
         ::mlir::FuncOp::create(::mlir::UnknownLoc::get(m_context), "main", funcType);
     mlir_function.addEntryBlock();
-
-    ::mlir::OpBuilder op_builder(m_context);
 
     for (shared_ptr<Node> op : ngraph_function->get_ordered_ops())
     {
