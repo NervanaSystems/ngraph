@@ -29,7 +29,7 @@ TEST(type_prop, ebos)
     auto per_sample_weights = make_shared<op::Parameter>(element::f32, Shape{4});
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
-    auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+    auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
         emb_table, indices, offsets, default_index, per_sample_weights);
     EXPECT_TRUE(ebos->get_output_partial_shape(0).same_scheme(PartialShape{3, 2}));
     EXPECT_TRUE(indices->get_partial_shape().same_scheme(per_sample_weights->get_partial_shape()));
@@ -47,7 +47,7 @@ TEST(type_prop, ebos_dynamic_emb_table)
     auto per_sample_weights = make_shared<op::Parameter>(element::f32, Shape{4});
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
-    auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+    auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
         emb_table, indices, offsets, default_index, per_sample_weights);
 
     EXPECT_TRUE(
@@ -62,7 +62,7 @@ TEST(type_prop, ebos_dynamic_offsets)
     auto per_sample_weights = make_shared<op::Parameter>(element::f32, Shape{4});
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
-    auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+    auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
         emb_table, indices, offsets, default_index, per_sample_weights);
 
     EXPECT_TRUE(
@@ -78,7 +78,7 @@ TEST(type_prop, ebos_dynamic_emb_table_offsets)
     auto per_sample_weights = make_shared<op::Parameter>(element::f32, Shape{4});
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
-    auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+    auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
         emb_table, indices, offsets, default_index, per_sample_weights);
 
     EXPECT_TRUE(ebos->get_output_partial_shape(0).same_scheme(
@@ -95,7 +95,7 @@ TEST(type_prop, ebos_fail_indices_element_type)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid indices type not detected";
     }
@@ -119,7 +119,7 @@ TEST(type_prop, ebos_fail_offsets_element_type)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid offsets type not detected";
     }
@@ -143,7 +143,7 @@ TEST(type_prop, ebos_fail_default_index_element_type)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid default_index type not detected";
     }
@@ -167,7 +167,7 @@ TEST(type_prop, ebos_fail_mismatch_element_type)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -193,7 +193,7 @@ TEST(type_prop, ebos_fail_mismatch_element_type_1)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -219,7 +219,7 @@ TEST(type_prop, ebos_fail_mismatch_element_type_2)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -245,7 +245,7 @@ TEST(type_prop, ebos_fail_mismatch_shape)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -270,7 +270,7 @@ TEST(type_prop, ebos_fail_default_index_scalar)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -294,7 +294,7 @@ TEST(type_prop, ebos_fail_indices_1d)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -318,7 +318,7 @@ TEST(type_prop, ebos_fail_offsets_1d)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -342,7 +342,7 @@ TEST(type_prop, ebos_fail_per_sample_weights_1d)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(
             emb_table, indices, offsets, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -362,7 +362,7 @@ TEST(type_prop, ebos_3_args_api)
     auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
     auto offsets = make_shared<op::Parameter>(element::i64, Shape{3});
 
-    auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(emb_table, indices, offsets);
+    auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(emb_table, indices, offsets);
     EXPECT_TRUE(ebos->get_output_partial_shape(0).same_scheme(PartialShape{3, 2}));
     EXPECT_EQ(ebos->get_output_element_type(0), element::f32);
     EXPECT_EQ(indices->get_partial_shape().rank().get_length(), 1);
@@ -377,7 +377,7 @@ TEST(type_prop, ebos_fail_indices_element_type_3_args_api)
 
     try
     {
-        auto ebos = make_shared<op::v3::EmbeddingBagOffsetsSum>(emb_table, indices, offsets);
+        auto ebos = make_shared<op::v0::EmbeddingBagOffsetsSum>(emb_table, indices, offsets);
         FAIL() << "Invalid indices type not detected";
     }
     catch (const NodeValidationFailure& error)

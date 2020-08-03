@@ -1883,9 +1883,9 @@ protected:
         case OP_TYPEID::DynPad_v0:
         case OP_TYPEID::DynReplaceSlice_v0:
         case OP_TYPEID::Elu_v0:
-        case OP_TYPEID::EmbeddingBagOffsetsSum_v3:
-        case OP_TYPEID::EmbeddingBagPackedSum_v3:
-        case OP_TYPEID::EmbeddingSegmentsSum_v3:
+        case OP_TYPEID::EmbeddingBagOffsetsSum_v0:
+        case OP_TYPEID::EmbeddingBagPackedSum_v0:
+        case OP_TYPEID::EmbeddingSegmentsSum_v0:
         case OP_TYPEID::Equal_v1:
         case OP_TYPEID::ExtractImagePatches_v3:
         case OP_TYPEID::FakeQuantize_v0:

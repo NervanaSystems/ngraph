@@ -24,13 +24,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v0
         {
             /// \brief Returns embeddings for given indices
             class NGRAPH_API EmbeddingBagPackedSum : public util::EmbeddingBagPackedBase
             {
             public:
-                static constexpr NodeTypeInfo type_info{"EmbeddingBagPackedSum", 3};
+                static constexpr NodeTypeInfo type_info{"EmbeddingBagPackedSum", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a EmbeddingBagPackedSum operation.
                 EmbeddingBagPackedSum() = default;
@@ -58,6 +58,6 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-        using v3::EmbeddingBagPackedSum;
+        using v0::EmbeddingBagPackedSum;
     }
 }

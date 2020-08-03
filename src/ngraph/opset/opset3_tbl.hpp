@@ -158,9 +158,9 @@ NGRAPH_OP(BatchToSpace, ngraph::op::v0)
 NGRAPH_OP(SpaceToBatch, ngraph::op::v0)
 
 // New operations added in opset3
-NGRAPH_OP(EmbeddingBagPackedSum, ngraph::op::v3)
-NGRAPH_OP(EmbeddingSegmentsSum, ngraph::op::v3)
-NGRAPH_OP(EmbeddingBagOffsetsSum, ngraph::op::v3)
+NGRAPH_OP(EmbeddingBagPackedSum, ngraph::op::v0)
+NGRAPH_OP(EmbeddingSegmentsSum, ngraph::op::v0)
+NGRAPH_OP(EmbeddingBagOffsetsSum, ngraph::op::v0)
 NGRAPH_OP(GRUCell, ngraph::op::v3)
 NGRAPH_OP(NonZero, ngraph::op::v3)
 NGRAPH_OP(RNNCell, ngraph::op::v0)

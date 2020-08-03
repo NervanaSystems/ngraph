@@ -32,7 +32,7 @@ TEST(type_prop, ess)
     auto per_sample_weights = make_shared<op::Parameter>(element::f32, Shape{4});
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
-    auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+    auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
         emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
     EXPECT_TRUE(
         ess->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2}));
@@ -52,7 +52,7 @@ TEST(type_prop, ess_dynamic_emb_table_number_segment)
     auto per_sample_weights = make_shared<op::Parameter>(element::f32, Shape{4});
     auto default_index = make_shared<op::Parameter>(element::i64, Shape{});
 
-    auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+    auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
         emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
 
     EXPECT_TRUE(ess->get_output_partial_shape(0).same_scheme(
@@ -70,7 +70,7 @@ TEST(type_prop, ess_fail_indices_element_type)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid indices type not detected";
     }
@@ -95,7 +95,7 @@ TEST(type_prop, ess_fail_segment_ids_element_type)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid segment_ids type not detected";
     }
@@ -120,7 +120,7 @@ TEST(type_prop, ess_fail_number_segments_element_type)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid segment_ids type not detected";
     }
@@ -145,7 +145,7 @@ TEST(type_prop, ess_fail_default_index_element_type)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid default_index type not detected";
     }
@@ -170,7 +170,7 @@ TEST(type_prop, ess_fail_mismatch_element_type)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -197,7 +197,7 @@ TEST(type_prop, ess_fail_mismatch_element_type_1)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -224,7 +224,7 @@ TEST(type_prop, ess_fail_mismatch_element_type_2)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -251,7 +251,7 @@ TEST(type_prop, ess_fail_mismatch_element_type_3)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of element type not detected";
     }
@@ -279,7 +279,7 @@ TEST(type_prop, ess_fail_mismatch_shape)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -305,7 +305,7 @@ TEST(type_prop, ess_fail_num_segments_scalar)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -330,7 +330,7 @@ TEST(type_prop, ess_fail_default_index_scalar)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -355,7 +355,7 @@ TEST(type_prop, ess_fail_indices_1d)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -380,7 +380,7 @@ TEST(type_prop, ess_fail_segment_ids_1d)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -405,7 +405,7 @@ TEST(type_prop, ess_fail_per_sample_weights_1d)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments, default_index, per_sample_weights);
         FAIL() << "Invalid mismatch of shapes not detected";
     }
@@ -427,7 +427,7 @@ TEST(type_prop, ess_4_args_api)
     auto num_segments = make_shared<op::Parameter>(element::i64, Shape{});
 
     auto ess =
-        make_shared<op::v3::EmbeddingSegmentsSum>(emb_table, indices, segment_ids, num_segments);
+        make_shared<op::v0::EmbeddingSegmentsSum>(emb_table, indices, segment_ids, num_segments);
     EXPECT_TRUE(
         ess->get_output_partial_shape(0).same_scheme(PartialShape{Dimension::dynamic(), 2}));
     EXPECT_EQ(ess->get_output_element_type(0), element::f32);
@@ -444,7 +444,7 @@ TEST(type_prop, ess_fail_indices_element_type_4_args_api)
 
     try
     {
-        auto ess = make_shared<op::v3::EmbeddingSegmentsSum>(
+        auto ess = make_shared<op::v0::EmbeddingSegmentsSum>(
             emb_table, indices, segment_ids, num_segments);
         FAIL() << "Invalid indices type not detected";
     }
@@ -466,7 +466,7 @@ TEST(type_prop, ess_num_segment_const)
     auto num_segments = opset3::Constant::create(element::i64, Shape{}, {3});
 
     auto ess =
-        make_shared<op::v3::EmbeddingSegmentsSum>(emb_table, indices, segment_ids, num_segments);
+        make_shared<op::v0::EmbeddingSegmentsSum>(emb_table, indices, segment_ids, num_segments);
     EXPECT_TRUE(ess->get_output_partial_shape(0).same_scheme(PartialShape{3, 2}));
     EXPECT_EQ(ess->get_output_element_type(0), element::f32);
     EXPECT_EQ(indices->get_partial_shape().rank().get_length(), 1);

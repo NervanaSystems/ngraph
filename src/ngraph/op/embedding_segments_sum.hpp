@@ -23,13 +23,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v0
         {
             /// \brief Returns embeddings for given indices
             class NGRAPH_API EmbeddingSegmentsSum : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"EmbeddingSegmentsSum", 3};
+                static constexpr NodeTypeInfo type_info{"EmbeddingSegmentsSum", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a EmbeddingSegmentsSum operation.
                 EmbeddingSegmentsSum() = default;
@@ -89,6 +89,6 @@ namespace ngraph
                 static constexpr int PER_SAMPLE_WEIGHTS = 5;
             };
         }
-        using v3::EmbeddingSegmentsSum;
+        using v0::EmbeddingSegmentsSum;
     }
 }

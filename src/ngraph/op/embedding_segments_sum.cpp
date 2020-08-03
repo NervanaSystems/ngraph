@@ -21,9 +21,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v3::EmbeddingSegmentsSum::type_info;
+constexpr NodeTypeInfo op::v0::EmbeddingSegmentsSum::type_info;
 
-op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table,
+op::v0::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table,
                                                    const Output<Node>& indices,
                                                    const Output<Node>& segment_ids,
                                                    const Output<Node>& num_segments,
@@ -34,7 +34,7 @@ op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table
     constructor_validate_and_infer_types();
 }
 
-op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table,
+op::v0::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table,
                                                    const Output<Node>& indices,
                                                    const Output<Node>& segment_ids,
                                                    const Output<Node>& num_segments,
@@ -44,7 +44,7 @@ op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table
     constructor_validate_and_infer_types();
 }
 
-op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table,
+op::v0::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table,
                                                    const Output<Node>& indices,
                                                    const Output<Node>& segment_ids,
                                                    const Output<Node>& num_segments)
@@ -53,7 +53,7 @@ op::v3::EmbeddingSegmentsSum::EmbeddingSegmentsSum(const Output<Node>& emb_table
     constructor_validate_and_infer_types();
 }
 
-void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
+void op::v0::EmbeddingSegmentsSum::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(SEGMENT_IDS) == element::i64 ||
@@ -180,22 +180,22 @@ void op::v3::EmbeddingSegmentsSum::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v3::EmbeddingSegmentsSum::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::EmbeddingSegmentsSum::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)
     {
-        return make_shared<op::v3::EmbeddingSegmentsSum>(
+        return make_shared<op::v0::EmbeddingSegmentsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
     }
     else if (new_args.size() == 5)
     {
-        return make_shared<op::v3::EmbeddingSegmentsSum>(
+        return make_shared<op::v0::EmbeddingSegmentsSum>(
             new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), new_args.at(4));
     }
     else if (new_args.size() == 6)
     {
-        return make_shared<op::v3::EmbeddingSegmentsSum>(new_args.at(0),
+        return make_shared<op::v0::EmbeddingSegmentsSum>(new_args.at(0),
                                                          new_args.at(1),
                                                          new_args.at(2),
                                                          new_args.at(3),

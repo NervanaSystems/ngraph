@@ -20,32 +20,32 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v3::EmbeddingBagPackedSum::type_info;
+constexpr NodeTypeInfo op::v0::EmbeddingBagPackedSum::type_info;
 
-op::v3::EmbeddingBagPackedSum::EmbeddingBagPackedSum(const Output<Node>& emb_table,
+op::v0::EmbeddingBagPackedSum::EmbeddingBagPackedSum(const Output<Node>& emb_table,
                                                      const Output<Node>& indices,
                                                      const Output<Node>& per_sample_weights)
     : util::EmbeddingBagPackedBase(emb_table, indices, per_sample_weights)
 {
 }
 
-op::v3::EmbeddingBagPackedSum::EmbeddingBagPackedSum(const Output<Node>& emb_table,
+op::v0::EmbeddingBagPackedSum::EmbeddingBagPackedSum(const Output<Node>& emb_table,
                                                      const Output<Node>& indices)
     : util::EmbeddingBagPackedBase(emb_table, indices)
 {
 }
 
 shared_ptr<Node>
-    op::v3::EmbeddingBagPackedSum::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::EmbeddingBagPackedSum::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 2)
     {
-        return make_shared<op::v3::EmbeddingBagPackedSum>(new_args.at(0), new_args.at(1));
+        return make_shared<op::v0::EmbeddingBagPackedSum>(new_args.at(0), new_args.at(1));
     }
     else if (new_args.size() == 3)
     {
-        return make_shared<op::v3::EmbeddingBagPackedSum>(
+        return make_shared<op::v0::EmbeddingBagPackedSum>(
             new_args.at(0), new_args.at(1), new_args.at(2));
     }
     else
