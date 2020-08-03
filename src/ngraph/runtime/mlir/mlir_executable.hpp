@@ -70,6 +70,7 @@ public:
 protected:
     std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
     std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
+
     int get_alignment() const { return 64; }
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;

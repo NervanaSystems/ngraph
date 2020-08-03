@@ -38,6 +38,7 @@
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
+#include "ngraph/runtime/mlir/mlir_ngraph_convert.hpp"
 
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Diagnostics.h"
@@ -105,6 +106,8 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     }
 
     set_parameters_and_results(*m_function);
+
+    NgraphToMlir::convert_function(m_function.get());
 }
 
 bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
