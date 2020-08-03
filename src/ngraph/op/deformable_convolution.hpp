@@ -24,13 +24,13 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief DeformableConvolution operation.
             class NGRAPH_API DeformableConvolution : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"DeformableConvolution", 1};
+                static constexpr NodeTypeInfo type_info{"DeformableConvolution", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a conversion operation.
                 DeformableConvolution() = default;

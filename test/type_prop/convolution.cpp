@@ -2896,7 +2896,7 @@ TEST(type_prop, deformable_conv_incorrect_group)
 
     try
     {
-        make_shared<op::v1::DeformableConvolution>(param0,
+        make_shared<op::v0::DeformableConvolution>(param0,
                                                    param1,
                                                    param2,
                                                    Strides{},
@@ -2915,7 +2915,7 @@ TEST(type_prop, deformable_conv_incorrect_group)
 
     try
     {
-        make_shared<op::v1::DeformableConvolution>(param0,
+        make_shared<op::v0::DeformableConvolution>(param0,
                                                    param1,
                                                    param2,
                                                    Strides{},
@@ -2945,7 +2945,7 @@ TEST(type_prop, deformable_conv_incorrect_deformable_group)
 
     try
     {
-        make_shared<op::v1::DeformableConvolution>(param0,
+        make_shared<op::v0::DeformableConvolution>(param0,
                                                    param1,
                                                    param2,
                                                    Strides{},

@@ -22,12 +22,12 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             class NGRAPH_API DeformablePSROIPooling : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"DeformablePSROIPooling", 1};
+                static constexpr NodeTypeInfo type_info{"DeformablePSROIPooling", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 DeformablePSROIPooling() = default;
                 /// \brief Constructs a DeformablePSROIPooling operation

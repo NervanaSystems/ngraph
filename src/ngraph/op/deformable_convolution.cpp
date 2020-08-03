@@ -25,9 +25,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::DeformableConvolution::type_info;
+constexpr NodeTypeInfo op::v0::DeformableConvolution::type_info;
 
-op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
+op::v0::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
                                                      const Output<Node>& deformable_values,
                                                      const Output<Node>& filters,
                                                      const Strides& strides,
@@ -49,7 +49,7 @@ op::v1::DeformableConvolution::DeformableConvolution(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-bool op::v1::DeformableConvolution::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::DeformableConvolution::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("strides", m_strides);
     visitor.on_attribute("dilations", m_dilations);
@@ -61,7 +61,7 @@ bool op::v1::DeformableConvolution::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::v1::DeformableConvolution::validate_and_infer_types()
+void op::v0::DeformableConvolution::validate_and_infer_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     const PartialShape& deformable_values_shape = get_input_partial_shape(1);
@@ -174,10 +174,10 @@ void op::v1::DeformableConvolution::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v1::DeformableConvolution::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::DeformableConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::DeformableConvolution>(new_args.at(0),
+    return make_shared<v0::DeformableConvolution>(new_args.at(0),
                                                   new_args.at(1),
                                                   new_args.at(2),
                                                   m_strides,

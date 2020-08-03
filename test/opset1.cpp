@@ -80,7 +80,7 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::Cosh, opset1::Cosh)
     CHECK_OPSET(op::v0::CTCGreedyDecoder, opset1::CTCGreedyDecoder)
     // TODO: using op::v0::DeformableConvolution
-    CHECK_OPSET(op::v1::DeformablePSROIPooling, opset1::DeformablePSROIPooling)
+    CHECK_OPSET(op::v0::DeformablePSROIPooling, opset1::DeformablePSROIPooling)
     CHECK_OPSET(op::v0::DepthToSpace, opset1::DepthToSpace)
     CHECK_OPSET(op::v0::DetectionOutput, opset1::DetectionOutput)
     CHECK_OPSET(op::v1::Divide, opset1::Divide)

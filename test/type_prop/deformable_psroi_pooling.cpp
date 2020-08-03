@@ -30,7 +30,7 @@ TEST(type_prop, deformable_psroi_pooling_output_shape)
     const float spatial_scale = 0.0625;
     const int64_t group_size = 3;
 
-    auto def_psroi_pool = make_shared<op::v1::DeformablePSROIPooling>(
+    auto def_psroi_pool = make_shared<op::v0::DeformablePSROIPooling>(
         input, coords, offsets, output_dim, spatial_scale, group_size);
 
     ASSERT_EQ(def_psroi_pool->get_output_shape(0), (Shape{300, 882, 3, 3}));
@@ -45,7 +45,7 @@ TEST(type_prop, deformable_psroi_pooling_output_shape_2)
     const float spatial_scale = 0.0625;
     const int64_t group_size = 7;
 
-    auto def_psroi_pool = make_shared<op::v1::DeformablePSROIPooling>(
+    auto def_psroi_pool = make_shared<op::v0::DeformablePSROIPooling>(
         input, coords, offsets, output_dim, spatial_scale, group_size);
 
     ASSERT_EQ(def_psroi_pool->get_output_shape(0), (Shape{300, 162, 7, 7}));
@@ -61,7 +61,7 @@ TEST(type_prop, deformable_psroi_pooling_invalid_input_rank)
     const int64_t group_size = 7;
     try
     {
-        auto def_psroi_pool = make_shared<op::v1::DeformablePSROIPooling>(
+        auto def_psroi_pool = make_shared<op::v0::DeformablePSROIPooling>(
             input, coords, offsets, output_dim, spatial_scale, group_size);
         // Should have thrown, so fail if it didn't
         FAIL() << "Ivalid feature map input rank not detected";
@@ -87,7 +87,7 @@ TEST(type_prop, deformable_psroi_pooling_invalid_box_coordinates_rank)
     const int64_t group_size = 7;
     try
     {
-        auto def_psroi_pool = make_shared<op::v1::DeformablePSROIPooling>(
+        auto def_psroi_pool = make_shared<op::v0::DeformablePSROIPooling>(
             input, coords, offsets, output_dim, spatial_scale, group_size);
         // Should have thrown, so fail if it didn't
         FAIL() << "Ivalid box coordinates input rank not detected";
@@ -114,7 +114,7 @@ TEST(type_prop, deformable_psroi_pooling_invalid_offstes_rank)
     const int64_t group_size = 7;
     try
     {
-        auto def_psroi_pool = make_shared<op::v1::DeformablePSROIPooling>(
+        auto def_psroi_pool = make_shared<op::v0::DeformablePSROIPooling>(
             input, coords, offsets, output_dim, spatial_scale, group_size);
         // Should have thrown, so fail if it didn't
         FAIL() << "Offsets input rank not detected";

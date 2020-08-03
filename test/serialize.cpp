@@ -908,7 +908,7 @@ TEST(serialize, deformable_psroi_pooling)
     float trans_std = 6.1f;
     int64_t part_size = 7;
 
-    auto def_psroi_pool_in = make_shared<op::v1::DeformablePSROIPooling>(input,
+    auto def_psroi_pool_in = make_shared<op::v0::DeformablePSROIPooling>(input,
                                                                          coords,
                                                                          offsets,
                                                                          output_dim,
@@ -927,7 +927,7 @@ TEST(serialize, deformable_psroi_pooling)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_def_psroi_pool = g_result->get_input_node_shared_ptr(0);
-    auto def_psroi_pool_out = as_type_ptr<op::v1::DeformablePSROIPooling>(g_def_psroi_pool);
+    auto def_psroi_pool_out = as_type_ptr<op::v0::DeformablePSROIPooling>(g_def_psroi_pool);
 
     EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");
     EXPECT_EQ(def_psroi_pool_out->get_version(), 1);

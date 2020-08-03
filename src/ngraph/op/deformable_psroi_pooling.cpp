@@ -19,9 +19,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::DeformablePSROIPooling::type_info;
+constexpr NodeTypeInfo op::v0::DeformablePSROIPooling::type_info;
 
-op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
+op::v0::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
                                                        const Output<Node>& coords,
                                                        const Output<Node>& offsets,
                                                        const int64_t output_dim,
@@ -45,7 +45,7 @@ op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input
     constructor_validate_and_infer_types();
 }
 
-op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
+op::v0::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input,
                                                        const Output<Node>& coords,
                                                        const int64_t output_dim,
                                                        const float spatial_scale,
@@ -68,7 +68,7 @@ op::v1::DeformablePSROIPooling::DeformablePSROIPooling(const Output<Node>& input
     constructor_validate_and_infer_types();
 }
 
-bool op::v1::DeformablePSROIPooling::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::DeformablePSROIPooling::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("output_dim", m_output_dim);
     visitor.on_attribute("spatial_scale", m_spatial_scale);
@@ -81,7 +81,7 @@ bool op::v1::DeformablePSROIPooling::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::v1::DeformablePSROIPooling::validate_and_infer_types()
+void op::v0::DeformablePSROIPooling::validate_and_infer_types()
 {
     const auto& input_et = get_input_element_type(0);
 
@@ -126,12 +126,12 @@ void op::v1::DeformablePSROIPooling::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v1::DeformablePSROIPooling::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::DeformablePSROIPooling::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 3)
     {
-        return make_shared<v1::DeformablePSROIPooling>(new_args.at(0),
+        return make_shared<v0::DeformablePSROIPooling>(new_args.at(0),
                                                        new_args.at(1),
                                                        new_args.at(2),
                                                        m_output_dim,
@@ -145,7 +145,7 @@ shared_ptr<Node>
     }
     else if (new_args.size() == 2)
     {
-        return make_shared<v1::DeformablePSROIPooling>(new_args.at(0),
+        return make_shared<v0::DeformablePSROIPooling>(new_args.at(0),
                                                        new_args.at(1),
                                                        m_output_dim,
                                                        m_spatial_scale,

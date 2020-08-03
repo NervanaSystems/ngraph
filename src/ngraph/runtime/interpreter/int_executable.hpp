@@ -1874,8 +1874,8 @@ protected:
         case OP_TYPEID::CrossEntropy_v0:
         case OP_TYPEID::CrossEntropyBackprop_v0:
         case OP_TYPEID::CTCGreedyDecoder_v0:
-        case OP_TYPEID::DeformableConvolution_v1:
-        case OP_TYPEID::DeformablePSROIPooling_v1:
+        case OP_TYPEID::DeformableConvolution_v0:
+        case OP_TYPEID::DeformablePSROIPooling_v0:
         case OP_TYPEID::DepthToSpace_v0:
         case OP_TYPEID::DetectionOutput_v0:
         case OP_TYPEID::Divide_v1:

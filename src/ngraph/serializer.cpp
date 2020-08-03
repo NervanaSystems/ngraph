@@ -1309,7 +1309,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::CTCGreedyDecoder: { break;
         }
-        case OP_TYPEID::DeformableConvolution_v1:
+        case OP_TYPEID::DeformableConvolution:
         {
             const auto strides = node_js.at("strides").get<vector<size_t>>();
             const auto dilations = node_js.at("dilations").get<vector<size_t>>();
@@ -1320,7 +1320,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
 
             const op::PadType auto_pad = read_pad_type(node_js);
 
-            node = make_shared<op::v1::DeformableConvolution>(args[0],
+            node = make_shared<op::v0::DeformableConvolution>(args[0],
                                                               args[1],
                                                               args[2],
                                                               strides,
