@@ -64,7 +64,7 @@ if(WIN32 OR APPLE)
 else()
     set(TBB_ROOT ${ngraphtbb_SOURCE_DIR})
     include(${TBB_ROOT}/cmake/TBBBuild.cmake)
-    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${PROJECT_BINARY_DIR}/tbb_build
+    tbb_build(TBB_ROOT ${TBB_ROOT} MAKE_ARGS tbb_build_dir=${ngraphtbb_BINARY_DIR}
         tbb_build_prefix=tbb stdver=c++${NGRAPH_CXX_STANDARD} CONFIG_DIR TBB_DIR)
 endif()
 
