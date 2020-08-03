@@ -1889,14 +1889,14 @@ protected:
         case OP_TYPEID::Equal_v1:
         case OP_TYPEID::ExtractImagePatches_v0:
         case OP_TYPEID::FakeQuantize_v0:
-        case OP_TYPEID::FloorMod_v1:
+        case OP_TYPEID::FloorMod_v0:
         case OP_TYPEID::Gather_v1:
-        case OP_TYPEID::GatherTree_v1:
+        case OP_TYPEID::GatherTree_v0:
         case OP_TYPEID::Gelu_v0:
         case OP_TYPEID::GeluBackpropFactor_v0:
         case OP_TYPEID::Gemm_v0:
         case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEqual_v1:
+        case OP_TYPEID::GreaterEqual_v0:
         case OP_TYPEID::GRN_v0:
         case OP_TYPEID::GroupConvolution_v0:
         case OP_TYPEID::GroupConvolution_v1:

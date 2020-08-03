@@ -48,13 +48,13 @@ namespace ngraph
             };
         }
 
-        namespace v1
+        namespace v0
         {
             /// \brief Elementwise greater-than-or-equal operation.
             class NGRAPH_API GreaterEqual : public util::BinaryElementwiseComparison
             {
             public:
-                static constexpr NodeTypeInfo type_info{"GreaterEqual", 1};
+                static constexpr NodeTypeInfo type_info{"GreaterEqual", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a greater-than-or-equal operation.
                 GreaterEqual() = default;
@@ -73,9 +73,6 @@ namespace ngraph
                 bool evaluate(const HostTensorVector& outputs,
                               const HostTensorVector& inputs) const override;
             };
-
-            // DO NOT USE. Will be removed once users switch to GreaterEqual
-            using GreaterEq = GreaterEqual;
         }
 
         using v0::GreaterEq;

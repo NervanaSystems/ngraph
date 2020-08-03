@@ -22,14 +22,14 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief Generates the complete beams from the ids per each step and the parent beam
             /// ids.
             class NGRAPH_API GatherTree : public Op
             {
             public:
-                static constexpr NodeTypeInfo type_info{"GatherTree", 1};
+                static constexpr NodeTypeInfo type_info{"GatherTree", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 GatherTree() = default;
                 /// \param step_ids     Tensor of shape [MAX_TIME, BATCH_SIZE, BEAM_WIDTH] with

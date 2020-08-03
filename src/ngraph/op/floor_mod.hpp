@@ -24,14 +24,14 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             /// \brief Elementwise FloorMod operation.
             ///
             class NGRAPH_API FloorMod : public util::BinaryElementwiseArithmetic
             {
             public:
-                static constexpr NodeTypeInfo type_info{"FloorMod", 1};
+                static constexpr NodeTypeInfo type_info{"FloorMod", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
                 FloorMod()
@@ -56,6 +56,6 @@ namespace ngraph
             };
         }
 
-        using v1::FloorMod;
+        using v0::FloorMod;
     }
 }

@@ -251,7 +251,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::GreaterEq> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
+        return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v0::GreaterEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::GroupConvolution> node)

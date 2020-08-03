@@ -20,9 +20,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::GatherTree::type_info;
+constexpr NodeTypeInfo op::v0::GatherTree::type_info;
 
-op::v1::GatherTree::GatherTree(const Output<Node>& step_ids,
+op::v0::GatherTree::GatherTree(const Output<Node>& step_ids,
                                const Output<Node>& parent_idx,
                                const Output<Node>& max_seq_len,
                                const Output<Node>& end_token)
@@ -31,19 +31,19 @@ op::v1::GatherTree::GatherTree(const Output<Node>& step_ids,
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::GatherTree::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::GatherTree::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::GatherTree>(
+    return make_shared<v0::GatherTree>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3));
 }
 
-bool ngraph::op::v1::GatherTree::visit_attributes(AttributeVisitor& visitor)
+bool ngraph::op::v0::GatherTree::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
 
-void op::v1::GatherTree::validate_and_infer_types()
+void op::v0::GatherTree::validate_and_infer_types()
 {
     const auto& step_ids_rank = get_input_partial_shape(0);
     const auto& parent_idx_rank = get_input_partial_shape(1);
@@ -82,7 +82,7 @@ void op::v1::GatherTree::validate_and_infer_types()
     set_output_type(0, step_ids_et, step_ids_rank);
 }
 
-void op::v1::GatherTree::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+void op::v0::GatherTree::generate_adjoints(autodiff::Adjoints& /* adjoints */,
                                            const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints is not implemented for GatherTree");
