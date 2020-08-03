@@ -760,11 +760,11 @@ TEST(serialize, opset1_binary_convolution)
     const CoordinateDiff pads_begin{0, 0};
     const CoordinateDiff pads_end{0, 0};
     const Strides dilations{1, 1};
-    auto mode = op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT;
+    auto mode = op::v0::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT;
     const float pad_value = 2.1f;
     const auto auto_pad = op::PadType::NOTSET;
 
-    auto binary_conv_in = make_shared<op::v1::BinaryConvolution>(
+    auto binary_conv_in = make_shared<op::v0::BinaryConvolution>(
         data, filter, strides, pads_begin, pads_end, dilations, mode, pad_value, auto_pad);
 
     auto result = make_shared<op::Result>(binary_conv_in);
@@ -774,7 +774,7 @@ TEST(serialize, opset1_binary_convolution)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_binary_conv = g_result->get_input_node_shared_ptr(0);
-    auto binary_conv_out = as_type_ptr<op::v1::BinaryConvolution>(g_binary_conv);
+    auto binary_conv_out = as_type_ptr<op::v0::BinaryConvolution>(g_binary_conv);
     ASSERT_TRUE(binary_conv_out);
 
     EXPECT_EQ(binary_conv_out->get_strides(), strides);
@@ -782,7 +782,7 @@ TEST(serialize, opset1_binary_convolution)
     EXPECT_EQ(binary_conv_out->get_pads_end(), pads_end);
     EXPECT_EQ(binary_conv_out->get_dilations(), dilations);
     EXPECT_EQ(binary_conv_out->get_mode(),
-              op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
+              op::v0::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT);
     EXPECT_EQ(binary_conv_out->get_pad_value(), pad_value);
     EXPECT_EQ(binary_conv_out->get_auto_pad(), auto_pad);
 }

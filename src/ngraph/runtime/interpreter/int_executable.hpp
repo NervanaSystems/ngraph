@@ -1854,14 +1854,14 @@ protected:
             break;
         }
 
-        case OP_TYPEID::Acosh_v3:
+        case OP_TYPEID::Acosh_v0:
         case OP_TYPEID::Add_v1:
-        case OP_TYPEID::Asinh_v3:
-        case OP_TYPEID::Atanh_v3:
+        case OP_TYPEID::Asinh_v0:
+        case OP_TYPEID::Atanh_v0:
         case OP_TYPEID::AvgPool_v1:
         case OP_TYPEID::BatchMatMulTranspose_v0:
         case OP_TYPEID::BatchToSpace_v1:
-        case OP_TYPEID::BinaryConvolution_v1:
+        case OP_TYPEID::BinaryConvolution_v0:
         case OP_TYPEID::Broadcast_v1:
         case OP_TYPEID::Broadcast_v3:
         case OP_TYPEID::Bucketize_v3:

@@ -26,9 +26,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::BinaryConvolution::type_info;
+constexpr NodeTypeInfo op::v0::BinaryConvolution::type_info;
 
-op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
+op::v0::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
                                              const Output<Node>& kernel,
                                              const Strides& strides,
                                              const CoordinateDiff& pads_begin,
@@ -49,7 +49,7 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
+op::v0::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
                                              const Output<Node>& kernel,
                                              const Strides& strides,
                                              const CoordinateDiff& pads_begin,
@@ -70,7 +70,7 @@ op::v1::BinaryConvolution::BinaryConvolution(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-void op::v1::BinaryConvolution::validate_and_infer_types()
+void op::v0::BinaryConvolution::validate_and_infer_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
@@ -129,10 +129,10 @@ void op::v1::BinaryConvolution::validate_and_infer_types()
 }
 
 shared_ptr<Node>
-    op::v1::BinaryConvolution::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::BinaryConvolution::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::BinaryConvolution>(new_args.at(0),
+    return make_shared<v0::BinaryConvolution>(new_args.at(0),
                                               new_args.at(1),
                                               m_strides,
                                               m_pads_begin,
@@ -143,7 +143,7 @@ shared_ptr<Node>
                                               m_auto_pad);
 }
 
-bool op::v1::BinaryConvolution::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::BinaryConvolution::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("strides", m_strides);
     visitor.on_attribute("pads_begin", m_pads_begin);
@@ -155,7 +155,7 @@ bool op::v1::BinaryConvolution::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::v1::BinaryConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
+void op::v0::BinaryConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
                                                   const OutputVector& deltas)
 {
     throw ngraph_error("BinaryConvolution generate_adjoints not implemented");
@@ -164,27 +164,27 @@ void op::v1::BinaryConvolution::generate_adjoints(autodiff::Adjoints& adjoints,
 namespace ngraph
 {
     template <>
-    EnumNames<op::v1::BinaryConvolution::BinaryConvolutionMode>&
-        EnumNames<op::v1::BinaryConvolution::BinaryConvolutionMode>::get()
+    EnumNames<op::v0::BinaryConvolution::BinaryConvolutionMode>&
+        EnumNames<op::v0::BinaryConvolution::BinaryConvolutionMode>::get()
     {
-        static auto enum_names = EnumNames<op::v1::BinaryConvolution::BinaryConvolutionMode>(
-            "op::v1::BinaryConvolution::BinaryConvolutionMode",
-            {{"xnor-popcount", op::v1::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT}});
+        static auto enum_names = EnumNames<op::v0::BinaryConvolution::BinaryConvolutionMode>(
+            "op::v0::BinaryConvolution::BinaryConvolutionMode",
+            {{"xnor-popcount", op::v0::BinaryConvolution::BinaryConvolutionMode::XNOR_POPCOUNT}});
         return enum_names;
     }
 
     constexpr DiscreteTypeInfo
-        AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>::type_info;
+        AttributeAdapter<op::v0::BinaryConvolution::BinaryConvolutionMode>::type_info;
 
     std::ostream& operator<<(std::ostream& s,
-                             const op::v1::BinaryConvolution::BinaryConvolutionMode& type)
+                             const op::v0::BinaryConvolution::BinaryConvolutionMode& type)
     {
         return s << as_string(type);
     }
 }
 
-op::v1::BinaryConvolution::BinaryConvolutionMode
-    op::v1::BinaryConvolution::mode_from_string(const std::string& mode) const
+op::v0::BinaryConvolution::BinaryConvolutionMode
+    op::v0::BinaryConvolution::mode_from_string(const std::string& mode) const
 {
     return as_enum<BinaryConvolutionMode>(mode);
 }

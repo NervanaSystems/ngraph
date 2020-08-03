@@ -25,15 +25,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v3::Acosh::type_info;
+constexpr NodeTypeInfo op::v0::Acosh::type_info;
 
-op::v3::Acosh::Acosh(const Output<Node>& arg)
+op::v0::Acosh::Acosh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v3::Acosh::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Acosh::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Acosh>(new_args.at(0));
@@ -81,7 +81,7 @@ namespace
     }
 }
 
-bool op::v3::Acosh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
+bool op::v0::Acosh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_acosh(inputs[0], outputs[0]);
 }

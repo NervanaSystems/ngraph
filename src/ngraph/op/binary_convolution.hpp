@@ -24,7 +24,7 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v1
+        namespace v0
         {
             class NGRAPH_API BinaryConvolution : public Op
             {
@@ -35,7 +35,7 @@ namespace ngraph
                     XNOR_POPCOUNT
                 };
 
-                static constexpr NodeTypeInfo type_info{"BinaryConvolution", 1};
+                static constexpr NodeTypeInfo type_info{"BinaryConvolution", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs a binary convolution operation.
                 BinaryConvolution() = default;
@@ -117,20 +117,20 @@ namespace ngraph
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
-                             const op::v1::BinaryConvolution::BinaryConvolutionMode& type);
+                             const op::v0::BinaryConvolution::BinaryConvolutionMode& type);
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>
-        : public EnumAttributeAdapterBase<op::v1::BinaryConvolution::BinaryConvolutionMode>
+    class NGRAPH_API AttributeAdapter<op::v0::BinaryConvolution::BinaryConvolutionMode>
+        : public EnumAttributeAdapterBase<op::v0::BinaryConvolution::BinaryConvolutionMode>
     {
     public:
-        AttributeAdapter(op::v1::BinaryConvolution::BinaryConvolutionMode& value)
-            : EnumAttributeAdapterBase<op::v1::BinaryConvolution::BinaryConvolutionMode>(value)
+        AttributeAdapter(op::v0::BinaryConvolution::BinaryConvolutionMode& value)
+            : EnumAttributeAdapterBase<op::v0::BinaryConvolution::BinaryConvolutionMode>(value)
         {
         }
 
         static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<op::v1::BinaryConvolution::BinaryConvolutionMode>", 0};
+            "AttributeAdapter<op::v0::BinaryConvolution::BinaryConvolutionMode>", 0};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 }

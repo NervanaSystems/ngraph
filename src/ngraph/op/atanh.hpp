@@ -24,14 +24,14 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v3
+        namespace v0
         {
             /// \brief Elementwise inverse hyperbolic tangent operation.
             ///
             class NGRAPH_API Atanh : public util::UnaryElementwiseArithmetic
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Atanh", 3};
+                static constexpr NodeTypeInfo type_info{"Atanh", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an Atanh operation.
                 Atanh() = default;
@@ -51,6 +51,6 @@ namespace ngraph
                               const HostTensorVector& inputs) const override;
             };
         }
-        using v3::Atanh;
+        using v0::Atanh;
     }
 }
