@@ -801,9 +801,9 @@ static void __mlir_cblas_sgemm(StaticMemRef* memRefmatA,
 {
     gemmAttrs gAttrs = (*attrsPtr).gemmAttrs2d;
     ;
-    cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                       gAttrs.transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                       gAttrs.transposeB ? cblas::Transpose::Transpose : cblas::Transpose::None,
+    dnnl_sgemm(
+                       gAttrs.transposeA ? 't' : 'n',
+                       gAttrs.transposeB ? 't' : 'n',
                        gAttrs.m,
                        gAttrs.n,
                        gAttrs.k,
@@ -842,9 +842,9 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
     auto matC = reinterpret_cast<float*>(memRefmatC->allocatedPtr);
     auto matOut = reinterpret_cast<float*>(memRefmatOut->allocatedPtr);
 
-    cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                       transposeA ? cblas::Transpose::Transpose : cblas::Transpose::None,
-                       transposeB ? cblas::Transpose::Transpose : cblas::Transpose::None,
+    dnnl_sgemm(
+                       transposeA ? 't' : 'n',
+                       transposeB ? 't' : 'n',
                        m,
                        n,
                        k,
@@ -860,9 +860,9 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
     if (broadcastHint == BroadcastType::ROW)
     {
         std::vector<float> ones(m, 1.0f);
-        cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                           cblas::Transpose::None,
-                           cblas::Transpose::None,
+        dnnl_sgemm(
+                           'n',
+                           'n',
                            m,
                            n,
                            1,
@@ -878,9 +878,9 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
     else if (broadcastHint == BroadcastType::COLUMN)
     {
         std::vector<float> ones(n, 1.0f);
-        cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                           cblas::Transpose::None,
-                           cblas::Transpose::None,
+        dnnl_sgemm(
+                           'n',
+                           'n',
                            m,
                            n,
                            1,
@@ -897,9 +897,9 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
     {
         std::vector<float> ones(m, 1.0f);
         std::vector<float> bias(n, *matC);
-        cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                           cblas::Transpose::None,
-                           cblas::Transpose::None,
+        dnnl_sgemm(
+                           'n',
+                           'n',
                            m,
                            n,
                            1,
@@ -919,9 +919,9 @@ static void __mlir_cblas_sgemm_with_bias(StaticMemRef* memRefmatA,
         {
             identity[i] = 1.0;
         }
-        cblas::cblas_sgemm(cblas::Layout::RowMajor,
-                           cblas::Transpose::None,
-                           cblas::Transpose::None,
+        dnnl_sgemm(
+                           'n',
+                           'n',
                            m,
                            n,
                            n,
