@@ -56,6 +56,7 @@ private:
     // llvm::SmallVectorImpl<int64_t> get_mlir_shape(const ngraph::Shape& ngraph_shape);
 
     ::mlir::Value get_tensor_value(const Output<Node>& input);
+    ::mlir::Type get_tensor_type(const Output<Node>& t);
 
     template <typename Op>
     ::mlir::Operation* create_generic_op(const ngraph::Node* node)
@@ -73,9 +74,9 @@ private:
         }
 
         return (m_builder.create<Op,
-                                llvm::ArrayRef<::mlir::Type>,
-                                llvm::ArrayRef<::mlir::Value>,
-                                llvm::ArrayRef<::mlir::NamedAttribute>>(
+                                 llvm::ArrayRef<::mlir::Type>,
+                                 llvm::ArrayRef<::mlir::Value>,
+                                 llvm::ArrayRef<::mlir::NamedAttribute>>(
                     ::mlir::UnknownLoc::get(m_context), result_types, arg_values, {/* no attrs */}))
             .getOperation();
     }

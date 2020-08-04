@@ -17,26 +17,30 @@
 #ifndef NGRAPH_OPS
 #define NGRAPH_OPS
 
-include "mlir/IR/OpBase.td"
+include "NgraphDialect.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
-
-// Provide a definition of the 'ngraph' dialect in the ODS framework so that we
-// can define our operations.
-def Ngraph_Dialect : Dialect {
-  let name = "ngraph";
-  let cppNamespace = "ngraph";
-}
-
-// Base class for ngraph dialect operations. This operation inherits from the base
-// `Op` class in OpBase.td, and provides:
-//   * The parent dialect of the operation.
-//   * The mnemonic for the operation, or the name without the dialect prefix.
-//   * A list of traits for the operation.
-class Ngraph_Op<string mnemonic, list<OpTrait> traits = []> :
-    Op<Ngraph_Dialect, mnemonic, traits>;
 
 //===----------------------------------------------------------------------===//
 // Ngraph Operations
 //===----------------------------------------------------------------------===//
+
+def Ngraph_AddOp : Ngraph_Op<"Add", [NoSideEffect, SameOperandsAndResultType]> {
+    let summary = "Performs elementwise addition on the inputs.";
+
+    let description = [{
+        Add tensorsxxxx
+    }];
+
+    let arguments = (ins
+        F32:$input1,
+        F32:$input2
+    );
+
+    let results = (outs
+        F32:$res
+    );
+
+    // Ngraph_DerivedOperandTypeAttr T = Ngraph_DerivedOperandTypeAttr<0>;
+}
 
 #endif // NGRAPH_OPS

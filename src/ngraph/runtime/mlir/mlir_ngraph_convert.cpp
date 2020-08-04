@@ -15,10 +15,37 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/mlir/mlir_ngraph_convert.hpp"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/ToolOutputFile.h"
+#include "mlir/IR/AsmState.h"
+#include "mlir/IR/Diagnostics.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/InitAllDialects.h"
+#include "mlir/InitAllTranslations.h"
+#include "mlir/Support/FileUtilities.h"
+#include "mlir/Support/LogicalResult.h"
+#include "mlir/Support/ToolUtilities.h"
+#include "mlir/Translation.h"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 
+#include <llvm/ADT/DenseSet.h>
+#include <llvm/Support/Debug.h>
+#include <mlir/Dialect/Affine/EDSC/Builders.h>
+#include <mlir/Dialect/Affine/EDSC/Intrinsics.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/Dialect/StandardOps/EDSC/Intrinsics.h>
+#include <mlir/IR/AffineExpr.h>
+#include <mlir/IR/Function.h>
+#include <mlir/IR/IntegerSet.h>
+#include <mlir/IR/MLIRContext.h>
+#include <mlir/IR/StandardTypes.h>
+#include <mlir/Transforms/DialectConversion.h>
+
 #include "Ngraph/NgraphDialect.h"
+#include "Ngraph/NgraphOps.h"
 
 using namespace std;
 using namespace ngraph;
@@ -85,36 +112,79 @@ void runtime::mlir::NgraphToMlir::convert_function(const ngraph::Function* ngrap
     obj.convert(ngraph_function);
 }
 
+::mlir::Value runtime::mlir::NgraphToMlir::get_tensor_value(const Output<Node>& t)
+{
+    static map<Output<Node>, ::mlir::Value> ngraph_output_to_mlir_value;
+    return ngraph_output_to_mlir_value[t];
+}
+
+::mlir::Type runtime::mlir::NgraphToMlir::get_tensor_type(const Output<Node>& t)
+{
+    element::Type_t type = t.get_element_type();
+    NGRAPH_INFO << t;
+    ::mlir::Type mlir_element_type = ::mlir::FloatType::getF32(m_context);
+
+    auto tensor = ::mlir::RankedTensorType::get(static_cast<int64_t>(t.get_shape().size()),
+                                                mlir_element_type);
+
+    return tensor;
+}
+
 void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_function)
 {
     using TypeList = llvm::SmallVector<::mlir::Type, 4>;
 
-    TypeList argsTypeList;
-    TypeList resultTypeList;
+    TypeList function_input_types;
+    TypeList function_output_types;
 
     // mlir::ModuleOp module = getOperation();
 
     for (auto input : ngraph_function->get_parameters())
     {
-        argsTypeList.push_back(get_mlir_type(input->get_output_element_type(0)));
+        function_input_types.push_back(get_mlir_type(input->get_output_element_type(0)));
     }
 
     for (auto output : ngraph_function->get_results())
     {
-        resultTypeList.push_back(get_mlir_type(output->get_input_element_type(0)));
+        function_output_types.push_back(get_mlir_type(output->get_input_element_type(0)));
     }
 
-    auto funcType = ::mlir::FunctionType::get(argsTypeList, resultTypeList, m_context);
+    auto funcType =
+        ::mlir::FunctionType::get(function_input_types, function_output_types, m_context);
     auto mlir_function =
         ::mlir::FuncOp::create(::mlir::UnknownLoc::get(m_context), "main", funcType);
     mlir_function.addEntryBlock();
 
-    for (shared_ptr<Node> op : ngraph_function->get_ordered_ops())
+    ::mlir::edsc::ScopedContext scope(m_builder, ::mlir::UnknownLoc::get(m_context));
+    for (shared_ptr<Node> ngraph_op : ngraph_function->get_ordered_ops())
     {
-        switch (get_typeid(*op))
+        ::mlir::OperationState ods_state(::mlir::UnknownLoc::get(m_context), ngraph_op->get_name());
+        switch (get_typeid(*ngraph_op))
         {
-        case runtime::mlir::OP_TYPEID::Add_v0: NGRAPH_INFO << *op; break;
-        default: NGRAPH_INFO << *op; break;
+        case runtime::mlir::OP_TYPEID::Add_v0:
+        {
+            NGRAPH_INFO << *ngraph_op;
+            vector<::mlir::Value> input_values;
+            vector<::mlir::Type> output_types;
+            for (auto input : ngraph_op->input_values())
+            {
+                NGRAPH_INFO << input;
+                input_values.push_back(get_tensor_value(input));
+            }
+            for (auto output : ngraph_op->outputs())
+            {
+                NGRAPH_INFO << output;
+                output_types.push_back(get_tensor_type(output));
+            }
+            NGRAPH_INFO << output_types.size();
+            NGRAPH_INFO << input_values.size();
+            NGRAPH_INFO;
+            auto mlir_op = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(
+                output_types[0], input_values[0], input_values[1]).value;
+            NGRAPH_INFO;
+            break;
+        }
+        default: NGRAPH_INFO << *ngraph_op; break;
         }
     }
 
