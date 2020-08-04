@@ -49,13 +49,14 @@ OutputVector op::v0::Selu::decompose_op() const
     // lambda * ((max(data, 0) + (alpha * exp(min(data, 0)) - alpha))
     return {std::make_shared<op::v1::Multiply>(
         lambda,
-        std::make_shared<op::v1::Add>(
+        std::make_shared<op::v0::Add>(
             std::make_shared<op::v1::Maximum>(data, zero_node),
             std::make_shared<op::v1::Subtract>(
                 std::make_shared<op::v1::Multiply>(
                     alpha,
                     std::make_shared<op::Exp>(std::make_shared<op::v1::Minimum>(data, zero_node))),
-                alpha)))};
+                alpha)),
+        AutoBroadcastType::NUMPY)};
 }
 
 shared_ptr<Node> op::v0::Selu::clone_with_new_inputs(const OutputVector& new_args) const

@@ -1855,7 +1855,6 @@ protected:
         }
 
         case OP_TYPEID::Acosh_v3:
-        case OP_TYPEID::Add_v1:
         case OP_TYPEID::Asinh_v3:
         case OP_TYPEID::Atanh_v3:
         case OP_TYPEID::AvgPool_v1:
