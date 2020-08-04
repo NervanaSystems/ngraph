@@ -1906,7 +1906,7 @@ protected:
         case OP_TYPEID::GRUCell_v0:
         case OP_TYPEID::HardSigmoid_v0:
         case OP_TYPEID::Interpolate_v0:
-        case OP_TYPEID::Interpolate_v3:
+        case OP_TYPEID::Interpolate_v1:
         case OP_TYPEID::LayerNorm_v0:
         case OP_TYPEID::LayerNormBackprop_v0:
         case OP_TYPEID::Less_v1:

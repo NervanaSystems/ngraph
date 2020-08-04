@@ -85,7 +85,7 @@ namespace ngraph
             };
         }
 
-        namespace v3
+        namespace v1
         {
             class NGRAPH_API Interpolate : public Op
             {
@@ -150,7 +150,7 @@ namespace ngraph
                     double cube_coeff = -0.75;
                 };
 
-                static constexpr NodeTypeInfo type_info{"Interpolate", 3};
+                static constexpr NodeTypeInfo type_info{"Interpolate", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 Interpolate() = default;
                 /// \brief Constructs a Interpolate operation
@@ -197,57 +197,57 @@ namespace ngraph
     };
 
     NGRAPH_API
-    std::ostream& operator<<(std::ostream& s, const op::v3::Interpolate::InterpolateMode& type);
+    std::ostream& operator<<(std::ostream& s, const op::v1::Interpolate::InterpolateMode& type);
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::v3::Interpolate::InterpolateMode>
-        : public EnumAttributeAdapterBase<op::v3::Interpolate::InterpolateMode>
+    class NGRAPH_API AttributeAdapter<op::v1::Interpolate::InterpolateMode>
+        : public EnumAttributeAdapterBase<op::v1::Interpolate::InterpolateMode>
     {
     public:
-        AttributeAdapter(op::v3::Interpolate::InterpolateMode& value)
-            : EnumAttributeAdapterBase<op::v3::Interpolate::InterpolateMode>(value)
+        AttributeAdapter(op::v1::Interpolate::InterpolateMode& value)
+            : EnumAttributeAdapterBase<op::v1::Interpolate::InterpolateMode>(value)
         {
         }
 
         static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<op::v3::Interpolate::InterpolateMode>", 3};
+            "AttributeAdapter<op::v1::Interpolate::InterpolateMode>", 3};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 
     NGRAPH_API
     std::ostream& operator<<(std::ostream& s,
-                             const op::v3::Interpolate::CoordinateTransformMode& type);
+                             const op::v1::Interpolate::CoordinateTransformMode& type);
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::v3::Interpolate::CoordinateTransformMode>
-        : public EnumAttributeAdapterBase<op::v3::Interpolate::CoordinateTransformMode>
+    class NGRAPH_API AttributeAdapter<op::v1::Interpolate::CoordinateTransformMode>
+        : public EnumAttributeAdapterBase<op::v1::Interpolate::CoordinateTransformMode>
     {
     public:
-        AttributeAdapter(op::v3::Interpolate::CoordinateTransformMode& value)
-            : EnumAttributeAdapterBase<op::v3::Interpolate::CoordinateTransformMode>(value)
+        AttributeAdapter(op::v1::Interpolate::CoordinateTransformMode& value)
+            : EnumAttributeAdapterBase<op::v1::Interpolate::CoordinateTransformMode>(value)
         {
         }
 
         static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<op::v3::Interpolate::CoordinateTransformMode>", 3};
+            "AttributeAdapter<op::v1::Interpolate::CoordinateTransformMode>", 3};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 
     NGRAPH_API
-    std::ostream& operator<<(std::ostream& s, const op::v3::Interpolate::NearestMode& type);
+    std::ostream& operator<<(std::ostream& s, const op::v1::Interpolate::NearestMode& type);
 
     template <>
-    class NGRAPH_API AttributeAdapter<op::v3::Interpolate::NearestMode>
-        : public EnumAttributeAdapterBase<op::v3::Interpolate::NearestMode>
+    class NGRAPH_API AttributeAdapter<op::v1::Interpolate::NearestMode>
+        : public EnumAttributeAdapterBase<op::v1::Interpolate::NearestMode>
     {
     public:
-        AttributeAdapter(op::v3::Interpolate::NearestMode& value)
-            : EnumAttributeAdapterBase<op::v3::Interpolate::NearestMode>(value)
+        AttributeAdapter(op::v1::Interpolate::NearestMode& value)
+            : EnumAttributeAdapterBase<op::v1::Interpolate::NearestMode>(value)
         {
         }
 
         static constexpr DiscreteTypeInfo type_info{
-            "AttributeAdapter<op::v3::Interpolate::NearestMode>", 3};
+            "AttributeAdapter<op::v1::Interpolate::NearestMode>", 3};
         const DiscreteTypeInfo& get_type_info() const override { return type_info; }
     };
 }

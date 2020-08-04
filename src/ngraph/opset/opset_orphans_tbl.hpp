@@ -17,4 +17,4 @@
 NGRAPH_OP(Acosh, ngraph::op::v0)
 NGRAPH_OP(Asinh, ngraph::op::v0)
 NGRAPH_OP(Atanh, ngraph::op::v0)
-NGRAPH_OP(Interpolate, ngraph::op::v3)
+NGRAPH_OP(Interpolate, ngraph::op::v1)

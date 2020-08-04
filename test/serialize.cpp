@@ -820,10 +820,10 @@ TEST(serialize, opset1_interpolate)
 
 TEST(serialize, opset3_interpolate)
 {
-    using op::v3::Interpolate;
-    using InterpolateMode = op::v3::Interpolate::InterpolateMode;
-    using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
-    using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
+    using op::v1::Interpolate;
+    using InterpolateMode = op::v1::Interpolate::InterpolateMode;
+    using CoordinateTransformMode = op::v1::Interpolate::CoordinateTransformMode;
+    using InterpolateAttrs = op::v1::Interpolate::InterpolateAttrs;
 
     auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
     auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
@@ -843,7 +843,7 @@ TEST(serialize, opset3_interpolate)
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_interpolate = g_result->get_input_node_shared_ptr(0);
-    auto g_op = as_type_ptr<op::v3::Interpolate>(g_interpolate);
+    auto g_op = as_type_ptr<op::v1::Interpolate>(g_interpolate);
     ASSERT_TRUE(g_op);
     InterpolateAttrs g_attrs = g_op->get_attrs();
     EXPECT_EQ(g_attrs.axes, attrs.axes);
@@ -930,7 +930,7 @@ TEST(serialize, deformable_psroi_pooling)
     auto def_psroi_pool_out = as_type_ptr<op::v0::DeformablePSROIPooling>(g_def_psroi_pool);
 
     EXPECT_EQ(def_psroi_pool_out->description(), "DeformablePSROIPooling");
-    EXPECT_EQ(def_psroi_pool_out->get_version(), 1);
+    EXPECT_EQ(def_psroi_pool_out->get_version(), 0);
 
     EXPECT_EQ(def_psroi_pool_out->get_output_dim(), output_dim);
     EXPECT_EQ(def_psroi_pool_out->get_group_size(), group_size);

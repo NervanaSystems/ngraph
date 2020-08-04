@@ -78,10 +78,10 @@ TEST(type_prop_layers, interpolate)
 
 TEST(type_prop_layers, interpolate_v3)
 {
-    using op::v3::Interpolate;
-    using InterpolateMode = op::v3::Interpolate::InterpolateMode;
-    using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
-    using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
+    using op::v1::Interpolate;
+    using InterpolateMode = op::v1::Interpolate::InterpolateMode;
+    using CoordinateTransformMode = op::v1::Interpolate::CoordinateTransformMode;
+    using InterpolateAttrs = op::v1::Interpolate::InterpolateAttrs;
 
     auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
     auto dyn_output_shape = make_shared<op::Parameter>(element::i64, Shape{2});
