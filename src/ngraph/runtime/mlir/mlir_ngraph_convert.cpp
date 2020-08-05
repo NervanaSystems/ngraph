@@ -150,8 +150,6 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
         }
         NGRAPH_INFO << "resulting shape " << join(dims);
         tensor = ::mlir::RankedTensorType::get(dims, mlir_element_type);
-        // tensor = ::mlir::RankedTensorType::get(static_cast<int64_t>(pshape.rank().get_length()),
-        //                                        mlir_element_type);
     }
     else
     {
@@ -172,14 +170,12 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
 
     for (auto input : ngraph_function->get_parameters())
     {
-        NGRAPH_INFO;
-        function_input_types.push_back(get_mlir_type(input->get_output_element_type(0)));
-        NGRAPH_INFO;
+        function_input_types.push_back(get_tensor_type(input->output(0)));
     }
 
     for (auto output : ngraph_function->get_results())
     {
-        function_output_types.push_back(get_mlir_type(output->get_input_element_type(0)));
+        function_output_types.push_back(get_tensor_type(output->get_input_source_output(0)));
     }
 
     auto funcType =
