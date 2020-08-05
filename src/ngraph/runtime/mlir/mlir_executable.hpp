@@ -16,22 +16,14 @@
 
 #pragma once
 
-#include <initializer_list>
-#include <iostream>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <vector>
 
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
-#include "ngraph/ops.hpp"
-#include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
-#include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "ngraph/state/bernoulli_rng_state.hpp"
-#include "ngraph/state/uniform_rng_state.hpp"
 
 namespace ngraph
 {
@@ -76,8 +68,6 @@ protected:
     int get_alignment() const { return 64; }
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;
-    std::unordered_map<const Node*, std::shared_ptr<State>> m_states;
-    // runtime::ngmlir::MLIRCPURuntime m_mlir_runtime;
     bool m_first_iteration = true;
     std::unique_ptr<::mlir::ExecutionEngine> m_engine;
 };
