@@ -166,6 +166,9 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
         ::mlir::FuncOp::create(::mlir::UnknownLoc::get(m_context), "main", funcType);
     mlir_function.addEntryBlock();
 
+    auto& region = mlir_function.getBody();
+    m_builder.setInsertionPoint(&region.front(), region.front().begin());
+
     // Fill the ngraph tensor to mlir value map with all Parameters so that all inputs are available
     for (size_t i = 0; i < ngraph_function->get_parameters().size(); i++)
     {
@@ -223,6 +226,7 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
     {
         value_list.push_back(get_tensor_value(output->input(0).get_source_output()));
     }
-    // ::mlir::edsc::OperationBuilder<::mlir::ReturnOp>(::mlir::UnknownLoc::get(m_context), value_list);
     m_builder.create<::mlir::ReturnOp>(::mlir::UnknownLoc::get(m_context), value_list);
+
+    mlir_function.dump();
 }
