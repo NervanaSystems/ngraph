@@ -178,6 +178,16 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
     for (shared_ptr<Node> ngraph_op : ngraph_function->get_ordered_ops())
     {
         ::mlir::OperationState ods_state(::mlir::UnknownLoc::get(m_context), ngraph_op->get_name());
+        vector<::mlir::Value> input_values;
+        vector<::mlir::Type> output_types;
+        for (auto input : ngraph_op->input_values())
+        {
+            input_values.push_back(get_tensor_value(input));
+        }
+        for (auto output : ngraph_op->outputs())
+        {
+            output_types.push_back(get_tensor_type(output));
+        }
         switch (get_typeid(*ngraph_op))
         {
         case runtime::mlir::OP_TYPEID::Parameter_v0: break;
@@ -185,16 +195,6 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
         case runtime::mlir::OP_TYPEID::Add_v0:
         {
             NGRAPH_INFO << *ngraph_op;
-            vector<::mlir::Value> input_values;
-            vector<::mlir::Type> output_types;
-            for (auto input : ngraph_op->input_values())
-            {
-                input_values.push_back(get_tensor_value(input));
-            }
-            for (auto output : ngraph_op->outputs())
-            {
-                output_types.push_back(get_tensor_type(output));
-            }
             ::mlir::Value result = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(
                                output_types[0], input_values[0], input_values[1])
                                .value;
@@ -218,10 +218,11 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
     }
 
     // Create return
-    vector<::mlir::Value> valueList;
+    vector<::mlir::Value> value_list;
     for (auto output : ngraph_function->get_results())
     {
-        valueList.push_back(get_tensor_value(output->input(0).get_source_output()));
+        value_list.push_back(get_tensor_value(output->input(0).get_source_output()));
     }
-    // m_builder.create<mlir::NGReturnOp>(::mlir::UnknownLoc::get(m_context), valueList);
+    // ::mlir::edsc::OperationBuilder<::mlir::ReturnOp>(::mlir::UnknownLoc::get(m_context), value_list);
+    m_builder.create<::mlir::ReturnOp>(::mlir::UnknownLoc::get(m_context), value_list);
 }
