@@ -292,3 +292,132 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_reverse_shape)
                         Shape{8, 2, 8, 2},
                         Shape{2, 3, 4, 5, 2}});
 }
+
+
+NGRAPH_TEST(${BACKEND_NAME}, dynamic_dim_add)
+{
+    //
+    // Create a graph for f(a,b,c) = (a+b)*c, where a, b, c all have shape {2,?,3}.
+    //
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+
+    auto add = make_shared<op::Add>(a, b);
+
+    auto f = make_shared<Function>(OutputVector{add}, ParameterVector{a, b});
+
+    //
+    // Get a backend with dynamic support, and compile f.
+    //
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    //
+    // Create a dynamic output tensor with shape {2,?,3}.
+    //
+    auto t_r =
+        backend->create_dynamic_tensor(element::f32, PartialShape{2, Dimension::dynamic(), 3});
+
+    //
+    // For each of n=[0,...,5), run the compiled executable against a test vector of shape
+    // {2,n,3}, and check the results.
+    //
+    for (size_t middle_dim = 0; middle_dim < 5; middle_dim++)
+    {
+        // Fill in some test input values, which we'll use for a, b, and c.
+        vector<float> inputs(2 * middle_dim * 3);
+        for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+        {
+            inputs[i] = i;
+        }
+
+        // Create static tensors for the inputs and copy data.
+        auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+        auto t_b = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+
+        copy_data(t_a, inputs);
+        copy_data(t_b, inputs);
+
+        // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
+        ex->call_with_validate({t_r}, {t_a, t_b});
+
+        // After call, t_r should have a shape of {2,n,3}.
+        ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
+
+        // Read out the results, and compare them against expected values.
+        auto results = read_vector<float>(t_r);
+
+        vector<float> expected_values(2 * middle_dim * 3);
+        for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+        {
+            expected_values[i] = i + i;
+        }
+
+        EXPECT_TRUE(test::all_close_f(results, expected_values));
+    }
+}
+
+NGRAPH_TEST(${BACKEND_NAME}, dynamic_rank_add)
+{
+    //
+    // Create a graph for f(a,b,c) = (a+b)*c, where a, b, c all have shape {2,?,3}.
+    //
+    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto b = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+
+    auto add = make_shared<op::Add>(a, b);
+
+    auto f = make_shared<Function>(OutputVector{add}, ParameterVector{a, b});
+
+    //
+    // Get a backend with dynamic support, and compile f.
+    //
+    auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
+
+    auto ex = backend->compile(f);
+
+    //
+    // Create a dynamic output tensor with shape {2,?,3}.
+    //
+    auto t_r =
+        backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+
+    //
+    // For each of n=[0,...,5), run the compiled executable against a test vector of shape
+    // {2,n,3}, and check the results.
+    //
+    for (size_t middle_dim = 0; middle_dim < 5; middle_dim++)
+    {
+        // Fill in some test input values, which we'll use for a, b, and c.
+        vector<float> inputs(2 * middle_dim * 3);
+        for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+        {
+            inputs[i] = i;
+        }
+
+        // Create static tensors for the inputs and copy data.
+        auto t_a = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+        auto t_b = backend->create_tensor(element::f32, Shape{2, middle_dim, 3});
+
+        copy_data(t_a, inputs);
+        copy_data(t_b, inputs);
+
+        // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
+        ex->call_with_validate({t_r}, {t_a, t_b});
+
+        // After call, t_r should have a shape of {2,n,3}.
+        ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
+
+        // Read out the results, and compare them against expected values.
+        auto results = read_vector<float>(t_r);
+
+        vector<float> expected_values(2 * middle_dim * 3);
+        for (size_t i = 0; i < 2 * middle_dim * 3; i++)
+        {
+            expected_values[i] = i + i;
+        }
+
+        EXPECT_TRUE(test::all_close_f(results, expected_values));
+    }
+}

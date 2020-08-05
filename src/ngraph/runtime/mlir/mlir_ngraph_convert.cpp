@@ -40,6 +40,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Translation.h"
 #include "ngraph/log.hpp"
+#include "ngraph/util.hpp"
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 
 #include "Ngraph/NgraphDialect.h"
@@ -129,11 +130,33 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
 ::mlir::Type runtime::mlir::NgraphToMlir::get_tensor_type(const Output<Node>& t)
 {
     element::Type_t type = t.get_element_type();
-    NGRAPH_INFO << t;
+    PartialShape pshape = t.get_partial_shape();
     ::mlir::Type mlir_element_type = ::mlir::FloatType::getF32(m_context);
-
-    auto tensor = ::mlir::RankedTensorType::get(static_cast<int64_t>(t.get_shape().size()),
-                                                mlir_element_type);
+    ::mlir::Type tensor;
+    if (pshape.rank().is_static())
+    {
+        // Rank is static so can create a RankedTensorType
+        vector<int64_t> dims;
+        for (size_t i=0; i<pshape.rank().get_length(); ++i)
+        {
+            if (pshape[i] == Dimension::dynamic())
+            {
+                dims.push_back(-1);
+            }
+            else
+            {
+                dims.push_back(pshape[i].get_length());
+            }
+        }
+        NGRAPH_INFO << "resulting shape " << join(dims);
+        tensor = ::mlir::RankedTensorType::get(dims, mlir_element_type);
+        // tensor = ::mlir::RankedTensorType::get(static_cast<int64_t>(pshape.rank().get_length()),
+        //                                        mlir_element_type);
+    }
+    else
+    {
+        tensor = ::mlir::UnrankedTensorType::get(mlir_element_type);
+    }
 
     return tensor;
 }
@@ -149,7 +172,9 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
 
     for (auto input : ngraph_function->get_parameters())
     {
+        NGRAPH_INFO;
         function_input_types.push_back(get_mlir_type(input->get_output_element_type(0)));
+        NGRAPH_INFO;
     }
 
     for (auto output : ngraph_function->get_results())
