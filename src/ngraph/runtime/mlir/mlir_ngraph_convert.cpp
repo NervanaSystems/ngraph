@@ -112,10 +112,21 @@ void runtime::mlir::NgraphToMlir::convert_function(const ngraph::Function* ngrap
     obj.convert(ngraph_function);
 }
 
-::mlir::Value runtime::mlir::NgraphToMlir::get_tensor_value(const Output<Node>& t)
+map<Output<Node>, ::mlir::Value>& runtime::mlir::NgraphToMlir::get_tensor_value_map()
 {
     static map<Output<Node>, ::mlir::Value> ngraph_output_to_mlir_value;
-    return ngraph_output_to_mlir_value[t];
+    return ngraph_output_to_mlir_value;
+}
+
+::mlir::Value runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t,
+                                                            ::mlir::Value value)
+{
+    get_tensor_value_map()[t] = value;
+}
+
+::mlir::Value runtime::mlir::NgraphToMlir::get_tensor_value(const Output<Node>& t)
+{
+    return get_tensor_value_map().at(t);
 }
 
 ::mlir::Type runtime::mlir::NgraphToMlir::get_tensor_type(const Output<Node>& t)
@@ -155,6 +166,14 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
         ::mlir::FuncOp::create(::mlir::UnknownLoc::get(m_context), "main", funcType);
     mlir_function.addEntryBlock();
 
+    // Fill the ngraph tensor to mlir value map with all Parameters so that all inputs are available
+    for (size_t i=0; i<ngraph_function->get_parameters().size(); i++)
+    {
+        Output<Node> output = ngraph_function->get_parameters()[i]->output(0);
+        ::mlir::Value value = mlir_function.getArgument(i);
+        set_tensor_value(output, value);
+    }
+
     ::mlir::edsc::ScopedContext scope(m_builder, ::mlir::UnknownLoc::get(m_context));
     for (shared_ptr<Node> ngraph_op : ngraph_function->get_ordered_ops())
     {
@@ -180,7 +199,8 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
             NGRAPH_INFO << input_values.size();
             NGRAPH_INFO;
             auto mlir_op = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(
-                output_types[0], input_values[0], input_values[1]).value;
+                               output_types[0], input_values[0], input_values[1])
+                               .value;
             NGRAPH_INFO;
             break;
         }

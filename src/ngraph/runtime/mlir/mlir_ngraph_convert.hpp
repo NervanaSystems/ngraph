@@ -55,6 +55,8 @@ private:
     ::mlir::Type get_mlir_type(const element::Type& type);
     // llvm::SmallVectorImpl<int64_t> get_mlir_shape(const ngraph::Shape& ngraph_shape);
 
+    std::map<Output<Node>, ::mlir::Value>& get_tensor_value_map();
+    ::mlir::Value set_tensor_value(const Output<Node>& t, ::mlir::Value value);
     ::mlir::Value get_tensor_value(const Output<Node>& input);
     ::mlir::Type get_tensor_type(const Output<Node>& t);
 
