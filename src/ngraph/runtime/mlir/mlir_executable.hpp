@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -31,7 +32,6 @@
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
-#include "mlir/ExecutionEngine/ExecutionEngine.h"
 
 namespace ngraph
 {
@@ -69,9 +69,9 @@ public:
 protected:
     std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
     std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
-void init();
-llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
-    create_default_target_machine(unsigned optLevel);
+    void init();
+    llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
+        create_default_target_machine(unsigned optLevel);
 
     int get_alignment() const { return 64; }
     std::shared_ptr<Function> m_function;

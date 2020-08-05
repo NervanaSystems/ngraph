@@ -22,9 +22,9 @@
 #include <string>
 #include <vector>
 
-#include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
-
+#include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
+#include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
 #include "ngraph/runtime/tensor.hpp"
 
 namespace ngraph
@@ -35,7 +35,6 @@ namespace ngraph
         {
             class MlirBackend;
             class MlirExecutable;
-            class MlirBackendConstructor;
         }
     }
 }
@@ -44,7 +43,6 @@ class MLIR_BACKEND_API ngraph::runtime::mlir::MlirBackend : public Backend
 {
 public:
     MlirBackend();
-    MlirBackend(const std::vector<std::string>& unsupported_op_name_list);
     MlirBackend(const MlirBackend&) = delete;
     MlirBackend(MlirBackend&&) = delete;
     MlirBackend& operator=(const MlirBackend&) = delete;
@@ -58,9 +56,4 @@ public:
 
     std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
                                         bool enable_performance_data = false) override;
-
-    bool is_supported(const Node& node) const override;
-
-private:
-    std::set<std::string> m_unsupported_op_name_list;
 };

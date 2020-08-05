@@ -199,8 +199,8 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
         {
             NGRAPH_INFO << *ngraph_op;
             ::mlir::Value result = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(
-                               output_types[0], input_values[0], input_values[1])
-                               .value;
+                                       output_types[0], input_values[0], input_values[1])
+                                       .value;
             set_tensor_value(ngraph_op->output(0), result);
             // if (mlir_op)
             // {
