@@ -15,34 +15,32 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/mlir/mlir_ngraph_convert.hpp"
+#include "llvm/ADT/DenseSet.h"
+#include "llvm/Support/Debug.h"
 #include "llvm/Support/InitLLVM.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"
 #include "llvm/Support/ToolOutputFile.h"
+#include "mlir/Dialect/Affine/EDSC/Builders.h"
+#include "mlir/Dialect/Affine/EDSC/Intrinsics.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/StandardOps/EDSC/Intrinsics.h"
+#include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Diagnostics.h"
+#include "mlir/IR/Function.h"
+#include "mlir/IR/IntegerSet.h"
 #include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/StandardTypes.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllTranslations.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Support/ToolUtilities.h"
+#include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Translation.h"
 #include "ngraph/log.hpp"
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
-
-#include <llvm/ADT/DenseSet.h>
-#include <llvm/Support/Debug.h>
-#include <mlir/Dialect/Affine/EDSC/Builders.h>
-#include <mlir/Dialect/Affine/EDSC/Intrinsics.h>
-#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
-#include <mlir/Dialect/StandardOps/EDSC/Intrinsics.h>
-#include <mlir/IR/AffineExpr.h>
-#include <mlir/IR/Function.h>
-#include <mlir/IR/IntegerSet.h>
-#include <mlir/IR/MLIRContext.h>
-#include <mlir/IR/StandardTypes.h>
-#include <mlir/Transforms/DialectConversion.h>
 
 #include "Ngraph/NgraphDialect.h"
 #include "Ngraph/NgraphOps.h"
