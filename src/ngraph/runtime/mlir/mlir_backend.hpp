@@ -56,4 +56,6 @@ public:
 
     std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
                                         bool enable_performance_data = false) override;
+
+    bool supports_dynamic_tensors() override { return true; }
 };

@@ -456,7 +456,6 @@ dyn_slice_96
 dyn_slice_97
 dyn_slice_98
 dyn_slice_99
-dynamic_abc
 dynamic_reverse_shape
 dynamic_to_vector
 elu

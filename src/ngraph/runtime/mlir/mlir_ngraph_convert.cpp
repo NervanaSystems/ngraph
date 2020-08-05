@@ -116,8 +116,7 @@ map<Output<Node>, ::mlir::Value>& runtime::mlir::NgraphToMlir::get_tensor_value_
     return ngraph_output_to_mlir_value;
 }
 
-::mlir::Value runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t,
-                                                            ::mlir::Value value)
+void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir::Value value)
 {
     get_tensor_value_map()[t] = value;
 }
