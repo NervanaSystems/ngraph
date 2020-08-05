@@ -15,9 +15,6 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/mlir/mlir_executable.hpp"
-// #include "contrib/mlir/backend/cpu/cpu_backend.hpp"
-// #include "contrib/mlir/core/compiler.hpp"
-// #include "contrib/mlir/runtime/cpu/cpu_runtime.hpp"
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/cpio.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
@@ -52,6 +49,21 @@
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Support/ToolUtilities.h"
 #include "mlir/Translation.h"
+#include "mlir/ExecutionEngine/OptUtils.h"
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
+#include <llvm/ADT/STLExtras.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
+#include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
+#include <llvm/IR/Module.h>
+#include <llvm/Support/ErrorOr.h>
+#include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Target/TargetMachine.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/ExecutionEngine/ExecutionEngine.h>
+#include <mlir/ExecutionEngine/OptUtils.h>
+#include <mlir/IR/Function.h>
 
 #include "Ngraph/NgraphDialect.h"
 
@@ -111,7 +123,14 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
 bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,
                                          const vector<shared_ptr<runtime::Tensor>>& inputs)
 {
+    NGRAPH_INFO;
     event::Duration d1("call", "Interpreter");
+
+    if (!m_engine)
+    {
+        NGRAPH_INFO;
+        init();
+    }
 
     // if (m_first_iteration)
     // {
@@ -231,3 +250,57 @@ vector<shared_ptr<runtime::Tensor>>
     }
     return result_tensors;
 }
+
+/// Creates target machine for current host.
+llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
+    runtime::mlir::MlirExecutable::create_default_target_machine(unsigned optLevel)
+{
+    auto machineBuilder = llvm::orc::JITTargetMachineBuilder::detectHost();
+    if (!machineBuilder)
+    {
+        return machineBuilder.takeError();
+    }
+
+    // Relocation model and code model are kept to default values. CodeGen
+    // optimization level
+    // matches LLVM recommendations, i.e.:
+    // enum Level {
+    //   None,        // -O0
+    //   Less,        // -O1
+    //   Default,     // -O2, -Os
+    //   Aggressive   // -O3
+    // };
+    machineBuilder->setCodeGenOptLevel((llvm::CodeGenOpt::Level)optLevel);
+    return machineBuilder->createTargetMachine();
+}
+
+void runtime::mlir::MlirExecutable::init()
+{
+    // Mutex to safely initialize CPU backend
+    static std::mutex mlirInitMutex;
+
+    std::unique_lock<std::mutex> lock(mlirInitMutex);
+
+    static bool initialized = false;
+    if (!initialized)
+    {
+        // Override default optimization level with macro value.
+        llvm::CodeGenOpt::Level mlirOptLevel = static_cast<llvm::CodeGenOpt::Level>(3);
+        // // -1 is the value returned if the env variable is not set
+        // if (clOptLevel != -1)
+        // {
+        //     NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
+        //     mlirOptLevel = clOptLevel;
+        // }
+
+        // Initialize LLVM targets and target machine for current host.
+        llvm::InitializeNativeTarget();
+        llvm::InitializeNativeTargetAsmPrinter();
+        auto expectedTargetMachine = create_default_target_machine(mlirOptLevel);
+        NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
+        // targetMachine = std::move(*expectedTargetMachine);
+
+        initialized = true;
+    }
+}
+

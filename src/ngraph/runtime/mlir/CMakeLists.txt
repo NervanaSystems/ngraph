@@ -38,18 +38,30 @@ if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
 
     get_property(dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)
     get_property(translation_libs GLOBAL PROPERTY MLIR_TRANSLATION_LIBS)
+    llvm_map_components_to_libnames(llvm_libs support core irreader)
 
     target_link_libraries(mlir_backend
         PRIVATE
             ngraph
             ${dialect_libs}
             ${translation_libs}
+            MLIRAffineOps
+            MLIRAffineEDSC
+            MLIRAffineToStandard
+            MLIRAnalysis
+            MLIREDSC
+            MLIRExecutionEngine
             MLIRIR
+            MLIRLLVMIR
+            MLIRSCFToStandard
+            MLIRStandardToLLVM
             MLIRParser
             MLIRPass
-            MLIRSPIRV
-            MLIRTranslation
+            MLIRTargetLLVMIR
+            MLIRTransforms
             MLIRSupport
+            MLIRAffineTransforms
+            ${llvm_libs}
     )
     if(NGRAPH_MLIR_STATIC_LIB_ENABLE)
         target_compile_definitions(mlir_backend PUBLIC NGRAPH_MLIR_STATIC_LIB_ENABLE)
