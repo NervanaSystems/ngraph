@@ -167,7 +167,7 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
     mlir_function.addEntryBlock();
 
     // Fill the ngraph tensor to mlir value map with all Parameters so that all inputs are available
-    for (size_t i=0; i<ngraph_function->get_parameters().size(); i++)
+    for (size_t i = 0; i < ngraph_function->get_parameters().size(); i++)
     {
         Output<Node> output = ngraph_function->get_parameters()[i]->output(0);
         ::mlir::Value value = mlir_function.getArgument(i);
@@ -180,6 +180,8 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
         ::mlir::OperationState ods_state(::mlir::UnknownLoc::get(m_context), ngraph_op->get_name());
         switch (get_typeid(*ngraph_op))
         {
+        case runtime::mlir::OP_TYPEID::Parameter_v0: break;
+        case runtime::mlir::OP_TYPEID::Result_v0: break;
         case runtime::mlir::OP_TYPEID::Add_v0:
         {
             NGRAPH_INFO << *ngraph_op;
@@ -187,32 +189,39 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
             vector<::mlir::Type> output_types;
             for (auto input : ngraph_op->input_values())
             {
-                NGRAPH_INFO << input;
                 input_values.push_back(get_tensor_value(input));
             }
             for (auto output : ngraph_op->outputs())
             {
-                NGRAPH_INFO << output;
                 output_types.push_back(get_tensor_type(output));
             }
-            NGRAPH_INFO << output_types.size();
-            NGRAPH_INFO << input_values.size();
-            NGRAPH_INFO;
-            auto mlir_op = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(
+            ::mlir::Value result = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(
                                output_types[0], input_values[0], input_values[1])
                                .value;
-            NGRAPH_INFO;
+            set_tensor_value(ngraph_op->output(0), result);
+            // if (mlir_op)
+            // {
+            //     for (auto i = 0; i < mlir_op->getNumResults(); i++)
+            //     {
+            //         auto result = mlir_op->getResult(i);
+            //         if (result)
+            //         {
+            //             set_tensor_value(ngraph_op->output(i), result);
+            //         }
+            //     }
+            // }
+
             break;
         }
-        default: NGRAPH_INFO << *ngraph_op; break;
+        default: NGRAPH_INFO << "Unsupported " << *ngraph_op; break;
         }
     }
 
     // Create return
-    // std::vector<mlir::Value> valueList;
-    // for (auto output : function->get_results())
-    // {
-    //     valueList.push_back(getTensorValue(&output->get_input_tensor(0)).m_value);
-    // }
-    // m_builder.create<mlir::NGReturnOp>(mlir::UnknownLoc::get(m_context), valueList);
+    vector<::mlir::Value> valueList;
+    for (auto output : ngraph_function->get_results())
+    {
+        valueList.push_back(get_tensor_value(output->input(0).get_source_output()));
+    }
+    // m_builder.create<mlir::NGReturnOp>(::mlir::UnknownLoc::get(m_context), valueList);
 }
