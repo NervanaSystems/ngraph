@@ -293,7 +293,6 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_reverse_shape)
                         Shape{2, 3, 4, 5, 2}});
 }
 
-
 NGRAPH_TEST(${BACKEND_NAME}, dynamic_dim_add)
 {
     //
@@ -380,8 +379,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_rank_add)
     //
     // Create a dynamic output tensor with shape {2,?,3}.
     //
-    auto t_r =
-        backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
+    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
 
     //
     // For each of n=[0,...,5), run the compiled executable against a test vector of shape

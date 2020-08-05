@@ -40,8 +40,8 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Translation.h"
 #include "ngraph/log.hpp"
-#include "ngraph/util.hpp"
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
+#include "ngraph/util.hpp"
 
 #include "Ngraph/NgraphDialect.h"
 #include "Ngraph/NgraphOps.h"
@@ -137,7 +137,7 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
     {
         // Rank is static so can create a RankedTensorType
         vector<int64_t> dims;
-        for (size_t i=0; i<pshape.rank().get_length(); ++i)
+        for (size_t i = 0; i < pshape.rank().get_length(); ++i)
         {
             if (pshape[i] == Dimension::dynamic())
             {
@@ -148,7 +148,6 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
                 dims.push_back(pshape[i].get_length());
             }
         }
-        NGRAPH_INFO << "resulting shape " << join(dims);
         tensor = ::mlir::RankedTensorType::get(dims, mlir_element_type);
     }
     else

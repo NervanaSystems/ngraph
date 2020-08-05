@@ -26,7 +26,7 @@ using namespace ngraph;
 extern "C" MLIR_BACKEND_API void ngraph_register_mlir_backend()
 {
     runtime::BackendManager::register_backend(
-        "MLIR", [](const std::string&) { return std::make_shared<runtime::mlir::MlirBackend>(); });
+        "MLIR", [](const string&) { return std::make_shared<runtime::mlir::MlirBackend>(); });
 }
 
 runtime::mlir::MlirBackend::MlirBackend() {}
@@ -47,6 +47,13 @@ shared_ptr<runtime::Tensor> runtime::mlir::MlirBackend::create_tensor(const elem
                                                                       void* memory_pointer)
 {
     return make_shared<runtime::HostTensor>(type, shape, memory_pointer);
+}
+
+shared_ptr<runtime::Tensor>
+    runtime::mlir::MlirBackend::create_dynamic_tensor(const element::Type& type,
+                                                      const PartialShape& shape)
+{
+    return make_shared<runtime::HostTensor>(type, shape);
 }
 
 shared_ptr<runtime::Executable>
