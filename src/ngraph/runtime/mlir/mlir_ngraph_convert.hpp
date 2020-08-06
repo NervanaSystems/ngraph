@@ -48,6 +48,8 @@ class ngraph::runtime::mlir::NgraphToMlir
 public:
     static void convert_function(const ngraph::Function* function);
 
+    ::mlir::OwningModuleRef& get_module() { return m_module; }
+
 private:
     NgraphToMlir(::mlir::MLIRContext* context);
     void convert(const ngraph::Function* function);
@@ -60,4 +62,5 @@ private:
 
     ::mlir::MLIRContext* m_context;
     ::mlir::OpBuilder m_builder;
+    ::mlir::OwningModuleRef m_module;
 };

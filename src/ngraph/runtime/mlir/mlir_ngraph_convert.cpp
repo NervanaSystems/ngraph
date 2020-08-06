@@ -52,6 +52,7 @@ using namespace ngraph;
 runtime::mlir::NgraphToMlir::NgraphToMlir(::mlir::MLIRContext* context)
     : m_context(context)
     , m_builder(context)
+    , m_module(::mlir::ModuleOp::create(::mlir::UnknownLoc::get(context)))
 {
 }
 
@@ -246,4 +247,5 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
     m_builder.create<::mlir::ReturnOp>(::mlir::UnknownLoc::get(m_context), value_list);
 
     mlir_function.dump();
+    m_module->push_back(mlir_function);
 }

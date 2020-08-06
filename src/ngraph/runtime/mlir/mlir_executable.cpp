@@ -296,3 +296,60 @@ void runtime::mlir::MlirExecutable::init()
         initialized = true;
     }
 }
+
+// int dumpLLVMIR(mlir::ModuleOp module)
+// {
+//     auto llvmModule = mlir::translateModuleToLLVMIR(module);
+//     if (!llvmModule)
+//     {
+//         llvm::errs() << "Failed to emit LLVM IR\n";
+//         return -1;
+//     }
+
+//     // Initialize LLVM targets.
+//     llvm::InitializeNativeTarget();
+//     llvm::InitializeNativeTargetAsmPrinter();
+//     mlir::ExecutionEngine::setupTargetTriple(llvmModule.get());
+
+//     /// Optionally run an optimization pipeline over the llvm module.
+//     auto optPipeline = mlir::makeOptimizingTransformer(
+//         /*optLevel=*/enableOpt ? 3 : 0,
+//         /*sizeLevel=*/0,
+//         /*targetMachine=*/nullptr);
+//     if (auto err = optPipeline(llvmModule.get()))
+//     {
+//         llvm::errs() << "Failed to optimize LLVM IR " << err << "\n";
+//         return -1;
+//     }
+//     llvm::errs() << *llvmModule << "\n";
+//     return 0;
+// }
+
+// int runJit(mlir::ModuleOp module)
+// {
+//     // Initialize LLVM targets.
+//     llvm::InitializeNativeTarget();
+//     llvm::InitializeNativeTargetAsmPrinter();
+
+//     // An optimization pipeline to use within the execution engine.
+//     auto optPipeline = mlir::makeOptimizingTransformer(
+//         /*optLevel=*/enableOpt ? 3 : 0,
+//         /*sizeLevel=*/0,
+//         /*targetMachine=*/nullptr);
+
+//     // Create an MLIR execution engine. The execution engine eagerly JIT-compiles
+//     // the module.
+//     auto maybeEngine = mlir::ExecutionEngine::create(module, optPipeline);
+//     assert(maybeEngine && "failed to construct an execution engine");
+//     auto& engine = maybeEngine.get();
+
+//     // Invoke the JIT-compiled function.
+//     auto invocationResult = engine->invoke("main");
+//     if (invocationResult)
+//     {
+//         llvm::errs() << "JIT invocation failed\n";
+//         return -1;
+//     }
+
+//     return 0;
+// }

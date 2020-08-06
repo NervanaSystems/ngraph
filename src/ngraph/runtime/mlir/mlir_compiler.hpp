@@ -1,0 +1,84 @@
+//*****************************************************************************
+// Copyright 2017-2020 Intel Corporation
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//*****************************************************************************
+
+// NOTE: This file follows nGraph format style.
+// Follows nGraph naming convention for public APIs only, else MLIR naming
+// convention.
+
+#pragma once
+
+#include <mlir/IR/Builders.h>
+#include <mlir/IR/Module.h>
+#include <mlir/IR/Types.h>
+#include <typeindex>
+#include <unordered_map>
+#include <vector>
+#include "contrib/mlir/runtime/cpu/memory_manager.hpp"
+#include "ngraph/check.hpp"
+#include "ngraph/descriptor/tensor.hpp"
+#include "ngraph/function.hpp"
+#include "ngraph/log.hpp"
+#include "ngraph/node.hpp"
+#include "ngraph/op/experimental/compiled_kernel.hpp"
+
+namespace ngraph
+{
+    namespace runtime
+    {
+        namespace mlir
+        {
+            class Compiler;
+        }
+    }
+}
+
+/// MLIR Compiler. Given an nGraph sub-graph, represented as CompiledKernel
+/// node, it
+/// translates the graph down to nGraph dialect and applies core optimizations.
+///
+/// The compiler owns the MLIR module until compilation is done. After that,
+/// the module can be grabbed and plugged into MLIR backends.
+class ngraph::runtime::mlir::Compiler
+{
+public:
+    /// Initializes MLIR environment. It must be called only once.
+    static void init();
+
+public:
+    Compiler(std::shared_ptr<ngraph::Function> function, ::mlir::MLIRContext& context);
+
+    /// Compiles a subgraph with MLIR
+    void compile();
+
+    ::mlir::OwningModuleRef& get_module() { return m_module; }
+
+private:
+    // Converts an nGraph sub-graph to MLIR nGraph dialect.
+    void buildNgDialectModule();
+    // Applies any nGraph dialect optimizations
+    void optimizeNgDialect();
+
+    // Sub-graph to be compiled and executed with MLIR.
+    std::shared_ptr<ngraph::Function> m_function;
+
+    // MLIR context that holds all the MLIR information related to the sub-graph
+    // compilation.
+    ::mlir::MLIRContext& m_context;
+    std::unique_ptr<mlir::ModuleOp> m_module;
+
+    // Global initialization for MLIR compiler
+    static bool initialized;
+};

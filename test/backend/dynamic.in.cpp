@@ -91,6 +91,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_abc)
         ex->call_with_validate({t_r}, {t_a, t_b, t_c});
 
         // After call, t_r should have a shape of {2,n,3}.
+        ASSERT_TRUE(t_r->get_partial_shape().is_static());
         ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
 
         // Read out the results, and compare them against expected values.
@@ -138,6 +139,7 @@ static void axpy_test(const PartialShape& input_pshape, const std::vector<Shape>
 
         ex->call_with_validate({t_r}, {t_a, t_x, t_y});
 
+        ASSERT_TRUE(t_r->get_partial_shape().is_static());
         ASSERT_EQ(t_r->get_shape(), shape);
 
         auto results = read_vector<float>(t_r);
@@ -203,6 +205,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
 
         ex->call_with_validate({t_r}, {t_x});
 
+        ASSERT_TRUE(t_r->get_partial_shape().is_static());
         ASSERT_EQ(t_r->get_shape(), (Shape{shape_size(shape)}));
 
         auto results = read_vector<float>(t_r);
@@ -261,6 +264,8 @@ static void reverse_shape_test(const PartialShape& input_pshape,
         copy_data(t_x, inputs);
 
         ex->call_with_validate({t_r}, {t_x});
+
+        ASSERT_TRUE(t_r->get_partial_shape().is_static());
 
         Shape expected_shape = shape;
         std::reverse(expected_shape.begin(), expected_shape.end());
@@ -341,6 +346,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_dim_add)
         // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
         ex->call_with_validate({t_r}, {t_a, t_b});
 
+        ASSERT_TRUE(t_r->get_partial_shape().is_static());
+
         // After call, t_r should have a shape of {2,n,3}.
         ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
 
@@ -403,6 +410,8 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_rank_add)
 
         // Call ex, writing result into t_r (note we're using the same t_r from outside the loop.)
         ex->call_with_validate({t_r}, {t_a, t_b});
+
+        ASSERT_TRUE(t_r->get_partial_shape().is_static());
 
         // After call, t_r should have a shape of {2,n,3}.
         ASSERT_EQ(t_r->get_shape(), (Shape{2, middle_dim, 3}));
