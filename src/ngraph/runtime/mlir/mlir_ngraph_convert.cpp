@@ -105,11 +105,16 @@ runtime::mlir::NgraphToMlir::NgraphToMlir(::mlir::MLIRContext* context)
     return rc;
 }
 
-void runtime::mlir::NgraphToMlir::convert_function(const ngraph::Function* ngraph_function)
+::mlir::OwningModuleRef
+    runtime::mlir::NgraphToMlir::convert_function(const ngraph::Function* ngraph_function,
+                                                  ::mlir::MLIRContext* context)
 {
-    ::mlir::MLIRContext context;
-    NgraphToMlir obj(&context);
-    obj.convert(ngraph_function);
+    NgraphToMlir obj(context);
+    auto module = obj.convert(ngraph_function);
+    NGRAPH_INFO;
+    module->dump();
+    NGRAPH_INFO;
+    return move(module);
 }
 
 map<Output<Node>, ::mlir::Value>& runtime::mlir::NgraphToMlir::get_tensor_value_map()
@@ -159,7 +164,8 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
     return tensor;
 }
 
-void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_function)
+::mlir::OwningModuleRef
+    runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_function)
 {
     using TypeList = llvm::SmallVector<::mlir::Type, 4>;
 
@@ -248,4 +254,8 @@ void runtime::mlir::NgraphToMlir::convert(const ngraph::Function* ngraph_functio
 
     mlir_function.dump();
     m_module->push_back(mlir_function);
+    NGRAPH_INFO;
+    m_module->dump();
+    NGRAPH_INFO;
+    return move(m_module);
 }

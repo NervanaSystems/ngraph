@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
+#include "mlir/IR/MLIRContext.h"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
 #include "ngraph/runtime/tensor.hpp"
@@ -69,5 +70,6 @@ protected:
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;
     bool m_first_iteration = true;
+    std::unique_ptr<::mlir::MLIRContext> m_context;
     std::unique_ptr<::mlir::ExecutionEngine> m_engine;
 };

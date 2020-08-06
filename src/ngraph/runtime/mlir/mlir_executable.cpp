@@ -110,7 +110,16 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
 
     set_parameters_and_results(*m_function);
 
-    NgraphToMlir::convert_function(m_function.get());
+    m_context.reset(new ::mlir::MLIRContext());
+    ::mlir::OwningModuleRef module =
+        NgraphToMlir::convert_function(m_function.get(), m_context.get());
+    NGRAPH_INFO;
+    if (!module)
+    {
+        NGRAPH_INFO << "module is nullptr";
+    }
+    module->dump();
+    NGRAPH_INFO;
 }
 
 bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor>>& outputs,

@@ -46,13 +46,12 @@ namespace ngraph
 class ngraph::runtime::mlir::NgraphToMlir
 {
 public:
-    static void convert_function(const ngraph::Function* function);
-
-    ::mlir::OwningModuleRef& get_module() { return m_module; }
+    static ::mlir::OwningModuleRef convert_function(const ngraph::Function* function,
+                                                    ::mlir::MLIRContext* context);
 
 private:
     NgraphToMlir(::mlir::MLIRContext* context);
-    void convert(const ngraph::Function* function);
+    ::mlir::OwningModuleRef convert(const ngraph::Function* function);
     ::mlir::Type get_mlir_type(const element::Type& type);
 
     std::map<Output<Node>, ::mlir::Value>& get_tensor_value_map();
