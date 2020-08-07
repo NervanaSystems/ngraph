@@ -29,6 +29,6 @@ NgraphDialect::NgraphDialect(mlir::MLIRContext* context)
 {
     addOperations<
 #define GET_OP_LIST
-#include "Ngraph/NgraphOps.cpp.inc"
+#include "Dialect/Ngraph/NgraphOps.cpp.inc"
         >();
 }

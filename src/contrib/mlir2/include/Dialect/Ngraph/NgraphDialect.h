@@ -22,7 +22,7 @@
 namespace mlir {
 namespace ngraph {
 
-#include "Ngraph/NgraphOpsDialect.h.inc"
+#include "Dialect/Ngraph/NgraphOpsDialect.h.inc"
 
 } // namespace ngraph
 } // namespace mlir

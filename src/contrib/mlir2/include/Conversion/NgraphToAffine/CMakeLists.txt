@@ -5,7 +5,7 @@ add_mlir_conversion_library(MLIRNgraphToAffine
         ${CMAKE_CURRENT_SOURCE_DIR}
 
    LINK_LIBS PUBLIC
-        NgraphOps
-        AffineOps
-        StandardOps
+        # NgraphOps
+        # AffineOps
+        # StandardOps
 )
