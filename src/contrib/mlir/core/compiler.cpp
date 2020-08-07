@@ -23,9 +23,13 @@
 #include <llvm/Analysis/TargetTransformInfo.h>
 #include <llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h>
 #include <llvm/IR/Module.h>
+#include <llvm/Support/Allocator.h>
+#include <llvm/Support/CommandLine.h>
 #include <llvm/Support/ErrorOr.h>
 #include <llvm/Support/MemoryBuffer.h>
+#include <llvm/Support/Process.h>
 #include <llvm/Support/SourceMgr.h>
+#include <llvm/Support/StringSaver.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Target/TargetMachine.h>
 #include <memory>
@@ -64,8 +68,10 @@ static llvm::cl::opt<bool> clEnableNgKernelLibFusion(
     llvm::cl::desc("Enable the ngraph pass that fuses ops to use kernel library"));
 
 using llvm::ArrayRef;
+using llvm::BumpPtrAllocator;
 using llvm::SmallVector;
 using llvm::StringRef;
+using llvm::StringSaver;
 
 using namespace ngraph;
 using namespace ngraph::runtime::ngmlir;
@@ -99,8 +105,19 @@ void MLIRCompiler::init()
         // process flags
         // from environment variable to be used by nGraph, MLIR and LLVM.
         mlir::registerPassManagerCLOptions();
-        llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
-
+        // Emulate: llvm::cl::ParseEnvironmentOptions("ngraph", "NGRAPH_MLIR_OPTIONS", "");
+        llvm::Optional<std::string> envValue =
+            llvm::sys::Process::GetEnv(StringRef("NGRAPH_MLIR_OPTIONS"));
+        if (envValue)
+        {
+            SmallVector<const char*, 20> newArgv;
+            BumpPtrAllocator A;
+            StringSaver Saver(A);
+            newArgv.push_back(Saver.save("ngraph").data());
+            llvm::cl::TokenizeGNUCommandLine(*envValue, Saver, newArgv);
+            int newArgc = static_cast<int>(newArgv.size());
+            llvm::cl::ParseCommandLineOptions(newArgc, &newArgv[0], StringRef(""));
+        }
         initialized = true;
     }
 }
