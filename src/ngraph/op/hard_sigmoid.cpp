@@ -92,7 +92,7 @@ OutputVector op::HardSigmoid::decompose_op() const
         std::make_shared<op::v1::Multiply>(alpha_node, data, AutoBroadcastType::NUMPY);
 
     alpha_x_plus_beta =
-        std::make_shared<op::v0::Add>(alpha_x_plus_beta, beta_node, AutoBroadcastType::NUMPY);
+        std::make_shared<op::v1::Add>(alpha_x_plus_beta, beta_node, AutoBroadcastType::NUMPY);
 
     return {std::make_shared<op::v1::Minimum>(
         std::make_shared<op::v1::Maximum>(alpha_x_plus_beta, zero_node), one_node)};

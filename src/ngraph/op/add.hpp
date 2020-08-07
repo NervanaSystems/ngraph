@@ -24,14 +24,14 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
+        namespace v1
         {
             /// \brief Elementwise addition operation.
             ///
             class NGRAPH_API Add : public util::BinaryElementwiseArithmetic
             {
             public:
-                static constexpr NodeTypeInfo type_info{"Add", 0};
+                static constexpr NodeTypeInfo type_info{"Add", 1};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 /// \brief Constructs an uninitialized addition operation
                 Add()
@@ -66,7 +66,7 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Add;
+        using v1::Add;
     }
 
     NGRAPH_API

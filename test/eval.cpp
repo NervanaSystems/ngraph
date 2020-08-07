@@ -178,7 +178,7 @@ TEST(eval, evaluate_dynamic_range_sum)
     auto p_step = make_shared<op::Parameter>(element::f32, PartialShape{});
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{});
     auto range = make_shared<op::v0::Range>(p_start, p_stop, p_step);
-    auto add = make_shared<op::v0::Add>(range, p1, op::AutoBroadcastType::NUMPY);
+    auto add = make_shared<op::v1::Add>(range, p1, op::AutoBroadcastType::NUMPY);
     auto fun =
         make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
     auto result_tensor = make_shared<HostTensor>();
@@ -202,7 +202,7 @@ TEST(eval, DISABLED_EVAL_dynamic_range_sum)
     auto p_step = make_shared<op::Parameter>(element::f32, PartialShape{});
     auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{});
     auto range = make_shared<op::v0::Range>(p_start, p_stop, p_step);
-    auto add = make_shared<op::v0::Add>(range, p1, op::AutoBroadcastType::NUMPY);
+    auto add = make_shared<op::v1::Add>(range, p1, op::AutoBroadcastType::NUMPY);
     auto fun =
         make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
     auto backend = runtime::Backend::create("EVAL");
