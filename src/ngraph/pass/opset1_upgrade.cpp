@@ -41,12 +41,8 @@ namespace
         return replacement_node;
     }
 
-    // Default is that we didn nothing
+    // Default is that we did nothing
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
-    shared_ptr<Node> op_cast(shared_ptr<op::Add> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
-    }
 
     shared_ptr<Node> op_cast(shared_ptr<op::And> node)
     {

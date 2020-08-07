@@ -227,7 +227,7 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::Add_v0:
+        case OP_TYPEID::Add_v1:
         {
             const op::Add* add = static_cast<const op::Add*>(&node);
             reference::add<T>(args[0]->get_data_ptr<const T>(),
@@ -1855,7 +1855,6 @@ protected:
         }
 
         case OP_TYPEID::Acosh_v3:
-        case OP_TYPEID::Add_v1:
         case OP_TYPEID::Asinh_v3:
         case OP_TYPEID::Atanh_v3:
         case OP_TYPEID::AvgPool_v1:
