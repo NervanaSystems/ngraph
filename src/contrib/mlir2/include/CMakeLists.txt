@@ -1,1 +1,1 @@
-add_subdirectory(Ngraph)
+add_subdirectory(Dialect/Ngraph)

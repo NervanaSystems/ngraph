@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "Ngraph/NgraphDialect.h"
-#include "Ngraph/NgraphOps.h"
+#include "Dialect/Ngraph/NgraphDialect.h"
+#include "Dialect/Ngraph/NgraphOps.h"
 
 using namespace mlir;
 using namespace mlir::ngraph;

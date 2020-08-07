@@ -77,7 +77,7 @@ private:
     // MLIR context that holds all the MLIR information related to the sub-graph
     // compilation.
     ::mlir::MLIRContext& m_context;
-    std::unique_ptr<mlir::ModuleOp> m_module;
+    ::mlir::OwningModuleRef m_module;
 
     // Global initialization for MLIR compiler
     static bool initialized;

@@ -58,7 +58,7 @@
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 #include "ngraph/util.hpp"
 
-#include "Ngraph/NgraphDialect.h"
+#include "Dialect/Ngraph/NgraphDialect.h"
 
 using namespace std;
 using namespace ngraph;
@@ -111,14 +111,28 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     set_parameters_and_results(*m_function);
 
     m_context.reset(new ::mlir::MLIRContext());
-    ::mlir::OwningModuleRef module =
+    m_module =
         NgraphToMlir::convert_function(m_function.get(), m_context.get());
+
+    // The m_module at this point contains MLIR ngraph ops, it must be lowered to LLVM IR
+    // before generating the engine
+
+    int optimization_level = 3;
+    // Initialize LLVM targets and target machine for current host.
+    llvm::InitializeNativeTarget();
+    llvm::InitializeNativeTargetAsmPrinter();
+
+    // An optimization pipeline to use within the execution engine.
+    auto optPipeline = ::mlir::makeOptimizingTransformer(
+        optimization_level,
+        /*sizeLevel=*/0,
+        /*targetMachine=*/nullptr);
+
+    // Create an MLIR execution engine. The execution engine eagerly JIT-compiles the module.
+    auto maybeEngine = ::mlir::ExecutionEngine::create(*m_module, optPipeline);
+    assert(maybeEngine && "failed to construct an execution engine");
     NGRAPH_INFO;
-    if (!module)
-    {
-        NGRAPH_INFO << "module is nullptr";
-    }
-    module->dump();
+    m_engine = move(maybeEngine.get());
     NGRAPH_INFO;
 }
 
@@ -127,6 +141,10 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
 {
     NGRAPH_INFO;
     event::Duration d1("call", "Interpreter");
+
+    NGRAPH_INFO;
+    m_module->dump();
+    NGRAPH_INFO;
 
     if (!m_engine)
     {
@@ -276,37 +294,7 @@ llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
     return machineBuilder->createTargetMachine();
 }
 
-void runtime::mlir::MlirExecutable::init()
-{
-    // Mutex to safely initialize CPU backend
-    static std::mutex mlirInitMutex;
-
-    std::unique_lock<std::mutex> lock(mlirInitMutex);
-
-    static bool initialized = false;
-    if (!initialized)
-    {
-        // Override default optimization level with macro value.
-        llvm::CodeGenOpt::Level mlirOptLevel = static_cast<llvm::CodeGenOpt::Level>(3);
-        // // -1 is the value returned if the env variable is not set
-        // if (clOptLevel != -1)
-        // {
-        //     NGRAPH_CHECK(clOptLevel >= 0 && clOptLevel <= 3, "Invalid optimization level");
-        //     mlirOptLevel = clOptLevel;
-        // }
-
-        // Initialize LLVM targets and target machine for current host.
-        llvm::InitializeNativeTarget();
-        llvm::InitializeNativeTargetAsmPrinter();
-        auto expectedTargetMachine = create_default_target_machine(mlirOptLevel);
-        NGRAPH_CHECK(expectedTargetMachine, "Invalid target machine");
-        // targetMachine = std::move(*expectedTargetMachine);
-
-        initialized = true;
-    }
-}
-
-// int dumpLLVMIR(mlir::ModuleOp module)
+// int runtime::mlir::MlirExecutable::dumpLLVMIR(mlir::ModuleOp module)
 // {
 //     auto llvmModule = mlir::translateModuleToLLVMIR(module);
 //     if (!llvmModule)
@@ -334,7 +322,7 @@ void runtime::mlir::MlirExecutable::init()
 //     return 0;
 // }
 
-// int runJit(mlir::ModuleOp module)
+// int runtime::mlir::MlirExecutable::runJit(mlir::ModuleOp module)
 // {
 //     // Initialize LLVM targets.
 //     llvm::InitializeNativeTarget();
@@ -361,4 +349,28 @@ void runtime::mlir::MlirExecutable::init()
 //     }
 
 //     return 0;
+// }
+
+// void runtime::mlir::MlirExecutable::optimize_dialect()
+// {
+//     ::mlir::PassManager pm(&m_context);
+//     if (clEnableNgKernelLibFusion)
+//     {
+//         pm.addPass(ngraph::pass::createNgDialectFusedOpsPass());
+//     }
+
+//     // Apply any generic pass manager command line options.
+//     ::mlir::applyPassManagerCLOptions(pm);
+
+//     if (failed(pm.run(m_module.get())))
+//     {
+//         NGRAPH_CHECK(false, "MLIR pass manager failed");
+//     }
+
+//     if (failed(m_module->verify()))
+//     {
+//         NGRAPH_CHECK(false, "Invalid module after NG dialect optimization");
+//     }
+
+//     dumpMlirModule("nGraph Dialect optimization", m_module.get());
 // }

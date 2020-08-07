@@ -25,6 +25,8 @@
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
 #include "ngraph/runtime/tensor.hpp"
+#include "mlir/InitAllDialects.h"
+#include "mlir/InitAllTranslations.h"
 
 namespace ngraph
 {
@@ -66,10 +68,16 @@ protected:
     llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
         create_default_target_machine(unsigned optLevel);
 
+    // int dumpLLVMIR(mlir::ModuleOp module);
+    // int runJit(mlir::ModuleOp module);
+    void optimize_dialect();
+
+
     int get_alignment() const { return 64; }
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;
     bool m_first_iteration = true;
     std::unique_ptr<::mlir::MLIRContext> m_context;
+    ::mlir::OwningModuleRef m_module;
     std::unique_ptr<::mlir::ExecutionEngine> m_engine;
 };

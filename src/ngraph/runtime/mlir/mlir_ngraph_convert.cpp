@@ -43,8 +43,8 @@
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 #include "ngraph/util.hpp"
 
-#include "Ngraph/NgraphDialect.h"
-#include "Ngraph/NgraphOps.h"
+#include "Dialect/Ngraph/NgraphDialect.h"
+#include "Dialect/Ngraph/NgraphOps.h"
 
 using namespace std;
 using namespace ngraph;
@@ -110,11 +110,7 @@ runtime::mlir::NgraphToMlir::NgraphToMlir(::mlir::MLIRContext* context)
                                                   ::mlir::MLIRContext* context)
 {
     NgraphToMlir obj(context);
-    auto module = obj.convert(ngraph_function);
-    NGRAPH_INFO;
-    module->dump();
-    NGRAPH_INFO;
-    return move(module);
+    return move(obj.convert(ngraph_function));
 }
 
 map<Output<Node>, ::mlir::Value>& runtime::mlir::NgraphToMlir::get_tensor_value_map()
@@ -252,10 +248,6 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
     }
     m_builder.create<::mlir::ReturnOp>(::mlir::UnknownLoc::get(m_context), value_list);
 
-    mlir_function.dump();
     m_module->push_back(mlir_function);
-    NGRAPH_INFO;
-    m_module->dump();
-    NGRAPH_INFO;
     return move(m_module);
 }
