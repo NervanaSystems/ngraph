@@ -47,7 +47,8 @@ namespace
 #define OBSOLETE_OPS                                                                               \
     NGRAPH_OP(GetOutputElement, 0)                                                                 \
     NGRAPH_OP(Add, 0)                                                                              \
-    NGRAPH_OP(Divide, 0)
+    NGRAPH_OP(Divide, 0)                                                                           \
+    NGRAPH_OP(Subtract, 0)
 
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
     // Abs,
@@ -3550,15 +3551,6 @@ json JSONSerializer::serialize_node(const Node& n)
     case OP_TYPEID::Squeeze_v0: { break;
     }
     case OP_TYPEID::StopGradient_v0: { break;
-    }
-    case OP_TYPEID::Subtract_v0:
-    {
-        auto tmp = static_cast<const op::Subtract*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
     }
     case OP_TYPEID::Sum_v0:
     {

@@ -494,7 +494,7 @@ static bool simplify_log(shared_ptr<Node> n)
         if (auto exp = as_type_ptr<op::v0::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
             auto denom = div->get_input_source_output(1);
-            auto diff = make_shared<op::v0::Subtract>(exp->get_input_source_output(0),
+            auto diff = make_shared<op::v1::Subtract>(exp->get_input_source_output(0),
                                                       make_shared<op::v0::Log>(denom));
             replace_node(n, diff);
             return true;

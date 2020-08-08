@@ -610,11 +610,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Subtract> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::Sum> node)
     {
         bool keep_dims = false;

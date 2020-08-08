@@ -1775,7 +1775,7 @@ protected:
         }
         case OP_TYPEID::StopGradient_v0: { throw unsupported_op("Unsupported op 'StopGradient_v0'");
         }
-        case OP_TYPEID::Subtract_v0:
+        case OP_TYPEID::Subtract_v1:
         {
             auto subtract = static_cast<const op::Subtract*>(&node);
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
@@ -1964,7 +1964,6 @@ protected:
         case OP_TYPEID::Squeeze_v0:
         case OP_TYPEID::Stack_v0:
         case OP_TYPEID::StridedSlice_v1:
-        case OP_TYPEID::Subtract_v1:
         case OP_TYPEID::TensorIterator_v0:
         case OP_TYPEID::Tile_v0:
         case OP_TYPEID::TopK_v1:

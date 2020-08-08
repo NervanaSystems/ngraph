@@ -789,11 +789,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Subtract> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::TopK> node)
     {
         const auto axis = node->get_axis();
