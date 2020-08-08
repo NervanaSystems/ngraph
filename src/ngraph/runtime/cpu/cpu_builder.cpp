@@ -46,14 +46,15 @@
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/logical_and.hpp"
+#include "ngraph/op/logical_not.hpp"
+#include "ngraph/op/logical_or.hpp"
+#include "ngraph/op/logical_xor.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/or.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
 #include "ngraph/op/relu.hpp"
@@ -66,7 +67,6 @@
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/tan.hpp"
 #include "ngraph/op/tanh.hpp"
-#include "ngraph/op/xor.hpp"
 #include "ngraph/runtime/cpu/cpu_builder_registry.hpp"
 #include "ngraph/runtime/cpu/cpu_kernels.hpp"
 #include "ngraph/runtime/cpu/cpu_op_annotations.hpp"
@@ -227,7 +227,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Or)
+            void Builder::BUILDER_DECL(ngraph::op::LogicalOr)
             {
                 (void)node;
                 auto& functors = external_function->get_functors();
@@ -251,29 +251,6 @@ namespace ngraph
 
             template <>
             void Builder::BUILDER_DECL(ngraph::op::v1::LogicalXor)
-            {
-                (void)node;
-                auto& functors = external_function->get_functors();
-
-                auto element_count = out[0].get_size();
-                auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
-                auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
-                auto out0_buffer_index = external_function->get_buffer_index(out[0].get_name());
-
-                auto functor =
-                    [&, element_count, arg0_buffer_index, arg1_buffer_index, out0_buffer_index](
-                        CPURuntimeContext* ctx, CPUExecutionContext* ectx) {
-                        runtime::cpu::kernel::logical_xor(ctx->buffer_data[arg0_buffer_index],
-                                                          ctx->buffer_data[arg1_buffer_index],
-                                                          ctx->buffer_data[out0_buffer_index],
-                                                          element_count,
-                                                          ectx->arena);
-                    };
-                functors.emplace_back(functor);
-            }
-
-            template <>
-            void Builder::BUILDER_DECL(ngraph::op::Xor)
             {
                 (void)node;
                 auto& functors = external_function->get_functors();
@@ -427,7 +404,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Not)
+            void Builder::BUILDER_DECL(ngraph::op::LogicalNot)
             {
                 BUILD_UNARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::logical_not);
             }
@@ -634,7 +611,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Or)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::LogicalOr)
             {
                 auto element_count = shape_size(node->get_output_shape(0));
 
@@ -647,7 +624,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Xor)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::LogicalXor)
             {
                 auto element_count = shape_size(node->get_output_shape(0));
 
@@ -666,7 +643,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Not)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::LogicalNot)
             {
                 BUILD_UNARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::logical_not);
             }
@@ -717,7 +694,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Tan);
                 REGISTER_OP_BUILDER(Tanh);
 
-                REGISTER_OP_BUILDER(Not);
+                REGISTER_OP_BUILDER(LogicalNot);
                 REGISTER_OP_BUILDER(Equal);
                 REGISTER_OP_BUILDER(NotEqual);
                 REGISTER_OP_BUILDER(Greater);
@@ -727,8 +704,8 @@ namespace ngraph
                 REGISTER_OP_BUILDER(Maximum);
                 REGISTER_OP_BUILDER(Minimum);
                 REGISTER_OP_BUILDER(LogicalAnd);
-                REGISTER_OP_BUILDER(Or);
-                REGISTER_OP_BUILDER(Xor);
+                REGISTER_OP_BUILDER(LogicalOr);
+                REGISTER_OP_BUILDER(LogicalXor);
 
                 REGISTER_CF_BUILDER(Add);
                 REGISTER_CF_BUILDER(Subtract);
@@ -749,11 +726,11 @@ namespace ngraph
                 REGISTER_CF_BUILDER(Less);
                 REGISTER_CF_BUILDER(LessEq);
                 REGISTER_CF_BUILDER(LogicalAnd);
-                REGISTER_CF_BUILDER(Or);
-                REGISTER_CF_BUILDER(Xor);
+                REGISTER_CF_BUILDER(LogicalOr);
+                REGISTER_CF_BUILDER(LogicalXor);
                 REGISTER_CF_BUILDER(Round);
                 REGISTER_CF_BUILDER(Sign);
-                REGISTER_CF_BUILDER(Not);
+                REGISTER_CF_BUILDER(LogicalNot);
                 REGISTER_CF_BUILDER(Power);
             }
         }

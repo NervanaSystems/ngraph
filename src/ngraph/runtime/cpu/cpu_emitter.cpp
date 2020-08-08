@@ -3107,7 +3107,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Not)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalNot)
             {
                 (void)external_function;
                 (void)node;
@@ -4257,7 +4257,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Or)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalOr)
             {
                 (void)external_function;
                 (void)node;
@@ -4279,7 +4279,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Xor)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalXor)
             {
                 (void)external_function;
                 (void)node;

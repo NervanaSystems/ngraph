@@ -1000,6 +1000,13 @@ protected:
                                    logical_and->get_autob());
             break;
         }
+        case OP_TYPEID::LogicalNot_v1:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::logical_not(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
         case OP_TYPEID::LogicalOr_v1:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
@@ -1136,14 +1143,6 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::LogicalNot_v1:
-        case OP_TYPEID::Not_v0:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            reference::logical_not(
-                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
         case OP_TYPEID::NotEqual_v0:
         {
             auto not_equal = static_cast<const op::NotEqual*>(&node);
@@ -1163,17 +1162,6 @@ protected:
                                   node.get_input_shape(0),
                                   node.get_output_shape(0),
                                   oh->get_one_hot_axis());
-            break;
-        }
-        case OP_TYPEID::Or_v0:
-        {
-            auto logical_or = static_cast<const op::Or*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  logical_or->get_autob());
             break;
         }
         case OP_TYPEID::Parameter_v0: break;
@@ -1829,17 +1817,6 @@ protected:
             {
                 throw ngraph_error("Unexpected type");
             }
-            break;
-        }
-        case OP_TYPEID::Xor_v0:
-        {
-            auto logical_xor = static_cast<const op::Or*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_xor->get_autob());
             break;
         }
 

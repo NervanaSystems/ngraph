@@ -256,7 +256,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Not);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalNot);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndices);
             template <>
@@ -306,9 +306,9 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalAnd);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Or);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalOr);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Xor);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalXor);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::CompiledKernel);
             template <>

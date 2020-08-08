@@ -96,6 +96,9 @@
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/logical_and.hpp"
+#include "ngraph/op/logical_not.hpp"
+#include "ngraph/op/logical_or.hpp"
+#include "ngraph/op/logical_xor.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/op/matmul.hpp"
@@ -106,11 +109,9 @@
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
 #include "ngraph/op/negative.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/not_equal.hpp"
 #include "ngraph/op/one_hot.hpp"
 #include "ngraph/op/op.hpp"
-#include "ngraph/op/or.hpp"
 #include "ngraph/op/pad.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/power.hpp"
@@ -141,7 +142,6 @@
 #include "ngraph/op/tanh.hpp"
 #include "ngraph/op/tile.hpp"
 #include "ngraph/op/topk.hpp"
-#include "ngraph/op/xor.hpp"
 #include "ngraph/pass/algebraic_simplification.hpp"
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
@@ -402,7 +402,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::ConvolutionBiasBackpropFiltersBias>},
     {TI(ngraph::runtime::cpu::op::ConvertLayout),
      &runtime::cpu::CPU_Emitter::emit<runtime::cpu::op::ConvertLayout>},
-    {TI(ngraph::op::Not), &runtime::cpu::CPU_Emitter::emit<op::Not>},
+    {TI(ngraph::op::LogicalNot), &runtime::cpu::CPU_Emitter::emit<op::LogicalNot>},
     {TI(ngraph::op::MaxPool), &runtime::cpu::CPU_Emitter::emit<op::MaxPool>},
     {TI(ngraph::op::MaxPoolWithIndices), &runtime::cpu::CPU_Emitter::emit<op::MaxPoolWithIndices>},
     {TI(ngraph::op::Reverse), &runtime::cpu::CPU_Emitter::emit<op::Reverse>},
@@ -437,8 +437,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
     {TI(ngraph::op::LogicalAnd), &runtime::cpu::CPU_Emitter::emit<op::LogicalAnd>},
-    {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
-    {TI(ngraph::op::Xor), &runtime::cpu::CPU_Emitter::emit<op::Xor>},
+    {TI(ngraph::op::LogicalOr), &runtime::cpu::CPU_Emitter::emit<op::LogicalOr>},
+    {TI(ngraph::op::LogicalXor), &runtime::cpu::CPU_Emitter::emit<op::LogicalXor>},
     {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},
     {TI(ngraph::op::CompiledKernel), &runtime::cpu::CPU_Emitter::emit<op::CompiledKernel>},
     {TI(ngraph::op::LRN), &runtime::cpu::CPU_Emitter::emit<ngraph::op::LRN>},

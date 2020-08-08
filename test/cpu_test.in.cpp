@@ -1244,11 +1244,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto less = make_shared<op::Less>(g, h);
     auto less_eq = make_shared<op::LessEq>(g, h);
     auto logical_and = make_shared<op::LogicalAnd>(i, j);
-    auto logical_or = make_shared<op::Or>(i, j);
-    auto logical_xor = make_shared<op::Xor>(i, j);
+    auto logical_or = make_shared<op::LogicalOr>(i, j);
+    auto logical_xor = make_shared<op::LogicalXor>(i, j);
     auto ceil = make_shared<op::Ceiling>(k);
     auto floor = make_shared<op::Floor>(k);
-    auto logical_not = make_shared<op::Not>(j);
+    auto logical_not = make_shared<op::LogicalNot>(j);
     // Note: The CPU functors do not actually support autobroadcast yet; instead the pass itself
     // falls back if autobroadcasting is in use. Putting this check here just to make sure the
     // fallback works as expected, but if direct support for autobroadcast is added to the CPU
@@ -1287,11 +1287,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::Less>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::LogicalAnd>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Xor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::LogicalOr>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::LogicalXor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Not>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::LogicalNot>(func), 0);
 
     // expected values
     vector<int> add_expected{2, 4, 6, 8};

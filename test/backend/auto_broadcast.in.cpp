@@ -125,7 +125,8 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
 
     check_auto_bcast<op::LogicalAnd, char, char>({{1, 0, 1, 0, 0, 1}, {1, 0, 1}},
                                                  {1, 0, 1, 0, 0, 1});
-    check_auto_bcast<op::Or, char, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 0, 1, 1, 1, 1});
+    check_auto_bcast<op::LogicalOr, char, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}},
+                                                {1, 0, 1, 1, 1, 1});
 
     check_auto_bcast<op::Equal, uint8_t, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 1, 0, 0, 0, 0});
     check_auto_bcast<op::Greater, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 0, 0, 1, 0, 0});
@@ -157,7 +158,7 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}}, {1, 4, 27, 4, 25, 216}, autob, true);
     check_auto_bcast<op::LogicalAnd, char, char>(
         {{1, 0, 1, 0, 0, 1}, {1, 0, 1}}, {1, 0, 1, 0, 0, 1}, autob);
-    check_auto_bcast<op::Or, char, char>(
+    check_auto_bcast<op::LogicalOr, char, char>(
         {{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 0, 1, 1, 1, 1}, autob);
 
     check_auto_bcast<op::Equal, uint8_t, char>(

@@ -450,23 +450,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalNot> node)
-    {
-        auto replacement_node = make_shared<op::v0::Not>(node->input_value(0));
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalOr> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalXor> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);

@@ -19,8 +19,8 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/logical_not.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/select.hpp"
 
 using namespace std;
@@ -109,7 +109,8 @@ void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
     auto y = input_value(2);
 
     auto p_as_x_type = make_shared<op::Convert>(p, x.get_element_type());
-    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y.get_element_type());
+    auto not_p_as_y_type =
+        make_shared<op::Convert>(make_shared<op::LogicalNot>(p), y.get_element_type());
 
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);
@@ -166,7 +167,8 @@ void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
     auto y = input_value(2);
 
     auto p_as_x_type = make_shared<op::Convert>(p, x.get_element_type());
-    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y.get_element_type());
+    auto not_p_as_y_type =
+        make_shared<op::Convert>(make_shared<op::LogicalNot>(p), y.get_element_type());
 
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);
