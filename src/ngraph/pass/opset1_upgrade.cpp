@@ -439,11 +439,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Multiply> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::Not> node)
     {
         auto replacement_node = make_shared<op::v1::LogicalNot>(node->input_value(0));

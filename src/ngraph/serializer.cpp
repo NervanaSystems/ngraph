@@ -45,9 +45,10 @@ static PartialShape read_partial_shape(json j);
 namespace
 {
 #define OBSOLETE_OPS                                                                               \
-    NGRAPH_OP(GetOutputElement, 0)                                                                 \
     NGRAPH_OP(Add, 0)                                                                              \
     NGRAPH_OP(Divide, 0)                                                                           \
+    NGRAPH_OP(GetOutputElement, 0)                                                                 \
+    NGRAPH_OP(Multiply, 0)                                                                         \
     NGRAPH_OP(Subtract, 0)
 
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
@@ -1869,7 +1870,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Multiply_v0:
         {
-            node = make_shared<op::v0::Multiply>(
+            node = make_shared<op::v1::Multiply>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -3229,16 +3230,6 @@ json JSONSerializer::serialize_node(const Node& n)
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
         tmp = static_cast<const op::v0::Minimum*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
-    case OP_TYPEID::Multiply_v0:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v0::Multiply*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());

@@ -1129,7 +1129,7 @@ protected:
                                   minimum->get_autob());
             break;
         }
-        case OP_TYPEID::Multiply_v0:
+        case OP_TYPEID::Multiply_v1:
         {
             auto multiply = static_cast<const op::Multiply*>(&node);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
@@ -1914,7 +1914,6 @@ protected:
         case OP_TYPEID::MaxPool_v1:
         case OP_TYPEID::Minimum_v1:
         case OP_TYPEID::Mod_v1:
-        case OP_TYPEID::Multiply_v1:
         case OP_TYPEID::MVN_v0:
         case OP_TYPEID::NonMaxSuppression_v1:
         case OP_TYPEID::NonMaxSuppression_v3:
