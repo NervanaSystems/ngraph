@@ -295,7 +295,7 @@ namespace
         const auto input_arg1 = node->input_value(1);
         const auto autob = node->get_autob();
         const bool pydiv = node->is_pythondiv();
-        auto replacement_node = make_shared<op::v0::Divide>(input_arg0, input_arg1, pydiv, autob);
+        auto replacement_node = make_shared<op::v1::Divide>(input_arg0, input_arg1, pydiv, autob);
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -635,7 +635,7 @@ namespace
         }
 
         const auto replacement_node =
-            std::make_shared<op::v0::Divide>(sum_node, count_node, op::AutoBroadcastSpec::NUMPY);
+            std::make_shared<op::v1::Divide>(sum_node, count_node, op::AutoBroadcastSpec::NUMPY);
         replace_node(node, replacement_node);
         return replacement_node;
     }

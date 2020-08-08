@@ -46,7 +46,8 @@ namespace
 {
 #define OBSOLETE_OPS                                                                               \
     NGRAPH_OP(GetOutputElement, 0)                                                                 \
-    NGRAPH_OP(Add, 0)
+    NGRAPH_OP(Add, 0)                                                                              \
+    NGRAPH_OP(Divide, 0)
 
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
     // Abs,
@@ -1334,7 +1335,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Divide_v0:
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
-            node = make_shared<op::v0::Divide>(
+            node = make_shared<op::v1::Divide>(
                 args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -2944,18 +2945,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
-        break;
-    }
-    case OP_TYPEID::Divide_v0:
-    {
-        const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
-        auto tmp = static_cast<const op::v0::Divide*>(&n);
-        bea_node = tmp;
-        node["pythondiv"] = tmp->is_pythondiv();
-        if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
-        }
         break;
     }
     case OP_TYPEID::Dot_v0:

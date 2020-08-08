@@ -118,35 +118,10 @@ TEST(opset_transform, opset0_divide_downgrade_pass)
 
     auto divide_v0_result = f->get_results().at(0);
     auto node = divide_v0_result->get_input_node_shared_ptr(0);
-    auto divide_v0_node = as_type_ptr<op::v0::Divide>(node);
-    ASSERT_TRUE(divide_v0_node);
-    EXPECT_EQ(divide_v0_node->is_pythondiv(), pydiv);
-    EXPECT_EQ(divide_v0_node->get_autob(), np_auto_b);
-    EXPECT_EQ(divide_v0_node->get_output_element_type(0), element::f32);
-    EXPECT_EQ(divide_v0_node->get_output_shape(0), (Shape{1, 3, 2}));
-}
-
-TEST(opset_transform, opset1_divide_upgrade_pass)
-{
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2});
-    const op::AutoBroadcastSpec none_auto_b = op::AutoBroadcastSpec(op::AutoBroadcastType::NONE);
-    const bool pydiv = false;
-
-    auto div_v0 = make_shared<op::v0::Divide>(A, B, pydiv);
-    auto result = make_shared<op::Result>(div_v0);
-    auto f = make_shared<Function>(ResultVector{result}, ParameterVector{A, B});
-
-    ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
-    pass_manager.run_passes(f);
-
-    auto divide_v1_result = f->get_results().at(0);
-    auto node = divide_v1_result->get_input_node_shared_ptr(0);
     auto divide_v1_node = as_type_ptr<op::v1::Divide>(node);
     ASSERT_TRUE(divide_v1_node);
     EXPECT_EQ(divide_v1_node->is_pythondiv(), pydiv);
-    EXPECT_EQ(divide_v1_node->get_autob(), none_auto_b);
+    EXPECT_EQ(divide_v1_node->get_autob(), np_auto_b);
     EXPECT_EQ(divide_v1_node->get_output_element_type(0), element::f32);
     EXPECT_EQ(divide_v1_node->get_output_shape(0), (Shape{1, 3, 2}));
 }

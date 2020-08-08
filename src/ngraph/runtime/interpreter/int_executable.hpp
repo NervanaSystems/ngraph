@@ -723,7 +723,7 @@ protected:
 
             break;
         }
-        case OP_TYPEID::Divide_v0:
+        case OP_TYPEID::Divide_v1:
         {
             const op::Divide* divop = static_cast<const op::Divide*>(&node);
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
@@ -1877,7 +1877,6 @@ protected:
         case OP_TYPEID::DeformablePSROIPooling_v1:
         case OP_TYPEID::DepthToSpace_v0:
         case OP_TYPEID::DetectionOutput_v0:
-        case OP_TYPEID::Divide_v1:
         case OP_TYPEID::DynBroadcast_v0:
         case OP_TYPEID::DynPad_v0:
         case OP_TYPEID::DynReplaceSlice_v0:

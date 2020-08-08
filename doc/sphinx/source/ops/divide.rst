@@ -56,6 +56,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Divide
+.. doxygenclass:: ngraph::op::v1::Divide
    :project: ngraph
    :members:

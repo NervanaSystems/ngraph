@@ -489,7 +489,7 @@ static bool simplify_add(shared_ptr<Node> add)
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
 static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = as_type_ptr<op::v0::Divide>(n->input_value(0).get_node_shared_ptr()))
+    if (auto div = as_type_ptr<op::v1::Divide>(n->input_value(0).get_node_shared_ptr()))
     {
         if (auto exp = as_type_ptr<op::v0::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
