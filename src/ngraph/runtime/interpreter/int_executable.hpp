@@ -259,17 +259,6 @@ protected:
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
             break;
         }
-        case OP_TYPEID::And_v0:
-        {
-            auto logical_and = static_cast<const op::And*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_and->get_autob());
-            break;
-        }
         case OP_TYPEID::Any_v0:
         {
             const op::Any* any = static_cast<const op::Any*>(&node);

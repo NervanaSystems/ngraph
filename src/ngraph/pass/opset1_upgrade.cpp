@@ -44,11 +44,6 @@ namespace
     // Default is that we did nothing
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::And> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::AvgPool> node)
     {
         auto rounding_mode =

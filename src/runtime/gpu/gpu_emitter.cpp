@@ -83,7 +83,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::And>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::LogicalAnd>(
+        compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)

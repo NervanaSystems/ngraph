@@ -51,7 +51,6 @@
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/all.hpp"
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/and.hpp"
 #include "ngraph/op/any.hpp"
 #include "ngraph/op/argmax.hpp"
 #include "ngraph/op/argmin.hpp"
@@ -96,6 +95,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/logical_and.hpp"
 #include "ngraph/op/lrn.hpp"
 #include "ngraph/op/lstm_cell.hpp"
 #include "ngraph/op/matmul.hpp"
@@ -436,7 +436,7 @@ static const runtime::cpu::OpMap dispatcher{
      &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiplyBackprop>},
     {TI(ngraph::op::Softmax), &runtime::cpu::CPU_Emitter::emit<op::Softmax>},
     {TI(ngraph::op::SigmoidBackprop), &runtime::cpu::CPU_Emitter::emit<op::SigmoidBackprop>},
-    {TI(ngraph::op::And), &runtime::cpu::CPU_Emitter::emit<op::And>},
+    {TI(ngraph::op::LogicalAnd), &runtime::cpu::CPU_Emitter::emit<op::LogicalAnd>},
     {TI(ngraph::op::Or), &runtime::cpu::CPU_Emitter::emit<op::Or>},
     {TI(ngraph::op::Xor), &runtime::cpu::CPU_Emitter::emit<op::Xor>},
     {TI(ngraph::op::CPULeakyRelu), &runtime::cpu::CPU_Emitter::emit<op::CPULeakyRelu>},

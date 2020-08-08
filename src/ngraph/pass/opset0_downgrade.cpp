@@ -450,11 +450,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalAnd> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalNot> node)
     {
         auto replacement_node = make_shared<op::v0::Not>(node->input_value(0));

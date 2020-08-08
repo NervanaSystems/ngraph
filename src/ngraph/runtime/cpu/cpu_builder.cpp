@@ -28,7 +28,6 @@
 #include "ngraph/op/acos.hpp"
 #include "ngraph/op/add.hpp"
 #include "ngraph/op/allreduce.hpp"
-#include "ngraph/op/and.hpp"
 #include "ngraph/op/asin.hpp"
 #include "ngraph/op/atan.hpp"
 #include "ngraph/op/atan2.hpp"
@@ -46,6 +45,7 @@
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/logical_and.hpp"
 #include "ngraph/op/maximum.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/multiply.hpp"
@@ -204,7 +204,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::And)
+            void Builder::BUILDER_DECL(ngraph::op::LogicalAnd)
             {
                 (void)node;
                 auto& functors = external_function->get_functors();
@@ -621,7 +621,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::And)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::LogicalAnd)
             {
                 auto element_count = shape_size(node->get_output_shape(0));
 
@@ -726,7 +726,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(LessEq);
                 REGISTER_OP_BUILDER(Maximum);
                 REGISTER_OP_BUILDER(Minimum);
-                REGISTER_OP_BUILDER(And);
+                REGISTER_OP_BUILDER(LogicalAnd);
                 REGISTER_OP_BUILDER(Or);
                 REGISTER_OP_BUILDER(Xor);
 
@@ -748,7 +748,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(GreaterEq);
                 REGISTER_CF_BUILDER(Less);
                 REGISTER_CF_BUILDER(LessEq);
-                REGISTER_CF_BUILDER(And);
+                REGISTER_CF_BUILDER(LogicalAnd);
                 REGISTER_CF_BUILDER(Or);
                 REGISTER_CF_BUILDER(Xor);
                 REGISTER_CF_BUILDER(Round);

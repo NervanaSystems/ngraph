@@ -46,6 +46,7 @@ namespace
 {
 #define OBSOLETE_OPS                                                                               \
     NGRAPH_OP(Add, 0)                                                                              \
+    NGRAPH_OP(And, 0)                                                                              \
     NGRAPH_OP(Divide, 0)                                                                           \
     NGRAPH_OP(GetOutputElement, 0)                                                                 \
     NGRAPH_OP(Multiply, 0)                                                                         \
@@ -925,7 +926,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::And_v0:
         {
-            node = make_shared<op::And>(
+            node = make_shared<op::LogicalAnd>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -2677,15 +2678,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::AllReduce_v0: { break;
-    }
-    case OP_TYPEID::And_v0:
-    {
-        auto tmp = static_cast<const op::And*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
     }
     case OP_TYPEID::Any_v0:
     {

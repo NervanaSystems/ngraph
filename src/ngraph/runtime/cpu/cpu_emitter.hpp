@@ -304,7 +304,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Result);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::And);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalAnd);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Or);
             template <>

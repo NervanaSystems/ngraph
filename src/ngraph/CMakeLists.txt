@@ -125,8 +125,6 @@ set (SRC
     op/all.hpp
     op/allreduce.cpp
     op/allreduce.hpp
-    op/and.cpp
-    op/and.hpp
     op/any.cpp
     op/any.hpp
     op/argmax.cpp
@@ -292,6 +290,8 @@ set (SRC
     op/less.hpp
     op/log.cpp
     op/log.hpp
+    op/logical_and.cpp
+    op/logical_and.hpp
     op/lrn.cpp
     op/lrn.hpp
     op/lstm_cell.cpp

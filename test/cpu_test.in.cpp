@@ -1243,7 +1243,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto greater_eq = make_shared<op::GreaterEq>(g, h);
     auto less = make_shared<op::Less>(g, h);
     auto less_eq = make_shared<op::LessEq>(g, h);
-    auto logical_and = make_shared<op::And>(i, j);
+    auto logical_and = make_shared<op::LogicalAnd>(i, j);
     auto logical_or = make_shared<op::Or>(i, j);
     auto logical_xor = make_shared<op::Xor>(i, j);
     auto ceil = make_shared<op::Ceiling>(k);
@@ -1286,7 +1286,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::GreaterEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Less>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::LogicalAnd>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Xor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
