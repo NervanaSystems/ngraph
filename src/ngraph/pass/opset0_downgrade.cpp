@@ -91,10 +91,6 @@ namespace
 
     // Default is that we did nothing
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Add> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
-    }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::AvgPool> node)
     {

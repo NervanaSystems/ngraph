@@ -349,7 +349,9 @@ TEST(util, test_fprop_cache)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto output = (A + B) * C + A;
+    auto add1 = make_shared<op::Add>(A, B, op::AutoBroadcastType::NONE);
+    auto mul1 = make_shared<op::Multiply>(add1, C, op::AutoBroadcastType::NONE);
+    auto output = make_shared<op::Add>(mul1, A, op::AutoBroadcastType::NONE);
 
     auto f = make_shared<Function>(OutputVector{output}, ParameterVector{A, B, C});
 
