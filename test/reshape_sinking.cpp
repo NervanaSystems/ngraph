@@ -46,6 +46,28 @@
 using namespace ngraph;
 using namespace std;
 
+TEST(reshape_sinking, simple)
+{
+    Shape shape_nhwc{16, 28, 28, 1};
+    Shape shape_nchw{16, 1, 28, 28};
+    auto a = make_shared<op::Parameter>(element::i32, shape_nhwc);
+    auto reshape = make_shared<op::Reshape>(a, AxisVector{0, 3, 1, 2}, shape_nchw);
+    auto absn = make_shared<op::Abs>(reshape);
+    auto absn2 = make_shared<op::Abs>(absn);
+    auto reshape1 = make_shared<op::Reshape>(absn2, AxisVector{0, 2, 3, 1}, shape_nhwc);
+    auto func = make_shared<Function>(OutputVector{reshape1}, ParameterVector{a});
+    pass::Manager pass_manager;
+    size_t before_count = count_ops_of_type<op::Reshape>(func);
+    plot_graph(func,"before-RS-simple.png");
+    pass_manager.register_pass<pass::ReshapeSinking>();
+    pass_manager.run_passes(func);
+    plot_graph(func,"after-RS-simple.png");
+    size_t after_count = count_ops_of_type<op::Reshape>(func);
+    std::cout << after_count << "\n";
+    ASSERT_EQ(func->get_results().at(1)->get_argument(0), absn2);
+    ASSERT_EQ(before_count, after_count);
+}
+
 TEST(reshape_sinking, edge_splitting)
 {
     // checks if Reshapes are pushed through op::Abs, but stopped by Sum
@@ -59,10 +81,12 @@ TEST(reshape_sinking, edge_splitting)
     auto func = make_shared<Function>(OutputVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;
     // size_t before_count = count_ops_of_type<op::Reshape>(func);
+    plot_graph(func,"before-RS.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
-    pass_manager.register_pass<pass::ReshapeElimination>();
-    pass_manager.register_pass<pass::CommonSubexpressionElimination>();
+    //pass_manager.register_pass<pass::ReshapeElimination>();
+    //pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     pass_manager.run_passes(func);
+    plot_graph(func,"after-RS.png");
     ASSERT_EQ(func->get_results().at(1)->get_argument(0), sum);
     auto new_reshape = as_type_ptr<op::Reshape>(func->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_reshape);
@@ -114,6 +138,7 @@ TEST(reshape_sinking, mnist_conv)
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
     pass::Manager pass_manager;
+    plot_graph(func,"before.png");
     size_t before_count = count_ops_of_type<op::Reshape>(func);
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
@@ -121,6 +146,7 @@ TEST(reshape_sinking, mnist_conv)
     // pass_manager.register_pass<pass::CoreFusion>();
     // pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
     pass_manager.run_passes(func);
+    plot_graph(func,"after.png");
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
 }
@@ -149,10 +175,12 @@ TEST(reshape_sinking, nasnet_pooladd)
 
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(func);
+    plot_graph(func,"before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     pass_manager.run_passes(func);
+    plot_graph(func,"after.png");
     size_t before_after = count_ops_of_type<op::Reshape>(func);
     ASSERT_LE(before_after, before_count);
 }
@@ -185,10 +213,12 @@ TEST(reshape_sinking, slice_pad)
 
     pass::Manager pass_manager;
     size_t before_count = count_ops_of_type<op::Reshape>(f);
+    plot_graph(f,"before.png");
     pass_manager.register_pass<pass::ReshapeSinking>();
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.register_pass<pass::CommonSubexpressionElimination>();
     pass_manager.run_passes(f);
+    plot_graph(f,"after.png");
     size_t before_after = count_ops_of_type<op::Reshape>(f);
     ASSERT_LE(before_after, before_count);
 }
