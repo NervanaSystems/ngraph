@@ -215,7 +215,7 @@ void runtime::mlir::NgraphToMlir::set_tensor_value(const Output<Node>& t, ::mlir
         {
         case runtime::mlir::OP_TYPEID::Parameter_v0: break;
         case runtime::mlir::OP_TYPEID::Result_v0: break;
-        case runtime::mlir::OP_TYPEID::Add_v0:
+        case runtime::mlir::OP_TYPEID::Add_v1:
         {
             NGRAPH_INFO << *ngraph_op;
             ::mlir::Value result = ::mlir::edsc::ValueBuilder<::mlir::ngraph::AddOp>(

@@ -149,7 +149,7 @@ bool runtime::mlir::MlirExecutable::call(const vector<shared_ptr<runtime::Tensor
     if (!m_engine)
     {
         NGRAPH_INFO;
-        init();
+        // init();
     }
 
     // if (m_first_iteration)
