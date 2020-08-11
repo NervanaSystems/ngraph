@@ -1846,7 +1846,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_sigmoid_multiply_fusion_backward)
         auto input_1_param = make_shared<op::Parameter>(element::f32, data_shape);
         auto input_2_param = make_shared<op::Parameter>(element::f32, data_shape);
         auto sigmoid_0 = make_shared<op::Sigmoid>(input_0_param);
-        auto sigmoid_1 = make_shared<op::Add>(input_1_param, input_2_param);
+        auto sigmoid_1 =
+            make_shared<op::Add>(input_1_param, input_2_param, op::AutoBroadcastType::NONE);
         vector<float> expected_0{8.65093f, 8.81946f, 5.60191f, 2.89668f};
         vector<float> expected_1{14.6212f, 17.6159f, 19.0515f, 19.6403f};
         ParameterVector input_params{input_0_param, input_1_param, input_2_param};

@@ -55,7 +55,8 @@ OutputVector op::v0::Selu::decompose_op() const
                 std::make_shared<op::v1::Multiply>(
                     alpha,
                     std::make_shared<op::Exp>(std::make_shared<op::v1::Minimum>(data, zero_node))),
-                alpha)))};
+                alpha)),
+        AutoBroadcastType::NUMPY)};
 }
 
 shared_ptr<Node> op::v0::Selu::clone_with_new_inputs(const OutputVector& new_args) const
