@@ -97,6 +97,15 @@ install(
 # Fetch and install oneDNN
 #------------------------------------------------------------------------------
 
+if(TARGET DNNL::dnnl)
+    return()
+endif()
+
+if(TARGET dnnl)
+    add_library(DNNL::dnnl ALIAS dnnl)
+    return()
+endif()
+
 set(DNNL_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
 set(DNNL_BUILD_EXAMPLES OFF CACHE INTERNAL "" FORCE)
 set(DNNL_ENABLE_CONCURRENT_EXEC ON CACHE INTERNAL "" FORCE)
@@ -110,8 +119,8 @@ message(STATUS "Fetching oneDNN")
 
 FetchContent_Declare(
     ext_dnnl
-    URL       https://github.com/oneapi-src/oneDNN/archive/v1.6.zip
-    URL_HASH  SHA1=712d77f8756adf1c53c833a7f5e83ad816b5a504
+    URL       https://github.com/oneapi-src/oneDNN/archive/v1.6.1.zip
+    URL_HASH  SHA1=5ebbe215ac1dd3121fe34511c9ffb597ec1d7a48
 )
 
 FetchContent_GetProperties(ext_dnnl)
