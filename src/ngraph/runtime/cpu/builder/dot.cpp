@@ -215,9 +215,10 @@ namespace ngraph
                                     arg1_buffer_index,
                                     out_buffer_index](CPURuntimeContext* ctx,
                                                       CPUExecutionContext* /* ectx */) {
-                        dnnl_sgemm(
-                            transpose_A ? 't' : 'n',
-                            transpose_B ? 't' : 'n',
+                        cblas::cblas_sgemm(
+                            cblas::Layout::RowMajor,
+                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
                             m,
                             n,
                             k,

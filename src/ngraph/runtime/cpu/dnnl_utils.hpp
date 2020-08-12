@@ -68,6 +68,9 @@ namespace ngraph
             namespace dnnl_utils
             {
                 extern dnnl::engine global_cpu_engine;
+#ifndef _WIN32
+                extern "C" void mkl_serv_free_buffers();
+#endif
                 dnnl::memory::FORMAT
                     CreateNativeDataFormat(const ngraph::runtime::cpu::LayoutDescriptor& layout);
                 dnnl::memory::FORMAT CreateNativeDataFormat(const Shape& shape);

@@ -23,6 +23,124 @@
 
 #include "ngraph/op/pad.hpp"
 
+// CBLAS types and wrappers
+
+namespace cblas
+{
+    enum class Layout
+    {
+        RowMajor = 101,
+        ColMajor = 102
+    };
+
+    enum class Transpose
+    {
+        None = 111,
+        Transpose = 112,
+        ConjTrans = 113
+    };
+
+    enum class UpperLower
+    {
+        Upper = 121,
+        Lower = 122
+    };
+
+    enum class Diag
+    {
+        NonUnit = 131,
+        Unit = 132
+    };
+
+    enum class Side
+    {
+        Left = 141,
+        Right = 142
+    };
+
+    enum class Storage
+    {
+        Packed = 151
+    };
+
+    enum class Ident
+    {
+        AMatrix = 161,
+        BMatrix = 162
+    };
+
+    enum class Offset
+    {
+        RowOffset = 171,
+        ColOffset = 172,
+        FixOffset = 173
+    };
+
+    extern "C" {
+    void cblas_sgemm(const Layout layout,
+                     const Transpose TransA,
+                     const Transpose TransB,
+                     const int64_t M,
+                     const int64_t N,
+                     const int64_t K,
+                     const float alpha,
+                     const float* A,
+                     const int64_t lda,
+                     const float* B,
+                     const int64_t ldb,
+                     const float beta,
+                     float* C,
+                     const int64_t ldc);
+
+    void cblas_dgemm(const Layout layout,
+                     const Transpose TransA,
+                     const Transpose TransB,
+                     const int64_t M,
+                     const int64_t N,
+                     const int64_t K,
+                     const double alpha,
+                     const double* A,
+                     const int64_t lda,
+                     const double* B,
+                     const int64_t ldb,
+                     const double beta,
+                     double* C,
+                     const int64_t ldc);
+
+    void cblas_sgemm_batch(const Layout Layout,
+                           const Transpose* transa_array,
+                           const Transpose* transb_array,
+                           const int64_t* m_array,
+                           const int64_t* n_array,
+                           const int64_t* k_array,
+                           const float* alpha_array,
+                           const float** a_array,
+                           const int64_t* lda_array,
+                           const float** b_array,
+                           const int64_t* ldb_array,
+                           const float* beta_array,
+                           float** c_array,
+                           const int64_t* ldc_array,
+                           const int64_t group_count,
+                           const int64_t* group_size);
+    }
+}
+
+namespace mkl
+{
+    extern "C" {
+    void MKL_Somatcopy(char ordering,
+                       char trans,
+                       size_t rows,
+                       size_t cols,
+                       const float alpha,
+                       const float* A,
+                       size_t lda,
+                       float* B,
+                       size_t ldb);
+    }
+}
+
 namespace ngraph
 {
     class AxisSet;

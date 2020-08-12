@@ -94,9 +94,10 @@ namespace ngraph
                     switch (element_type)
                     {
                     case Type_t::f32:
-                        dnnl_sgemm(
-                            transpose_A ? 't' : 'n',
-                            transpose_B ? 't' : 'n',
+                        cblas::cblas_sgemm(
+                            cblas::Layout::RowMajor,
+                            transpose_A ? cblas::Transpose::Transpose : cblas::Transpose::None,
+                            transpose_B ? cblas::Transpose::Transpose : cblas::Transpose::None,
                             m,
                             n,
                             k,
@@ -152,9 +153,10 @@ namespace ngraph
                             bias_functor =
                                 [&, ones_row, arg2_shape, arg2_buffer_index, out0_buffer_index](
                                     CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
-                                    dnnl_sgemm(
-                                        'n',
-                                        'n',
+                                    cblas::cblas_sgemm(
+                                        cblas::Layout::RowMajor,
+                                        cblas::Transpose::None,
+                                        cblas::Transpose::None,
                                         arg2_shape[0],
                                         arg2_shape[1],
                                         1,
@@ -174,9 +176,10 @@ namespace ngraph
                             bias_functor =
                                 [&, ones_col, arg2_shape, arg2_buffer_index, out0_buffer_index](
                                     CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
-                                    dnnl_sgemm(
-                                        'n',
-                                        'n',
+                                    cblas::cblas_sgemm(
+                                        cblas::Layout::RowMajor,
+                                        cblas::Transpose::None,
+                                        cblas::Transpose::None,
                                         arg2_shape[0],
                                         arg2_shape[1],
                                         1,
@@ -206,9 +209,10 @@ namespace ngraph
                                 vector<float> bias(
                                     arg2_shape[1],
                                     *static_cast<float*>(ctx->buffer_data[arg2_buffer_index]));
-                                dnnl_sgemm(
-                                    'n',
-                                    'n',
+                                cblas::cblas_sgemm(
+                                    cblas::Layout::RowMajor,
+                                    cblas::Transpose::None,
+                                    cblas::Transpose::None,
                                     arg2_shape[0],
                                     arg2_shape[1],
                                     1,

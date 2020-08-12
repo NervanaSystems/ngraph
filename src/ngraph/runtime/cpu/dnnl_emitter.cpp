@@ -61,6 +61,12 @@ DNNLEmitter::~DNNLEmitter()
         delete p;
     for (auto s : m_dnnl_scratchpad_mds)
         delete s;
+#ifndef _WIN32
+    // To avoid memory leak in dnnl, release any buffers that are not free'd yet.
+    // https://software.intel.com/en-us/mkl-linux-developer-guide-avoiding-memory-leaks-in-intel-mkl
+    // mkl_free_buffers() is not exposed at this point, hence using mkl_serv_free_buffers()
+    dnnl_utils::mkl_serv_free_buffers();
+#endif
 }
 
 std::vector<dnnl::primitive*>& DNNLEmitter::get_dnnl_primitives()
