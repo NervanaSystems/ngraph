@@ -457,7 +457,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_add)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(X0 + X1, ParameterVector{X0, X1});
+        auto add = make_shared<op::Add>(X0, X1, op::AutoBroadcastType::NONE);
+        return make_shared<Function>(add, ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -474,7 +475,11 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_add_nested)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>((X0 + X1) + (X1 + X0), ParameterVector{X0, X1});
+        auto add1 = make_shared<op::Add>(X0, X1, op::AutoBroadcastType::NONE);
+        auto add2 = make_shared<op::Add>(X1, X0, op::AutoBroadcastType::NONE);
+        auto add3 = make_shared<op::Add>(add1, add2, op::AutoBroadcastType::NONE);
+
+        return make_shared<Function>(add3, ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -1146,7 +1151,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_select_nested)
         auto X0 = make_shared<op::Parameter>(element::boolean, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         auto X2 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Select>(X0, X2 + X1, X2 - X1),
+        auto add1 = make_shared<op::Add>(X2, X1, op::AutoBroadcastType::NONE);
+        return make_shared<Function>(make_shared<op::Select>(X0, add1, X2 - X1),
                                      ParameterVector{X0, X1, X2});
     };
 
@@ -1533,7 +1539,9 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_abc)
         auto X0 = make_shared<op::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::Parameter>(element::f32, shape);
         auto X2 = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>((X0 + X1) * X2, ParameterVector{X0, X1, X2});
+        auto add = make_shared<op::Add>(X0, X1, op::AutoBroadcastType::NONE);
+        auto mul = make_shared<op::Multiply>(add, X2);
+        return make_shared<Function>(mul, ParameterVector{X0, X1, X2});
     };
 
     EXPECT_TRUE(

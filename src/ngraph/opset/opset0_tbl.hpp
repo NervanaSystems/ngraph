@@ -52,7 +52,7 @@
 
 NGRAPH_OP(Abs, ngraph::op::v0)
 NGRAPH_OP(Acos, ngraph::op::v0)
-NGRAPH_OP(Add, ngraph::op::v0)
+NGRAPH_OP(Add, ngraph::op::v1)
 NGRAPH_OP(All, ngraph::op::v0)
 NGRAPH_OP(AllReduce, ngraph::op::v0)
 NGRAPH_OP(And, ngraph::op::v0)
