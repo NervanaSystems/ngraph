@@ -14,33 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OPS
-#define NGRAPH_OPS
+#pragma once
 
-include "NgraphDialect.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
+#include "Conversion/NgraphToStandard/NgraphToStandard.h"
 
-//===----------------------------------------------------------------------===//
-// Ngraph Operations
-//===----------------------------------------------------------------------===//
+namespace mlir {
 
-def Ngraph_AddOp : Ngraph_Op<"Add", [NoSideEffect, SameOperandsAndResultType]> {
-    let summary = "Performs elementwise addition on the inputs.";
+/// Generate the code for registering conversion passes.
+#define GEN_PASS_REGISTRATION
+#include "Conversion/Passes.h.inc"
 
-    let description = [{
-        Add tensors
-    }];
+} // namespace mlir
 
-    let arguments = (ins
-        F32:$input1,
-        F32:$input2
-    );
-
-    let results = (outs
-        F32:$res
-    );
-
-    // Ngraph_DerivedOperandTypeAttr T = Ngraph_DerivedOperandTypeAttr<0>;
-}
-
-#endif // NGRAPH_OPS
+#endif // MLIR_CONVERSION_PASSES_H

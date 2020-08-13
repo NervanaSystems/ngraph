@@ -111,8 +111,7 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     set_parameters_and_results(*m_function);
 
     m_context.reset(new ::mlir::MLIRContext());
-    m_module =
-        NgraphToMlir::convert_function(m_function.get(), m_context.get());
+    m_module = NgraphToMlir::convert_function(m_function.get(), m_context.get());
 
     // The m_module at this point contains MLIR ngraph ops, it must be lowered to LLVM IR
     // before generating the engine
@@ -123,10 +122,9 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     llvm::InitializeNativeTargetAsmPrinter();
 
     // An optimization pipeline to use within the execution engine.
-    auto optPipeline = ::mlir::makeOptimizingTransformer(
-        optimization_level,
-        /*sizeLevel=*/0,
-        /*targetMachine=*/nullptr);
+    auto optPipeline = ::mlir::makeOptimizingTransformer(optimization_level,
+                                                         /*sizeLevel=*/0,
+                                                         /*targetMachine=*/nullptr);
 
     // Create an MLIR execution engine. The execution engine eagerly JIT-compiles the module.
     auto maybeEngine = ::mlir::ExecutionEngine::create(*m_module, optPipeline);

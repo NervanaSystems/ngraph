@@ -22,11 +22,11 @@
 
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/IR/MLIRContext.h"
+#include "mlir/InitAllDialects.h"
+#include "mlir/InitAllTranslations.h"
 #include "ngraph/runtime/backend.hpp"
 #include "ngraph/runtime/mlir/mlir_backend_visibility.hpp"
 #include "ngraph/runtime/tensor.hpp"
-#include "mlir/InitAllDialects.h"
-#include "mlir/InitAllTranslations.h"
 
 namespace ngraph
 {
@@ -71,7 +71,6 @@ protected:
     // int dumpLLVMIR(mlir::ModuleOp module);
     // int runJit(mlir::ModuleOp module);
     void optimize_dialect();
-
 
     int get_alignment() const { return 64; }
     std::shared_ptr<Function> m_function;

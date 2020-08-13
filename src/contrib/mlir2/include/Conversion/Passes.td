@@ -14,33 +14,22 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_OPS
-#define NGRAPH_OPS
+#ifndef MLIR_NGRAPH_CONVERSION_PASSES
+#define MLIR_NGRAPH_CONVERSION_PASSES
 
-include "NgraphDialect.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/Pass/PassBase.td"
 
 //===----------------------------------------------------------------------===//
-// Ngraph Operations
+// NgraphToStandard
 //===----------------------------------------------------------------------===//
 
-def Ngraph_AddOp : Ngraph_Op<"Add", [NoSideEffect, SameOperandsAndResultType]> {
-    let summary = "Performs elementwise addition on the inputs.";
+def ConvertNgraphToStandard : Pass<"lower-ngraph"> {
+  let summary = "Lower Ngraph operations to a combination of Standard and Affine "
+                "operations";
+  let description = [{
 
-    let description = [{
-        Add tensors
-    }];
-
-    let arguments = (ins
-        F32:$input1,
-        F32:$input2
-    );
-
-    let results = (outs
-        F32:$res
-    );
-
-    // Ngraph_DerivedOperandTypeAttr T = Ngraph_DerivedOperandTypeAttr<0>;
+  }];
+  let constructor = "mlir::createLowerNgraphPass()";
 }
 
-#endif // NGRAPH_OPS
+#endif // MLIR_NGRAPH_CONVERSION_PASSES

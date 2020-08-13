@@ -13,6 +13,6 @@ add_mlir_conversion_library(MLIRNgraphToStandard
     LINK_COMPONENTS
         Core
 
-    LINK_LIBS PUBLIC
-        Ngraph
+    # LINK_LIBS PUBLIC
+    #     Ngraph
 )

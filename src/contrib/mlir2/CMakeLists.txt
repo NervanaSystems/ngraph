@@ -23,6 +23,10 @@ include_directories(${LLVM_INCLUDE_DIRS})
 include_directories(${MLIR_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+
+message(STATUS "****** ${CMAKE_CURRENT_SOURCE_DIR}/include")
+message(STATUS "****** ${CMAKE_CURRENT_BINARY_DIR}/include")
+
 link_directories(${LLVM_BUILD_LIBRARY_DIR})
 add_definitions(${LLVM_DEFINITIONS})
 
