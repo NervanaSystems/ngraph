@@ -198,7 +198,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not)
 {
     Shape shape{0};
     auto A = make_shared<op::Parameter>(element::from<char>(), shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::LogicalNot>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -66,7 +66,7 @@ TEST(compat, node)
     autodiff::Adjoints adjoints({result}, {c});
     auto bprop = adjoints.backprop_output(param);
     ASSERT_TRUE(bprop.get_index() == 0);
-    ASSERT_TRUE(is_type<op::v0::Multiply>(bprop.get_node_shared_ptr()));
+    ASSERT_TRUE(is_type<op::v1::Multiply>(bprop.get_node_shared_ptr()));
     set<Output<Node>> params;
     params.insert(bprop.get_node_shared_ptr()->input_value(0));
     params.insert(bprop.get_node_shared_ptr()->input_value(1));

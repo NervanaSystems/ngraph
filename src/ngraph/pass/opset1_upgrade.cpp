@@ -44,11 +44,6 @@ namespace
     // Default is that we did nothing
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::And> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::AvgPool> node)
     {
         auto rounding_mode =
@@ -439,18 +434,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Multiply> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Not> node)
-    {
-        auto replacement_node = make_shared<op::v1::LogicalNot>(node->input_value(0));
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::NotEqual> node)
     {
         return op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
@@ -475,11 +458,6 @@ namespace
             make_shared<op::v1::OneHot>(indices, depth_node, on_value, off_value, one_hot_axis);
         replace_node(node, replacement_node);
         return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Or> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::Pad> node)
@@ -610,11 +588,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Subtract> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::Sum> node)
     {
         bool keep_dims = false;
@@ -659,14 +632,6 @@ namespace
         // indices output will be 0, values 1
         vector<int64_t> output_order{1, 0};
         replace_node(node, replacement_node, output_order);
-        return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Xor> node)
-    {
-        auto replacement_node = make_shared<op::v1::LogicalXor>(
-            node->input_value(0), node->input_value(1), node->get_autob());
-        replace_node(node, replacement_node);
         return replacement_node;
     }
 
