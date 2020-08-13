@@ -489,12 +489,12 @@ static bool simplify_add(shared_ptr<Node> add)
 //`simplify_log` optimizes `log(exp(x)/y)` into `x - log(y)`
 static bool simplify_log(shared_ptr<Node> n)
 {
-    if (auto div = as_type_ptr<op::v0::Divide>(n->input_value(0).get_node_shared_ptr()))
+    if (auto div = as_type_ptr<op::v1::Divide>(n->input_value(0).get_node_shared_ptr()))
     {
         if (auto exp = as_type_ptr<op::v0::Exp>(div->input_value(0).get_node_shared_ptr()))
         {
             auto denom = div->get_input_source_output(1);
-            auto diff = make_shared<op::v0::Subtract>(exp->get_input_source_output(0),
+            auto diff = make_shared<op::v1::Subtract>(exp->get_input_source_output(0),
                                                       make_shared<op::v0::Log>(denom));
             replace_node(n, diff);
             return true;
@@ -808,7 +808,6 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
 {
     return unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>>(
         {{op::v1::Add::type_info, simplify_add},
-         {op::v0::Multiply::type_info, simplify_multiply},
          {op::v1::Multiply::type_info, simplify_multiply},
          {opset3::Gather::type_info, simplify_gather},
          {op::v0::Concat::type_info, simplify_concat},
