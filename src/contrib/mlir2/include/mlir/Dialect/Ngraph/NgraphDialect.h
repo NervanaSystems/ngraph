@@ -14,21 +14,17 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef MLIR_NGRAPH_PASSES_H
-#define MLIR_NGRAPH_PASSES_H
+#ifndef NGRAPH_NGRAPHDIALECT_H
+#define NGRAPH_NGRAPHDIALECT_H
 
-#include <memory>
+#include "mlir/IR/Dialect.h"
 
-namespace mlir
-{
-    class Pass;
+namespace mlir {
+namespace ngraph {
 
-    namespace ngraph
-    {
-        /// Create a pass for lowering operations the remaining `Ngraph` operations, as
-        /// well as `Affine` and `Std`, to the LLVM dialect for codegen.
-        std::unique_ptr<mlir::Pass> createLowerToLLVMPass();
-    }
-}
+#include "mlir/Dialect/Ngraph/NgraphOpsDialect.h.inc"
 
-#endif // MLIR_NGRAPH_PASSES_H
+} // namespace ngraph
+} // namespace mlir
+
+#endif // NGRAPH_NGRAPHDIALECT_H

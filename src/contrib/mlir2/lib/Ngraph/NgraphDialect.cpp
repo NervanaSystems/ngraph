@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "Dialect/Ngraph/NgraphDialect.h"
-#include "Dialect/Ngraph/NgraphOps.h"
+#include "mlir/Dialect/Ngraph/NgraphDialect.h"
+#include "mlir/Dialect/Ngraph/NgraphOps.h"
 
 using namespace mlir;
 using namespace mlir::ngraph;
@@ -29,6 +29,6 @@ NgraphDialect::NgraphDialect(mlir::MLIRContext* context)
 {
     addOperations<
 #define GET_OP_LIST
-#include "Dialect/Ngraph/NgraphOps.cpp.inc"
+#include "mlir/Dialect/Ngraph/NgraphOps.cpp.inc"
         >();
 }

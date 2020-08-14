@@ -43,8 +43,8 @@
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 #include "ngraph/util.hpp"
 
-#include "Dialect/Ngraph/NgraphDialect.h"
-#include "Dialect/Ngraph/NgraphOps.h"
+#include "mlir/Dialect/Ngraph/NgraphDialect.h"
+#include "mlir/Dialect/Ngraph/NgraphOps.h"
 
 using namespace std;
 using namespace ngraph;

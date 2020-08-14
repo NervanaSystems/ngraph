@@ -14,17 +14,20 @@
 // limitations under the License.
 //*****************************************************************************
 
-#ifndef NGRAPH_NGRAPHDIALECT_H
-#define NGRAPH_NGRAPHDIALECT_H
+#ifndef NGRAPH_NGRAPHOPS_H
+#define NGRAPH_NGRAPHOPS_H
 
 #include "mlir/IR/Dialect.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/Interfaces/SideEffectInterfaces.h"
 
 namespace mlir {
 namespace ngraph {
 
-#include "Dialect/Ngraph/NgraphOpsDialect.h.inc"
+#define GET_OP_CLASSES
+#include "mlir/Dialect/Ngraph/NgraphOps.h.inc"
 
 } // namespace ngraph
 } // namespace mlir
 
-#endif // NGRAPH_NGRAPHDIALECT_H
+#endif // NGRAPH_NGRAPHOPS_H

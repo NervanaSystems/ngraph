@@ -14,7 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "Conversion/NgraphToStandard/NgraphToStandard.hpp"
+#include "mlir/Conversion/NgraphToStandard/NgraphToStandard.h"
+#include "llvm/ADT/Sequence.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/SCFToStandard/SCFToStandard.h"
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h"
@@ -25,7 +26,6 @@
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
-#include "llvm/ADT/Sequence.h"
 
 using namespace ::mlir;
 // using namespace mlir::edsc;
@@ -35,7 +35,8 @@ using namespace ::mlir;
 namespace
 {
     struct NgraphToLLVMLoweringPass
-        : public ::mlir::PassWrapper<NgraphToLLVMLoweringPass, ::mlir::OperationPass<::mlir::ModuleOp>>
+        : public ::mlir::PassWrapper<NgraphToLLVMLoweringPass,
+                                     ::mlir::OperationPass<::mlir::ModuleOp>>
     {
         void runOnOperation() final;
     };

@@ -26,6 +26,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Target/TargetMachine.h"
+#include "mlir/Conversion/NgraphToStandard/NgraphToStandard.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/ExecutionEngine/OptUtils.h"
@@ -35,9 +36,11 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllTranslations.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/LogicalResult.h"
 #include "mlir/Support/ToolUtilities.h"
+// #include "mlir/Conversion/ToolUtilities.h"
 #include "mlir/Translation.h"
 #include "ngraph/chrome_trace.hpp"
 #include "ngraph/descriptor/layout/dense_tensor_layout.hpp"
@@ -58,7 +61,7 @@
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 #include "ngraph/util.hpp"
 
-#include "Dialect/Ngraph/NgraphDialect.h"
+#include "mlir/Dialect/Ngraph/NgraphDialect.h"
 
 using namespace std;
 using namespace ngraph;
@@ -115,6 +118,23 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
 
     // The m_module at this point contains MLIR ngraph ops, it must be lowered to LLVM IR
     // before generating the engine
+    ::mlir::PassManager pm(m_context.get());
+    pm.addPass(::mlir::ngraph::createLowerToLLVMPass());
+
+    // Apply any generic pass manager command line options.
+    ::mlir::applyPassManagerCLOptions(pm);
+
+    if (failed(pm.run(m_module.get())))
+    {
+        NGRAPH_CHECK(false, "MLIR pass manager failed");
+    }
+
+    if (failed(m_module->verify()))
+    {
+        NGRAPH_CHECK(false, "Invalid module after NG dialect optimization");
+    }
+
+    // dumpMlirModule("nGraph Dialect optimization", m_module.get());
 
     int optimization_level = 3;
     // Initialize LLVM targets and target machine for current host.
