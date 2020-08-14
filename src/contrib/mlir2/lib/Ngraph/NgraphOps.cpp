@@ -14,8 +14,8 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "mlir/Dialect/Ngraph/NgraphOps.h"
-#include "mlir/Dialect/Ngraph/NgraphDialect.h"
+#include "Dialect/Ngraph/NgraphOps.h"
+#include "Dialect/Ngraph/NgraphDialect.h"
 #include "mlir/IR/OpImplementation.h"
 
 namespace mlir
@@ -23,6 +23,6 @@ namespace mlir
     namespace ngraph
     {
 #define GET_OP_CLASSES
-#include "mlir/Dialect/Ngraph/NgraphOps.cpp.inc"
+#include "Dialect/Ngraph/NgraphOps.cpp.inc"
     } // namespace ngraph
 } // namespace mlir

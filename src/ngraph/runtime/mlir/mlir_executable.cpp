@@ -26,7 +26,7 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Target/TargetMachine.h"
-#include "mlir/Conversion/NgraphToStandard/NgraphToStandard.h"
+#include "Conversion/NgraphToStandard/NgraphToStandard.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/ExecutionEngine/OptUtils.h"
@@ -61,7 +61,7 @@
 #include "ngraph/runtime/mlir/mlir_ngraph_ops.hpp"
 #include "ngraph/util.hpp"
 
-#include "mlir/Dialect/Ngraph/NgraphDialect.h"
+#include "Dialect/Ngraph/NgraphDialect.h"
 
 using namespace std;
 using namespace ngraph;
@@ -119,7 +119,7 @@ runtime::mlir::MlirExecutable::MlirExecutable(const shared_ptr<Function>& functi
     // The m_module at this point contains MLIR ngraph ops, it must be lowered to LLVM IR
     // before generating the engine
     ::mlir::PassManager pm(m_context.get());
-    pm.addPass(::mlir::ngraph::createLowerToLLVMPass());
+    pm.addPass(::mlir::createLowerNgraphPass());
 
     // Apply any generic pass manager command line options.
     ::mlir::applyPassManagerCLOptions(pm);

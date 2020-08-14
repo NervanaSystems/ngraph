@@ -6,13 +6,13 @@ add_mlir_conversion_library(MLIRNgraphToStandard
     ADDITIONAL_HEADER_DIRS
         ${MLIR_MAIN_INCLUDE_DIR}/mlir/Conversion/NgraphToStandard
 
-    # DEPENDS
-    #     MLIRConversionPassIncGen
-        # NgraphOps
+    DEPENDS
+        MLIRNgraphOpsIncGen
+        MLIRConversionPassIncGen
 
     LINK_COMPONENTS
         Core
 
-    # LINK_LIBS PUBLIC
-    #     Ngraph
+    LINK_LIBS PUBLIC
+        MLIRNgraph
 )

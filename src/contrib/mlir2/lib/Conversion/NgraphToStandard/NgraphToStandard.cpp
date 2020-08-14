@@ -15,7 +15,7 @@
 //*****************************************************************************
 
 #include <iostream>
-#include "mlir/Conversion/NgraphToStandard/NgraphToStandard.h"
+#include "Conversion/NgraphToStandard/NgraphToStandard.h"
 #include "llvm/ADT/Sequence.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/SCFToStandard/SCFToStandard.h"
@@ -27,6 +27,7 @@
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
+#include "../PassDetail.h"
 
 using namespace ::mlir;
 // using namespace mlir::edsc;
@@ -87,7 +88,7 @@ void NgraphToLLVMLoweringPass::runOnOperation()
 
 /// Create a pass for lowering operations the remaining `Toy` operations, as
 /// well as `Affine` and `Std`, to the LLVM dialect for codegen.
-std::unique_ptr<mlir::Pass> mlir::ngraph::createLowerToLLVMPass()
+std::unique_ptr<mlir::Pass> mlir::createLowerNgraphPass()
 {
     return std::make_unique<NgraphToLLVMLoweringPass>();
 }

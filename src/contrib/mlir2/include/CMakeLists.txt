@@ -1,1 +1,3 @@
-add_subdirectory(mlir)
+
+add_subdirectory(Dialect/Ngraph)
+add_subdirectory(Conversion)

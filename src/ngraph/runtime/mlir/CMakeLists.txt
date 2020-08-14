@@ -38,13 +38,19 @@ if (NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
 
     get_property(dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)
     get_property(translation_libs GLOBAL PROPERTY MLIR_TRANSLATION_LIBS)
+    get_property(conversion_libs GLOBAL PROPERTY MLIR_CONVERSION_LIBS)
     llvm_map_components_to_libnames(llvm_libs support core irreader)
+
+    message(STATUS "dialect_libs ${dialect_libs}")
+    message(STATUS "translation_libs ${translation_libs}")
+    message(STATUS "conversion_libs ${conversion_libs}")
 
     target_link_libraries(mlir_backend
         PRIVATE
             ngraph
             ${dialect_libs}
             ${translation_libs}
+            ${conversion_libs}
             MLIRAffineOps
             MLIRAffineEDSC
             MLIRAffineToStandard
