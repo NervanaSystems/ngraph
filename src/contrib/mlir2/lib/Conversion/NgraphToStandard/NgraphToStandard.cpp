@@ -14,6 +14,7 @@
 // limitations under the License.
 //*****************************************************************************
 
+#include <iostream>
 #include "mlir/Conversion/NgraphToStandard/NgraphToStandard.h"
 #include "llvm/ADT/Sequence.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
@@ -44,6 +45,7 @@ namespace
 
 void NgraphToLLVMLoweringPass::runOnOperation()
 {
+    std::cout << __FILE__ << " " << __LINE__ << std::endl;
     // The first thing to define is the conversion target. This will define the
     // final target for this lowering. For this lowering, we are only targeting
     // the LLVM dialect.

@@ -8,6 +8,7 @@ add_mlir_dialect_library(MLIRNgraph
 
         DEPENDS
         MLIRNgraphOpsIncGen
+        MLIRConversionPassIncGen
 
     LINK_LIBS PUBLIC
     MLIRIR
