@@ -41,12 +41,12 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/logical_not.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/non_zero.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/relu.hpp"
@@ -1156,7 +1156,7 @@ TEST(eval, evaluate_tanh)
 TEST(eval, evaluate_not)
 {
     auto p = make_shared<op::Parameter>(element::boolean, Shape{2, 2});
-    auto op_not = make_shared<op::Not>(p);
+    auto op_not = make_shared<op::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1171,7 +1171,7 @@ TEST(eval, evaluate_not)
 TEST(eval, evaluate_not_i32)
 {
     auto p = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-    auto op_not = make_shared<op::Not>(p);
+    auto op_not = make_shared<op::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 

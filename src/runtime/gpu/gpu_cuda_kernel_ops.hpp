@@ -240,7 +240,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Not>
+            struct CudaOpMap<ngraph::op::LogicalNot>
             {
                 static constexpr const char* op = "logical_not";
                 static constexpr const char* math_kernel = "!x0";
@@ -268,7 +268,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::And>
+            struct CudaOpMap<ngraph::op::LogicalAnd>
             {
                 static constexpr const char* op = "logical_and";
                 static constexpr const char* math_kernel = "x0 & x1";
@@ -276,7 +276,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Or>
+            struct CudaOpMap<ngraph::op::LogicalOr>
             {
                 static constexpr const char* op = "logical_or";
                 static constexpr const char* math_kernel = "x0 | x1";

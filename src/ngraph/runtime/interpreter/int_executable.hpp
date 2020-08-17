@@ -259,17 +259,6 @@ protected:
                                     static_cast<int>(shape_size(node.get_input_shape(0))));
             break;
         }
-        case OP_TYPEID::And_v0:
-        {
-            auto logical_and = static_cast<const op::And*>(&node);
-            reference::logical_and(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_and->get_autob());
-            break;
-        }
         case OP_TYPEID::Any_v0:
         {
             const op::Any* any = static_cast<const op::Any*>(&node);
@@ -723,7 +712,7 @@ protected:
 
             break;
         }
-        case OP_TYPEID::Divide_v0:
+        case OP_TYPEID::Divide_v1:
         {
             const op::Divide* divop = static_cast<const op::Divide*>(&node);
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
@@ -1011,6 +1000,13 @@ protected:
                                    logical_and->get_autob());
             break;
         }
+        case OP_TYPEID::LogicalNot_v1:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::logical_not(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
         case OP_TYPEID::LogicalOr_v1:
         {
             auto logical_or = static_cast<const op::v1::LogicalOr*>(&node);
@@ -1129,7 +1125,7 @@ protected:
                                   minimum->get_autob());
             break;
         }
-        case OP_TYPEID::Multiply_v0:
+        case OP_TYPEID::Multiply_v1:
         {
             auto multiply = static_cast<const op::Multiply*>(&node);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
@@ -1144,14 +1140,6 @@ protected:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::negate<T>(
-                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            break;
-        }
-        case OP_TYPEID::LogicalNot_v1:
-        case OP_TYPEID::Not_v0:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            reference::logical_not(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
@@ -1174,17 +1162,6 @@ protected:
                                   node.get_input_shape(0),
                                   node.get_output_shape(0),
                                   oh->get_one_hot_axis());
-            break;
-        }
-        case OP_TYPEID::Or_v0:
-        {
-            auto logical_or = static_cast<const op::Or*>(&node);
-            reference::logical_or(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<T>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  logical_or->get_autob());
             break;
         }
         case OP_TYPEID::Parameter_v0: break;
@@ -1775,7 +1752,7 @@ protected:
         }
         case OP_TYPEID::StopGradient_v0: { throw unsupported_op("Unsupported op 'StopGradient_v0'");
         }
-        case OP_TYPEID::Subtract_v0:
+        case OP_TYPEID::Subtract_v1:
         {
             auto subtract = static_cast<const op::Subtract*>(&node);
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
@@ -1842,17 +1819,6 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Xor_v0:
-        {
-            auto logical_xor = static_cast<const op::Or*>(&node);
-            reference::logical_xor(args[0]->get_data_ptr<const T>(),
-                                   args[1]->get_data_ptr<const T>(),
-                                   out[0]->get_data_ptr<T>(),
-                                   node.get_input_shape(0),
-                                   node.get_input_shape(1),
-                                   logical_xor->get_autob());
-            break;
-        }
 
         case OP_TYPEID::Acosh_v3:
         case OP_TYPEID::Asinh_v3:
@@ -1877,7 +1843,6 @@ protected:
         case OP_TYPEID::DeformablePSROIPooling_v1:
         case OP_TYPEID::DepthToSpace_v0:
         case OP_TYPEID::DetectionOutput_v0:
-        case OP_TYPEID::Divide_v1:
         case OP_TYPEID::DynBroadcast_v0:
         case OP_TYPEID::DynPad_v0:
         case OP_TYPEID::DynReplaceSlice_v0:
@@ -1915,7 +1880,6 @@ protected:
         case OP_TYPEID::MaxPool_v1:
         case OP_TYPEID::Minimum_v1:
         case OP_TYPEID::Mod_v1:
-        case OP_TYPEID::Multiply_v1:
         case OP_TYPEID::MVN_v0:
         case OP_TYPEID::NonMaxSuppression_v1:
         case OP_TYPEID::NonMaxSuppression_v3:
@@ -1965,7 +1929,6 @@ protected:
         case OP_TYPEID::Squeeze_v0:
         case OP_TYPEID::Stack_v0:
         case OP_TYPEID::StridedSlice_v1:
-        case OP_TYPEID::Subtract_v1:
         case OP_TYPEID::TensorIterator_v0:
         case OP_TYPEID::Tile_v0:
         case OP_TYPEID::TopK_v1:

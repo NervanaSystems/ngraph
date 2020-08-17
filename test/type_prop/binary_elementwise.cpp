@@ -196,7 +196,7 @@ TEST(type_prop, and_bad_arguments)
 {
     test_binary_logical(
         "And", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-            return make_shared<op::And>(x, y);
+            return make_shared<op::LogicalAnd>(x, y);
         });
 }
 
@@ -204,7 +204,7 @@ TEST(type_prop, or_bad_arguments)
 {
     test_binary_logical(
         "Or", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-            return make_shared<op::Or>(x, y);
+            return make_shared<op::LogicalOr>(x, y);
         });
 }
 
@@ -212,7 +212,7 @@ TEST(type_prop, xor_bad_arguments)
 {
     test_binary_logical(
         "Xor", [](const shared_ptr<Node>& x, const shared_ptr<Node>& y) -> shared_ptr<Node> {
-            return make_shared<op::Xor>(x, y);
+            return make_shared<op::LogicalXor>(x, y);
         });
 }
 
@@ -235,7 +235,7 @@ void test_binary_eltwise_numpy(const element::Type& et, const op::AutoBroadcastS
 TEST(type_prop, eltwise_auto_bcast)
 {
     test_binary_eltwise_numpy<op::Add>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::And>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LogicalAnd>(element::boolean, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
@@ -246,10 +246,10 @@ TEST(type_prop, eltwise_auto_bcast)
     test_binary_eltwise_numpy<op::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::Or>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LogicalOr>(element::boolean, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Power>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::Xor>(element::boolean, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::LogicalXor>(element::boolean, op::AutoBroadcastType::NUMPY);
 }
 
 TEST(type_prop, comparison_good)
@@ -533,7 +533,7 @@ TEST(type_prop, logic_arith_compare_partial_et)
     auto test_logic = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
         auto param0 = std::make_shared<op::Parameter>(et0, Shape{1, 2, 3});
         auto param1 = std::make_shared<op::Parameter>(et1, Shape{1, 2, 3});
-        return std::make_shared<op::And>(param0, param1);
+        return std::make_shared<op::LogicalAnd>(param0, param1);
     };
 
     auto test_arith = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
@@ -550,7 +550,7 @@ TEST(type_prop, logic_arith_compare_partial_et)
 
     auto test_not = [](element::Type et) -> std::shared_ptr<Node> {
         auto param = std::make_shared<op::Parameter>(et, Shape{1, 2, 3});
-        return std::make_shared<op::Not>(param);
+        return std::make_shared<op::LogicalNot>(param);
     };
 
     // Logical ops:

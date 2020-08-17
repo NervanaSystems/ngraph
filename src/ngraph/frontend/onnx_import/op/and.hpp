@@ -21,7 +21,7 @@
 #include "core/node.hpp"
 #include "default_opset.hpp"
 #include "ngraph/node.hpp"
-#include "ngraph/op/and.hpp"
+#include "ngraph/op/logical_and.hpp"
 
 namespace ngraph
 {
