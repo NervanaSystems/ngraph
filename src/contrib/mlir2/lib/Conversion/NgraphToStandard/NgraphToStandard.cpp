@@ -14,22 +14,24 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include <iostream>
 #include "Conversion/NgraphToStandard/NgraphToStandard.h"
+#include <iostream>
+#include "../PassDetail.h"
 #include "llvm/ADT/Sequence.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/SCFToStandard/SCFToStandard.h"
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVM.h"
 #include "mlir/Conversion/StandardToLLVM/ConvertStandardToLLVMPass.h"
+#include "Dialect/Ngraph/NgraphOps.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/SCF/SCF.h"
 #include "mlir/Dialect/StandardOps/IR/Ops.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
-#include "../PassDetail.h"
 
 using namespace ::mlir;
+// using namespace ::mlir::vector;
 // using namespace mlir::edsc;
 // using namespace mlir::edsc::intrinsics;
 // using namespace mlir::edsc::op;
@@ -42,48 +44,99 @@ namespace
     {
         void runOnOperation() final;
     };
+
+    class NgraphAddLowering : public OpRewritePattern<ngraph::AddOp>
+    {
+    public:
+        using OpRewritePattern<ngraph::AddOp>::OpRewritePattern;
+
+        LogicalResult matchAndRewrite(ngraph::AddOp op, PatternRewriter& rewriter) const override
+        {
+            std::cout << __FILE__ << " " << __LINE__ << std::endl;
+            return failure();
+            // auto maybeExpandedMap = expandNgraphMap(
+            //     rewriter, op.getLoc(), op.getAffineMap(), llvm::to_vector<8>(op.getOperands()));
+            // if (!maybeExpandedMap)
+            // {
+            //     return failure();
+            // }
+            // rewriter.replaceOp(op, *maybeExpandedMap);
+            // return success();
+        }
+    };
+
+    void populateNgraphToStdConversionPatterns(OwningRewritePatternList& patterns, MLIRContext* ctx)
+    {
+        // clang-format off
+    patterns.insert<
+        //   NgraphApplyLowering,
+        //   NgraphDmaStartLowering,
+        //   NgraphDmaWaitLowering,
+        //   NgraphLoadLowering,
+        //   NgraphMinLowering,
+        //   NgraphMaxLowering,
+        //   NgraphParallelLowering,
+        //   NgraphPrefetchLowering,
+        //   NgraphStoreLowering,
+        //   NgraphForLowering,
+        //   NgraphIfLowering,
+        NgraphAddLowering
+        >(ctx);
+        // clang-format on
+    }
 }
 
 void NgraphToLLVMLoweringPass::runOnOperation()
 {
     std::cout << __FILE__ << " " << __LINE__ << std::endl;
-    // The first thing to define is the conversion target. This will define the
-    // final target for this lowering. For this lowering, we are only targeting
-    // the LLVM dialect.
-    ::mlir::LLVMConversionTarget target(getContext());
-    target.addLegalOp<::mlir::ModuleOp, ::mlir::ModuleTerminatorOp>();
-
-    // During this lowering, we will also be lowering the MemRef types, that are
-    // currently being operated on, to a representation in LLVM. To perform this
-    // conversion we use a TypeConverter as part of the lowering. This converter
-    // details how one type maps to another. This is necessary now that we will be
-    // doing more complicated lowerings, involving loop region arguments.
-    LLVMTypeConverter typeConverter(&getContext());
-
-    // Now that the conversion target has been defined, we need to provide the
-    // patterns used for lowering. At this point of the compilation process, we
-    // have a combination of `ngraph`, `affine`, and `std` operations. Luckily, there
-    // are already exists a set of patterns to transform `affine` and `std`
-    // dialects. These patterns lowering in multiple stages, relying on transitive
-    // lowerings. Transitive lowering, or A->B->C lowering, is when multiple
-    // patterns must be applied to fully transform an illegal operation into a
-    // set of legal ones.
     OwningRewritePatternList patterns;
-    populateAffineToStdConversionPatterns(patterns, &getContext());
-    populateLoopToStdConversionPatterns(patterns, &getContext());
-    populateStdToLLVMConversionPatterns(typeConverter, patterns);
+    populateNgraphToStdConversionPatterns(patterns, &getContext());
+    // populateNgraphToVectorConversionPatterns(patterns, &getContext());
+    ConversionTarget target(getContext());
+    target.addLegalDialect<scf::SCFDialect, StandardOpsDialect>();
 
-    // The only remaining operation to lower from the `ngraph` dialect, is the
-    // PrintOp.
-    // patterns.insert<PrintOpLowering>(&getContext());
-
-    // We want to completely lower to LLVM, so we use a `FullConversion`. This
-    // ensures that only legal operations will remain after the conversion.
-    auto module = getOperation();
-    if (failed(applyFullConversion(module, target, patterns)))
+    if (failed(applyPartialConversion(getOperation(), target, patterns)))
     {
         signalPassFailure();
     }
+
+    // // The first thing to define is the conversion target. This will define the
+    // // final target for this lowering. For this lowering, we are only targeting
+    // // the LLVM dialect.
+    // ::mlir::LLVMConversionTarget target(getContext());
+    // target.addLegalOp<::mlir::ModuleOp, ::mlir::ModuleTerminatorOp>();
+
+    // // During this lowering, we will also be lowering the MemRef types, that are
+    // // currently being operated on, to a representation in LLVM. To perform this
+    // // conversion we use a TypeConverter as part of the lowering. This converter
+    // // details how one type maps to another. This is necessary now that we will be
+    // // doing more complicated lowerings, involving loop region arguments.
+    // LLVMTypeConverter typeConverter(&getContext());
+
+    // // Now that the conversion target has been defined, we need to provide the
+    // // patterns used for lowering. At this point of the compilation process, we
+    // // have a combination of `ngraph`, `affine`, and `std` operations. Luckily, there
+    // // are already exists a set of patterns to transform `affine` and `std`
+    // // dialects. These patterns lowering in multiple stages, relying on transitive
+    // // lowerings. Transitive lowering, or A->B->C lowering, is when multiple
+    // // patterns must be applied to fully transform an illegal operation into a
+    // // set of legal ones.
+    // OwningRewritePatternList patterns;
+    // populateAffineToStdConversionPatterns(patterns, &getContext());
+    // populateLoopToStdConversionPatterns(patterns, &getContext());
+    // populateStdToLLVMConversionPatterns(typeConverter, patterns);
+
+    // // The only remaining operation to lower from the `ngraph` dialect, is the
+    // // PrintOp.
+    // // patterns.insert<PrintOpLowering>(&getContext());
+
+    // // We want to completely lower to LLVM, so we use a `FullConversion`. This
+    // // ensures that only legal operations will remain after the conversion.
+    // auto module = getOperation();
+    // if (failed(applyFullConversion(module, target, patterns)))
+    // {
+    //     signalPassFailure();
+    // }
 }
 
 /// Create a pass for lowering operations the remaining `Toy` operations, as

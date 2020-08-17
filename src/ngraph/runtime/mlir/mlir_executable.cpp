@@ -15,6 +15,7 @@
 //*****************************************************************************
 
 #include "ngraph/runtime/mlir/mlir_executable.hpp"
+#include "Conversion/NgraphToStandard/NgraphToStandard.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h"
@@ -26,7 +27,6 @@
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/ToolOutputFile.h"
 #include "llvm/Target/TargetMachine.h"
-#include "Conversion/NgraphToStandard/NgraphToStandard.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/ExecutionEngine/OptUtils.h"
