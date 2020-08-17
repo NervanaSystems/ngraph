@@ -242,7 +242,9 @@ if NGRAPH_ONNX_IMPORT_ENABLE in ["TRUE", "ON", True]:
 
 extra_link_args = []
 
+
 def islib(name):
+    """Check if name is a shared library."""
     full_path = os.path.join(NGRAPH_CPP_LIBRARY_DIR, name)
     if not os.path.exists(full_path):
         return False
@@ -253,6 +255,7 @@ def islib(name):
     if ".so" in name:
         return True
     return False
+
 
 data_files = [
     (
