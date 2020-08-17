@@ -29,7 +29,7 @@
 using namespace mlir;
 
 NGraphOpsDialect::NGraphOpsDialect(mlir::MLIRContext* ctx)
-    : mlir::Dialect(getDialectNamespace(), ctx)
+    : mlir::Dialect(getDialectNamespace(), ctx, mlir::TypeID::get<NGraphOpsDialect>())
 {
     addTypes<NGTensorType>();
     addTypes<NGBoolType>();
