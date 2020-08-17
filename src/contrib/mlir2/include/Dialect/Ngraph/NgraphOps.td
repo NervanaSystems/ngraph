@@ -32,12 +32,12 @@ def Ngraph_AddOp : Ngraph_Op<"Add", [NoSideEffect, SameOperandsAndResultType]> {
     }];
 
     let arguments = (ins
-        F32:$input1,
-        F32:$input2
+        AnyType:$input1,
+        AnyType:$input2
     );
 
     let results = (outs
-        F32:$res
+        AnyType:$res
     );
 
     // Ngraph_DerivedOperandTypeAttr T = Ngraph_DerivedOperandTypeAttr<0>;
