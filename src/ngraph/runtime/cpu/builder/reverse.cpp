@@ -62,7 +62,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_reverse_cpp() { REGISTER_OP_BUILDER(Reverse); }
+            void register_builders_reverse_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Reverse); }
         }
     }
 }

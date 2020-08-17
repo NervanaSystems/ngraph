@@ -1076,7 +1076,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Abs)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Abs)
             {
                 (void)external_function;
                 (void)node;
@@ -4335,7 +4335,7 @@ namespace ngraph
                 return std::unordered_map<
                     std::type_index,
                     std::function<std::string(const std::vector<std::string>&)>>{
-                    {TI(ngraph::op::Abs), abse},
+                    {TI(ngraph::op::v0::Abs), abse},
                     {TI(ngraph::op::Minimum), mine},
                     {TI(ngraph::op::Relu), maxe},
                     {TI(ngraph::op::Maximum), maxe},

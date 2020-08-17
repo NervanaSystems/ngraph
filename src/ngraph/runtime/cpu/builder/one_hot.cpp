@@ -108,7 +108,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_one_hot_cpp() { REGISTER_OP_BUILDER(OneHot); }
+            void register_builders_one_hot_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::OneHot); }
         }
     }
 }

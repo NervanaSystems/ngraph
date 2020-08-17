@@ -765,11 +765,11 @@ namespace ngraph
 
             void register_builders_quantized_conv_cpp()
             {
-                REGISTER_OP_BUILDER(QuantizedConvolution);
-                REGISTER_OP_BUILDER(QuantizedConvolutionRelu);
-                REGISTER_OP_BUILDER(QuantizedConvolutionBias);
-                REGISTER_OP_BUILDER(QuantizedConvolutionBiasAdd);
-                REGISTER_OP_BUILDER(QuantizedConvolutionBiasSignedAdd);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolution);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionRelu);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionBiasAdd);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionBiasSignedAdd);
             }
         }
     }

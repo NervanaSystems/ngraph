@@ -179,7 +179,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_concat_cpp() { REGISTER_OP_BUILDER(Concat); }
+            void register_builders_concat_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Concat); }
         }
     }
 }

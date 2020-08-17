@@ -78,7 +78,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_tile_cpp() { REGISTER_OP_BUILDER(Tile); }
+            void register_builders_tile_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Tile); }
         }
     }
 }

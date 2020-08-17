@@ -142,7 +142,7 @@ TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
 
     auto dot = make_shared<op::Dot>(W, x);
     auto reshape_dot = std::make_shared<op::Reshape>(dot, AxisVector{1, 0}, Shape{1, 2});
-    auto graph = make_shared<op::Abs>(reshape_dot);
+    auto graph = make_shared<op::v0::Abs>(reshape_dot);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeElimination>();
@@ -306,7 +306,7 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
         auto reshape_2 = make_shared<op::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_a);
         auto reshape_3 =
             make_shared<op::Reshape>(reshape_2, AxisVector{0, 1, 2, 3}, Shape{4, 3, 8, 1});
-        auto abs_1 = make_shared<op::Abs>(reshape_3);
+        auto abs_1 = make_shared<op::v0::Abs>(reshape_3);
         auto f_ = make_shared<Function>(OutputVector{abs_1, reshape_3}, ParameterVector{A});
         return f_;
     };
@@ -394,9 +394,9 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
         auto A = make_shared<op::Parameter>(element::f32, shape_a);
 
         auto reshape_1 = make_shared<op::Reshape>(A, AxisVector{3, 0, 2, 1}, shape_r);
-        auto abs_1 = make_shared<op::Abs>(reshape_1);
+        auto abs_1 = make_shared<op::v0::Abs>(reshape_1);
         auto reshape_2 = make_shared<op::Reshape>(abs_1, AxisVector{0, 1}, shape_a);
-        auto abs_2 = make_shared<op::Abs>(reshape_2);
+        auto abs_2 = make_shared<op::v0::Abs>(reshape_2);
         auto reshape_3 = make_shared<op::Reshape>(abs_2, AxisVector{0, 1, 2, 3}, shape_a);
         auto f_ = make_shared<Function>(OutputVector{reshape_3}, ParameterVector{A});
         return f_;

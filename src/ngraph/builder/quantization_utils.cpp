@@ -24,8 +24,8 @@ namespace ngraph
         {
             std::shared_ptr<Node> max_abs(const Output<Node>& a, const Output<Node>& b)
             {
-                auto abs_a = std::make_shared<op::Abs>(a);
-                auto abs_b = std::make_shared<op::Abs>(b);
+                auto abs_a = std::make_shared<op::v0::Abs>(a);
+                auto abs_b = std::make_shared<op::v0::Abs>(b);
                 return std::make_shared<op::Maximum>(abs_a, abs_b)
                     ->add_provenance_group_members_above({a, b});
             }

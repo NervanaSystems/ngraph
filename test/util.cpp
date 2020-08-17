@@ -309,7 +309,7 @@ TEST(graph_util, get_subgraph_outputs_trivial_tests)
 
     Shape shape{};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto absn = make_shared<op::Abs>(A);
+    auto absn = make_shared<op::v0::Abs>(A);
     auto neg_absn = make_shared<op::Negative>(absn);
     outputs = ngraph::get_subgraph_outputs(OutputVector{A}, OutputVector{});
     ASSERT_EQ(outputs, (OutputVector{A}));
@@ -321,7 +321,7 @@ TEST(graph_util, get_subgraph_outputs_trivial_tests)
     ASSERT_EQ(outputs, (OutputVector{absn}));
 
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto abs_b = make_shared<op::Abs>(B);
+    auto abs_b = make_shared<op::v0::Abs>(B);
     auto neg_b = make_shared<op::Negative>(B);
     auto abs_b_neg = make_shared<op::Negative>(abs_b);
     outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b}, OutputVector{});
@@ -383,8 +383,8 @@ TEST(graph_util, test_subgraph_topological_sort_control_dependencies)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto D = make_shared<op::Abs>(A);
-    auto E = make_shared<op::Abs>(B);
+    auto D = make_shared<op::v0::Abs>(A);
+    auto E = make_shared<op::v0::Abs>(B);
     auto add = A + B;
     add->add_control_dependency(D);
     add->add_control_dependency(E);

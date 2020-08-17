@@ -48,13 +48,13 @@ using namespace std;
 
 TEST(reshape_sinking, edge_splitting)
 {
-    // checks if Reshapes are pushed through op::Abs, but stopped by Sum
+    // checks if Reshapes are pushed through op::v0::Abs, but stopped by Sum
     Shape shape_nhwc{16, 28, 28, 1};
     Shape shape_nchw{16, 1, 28, 28};
     auto a = make_shared<op::Parameter>(element::i32, shape_nhwc);
     auto reshape = make_shared<op::Reshape>(a, AxisVector{0, 3, 1, 2}, shape_nchw);
-    auto absn = make_shared<op::Abs>(reshape);
-    auto absn2 = make_shared<op::Abs>(absn);
+    auto absn = make_shared<op::v0::Abs>(reshape);
+    auto absn2 = make_shared<op::v0::Abs>(absn);
     auto sum = make_shared<op::Sum>(reshape, AxisSet{0, 1, 2, 3});
     auto func = make_shared<Function>(OutputVector{absn2, sum}, ParameterVector{a});
     pass::Manager pass_manager;

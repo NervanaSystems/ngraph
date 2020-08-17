@@ -120,7 +120,7 @@ Equivalent to ``"A(BC)+A"`` in regexes
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto rpattern = std::make_shared<pattern::op::Label>(b);
     auto iconst0 = ngraph::make_zero(element::i32, shape);
-    auto abs = make_shared<op::Abs>(a);
+    auto abs = make_shared<op::v0::Abs>(a);
     auto add1 = iconst0 + b;
     auto add2 = iconst0 + add1;
     auto add3 = iconst0 + add2;

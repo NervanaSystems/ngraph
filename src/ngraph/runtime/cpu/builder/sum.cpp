@@ -37,7 +37,7 @@ namespace ngraph
                 BUILD_REDUCTION_FUNCTOR(Sum, sum);
             }
 
-            void register_builders_sum_cpp() { REGISTER_OP_BUILDER(Sum); }
+            void register_builders_sum_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Sum); }
         }
     }
 }

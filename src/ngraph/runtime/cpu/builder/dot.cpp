@@ -267,7 +267,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_dot_cpp() { REGISTER_OP_BUILDER(Dot); }
+            void register_builders_dot_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Dot); }
         }
     }
 }

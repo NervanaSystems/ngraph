@@ -178,8 +178,8 @@ namespace ngraph
 
             void register_builders_pad_cpp()
             {
-                REGISTER_OP_BUILDER(Pad);
-                REGISTER_CF_BUILDER(Pad);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Pad);
+                REGISTER_CF_BUILDER(ngraph::op::v0::Pad);
             }
         }
     }
