@@ -25,7 +25,7 @@ namespace mlir {
 namespace ngraph {
 
 #define GET_OP_CLASSES
-#include "mlir/Dialect/Ngraph/NgraphOps.h.inc"
+#include "Dialect/Ngraph/NgraphOps.h.inc"
 
 } // namespace ngraph
 } // namespace mlir
