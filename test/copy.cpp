@@ -56,7 +56,7 @@ bool check_binary()
 
 TEST(copy, abs)
 {
-    ASSERT_TRUE(check_unary<op::Abs>());
+    ASSERT_TRUE(check_unary<op::v0::Abs>());
 }
 
 TEST(copy, acos)

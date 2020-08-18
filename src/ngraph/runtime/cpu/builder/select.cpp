@@ -63,7 +63,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_select_cpp() { REGISTER_OP_BUILDER(Select); }
+            void register_builders_select_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Select); }
         }
     }
 }

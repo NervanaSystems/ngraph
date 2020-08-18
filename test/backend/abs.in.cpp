@@ -49,7 +49,7 @@ NGRAPH_TEST(${BACKEND_NAME}, abs)
 {
     Shape shape{5};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

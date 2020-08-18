@@ -433,9 +433,9 @@ namespace ngraph
 
             void register_builders_matmul_bias_cpp()
             {
-                REGISTER_OP_BUILDER(MatmulBias);
-                REGISTER_OP_BUILDER(BatchMatMul);
-                REGISTER_OP_BUILDER(BatchMatMulTranspose);
+                REGISTER_OP_BUILDER(ngraph::op::MatmulBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BatchMatMul);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BatchMatMulTranspose);
             }
         }
     }

@@ -141,7 +141,7 @@ TEST(build_graph, no_arg_construction)
     auto arg2 = make_shared<op::Parameter>(element::f32, Shape{7});
     auto arg3 = make_shared<op::Parameter>(element::f32, Shape{7});
     auto add0 = make_shared<op::Add>();
-    auto abs0 = make_shared<op::Abs>();
+    auto abs0 = make_shared<op::v0::Abs>();
     auto acos0 = make_shared<op::Acos>();
     auto add1 = make_shared<op::Add>();
     add0->set_argument(1, arg0);
@@ -177,7 +177,7 @@ TEST(build_graph, multi_output_split_dynamic)
     const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
     const auto axis = op::Constant::create(element::i64, Shape{}, {1});
     const auto split = make_shared<op::Split>(data, axis, 2);
-    auto abs = make_shared<op::Abs>(split->output(1));
+    auto abs = make_shared<op::v0::Abs>(split->output(1));
     EXPECT_TRUE(abs->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 
     auto new_parameter = make_shared<op::Parameter>(element::f32, Shape{2, 4});

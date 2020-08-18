@@ -68,7 +68,7 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
 
 std::string runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Abs>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::v0::Abs>(compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Acos(EMIT_ARGS)

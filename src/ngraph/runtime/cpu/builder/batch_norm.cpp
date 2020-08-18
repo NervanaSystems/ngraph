@@ -623,11 +623,11 @@ namespace ngraph
 
             void register_builders_batch_norm_cpp()
             {
-                REGISTER_OP_BUILDER(BatchNormTraining);
-                REGISTER_OP_BUILDER(BatchNormInference);
-                REGISTER_OP_BUILDER(BatchNormTrainingRelu);
-                REGISTER_OP_BUILDER(BatchNormInferenceRelu);
-                REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormTraining);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormInference);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormTrainingRelu);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormInferenceRelu);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormTrainingBackprop);
             }
         }
     }

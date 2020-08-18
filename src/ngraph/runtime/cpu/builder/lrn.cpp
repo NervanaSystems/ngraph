@@ -144,7 +144,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_lrn_cpp() { REGISTER_OP_BUILDER(LRN); }
+            void register_builders_lrn_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::LRN); }
         }
     }
 }

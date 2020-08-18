@@ -98,7 +98,10 @@ namespace ngraph
                 }
             }
 
-            void register_builders_leaky_relu_cpp() { REGISTER_OP_BUILDER(CPULeakyRelu); }
+            void register_builders_leaky_relu_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::CPULeakyRelu);
+            }
         }
     }
 }

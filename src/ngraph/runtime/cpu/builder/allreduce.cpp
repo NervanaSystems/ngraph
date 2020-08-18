@@ -62,7 +62,10 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_allreduce_cpp() { REGISTER_OP_BUILDER(AllReduce); }
+            void register_builders_allreduce_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::AllReduce);
+            }
         }
     }
 }

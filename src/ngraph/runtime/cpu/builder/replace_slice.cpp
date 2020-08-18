@@ -163,7 +163,10 @@ namespace ngraph
                 }
             }
 
-            void register_builders_replace_slice_cpp() { REGISTER_OP_BUILDER(ReplaceSlice); }
+            void register_builders_replace_slice_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::ReplaceSlice);
+            }
         }
     }
 }

@@ -627,8 +627,8 @@ namespace ngraph
 
             void register_builders_quantization_cpp()
             {
-                REGISTER_OP_BUILDER(Dequantize);
-                REGISTER_OP_BUILDER(Quantize);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Dequantize);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Quantize);
             }
         }
     }
