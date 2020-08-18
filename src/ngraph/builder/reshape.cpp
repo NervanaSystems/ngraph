@@ -40,7 +40,7 @@ using namespace std;
 
 shared_ptr<Node> builder::reshape(const Output<Node>& value, const Shape& shape)
 {
-    return make_shared<op::Reshape>(value, get_default_order(value.get_shape().size()), shape)
+    return make_shared<op::v0::Reshape>(value, get_default_order(value.get_shape().size()), shape)
         ->add_provenance_group_members_above({value});
 }
 
@@ -61,7 +61,7 @@ shared_ptr<Node> builder::reorder_axes(const Output<Node>& value, vector<size_t>
     }
 
     auto axis_vector = AxisVector{begin(axes_order), end(axes_order)};
-    return make_shared<op::Reshape>(value, axis_vector, out_shape)
+    return make_shared<op::v0::Reshape>(value, axis_vector, out_shape)
         ->add_provenance_group_members_above({value});
 }
 
@@ -86,7 +86,7 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
     size_t last_dim_size =
         accumulate(next(begin(data_shape), axis), end(data_shape), 1UL, multiplies<size_t>());
 
-    return make_shared<op::Reshape>(
+    return make_shared<op::v0::Reshape>(
                value, get_default_order(data_shape.size()), Shape{first_dim_size, last_dim_size})
         ->add_provenance_group_members_above({value});
 }
@@ -95,35 +95,36 @@ shared_ptr<Node> builder::flatten(const Output<Node>& value, int axis)
 shared_ptr<Node> builder::flatten(const Output<Node>& value, const Output<Node>& axis)
 {
     // value_shape := ShapeOf(value)
-    auto value_shape = make_shared<op::ShapeOf>(value);
+    auto value_shape = make_shared<op::v0::ShapeOf>(value);
     // value_shape_shape := ShapeOf(value_shape)
-    auto value_shape_shape = make_shared<op::ShapeOf>(value_shape);
+    auto value_shape_shape = make_shared<op::v0::ShapeOf>(value_shape);
 
     // shape_1_vector := Constant(i64, Shape{1}, [1])
-    auto shape_1_vector = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
+    auto shape_1_vector = make_shared<op::v0::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
     // unit_strides := Constant(i64, Shape{1}, [1])
-    auto unit_strides = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
+    auto unit_strides = make_shared<op::v0::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
 
     // row_dims := value_shape[0:axis]
     auto row_dims_slice_start =
-        make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{0});
+        make_shared<op::v0::Constant>(element::i64, Shape{1}, vector<int64_t>{0});
     auto row_dims_slice_end = make_shared<op::v1::Reshape>(axis, shape_1_vector, true);
-    auto row_dims = make_shared<op::DynSlice>(
+    auto row_dims = make_shared<op::v0::DynSlice>(
         value_shape, row_dims_slice_start, row_dims_slice_end, unit_strides);
 
     // col_dims := value_shape[axis:ReshapeToScalar(value_shape_shape)]
-    auto col_dims =
-        make_shared<op::DynSlice>(value_shape, row_dims_slice_end, value_shape_shape, unit_strides);
+    auto col_dims = make_shared<op::v0::DynSlice>(
+        value_shape, row_dims_slice_end, value_shape_shape, unit_strides);
 
     // row_dims_prod := [Product(row_dims, axis=0)]
-    auto row_dims_prod = make_shared<op::Reshape>(
-        make_shared<op::Product>(row_dims, AxisSet{0}), AxisVector{}, Shape{1});
+    auto row_dims_prod = make_shared<op::v0::Reshape>(
+        make_shared<op::v0::Product>(row_dims, AxisSet{0}), AxisVector{}, Shape{1});
     // col_dims_prod := [Product(col_dims, axis=0)]
-    auto col_dims_prod = make_shared<op::Reshape>(
-        make_shared<op::Product>(col_dims, AxisSet{0}), AxisVector{}, Shape{1});
+    auto col_dims_prod = make_shared<op::v0::Reshape>(
+        make_shared<op::v0::Product>(col_dims, AxisSet{0}), AxisVector{}, Shape{1});
 
     // flattened_dims := Concat({row_dims_prod, col_dims_prod})
-    auto flattened_dims = make_shared<op::Concat>(OutputVector{row_dims_prod, col_dims_prod}, 0);
+    auto flattened_dims =
+        make_shared<op::v0::Concat>(OutputVector{row_dims_prod, col_dims_prod}, 0);
 
     return make_shared<op::v1::Reshape>(value, flattened_dims, true)
         ->add_provenance_group_members_above({value});
@@ -173,7 +174,7 @@ shared_ptr<Node> builder::expand_dims(const Output<Node>& value, size_t axis)
     auto empty_axis_it = begin(output_shape);
     advance(empty_axis_it, axis);
     output_shape.insert(empty_axis_it, 1);
-    return make_shared<op::Reshape>(
+    return make_shared<op::v0::Reshape>(
                value, get_default_order(value.get_shape().size()), output_shape)
         ->add_provenance_group_members_above({value});
 }
@@ -190,12 +191,12 @@ shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape
         auto value_rank = value.get_shape().size();
         AxisVector axes_vector(value_rank);
         std::iota(axes_vector.begin(), axes_vector.end(), 0);
-        auto axes = op::Constant::create(element::i64, Shape{value_rank}, axes_vector);
-        return std::make_shared<op::Squeeze>(value, axes);
+        auto axes = op::v0::Constant::create(element::i64, Shape{value_rank}, axes_vector);
+        return std::make_shared<op::v0::Squeeze>(value, axes);
     }
     else
     {
-        auto out_pattern = op::Constant::create(
+        auto out_pattern = op::v0::Constant::create(
             element::i64, Shape{shape.size()}, vector<int64_t>(shape.begin(), shape.end()));
 
         return make_shared<ngraph::opset1::Reshape>(value, out_pattern, false)
@@ -206,9 +207,9 @@ shared_ptr<Node> builder::opset1::reshape(const Output<Node>& value, const Shape
 shared_ptr<Node> builder::opset1::reorder_axes(const Output<Node>& value, vector<size_t> axes_order)
 {
     const auto axes_order_const =
-        op::Constant::create(element::i64,
-                             Shape{axes_order.size()},
-                             vector<int64_t>(axes_order.begin(), axes_order.end()));
+        op::v0::Constant::create(element::i64,
+                                 Shape{axes_order.size()},
+                                 vector<int64_t>(axes_order.begin(), axes_order.end()));
     return make_shared<ngraph::opset1::Transpose>(value, axes_order_const)
         ->add_provenance_group_members_above({value});
 }

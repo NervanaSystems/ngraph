@@ -33,7 +33,7 @@ namespace ngraph
                 static constexpr NodeTypeInfo type_info{"ConvolutionBias", 0};
                 const NodeTypeInfo& get_type_info() const override { return type_info; }
                 ConvolutionBias() = default;
-                ConvolutionBias(const std::shared_ptr<op::Convolution>& conv,
+                ConvolutionBias(const std::shared_ptr<op::v0::Convolution>& conv,
                                 const Output<Node>& bias,
                                 const bool with_relu = false);
 
@@ -229,8 +229,5 @@ namespace ngraph
                 bool m_with_relu;
             };
         }
-        using v0::ConvolutionBias;
-        using v0::ConvolutionBiasAdd;
-        using v0::ConvolutionBiasBackpropFiltersBias;
     }
 }

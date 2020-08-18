@@ -28,7 +28,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Tile)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Tile)
             {
                 (void)node;
                 auto arg_shape = args[0].get_shape();

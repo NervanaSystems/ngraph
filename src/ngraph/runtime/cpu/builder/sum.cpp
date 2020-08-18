@@ -32,7 +32,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Sum)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Sum)
             {
                 BUILD_REDUCTION_FUNCTOR(Sum, sum);
             }

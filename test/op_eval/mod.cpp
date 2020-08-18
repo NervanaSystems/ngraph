@@ -28,8 +28,8 @@ using namespace ngraph;
 
 TEST(op_eval, mod_no_autobroadcast)
 {
-    auto arg0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg0 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
     auto mod = make_shared<op::v1::Mod>(arg0, arg1, op::AutoBroadcastType::NONE);
     auto fun = make_shared<Function>(OutputVector{mod}, ParameterVector{arg0, arg1});
 
@@ -56,8 +56,8 @@ TEST(op_eval, mod_no_autobroadcast)
 
 TEST(op_eval, mod_autobroadcast_numpy)
 {
-    auto arg0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg0 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
     auto mod = make_shared<op::v1::Mod>(arg0, arg1, op::AutoBroadcastType::NUMPY);
     auto fun = make_shared<Function>(OutputVector{mod}, ParameterVector{arg0, arg1});
 

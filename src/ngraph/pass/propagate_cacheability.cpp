@@ -42,7 +42,7 @@ bool pass::PropagateCacheability::run_on_function(shared_ptr<Function> function)
             }
             if (node->is_parameter())
             {
-                auto parameter = static_pointer_cast<op::Parameter>(node);
+                auto parameter = static_pointer_cast<op::v0::Parameter>(node);
                 op_annotations->set_cacheable(parameter->get_cacheable());
                 NGRAPH_DEBUG << "propagate cacheability: cacheability is "
                              << parameter->get_cacheable();

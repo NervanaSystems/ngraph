@@ -13,8 +13,8 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_convolution_upgrade_pass)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{1, 3, 3, 3});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 3, 3});
     CoordinateDiff pads_begin{0, 0};
     CoordinateDiff pads_end{0, 0};
     Strides strides{1, 1};
@@ -24,7 +24,7 @@ TEST(opset_transform, opset1_convolution_upgrade_pass)
 
     auto convolution_v0 = make_shared<op::v0::Convolution>(
         data, filters, strides, dilations, pads_begin, pads_end, data_dilations_strides, pad_type);
-    auto result = make_shared<op::Result>(convolution_v0);
+    auto result = make_shared<op::v0::Result>(convolution_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filters});
 
     ngraph::pass::Manager pass_manager;
@@ -46,8 +46,8 @@ TEST(opset_transform, opset1_convolution_upgrade_pass)
 
 TEST(opset_transform, opset1_convolution_downgrade_pass)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{1, 3, 3, 3});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 3, 3});
     CoordinateDiff pads_begin{1, 1};
     CoordinateDiff pads_end{2, 2};
     Strides strides{1, 1};
@@ -56,7 +56,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
 
     auto convolution_v1 = make_shared<op::v1::Convolution>(
         data, filters, strides, pads_begin, pads_end, dilations, pad_type);
-    auto result = make_shared<op::Result>(convolution_v1);
+    auto result = make_shared<op::v0::Result>(convolution_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filters});
 
     ngraph::pass::Manager pass_manager;
@@ -78,9 +78,9 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
 
 TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 {
-    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{1}, {100});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
+    auto data_batch_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{1}, {100});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};
     auto dilations = Strides{1};
     auto padding_begin = CoordinateDiff{2};
@@ -88,7 +88,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 
     auto conv = make_shared<op::v1::ConvolutionBackpropData>(
         delta, filters, data_batch_shape, strides, padding_begin, padding_end, dilations);
-    auto result = make_shared<op::Result>(conv);
+    auto result = make_shared<op::v0::Result>(conv);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
     ngraph::pass::Manager pass_manager;
@@ -110,16 +110,16 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
 
 TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
 {
-    auto filters_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {128, 3, 10});
-    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
+    auto filters_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {128, 3, 10});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};
     auto dilations = Strides{1};
     auto padding_begin = CoordinateDiff{2};
     auto padding_end = CoordinateDiff{3};
     auto conv = make_shared<op::v1::ConvolutionBackpropFilters>(
         data, delta, filters_shape, strides, dilations, padding_begin, padding_end);
-    auto result = make_shared<op::Result>(conv);
+    auto result = make_shared<op::v0::Result>(conv);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, delta});
 
     ngraph::pass::Manager pass_manager;
@@ -141,9 +141,9 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
 
 TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
 {
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{1}, {100});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 128, 3, 10});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 256, 96});
+    auto output_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{1}, {100});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{2, 128, 3, 10});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{64, 256, 96});
     size_t groups = 2;
     auto strides = Strides{1};
     auto dilations = Strides{1};
@@ -153,7 +153,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
 
     auto group_conv_backprop = make_shared<op::v1::GroupConvolutionBackpropData>(
         delta, filters, output_shape, strides, padding_begin, padding_end, dilations);
-    auto result = make_shared<op::Result>(group_conv_backprop);
+    auto result = make_shared<op::v0::Result>(group_conv_backprop);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
     ngraph::pass::Manager pass_manager;
@@ -175,9 +175,10 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
 
 TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
 {
-    auto data_batch_shape = op::Constant::create<int64_t>(element::i64, Shape{64, 12, 100}, {0});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96});
+    auto data_batch_shape =
+        op::v0::Constant::create<int64_t>(element::i64, Shape{64, 12, 100}, {0});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 96});
     auto strides = Strides{1};
     auto dilations = Strides{1};
     auto padding_begin = CoordinateDiff{2};
@@ -186,7 +187,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
 
     auto group_conv_backprop = make_shared<op::v0::GroupConvolutionBackpropData>(
         data_batch_shape, filters, delta, strides, dilations, padding_begin, padding_end, groups);
-    auto result = make_shared<op::Result>(group_conv_backprop);
+    auto result = make_shared<op::v0::Result>(group_conv_backprop);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
     ngraph::pass::Manager pass_manager;

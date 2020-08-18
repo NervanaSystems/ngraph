@@ -23,13 +23,13 @@ using namespace ngraph;
 
 TEST(type_prop, dyn_broadcast_shape_wrong_rank)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1, 1});
-    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::v0::Parameter>(element::i64, Shape{1, 1});
+    auto bc_axes = make_shared<op::v0::Parameter>(element::i64, Shape{1});
 
     try
     {
-        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        auto bc = make_shared<op::v0::DynBroadcast>(arg, bc_shape, bc_axes);
         FAIL() << "DynBroadcast: wrong shape rank not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -44,13 +44,13 @@ TEST(type_prop, dyn_broadcast_shape_wrong_rank)
 
 TEST(type_prop, dyn_broadcast_axes_wrong_rank)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2, 2});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::v0::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::v0::Parameter>(element::i64, Shape{2, 2});
 
     try
     {
-        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        auto bc = make_shared<op::v0::DynBroadcast>(arg, bc_shape, bc_axes);
         FAIL() << "DynBroadcast: axes shape rank not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -65,24 +65,24 @@ TEST(type_prop, dyn_broadcast_axes_wrong_rank)
 
 TEST(type_prop, dyn_broadcast_output_partial_shape_dynamic)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::v0::Parameter>(element::i64, Shape{1});
+    auto bc_axes = make_shared<op::v0::Parameter>(element::i64, Shape{2});
 
-    auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+    auto bc = make_shared<op::v0::DynBroadcast>(arg, bc_shape, bc_axes);
     ASSERT_TRUE(bc->get_output_partial_shape(0).is_dynamic());
 }
 
 TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
     // wrong element type
-    auto bc_shape = make_shared<op::Parameter>(element::boolean, Shape{1});
-    auto bc_axes = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto bc_shape = make_shared<op::v0::Parameter>(element::boolean, Shape{1});
+    auto bc_axes = make_shared<op::v0::Parameter>(element::i64, Shape{2});
 
     try
     {
-        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        auto bc = make_shared<op::v0::DynBroadcast>(arg, bc_shape, bc_axes);
         FAIL() << "DynBroadcast: did not detect shape element type not i64";
     }
     catch (const NodeValidationFailure& error)
@@ -98,14 +98,14 @@ TEST(type_prop, dyn_broadcast_broadcast_shape_et_wrong)
 
 TEST(type_prop, dyn_broadcast_axes_et_wrong)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bc_shape = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto bc_shape = make_shared<op::v0::Parameter>(element::i64, Shape{1});
     // wrong element type
-    auto bc_axes = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto bc_axes = make_shared<op::v0::Parameter>(element::f32, Shape{2});
 
     try
     {
-        auto bc = make_shared<op::DynBroadcast>(arg, bc_shape, bc_axes);
+        auto bc = make_shared<op::v0::DynBroadcast>(arg, bc_shape, bc_axes);
         FAIL() << "DynBroadcast: did not detect axes element type not i64";
     }
     catch (const NodeValidationFailure& error)

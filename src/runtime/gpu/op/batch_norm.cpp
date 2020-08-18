@@ -24,7 +24,7 @@ ngraph::op::gpu::BatchNormTrainingWithStats::BatchNormTrainingWithStats(double e
                                                                         const Output<Node>& gamma,
                                                                         const Output<Node>& beta,
                                                                         const Output<Node>& input)
-    : ngraph::op::BatchNormTraining(eps, gamma, beta, input)
+    : ngraph::op::v0::BatchNormTraining(eps, gamma, beta, input)
 {
     constructor_validate_and_infer_types();
 }

@@ -27,12 +27,12 @@ TEST(type_prop, scatter_add_fail_indices_element_type)
     Shape indices_shape{2, 2};
     Shape updates_shape{2, 2, 3, 3};
     Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices element type";
     }
@@ -52,12 +52,12 @@ TEST(type_prop, scatter_add_fail_updates_element_type)
     Shape indices_shape{2, 2};
     Shape updates_shape{2, 2, 3, 3};
     Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -78,12 +78,12 @@ TEST(type_prop, scatter_add_fail_updates_rank)
     Shape indices_shape{2, 2};
     Shape updates_shape{2, 3, 3};
     Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates rank";
     }
@@ -105,12 +105,12 @@ TEST(type_prop, scatter_add_fail_updates_shape)
     Shape indices_shape{2, 2};
     Shape updates_shape{1, 2, 3, 3};
     Shape out_shape{2, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates shape";
     }
@@ -130,10 +130,10 @@ TEST(type_prop, scatter_add_v3_fail_indices_element_type)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::f16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
-    auto A = op::Constant::create(element::i64, Shape{}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::f16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
+    auto A = op::v0::Constant::create(element::i64, Shape{}, {1});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -156,10 +156,10 @@ TEST(type_prop, scatter_add_v3_fail_updates_data_et_not_equal)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::u32, updates_shape);
-    auto A = op::Constant::create(element::u32, Shape{1}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::u32, updates_shape);
+    auto A = op::v0::Constant::create(element::u32, Shape{1}, {1});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -182,10 +182,10 @@ TEST(type_prop, scatter_add_v3_fail_axis_element_type)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::i16, ref_shape);
-    auto I = make_shared<op::Parameter>(element::u64, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i16, updates_shape);
-    auto A = op::Constant::create(element::f32, Shape{1}, {1.5f});
+    auto R = make_shared<op::v0::Parameter>(element::i16, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::u64, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i16, updates_shape);
+    auto A = op::v0::Constant::create(element::f32, Shape{1}, {1.5f});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -208,10 +208,10 @@ TEST(type_prop, scatter_add_v3_fail_axis_shape)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::u8, ref_shape);
-    auto I = make_shared<op::Parameter>(element::u16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::u8, updates_shape);
-    auto A = op::Constant::create(element::u8, Shape{2}, {1, 5});
+    auto R = make_shared<op::v0::Parameter>(element::u8, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::u16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::u8, updates_shape);
+    auto A = op::v0::Constant::create(element::u8, Shape{2}, {1, 5});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -234,10 +234,10 @@ TEST(type_prop, scatter_add_v3_fail_updates_rank)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::f64, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f64, updates_shape);
-    auto A = op::Constant::create(element::u8, Shape{}, {0});
+    auto R = make_shared<op::v0::Parameter>(element::f64, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f64, updates_shape);
+    auto A = op::v0::Constant::create(element::u8, Shape{}, {0});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -261,10 +261,10 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_axis)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::u64, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::u64, updates_shape);
-    auto A = op::Constant::create(element::u16, Shape{}, {0});
+    auto R = make_shared<op::v0::Parameter>(element::u64, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::u64, updates_shape);
+    auto A = op::v0::Constant::create(element::u16, Shape{}, {0});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -289,10 +289,10 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_indices)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 3, 1, 4};
-    auto R = make_shared<op::Parameter>(element::u32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::u32, updates_shape);
-    auto A = op::Constant::create(element::i32, Shape{}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::u32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::u32, updates_shape);
+    auto A = op::v0::Constant::create(element::i32, Shape{}, {1});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -317,10 +317,10 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_data_before_axis)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{3, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::u16, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::u16, updates_shape);
-    auto A = op::Constant::create(element::i8, Shape{}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::u16, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::u16, updates_shape);
+    auto A = op::v0::Constant::create(element::i8, Shape{}, {1});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -345,10 +345,10 @@ TEST(type_prop, scatter_add_v3_fail_updates_shape_data_after_axis)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 5};
-    auto R = make_shared<op::Parameter>(element::i8, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i8, updates_shape);
-    auto A = op::Constant::create(element::i16, Shape{}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::i8, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i8, updates_shape);
+    auto A = op::v0::Constant::create(element::i16, Shape{}, {1});
     try
     {
         auto G = make_shared<op::v3::ScatterAdd>(R, I, U, A);
@@ -373,10 +373,10 @@ TEST(type_prop, scatter_add_v3)
     Shape ref_shape{2, 3, 4};
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::i8, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i8, updates_shape);
-    auto A = op::Constant::create(element::i16, Shape{}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::i8, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i8, updates_shape);
+    auto A = op::v0::Constant::create(element::i16, Shape{}, {1});
 
     auto scatter_update = make_shared<op::v3::ScatterAdd>(R, I, U, A);
     EXPECT_EQ(scatter_update->get_output_element_type(0), element::i8);
@@ -388,10 +388,10 @@ TEST(type_prop, scatter_add_v3_dynamic_data_shape)
     PartialShape ref_shape = PartialShape::dynamic();
     Shape indices_shape{2, 1};
     Shape updates_shape{2, 2, 1, 4};
-    auto R = make_shared<op::Parameter>(element::i8, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i8, updates_shape);
-    auto A = op::Constant::create(element::i16, Shape{}, {1});
+    auto R = make_shared<op::v0::Parameter>(element::i8, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i8, updates_shape);
+    auto A = op::v0::Constant::create(element::i16, Shape{}, {1});
 
     auto scatter_update = make_shared<op::v3::ScatterAdd>(R, I, U, A);
     EXPECT_EQ(scatter_update->get_output_element_type(0), element::i8);

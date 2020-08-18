@@ -51,7 +51,7 @@ public:
     /// that match the pattern specified by \sa wrapped_nodes
     /// Example:
     /// \code{.cpp}
-    /// auto add = a + b; // a and b are op::Parameter in this example
+    /// auto add = a + b; // a and b are op::v0::Parameter in this example
     /// auto label = std::make_shared<pattern::op::Label>(element::f32,
     ///                                                   Shape{2,2},
     ///                                                   nullptr,
@@ -83,7 +83,7 @@ public:
     /// that match the pattern specified by \sa wrapped_values
     /// Example:
     /// \code{.cpp}
-    /// auto add = a + b; // a and b are op::Parameter in this example
+    /// auto add = a + b; // a and b are op::v0::Parameter in this example
     /// auto label = std::make_shared<pattern::op::Label>(add,
     ///                                                   nullptr,
     ///                                                   OutputVector{add});

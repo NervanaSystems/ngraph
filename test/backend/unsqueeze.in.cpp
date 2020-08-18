@@ -48,10 +48,10 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, unsqueeze)
 {
-    auto data_node = make_shared<op::Parameter>(element::f32, Shape{4, 2});
+    auto data_node = make_shared<op::v0::Parameter>(element::f32, Shape{4, 2});
     auto axes_node =
-        make_shared<ngraph::op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
-    auto squeeze = make_shared<op::Unsqueeze>(data_node, axes_node);
+        make_shared<ngraph::op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto squeeze = make_shared<op::v0::Unsqueeze>(data_node, axes_node);
 
     auto function = make_shared<Function>(OutputVector{squeeze}, ParameterVector{data_node});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

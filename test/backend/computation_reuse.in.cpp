@@ -31,22 +31,22 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, computation_reuse)
 {
     Shape shape_a{1, 16, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b, true);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b, true);
     Shape shape_r{1, 32, 2, 2};
-    auto conv = make_shared<op::Convolution>(A,
-                                             B,
-                                             Strides{1, 1},
-                                             Strides{1, 1},
-                                             CoordinateDiff{0, 0},
-                                             CoordinateDiff{0, 0},
-                                             Strides{1, 1});
+    auto conv = make_shared<op::v0::Convolution>(A,
+                                                 B,
+                                                 Strides{1, 1},
+                                                 Strides{1, 1},
+                                                 CoordinateDiff{0, 0},
+                                                 CoordinateDiff{0, 0},
+                                                 Strides{1, 1});
     Shape pool_shape{1, 1};
-    auto pool = make_shared<op::AvgPool>(conv, pool_shape);
-    auto bias = make_shared<op::Broadcast>(
-        op::Constant::create(element::f32, Shape{}, {2.14}), shape_r, AxisSet{0, 1, 2, 3});
-    auto result_op = make_shared<op::Result>(pool + bias);
+    auto pool = make_shared<op::v0::AvgPool>(conv, pool_shape);
+    auto bias = make_shared<op::v0::Broadcast>(
+        op::v0::Constant::create(element::f32, Shape{}, {2.14}), shape_r, AxisSet{0, 1, 2, 3});
+    auto result_op = make_shared<op::v0::Result>(pool + bias);
     auto f = make_shared<Function>(ResultVector{result_op}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

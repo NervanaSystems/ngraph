@@ -408,9 +408,5 @@ namespace ngraph
                 size_t m_groups;
             };
         }
-
-        using v0::GroupConvolution;
-        using v0::GroupConvolutionBackpropData;
-        using v0::GroupConvolutionBackpropFilters;
     }
 }

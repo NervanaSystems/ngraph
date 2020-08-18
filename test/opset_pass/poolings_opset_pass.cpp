@@ -13,7 +13,7 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_avgpool_upgrade_pass_floor)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape pads_begin{0, 0};
     Shape pads_end{0, 0};
     Strides strides{1, 1};
@@ -24,7 +24,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass_floor)
 
     auto avgpool_v0 = make_shared<op::v0::AvgPool>(
         arg, kernel_shape, strides, pads_begin, pads_end, include_pad, pad_mode, ceil_mode);
-    auto result = make_shared<op::Result>(avgpool_v0);
+    auto result = make_shared<op::v0::Result>(avgpool_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -47,7 +47,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass_floor)
 
 TEST(opset_transform, opset1_avgpool_upgrade_pass_ceil)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape pads_begin{0, 0};
     Shape pads_end{0, 0};
     Strides strides{1, 1};
@@ -58,7 +58,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass_ceil)
 
     auto avgpool_v0 = make_shared<op::v0::AvgPool>(
         arg, kernel_shape, strides, pads_begin, pads_end, include_pad, pad_mode, ceil_mode);
-    auto result = make_shared<op::Result>(avgpool_v0);
+    auto result = make_shared<op::v0::Result>(avgpool_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -81,7 +81,7 @@ TEST(opset_transform, opset1_avgpool_upgrade_pass_ceil)
 
 TEST(opset_transform, opset1_maxpool_upgrade_pass_fllor)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape pads_begin{0, 0};
     Shape pads_end{0, 0};
     Strides strides{1, 1};
@@ -91,7 +91,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass_fllor)
 
     auto maxpool_v0 = make_shared<op::v0::MaxPool>(
         arg, kernel_shape, strides, pads_begin, pads_end, pad_mode, ceil_mode);
-    auto result = make_shared<op::Result>(maxpool_v0);
+    auto result = make_shared<op::v0::Result>(maxpool_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -113,7 +113,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass_fllor)
 
 TEST(opset_transform, opset1_maxpool_upgrade_pass_ceil)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape pads_begin{0, 0};
     Shape pads_end{0, 0};
     Strides strides{1, 1};
@@ -123,7 +123,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass_ceil)
 
     auto maxpool_v0 = make_shared<op::v0::MaxPool>(
         arg, kernel_shape, strides, pads_begin, pads_end, pad_mode, ceil_mode);
-    auto result = make_shared<op::Result>(maxpool_v0);
+    auto result = make_shared<op::v0::Result>(maxpool_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -145,7 +145,7 @@ TEST(opset_transform, opset1_maxpool_upgrade_pass_ceil)
 
 TEST(opset_transform, opset1_avgpool_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape padding_below{1, 0};
     Shape padding_above{0, 1};
     Strides window_movement_strides{1, 1};
@@ -162,7 +162,7 @@ TEST(opset_transform, opset1_avgpool_downgrade_pass)
                                                    exclude_pad,
                                                    rounding_type,
                                                    auto_pad);
-    auto result = make_shared<op::Result>(avgpool_v1);
+    auto result = make_shared<op::v0::Result>(avgpool_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -185,7 +185,7 @@ TEST(opset_transform, opset1_avgpool_downgrade_pass)
 
 TEST(opset_transform, opset1_maxpool_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape padding_below{1, 0};
     Shape padding_above{0, 1};
     Strides window_movement_strides{1, 1};
@@ -200,7 +200,7 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
                                                    window_shape,
                                                    rounding_type,
                                                    pad_type);
-    auto result = make_shared<op::Result>(maxpool_v1);
+    auto result = make_shared<op::v0::Result>(maxpool_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -222,9 +222,9 @@ TEST(opset_transform, opset1_maxpool_downgrade_pass)
 
 TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
 {
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     auto forward_arg_shape =
-        op::Constant::create(element::i64, Shape{4}, vector<int64_t>{1, 3, 7, 10});
+        op::v0::Constant::create(element::i64, Shape{4}, vector<int64_t>{1, 3, 7, 10});
     Shape padding_below{1, 0};
     Shape padding_above{0, 1};
     Strides window_movement_strides{1, 1};
@@ -238,7 +238,7 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
                                                                     padding_above,
                                                                     window_shape,
                                                                     exclude_pad);
-    auto result = make_shared<op::Result>(avgpool_backprop_v1);
+    auto result = make_shared<op::v0::Result>(avgpool_backprop_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{delta});
 
     ngraph::pass::Manager pass_manager;
@@ -260,9 +260,9 @@ TEST(opset_transform, opset1_avgpool_backprop_downgrade_pass)
 
 TEST(opset_transform, opset1_maxpool_backprop_downgrade_pass)
 {
-    auto arg_forward = make_shared<op::Parameter>(element::f32, Shape{1, 3, 7, 10});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
-    auto result_forward = make_shared<op::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto arg_forward = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 7, 10});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
+    auto result_forward = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 6, 9});
     Shape padding_below{1, 0};
     Shape padding_above{0, 1};
     Strides window_movement_strides{1, 1};
@@ -275,7 +275,7 @@ TEST(opset_transform, opset1_maxpool_backprop_downgrade_pass)
                                                                      padding_below,
                                                                      padding_above,
                                                                      window_shape);
-    auto result = make_shared<op::Result>(max_pool_backprop_v1);
+    auto result = make_shared<op::v0::Result>(max_pool_backprop_v1);
     auto f = make_shared<Function>(ResultVector{result},
                                    ParameterVector{arg_forward, delta, result_forward});
 

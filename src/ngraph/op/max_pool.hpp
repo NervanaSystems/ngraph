@@ -348,8 +348,5 @@ namespace ngraph
                 Shape m_pads_end;
             };
         }
-
-        using v0::MaxPool;
-        using v0::MaxPoolBackprop;
     }
 }

@@ -354,7 +354,7 @@ void op::v0::Broadcast::generate_adjoints(autodiff::Adjoints& adjoints, const Ou
 
     auto x = input_value(0);
 
-    adjoints.add_delta(x, make_shared<op::Sum>(delta, m_broadcast_axes));
+    adjoints.add_delta(x, make_shared<op::v0::Sum>(delta, m_broadcast_axes));
 }
 
 namespace

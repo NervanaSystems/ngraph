@@ -49,12 +49,13 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
 {
     Shape data_shape{1, 2, 3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes =
+        make_shared<op::v0::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -76,12 +77,12 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
 {
     Shape data_shape{1, 2, 3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{0}, vector<int64_t>{});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::v0::Constant>(element::i64, Shape{0}, vector<int64_t>{});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -100,12 +101,12 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_empty_axes_input)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_h_4d)
 {
     Shape data_shape{1, 2, 3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::v0::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -126,12 +127,12 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_h_4d)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_1axis_5d)
 {
     Shape data_shape{1, 2, 2, 2, 3};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::v0::Constant>(element::i64, Shape{1}, vector<int64_t>{1});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -152,12 +153,13 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_1axis_5d)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
 {
     Shape data_shape{1, 2, 2, 2, 3};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes =
+        make_shared<op::v0::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -178,12 +180,12 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_123axes_5d)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
 {
     Shape data_shape{2, 2};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::v0::Constant>(element::i64, Shape{}, vector<int64_t>{1});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -202,12 +204,12 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x2_shape)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
 {
     Shape data_shape{2, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{1});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes = make_shared<op::v0::Constant>(element::i64, Shape{}, vector<int64_t>{1});
     float eps{1e-6f};
     auto eps_mode = op::EpsMode::ADD;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -233,12 +235,13 @@ NGRAPH_TEST(${BACKEND_NAME}, normalize_across_c_2x4_shape)
 NGRAPH_TEST(${BACKEND_NAME}, normalize_across_chw_4d_max_bias)
 {
     Shape data_shape{1, 2, 3, 4};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto axes = make_shared<op::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto axes =
+        make_shared<op::v0::Constant>(element::i64, Shape{3}, vector<int64_t>{1, 2, 3});
     float eps{5000};
     auto eps_mode = op::EpsMode::MAX;
 
-    auto normalize = make_shared<op::NormalizeL2>(data, axes, eps, eps_mode);
+    auto normalize = make_shared<op::v0::NormalizeL2>(data, axes, eps, eps_mode);
     auto function = make_shared<Function>(OutputVector{normalize}, ParameterVector{data});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");

@@ -39,14 +39,14 @@ TEST(pass, constant_to_broadcast)
 {
     Shape shape{128, 256, 1, 1};
     vector<float> v = {3};
-    auto c = make_shared<op::Constant>(element::f32, shape, v);
+    auto c = make_shared<op::v0::Constant>(element::f32, shape, v);
     auto f = make_shared<Function>(c, ParameterVector{});
 
     {
         ngraph::pass::Manager pm;
         pm.register_pass<pass::ConstantToBroadcast>();
-        EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
+        EXPECT_EQ(count_ops_of_type<op::v0::Broadcast>(f), 0);
         pm.run_passes(f);
-        EXPECT_EQ(count_ops_of_type<op::Broadcast>(f), 1);
+        EXPECT_EQ(count_ops_of_type<op::v0::Broadcast>(f), 1);
     }
 }

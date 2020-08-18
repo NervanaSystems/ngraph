@@ -46,7 +46,7 @@ static void visualize_layout_format(const Node& node, ostream& ss)
         {
             return;
         }
-        if (auto reshape = dynamic_cast<const op::Reshape*>(&node))
+        if (auto reshape = dynamic_cast<const op::v0::Reshape*>(&node))
         {
             ss << "\ninput_order=" << reshape->get_input_order();
         }
@@ -82,7 +82,7 @@ namespace ngraph
             {
                 const static visualize_tree_ops_map_t vtom{
                     {runtime::cpu::op::ConvertLayout::type_info, visualize_layout_format},
-                    {ngraph::op::Reshape::type_info, visualize_layout_format}};
+                    {ngraph::op::v0::Reshape::type_info, visualize_layout_format}};
                 return vtom;
             }
         }

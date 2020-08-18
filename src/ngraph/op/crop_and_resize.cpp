@@ -22,14 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::CropAndResize::type_info;
+constexpr NodeTypeInfo op::v0::CropAndResize::type_info;
 
-op::CropAndResize::CropAndResize(const Output<Node>& image,
-                                 const Output<Node>& boxes,
-                                 const Output<Node>& box_indices,
-                                 const Output<Node>& crop_size,
-                                 ResizeMethod resize_method,
-                                 float extrapolation_value)
+op::v0::CropAndResize::CropAndResize(const Output<Node>& image,
+                                     const Output<Node>& boxes,
+                                     const Output<Node>& box_indices,
+                                     const Output<Node>& crop_size,
+                                     ResizeMethod resize_method,
+                                     float extrapolation_value)
     : Op({image, boxes, box_indices, crop_size})
     , m_resize_method(resize_method)
     , m_extrapolation_value(extrapolation_value)
@@ -37,7 +37,7 @@ op::CropAndResize::CropAndResize(const Output<Node>& image,
     constructor_validate_and_infer_types();
 }
 
-void op::CropAndResize::validate_and_infer_types()
+void op::v0::CropAndResize::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this, get_input_size() == 4);
     NODE_VALIDATION_CHECK(
@@ -95,7 +95,7 @@ void op::CropAndResize::validate_and_infer_types()
     NODE_VALIDATION_CHECK(this, crop_size_et.is_integral(), "crops_size must be integral");
     auto crop_size_node = crop_size.get_node_shared_ptr();
     NODE_VALIDATION_CHECK(this, crop_size_node->is_constant(), "crop_size must be a constant");
-    auto crop_size_const = static_pointer_cast<op::Constant>(crop_size_node);
+    auto crop_size_const = static_pointer_cast<op::v0::Constant>(crop_size_node);
     if (crop_size_et == element::i8)
     {
         auto v = crop_size_const->get_vector<int8_t>();
@@ -145,7 +145,7 @@ void op::CropAndResize::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::CropAndResize::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::CropAndResize::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<CropAndResize>(new_args.at(0),
@@ -156,16 +156,16 @@ shared_ptr<Node> op::CropAndResize::clone_with_new_inputs(const OutputVector& ne
                                       m_extrapolation_value);
 }
 
-static const vector<pair<string, op::CropAndResize::ResizeMethod>>& get_resize_pairs()
+static const vector<pair<string, op::v0::CropAndResize::ResizeMethod>>& get_resize_pairs()
 {
-    static vector<pair<string, op::CropAndResize::ResizeMethod>> pairs{
-        {"unspecified", op::CropAndResize::ResizeMethod::unspecified},
-        {"bilinear", op::CropAndResize::ResizeMethod::bilinear},
-        {"nearest", op::CropAndResize::ResizeMethod::nearest}};
+    static vector<pair<string, op::v0::CropAndResize::ResizeMethod>> pairs{
+        {"unspecified", op::v0::CropAndResize::ResizeMethod::unspecified},
+        {"bilinear", op::v0::CropAndResize::ResizeMethod::bilinear},
+        {"nearest", op::v0::CropAndResize::ResizeMethod::nearest}};
     return pairs;
 }
 
-const string& ngraph::as_string(op::CropAndResize::ResizeMethod resize_method)
+const string& ngraph::as_string(op::v0::CropAndResize::ResizeMethod resize_method)
 {
     for (auto& p : get_resize_pairs())
     {
@@ -180,7 +180,8 @@ const string& ngraph::as_string(op::CropAndResize::ResizeMethod resize_method)
 namespace ngraph
 {
     template <>
-    op::CropAndResize::ResizeMethod as_type<op::CropAndResize::ResizeMethod>(const std::string& s)
+    op::v0::CropAndResize::ResizeMethod
+        as_type<op::v0::CropAndResize::ResizeMethod>(const std::string& s)
     {
         for (auto& p : get_resize_pairs())
         {

@@ -72,6 +72,5 @@ namespace ngraph
                 size_t m_group;
             };
         }
-        using v0::ShuffleChannels;
     }
 }

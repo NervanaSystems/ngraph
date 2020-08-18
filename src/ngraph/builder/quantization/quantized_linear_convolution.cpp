@@ -56,22 +56,22 @@ namespace ngraph
                     const auto zero = make_constant(element::i32, input_scale.get_shape(), 0);
                     const AxisSet quantization_axes;
                     const auto bias_scale = input_scale * filter_scale;
-                    op::Quantize::RoundMode round_mode =
-                        op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+                    op::v0::Quantize::RoundMode round_mode =
+                        op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                    mybias = make_shared<op::Quantize>(
+                    mybias = make_shared<op::v0::Quantize>(
                         bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
                 }
-                return make_shared<op::QuantizedConvolutionBias>(input,
-                                                                 filter,
-                                                                 mybias,
-                                                                 window_movement_strides,
-                                                                 window_dilation_strides,
-                                                                 padding_below,
-                                                                 padding_above,
-                                                                 data_dilation_strides,
-                                                                 requantization_scale,
-                                                                 false)
+                return make_shared<op::v0::QuantizedConvolutionBias>(input,
+                                                                     filter,
+                                                                     mybias,
+                                                                     window_movement_strides,
+                                                                     window_dilation_strides,
+                                                                     padding_below,
+                                                                     padding_above,
+                                                                     data_dilation_strides,
+                                                                     requantization_scale,
+                                                                     false)
                     ->add_provenance_group_members_above(
                         {input, filter, bias, input_scale, filter_scale, output_scale});
             }

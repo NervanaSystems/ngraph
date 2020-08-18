@@ -61,6 +61,5 @@ namespace ngraph
                 AutoBroadcastSpec m_autobroadcast;
             };
         }
-        using v0::SquaredDifference;
     }
 }

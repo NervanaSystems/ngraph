@@ -47,6 +47,5 @@ namespace ngraph
                 reduction::Type m_reduce_type{reduction::Type::SUM};
             };
         }
-        using v0::AllReduce;
     }
 }

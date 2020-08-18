@@ -539,13 +539,13 @@ NGRAPH_TEST_P(${BACKEND_NAME}, DynReplaceSliceTest, dyn_replace_slice)
     auto output = backend->create_dynamic_tensor(t->input_element_type, PartialShape::dynamic());
 
     auto setup = [&t, &backend, &output]() {
-        auto arg = std::make_shared<op::Parameter>(t->input_element_type, t->input_shape);
-        auto repl = std::make_shared<op::Parameter>(t->replacement_element_type, t->replacement_shape);
-        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{t->lb_values.size()});
-        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{t->ub_values.size()});
-        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{t->strides_values.size()});
+        auto arg = std::make_shared<op::v0::Parameter>(t->input_element_type, t->input_shape);
+        auto repl = std::make_shared<op::v0::Parameter>(t->replacement_element_type, t->replacement_shape);
+        auto lb = std::make_shared<op::v0::Parameter>(element::i64, Shape{t->lb_values.size()});
+        auto ub = std::make_shared<op::v0::Parameter>(element::i64, Shape{t->ub_values.size()});
+        auto strides = std::make_shared<op::v0::Parameter>(element::i64, Shape{t->strides_values.size()});
 
-        auto rsl = std::make_shared<op::DynReplaceSlice>(arg, repl,
+        auto rsl = std::make_shared<op::v0::DynReplaceSlice>(arg, repl,
                                                          lb, ub, strides,
                                                          t->lb_mask, t->ub_mask, t->new_mask,
                                                          t->shrink_mask, t->ellipsis_mask);

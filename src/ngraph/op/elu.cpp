@@ -29,9 +29,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Elu::type_info;
+constexpr NodeTypeInfo op::v0::Elu::type_info;
 
-op::Elu::Elu(const Output<Node>& data, const double alpha)
+op::v0::Elu::Elu(const Output<Node>& data, const double alpha)
     : FusedOp({data})
     , m_alpha{alpha}
 {
@@ -44,24 +44,24 @@ bool ngraph::op::v0::Elu::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-OutputVector op::Elu::decompose_op() const
+OutputVector op::v0::Elu::decompose_op() const
 {
     auto data = input_value(0);
     shared_ptr<Node> alpha_node =
-        make_shared<op::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
+        make_shared<op::v0::Constant>(data.get_element_type(), Shape{}, vector<double>{m_alpha});
 
     alpha_node = builder::numpy_broadcast(alpha_node, data.get_shape());
 
     shared_ptr<ngraph::Node> zero_node =
         builder::make_constant(data.get_element_type(), data.get_shape(), 0);
 
-    return {make_shared<ngraph::op::Maximum>(data, zero_node) +
-            alpha_node *
-                make_shared<ngraph::op::Exp>(make_shared<ngraph::op::Minimum>(data, zero_node)) -
+    return {make_shared<ngraph::op::v0::Maximum>(data, zero_node) +
+            alpha_node * make_shared<ngraph::op::v0::Exp>(
+                             make_shared<ngraph::op::v0::Minimum>(data, zero_node)) -
             alpha_node};
 }
 
-shared_ptr<Node> op::Elu::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Elu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Elu>(new_args.at(0), m_alpha);

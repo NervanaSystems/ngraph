@@ -42,8 +42,8 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_to_scalar)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -62,8 +62,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_large_1d_to_scalar)
 {
     Shape shape{1000000};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -92,9 +92,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_large_1d_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_columns)
 {
     Shape shape_a{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -113,9 +113,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_columns)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_6d)
 {
     Shape shape_a{2, 6, 4, 5, 7, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{2, 4, 5, 3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{1, 4});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{1, 4});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -144,9 +144,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_6d)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_rows)
 {
     Shape shape_a{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -165,9 +165,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_rows)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_rows_zero)
 {
     Shape shape_a{3, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -188,9 +188,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_cols_zero)
 {
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -210,9 +210,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_cols_zero)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_vector_zero)
 {
     Shape shape_a{0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -232,9 +232,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_vector_zero)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_to_scalar_zero_by_zero)
 {
     Shape shape_a{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -254,9 +254,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_to_scalar_zero_by_zero)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -285,9 +285,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_matrix_most_sig)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 2);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 2);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -316,9 +316,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_matrix_least_sig)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -341,9 +341,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_vector)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -366,9 +366,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -390,9 +390,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_to_scalar_int32)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_eliminate_zero_dim)
 {
     Shape shape_a{3, 0, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -415,9 +415,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_eliminate_zero_dim)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_eliminate_zero_dim_int32)
 {
     Shape shape_a{3, 0, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_rt{3, 2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -440,9 +440,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_3d_eliminate_zero_dim_int32)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_5d_to_scalar)
 {
     Shape shape_a{3, 3, 3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
+    auto axes =
+        make_shared<op::v0::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -461,9 +462,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_5d_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_5d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
+    auto axes =
+        make_shared<op::v0::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -482,9 +484,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_5d_to_scalar_int32)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_2d_to_scalar_int8)
 {
     Shape shape_a{3, 3};
-    auto A = make_shared<op::Parameter>(element::i8, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i8, shape_a);
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -504,8 +506,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_trivial_in_double)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -532,16 +534,16 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_stable_acc)
         return;
     }
     Shape shape_a{10, 10, 10, 30};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
     Shape shape_rt{10};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
     test::Uniform<float> rng(1000.0f, 1000.1f, 2112);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -567,16 +569,16 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_stable_acc_double)
         return;
     }
     Shape shape_a{10, 10, 20, 300};
-    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape_a);
 
     Shape shape_rt{10};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
     test::Uniform<double> rng(1000000000.0L, 1000000000.001L, 2112);
     vector<vector<double>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -600,10 +602,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_stable_simple_float)
         return;
     }
     Shape shape_a{20};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -631,10 +633,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_stable_simple_double)
         return;
     }
     Shape shape_a{20};
-    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape_a);
 
     Shape shape_rt{};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -675,9 +677,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_stable_simple_double)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_dynamic)
 {
     // Create a graph for f(x,axes:int32) = Sum(x,Convert<int64>(axes)).
-    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+    auto x = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes_i64 = make_shared<op::v0::Convert>(axes, element::i64);
 
     auto sum = make_shared<op::v1::ReduceSum>(x, axes_i64, false);
     ASSERT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
@@ -725,8 +727,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_dynamic)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_inf)
 {
     Shape shape{7, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -765,8 +767,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_inf)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_to_scalar)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -785,8 +787,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_large_1d_to_scalar)
 {
     Shape shape{1000000};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -815,9 +817,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_large_1d_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_columns)
 {
     Shape shape_a{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -836,9 +838,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_columns)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_6d)
 {
     Shape shape_a{2, 6, 4, 5, 7, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{2, 1, 4, 5, 1, 3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{1, 4});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{1, 4});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -867,9 +869,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_6d)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_rows)
 {
     Shape shape_a{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -888,9 +890,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_rows)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_rows_zero)
 {
     Shape shape_a{3, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -911,9 +913,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_cols_zero)
 {
     // Now the reduction (g(x:float32[2,2],y:float32[]) = reduce(x,y,f,axes={})).
     Shape shape_a{0, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -933,9 +935,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_cols_zero)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_vector_zero)
 {
     Shape shape_a{0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -955,9 +957,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_vector_zero)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_to_scalar_zero_by_zero)
 {
     Shape shape_a{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -977,9 +979,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_to_scalar_zero_by_zero)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_matrix_most_sig)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 3, 3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1008,9 +1010,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_matrix_most_sig)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_matrix_least_sig)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 3, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 2);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 2);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1039,9 +1041,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_matrix_least_sig)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_vector)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 1, 3};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1064,9 +1066,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_vector)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_scalar)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1089,9 +1091,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_rt{1, 1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{0, 1, 2});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1113,9 +1115,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_to_scalar_int32)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_eliminate_zero_dim)
 {
     Shape shape_a{3, 0, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{3, 1, 2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1138,9 +1140,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_eliminate_zero_dim)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_eliminate_zero_dim_int32)
 {
     Shape shape_a{3, 0, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_rt{3, 1, 2};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1163,9 +1165,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_3d_eliminate_zero_dim_int32)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_5d_to_scalar)
 {
     Shape shape_a{3, 3, 3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_rt{1, 1, 1, 1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
+    auto axes =
+        make_shared<op::v0::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1184,9 +1187,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_5d_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_5d_to_scalar_int32)
 {
     Shape shape_a{3, 3, 3, 3, 3};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_rt{1, 1, 1, 1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
+    auto axes =
+        make_shared<op::v0::Constant>(element::i32, Shape{5}, vector<int32_t>{0, 1, 2, 3, 4});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1205,9 +1209,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_5d_to_scalar_int32)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_2d_to_scalar_int8)
 {
     Shape shape_a{3, 3};
-    auto A = make_shared<op::Parameter>(element::i8, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i8, shape_a);
     Shape shape_rt{1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{2}, vector<int32_t>{0, 1});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1227,8 +1231,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_trivial_in_double)
 {
     Shape shape{4, 3};
     Shape rshape{1, 3};
-    auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1255,16 +1259,16 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_stable_acc)
         return;
     }
     Shape shape_a{10, 10, 10, 30};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
     Shape shape_rt{10, 1, 1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
     test::Uniform<float> rng(1000.0f, 1000.1f, 2112);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -1290,16 +1294,16 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_stable_acc_double)
         return;
     }
     Shape shape_a{10, 10, 20, 300};
-    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape_a);
 
     Shape shape_rt{10, 1, 1, 1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{3}, vector<int32_t>{1, 2, 3});
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
     test::Uniform<double> rng(1000000000.0L, 1000000000.001L, 2112);
     vector<vector<double>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         vector<double> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -1323,10 +1327,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_stable_simple_float)
         return;
     }
     Shape shape_a{20};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
     Shape shape_rt{1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1354,10 +1358,10 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_stable_simple_double)
         return;
     }
     Shape shape_a{20};
-    auto A = make_shared<op::Parameter>(element::f64, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape_a);
 
     Shape shape_rt{1};
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1398,9 +1402,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_stable_simple_double)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_dynamic)
 {
     // Create a graph for f(x,axes:int32) = Sum(x,Convert<int64>(axes)).
-    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+    auto x = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes_i64 = make_shared<op::v0::Convert>(axes, element::i64);
 
     auto sum = make_shared<op::v1::ReduceSum>(x, axes_i64, true);
     ASSERT_TRUE(sum->get_output_partial_shape(0).rank().is_dynamic());
@@ -1448,8 +1452,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_dynamic)
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_inf)
 {
     Shape shape{7, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1487,8 +1491,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_inf)
 
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_columns_dynamic)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -1507,8 +1511,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_columns_dynamic)
 
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_rows_dynamic)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, false), ParameterVector{A});
 
@@ -1527,8 +1531,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_matrix_rows_dynamic)
 
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_columns_dynamic)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 0);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 
@@ -1547,8 +1551,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_columns_dynamic)
 
 NGRAPH_TEST(${BACKEND_NAME}, reduce_sum_keep_matrix_rows_dynamic)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto axes = make_shared<op::Constant>(element::i32, Shape{}, 1);
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto axes = make_shared<op::v0::Constant>(element::i32, Shape{}, 1);
     auto f =
         make_shared<Function>(make_shared<op::v1::ReduceSum>(A, axes, true), ParameterVector{A});
 

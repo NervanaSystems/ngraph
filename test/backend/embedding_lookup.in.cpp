@@ -40,9 +40,9 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_4x5_reverse)
 {
     Shape shape{4};
     Shape rshape{4, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto embed = make_shared<op::EmbeddingLookup>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto embed = make_shared<op::v0::EmbeddingLookup>(A, B);
     auto f0 = make_shared<Function>(OutputVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -64,9 +64,9 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary)
 {
     Shape shape{10};
     Shape rshape{10, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto embed = make_shared<op::EmbeddingLookup>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto embed = make_shared<op::v0::EmbeddingLookup>(A, B);
     auto f0 = make_shared<Function>(OutputVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -87,9 +87,9 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary_index_type_int)
 {
     Shape shape{10};
     Shape rshape{10, 1};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto embed = make_shared<op::EmbeddingLookup>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto embed = make_shared<op::v0::EmbeddingLookup>(A, B);
     auto f0 = make_shared<Function>(OutputVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -111,9 +111,9 @@ NGRAPH_TEST(${BACKEND_NAME}, embedding_lookup_10x1_arbitrary_index_type_int64)
 {
     Shape shape{10};
     Shape rshape{10, 1};
-    auto A = make_shared<op::Parameter>(element::i64, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto embed = make_shared<op::EmbeddingLookup>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::i64, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto embed = make_shared<op::v0::EmbeddingLookup>(A, B);
     auto f0 = make_shared<Function>(OutputVector{embed}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

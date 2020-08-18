@@ -60,6 +60,5 @@ namespace ngraph
         }
 
         // default opset version
-        using v1::LogicalXor;
     }
 }

@@ -21,27 +21,27 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::RandomUniform::type_info;
+constexpr NodeTypeInfo op::v0::RandomUniform::type_info;
 
-op::RandomUniform::RandomUniform(const Output<Node>& min_value,
-                                 const Output<Node>& max_value,
-                                 const Output<Node>& result_shape,
-                                 const Output<Node>& use_fixed_seed,
-                                 uint64_t fixed_seed)
+op::v0::RandomUniform::RandomUniform(const Output<Node>& min_value,
+                                     const Output<Node>& max_value,
+                                     const Output<Node>& result_shape,
+                                     const Output<Node>& use_fixed_seed,
+                                     uint64_t fixed_seed)
     : Op({min_value, max_value, result_shape, use_fixed_seed})
     , m_fixed_seed(fixed_seed)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::RandomUniform::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::RandomUniform::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<op::RandomUniform>(
+    return make_shared<op::v0::RandomUniform>(
         new_args.at(0), new_args.at(1), new_args.at(2), new_args.at(3), m_fixed_seed);
 }
 
-void ngraph::op::RandomUniform::validate_and_infer_types()
+void ngraph::op::v0::RandomUniform::validate_and_infer_types()
 {
     element::Type result_element_type;
 
@@ -81,7 +81,7 @@ void ngraph::op::RandomUniform::validate_and_infer_types()
 
     PartialShape result_shape;
 
-    if (auto result_shape_source_constant = as_type<op::Constant>(input_value(2).get_node()))
+    if (auto result_shape_source_constant = as_type<op::v0::Constant>(input_value(2).get_node()))
     {
         result_shape = result_shape_source_constant->get_shape_val();
     }

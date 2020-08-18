@@ -44,7 +44,7 @@ void op::v0::Abs::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
     auto x = input_value(0);
 
-    adjoints.add_delta(x, delta * make_shared<op::Sign>(x));
+    adjoints.add_delta(x, delta * make_shared<op::v0::Sign>(x));
 }
 
 namespace
