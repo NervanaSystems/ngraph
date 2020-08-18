@@ -70,7 +70,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_fprop()
     // parameter with one-hot encoded values
     auto param_2 = std::make_shared<pattern::op::Label>(element::f32, Shape{41, 37});
     auto log = std::make_shared<ngraph::op::Log>(softmax);
-    auto multiply = std::make_shared<ngraph::op::Multiply>(param_2, log);
+    auto multiply = std::make_shared<ngraph::op::v1::Multiply>(param_2, log);
 
     auto reduction_axes = ngraph::op::Constant::create(element::i64, Shape{}, {1});
     auto reduction_axes_label = std::make_shared<pattern::op::Label>(reduction_axes);
@@ -103,7 +103,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto max_x = std::make_shared<ngraph::op::Max>(input_x, constant_1);
     auto broadcast_max_x =
         std::make_shared<ngraph::op::Broadcast>(max_x, Shape{41, 37}, AxisSet{1});
-    auto subtract_input_x = std::make_shared<ngraph::op::Subtract>(input_x, broadcast_max_x);
+    auto subtract_input_x = std::make_shared<ngraph::op::v1::Subtract>(input_x, broadcast_max_x);
     auto constant_2 = ngraph::op::Constant::create(element::f32, Shape{41, 37}, {1});
     auto maximum = std::make_shared<ngraph::op::Maximum>(constant_2, subtract_input_x);
     auto softmax_axes = ngraph::op::Constant::create(element::i64, Shape{1}, {1});
@@ -118,18 +118,18 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
     auto labels_y = std::make_shared<pattern::op::Label>(
         element::f32, Shape{41, 37}, pattern::has_class<op::Parameter>());
     auto negative_y = std::make_shared<ngraph::op::Negative>(labels_y);
-    auto multiply_ce = std::make_shared<ngraph::op::Multiply>(negative_y, delta_label);
+    auto multiply_ce = std::make_shared<ngraph::op::v1::Multiply>(negative_y, delta_label);
 
     // summation
-    auto divide_sm_ce = std::make_shared<ngraph::op::Divide>(multiply_ce, softmax_label);
-    auto multiply_sm_ce = std::make_shared<ngraph::op::Multiply>(softmax_label, divide_sm_ce);
+    auto divide_sm_ce = std::make_shared<ngraph::op::v1::Divide>(multiply_ce, softmax_label);
+    auto multiply_sm_ce = std::make_shared<ngraph::op::v1::Multiply>(softmax_label, divide_sm_ce);
     auto reduction_axes_label = std::make_shared<pattern::op::Label>(element::i64, Shape{1});
     auto summation = std::make_shared<ngraph::op::Sum>(multiply_sm_ce, reduction_axes_label);
     auto broadcast_summation =
         std::make_shared<ngraph::op::Broadcast>(summation, Shape{41, 37}, AxisSet{1});
 
-    auto subtract = std::make_shared<ngraph::op::Subtract>(divide_sm_ce, broadcast_summation);
-    auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
+    auto subtract = std::make_shared<ngraph::op::v1::Subtract>(divide_sm_ce, broadcast_summation);
+    auto multiply = std::make_shared<ngraph::op::v1::Multiply>(softmax_label, subtract);
 
     auto callback = [input_x, delta_label, labels_y, reduction_axes_label, softmax_label](
                         pattern::Matcher& m) {
@@ -159,7 +159,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     auto max_x = std::make_shared<ngraph::op::Max>(input_x, constant_1);
     auto broadcast_max_x =
         std::make_shared<ngraph::op::Broadcast>(max_x, Shape{41, 37}, AxisSet{1});
-    auto subtract_input_x = std::make_shared<ngraph::op::Subtract>(input_x, broadcast_max_x);
+    auto subtract_input_x = std::make_shared<ngraph::op::v1::Subtract>(input_x, broadcast_max_x);
     auto constant_2 = ngraph::op::Constant::create(element::f64, Shape{41, 37}, {1});
     auto maximum = std::make_shared<ngraph::op::Maximum>(constant_2, subtract_input_x);
     auto softmax_axes = ngraph::op::Constant::create(element::i64, Shape{1}, {1});
@@ -187,19 +187,19 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     auto one_hot = std::make_shared<ngraph::op::OneHot>(reshape_labels, Shape{41, 37}, size_t(1));
     auto convert_one_hot = std::make_shared<ngraph::op::Convert>(one_hot, element::f64);
     auto negative_y = std::make_shared<ngraph::op::Negative>(convert_one_hot);
-    auto multiply_ce = std::make_shared<ngraph::op::Multiply>(negative_y, delta_label);
+    auto multiply_ce = std::make_shared<ngraph::op::v1::Multiply>(negative_y, delta_label);
 
     // summation
-    auto divide_sm_ce = std::make_shared<ngraph::op::Divide>(multiply_ce, softmax_label);
-    auto multiply_mask = std::make_shared<ngraph::op::Multiply>(divide_sm_ce, broadcast_mask);
-    auto multiply_sm_ce = std::make_shared<ngraph::op::Multiply>(softmax_label, multiply_mask);
+    auto divide_sm_ce = std::make_shared<ngraph::op::v1::Divide>(multiply_ce, softmax_label);
+    auto multiply_mask = std::make_shared<ngraph::op::v1::Multiply>(divide_sm_ce, broadcast_mask);
+    auto multiply_sm_ce = std::make_shared<ngraph::op::v1::Multiply>(softmax_label, multiply_mask);
     auto reduction_axes_label = std::make_shared<pattern::op::Label>(element::i64, Shape{1});
     auto summation = std::make_shared<ngraph::op::Sum>(multiply_sm_ce, reduction_axes_label);
     auto broadcast_summation =
         std::make_shared<ngraph::op::Broadcast>(summation, Shape{41, 37}, AxisSet{1});
 
-    auto subtract = std::make_shared<ngraph::op::Subtract>(multiply_mask, broadcast_summation);
-    auto multiply = std::make_shared<ngraph::op::Multiply>(softmax_label, subtract);
+    auto subtract = std::make_shared<ngraph::op::v1::Subtract>(multiply_mask, broadcast_summation);
+    auto multiply = std::make_shared<ngraph::op::v1::Multiply>(softmax_label, subtract);
 
     auto callback = [input_x,
                      delta_label,
@@ -271,8 +271,8 @@ void pass::CoreFusion::construct_sigmoid()
     auto skip_broadcast =
         make_shared<pattern::op::Skip>(constant, pattern::has_class<op::Broadcast>());
 
-    auto add_exp = make_shared<op::Add>(exp_neg_input, skip_broadcast);
-    auto divide_1_over_exp = make_shared<op::Divide>(skip_broadcast, add_exp);
+    auto add_exp = make_shared<op::v1::Add>(exp_neg_input, skip_broadcast);
+    auto divide_1_over_exp = make_shared<op::v1::Divide>(skip_broadcast, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input, constant](pattern::Matcher& m) {
@@ -319,17 +319,17 @@ void pass::CoreFusion::construct_sigmoid_bprop()
     auto constant = make_shared<pattern::op::Label>(element::f32, Shape{});
     auto broadcast_constant = make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
-    auto add_exp = make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    // auto divide_1_over_exp = make_shared<op::Divide>(broadcast_constant, add_exp);
+    auto add_exp = make_shared<op::v1::Add>(exp_neg_input, broadcast_constant);
+    // auto divide_1_over_exp = make_shared<op::v1::Divide>(broadcast_constant, add_exp);
     auto sigmoid_fwd = make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
 
     auto delta = make_shared<pattern::op::Label>(element::f32, Shape{3, 4});
     auto neg_delta = make_shared<op::Negative>(delta);
 
-    auto multiply_sigmoid_delta = make_shared<op::Multiply>(sigmoid_fwd, neg_delta);
-    auto divide_2 = make_shared<op::Divide>(multiply_sigmoid_delta, add_exp);
+    auto multiply_sigmoid_delta = make_shared<op::v1::Multiply>(sigmoid_fwd, neg_delta);
+    auto divide_2 = make_shared<op::v1::Divide>(multiply_sigmoid_delta, add_exp);
 
-    auto multiply_2 = make_shared<op::Multiply>(divide_2, exp_neg_input);
+    auto multiply_2 = make_shared<op::v1::Multiply>(divide_2, exp_neg_input);
     auto negative_2 = make_shared<op::Negative>(multiply_2);
 
     // Define a call back that needs to called once the DFG matches the pattern
@@ -409,16 +409,16 @@ void pass::CoreFusion::construct_folded_batch_norm()
         // new biases = -mean * gamma / sqrt(variance + epsilon) + beta
 
         auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
-        auto var_eps = make_shared<op::Add>(
+        auto var_eps = make_shared<op::v1::Add>(
             pattern_map[var],
             make_shared<op::Broadcast>(bn_eps, pattern_map[var].get_shape(), AxisSet{0}));
         auto sqrt_var_eps = make_shared<op::Sqrt>(var_eps);
 
-        auto mean_gamma = make_shared<op::Multiply>(pattern_map[mean], pattern_map[gamma]);
-        auto new_biases = make_shared<op::Subtract>(
-            pattern_map[beta], make_shared<op::Divide>(mean_gamma, sqrt_var_eps));
-        auto weight_scaling = make_shared<op::Divide>(pattern_map[gamma], sqrt_var_eps);
-        auto new_weights = make_shared<op::Multiply>(
+        auto mean_gamma = make_shared<op::v1::Multiply>(pattern_map[mean], pattern_map[gamma]);
+        auto new_biases = make_shared<op::v1::Subtract>(
+            pattern_map[beta], make_shared<op::v1::Divide>(mean_gamma, sqrt_var_eps));
+        auto weight_scaling = make_shared<op::v1::Divide>(pattern_map[gamma], sqrt_var_eps);
+        auto new_weights = make_shared<op::v1::Multiply>(
             pattern_map[filters],
             make_shared<op::Broadcast>(
                 weight_scaling, pattern_map[filters].get_shape(), AxisSet{1, 2, 3}));
@@ -463,8 +463,8 @@ void pass::CoreFusion::construct_conv_affine_folding()
     auto Bc = make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto B = make_shared<op::Broadcast>(Bc, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
     auto B_label = make_shared<pattern::op::Label>(B, nullptr, OutputVector{B});
-    auto multiply = make_shared<op::Multiply>(conv_label, A_label);
-    auto add = make_shared<op::Add>(multiply, B_label);
+    auto multiply = make_shared<op::v1::Multiply>(conv_label, A_label);
+    auto add = make_shared<op::v1::Add>(multiply, B_label);
 
     auto callback = [input, filters, conv_label, A_label, B_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for conv affine folding against node = "
@@ -528,7 +528,7 @@ void pass::CoreFusion::construct_conv_affine_folding()
         // new weights = old weights * Ac_m
         // new biases = Bc_m
 
-        auto filters_n = make_shared<op::Multiply>(
+        auto filters_n = make_shared<op::v1::Multiply>(
             pvm[filters],
             make_shared<op::Broadcast>(Ac_m, pvm[filters].get_shape(), AxisSet{1, 2, 3}));
 
@@ -697,7 +697,7 @@ void pass::CoreFusion::construct_optimized_strided_conv()
         make_shared<pattern::op::Label>(conv_stride3, nullptr, OutputVector{conv_stride3});
 
     auto broadcast_w3_label = make_shared<pattern::op::Label>(conv_stride3_label, is_bc);
-    auto add_w3 = make_shared<op::Add>(conv_stride3_label, broadcast_w3_label);
+    auto add_w3 = make_shared<op::v1::Add>(conv_stride3_label, broadcast_w3_label);
     auto relu_w3 = make_shared<op::Relu>(add_w3);
 
     auto weights_stride1 = make_shared<pattern::op::Label>(element::f32, win_size_1);
@@ -705,11 +705,11 @@ void pass::CoreFusion::construct_optimized_strided_conv()
     auto conv_stride1_label =
         make_shared<pattern::op::Label>(conv_stride1, nullptr, OutputVector{conv_stride1});
     auto broadcast_w1_label = make_shared<pattern::op::Label>(conv_stride1_label, is_bc);
-    auto add_w1 = make_shared<op::Add>(conv_stride1_label, broadcast_w1_label);
+    auto add_w1 = make_shared<op::v1::Add>(conv_stride1_label, broadcast_w1_label);
 
     auto eltwise_arg_label =
         make_shared<pattern::op::Label>(element::f32, conv_stride1->get_output_shape(0));
-    auto add_two_convs = make_shared<op::Add>(add_w1, eltwise_arg_label);
+    auto add_two_convs = make_shared<op::v1::Add>(add_w1, eltwise_arg_label);
 
     auto relu_two_convs = make_shared<op::Relu>(add_two_convs);
 
@@ -836,19 +836,19 @@ void pass::CoreFusion::construct_optimized_strided_conv()
                                                         pad_1,
                                                         pad_1);
 
-        auto new_add_conv_28w3s2 =
-            make_shared<op::Add>(conv_28w3s2, reduce_broadcast(pattern_map[broadcast_w3_label]));
+        auto new_add_conv_28w3s2 = make_shared<op::v1::Add>(
+            conv_28w3s2, reduce_broadcast(pattern_map[broadcast_w3_label]));
         auto new_relu_28w3s2 = make_shared<op::Relu>(new_add_conv_28w3s2);
 
         auto conv_28w1s1 = make_shared<op::Convolution>(
             new_relu_28w3s2, m_conv_stride1->input_value(1), stride_1, stride_1);
 
-        auto new_add_conv28s1 =
-            make_shared<op::Add>(conv_28w1s1, reduce_broadcast(pattern_map[broadcast_w1_label]));
+        auto new_add_conv28s1 = make_shared<op::v1::Add>(
+            conv_28w1s1, reduce_broadcast(pattern_map[broadcast_w1_label]));
 
         auto maxpool = make_shared<op::MaxPool>(
             m.get_pattern_value_map()[eltwise_arg_label], Shape{1, 1}, stride_2);
-        auto new_add_two_convs = make_shared<op::Add>(new_add_conv28s1, maxpool);
+        auto new_add_two_convs = make_shared<op::v1::Add>(new_add_conv28s1, maxpool);
         auto new_relu_two_convs = make_shared<op::Relu>(new_add_two_convs);
 
         for (auto sconv : sconvs)
@@ -1314,7 +1314,7 @@ void pass::CoreFusion::construct_conv_bias_add()
                                                   CoordinateDiff{0, 0},
                                                   Strides{1, 1});
     auto add_input = make_shared<pattern::op::Label>(element::f32, pconv->get_output_shape(0));
-    auto padd = make_shared<op::Add>(add_input, pconv);
+    auto padd = make_shared<op::v1::Add>(add_input, pconv);
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "

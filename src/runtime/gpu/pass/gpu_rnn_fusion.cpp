@@ -65,8 +65,8 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_sigmoid()
     auto constant = std::make_shared<pattern::op::Label>(element::f32, Shape{});
     auto broadcast_constant = std::make_shared<op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
-    auto add_exp = std::make_shared<op::Add>(exp_neg_input, broadcast_constant);
-    auto divide_1_over_exp = std::make_shared<op::Divide>(broadcast_constant, add_exp);
+    auto add_exp = std::make_shared<op::v1::Add>(exp_neg_input, broadcast_constant);
+    auto divide_1_over_exp = std::make_shared<op::v1::Divide>(broadcast_constant, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
@@ -136,7 +136,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
     auto bias_i2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{10, 400}, AxisSet{0});
-    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
+    auto add_1 = std::make_shared<op::v1::Add>(dot_1, broadcast_bias_i2h);
 
     auto hidden_ht = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 50});
     auto weights_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400, 50});
@@ -146,26 +146,26 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
 
     auto bias_h2h = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{10, 400}, AxisSet{0});
-    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
+    auto add_2 = std::make_shared<op::v1::Add>(dot_2, broadcast_bias_h2h);
 
-    auto X = std::make_shared<op::Add>(add_2, add_1);
+    auto X = std::make_shared<op::v1::Add>(add_2, add_1);
     // construct forget gate
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{10, 100});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
 
     // ct-1 -> cell state
     auto ct_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{10, 100});
-    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::v1::Multiply>(forget_gate, ct_1);
 
     // construct input gate
     auto input_slice_1 = std::make_shared<op::Slice>(X, Coordinate{0, 100}, Coordinate{10, 200});
     auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
     auto input_slice_2 = std::make_shared<op::Slice>(X, Coordinate{0, 200}, Coordinate{10, 300});
     auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
-    auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
+    auto multiply_input_gate_tanh_1 = std::make_shared<op::v1::Multiply>(input_gate, tanh_1);
 
     auto add_ct_1_input_gate_tanh_1 =
-        std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+        std::make_shared<op::v1::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
     auto ct_label = std::make_shared<pattern::op::Label>(
         add_ct_1_input_gate_tanh_1, nullptr, OutputVector{add_ct_1_input_gate_tanh_1});
 
@@ -173,7 +173,7 @@ void ngraph::runtime::gpu::pass::LSTMFusion::construct_lstm_fprop()
     auto input_slice_3 = std::make_shared<op::Slice>(X, Coordinate{0, 300}, Coordinate{10, 400});
     auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
     auto tanh_2 = std::make_shared<op::Tanh>(ct_label);
-    auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
+    auto ht = std::make_shared<op::v1::Multiply>(output_gate, tanh_2);
     // auto ht_label = std::make_shared<pattern::op::Label>(ht, nullptr, NodeVector{ht});
 
     // Define a call back that needs to called once the DFG matches the pattern

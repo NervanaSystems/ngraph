@@ -35,7 +35,7 @@ TEST(dyn_elimination, transpose)
     auto constant_perm =
         make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{2, 3, 1, 0});
 
-    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
 
     auto f = make_shared<Function>(transpose, ParameterVector{param});
 
@@ -43,7 +43,7 @@ TEST(dyn_elimination, transpose)
     pass_manager.register_pass<pass::DynElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(f), 0);
     ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 1);
 
     auto new_reshape = as_type_ptr<op::Reshape>(f->get_results().at(0)->get_argument(0));
@@ -67,7 +67,7 @@ TEST(dyn_elimination, transpose_dyn_shape)
     auto constant_perm =
         make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{2, 3, 1, 0});
 
-    auto transpose = make_shared<op::Transpose>(param, constant_perm);
+    auto transpose = make_shared<op::v1::Transpose>(param, constant_perm);
 
     auto f = make_shared<Function>(transpose, ParameterVector{param});
 
@@ -75,10 +75,10 @@ TEST(dyn_elimination, transpose_dyn_shape)
     pass_manager.register_pass<pass::DynElimination>();
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Transpose>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v1::Transpose>(f), 1);
     ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
 
-    auto new_transpose = as_type_ptr<op::Transpose>(f->get_results().at(0)->get_argument(0));
+    auto new_transpose = as_type_ptr<op::v1::Transpose>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_transpose);
 
     ASSERT_EQ(new_transpose->get_output_element_type(0), element::boolean);

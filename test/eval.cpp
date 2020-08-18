@@ -1156,7 +1156,7 @@ TEST(eval, evaluate_tanh)
 TEST(eval, evaluate_not)
 {
     auto p = make_shared<op::Parameter>(element::boolean, Shape{2, 2});
-    auto op_not = make_shared<op::LogicalNot>(p);
+    auto op_not = make_shared<op::v1::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1171,7 +1171,7 @@ TEST(eval, evaluate_not)
 TEST(eval, evaluate_not_i32)
 {
     auto p = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-    auto op_not = make_shared<op::LogicalNot>(p);
+    auto op_not = make_shared<op::v1::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 

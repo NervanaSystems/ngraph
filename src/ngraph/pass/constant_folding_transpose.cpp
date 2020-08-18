@@ -24,7 +24,7 @@ using namespace ngraph;
 template <class T>
 shared_ptr<op::Constant> fold_constant_transpose(shared_ptr<op::Constant> constant_data,
                                                  shared_ptr<op::Constant> constant_perm,
-                                                 shared_ptr<op::Transpose> transpose)
+                                                 shared_ptr<op::v1::Transpose> transpose)
 {
     const Shape& out_shape = transpose->get_output_shape(0);
     auto input_order = constant_perm->get_axis_vector_val();
@@ -47,7 +47,7 @@ void pass::ConstantFolding::construct_constant_transpose()
         element::f32, Shape{2, 4}, pattern::has_class<op::Constant>());
     auto constant_perm_label =
         make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
-    auto transpose = make_shared<op::Transpose>(constant_data_label, constant_perm_label);
+    auto transpose = make_shared<op::v1::Transpose>(constant_data_label, constant_perm_label);
 
     auto constant_transpose_callback = [constant_data_label,
                                         constant_perm_label](pattern::Matcher& m) {
@@ -60,11 +60,11 @@ void pass::ConstantFolding::construct_constant_transpose()
             static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
         auto constant_perm_match =
             static_pointer_cast<op::Constant>(pattern_map[constant_perm_label]);
-        auto transpose_match = m.get_match_root_as<op::Transpose>();
+        auto transpose_match = m.get_match_root_as<op::v1::Transpose>();
         NGRAPH_CHECK(transpose_match,
                      "match root node ",
                      *m.get_match_root(),
-                     " not of type `op::Transpose`");
+                     " not of type `op::v1::Transpose`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(transpose_match));
 

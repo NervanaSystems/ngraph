@@ -44,7 +44,7 @@ namespace
 
     void op_is_Add()
     {
-        op::Add node;
+        op::v1::Add node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -386,7 +386,7 @@ namespace
 
     void op_is_Divide()
     {
-        op::Divide node;
+        op::v1::Divide node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -683,7 +683,7 @@ namespace
 
     void op_is_LogicalAnd()
     {
-        op::LogicalAnd node;
+        op::v1::LogicalAnd node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -692,7 +692,7 @@ namespace
 
     void op_is_LogicalNot()
     {
-        op::LogicalNot node;
+        op::v1::LogicalNot node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -701,7 +701,7 @@ namespace
 
     void op_is_LogicalOr()
     {
-        op::LogicalOr node;
+        op::v1::LogicalOr node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -710,7 +710,7 @@ namespace
 
     void op_is_LogicalXor()
     {
-        op::LogicalXor node;
+        op::v1::LogicalXor node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -818,7 +818,7 @@ namespace
 
     void op_is_Multiply()
     {
-        op::Multiply node;
+        op::v1::Multiply node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -1349,7 +1349,7 @@ namespace
 
     void op_is_Subtract()
     {
-        op::Subtract node;
+        op::v1::Subtract node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());

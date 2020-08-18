@@ -929,7 +929,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::And_v0:
         {
-            node = make_shared<op::LogicalAnd>(
+            node = make_shared<op::v1::LogicalAnd>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -2388,7 +2388,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Subtract_v0:
         {
-            node = make_shared<op::Subtract>(
+            node = make_shared<op::v1::Subtract>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }

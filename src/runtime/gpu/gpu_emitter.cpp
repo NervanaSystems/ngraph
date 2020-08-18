@@ -78,12 +78,12 @@ std::string runtime::gpu::GPU_Emitter::emit_Acos(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Add>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::v1::Add>(compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_LogicalAnd(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::LogicalAnd>(
+    return emit_elementwise<ngraph::op::v1::LogicalAnd>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -445,7 +445,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Cosh(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Divide(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Divide>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::v1::Divide>(
+        compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
@@ -655,7 +656,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Min(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Multiply(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Multiply>(
+    return emit_elementwise<ngraph::op::v1::Multiply>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -667,7 +668,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Negative(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_LogicalNot(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::LogicalNot>(
+    return emit_elementwise<ngraph::op::v1::LogicalNot>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -701,7 +702,7 @@ std::string runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_LogicalOr(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::LogicalOr>(
+    return emit_elementwise<ngraph::op::v1::LogicalOr>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -757,7 +758,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Product(EMIT_ARGS)
     dtypes.push_back(args[0].get_element_type());
     dtypes.push_back(out[0].get_element_type());
     auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-    size_t index = cuda_emitter->build_reduce<ngraph::op::Multiply>(
+    size_t index = cuda_emitter->build_reduce<ngraph::op::v1::Multiply>(
         dtypes, args[0].get_shape(), out[0].get_shape(), prod->get_reduction_axes());
 
     return compiled_function->add_to_runtime(index, function_name, args, out);
@@ -1072,7 +1073,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Sqrt(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Subtract(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Subtract>(
+    return emit_elementwise<ngraph::op::v1::Subtract>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -1098,7 +1099,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Sum_0(EMIT_ARGS)
     dtypes.push_back(args[0].get_element_type());
     dtypes.push_back(out[0].get_element_type());
     auto& cuda_emitter = compiled_function->get_primitive_emitter()->get_cuda_emitter();
-    auto sum_index = cuda_emitter->build_reduce<ngraph::op::Add>(
+    auto sum_index = cuda_emitter->build_reduce<ngraph::op::v1::Add>(
         dtypes, args[0].get_shape(), out[0].get_shape(), axes_set);
 
     return compiled_function->add_to_runtime(sum_index, function_name, args, out);

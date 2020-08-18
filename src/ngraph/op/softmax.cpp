@@ -150,7 +150,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto order = ngraph::get_default_order(zsum->get_output_shape(0));
     auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
-    auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
+    auto adjoint = z - builder::make_with_numpy_broadcast<op::v1::Multiply>(output(0), zreshape);
 
     auto x = input_value(0);
     adjoints.add_delta(x, adjoint);
@@ -263,7 +263,7 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     auto order = ngraph::get_default_order(zsum->get_shape());
     auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
 
-    auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
+    auto adjoint = z - builder::make_with_numpy_broadcast<op::v1::Multiply>(output(0), zreshape);
 
     auto x = input_value(0);
     adjoints.add_delta(x, adjoint);

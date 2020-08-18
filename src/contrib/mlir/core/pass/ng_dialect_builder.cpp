@@ -314,32 +314,30 @@ void NgDialectConversionPass::buildNgDialect(mlir::FuncOp function)
 
 template <>
 mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::Add>(NgDialectConversionPass& NgDialectObj,
-                                                       const ngraph::Node* ngNode)
+    NgDialectConversionPass::createOp<ngraph::op::v1::Add>(NgDialectConversionPass& NgDialectObj,
+                                                           const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGAddOp>(ngNode);
 }
 
 template <>
-mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::Subtract>(NgDialectConversionPass& NgDialectObj,
-                                                            const ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Subtract>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGSubOp>(ngNode);
 }
 
 template <>
-mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::Multiply>(NgDialectConversionPass& NgDialectObj,
-                                                            const ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Multiply>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGMulOp>(ngNode);
 }
 
 template <>
 mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::Divide>(NgDialectConversionPass& NgDialectObj,
-                                                          const ngraph::Node* ngNode)
+    NgDialectConversionPass::createOp<ngraph::op::v1::Divide>(NgDialectConversionPass& NgDialectObj,
+                                                              const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGDivOp>(ngNode);
 }

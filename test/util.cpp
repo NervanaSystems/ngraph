@@ -234,8 +234,8 @@ TEST_F(CloneTest, clone_nodes_full)
     ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(A.get())));
     ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(B.get())));
     ASSERT_NE(nullptr, as_type_ptr<op::Parameter>(node_map.at(C.get())));
-    ASSERT_NE(nullptr, as_type_ptr<op::Add>(node_map.at(AplusB.get())));
-    ASSERT_NE(nullptr, as_type_ptr<op::Multiply>(node_map.at(AplusBtimesC.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::v1::Add>(node_map.at(AplusB.get())));
+    ASSERT_NE(nullptr, as_type_ptr<op::v1::Multiply>(node_map.at(AplusBtimesC.get())));
 
     auto sorted_nodes = topological_sort(nodes);
     auto sorted_cloned_nodes = topological_sort(cloned_nodes);
@@ -267,8 +267,8 @@ TEST(graph_util, clone_multiple_results)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto A_add_B = make_shared<op::Add>(A, B);
-    auto A_add_B_mul_C = make_shared<op::Multiply>(A_add_B, C);
+    auto A_add_B = make_shared<op::v1::Add>(A, B);
+    auto A_add_B_mul_C = make_shared<op::v1::Multiply>(A_add_B, C);
 
     auto f = make_shared<Function>(OutputVector{A_add_B, A_add_B_mul_C}, ParameterVector{A, B, C});
 
@@ -333,7 +333,7 @@ TEST(graph_util, get_subgraph_outputs_trivial_tests)
     outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b, abs_b_neg}, OutputVector{});
     ASSERT_EQ(outputs, (OutputVector{B}));
 
-    auto add_b = make_shared<op::Add>(neg_b, abs_b_neg);
+    auto add_b = make_shared<op::v1::Add>(neg_b, abs_b_neg);
     outputs = ngraph::get_subgraph_outputs(OutputVector{B, abs_b, neg_b, abs_b_neg, add_b},
                                            OutputVector{});
     ASSERT_EQ(outputs, (OutputVector{}));
@@ -349,9 +349,9 @@ TEST(util, test_fprop_cache)
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
     auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto add1 = make_shared<op::Add>(A, B, op::AutoBroadcastType::NONE);
-    auto mul1 = make_shared<op::Multiply>(add1, C, op::AutoBroadcastType::NONE);
-    auto output = make_shared<op::Add>(mul1, A, op::AutoBroadcastType::NONE);
+    auto add1 = make_shared<op::v1::Add>(A, B, op::AutoBroadcastType::NONE);
+    auto mul1 = make_shared<op::v1::Multiply>(add1, C, op::AutoBroadcastType::NONE);
+    auto output = make_shared<op::v1::Add>(mul1, A, op::AutoBroadcastType::NONE);
 
     auto f = make_shared<Function>(OutputVector{output}, ParameterVector{A, B, C});
 
@@ -636,7 +636,7 @@ TEST(util, clone_function_friendly_name)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Add>(A, B), ParameterVector{A, B});
 
     A->set_friendly_name("A");
     B->set_friendly_name("B");

@@ -40,7 +40,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_dot_add)
     auto B = make_shared<op::Parameter>(element::f32, shape_in2);
     auto dot = make_shared<op::Dot>(A, B);
     auto C = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto add = make_shared<op::Add>(dot, C);
+    auto add = make_shared<op::v1::Add>(dot, C);
     auto f = make_shared<Function>(add, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -73,14 +73,14 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add)
     auto P2 = make_shared<op::Parameter>(element::f32, shape_in2);
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
-    auto sg1_output = make_shared<op::Add>(dot, P3);
+    auto sg1_output = make_shared<op::v1::Add>(dot, P3);
 
     // sub-graph 2
     auto P4 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto P5 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto P6 = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto add = make_shared<op::Add>(P4, P5);
-    auto sg2_output = make_shared<op::Add>(add, P6);
+    auto add = make_shared<op::v1::Add>(P4, P5);
+    auto sg2_output = make_shared<op::v1::Add>(add, P6);
 
     auto out = make_shared<op::Maximum>(sg1_output, sg2_output);
 
@@ -123,16 +123,16 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_2)
     auto P2 = make_shared<op::Parameter>(element::f32, shape_in2);
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
-    auto sg1_output = make_shared<op::Add>(dot, P3);
+    auto sg1_output = make_shared<op::v1::Add>(dot, P3);
 
     // sub-graph 2
     auto P4 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto P5 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto P6 = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto add = make_shared<op::Add>(P4, P5);
-    auto sg2_output = make_shared<op::Add>(add, P6);
+    auto add = make_shared<op::v1::Add>(P4, P5);
+    auto sg2_output = make_shared<op::v1::Add>(add, P6);
 
-    auto add2 = make_shared<op::Add>(sg1_output, sg2_output);
+    auto add2 = make_shared<op::v1::Add>(sg1_output, sg2_output);
     auto abs = make_shared<op::v0::Abs>(add2);
 
     auto f = make_shared<Function>(abs, ParameterVector{P1, P2, P3, P4, P5, P6});
@@ -174,17 +174,17 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_3)
     auto P2 = make_shared<op::Parameter>(element::f32, shape_in2);
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
-    auto sg1_output = make_shared<op::Add>(dot, P3);
+    auto sg1_output = make_shared<op::v1::Add>(dot, P3);
 
     // sub-graph 2
     auto P4 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto P5 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto P6 = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto add = make_shared<op::Add>(P4, P5);
-    auto sg2_output = make_shared<op::Add>(add, P6);
+    auto add = make_shared<op::v1::Add>(P4, P5);
+    auto sg2_output = make_shared<op::v1::Add>(add, P6);
 
     auto max = make_shared<op::Maximum>(sg1_output, sg2_output);
-    auto add2 = make_shared<op::Add>(max, max);
+    auto add2 = make_shared<op::v1::Add>(max, max);
 
     auto f = make_shared<Function>(add2, ParameterVector{P1, P2, P3, P4, P5, P6});
 
@@ -225,9 +225,9 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_cycle)
     auto P2 = make_shared<op::Parameter>(element::f32, shape_in2);
     auto P3 = make_shared<op::Parameter>(element::f32, shape_in1);
     auto dot = make_shared<op::Dot>(P1, P2);
-    auto add = make_shared<op::Add>(dot, P3);
+    auto add = make_shared<op::v1::Add>(dot, P3);
     auto abs = make_shared<op::v0::Abs>(add);
-    auto add2 = make_shared<op::Add>(add, abs);
+    auto add2 = make_shared<op::v1::Add>(add, abs);
 
     auto f = make_shared<Function>(add2, ParameterVector{P1, P2, P3});
 
@@ -258,7 +258,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_multi_call)
     auto B = make_shared<op::Parameter>(element::f32, shape_in2);
     auto dot = make_shared<op::Dot>(A, B);
     auto C = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto add = make_shared<op::Add>(dot, C);
+    auto add = make_shared<op::v1::Add>(dot, C);
     auto f = make_shared<Function>(add, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

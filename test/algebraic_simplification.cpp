@@ -79,7 +79,7 @@ TEST(algebraic_simplification, add_types_shapes)
                                                 ParameterVector{a, b, c});
             pass_manager.run_passes(f);
 
-            ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
+            ASSERT_EQ(count_ops_of_type<op::v1::Add>(f), 0);
             auto expected = ngraph::NodeVector{a, b, a, c, b};
             auto results = f->get_results();
             for (size_t i = 0; i < results.size(); i++)
@@ -157,7 +157,7 @@ TEST(algebraic_simplification, add_broadcast)
                                         ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Add>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Add>(f), 0);
     auto expected = ngraph::NodeVector{a, b, a, c, b};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
@@ -228,7 +228,7 @@ TEST(algebraic_simplification, multiply_broadcast_0)
                                         ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(f), 0);
     auto expected = ngraph::NodeVector{a, b, const_broadcast, c, const_broadcast};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
@@ -294,7 +294,7 @@ TEST(algebraic_simplification, multiply_broadcast_1)
                                         ParameterVector{a, b, c});
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Multiply>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(f), 0);
     auto expected = ngraph::NodeVector{a, b, a, c, b};
     auto results = f->get_results();
     for (size_t i = 0; i < results.size(); i++)
@@ -809,7 +809,7 @@ TEST(algebraic_simplification, log_neg_neg)
 
     auto f = std::make_shared<Function>(ngraph::OutputVector{neg4}, ParameterVector{a, b});
     pass_manager.run_passes(f);
-    auto sub = as_type_ptr<op::Subtract>(neg_inner->get_argument(0));
+    auto sub = as_type_ptr<op::v1::Subtract>(neg_inner->get_argument(0));
     ASSERT_TRUE(sub != nullptr);
     ASSERT_EQ(sub->get_argument(0), a);
     auto new_log = as_type_ptr<op::Log>(sub->get_argument(1));

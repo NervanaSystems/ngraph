@@ -90,7 +90,7 @@ namespace ngraph
             };
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Add);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Add);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::AllReduce);
             template <>
@@ -118,13 +118,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Dot);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Multiply);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Abs);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Concat);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Divide);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Divide);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Equal);
             template <>
@@ -154,7 +154,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Select);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Subtract);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Subtract);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Broadcast);
             template <>
@@ -256,7 +256,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalNot);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalNot);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::MaxPoolWithIndices);
             template <>
@@ -304,11 +304,11 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::Result);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalAnd);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalAnd);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalOr);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalOr);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalXor);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalXor);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::CompiledKernel);
             template <>

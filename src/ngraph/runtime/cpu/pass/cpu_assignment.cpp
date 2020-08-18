@@ -77,7 +77,7 @@ namespace ngraph
             namespace pass
             {
                 template <>
-                void CPUAssignment::ASSIGN_DECL(ngraph::op::Add)
+                void CPUAssignment::ASSIGN_DECL(ngraph::op::v1::Add)
                 {
                     (void)external_function;
                     auto arg0_shape = node->get_input_shape(0);
@@ -1002,7 +1002,7 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::AssignOpMap s_dispatcher{
-    {TI(ngraph::op::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Add>},
+    {TI(ngraph::op::v1::Add), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::v1::Add>},
     {TI(ngraph::op::Concat), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Concat>},
     {TI(ngraph::op::Convert), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::Convert>},
     {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPUAssignment::assign<ngraph::op::AvgPool>},

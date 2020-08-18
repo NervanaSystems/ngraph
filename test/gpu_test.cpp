@@ -179,10 +179,10 @@ TEST(gpu_test, topk_fanout_graph_transform)
     auto C_gpu_0 = B_gpu->output(0);
     auto C_gpu_1 = B_gpu->output(1);
 
-    auto gpu_R_0 = make_shared<op::Add>(A_int32_gpu_1, C_gpu_0);
-    auto gpu_R_1 = make_shared<op::Add>(A_int32_gpu_2, C_gpu_0);
-    auto gpu_R_2 = make_shared<op::Add>(A_f32_gpu_1, C_gpu_1);
-    auto gpu_R_3 = make_shared<op::Add>(A_f32_gpu_2, C_gpu_1);
+    auto gpu_R_0 = make_shared<op::v1::Add>(A_int32_gpu_1, C_gpu_0);
+    auto gpu_R_1 = make_shared<op::v1::Add>(A_int32_gpu_2, C_gpu_0);
+    auto gpu_R_2 = make_shared<op::v1::Add>(A_f32_gpu_1, C_gpu_1);
+    auto gpu_R_3 = make_shared<op::v1::Add>(A_f32_gpu_2, C_gpu_1);
 
     auto gpu_f = make_shared<Function>(
         OutputVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},

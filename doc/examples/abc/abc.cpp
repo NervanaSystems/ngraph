@@ -28,8 +28,8 @@ int main()
     auto b = std::make_shared<op::Parameter>(element::f32, s);
     auto c = std::make_shared<op::Parameter>(element::f32, s);
 
-    auto t0 = std::make_shared<op::Add>(a, b);
-    auto t1 = std::make_shared<op::Multiply>(t0, c);
+    auto t0 = std::make_shared<op::v1::Add>(a, b);
+    auto t1 = std::make_shared<op::v1::Multiply>(t0, c);
 
     // Make the function
     auto f = std::make_shared<Function>(OutputVector{t1},

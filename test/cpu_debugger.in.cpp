@@ -49,7 +49,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_add_breakpoint)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto absn = make_shared<op::v0::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
@@ -86,7 +86,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_stepping)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto absn = make_shared<op::v0::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
@@ -124,7 +124,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_delete_breakpoint)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto absn = make_shared<op::v0::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
@@ -165,7 +165,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_while_stepping)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto absn = make_shared<op::v0::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
@@ -202,7 +202,7 @@ NGRAPH_TEST(${BACKEND_NAME}, debugger_resume)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto absn = make_shared<op::v0::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
@@ -239,7 +239,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tracer_basic)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto absn = make_shared<op::v0::Abs>(add);
     auto neg = make_shared<op::Negative>(absn);
 
@@ -279,7 +279,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tracer_count_tracepoint)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
 
     auto f = make_shared<Function>(add, ParameterVector{A, B});
 
@@ -320,7 +320,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tracer_conditional_tracepoint)
     auto A = make_shared<op::Parameter>(element::i32, shape);
     auto B = make_shared<op::Parameter>(element::i32, shape);
 
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
 
     auto f = make_shared<Function>(add, ParameterVector{A, B});
 

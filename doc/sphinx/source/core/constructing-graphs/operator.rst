@@ -21,5 +21,5 @@ can be simplified to:
    :lines: 31
 
 The expression ``a + b`` is equivalent to
-``std::make_shared<op::Add>(a, b)`` and the ``*`` operator similarly
-returns ``std::make_shared<op::Multiply>`` to its arguments.
+``std::make_shared<op::v1::Add>(a, b)`` and the ``*`` operator similarly
+returns ``std::make_shared<op::v1::Multiply>`` to its arguments.

@@ -159,9 +159,9 @@ int main(int argc, char* argv[])
     auto softmax_clip =
         std::make_shared<op::Maximum>(softmax, softmax_clip_broadcast);
     auto softmax_log = std::make_shared<op::Log>(softmax_clip);
-    auto prod = std::make_shared<op::Multiply>(softmax_log, labels);
+    auto prod = std::make_shared<op::v1::Multiply>(softmax_log, labels);
     auto N = std::make_shared<op::Parameter>(element::f32, Shape{});
-    auto loss = std::make_shared<op::Divide>(
+    auto loss = std::make_shared<op::v1::Divide>(
         std::make_shared<op::Sum>(prod, AxisSet{0, 1}), N);
 
     // Backprop

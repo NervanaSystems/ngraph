@@ -56,7 +56,7 @@ static std::shared_ptr<pattern::Matcher>
     auto skip =
         std::make_shared<pattern::op::Skip>(labels[Type::DATA], pattern::has_class<op::Reshape>());
     auto dot = std::make_shared<op::Dot>(skip, labels[Type::WEIGHTS]);
-    auto add_bias = std::make_shared<op::Add>(dot, labels[Type::BIAS]);
+    auto add_bias = std::make_shared<op::v1::Add>(dot, labels[Type::BIAS]);
     return std::make_shared<pattern::Matcher>(add_bias);
 }
 
@@ -268,7 +268,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
             auto new_dot = std::make_shared<op::Dot>(new_input_node, w_reshape_node);
             auto bias_broadcast_node =
                 std::make_shared<op::Broadcast>(bias, new_dot->get_output_shape(0), AxisSet{0});
-            auto new_add_bias = std::make_shared<op::Add>(new_dot, bias_broadcast_node);
+            auto new_add_bias = std::make_shared<op::v1::Add>(new_dot, bias_broadcast_node);
 
             // now slice the new_add and feed the corrosponding root nodes
             auto batch_size = new_add_bias->get_output_shape(0)[0] / data_param_nodes.size();
@@ -351,7 +351,7 @@ bool runtime::cpu::pass::CPURnnMatFusion::run_on_function(std::shared_ptr<Functi
 
             auto bias_broadcast_node =
                 std::make_shared<op::Broadcast>(bias_node, dot_shape, AxisSet{0});
-            auto add_node = std::make_shared<op::Add>(dot_node, bias_broadcast_node);
+            auto add_node = std::make_shared<op::v1::Add>(dot_node, bias_broadcast_node);
             const auto& add_shape = add_node->get_output_shape(0);
 
             size_t num_timesteps = op_nodes.size();

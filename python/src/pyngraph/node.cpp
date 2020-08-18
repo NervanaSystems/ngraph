@@ -18,10 +18,10 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/node.hpp"        // ngraph::Node
-#include "ngraph/op/add.hpp"      // ngraph::op::Add
-#include "ngraph/op/divide.hpp"   // ngraph::op::Divide
-#include "ngraph/op/multiply.hpp" // ngraph::op::Multiply
-#include "ngraph/op/subtract.hpp" // ngraph::op::Subtract
+#include "ngraph/op/add.hpp"      // ngraph::op::v1::Add
+#include "ngraph/op/divide.hpp"   // ngraph::op::v1::Divide
+#include "ngraph/op/multiply.hpp" // ngraph::op::v1::Multiply
+#include "ngraph/op/subtract.hpp" // ngraph::op::v1::Subtract
 #include "pyngraph/node.hpp"
 #include "pyngraph/output.hpp"
 

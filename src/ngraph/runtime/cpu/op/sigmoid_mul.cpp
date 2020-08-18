@@ -41,7 +41,7 @@ ngraph::op::SigmoidMultiply::FunctionType
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }
-    else if (is_type<ngraph::op::Add>(node))
+    else if (is_type<ngraph::op::v1::Add>(node))
     {
         return ngraph::op::SigmoidMultiply::FunctionType::Identity;
     }

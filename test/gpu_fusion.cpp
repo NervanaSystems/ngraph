@@ -193,7 +193,7 @@ TEST(gpu_fusion, lstm_analytic)
 
     auto bias_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4});
     auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{1, 4}, AxisSet{0});
-    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
+    auto add_1 = std::make_shared<op::v1::Add>(dot_1, broadcast_bias_i2h);
 
     auto h_const = op::Constant::create(element::f32, Shape{}, {1.0});
     auto hidden_ht = std::make_shared<op::Broadcast>(h_const, Shape{1, 1}, AxisSet{0, 1});
@@ -204,9 +204,9 @@ TEST(gpu_fusion, lstm_analytic)
 
     auto bias_h2h = std::make_shared<op::Parameter>(element::f32, Shape{4});
     auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{1, 4}, AxisSet{0});
-    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
+    auto add_2 = std::make_shared<op::v1::Add>(dot_2, broadcast_bias_h2h);
 
-    auto X = std::make_shared<op::Add>(add_2, add_1);
+    auto X = std::make_shared<op::v1::Add>(add_2, add_1);
     // construct forget gate
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{1, 1});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
@@ -215,22 +215,22 @@ TEST(gpu_fusion, lstm_analytic)
     auto c_const = op::Constant::create(element::f32, Shape{}, {-1.0});
     auto ct_1 = std::make_shared<op::Broadcast>(c_const, Shape{1, 1}, AxisSet{0, 1});
     // auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
-    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::v1::Multiply>(forget_gate, ct_1);
 
     // construct input gate
     auto input_slice_1 = std::make_shared<op::Slice>(X, Coordinate{0, 1}, Coordinate{1, 2});
     auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
     auto input_slice_2 = std::make_shared<op::Slice>(X, Coordinate{0, 2}, Coordinate{1, 3});
     auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
-    auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
+    auto multiply_input_gate_tanh_1 = std::make_shared<op::v1::Multiply>(input_gate, tanh_1);
 
-    auto ct = std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+    auto ct = std::make_shared<op::v1::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
 
     // construct output gate
     auto input_slice_3 = std::make_shared<op::Slice>(X, Coordinate{0, 3}, Coordinate{1, 4});
     auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
     auto tanh_2 = std::make_shared<op::Tanh>(ct);
-    auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
+    auto ht = std::make_shared<op::v1::Multiply>(output_gate, tanh_2);
 
     auto f = make_shared<Function>(
         OutputVector{ht, ct},
@@ -285,7 +285,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 
     auto bias_i2h = std::make_shared<op::Parameter>(element::f32, Shape{4});
     auto broadcast_bias_i2h = std::make_shared<op::Broadcast>(bias_i2h, Shape{1, 4}, AxisSet{0});
-    auto add_1 = std::make_shared<op::Add>(dot_1, broadcast_bias_i2h);
+    auto add_1 = std::make_shared<op::v1::Add>(dot_1, broadcast_bias_i2h);
 
     auto h_const = op::Constant::create(element::f32, Shape{}, {1.0});
     auto hidden_ht = std::make_shared<op::Broadcast>(h_const, Shape{1, 1}, AxisSet{0, 1});
@@ -296,9 +296,9 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
 
     auto bias_h2h = std::make_shared<op::Parameter>(element::f32, Shape{4});
     auto broadcast_bias_h2h = std::make_shared<op::Broadcast>(bias_h2h, Shape{1, 4}, AxisSet{0});
-    auto add_2 = std::make_shared<op::Add>(dot_2, broadcast_bias_h2h);
+    auto add_2 = std::make_shared<op::v1::Add>(dot_2, broadcast_bias_h2h);
 
-    auto X = std::make_shared<op::Add>(add_2, add_1);
+    auto X = std::make_shared<op::v1::Add>(add_2, add_1);
     // construct forget gate
     auto input_slice_0 = std::make_shared<op::Slice>(X, Coordinate{0, 0}, Coordinate{1, 1});
     auto forget_gate = std::make_shared<op::Sigmoid>(input_slice_0);
@@ -307,22 +307,22 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto c_const = op::Constant::create(element::f32, Shape{}, {1.0});
     auto ct_1 = std::make_shared<op::Broadcast>(c_const, Shape{1, 1}, AxisSet{0, 1});
     // auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
-    auto multiply_forget_gate_ct_1 = std::make_shared<op::Multiply>(forget_gate, ct_1);
+    auto multiply_forget_gate_ct_1 = std::make_shared<op::v1::Multiply>(forget_gate, ct_1);
 
     // construct input gate
     auto input_slice_1 = std::make_shared<op::Slice>(X, Coordinate{0, 1}, Coordinate{1, 2});
     auto input_gate = std::make_shared<op::Sigmoid>(input_slice_1);
     auto input_slice_2 = std::make_shared<op::Slice>(X, Coordinate{0, 2}, Coordinate{1, 3});
     auto tanh_1 = std::make_shared<op::Tanh>(input_slice_2);
-    auto multiply_input_gate_tanh_1 = std::make_shared<op::Multiply>(input_gate, tanh_1);
+    auto multiply_input_gate_tanh_1 = std::make_shared<op::v1::Multiply>(input_gate, tanh_1);
 
-    auto ct = std::make_shared<op::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
+    auto ct = std::make_shared<op::v1::Add>(multiply_forget_gate_ct_1, multiply_input_gate_tanh_1);
 
     // construct output gate
     auto input_slice_3 = std::make_shared<op::Slice>(X, Coordinate{0, 3}, Coordinate{1, 4});
     auto output_gate = std::make_shared<op::Sigmoid>(input_slice_3);
     auto tanh_2 = std::make_shared<op::Tanh>(ct);
-    auto ht = std::make_shared<op::Multiply>(output_gate, tanh_2);
+    auto ht = std::make_shared<op::v1::Multiply>(output_gate, tanh_2);
 
     // next lstm layer
     auto weights_i2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4, 1});
@@ -333,7 +333,7 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto bias_i2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4});
     auto broadcast_bias_i2h_0_0 =
         std::make_shared<op::Broadcast>(bias_i2h_0, Shape{1, 4}, AxisSet{0});
-    auto add_1_0 = std::make_shared<op::Add>(dot_1_0, broadcast_bias_i2h_0_0);
+    auto add_1_0 = std::make_shared<op::v1::Add>(dot_1_0, broadcast_bias_i2h_0_0);
 
     auto h_const_0 = op::Constant::create(element::f32, Shape{}, {1.0});
     auto hidden_ht_0 = std::make_shared<op::Broadcast>(h_const_0, Shape{1, 1}, AxisSet{0, 1});
@@ -345,9 +345,9 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto bias_h2h_0 = std::make_shared<op::Parameter>(element::f32, Shape{4});
     auto broadcast_bias_h2h_0_0 =
         std::make_shared<op::Broadcast>(bias_h2h_0, Shape{1, 4}, AxisSet{0});
-    auto add_2_0 = std::make_shared<op::Add>(dot_2_0, broadcast_bias_h2h_0_0);
+    auto add_2_0 = std::make_shared<op::v1::Add>(dot_2_0, broadcast_bias_h2h_0_0);
 
-    auto X_0 = std::make_shared<op::Add>(add_2_0, add_1_0);
+    auto X_0 = std::make_shared<op::v1::Add>(add_2_0, add_1_0);
     // construct forget gate
     auto input_slice_0_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 0}, Coordinate{1, 1});
     auto forget_gate_0 = std::make_shared<op::Sigmoid>(input_slice_0_0);
@@ -356,23 +356,24 @@ TEST(gpu_fusion, fuse_2_layer_rnn_1lstm_analytic)
     auto c_const_0 = op::Constant::create(element::f32, Shape{}, {1.0});
     auto ct_1_0 = std::make_shared<op::Broadcast>(c_const_0, Shape{1, 1}, AxisSet{0, 1});
     // auto ct_1 = std::make_shared<op::>(element::f32, Shape{10, 100});
-    auto multiply_forget_gate_0_ct_1_0 = std::make_shared<op::Multiply>(forget_gate_0, ct_1_0);
+    auto multiply_forget_gate_0_ct_1_0 = std::make_shared<op::v1::Multiply>(forget_gate_0, ct_1_0);
 
     // construct input gate
     auto input_slice_1_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 1}, Coordinate{1, 2});
     auto input_gate_0 = std::make_shared<op::Sigmoid>(input_slice_1_0);
     auto input_slice_2_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 2}, Coordinate{1, 3});
     auto tanh_1_0 = std::make_shared<op::Tanh>(input_slice_2_0);
-    auto multiply_input_gate_0_tanh_1_0 = std::make_shared<op::Multiply>(input_gate_0, tanh_1_0);
+    auto multiply_input_gate_0_tanh_1_0 =
+        std::make_shared<op::v1::Multiply>(input_gate_0, tanh_1_0);
 
-    auto ct_0 =
-        std::make_shared<op::Add>(multiply_forget_gate_0_ct_1_0, multiply_input_gate_0_tanh_1_0);
+    auto ct_0 = std::make_shared<op::v1::Add>(multiply_forget_gate_0_ct_1_0,
+                                              multiply_input_gate_0_tanh_1_0);
 
     // construct output gate
     auto input_slice_3_0 = std::make_shared<op::Slice>(X_0, Coordinate{0, 3}, Coordinate{1, 4});
     auto output_gate_0 = std::make_shared<op::Sigmoid>(input_slice_3_0);
     auto tanh_2_0 = std::make_shared<op::Tanh>(ct_0);
-    auto ht_0 = std::make_shared<op::Multiply>(output_gate_0, tanh_2_0);
+    auto ht_0 = std::make_shared<op::v1::Multiply>(output_gate_0, tanh_2_0);
 
     auto f = make_shared<Function>(OutputVector{ht_0, ct_0},
                                    ParameterVector{input_xt,

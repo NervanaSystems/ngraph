@@ -81,7 +81,7 @@ OutputVector op::SoftmaxCrossEntropy::decompose_op() const
         auto broadcast_max_xj = std::make_shared<ngraph::op::Broadcast>(
             max_xj, input_to_normalize.get_shape(), AxisSet{1});
         auto subtract =
-            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+            std::make_shared<ngraph::op::v1::Subtract>(input_to_normalize, broadcast_max_xj);
         auto exp = std::make_shared<ngraph::op::Exp>(subtract);
 
         auto sum_over_j =
@@ -89,11 +89,11 @@ OutputVector op::SoftmaxCrossEntropy::decompose_op() const
         auto log_sum_over_j = std::make_shared<ngraph::op::Log>(sum_over_j);
 
         auto subtract_max_xj_from_input =
-            std::make_shared<ngraph::op::Subtract>(input_to_normalize, broadcast_max_xj);
+            std::make_shared<ngraph::op::v1::Subtract>(input_to_normalize, broadcast_max_xj);
         auto broadcast_log = std::make_shared<ngraph::op::Broadcast>(
             log_sum_over_j, subtract_max_xj_from_input->get_output_shape(0), AxisSet{1});
         auto subtract_max_xj_from_input_from_log_sum_over_j =
-            std::make_shared<ngraph::op::Subtract>(subtract_max_xj_from_input, broadcast_log);
+            std::make_shared<ngraph::op::v1::Subtract>(subtract_max_xj_from_input, broadcast_log);
 
         // insert dtype conversion if required
         if (labels.get_element_type() != input_to_normalize.get_element_type())
@@ -101,7 +101,7 @@ OutputVector op::SoftmaxCrossEntropy::decompose_op() const
             labels = std::make_shared<ngraph::op::Convert>(labels,
                                                            input_to_normalize.get_element_type());
         }
-        auto multiply = std::make_shared<ngraph::op::Multiply>(
+        auto multiply = std::make_shared<ngraph::op::v1::Multiply>(
             labels, subtract_max_xj_from_input_from_log_sum_over_j);
         auto sum_over_k = std::make_shared<ngraph::op::Sum>(
             multiply, AxisSet{static_cast<size_t>(reduction_axis)});
@@ -216,7 +216,7 @@ OutputVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
             delta =
                 std::make_shared<ngraph::op::Broadcast>(reshape, labels.get_shape(), AxisSet{1});
         }
-        auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, labels);
+        auto delta_mul_labels = std::make_shared<ngraph::op::v1::Multiply>(delta, labels);
         auto summation_delta_mul_labels = std::make_shared<ngraph::op::Sum>(
             delta_mul_labels, AxisSet{static_cast<size_t>(reduction_axis)});
         auto broadcast_sum = std::make_shared<ngraph::op::Broadcast>(
@@ -253,9 +253,9 @@ OutputVector op::SoftmaxCrossEntropyBackprop::decompose_op() const
         }
 
         // (cross_entr * delta * mask)
-        auto delta_mul_labels = std::make_shared<ngraph::op::Multiply>(delta, convert_one_hot);
+        auto delta_mul_labels = std::make_shared<ngraph::op::v1::Multiply>(delta, convert_one_hot);
         auto multiply_mask =
-            std::make_shared<ngraph::op::Multiply>(delta_mul_labels, broadcast_mask);
+            std::make_shared<ngraph::op::v1::Multiply>(delta_mul_labels, broadcast_mask);
 
         // sum (cross_entr * delta * mask)
         auto summation_delta_mul_labels = std::make_shared<ngraph::op::Sum>(

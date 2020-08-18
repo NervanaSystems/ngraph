@@ -258,13 +258,13 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
     // construct varaiance
     auto N = ngraph::op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
-    auto input_sq = std::make_shared<ngraph::op::Multiply>(input, input);
+    auto input_sq = std::make_shared<ngraph::op::v1::Multiply>(input, input);
     auto sum_input = std::make_shared<ngraph::op::Sum>(input, AxisSet{0});
-    auto square_sumed_input = std::make_shared<ngraph::op::Multiply>(sum_input, sum_input);
+    auto square_sumed_input = std::make_shared<ngraph::op::v1::Multiply>(sum_input, sum_input);
     auto sum_squared_input = std::make_shared<ngraph::op::Sum>(input_sq, AxisSet{0});
-    auto avg_input_sum_sq = std::make_shared<ngraph::op::Divide>(square_sumed_input, N);
-    auto xmu = std::make_shared<ngraph::op::Subtract>(sum_squared_input, avg_input_sum_sq);
-    auto variance = std::make_shared<ngraph::op::Divide>(xmu, N);
+    auto avg_input_sum_sq = std::make_shared<ngraph::op::v1::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<ngraph::op::v1::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance = std::make_shared<ngraph::op::v1::Divide>(xmu, N);
     auto variance_label =
         std::make_shared<pattern::op::Label>(variance, nullptr, OutputVector{variance});
     auto variance_with_broadcast =
@@ -272,35 +272,35 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_fprop_bn()
 
     // construct mean
     auto sum_input1 = std::make_shared<ngraph::op::Sum>(input, AxisSet{0});
-    auto mean = std::make_shared<ngraph::op::Divide>(sum_input1, N);
+    auto mean = std::make_shared<ngraph::op::v1::Divide>(sum_input1, N);
     auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, OutputVector{mean});
     auto mean_with_broadcast =
         std::make_shared<ngraph::op::Broadcast>(mean_label, Shape{2, 3}, AxisSet{0});
-    auto input_diff_mean = std::make_shared<ngraph::op::Subtract>(input, mean_with_broadcast);
+    auto input_diff_mean = std::make_shared<ngraph::op::v1::Subtract>(input, mean_with_broadcast);
 
     // Eps
     auto eps_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
     auto eps_with_broadcast =
         std::make_shared<ngraph::op::Broadcast>(eps_label, Shape{2, 3}, AxisSet{0});
 
-    auto add1 = std::make_shared<ngraph::op::Add>(eps_with_broadcast, variance_with_broadcast);
+    auto add1 = std::make_shared<ngraph::op::v1::Add>(eps_with_broadcast, variance_with_broadcast);
     auto sqrt_variance_eps = std::make_shared<ngraph::op::Sqrt>(add1);
     auto divide_mean_variance =
-        std::make_shared<ngraph::op::Divide>(input_diff_mean, sqrt_variance_eps);
+        std::make_shared<ngraph::op::v1::Divide>(input_diff_mean, sqrt_variance_eps);
 
     // Gamma
     auto gamma_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
     auto gamma_with_broadcast =
         std::make_shared<ngraph::op::Broadcast>(gamma_label, Shape{2, 3}, AxisSet{0});
     auto multiply_gamma =
-        std::make_shared<ngraph::op::Multiply>(gamma_with_broadcast, divide_mean_variance);
+        std::make_shared<ngraph::op::v1::Multiply>(gamma_with_broadcast, divide_mean_variance);
 
     // Beta
     auto beta_label = std::make_shared<pattern::op::Label>(element::f32, Shape{3});
     auto beta_with_broadcast =
         std::make_shared<ngraph::op::Broadcast>(beta_label, Shape{2, 3}, AxisSet{0});
 
-    auto add_beta = std::make_shared<ngraph::op::Add>(beta_with_broadcast, multiply_gamma);
+    auto add_beta = std::make_shared<ngraph::op::v1::Add>(beta_with_broadcast, multiply_gamma);
     // This completes fprop bn pattern
 
     // Define a call back that needs to called once the DFG matches the pattern
@@ -735,7 +735,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         std::make_shared<ngraph::op::Broadcast>(broadcast1_input, input_shape, AxisSet{0, 2, 3});
     auto broadcast1_label =
         std::make_shared<pattern::op::Label>(broadcast1, nullptr, OutputVector{broadcast1});
-    auto multiply = std::make_shared<ngraph::op::Multiply>(bn_label, broadcast1_label);
+    auto multiply = std::make_shared<ngraph::op::v1::Multiply>(bn_label, broadcast1_label);
     auto multi_label =
         std::make_shared<pattern::op::Label>(multiply, nullptr, OutputVector{multiply});
 
@@ -744,7 +744,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
         std::make_shared<ngraph::op::Broadcast>(broadcast2_input, input_shape, AxisSet{0, 2, 3});
     auto broadcast2_label =
         std::make_shared<pattern::op::Label>(broadcast2, nullptr, OutputVector{broadcast2});
-    auto add = std::make_shared<ngraph::op::Add>(multi_label, broadcast2_label);
+    auto add = std::make_shared<ngraph::op::v1::Add>(multi_label, broadcast2_label);
     auto prelu = std::make_shared<ngraph::op::Relu>(add);
 
     auto callback = [input,
@@ -793,9 +793,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_batch_norm_infer_relu_with
             return false;
         }
 
-        auto new_gamma = std::make_shared<ngraph::op::Multiply>(pvm[gamma], pvm[broadcast1_input]);
-        auto new_multi = std::make_shared<ngraph::op::Multiply>(pvm[beta], pvm[broadcast1_input]);
-        auto new_beta = std::make_shared<ngraph::op::Add>(new_multi, pvm[broadcast2_input]);
+        auto new_gamma =
+            std::make_shared<ngraph::op::v1::Multiply>(pvm[gamma], pvm[broadcast1_input]);
+        auto new_multi =
+            std::make_shared<ngraph::op::v1::Multiply>(pvm[beta], pvm[broadcast1_input]);
+        auto new_beta = std::make_shared<ngraph::op::v1::Add>(new_multi, pvm[broadcast2_input]);
 
         std::shared_ptr<Node> bn_relu;
         if (auto bn_inference = as_type_ptr<ngraph::op::BatchNormInference>(bn_match))
@@ -936,7 +938,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_add()
                                                            CoordinateDiff{0, 0},
                                                            Strides{1, 1});
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_output_shape(0));
-    auto padd = std::make_shared<ngraph::op::Add>(add_input, pconv);
+    auto padd = std::make_shared<ngraph::op::v1::Add>(add_input, pconv);
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_add against "
@@ -1045,7 +1047,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_add()
                                                                CoordinateDiff{0, 0},
                                                                Strides{1, 1});
     auto add_input = std::make_shared<pattern::op::Label>(element::f32, pconv->get_output_shape(0));
-    auto padd = std::make_shared<ngraph::op::Add>(add_input, pconv);
+    auto padd = std::make_shared<ngraph::op::v1::Add>(add_input, pconv);
 
     auto callback = [data_batch, filters](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_conv_sum against "
@@ -1114,9 +1116,9 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
     auto genmask_label =
         std::make_shared<pattern::op::Label>(genmask, nullptr, OutputVector{genmask});
 
-    auto mult = std::make_shared<ngraph::op::Multiply>(genmask_label, x_label);
+    auto mult = std::make_shared<ngraph::op::v1::Multiply>(genmask_label, x_label);
 
-    auto pdivide = std::make_shared<ngraph::op::Divide>(mult, value_label);
+    auto pdivide = std::make_shared<ngraph::op::v1::Divide>(mult, value_label);
 
     auto callback = [x, const1_label, seed_label, value_label, genmask_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_dropout against "
@@ -1124,9 +1126,11 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_dropout()
         auto pattern_map = m.get_pattern_map();
         auto pvm = m.get_pattern_value_map();
 
-        auto m_div = m.get_match_root_as<ngraph::op::Divide>();
-        NGRAPH_CHECK(
-            m_div, "match root node ", *m.get_match_root(), " not of type `ngraph::op::Divide`");
+        auto m_div = m.get_match_root_as<ngraph::op::v1::Divide>();
+        NGRAPH_CHECK(m_div,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `ngraph::op::v1::Divide`");
 
         auto gm = std::static_pointer_cast<ngraph::op::GenerateMask>(pattern_map[genmask_label]);
 
@@ -1238,12 +1242,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_sigmoid_multiply()
     auto other_pred = [](Output<Node> n) {
         return (is_type<ngraph::op::Sigmoid>(n.get_node())) ||
                (is_type<ngraph::op::Tanh>(n.get_node())) ||
-               (is_type<ngraph::op::Add>(n.get_node())) ||
+               (is_type<ngraph::op::v1::Add>(n.get_node())) ||
                (is_type<ngraph::op::Broadcast>(n.get_node()));
     };
     auto sigmoid_0 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, sigmoid_pred);
     auto sigmoid_1 = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1}, other_pred);
-    auto elem_mul = std::make_shared<ngraph::op::Multiply>(sigmoid_0, sigmoid_1);
+    auto elem_mul = std::make_shared<ngraph::op::v1::Multiply>(sigmoid_0, sigmoid_1);
 
     auto callback = [sigmoid_0, sigmoid_1](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_sigmoid_multiply pattern against "
@@ -1300,7 +1304,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
     auto leaky_relu = std::make_shared<ngraph::op::Maximum>(
-        input, std::make_shared<ngraph::op::Multiply>(input, skip_broadcast));
+        input, std::make_shared<ngraph::op::v1::Multiply>(input, skip_broadcast));
 
     auto callback = [input, alpha](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_leaky_relu against "
@@ -1453,17 +1457,17 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_folded_batch_nor
         // new biases = (old_bias-mean) * gamma / sqrt(variance + epsilon) + beta
 
         auto bn_eps = ngraph::op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
-        auto var_eps = std::make_shared<ngraph::op::Add>(
+        auto var_eps = std::make_shared<ngraph::op::v1::Add>(
             pvm[var],
             std::make_shared<ngraph::op::Broadcast>(bn_eps, pvm[var].get_shape(), AxisSet{0}));
         auto sqrt_var_eps = std::make_shared<ngraph::op::Sqrt>(var_eps);
 
-        auto mean_gamma = std::make_shared<ngraph::op::Multiply>(
-            std::make_shared<ngraph::op::Subtract>(pvm[bias], pvm[mean]), pvm[gamma]);
-        auto new_biases = std::make_shared<ngraph::op::Add>(
-            pvm[beta], std::make_shared<ngraph::op::Divide>(mean_gamma, sqrt_var_eps));
-        auto weight_scaling = std::make_shared<ngraph::op::Divide>(pvm[gamma], sqrt_var_eps);
-        auto new_weights = std::make_shared<ngraph::op::Multiply>(
+        auto mean_gamma = std::make_shared<ngraph::op::v1::Multiply>(
+            std::make_shared<ngraph::op::v1::Subtract>(pvm[bias], pvm[mean]), pvm[gamma]);
+        auto new_biases = std::make_shared<ngraph::op::v1::Add>(
+            pvm[beta], std::make_shared<ngraph::op::v1::Divide>(mean_gamma, sqrt_var_eps));
+        auto weight_scaling = std::make_shared<ngraph::op::v1::Divide>(pvm[gamma], sqrt_var_eps);
+        auto new_weights = std::make_shared<ngraph::op::v1::Multiply>(
             pvm[filters],
             std::make_shared<ngraph::op::Broadcast>(
                 weight_scaling, pvm[filters].get_shape(), AxisSet{1, 2, 3}));
@@ -1507,7 +1511,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
     auto Ac = std::make_shared<pattern::op::Label>(element::f32, Shape{2});
     auto A = std::make_shared<ngraph::op::Broadcast>(Ac, Shape{2, 2, 1, 1}, AxisSet{0, 2, 3});
     auto A_label = std::make_shared<pattern::op::Label>(A, nullptr, OutputVector{A});
-    auto multiply = std::make_shared<ngraph::op::Multiply>(conv_label, A_label);
+    auto multiply = std::make_shared<ngraph::op::v1::Multiply>(conv_label, A_label);
 
     auto callback = [input, filters, bias, conv_label, A_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for conv affine folding against node = "
@@ -1598,12 +1602,12 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_conv_bias_affine_folding()
         // new weights = old weights * Ac_m
         // new_bias = old_bias * Ac_m;
 
-        auto filters_n = std::make_shared<ngraph::op::Multiply>(
+        auto filters_n = std::make_shared<ngraph::op::v1::Multiply>(
             pvm[filters],
             std::make_shared<ngraph::op::Broadcast>(
                 Ac_m, pvm[filters].get_shape(), AxisSet{1, 2, 3}));
 
-        auto bias_n = std::make_shared<ngraph::op::Multiply>(pvm[bias], Ac_m);
+        auto bias_n = std::make_shared<ngraph::op::v1::Multiply>(pvm[bias], Ac_m);
 
         auto convbias_n =
             std::make_shared<ngraph::op::ConvolutionBias>(pvm[input],
@@ -1691,20 +1695,20 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_groupconv_batchnorm_global
 
         auto bn_eps = ngraph::op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
 
-        auto var_eps = std::make_shared<ngraph::op::Add>(
+        auto var_eps = std::make_shared<ngraph::op::v1::Add>(
             pvm[var],
             std::make_shared<ngraph::op::Broadcast>(bn_eps, pvm[var].get_shape(), AxisSet{0}));
         auto sqrt_var_eps = std::make_shared<ngraph::op::Sqrt>(var_eps);
 
-        auto weight_scaling = std::make_shared<ngraph::op::Divide>(pvm[gamma], sqrt_var_eps);
+        auto weight_scaling = std::make_shared<ngraph::op::v1::Divide>(pvm[gamma], sqrt_var_eps);
 
         auto weight_scaling_bcast = std::make_shared<ngraph::op::Broadcast>(
             weight_scaling, pvm[filters].get_shape(), AxisSet{1, 2, 3});
 
         auto new_weights =
-            std::make_shared<ngraph::op::Multiply>(pvm[filters], weight_scaling_bcast);
-        auto mean_gamma = std::make_shared<ngraph::op::Multiply>(pvm[mean], weight_scaling);
-        auto new_biases = std::make_shared<ngraph::op::Subtract>(pvm[beta], mean_gamma);
+            std::make_shared<ngraph::op::v1::Multiply>(pvm[filters], weight_scaling_bcast);
+        auto mean_gamma = std::make_shared<ngraph::op::v1::Multiply>(pvm[mean], weight_scaling);
+        auto new_biases = std::make_shared<ngraph::op::v1::Subtract>(pvm[beta], mean_gamma);
 
         auto g_conv_bias = std::make_shared<ngraph::op::GroupConvolutionBias>(
             pvm[input],
@@ -1847,18 +1851,18 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_deconvolution_affine_foldi
 
         auto bn_eps = op::Constant::create(element::f32, Shape{}, {m_bn->get_eps_value()});
 
-        auto var_eps = std::make_shared<op::Add>(
+        auto var_eps = std::make_shared<op::v1::Add>(
             pvm[var], std::make_shared<op::Broadcast>(bn_eps, pvm[var].get_shape(), AxisSet{0}));
         auto sqrt_var_eps = std::make_shared<op::Sqrt>(var_eps);
 
-        auto weight_scaling = std::make_shared<op::Divide>(pvm[gamma], sqrt_var_eps);
+        auto weight_scaling = std::make_shared<op::v1::Divide>(pvm[gamma], sqrt_var_eps);
 
         auto weight_scaling_bcast = std::make_shared<op::Broadcast>(
             weight_scaling, pvm[filters].get_shape(), AxisSet{0, 2, 3});
 
-        auto new_weights = std::make_shared<op::Multiply>(pvm[filters], weight_scaling_bcast);
-        auto mean_gamma = std::make_shared<op::Multiply>(pvm[mean], weight_scaling);
-        auto new_biases = std::make_shared<op::Subtract>(pvm[beta], mean_gamma);
+        auto new_weights = std::make_shared<op::v1::Multiply>(pvm[filters], weight_scaling_bcast);
+        auto mean_gamma = std::make_shared<op::v1::Multiply>(pvm[mean], weight_scaling);
+        auto new_biases = std::make_shared<op::v1::Subtract>(pvm[beta], mean_gamma);
 
         // Weights are in i,o,h,w relative to deconvolution. Flip them to o,i,h,w
         auto new_weights_reshape =
@@ -1957,7 +1961,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_update_slice()
         std::make_shared<ngraph::op::Slice>(input, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
     auto slice_label = std::make_shared<pattern::op::Label>(slice, nullptr, OutputVector{slice});
     auto update_input = std::make_shared<pattern::op::Label>(element::f32, shape_b);
-    auto update = std::make_shared<ngraph::op::Add>(update_input, slice_label);
+    auto update = std::make_shared<ngraph::op::v1::Add>(update_input, slice_label);
     auto replace_slice = std::make_shared<ngraph::op::ReplaceSlice>(
         input, update, Coordinate{1, 0, 0}, Coordinate{2, 32, 2});
 
@@ -2383,7 +2387,8 @@ void ngraph::runtime::cpu::pass::CPUQuantFusion::construct_qconvb_add()
         NGRAPH_DEBUG << "In a callback for construct_qconvb_dq_add_relu against "
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
-        auto add_m = as_type_ptr<ngraph::op::Add>(m.get_match_value().get_node()->get_argument(0));
+        auto add_m =
+            as_type_ptr<ngraph::op::v1::Add>(m.get_match_value().get_node()->get_argument(0));
         auto dq_l_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_l_label]);
         auto dq_r_m = as_type_ptr<ngraph::op::Dequantize>(pattern_map[dq_r_label]);
 

@@ -88,7 +88,7 @@ void ngraph::runtime::cpu::pass::VanillaRNNFusion::construct_vanilla_rnn()
                 (is_type<ngraph::op::Reshape>(n.get_node())));
     };
     auto dot = std::make_shared<ngraph::op::Dot>(concat, weights);
-    auto add = std::make_shared<ngraph::op::Add>(
+    auto add = std::make_shared<ngraph::op::v1::Add>(
         dot, std::make_shared<pattern::op::Skip>(bias_label, broadcast_pred));
 
     auto activation = std::make_shared<ngraph::op::Tanh>(add);
@@ -252,8 +252,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_sigmoid()
     auto broadcast_constant =
         std::make_shared<ngraph::op::Broadcast>(constant, Shape{3, 4}, AxisSet{0, 1});
 
-    auto add_exp = std::make_shared<ngraph::op::Add>(exp_neg_input, broadcast_constant);
-    auto divide_1_over_exp = std::make_shared<ngraph::op::Divide>(broadcast_constant, add_exp);
+    auto add_exp = std::make_shared<ngraph::op::v1::Add>(exp_neg_input, broadcast_constant);
+    auto divide_1_over_exp = std::make_shared<ngraph::op::v1::Divide>(broadcast_constant, add_exp);
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [input](pattern::Matcher& m) {
@@ -325,14 +325,14 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
     // Fused MatMuls
     // (W_{ii} | (W_{if} | W_{ig} | W_{io}) * x_t + (b_{ii} | b_{if} |  b_{ig} | b_{io})
     auto dot1 = std::make_shared<ngraph::op::Dot>(xt, w_i2h);
-    auto add1 = std::make_shared<ngraph::op::Add>(
+    auto add1 = std::make_shared<ngraph::op::v1::Add>(
         dot1, std::make_shared<pattern::op::Skip>(bias_i2h, broadcast_pred));
     // (W_{hi} | (W_{hf} | W_{hg} | W_{ho}) * h_{(t-1)} + (b_{hi} | b_{hf} |  b_{hg} | b_{ho})
     auto dot2 = std::make_shared<ngraph::op::Dot>(ht_1, w_h2h);
-    auto add2 = std::make_shared<ngraph::op::Add>(
+    auto add2 = std::make_shared<ngraph::op::v1::Add>(
         dot2, std::make_shared<pattern::op::Skip>(bias_h2h, broadcast_pred));
 
-    auto X = std::make_shared<ngraph::op::Add>(add2, add1);
+    auto X = std::make_shared<ngraph::op::v1::Add>(add2, add1);
 
     // construct gates
     auto it = std::make_shared<ngraph::op::Sigmoid>(
@@ -345,13 +345,14 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
         std::make_shared<ngraph::op::Slice>(X, Coordinate{0, 300}, Coordinate{10, 400}));
 
     // construct (c_t) cell state
-    auto ct = std::make_shared<ngraph::op::Add>(std::make_shared<ngraph::op::Multiply>(ft, ct_1),
-                                                std::make_shared<ngraph::op::Multiply>(it, gt));
+    auto ct =
+        std::make_shared<ngraph::op::v1::Add>(std::make_shared<ngraph::op::v1::Multiply>(ft, ct_1),
+                                              std::make_shared<ngraph::op::v1::Multiply>(it, gt));
     auto ct_label = std::make_shared<pattern::op::Label>(ct, nullptr, OutputVector{ct});
 
     // construct (h_t)
-    auto ht =
-        std::make_shared<ngraph::op::Multiply>(ot, std::make_shared<ngraph::op::Tanh>(ct_label));
+    auto ht = std::make_shared<ngraph::op::v1::Multiply>(
+        ot, std::make_shared<ngraph::op::Tanh>(ct_label));
 
     // Define a call back that needs to called once the DFG matches the pattern
     auto callback = [this, ct_label, w_i2h, bias_i2h, w_h2h, bias_h2h, xt, ht_1, ct_1](
@@ -430,7 +431,8 @@ void ngraph::runtime::cpu::pass::LSTMFusion::construct_lstm_fprop()
             return false;
         }
 
-        auto bias = std::make_shared<ngraph::op::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
+        auto bias =
+            std::make_shared<ngraph::op::v1::Add>(pattern_map[bias_i2h], pattern_map[bias_h2h]);
 
         if (src_layer.get_shape()[1] != slc || hidden_state.get_shape()[1] != sic ||
             cell_state.get_shape()[1] != sic)
@@ -485,7 +487,7 @@ void ngraph::runtime::cpu::pass::RNNFusion::construct_rnn_lstm_fprop()
     auto lstm_bias_layer_shared = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto lstm_bias_iter_shared = std::make_shared<pattern::op::Label>(element::f32, Shape{400});
     auto lstm_bias =
-        std::make_shared<ngraph::op::Add>(lstm_bias_layer_shared, lstm_bias_iter_shared);
+        std::make_shared<ngraph::op::v1::Add>(lstm_bias_layer_shared, lstm_bias_iter_shared);
     auto lstm_bias_label =
         std::make_shared<pattern::op::Label>(lstm_bias, nullptr, OutputVector{lstm_bias});
     ngraph::runtime::cpu::rnn_utils::rnntype ref_rnn_type =

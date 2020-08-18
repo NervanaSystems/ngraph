@@ -143,8 +143,8 @@ TEST(reshape_sinking, nasnet_pooladd)
         make_shared<op::MaxPool>(reshape1, Shape{1, 1}, Strides{1, 1}, Shape{0, 0}, Shape{0, 0});
     auto reshape3 = make_shared<op::Reshape>(maxpool, AxisVector{0, 2, 3, 1}, Shape{1, 3, 3, 1});
     auto const1 = op::Constant::create(input_type, Shape{1, 3, 3, 1}, {3});
-    auto add1 = make_shared<op::Add>(reshape3, const1);
-    auto add2 = make_shared<op::Add>(add1, reshape2);
+    auto add1 = make_shared<op::v1::Add>(reshape3, const1);
+    auto add2 = make_shared<op::v1::Add>(add1, reshape2);
     auto func = make_shared<Function>(add2, ParameterVector{X});
 
     pass::Manager pass_manager;

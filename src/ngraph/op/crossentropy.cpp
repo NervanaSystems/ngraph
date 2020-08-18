@@ -281,7 +281,7 @@ OutputVector op::CrossEntropyBackprop::decompose_op() const
     }
 
     std::shared_ptr<ngraph::Node> xe_grad =
-        std::make_shared<ngraph::op::Divide>(-labels * delta_bcast, input);
+        std::make_shared<ngraph::op::v1::Divide>(-labels * delta_bcast, input);
 
     if (!m_soft_label && m_ignore_index > 0)
     {

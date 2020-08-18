@@ -66,7 +66,7 @@ TEST(copy, acos)
 
 TEST(copy, add)
 {
-    ASSERT_TRUE(check_binary<op::Add>());
+    ASSERT_TRUE(check_binary<op::v1::Add>());
 }
 
 TEST(copy, asin)
@@ -172,7 +172,7 @@ TEST(copy, cosh)
 
 TEST(copy, divide)
 {
-    ASSERT_TRUE(check_binary<op::Divide>());
+    ASSERT_TRUE(check_binary<op::v1::Divide>());
 }
 
 TEST(copy, dot)
@@ -232,7 +232,7 @@ TEST(copy, minimum)
 
 TEST(copy, multiply)
 {
-    ASSERT_TRUE(check_binary<op::Multiply>());
+    ASSERT_TRUE(check_binary<op::v1::Multiply>());
 }
 
 TEST(copy, negative)
@@ -341,7 +341,7 @@ TEST(copy, slice)
 
 TEST(copy, subtract)
 {
-    ASSERT_TRUE(check_binary<op::Subtract>());
+    ASSERT_TRUE(check_binary<op::v1::Subtract>());
 }
 
 TEST(copy, sum)

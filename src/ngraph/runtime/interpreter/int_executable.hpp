@@ -229,7 +229,7 @@ protected:
         }
         case OP_TYPEID::Add_v1:
         {
-            const op::Add* add = static_cast<const op::Add*>(&node);
+            const op::v1::Add* add = static_cast<const op::v1::Add*>(&node);
             reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
@@ -714,7 +714,7 @@ protected:
         }
         case OP_TYPEID::Divide_v1:
         {
-            const op::Divide* divop = static_cast<const op::Divide*>(&node);
+            const op::v1::Divide* divop = static_cast<const op::v1::Divide*>(&node);
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
@@ -1127,7 +1127,7 @@ protected:
         }
         case OP_TYPEID::Multiply_v1:
         {
-            auto multiply = static_cast<const op::Multiply*>(&node);
+            auto multiply = static_cast<const op::v1::Multiply*>(&node);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -1754,7 +1754,7 @@ protected:
         }
         case OP_TYPEID::Subtract_v1:
         {
-            auto subtract = static_cast<const op::Subtract*>(&node);
+            auto subtract = static_cast<const op::v1::Subtract*>(&node);
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),

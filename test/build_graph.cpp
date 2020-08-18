@@ -51,7 +51,7 @@ TEST(build_graph, node_comparison)
     auto arg2 = make_shared<op::Parameter>(element::f32, Shape{32});
 
     auto dot = make_shared<op::Dot>(arg0, arg1);
-    auto add = make_shared<op::Add>(dot, arg2);
+    auto add = make_shared<op::v1::Add>(dot, arg2);
 
     auto parg = make_shared<op::Parameter>(element::f32, Shape{});
     auto pattern_dot = make_shared<op::Dot>(parg, parg);
@@ -86,7 +86,7 @@ TEST(build_graph, tensor)
     auto float0 = make_shared<op::Constant>(element::f32, shape, float_t);
     ASSERT_EQ(float0->get_output_element_type(0), element::f32);
     ASSERT_EQ(float0->get_output_shape(0), shape);
-    auto d = make_shared<op::Add>(float0, float0);
+    auto d = make_shared<op::v1::Add>(float0, float0);
     ASSERT_EQ(d->get_argument(0), float0);
     ASSERT_EQ(d->get_argument(1), float0);
 
@@ -140,10 +140,10 @@ TEST(build_graph, no_arg_construction)
     auto arg1 = make_shared<op::Parameter>(element::f32, Shape{7});
     auto arg2 = make_shared<op::Parameter>(element::f32, Shape{7});
     auto arg3 = make_shared<op::Parameter>(element::f32, Shape{7});
-    auto add0 = make_shared<op::Add>();
+    auto add0 = make_shared<op::v1::Add>();
     auto abs0 = make_shared<op::v0::Abs>();
     auto acos0 = make_shared<op::Acos>();
-    auto add1 = make_shared<op::Add>();
+    auto add1 = make_shared<op::v1::Add>();
     add0->set_argument(1, arg0);
     add0->set_argument(0, arg1);
     abs0->set_argument(0, add0);

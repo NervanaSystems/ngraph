@@ -58,13 +58,13 @@ static std::shared_ptr<pattern::op::Label> construct_variance_graph()
     // construct varaiance
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
-    auto input_sq = std::make_shared<op::Multiply>(input, input);
+    auto input_sq = std::make_shared<op::v1::Multiply>(input, input);
     auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
-    auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+    auto square_sumed_input = std::make_shared<op::v1::Multiply>(sum_input, sum_input);
     auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
-    auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
-    auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
-    auto variance = std::make_shared<op::Divide>(xmu, N);
+    auto avg_input_sum_sq = std::make_shared<op::v1::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<op::v1::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance = std::make_shared<op::v1::Divide>(xmu, N);
     auto variance_label =
         std::make_shared<pattern::op::Label>(variance, nullptr, OutputVector{variance});
 
@@ -77,7 +77,7 @@ static std::shared_ptr<pattern::op::Label> construct_mean_graph()
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
-    auto mean = std::make_shared<op::Divide>(sum_input1, N);
+    auto mean = std::make_shared<op::v1::Divide>(sum_input1, N);
     auto mean_label = std::make_shared<pattern::op::Label>(mean, nullptr, OutputVector{mean});
     return mean_label;
 }
@@ -214,7 +214,7 @@ TEST(pattern, graph_rewrite)
         ASSERT_TRUE(graph_b->get_output_target_inputs(0).empty());
 
         auto expected = ngraph::NodeVector{a, b, a, c, b};
-        ASSERT_TRUE(count_ops_of_type<op::Add>(f) == 0);
+        ASSERT_TRUE(count_ops_of_type<op::v1::Add>(f) == 0);
     }
 
     {
@@ -478,7 +478,7 @@ TEST(pattern, mean)
     auto input = std::make_shared<op::Parameter>(element::f32, Shape{2, 3});
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto sum_input1 = std::make_shared<op::Sum>(input, AxisSet{0});
-    auto mean = std::make_shared<op::Divide>(sum_input1, N);
+    auto mean = std::make_shared<op::v1::Divide>(sum_input1, N);
 
     auto mean_graph = construct_mean_graph();
     ASSERT_TRUE(n.match(mean_graph, mean));
@@ -491,13 +491,13 @@ TEST(pattern, variance)
     TestMatcher n;
     auto N = op::Constant::create(element::f32, Shape{3}, {2, 2, 2});
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{2, 3});
-    auto input_sq = std::make_shared<op::Multiply>(input, input);
+    auto input_sq = std::make_shared<op::v1::Multiply>(input, input);
     auto sum_input = std::make_shared<op::Sum>(input, AxisSet{0});
-    auto square_sumed_input = std::make_shared<op::Multiply>(sum_input, sum_input);
+    auto square_sumed_input = std::make_shared<op::v1::Multiply>(sum_input, sum_input);
     auto sum_squared_input = std::make_shared<op::Sum>(input_sq, AxisSet{0});
-    auto avg_input_sum_sq = std::make_shared<op::Divide>(square_sumed_input, N);
-    auto xmu = std::make_shared<op::Subtract>(sum_squared_input, avg_input_sum_sq);
-    auto variance = std::make_shared<op::Divide>(xmu, N);
+    auto avg_input_sum_sq = std::make_shared<op::v1::Divide>(square_sumed_input, N);
+    auto xmu = std::make_shared<op::v1::Subtract>(sum_squared_input, avg_input_sum_sq);
+    auto variance = std::make_shared<op::v1::Divide>(xmu, N);
 
     auto var_graph = construct_variance_graph();
     ASSERT_TRUE(n.match(var_graph, variance));
@@ -724,7 +724,7 @@ TEST(pattern, label_on_skip)
     auto bcst = std::make_shared<pattern::op::Skip>(const_label, bcst_pred);
     auto bcst_label = std::make_shared<pattern::op::Label>(bcst, nullptr, OutputVector{bcst});
     auto matcher = std::make_shared<pattern::Matcher>(
-        std::make_shared<op::Multiply>(label, bcst_label), "label_on_skip");
+        std::make_shared<op::v1::Multiply>(label, bcst_label), "label_on_skip");
 
     auto const_broadcast = make_shared<op::Broadcast>(iconst, shape, AxisSet{0, 1});
     auto mul = a * const_broadcast;

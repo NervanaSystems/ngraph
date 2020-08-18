@@ -241,7 +241,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Add)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Add)
             {
                 writer.block_begin();
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
@@ -1061,7 +1061,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Multiply)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Multiply)
             {
                 (void)external_function;
                 (void)node;
@@ -1170,7 +1170,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Divide)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Divide)
             {
                 (void)external_function;
                 writer.block_begin();
@@ -1185,7 +1185,7 @@ namespace ngraph
                            << "[i] == 0) throw std::runtime_error(\"integer divide by zero\");\n";
                     writer.block_end();
                 }
-                auto divop = static_cast<const ngraph::op::Divide*>(node);
+                auto divop = static_cast<const ngraph::op::v1::Divide*>(node);
                 bool pythondiv = divop->is_pythondiv();
                 writer << "#pragma omp parallel for\n";
                 writer << "for (size_t i = 0; i < " << out[0].get_size() << "; i++)\n";
@@ -1447,7 +1447,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Subtract)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Subtract)
             {
                 (void)external_function;
                 (void)node;
@@ -3107,7 +3107,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalNot)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalNot)
             {
                 (void)external_function;
                 (void)node;
@@ -4246,7 +4246,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalAnd)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalAnd)
             {
                 (void)external_function;
                 (void)node;
@@ -4257,7 +4257,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalOr)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalOr)
             {
                 (void)external_function;
                 (void)node;
@@ -4279,7 +4279,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::LogicalXor)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LogicalXor)
             {
                 (void)external_function;
                 (void)node;
@@ -4339,9 +4339,9 @@ namespace ngraph
                     {TI(ngraph::op::Minimum), mine},
                     {TI(ngraph::op::Relu), maxe},
                     {TI(ngraph::op::Maximum), maxe},
-                    {TI(ngraph::op::Add), adde},
+                    {TI(ngraph::op::v1::Add), adde},
                     {TI(ngraph::op::Negative), nege},
-                    {TI(ngraph::op::Subtract), sube},
+                    {TI(ngraph::op::v1::Subtract), sube},
                 };
             }
 

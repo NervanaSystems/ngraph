@@ -254,7 +254,7 @@ TEST(cpu_fusion, conv_bias_bprop)
     auto bias = make_shared<op::Parameter>(element::f32, Shape{shape[0]});
     auto pbroadcast = std::make_shared<op::Broadcast>(bias, shape, AxisSet{1, 2, 3});
     auto conv = std::make_shared<op::Convolution>(data_batch, filters);
-    auto conv_bias = std::make_shared<op::Add>(conv, pbroadcast);
+    auto conv_bias = std::make_shared<op::v1::Add>(conv, pbroadcast);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>();
@@ -304,8 +304,8 @@ shared_ptr<Function> gen_conv_bias_add(bool param_input, bool result_output)
     auto convbias = conv + bias_broadcast;
     auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
     auto abs_B = make_shared<op::v0::Abs>(B);
-    auto add =
-        param_input ? make_shared<op::Add>(convbias, B) : make_shared<op::Add>(convbias, abs_B);
+    auto add = param_input ? make_shared<op::v1::Add>(convbias, B)
+                           : make_shared<op::v1::Add>(convbias, abs_B);
     auto abs = make_shared<op::v0::Abs>(add);
 
     return result_output ? make_shared<Function>(add, ParameterVector{A, weights, bias, B})
@@ -339,7 +339,8 @@ shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
     auto conv = make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
     auto abs_B = make_shared<op::v0::Abs>(B);
-    auto add = param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
+    auto add =
+        param_input ? make_shared<op::v1::Add>(conv, B) : make_shared<op::v1::Add>(conv, abs_B);
     auto abs = make_shared<op::v0::Abs>(add);
 
     return result_output ? make_shared<Function>(add, ParameterVector{A, weights, B})
@@ -570,7 +571,7 @@ static std::shared_ptr<Function>
         auto dot = std::make_shared<op::Dot>(data_param_reshape, W_reshape);
         auto bias_broadcast =
             make_shared<op::Broadcast>(bias, dot->get_output_shape(0), AxisSet{0});
-        auto add_bias = std::make_shared<op::Add>(dot, bias_broadcast);
+        auto add_bias = std::make_shared<op::v1::Add>(dot, bias_broadcast);
         return move(add_bias);
     };
 

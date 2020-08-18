@@ -88,8 +88,8 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast)
         auto constant =
             op::Constant::create(element::f32, Shape{3, 4}, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1});
 
-        auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
-        auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
+        auto add_exp = std::make_shared<op::v1::Add>(exp_neg_input, constant);
+        auto divide_1_over_exp = std::make_shared<op::v1::Divide>(constant, add_exp);
         return make_shared<Function>(OutputVector{divide_1_over_exp}, ParameterVector{input});
     };
     auto func = make_function();
@@ -113,8 +113,8 @@ TEST(core_fusion, sigmoid_fprop_fusion_no_broadcast2)
         auto constant =
             op::Constant::create(element::f32, Shape{3, 4}, {1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1});
 
-        auto add_exp = std::make_shared<op::Add>(exp_neg_input, constant);
-        auto divide_1_over_exp = std::make_shared<op::Divide>(constant, add_exp);
+        auto add_exp = std::make_shared<op::v1::Add>(exp_neg_input, constant);
+        auto divide_1_over_exp = std::make_shared<op::v1::Divide>(constant, add_exp);
         return make_shared<Function>(OutputVector{divide_1_over_exp}, ParameterVector{input});
     };
     auto func = make_function();
@@ -227,7 +227,7 @@ TEST(core_fusion, sparsity_opt_56x56)
     auto param_broadcast_w3 = std::make_shared<op::Parameter>(element::f32, Shape{64});
     auto broadcast_w3 =
         std::make_shared<op::Broadcast>(param_broadcast_w3, Shape{1, 64, 56, 56}, AxisSet{0, 2, 3});
-    auto add_w3 = std::make_shared<op::Add>(conv_stride3, broadcast_w3);
+    auto add_w3 = std::make_shared<op::v1::Add>(conv_stride3, broadcast_w3);
     auto relu_w3 = std::make_shared<op::Relu>(add_w3);
     ///
     auto weights_stride1 = std::make_shared<op::Parameter>(element::f32, Shape{256, 64, 1, 1});
@@ -235,10 +235,10 @@ TEST(core_fusion, sparsity_opt_56x56)
     auto param_broadcast_w1 = std::make_shared<op::Parameter>(element::f32, Shape{256});
     auto broadcast_w1 = std::make_shared<op::Broadcast>(
         param_broadcast_w1, Shape{1, 256, 56, 56}, AxisSet{0, 2, 3});
-    auto add_w1 = std::make_shared<op::Add>(conv_stride1, broadcast_w1);
+    auto add_w1 = std::make_shared<op::v1::Add>(conv_stride1, broadcast_w1);
     ////
     auto other_arg = std::make_shared<op::Parameter>(element::f32, Shape{1, 256, 56, 56});
-    auto add_two_convs = std::make_shared<op::Add>(add_w1, other_arg);
+    auto add_two_convs = std::make_shared<op::v1::Add>(add_w1, other_arg);
     auto relu_two_convs = std::make_shared<op::Relu>(add_two_convs);
     ///
     auto weights_conv_s2 = std::make_shared<op::Parameter>(element::f32, Shape{512, 256, 1, 1});

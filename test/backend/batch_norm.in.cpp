@@ -858,7 +858,7 @@ NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dyn_batch_norm_fprop_b1c2h2w2)
         ngraph::op::Constant::create(mean_rt.get_element_type(), ngraph::Shape{}, {1}),
         shapeof_mean_rt,
         range);
-    auto mean_rt_multiplied = std::make_shared<ngraph::op::Multiply>(one_bcast, mean_rt);
+    auto mean_rt_multiplied = std::make_shared<ngraph::op::v1::Multiply>(one_bcast, mean_rt);
 
     auto f = make_shared<Function>(OutputVector{output_rt, mean_rt_multiplied, variance_rt},
                                    ParameterVector{input, gamma, beta});

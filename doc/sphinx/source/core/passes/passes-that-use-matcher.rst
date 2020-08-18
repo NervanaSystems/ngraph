@@ -24,8 +24,8 @@ Register ``simplify_neg`` handler
             initialize_const_values_to_ops()
         {
             return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
-                {TI(op::Add), simplify_add},
-                {TI(op::Multiply), simplify_multiply},
+                {TI(op::v1::Add), simplify_add},
+                {TI(op::v1::Multiply), simplify_multiply},
                 {TI(op::Sum), simplify_sum},
                 {TI(op::Negative), simplify_neg}
             });

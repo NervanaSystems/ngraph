@@ -261,7 +261,7 @@ NGRAPH_TEST(${BACKEND_NAME}, core_fusion_softmax_crossentropy_bprop_with_soft_la
 
     // during this optimization for numeric stability we will eliminate (softmax / softmax)
     // the number of div operator for cpu_f should be zero if the fusion is valid
-    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    size_t divide = count_ops_of_type<op::v1::Divide>(cpu_f);
     ASSERT_EQ(divide, 0);
 }
 
@@ -288,7 +288,7 @@ NGRAPH_TEST(${BACKEND_NAME}, core_fusion_softmax_crossentropy_bprop_with_ignore_
 
     // during this optimization for numeric stability we will eliminate (softmax / softmax)
     // the number of div operator for cpu_f should be zero if the fusion is valid
-    size_t divide = count_ops_of_type<op::Divide>(cpu_f);
+    size_t divide = count_ops_of_type<op::v1::Divide>(cpu_f);
     ASSERT_EQ(divide, 0);
 }
 #endif

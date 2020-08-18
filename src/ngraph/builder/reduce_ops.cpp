@@ -104,7 +104,7 @@ namespace ngraph
 
             mu = std::make_shared<op::Reshape>(mu, order, reshape);
 
-            Output<Node> diff = make_with_numpy_broadcast<op::Subtract>(value, mu);
+            Output<Node> diff = make_with_numpy_broadcast<op::v1::Subtract>(value, mu);
 
             diff = std::make_shared<op::Sum>(diff * diff, reduction_axes);
 

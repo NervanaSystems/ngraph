@@ -51,7 +51,7 @@ void pass::DynElimination::construct_transpose()
     auto perm_arg_label =
         make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
 
-    auto transpose = make_shared<op::Transpose>(data_arg_label, perm_arg_label);
+    auto transpose = make_shared<op::v1::Transpose>(data_arg_label, perm_arg_label);
 
     auto transpose_callback = [data_arg_label, perm_arg_label](pattern::Matcher& m) {
         auto pattern_map = m.get_pattern_map();

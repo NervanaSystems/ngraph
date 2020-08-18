@@ -463,7 +463,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations6)
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3, 2});
-        auto mul = make_shared<op::Multiply>(A, A);
+        auto mul = make_shared<op::v1::Multiply>(A, A);
         auto sum = make_shared<op::Sum>(mul, AxisVector{0});
         auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 4, 3, 2});
         auto sqrt = make_shared<op::Sqrt>(reshape);
@@ -497,7 +497,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations7)
     // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
         auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
-        auto mul = make_shared<op::Multiply>(A, A);
+        auto mul = make_shared<op::v1::Multiply>(A, A);
         auto sum = make_shared<op::Sum>(mul, AxisVector{0, 1});
         auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 1, 10, 6, 10});
         return make_shared<Function>(OutputVector{reshape}, ParameterVector{A});
@@ -597,9 +597,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_layout)
         auto X = std::make_shared<op::Parameter>(element::f32, Shape{400, 10});
         auto W_reshape = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{400, 10});
 
-        auto add1 = std::make_shared<op::Add>(X, W_reshape);
-        auto sub1 = std::make_shared<op::Subtract>(X, W_reshape);
-        auto mul1 = std::make_shared<op::Multiply>(X, W_reshape);
+        auto add1 = std::make_shared<op::v1::Add>(X, W_reshape);
+        auto sub1 = std::make_shared<op::v1::Subtract>(X, W_reshape);
+        auto mul1 = std::make_shared<op::v1::Multiply>(X, W_reshape);
 
         return make_shared<Function>(OutputVector{add1, sub1, mul1}, ParameterVector{W, X});
     };
@@ -775,9 +775,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_destructive_oi_relu)
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
     auto B = make_shared<op::Parameter>(element::f32, shape_a);
     auto C = make_shared<op::Parameter>(element::f32, shape_a);
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto relu = make_shared<op::Relu>(add);
-    auto subtract = make_shared<op::Subtract>(C, relu);
+    auto subtract = make_shared<op::v1::Subtract>(C, relu);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
 
@@ -804,9 +804,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_cacheable_no_destructive_oi_r
     auto A = make_shared<op::Parameter>(element::f32, shape_a, true);
     auto B = make_shared<op::Parameter>(element::f32, shape_a, true);
     auto C = make_shared<op::Parameter>(element::f32, shape_a);
-    auto add = make_shared<op::Add>(A, B);
+    auto add = make_shared<op::v1::Add>(A, B);
     auto relu = make_shared<op::Relu>(add);
-    auto subtract = make_shared<op::Subtract>(C, relu);
+    auto subtract = make_shared<op::v1::Subtract>(C, relu);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
 
@@ -862,11 +862,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_slice_after_in_place
     Shape shape{1, 1};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto add1 = make_shared<op::Add>(A, B);
+    auto add1 = make_shared<op::v1::Add>(A, B);
     auto C = make_shared<op::Parameter>(element::f32, shape);
     auto D = make_shared<op::Parameter>(element::f32, shape);
-    auto add2 = make_shared<op::Add>(C, D);
-    auto subtract = make_shared<op::Subtract>(C, A);
+    auto add2 = make_shared<op::v1::Add>(C, D);
+    auto subtract = make_shared<op::v1::Subtract>(C, A);
     auto concat = make_shared<op::Concat>(OutputVector{add1, add2, subtract}, 0);
     Shape shape_r{2, 1};
     auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
@@ -1243,17 +1243,17 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto greater_eq = make_shared<op::GreaterEq>(g, h);
     auto less = make_shared<op::Less>(g, h);
     auto less_eq = make_shared<op::LessEq>(g, h);
-    auto logical_and = make_shared<op::LogicalAnd>(i, j);
-    auto logical_or = make_shared<op::LogicalOr>(i, j);
-    auto logical_xor = make_shared<op::LogicalXor>(i, j);
+    auto logical_and = make_shared<op::v1::LogicalAnd>(i, j);
+    auto logical_or = make_shared<op::v1::LogicalOr>(i, j);
+    auto logical_xor = make_shared<op::v1::LogicalXor>(i, j);
     auto ceil = make_shared<op::Ceiling>(k);
     auto floor = make_shared<op::Floor>(k);
-    auto logical_not = make_shared<op::LogicalNot>(j);
+    auto logical_not = make_shared<op::v1::LogicalNot>(j);
     // Note: The CPU functors do not actually support autobroadcast yet; instead the pass itself
     // falls back if autobroadcasting is in use. Putting this check here just to make sure the
     // fallback works as expected, but if direct support for autobroadcast is added to the CPU
     // folders we should add more comprehensive tests here. --amprocte
-    auto add_autob_numpy = make_shared<op::Add>(a, l, op::AutoBroadcastType::NUMPY);
+    auto add_autob_numpy = make_shared<op::v1::Add>(a, l, op::AutoBroadcastType::NUMPY);
 
     auto func = make_shared<Function>(
         OutputVector{add,        sub,         mul,        divn,  min,         max,
@@ -1269,10 +1269,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
     pass_manager.run_passes(func);
 
-    ASSERT_EQ(count_ops_of_type<op::Add>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Subtract>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Multiply>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Divide>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Add>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Subtract>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Divide>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Minimum>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Maximum>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Abs>(func), 0);
@@ -1286,12 +1286,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::GreaterEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Less>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::LogicalAnd>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::LogicalOr>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::LogicalXor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalAnd>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalOr>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalXor>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::LogicalNot>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalNot>(func), 0);
 
     // expected values
     vector<int> add_expected{2, 4, 6, 8};
@@ -1976,11 +1976,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_scatter_add_1d_indices_in_place)
     Shape out_shape{2, 3, 3};
     auto R1 = make_shared<op::Parameter>(element::f32, ref_shape);
     auto R2 = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto R = make_shared<op::Add>(R1, R2);
+    auto R = make_shared<op::v1::Add>(R1, R2);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     auto G = make_shared<op::ScatterAdd>(R, I, U);
-    auto add = make_shared<op::Add>(G, R2);
+    auto add = make_shared<op::v1::Add>(G, R2);
     auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2011,11 +2011,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_scatter_add_1d_indices_no_in_place)
     Shape out_shape{2, 3, 3};
     auto R1 = make_shared<op::Parameter>(element::f32, ref_shape);
     auto R2 = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto R = make_shared<op::Add>(R1, R2);
+    auto R = make_shared<op::v1::Add>(R1, R2);
     auto I = make_shared<op::Parameter>(element::i32, indices_shape);
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     auto G = make_shared<op::ScatterAdd>(R, I, U);
-    auto add = make_shared<op::Add>(G, R);
+    auto add = make_shared<op::v1::Add>(G, R);
     auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2219,7 +2219,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_input)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Add>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2243,7 +2243,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_output)
     Shape shape{2, 2};
     auto A = make_shared<op::Parameter>(element::f32, shape);
     auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Add>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2273,7 +2273,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensorview_custom_mem)
     auto make_external = [&]() {
         auto A = make_shared<op::Parameter>(element::f32, shape);
         auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
+        auto f = make_shared<Function>(make_shared<op::v1::Divide>(A, B), ParameterVector{A, B});
 
         return f;
     };

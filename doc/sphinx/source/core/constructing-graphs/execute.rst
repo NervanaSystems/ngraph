@@ -66,8 +66,8 @@ input for another operation.
 
 Most of the public portion of the nGraph API is in the ``ngraph`` namespace, so 
 we will omit the namespace. Use of namespaces other than ``std`` will be 
-namespaces in ``ngraph``. For example, the ``op::Add`` is assumed to refer to 
-``ngraph::op::Add``. A computation's graph is constructed from ops; each is a 
+namespaces in ``ngraph``. For example, the ``op::v1::Add`` is assumed to refer to 
+``ngraph::op::v1::Add``. A computation's graph is constructed from ops; each is a 
 member of a subclass of ``op::Op``, which, in turn, is a subclass of ``Node``. 
 Not all graphs are computation, but all graphs are composed entirely of 
 instances of ``Node``.  Computation graphs contain only ``op::Op`` nodes.
@@ -99,18 +99,18 @@ be passed to them.
 The above code makes three parameter nodes where each is a 32-bit float of 
 shape ``(2, 3)`` and a row-major element layout.
 
-To create a graph for ``(a + b) * c``, first make an ``op::Add`` node with inputs 
-from ``a`` and ``b``, and an ``op::Multiply`` node from the add node and ``c``:
+To create a graph for ``(a + b) * c``, first make an ``op::v1::Add`` node with inputs 
+from ``a`` and ``b``, and an ``op::v1::Multiply`` node from the add node and ``c``:
 
 .. literalinclude:: ../../../../examples/abc/abc.cpp
    :language: cpp
    :lines: 31-32
 
-When the ``op::Add`` op is constructed, it will check that the element types and 
+When the ``op::v1::Add`` op is constructed, it will check that the element types and 
 shapes of its inputs match; to support multiple frameworks, ngraph does not do 
 automatic type conversion or broadcasting. In this case, they match, and the 
 shape of the unique output of ``t0`` will be a 32-bit float with shape ``(2, 3)``. 
-Similarly, ``op::Multiply`` checks that its inputs match and sets the element 
+Similarly, ``op::v1::Multiply`` checks that its inputs match and sets the element 
 type and shape of its unique output.
 
 Once the graph is built, we need to package it in a ``Function``:

@@ -90,7 +90,7 @@ Predicates are of type ``std::function<bool(std::shared_ptr<Node>)>``
    
     //predicates are of type std::function<bool(std::shared_ptr<Node>)>
     auto add_or_sub = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Add>(n) != nullptr ||
+        return std::dynamic_pointer_cast<op::v1::Add>(n) != nullptr ||
             std::dynamic_pointer_cast<op::Sub>(n) != nullptr
     };
 

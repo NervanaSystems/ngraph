@@ -486,7 +486,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
 
     // check on invariants expected by MLIR backend
 
-    if (auto div = as_type_ptr<ngraph::op::Divide>(node))
+    if (auto div = as_type_ptr<ngraph::op::v1::Divide>(node))
     {
         if (div->is_pythondiv())
         {
