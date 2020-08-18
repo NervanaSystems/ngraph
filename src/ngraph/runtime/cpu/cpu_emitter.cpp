@@ -1918,7 +1918,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Asinh)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v3::Asinh)
             {
                 (void)external_function;
                 (void)node;
@@ -1932,7 +1932,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Acosh)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v3::Acosh)
             {
                 (void)external_function;
                 (void)node;
@@ -1946,7 +1946,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::Atanh)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v3::Atanh)
             {
                 (void)external_function;
                 (void)node;

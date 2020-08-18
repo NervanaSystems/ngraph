@@ -60,14 +60,14 @@ TEST(constant_folding, acosh)
         expected.push_back(std::acosh(f));
     }
     auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
-    auto acosh = make_shared<op::Acosh>(constant);
+    auto acosh = make_shared<op::v3::Acosh>(constant);
     auto f = make_shared<Function>(acosh, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    EXPECT_EQ(count_ops_of_type<op::Acosh>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::v3::Acosh>(f), 0);
     EXPECT_EQ(count_ops_of_type<op::Constant>(f), 1);
     ASSERT_EQ(f->get_results().size(), 1);
 
@@ -89,14 +89,14 @@ TEST(constant_folding, asinh)
         expected.push_back(std::asinh(f));
     }
     auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
-    auto asinh = make_shared<op::Asinh>(constant);
+    auto asinh = make_shared<op::v3::Asinh>(constant);
     auto f = make_shared<Function>(asinh, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    EXPECT_EQ(count_ops_of_type<op::Asinh>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::v3::Asinh>(f), 0);
     EXPECT_EQ(count_ops_of_type<op::Constant>(f), 1);
     ASSERT_EQ(f->get_results().size(), 1);
 
@@ -118,14 +118,14 @@ TEST(constant_folding, atanh)
         expected.push_back(std::atanh(f));
     }
     auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
-    auto atanh = make_shared<op::Atanh>(constant);
+    auto atanh = make_shared<op::v3::Atanh>(constant);
     auto f = make_shared<Function>(atanh, ParameterVector{});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ConstantFolding>();
     pass_manager.run_passes(f);
 
-    EXPECT_EQ(count_ops_of_type<op::Atanh>(f), 0);
+    EXPECT_EQ(count_ops_of_type<op::v3::Atanh>(f), 0);
     EXPECT_EQ(count_ops_of_type<op::Constant>(f), 1);
     ASSERT_EQ(f->get_results().size(), 1);
 

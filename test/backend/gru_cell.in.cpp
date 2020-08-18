@@ -63,17 +63,17 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_bias_clip)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
 
-    const auto gru_cell = make_shared<op::GRUCell>(X,
-                                                   H_t,
-                                                   W,
-                                                   R,
-                                                   B,
-                                                   hidden_size,
-                                                   vector<string>{"sigmoid", "tanh"},
-                                                   vector<float>{},
-                                                   vector<float>{},
-                                                   clip,
-                                                   linear_before_reset);
+    const auto gru_cell = make_shared<op::v3::GRUCell>(X,
+                                                       H_t,
+                                                       W,
+                                                       R,
+                                                       B,
+                                                       hidden_size,
+                                                       vector<string>{"sigmoid", "tanh"},
+                                                       vector<float>{},
+                                                       vector<float>{},
+                                                       clip,
+                                                       linear_before_reset);
     auto function = make_shared<Function>(gru_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -136,17 +136,17 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_linear_before_reset)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
-    const auto gru_cell = make_shared<op::GRUCell>(X,
-                                                   H_t,
-                                                   W,
-                                                   R,
-                                                   B,
-                                                   hidden_size,
-                                                   vector<string>{"sigmoid", "tanh"},
-                                                   vector<float>{},
-                                                   vector<float>{},
-                                                   clip,
-                                                   linear_before_reset);
+    const auto gru_cell = make_shared<op::v3::GRUCell>(X,
+                                                       H_t,
+                                                       W,
+                                                       R,
+                                                       B,
+                                                       hidden_size,
+                                                       vector<string>{"sigmoid", "tanh"},
+                                                       vector<float>{},
+                                                       vector<float>{},
+                                                       clip,
+                                                       linear_before_reset);
     auto function = make_shared<Function>(gru_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -208,17 +208,17 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
     const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
     const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
-    const auto gru_cell = make_shared<op::GRUCell>(X,
-                                                   H_t,
-                                                   W,
-                                                   R,
-                                                   B,
-                                                   hidden_size,
-                                                   vector<string>{"hardsigmoid", "hardsigmoid"},
-                                                   vector<float>{1.8345f, 1.8345f},
-                                                   vector<float>{3.05f, 3.05f},
-                                                   clip,
-                                                   linear_before_reset);
+    const auto gru_cell = make_shared<op::v3::GRUCell>(X,
+                                                       H_t,
+                                                       W,
+                                                       R,
+                                                       B,
+                                                       hidden_size,
+                                                       vector<string>{"hardsigmoid", "hardsigmoid"},
+                                                       vector<float>{1.8345f, 1.8345f},
+                                                       vector<float>{3.05f, 3.05f},
+                                                       clip,
+                                                       linear_before_reset);
     auto function = make_shared<Function>(gru_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

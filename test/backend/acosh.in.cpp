@@ -48,7 +48,7 @@ NGRAPH_TEST(${BACKEND_NAME}, acosh)
 {
     Shape shape{11};
     auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Acosh>(A), ParameterVector{A});
+    auto f = make_shared<Function>(make_shared<op::v3::Acosh>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

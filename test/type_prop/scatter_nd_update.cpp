@@ -56,7 +56,7 @@ TEST(type_prop, scatter_nd_update_v3_fail_updates_rank)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDUpdate>(R, I, U);
+        auto G = make_shared<op::v3::ScatterNDUpdate>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates rank";
     }
@@ -83,7 +83,7 @@ TEST(type_prop, scatter_nd_update_fail_updates_element_type)
     auto U = make_shared<op::Parameter>(element::i32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDUpdate>(R, I, U);
+        auto G = make_shared<op::v3::ScatterNDUpdate>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Created ScatterND op with incorrect updates element type.";
     }
@@ -109,7 +109,7 @@ TEST(type_prop, scatter_nd_update_fail_updates_shape)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDUpdate>(R, I, U);
+        auto G = make_shared<op::v3::ScatterNDUpdate>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates shape";
     }
@@ -137,7 +137,7 @@ TEST(type_prop, scatter_nd_update_fail_indices_last_dim)
     auto U = make_shared<op::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDUpdate>(R, I, U);
+        auto G = make_shared<op::v3::ScatterNDUpdate>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices innermost dim";
     }
