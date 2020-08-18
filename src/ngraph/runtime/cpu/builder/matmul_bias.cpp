@@ -414,15 +414,15 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchMatMul)
+            void Builder::BUILDER_DECL(ngraph::op::v0::BatchMatMul)
             {
                 batchMatMul(external_function, node, args, out, false, false);
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchMatMulTranspose)
+            void Builder::BUILDER_DECL(ngraph::op::v0::BatchMatMulTranspose)
             {
-                const auto* cg = static_cast<const ngraph::op::BatchMatMulTranspose*>(node);
+                const auto* cg = static_cast<const ngraph::op::v0::BatchMatMulTranspose*>(node);
                 batchMatMul(external_function,
                             node,
                             args,

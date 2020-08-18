@@ -56,6 +56,5 @@ namespace ngraph
             };
         }
         // default opset version
-        using v0::Product;
     }
 }

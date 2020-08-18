@@ -248,7 +248,7 @@ static bool simplify_concat(shared_ptr<Node> n)
     return true;
 }
 
-static bool is_uniform_constant(const op::Constant* constant, int value)
+static bool is_uniform_constant(const op::v0::Constant* constant, int value)
 {
     bool rc = false;
     if (constant && constant->get_all_data_elements_bitwise_identical())
@@ -315,7 +315,7 @@ static bool is_uniform_constant(const op::Constant* constant, int value)
     return rc;
 }
 
-static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
+static shared_ptr<op::v0::Constant> get_constant(shared_ptr<Node> op)
 {
     set<Node::type_info_t> nomath = {op::v0::Broadcast::type_info,
                                      op::v0::Reshape::type_info,
@@ -327,7 +327,7 @@ static shared_ptr<op::Constant> get_constant(shared_ptr<Node> op)
     {
         op = op->get_input_node_shared_ptr(0);
     }
-    return as_type_ptr<op::Constant>(op);
+    return as_type_ptr<op::v0::Constant>(op);
 }
 
 static bool is_input_uniform_constant(shared_ptr<Node> op,
@@ -585,14 +585,15 @@ static size_t reduction_shape_size(const AxisSet& axes, const Shape& shape)
 
 template <typename T>
 static shared_ptr<Node>
-    multiply_by(element::Type type, size_t multiplier, shared_ptr<op::Constant> cnst)
+    multiply_by(element::Type type, size_t multiplier, shared_ptr<op::v0::Constant> cnst)
 {
     T sum_cnst = static_cast<T>(cnst->get_vector<T>().at(0) * multiplier);
-    return op::Constant::create<T>(type, Shape{}, {sum_cnst});
+    return op::v0::Constant::create<T>(type, Shape{}, {sum_cnst});
 }
 
 template <typename T>
-static shared_ptr<Node> pow_by(element::Type type, size_t multiplier, shared_ptr<op::Constant> cnst)
+static shared_ptr<Node>
+    pow_by(element::Type type, size_t multiplier, shared_ptr<op::v0::Constant> cnst)
 {
     T prod = static_cast<T>(1);
     T val = cnst->get_vector<T>().at(0);
@@ -600,10 +601,10 @@ static shared_ptr<Node> pow_by(element::Type type, size_t multiplier, shared_ptr
     {
         prod *= val;
     }
-    return op::Constant::create<T>(type, Shape{}, {prod});
+    return op::v0::Constant::create<T>(type, Shape{}, {prod});
 }
 
-static shared_ptr<Node> get_sum_constant(shared_ptr<op::Constant> cnst, size_t multiplier)
+static shared_ptr<Node> get_sum_constant(shared_ptr<op::v0::Constant> cnst, size_t multiplier)
 {
     if (cnst->get_output_element_type(0) == element::i32)
     {
@@ -625,7 +626,7 @@ static shared_ptr<Node> get_sum_constant(shared_ptr<op::Constant> cnst, size_t m
     return nullptr;
 }
 
-static shared_ptr<Node> get_prod_constant(shared_ptr<op::Constant> cnst, size_t multiplier)
+static shared_ptr<Node> get_prod_constant(shared_ptr<op::v0::Constant> cnst, size_t multiplier)
 {
     if (cnst->get_output_element_type(0) == element::i32)
     {
@@ -652,7 +653,7 @@ static shared_ptr<Node> get_prod_constant(shared_ptr<op::Constant> cnst, size_t 
 // where constant2's values are equal to scalar_constant * shape_size(reduction_axes)
 // product(broadcast(scalar_constant), reduction_axes = ...) -> constant2 (or scalar constant)
 // where constant2's values are equal to scalar_constant ^ shape_size(reduction_axes)
-template <typename T, shared_ptr<Node> (*F)(shared_ptr<op::Constant> cnst, size_t multiplier)>
+template <typename T, shared_ptr<Node> (*F)(shared_ptr<op::v0::Constant> cnst, size_t multiplier)>
 static bool simplify_reduction(shared_ptr<Node> n)
 {
     NGRAPH_DEBUG << "In simplify_reduction for " << n->get_name();
@@ -670,7 +671,7 @@ static bool simplify_reduction(shared_ptr<Node> n)
         return false;
     }
 
-    auto cnst = as_type_ptr<op::Constant>(broadcast->input_value(0).get_node_shared_ptr());
+    auto cnst = as_type_ptr<op::v0::Constant>(broadcast->input_value(0).get_node_shared_ptr());
     if (!cnst || cnst->get_output_shape(0).size() > 0 /*not a scalar*/)
     {
         NGRAPH_DEBUG << broadcast->get_argument(0)->get_name() << " isn't a scalar constant";

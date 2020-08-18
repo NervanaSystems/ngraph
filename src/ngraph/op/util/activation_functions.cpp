@@ -31,25 +31,26 @@ using namespace ngraph;
 
 static Output<Node> sigmoid(const Output<Node>& arg, float /* alpha */, float /* beta */)
 {
-    return make_shared<op::Sigmoid>(arg)->output(0);
+    return make_shared<op::v0::Sigmoid>(arg)->output(0);
 }
 
 static Output<Node> tanh(const Output<Node>& arg, float /* alpha */, float /* beta */)
 {
-    return make_shared<op::Tanh>(arg)->output(0);
+    return make_shared<op::v0::Tanh>(arg)->output(0);
 }
 
 static Output<Node> relu(const Output<Node>& arg, float /* alpha */, float /* beta */)
 {
-    return make_shared<op::Relu>(arg)->output(0);
+    return make_shared<op::v0::Relu>(arg)->output(0);
 }
 
 static Output<Node> hardsigmoid(const Output<Node>& arg, float alpha, float beta)
 {
-    const auto alpha_node = op::Constant::create<float>(arg.get_element_type(), Shape{}, {alpha});
-    const auto beta_node = op::Constant::create<float>(arg.get_element_type(), Shape{}, {beta});
+    const auto alpha_node =
+        op::v0::Constant::create<float>(arg.get_element_type(), Shape{}, {alpha});
+    const auto beta_node = op::v0::Constant::create<float>(arg.get_element_type(), Shape{}, {beta});
 
-    return make_shared<op::HardSigmoid>(arg, alpha_node, beta_node)->output(0);
+    return make_shared<op::v0::HardSigmoid>(arg, alpha_node, beta_node)->output(0);
 }
 
 op::util::ActivationFunction::ActivationFunction(ActivationFunctionType f, float alpha, float beta)

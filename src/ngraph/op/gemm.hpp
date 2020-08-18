@@ -76,6 +76,5 @@ namespace ngraph
                 bool m_transB;
             };
         }
-        using v0::Gemm;
     }
 }

@@ -77,8 +77,8 @@ namespace ngraph
                                          std::vector<void*> memory_pointers) override;
 
             private:
-                std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
-                std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
+                std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
+                std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
 
                 std::shared_ptr<CPU_ExternalFunction> m_external_function;
                 std::shared_ptr<CPU_CallFrame> m_call_frame;

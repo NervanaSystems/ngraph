@@ -72,8 +72,6 @@ namespace ngraph
                 bool m_pythondiv{true};
             };
         }
-
-        using v1::Divide;
     }
 
     NGRAPH_API

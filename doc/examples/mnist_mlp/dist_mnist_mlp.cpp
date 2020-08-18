@@ -121,53 +121,53 @@ int main(int argc, char* argv[])
         train_loader.get_columns() * train_loader.get_rows();
 
     // The data input
-    auto X = std::make_shared<op::Parameter>(
+    auto X = std::make_shared<op::v0::Parameter>(
         element::f32, Shape{batch_size, input_size});
 
     // Layer 0
-    auto W0 = std::make_shared<op::Parameter>(element::f32,
-                                              Shape{input_size, l0_size});
+    auto W0 = std::make_shared<op::v0::Parameter>(
+        element::f32, Shape{input_size, l0_size});
     auto b0 =
-        std::make_shared<op::Parameter>(element::f32, Shape{l0_size});
-    auto l0_dot = std::make_shared<op::Dot>(X, W0, 1);
-    auto b0_broadcast = std::make_shared<op::Broadcast>(
+        std::make_shared<op::v0::Parameter>(element::f32, Shape{l0_size});
+    auto l0_dot = std::make_shared<op::v0::Dot>(X, W0, 1);
+    auto b0_broadcast = std::make_shared<op::v0::Broadcast>(
         b0, Shape{batch_size, l0_size}, AxisSet{0});
-    auto l0 = std::make_shared<op::Relu>(l0_dot + b0_broadcast);
+    auto l0 = std::make_shared<op::v0::Relu>(l0_dot + b0_broadcast);
 
     // Layer 1
-    auto W1 = std::make_shared<op::Parameter>(element::f32,
-                                              Shape{l0_size, l1_size});
+    auto W1 = std::make_shared<op::v0::Parameter>(element::f32,
+                                                  Shape{l0_size, l1_size});
     auto b1 =
-        std::make_shared<op::Parameter>(element::f32, Shape{l1_size});
-    auto l1_dot = std::make_shared<op::Dot>(l0, W1, 1);
-    auto b1_broadcast = std::make_shared<op::Broadcast>(
+        std::make_shared<op::v0::Parameter>(element::f32, Shape{l1_size});
+    auto l1_dot = std::make_shared<op::v0::Dot>(l0, W1, 1);
+    auto b1_broadcast = std::make_shared<op::v0::Broadcast>(
         b1, Shape{batch_size, l1_size}, AxisSet{0});
     auto l1 = l1_dot + b1_broadcast;
 
     // Softmax
-    auto softmax = std::make_shared<op::Softmax>(l1, AxisSet{1});
+    auto softmax = std::make_shared<op::v0::Softmax>(l1, AxisSet{1});
 
     // Loss computation
-    auto Y =
-        std::make_shared<op::Parameter>(element::f32, Shape{batch_size});
-    auto labels =
-        std::make_shared<op::OneHot>(Y, Shape{batch_size, output_size}, 1);
-    auto softmax_clip_value = std::make_shared<op::Constant>(
+    auto Y = std::make_shared<op::v0::Parameter>(element::f32,
+                                                 Shape{batch_size});
+    auto labels = std::make_shared<op::v0::OneHot>(
+        Y, Shape{batch_size, output_size}, 1);
+    auto softmax_clip_value = std::make_shared<op::v0::Constant>(
         element::f32, Shape{}, std::vector<float>{log_min});
-    auto softmax_clip_broadcast = std::make_shared<op::Broadcast>(
+    auto softmax_clip_broadcast = std::make_shared<op::v0::Broadcast>(
         softmax_clip_value, Shape{batch_size, output_size}, AxisSet{0, 1});
     auto softmax_clip =
-        std::make_shared<op::Maximum>(softmax, softmax_clip_broadcast);
-    auto softmax_log = std::make_shared<op::Log>(softmax_clip);
-    auto prod = std::make_shared<op::Multiply>(softmax_log, labels);
-    auto N = std::make_shared<op::Parameter>(element::f32, Shape{});
-    auto loss = std::make_shared<op::Divide>(
-        std::make_shared<op::Sum>(prod, AxisSet{0, 1}), N);
+        std::make_shared<op::v0::Maximum>(softmax, softmax_clip_broadcast);
+    auto softmax_log = std::make_shared<op::v0::Log>(softmax_clip);
+    auto prod = std::make_shared<op::v1::Multiply>(softmax_log, labels);
+    auto N = std::make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto loss = std::make_shared<op::v1::Divide>(
+        std::make_shared<op::v0::Sum>(prod, AxisSet{0, 1}), N);
 
     // Backprop
     // Each of W0, b0, W1, and b1
     auto learning_rate =
-        std::make_shared<op::Parameter>(element::f32, Shape{});
+        std::make_shared<op::v0::Parameter>(element::f32, Shape{});
     auto delta = -learning_rate * loss;
 
     // Updates
@@ -178,10 +178,10 @@ int main(int argc, char* argv[])
     auto grad_W1 = adjoints.backprop_output(W1);
     auto grad_b1 = adjoints.backprop_output(b1);
 
-    auto avg_grad_W0 = std::make_shared<op::AllReduce>(grad_W0);
-    auto avg_grad_b0 = std::make_shared<op::AllReduce>(grad_b0);
-    auto avg_grad_W1 = std::make_shared<op::AllReduce>(grad_W1);
-    auto avg_grad_b1 = std::make_shared<op::AllReduce>(grad_b1);
+    auto avg_grad_W0 = std::make_shared<op::v0::AllReduce>(grad_W0);
+    auto avg_grad_b0 = std::make_shared<op::v0::AllReduce>(grad_b0);
+    auto avg_grad_W1 = std::make_shared<op::v0::AllReduce>(grad_W1);
+    auto avg_grad_b1 = std::make_shared<op::v0::AllReduce>(grad_b1);
 
     auto W0_next = W0 + avg_grad_W0;
     auto b0_next = b0 + avg_grad_b0;

@@ -178,6 +178,5 @@ namespace ngraph
                 bool m_linear_before_reset;
             };
         }
-        using v3::GRUCell;
     }
 }

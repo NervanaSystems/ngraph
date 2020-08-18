@@ -26,11 +26,11 @@ using namespace ngraph;
 void pass::ConstantFolding::construct_constant_variadic_split()
 {
     auto data_label = make_shared<pattern::op::Label>(
-        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto axis_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{}, pattern::has_class<op::Constant>());
-    auto lengths_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::v0::Constant>());
+    auto axis_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{}, pattern::has_class<op::v0::Constant>());
+    auto lengths_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{2}, pattern::has_class<op::v0::Constant>());
     auto variadic_split_pattern =
         make_shared<op::v1::VariadicSplit>(data_label, axis_label, lengths_label);
 
@@ -40,9 +40,9 @@ void pass::ConstantFolding::construct_constant_variadic_split()
                      << m.get_match_root()->get_name();
         auto pattern_map = m.get_pattern_map();
 
-        const auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
-        const auto axis_node = static_pointer_cast<op::Constant>(pattern_map[axis_label]);
-        const auto lengths_node = static_pointer_cast<op::Constant>(pattern_map[lengths_label]);
+        const auto data_node = static_pointer_cast<op::v0::Constant>(pattern_map[data_label]);
+        const auto axis_node = static_pointer_cast<op::v0::Constant>(pattern_map[axis_label]);
+        const auto lengths_node = static_pointer_cast<op::v0::Constant>(pattern_map[lengths_label]);
         const auto variadic_split = m.get_match_root_as<op::v1::VariadicSplit>();
         NGRAPH_CHECK(variadic_split,
                      "match root node ",

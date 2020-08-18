@@ -49,9 +49,9 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 {
     Shape data_shape{1, 2, 5};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
 
-    auto mvn_func = make_shared<op::MVN>(data, true, false);
+    auto mvn_func = make_shared<op::v0::MVN>(data, true, false);
     auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
@@ -69,9 +69,9 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
 {
     Shape data_shape{1, 2, 5, 1};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
 
-    auto mvn_func = make_shared<op::MVN>(data, false, false);
+    auto mvn_func = make_shared<op::v0::MVN>(data, false, false);
     auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
@@ -89,9 +89,9 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_normalization_split_channels)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
 {
     Shape data_shape{1, 2, 5};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
 
-    auto mvn_func = make_shared<op::MVN>(data);
+    auto mvn_func = make_shared<op::v0::MVN>(data);
     auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data
@@ -118,9 +118,9 @@ NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization)
 NGRAPH_TEST(${BACKEND_NAME}, mvn_mean_variance_normalization_split_channels)
 {
     Shape data_shape{1, 2, 5};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
 
-    auto mvn_func = make_shared<op::MVN>(data, false);
+    auto mvn_func = make_shared<op::v0::MVN>(data, false);
     auto function = make_shared<Function>(OutputVector{mvn_func}, ParameterVector{data});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // data

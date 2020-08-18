@@ -72,7 +72,7 @@ namespace ngraph
                 {
                     Shape weights_shape_groups;
                     if (auto gconv =
-                            as_type_ptr<ngraph::op::GroupConvolution>(node->get_users()[0]))
+                            as_type_ptr<ngraph::op::v0::GroupConvolution>(node->get_users()[0]))
                     {
                         weights_shape_groups = gconv->get_weights_dimensions();
                     }

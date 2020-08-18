@@ -217,7 +217,7 @@ bool pass::VisualizeTree::run_on_module(vector<shared_ptr<Function>>& functions)
         size_t fake_node_ctr = 0;
 
         traverse_nodes(f, [&](shared_ptr<Node> node) {
-            if (auto ck = as_type_ptr<ngraph::op::CompiledKernel>(node))
+            if (auto ck = as_type_ptr<ngraph::op::v0::CompiledKernel>(node))
             {
                 // print sub-graph
                 auto nodes_list = ck->get_function()->get_ordered_ops();
@@ -257,7 +257,7 @@ void pass::VisualizeTree::add_node_arguments(shared_ptr<Node> node,
     {
         auto arg = input_value.get_node_shared_ptr();
         size_t jump_distance = height_maps[arg.get()].max_jump_to(height_maps[node.get()]);
-        if (is_type<ngraph::op::Constant>(arg) || is_type<ngraph::op::Parameter>(arg))
+        if (is_type<ngraph::op::v0::Constant>(arg) || is_type<ngraph::op::v0::Parameter>(arg))
         {
             auto clone_name = "CLONE_" + to_string(fake_node_ctr);
             auto color = (is_type<op::v0::Parameter>(arg) ? "blue" : "black");

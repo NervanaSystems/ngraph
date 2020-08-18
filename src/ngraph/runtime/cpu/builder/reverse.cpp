@@ -28,9 +28,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Reverse)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Reverse)
             {
-                auto reverse = static_cast<const ngraph::op::Reverse*>(node);
+                auto reverse = static_cast<const ngraph::op::v0::Reverse*>(node);
 
                 auto& functors = external_function->get_functors();
 

@@ -128,7 +128,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     // Create random input data for all input tensors
     for (size_t i = 0; i < pipeline_depth; i++)
     {
-        for (shared_ptr<op::Parameter> param : f->get_parameters())
+        for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
         {
             auto tensor_data = make_shared<runtime::HostTensor>(param->get_element_type(),
                                                                 param->get_output_shape(0));
@@ -151,7 +151,7 @@ vector<runtime::PerformanceCounter> run_benchmark_pipelined(shared_ptr<Function>
     // Create input tensors for all Parameters
     array<vector<shared_ptr<runtime::Tensor>>, pipeline_depth> input_tensors_array;
     size_t input_index = 0;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         auto input_tensors = exec->create_input_tensor(input_index++, pipeline_depth);
         for (size_t i = 0; i < pipeline_depth; i++)

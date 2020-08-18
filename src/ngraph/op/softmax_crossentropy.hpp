@@ -98,7 +98,5 @@ namespace ngraph
                 int64_t m_ignore_index;
             };
         }
-        using v0::SoftmaxCrossEntropy;
-        using v0::SoftmaxCrossEntropyBackprop;
     }
 }

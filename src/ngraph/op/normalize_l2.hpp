@@ -67,6 +67,5 @@ namespace ngraph
                 EpsMode m_eps_mode;
             };
         }
-        using v0::NormalizeL2;
     }
 }

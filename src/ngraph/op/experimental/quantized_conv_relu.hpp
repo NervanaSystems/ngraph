@@ -66,6 +66,5 @@ namespace ngraph
                 Strides m_data_dilation_strides;
             };
         }
-        using v0::QuantizedConvolutionRelu;
     }
 }

@@ -12,15 +12,15 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_pad_upgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{5, 6});
+    auto arg_pad_value = make_shared<op::v0::Parameter>(element::f32, Shape{});
     CoordinateDiff padding_below{1, 2};
     CoordinateDiff padding_above{3, 4};
     auto pad_mode = op::PadMode::EDGE;
 
     auto pad_v0 =
         make_shared<op::v0::Pad>(arg, arg_pad_value, padding_below, padding_above, pad_mode);
-    auto result = make_shared<op::Result>(pad_v0);
+    auto result = make_shared<op::v0::Result>(pad_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, arg_pad_value});
 
     ngraph::pass::Manager pass_manager;
@@ -39,15 +39,16 @@ TEST(opset_transform, opset1_pad_upgrade_pass)
 
 TEST(opset_transform, opset1_pad_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{5, 6});
+    auto arg_pad_value = make_shared<op::v0::Parameter>(element::f32, Shape{});
     const auto pads_begin =
-        make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
-    const auto pads_end = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
+        make_shared<op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    const auto pads_end =
+        make_shared<op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{3, 4});
     auto pad_mode = op::PadMode::EDGE;
 
     auto pad_v1 = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
-    auto result = make_shared<op::Result>(pad_v1);
+    auto result = make_shared<op::v0::Result>(pad_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg, arg_pad_value});
 
     ngraph::pass::Manager pass_manager;

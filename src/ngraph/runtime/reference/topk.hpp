@@ -78,7 +78,7 @@ namespace ngraph
                       size_t axis,
                       size_t k,
                       bool compute_max,
-                      op::TopK::SortType sort = op::TopK::SortType::none)
+                      op::v0::TopK::SortType sort = op::v0::TopK::SortType::none)
             {
                 using namespace std;
                 // reorder source axis visit order and make "axis" inner most
@@ -135,13 +135,13 @@ namespace ngraph
                     {
                         switch (sort)
                         {
-                        case op::TopK::SortType::none: break;
-                        case op::TopK::SortType::index:
+                        case op::v0::TopK::SortType::none: break;
+                        case op::v0::TopK::SortType::index:
                             std::sort(workspace.begin(),
                                       workspace.begin() + k,
                                       sort_indices_descending<T, U>);
                             break;
-                        case op::TopK::SortType::value:
+                        case op::v0::TopK::SortType::value:
                             std::sort(workspace.begin(), workspace.begin() + k, compare_max<T, U>);
                             break;
                         }
@@ -150,13 +150,13 @@ namespace ngraph
                     {
                         switch (sort)
                         {
-                        case op::TopK::SortType::none: break;
-                        case op::TopK::SortType::index:
+                        case op::v0::TopK::SortType::none: break;
+                        case op::v0::TopK::SortType::index:
                             std::sort(workspace.begin(),
                                       workspace.begin() + k,
                                       sort_indices_ascending<T, U>);
                             break;
-                        case op::TopK::SortType::value:
+                        case op::v0::TopK::SortType::value:
                             std::sort(workspace.begin(), workspace.begin() + k, compare_min<T, U>);
                             break;
                         }

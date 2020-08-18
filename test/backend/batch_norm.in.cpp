@@ -39,12 +39,13 @@ public:
     {
         Shape channel_shape{input_shape.at(1)};
 
-        auto Input = make_shared<op::Parameter>(etype, input_shape);
-        auto Gamma = make_shared<op::Parameter>(etype, channel_shape);
-        auto Beta = make_shared<op::Parameter>(etype, channel_shape);
-        auto Mean = make_shared<op::Parameter>(etype, channel_shape);
-        auto Variance = make_shared<op::Parameter>(etype, channel_shape);
-        auto BN = make_shared<op::BatchNormInference>(Input, Gamma, Beta, Mean, Variance, epsilon);
+        auto Input = make_shared<op::v0::Parameter>(etype, input_shape);
+        auto Gamma = make_shared<op::v0::Parameter>(etype, channel_shape);
+        auto Beta = make_shared<op::v0::Parameter>(etype, channel_shape);
+        auto Mean = make_shared<op::v0::Parameter>(etype, channel_shape);
+        auto Variance = make_shared<op::v0::Parameter>(etype, channel_shape);
+        auto BN =
+            make_shared<op::v0::BatchNormInference>(Input, Gamma, Beta, Mean, Variance, epsilon);
         m_function = make_shared<Function>(BN, ParameterVector{Input, Gamma, Beta, Mean, Variance});
 
         m_input = backend->create_tensor(etype, input_shape);
@@ -285,13 +286,13 @@ public:
     {
         Shape channel_shape{input_shape.at(1)};
 
-        auto Input = make_shared<op::Parameter>(etype, input_shape);
-        auto Gamma = make_shared<op::Parameter>(etype, channel_shape);
-        auto Beta = make_shared<op::Parameter>(etype, channel_shape);
-        auto BN = make_shared<op::BatchNormTraining>(Input, Gamma, Beta, epsilon);
-        auto NormedInput = make_shared<op::Result>(BN->output(0));
-        auto Mean = make_shared<op::Result>(BN->output(1));
-        auto Variance = make_shared<op::Result>(BN->output(2));
+        auto Input = make_shared<op::v0::Parameter>(etype, input_shape);
+        auto Gamma = make_shared<op::v0::Parameter>(etype, channel_shape);
+        auto Beta = make_shared<op::v0::Parameter>(etype, channel_shape);
+        auto BN = make_shared<op::v0::BatchNormTraining>(Input, Gamma, Beta, epsilon);
+        auto NormedInput = make_shared<op::v0::Result>(BN->output(0));
+        auto Mean = make_shared<op::v0::Result>(BN->output(1));
+        auto Variance = make_shared<op::v0::Result>(BN->output(2));
         m_function = make_shared<Function>(ResultVector{NormedInput, Mean, Variance},
                                            ParameterVector{Input, Gamma, Beta});
 
@@ -466,14 +467,14 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_training_0eps_f32)
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication)
 {
     auto input_shape = Shape{2, 2, 2, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
 
     auto mvgb_shape = Shape{2};
-    auto mvgb = make_shared<op::Parameter>(element::f32, mvgb_shape);
+    auto mvgb = make_shared<op::v0::Parameter>(element::f32, mvgb_shape);
 
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormInference>(input, mvgb, mvgb, mvgb, mvgb, eps);
+    auto bn = make_shared<op::v0::BatchNormInference>(input, mvgb, mvgb, mvgb, mvgb, eps);
 
     auto f = make_shared<Function>(bn, ParameterVector{input, mvgb, mvgb, mvgb, mvgb});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -511,16 +512,16 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_inference_parameters_duplication)
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
 {
     auto input_shape = Shape{1, 2, 2, 2};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
     auto var_shape = Shape{2};
     auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto beta = make_shared<op::v0::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
+    auto bn = make_shared<op::v0::BatchNormTraining>(input, gamma, beta, eps);
 
     auto output_rt = bn->output(0);
     auto mean_rt = bn->output(1);
@@ -574,16 +575,16 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b1c2h2w2)
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2h2w1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
     auto var_shape = Shape{2};
     auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto beta = make_shared<op::v0::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
+    auto bn = make_shared<op::v0::BatchNormTraining>(input, gamma, beta, eps);
 
     auto output_rt = bn->output(0);
     auto mean_rt = bn->output(1);
@@ -628,16 +629,16 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2h2w1)
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_b2c2d2h1w1)
 {
     auto input_shape = Shape{2, 2, 2, 1, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
     auto var_shape = Shape{2};
     auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto beta = make_shared<op::v0::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1, 1};
-    auto bn = make_shared<op::BatchNormTraining>(eps, gamma, beta, input);
+    auto bn = make_shared<op::v0::BatchNormTraining>(eps, gamma, beta, input);
 
     auto output_rt = bn->output(0);
     auto mean_rt = bn->output(1);
@@ -683,18 +684,18 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
 {
     auto input_shape = Shape{4, 3, 2, 2};
     auto shape_mean = Shape{3};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{3};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    auto mean = make_shared<op::v0::Parameter>(element::f32, mean_shape);
     auto var_shape = Shape{3};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    auto var = make_shared<op::v0::Parameter>(element::f32, var_shape);
     auto gamma_shape = Shape{3};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{3};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto beta = make_shared<op::v0::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{4, 3, 2, 2};
-    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
+    auto bn = make_shared<op::v0::BatchNormTraining>(input, gamma, beta, eps);
     auto bn_dx = bn->output(0);
     auto bn_dgamma = bn->output(1);
     auto bn_dbeta = bn->output(2);
@@ -730,7 +731,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
     auto f = make_shared<Function>(OutputVector{bn_dx, bn_dgamma, bn_dbeta},
                                    ParameterVector{mean, var, input, gamma, beta});
 
-    auto C = std::make_shared<op::Parameter>(element::f32, shape_r);
+    auto C = std::make_shared<op::v0::Parameter>(element::f32, shape_r);
 
     auto zero = ngraph::make_zero(bn_dgamma.get_element_type(), bn_dgamma.get_shape());
     ngraph::autodiff::Adjoints adjoints(OutputVector{bn_dx, bn_dgamma, bn_dbeta},
@@ -781,18 +782,18 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_bprop_n4c3h2w2)
 NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
 {
     auto input_shape = Shape{2, 2, 2, 1};
-    auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     auto mean_shape = Shape{2};
-    auto mean = make_shared<op::Parameter>(element::f32, mean_shape);
+    auto mean = make_shared<op::v0::Parameter>(element::f32, mean_shape);
     auto var_shape = Shape{2};
-    auto var = make_shared<op::Parameter>(element::f32, var_shape);
+    auto var = make_shared<op::v0::Parameter>(element::f32, var_shape);
     auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto beta = make_shared<op::v0::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{2, 2, 2, 1};
-    auto bn = make_shared<op::BatchNormInference>(input, gamma, beta, mean, var, eps);
+    auto bn = make_shared<op::v0::BatchNormInference>(input, gamma, beta, mean, var, eps);
 
     auto f = make_shared<Function>(bn, ParameterVector{input, gamma, beta, mean, var});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -830,35 +831,35 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_norm_fprop_inference_b2c2h2w1)
 NGRAPH_TEST(DISABLED_${BACKEND_NAME}, dyn_batch_norm_fprop_b1c2h2w2)
 {
     // auto input_shape = Shape{1, 2, 2, 2};
-    auto input = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto input = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto mean_shape = Shape{2};
     auto var_shape = Shape{2};
     auto gamma_shape = Shape{2};
-    auto gamma = make_shared<op::Parameter>(element::f32, gamma_shape);
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, gamma_shape);
     auto beta_shape = Shape{2};
-    auto beta = make_shared<op::Parameter>(element::f32, beta_shape);
+    auto beta = make_shared<op::v0::Parameter>(element::f32, beta_shape);
     double eps = 0.001;
     auto shape_r = Shape{1, 2, 2, 2};
-    auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, eps);
+    auto bn = make_shared<op::v0::BatchNormTraining>(input, gamma, beta, eps);
 
     auto output_rt = bn->output(0);
     auto mean_rt = bn->output(1);
     auto variance_rt = bn->output(2);
 
-    auto shapeof_mean_rt = std::make_shared<ngraph::op::ShapeOf>(mean_rt);
-    auto rankof_mean_rt = std::make_shared<ngraph::op::ShapeOf>(shapeof_mean_rt);
-    auto rank_scalar = std::make_shared<ngraph::op::Reshape>(
+    auto shapeof_mean_rt = std::make_shared<ngraph::op::v0::ShapeOf>(mean_rt);
+    auto rankof_mean_rt = std::make_shared<ngraph::op::v0::ShapeOf>(shapeof_mean_rt);
+    auto rank_scalar = std::make_shared<ngraph::op::v0::Reshape>(
         rankof_mean_rt, ngraph::AxisVector{0}, ngraph::Shape{});
-    auto range = std::make_shared<ngraph::op::Range>(
-        ngraph::op::Constant::create(ngraph::element::i64, ngraph::Shape{}, {0}),
+    auto range = std::make_shared<ngraph::op::v0::Range>(
+        ngraph::op::v0::Constant::create(ngraph::element::i64, ngraph::Shape{}, {0}),
         rank_scalar,
-        ngraph::op::Constant::create(ngraph::element::i64, ngraph::Shape{}, {1}));
+        ngraph::op::v0::Constant::create(ngraph::element::i64, ngraph::Shape{}, {1}));
 
-    auto one_bcast = std::make_shared<ngraph::op::DynBroadcast>(
-        ngraph::op::Constant::create(mean_rt.get_element_type(), ngraph::Shape{}, {1}),
+    auto one_bcast = std::make_shared<ngraph::op::v0::DynBroadcast>(
+        ngraph::op::v0::Constant::create(mean_rt.get_element_type(), ngraph::Shape{}, {1}),
         shapeof_mean_rt,
         range);
-    auto mean_rt_multiplied = std::make_shared<ngraph::op::Multiply>(one_bcast, mean_rt);
+    auto mean_rt_multiplied = std::make_shared<ngraph::op::v1::Multiply>(one_bcast, mean_rt);
 
     auto f = make_shared<Function>(OutputVector{output_rt, mean_rt_multiplied, variance_rt},
                                    ParameterVector{input, gamma, beta});

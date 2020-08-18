@@ -107,7 +107,7 @@ void op::v0::ScatterND::pre_validate_and_infer_types()
     set_output_type(0, data_et, data_ps);
 }
 
-OutputVector op::ScatterND::decompose_op() const
+OutputVector op::v0::ScatterND::decompose_op() const
 {
     const auto data = input_value(0);
     const auto indices = input_value(1);
@@ -122,14 +122,14 @@ OutputVector op::ScatterND::decompose_op() const
     // contains 'true' values in the positions indicated by 'indices'
     // and 'false' values everywhere else.
 
-    const auto true_values = op::Constant::create(element::i64, updates_shape, {1});
-    const auto false_values = op::Constant::create(element::i64, data_shape, {0});
+    const auto true_values = op::v0::Constant::create(element::i64, updates_shape, {1});
+    const auto false_values = op::v0::Constant::create(element::i64, data_shape, {0});
 
     const auto mask = std::make_shared<op::v0::ScatterNDAdd>(false_values, indices, true_values);
 
     const auto mask_bool = std::make_shared<op::v0::Convert>(mask, element::boolean);
 
-    const auto zeros = op::Constant::create(data_et, data_shape, {0});
+    const auto zeros = op::v0::Constant::create(data_et, data_shape, {0});
 
     // Create an intermediate node that will contain the original data and
     // zeros in the positions indicated by indices.

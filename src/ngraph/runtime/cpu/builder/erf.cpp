@@ -28,7 +28,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Erf)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Erf)
             {
                 (void)node;
                 auto element_type = args[0].get_element_type();

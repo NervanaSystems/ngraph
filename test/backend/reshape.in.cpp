@@ -38,9 +38,9 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, reshape_t2v_012)
 {
     Shape shape_a{2, 2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -60,9 +60,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_t2v_012)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_t2s_012)
 {
     Shape shape_a{1, 1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{};
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0, 1, 2}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -81,9 +81,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_t2s_012)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_t2s_120)
 {
     Shape shape_a{1, 1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{};
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -102,9 +102,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_t2s_120)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t)
 {
     Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 1, 1, 1, 1};
-    auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -123,9 +123,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t1)
 {
     Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::boolean, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::boolean, shape_a);
     Shape shape_r{1};
-    auto r = make_shared<op::Reshape>(A, AxisVector{}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -143,9 +143,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_s2t1)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_col)
 {
     Shape shape_a{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 1};
-    auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -164,9 +164,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_col)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_row)
 {
     Shape shape_a{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3};
-    auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -185,9 +185,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_v2m_row)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_v2t_middle)
 {
     Shape shape_a{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 3, 1};
-    auto r = make_shared<op::Reshape>(A, AxisVector{0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -206,9 +206,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_v2t_middle)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_same)
 {
     Shape shape_a{3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0, 1}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -228,9 +228,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_same)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 {
     Shape shape_a{3, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 3};
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -250,9 +250,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_transpose)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_m2m_dim_change_transpose)
 {
     Shape shape_a{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 3};
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -272,8 +272,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_021)
 {
     Shape shape_a{2, 3, 4};
     Shape shape_r{2, 4, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 2, 1}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0, 2, 1}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -298,8 +298,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_210)
 {
     Shape shape_a{2, 3, 4};
     Shape shape_r{4, 3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{2, 1, 0}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{2, 1, 0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -324,8 +324,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_201)
 {
     Shape shape_a{2, 3, 4};
     Shape shape_r{4, 2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{2, 0, 1}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{2, 0, 1}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -350,8 +350,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_102)
 {
     Shape shape_a{2, 3, 4};
     Shape shape_r{3, 2, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0, 2}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{1, 0, 2}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -376,8 +376,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_3d_transpose_120)
 {
     Shape shape_a{2, 3, 4};
     Shape shape_r{3, 4, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{1, 2, 0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -402,8 +402,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_transpose)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape shape_r{2, 5, 5, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 2, 3, 1}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0, 2, 3, 1}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -434,8 +434,8 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_no_transpose)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape shape_r{2, 5, 5, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto r = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     vector<float> a_data(shape_size(shape_a));
@@ -456,9 +456,9 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_4d_no_transpose)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_transposed_shape_change)
 {
     Shape shape_a{2, 6};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{12};
-    auto r = make_shared<op::Reshape>(A, AxisVector{1, 0}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{1, 0}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -519,13 +519,13 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_transposed_shape_change)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_6d)
 {
     Shape shape_a{2, 2, 3, 3, 2, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{3, 2, 2, 4, 3, 2};
 
     vector<float> a_data(shape_size(shape_a));
     iota(a_data.begin(), a_data.end(), 1.f);
 
-    auto r = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
+    auto r = make_shared<op::v0::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -568,7 +568,7 @@ NGRAPH_TEST(${BACKEND_NAME}, reshape_6d)
 NGRAPH_TEST(${BACKEND_NAME}, builder_reshape_1D_to_scalar)
 {
     const Shape input_shape{1};
-    const auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    const auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     const auto reshape_builder = builder::opset1::reshape(input, Shape{});
     auto function = make_shared<Function>(reshape_builder, ParameterVector{input});
 
@@ -583,7 +583,7 @@ NGRAPH_TEST(${BACKEND_NAME}, builder_reshape_1D_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, builder_reshape_3D_to_scalar)
 {
     const Shape input_shape{1, 1, 1};
-    const auto input = make_shared<op::Parameter>(element::f32, input_shape);
+    const auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
     const auto reshape_builder = builder::opset1::reshape(input, Shape{});
     auto function = make_shared<Function>(reshape_builder, ParameterVector{input});
 
@@ -600,19 +600,19 @@ NGRAPH_TEST(${BACKEND_NAME}, builder_reshape_3D_to_scalar)
 NGRAPH_TEST(${BACKEND_NAME}, reshape_shufflenet_5d)
 {
     Shape shape_a{1, 112, 56, 56};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{1, 4, 28, 56, 56};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_c{1, 28, 4, 56, 56};
-    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape_c);
     Shape shape_r{1, 112, 56, 56};
 
     vector<float> a_data(shape_size(shape_a));
     iota(a_data.begin(), a_data.end(), 1.f);
 
-    auto r0 = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_b);
-    auto r1 = make_shared<op::Reshape>(r0, AxisVector{0, 2, 1, 3, 4}, shape_c);
-    auto r2 = make_shared<op::Reshape>(r1, AxisVector{0, 1, 2, 3, 4}, shape_r);
+    auto r0 = make_shared<op::v0::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_b);
+    auto r1 = make_shared<op::v0::Reshape>(r0, AxisVector{0, 2, 1, 3, 4}, shape_c);
+    auto r2 = make_shared<op::v0::Reshape>(r1, AxisVector{0, 1, 2, 3, 4}, shape_r);
     auto f = make_shared<Function>(r2, ParameterVector{A});
 
     auto ref_func = clone_function(*f);
