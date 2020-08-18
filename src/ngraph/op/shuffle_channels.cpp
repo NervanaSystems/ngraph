@@ -21,9 +21,11 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ShuffleChannels::type_info;
+constexpr NodeTypeInfo op::v0::ShuffleChannels::type_info;
 
-op::ShuffleChannels::ShuffleChannels(const Output<Node>& data, const int axis, const size_t group)
+op::v0::ShuffleChannels::ShuffleChannels(const Output<Node>& data,
+                                         const int axis,
+                                         const size_t group)
     : FusedOp({data})
     , m_axis(axis)
     , m_group{group}
@@ -38,7 +40,7 @@ bool ngraph::op::v0::ShuffleChannels::visit_attributes(AttributeVisitor& visitor
     return true;
 }
 
-size_t op::ShuffleChannels::get_zero_based_axis() const
+size_t op::v0::ShuffleChannels::get_zero_based_axis() const
 {
     if (m_axis >= 0)
     {
@@ -57,7 +59,7 @@ size_t op::ShuffleChannels::get_zero_based_axis() const
     }
 }
 
-void op::ShuffleChannels::pre_validate_and_infer_types()
+void op::v0::ShuffleChannels::pre_validate_and_infer_types()
 {
     if (get_input_partial_shape(0).is_static())
     {
@@ -80,7 +82,7 @@ void op::ShuffleChannels::pre_validate_and_infer_types()
     }
 }
 
-OutputVector op::ShuffleChannels::decompose_op() const
+OutputVector op::v0::ShuffleChannels::decompose_op() const
 {
     const auto data = input_value(0);
     const auto& data_shape = data.get_shape();
@@ -91,7 +93,7 @@ OutputVector op::ShuffleChannels::decompose_op() const
     return {builder::reshape(shuffled, data_shape)};
 }
 
-shared_ptr<Node> op::ShuffleChannels::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ShuffleChannels::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -102,7 +104,7 @@ shared_ptr<Node> op::ShuffleChannels::clone_with_new_inputs(const OutputVector& 
     return make_shared<ShuffleChannels>(new_args.at(0), m_axis, m_group);
 }
 
-Shape op::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
+Shape op::v0::ShuffleChannels::get_pre_shuffle_shape(const Shape& data_shape) const
 {
     const Shape& ds = data_shape;
 

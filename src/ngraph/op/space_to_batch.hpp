@@ -63,6 +63,5 @@ namespace ngraph
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
-        using v1::SpaceToBatch;
     }
 }

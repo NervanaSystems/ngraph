@@ -48,11 +48,11 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto shift = make_shared<op::Parameter>(element::f32, Shape{3, 6});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto scale = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto shift = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
 
-    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    auto scale_shift_func = make_shared<op::v0::ScaleShift>(data, scale, shift);
     auto function =
         make_shared<Function>(OutputVector{scale_shift_func}, ParameterVector{data, scale, shift});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -69,11 +69,11 @@ NGRAPH_TEST(${BACKEND_NAME}, scale_shift_no_broadcast)
 
 NGRAPH_TEST(${BACKEND_NAME}, scale_shift)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto shift = make_shared<op::Parameter>(element::f32, Shape{});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto scale = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto shift = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
-    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    auto scale_shift_func = make_shared<op::v0::ScaleShift>(data, scale, shift);
     auto function =
         make_shared<Function>(OutputVector{scale_shift_func}, ParameterVector{data, scale, shift});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");

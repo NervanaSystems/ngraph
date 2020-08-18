@@ -30,9 +30,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Concat)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Concat)
             {
-                auto concat = static_cast<const ngraph::op::Concat*>(node);
+                auto concat = static_cast<const ngraph::op::v0::Concat*>(node);
                 auto axis = concat->get_concatenation_axis();
 
                 auto& functors = external_function->get_functors();
@@ -98,7 +98,8 @@ namespace ngraph
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
-                    auto concat_pd = dnnl_emitter->get_concat_desc<ngraph::op::Concat>(node, nargs);
+                    auto concat_pd =
+                        dnnl_emitter->get_concat_desc<ngraph::op::v0::Concat>(node, nargs);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(concat, concat_pd);
 
                     std::vector<dnnl::memory::desc> inputs_data_desc;
@@ -179,7 +180,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_concat_cpp() { REGISTER_OP_BUILDER(Concat); }
+            void register_builders_concat_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Concat); }
         }
     }
 }

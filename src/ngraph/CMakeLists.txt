@@ -125,8 +125,6 @@ set (SRC
     op/all.hpp
     op/allreduce.cpp
     op/allreduce.hpp
-    op/and.cpp
-    op/and.hpp
     op/any.cpp
     op/any.hpp
     op/argmax.cpp
@@ -292,6 +290,14 @@ set (SRC
     op/less.hpp
     op/log.cpp
     op/log.hpp
+    op/logical_and.cpp
+    op/logical_and.hpp
+    op/logical_not.cpp
+    op/logical_not.hpp
+    op/logical_or.cpp
+    op/logical_or.hpp
+    op/logical_xor.cpp
+    op/logical_xor.hpp
     op/lrn.cpp
     op/lrn.hpp
     op/lstm_cell.cpp
@@ -326,14 +332,10 @@ set (SRC
     op/normalize_l2.hpp
     op/not_equal.cpp
     op/not_equal.hpp
-    op/not.cpp
-    op/not.hpp
     op/one_hot.cpp
     op/one_hot.hpp
     op/op.cpp
     op/op.hpp
-    op/or.cpp
-    op/or.hpp
     op/pad.cpp
     op/pad.hpp
     op/parameter.cpp
@@ -514,8 +516,6 @@ set (SRC
     op/util/unary_elementwise_arithmetic.hpp
     op/variadic_split.cpp
     op/variadic_split.hpp
-    op/xor.cpp
-    op/xor.hpp
     ops.hpp
     opset/opset.cpp
     partial_shape.cpp

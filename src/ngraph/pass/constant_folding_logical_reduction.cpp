@@ -40,13 +40,13 @@ static Shape get_shape_no_keep_dims(const AxisSet& reduction_axes, const Shape& 
     return shape_no_keep_dims;
 }
 
-static Output<Node> fold_constant_logical_reduction(shared_ptr<op::Constant> constant,
+static Output<Node> fold_constant_logical_reduction(shared_ptr<op::v0::Constant> constant,
                                                     shared_ptr<Node> reduction_node)
 {
     runtime::AlignedBuffer buffer(shape_size(reduction_node->get_output_shape(0)) * sizeof(char));
     char* data_ptr = buffer.get_ptr<char>();
 
-    if (auto all = as_type_ptr<::ngraph::op::All>(reduction_node))
+    if (auto all = as_type_ptr<::ngraph::op::v0::All>(reduction_node))
     {
         runtime::reference::all(constant->get_vector<char>().data(),
                                 data_ptr,
@@ -54,7 +54,7 @@ static Output<Node> fold_constant_logical_reduction(shared_ptr<op::Constant> con
                                 reduction_node->get_output_shape(0),
                                 all->get_reduction_axes());
     }
-    else if (auto any = as_type_ptr<::ngraph::op::Any>(reduction_node))
+    else if (auto any = as_type_ptr<::ngraph::op::v0::Any>(reduction_node))
     {
         runtime::reference::any(constant->get_vector<char>().data(),
                                 data_ptr,
@@ -92,21 +92,21 @@ static Output<Node> fold_constant_logical_reduction(shared_ptr<op::Constant> con
                      "matched in construct_constant_logical_reduction");
     }
 
-    return make_shared<op::Constant>(reduction_node->get_output_element_type(0),
-                                     reduction_node->get_output_shape(0),
-                                     data_ptr)
+    return make_shared<op::v0::Constant>(reduction_node->get_output_element_type(0),
+                                         reduction_node->get_output_shape(0),
+                                         data_ptr)
         ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_logical_reduction()
 {
     auto constant_data_label = make_shared<pattern::op::Label>(
-        element::boolean, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto constant_axes_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
+        element::boolean, Shape{2, 3, 4}, pattern::has_class<op::v0::Constant>());
+    auto constant_axes_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{2}, pattern::has_class<op::v0::Constant>());
     auto is_supported_reduction = [](Output<Node> n) {
-        return (pattern::has_class<::ngraph::op::All>()(n) ||
-                pattern::has_class<::ngraph::op::Any>()(n) ||
+        return (pattern::has_class<::ngraph::op::v0::All>()(n) ||
+                pattern::has_class<::ngraph::op::v0::Any>()(n) ||
                 pattern::has_class<::ngraph::op::v1::ReduceLogicalAnd>()(n) ||
                 pattern::has_class<::ngraph::op::v1::ReduceLogicalOr>()(n));
     };
@@ -122,7 +122,8 @@ void pass::ConstantFolding::construct_constant_logical_reduction()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_data_label]);
+        auto constant_match =
+            static_pointer_cast<op::v0::Constant>(pattern_map[constant_data_label]);
         Output<Node> reduction_match = m.get_match_value();
 
         NGRAPH_CHECK(revalidate_and_ensure_static(reduction_match.get_node_shared_ptr()));

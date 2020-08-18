@@ -33,10 +33,10 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Any)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Any)
             {
                 auto& functors = external_function->get_functors();
-                auto reduce = static_cast<const ngraph::op::Any*>(node);
+                auto reduce = static_cast<const ngraph::op::v0::Any*>(node);
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
@@ -58,10 +58,10 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::All)
+            void Builder::BUILDER_DECL(ngraph::op::v0::All)
             {
                 auto& functors = external_function->get_functors();
-                auto reduce = static_cast<const ngraph::op::All*>(node);
+                auto reduce = static_cast<const ngraph::op::v0::All*>(node);
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
@@ -84,8 +84,8 @@ namespace ngraph
 
             void register_builders_reduce_function_cpp()
             {
-                REGISTER_OP_BUILDER(Any);
-                REGISTER_OP_BUILDER(All);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Any);
+                REGISTER_OP_BUILDER(ngraph::op::v0::All);
             }
         }
     }

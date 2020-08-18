@@ -108,7 +108,5 @@ namespace ngraph
                 size_t m_num_splits;
             };
         }
-
-        using v0::Split;
     }
 }

@@ -39,8 +39,8 @@
 // #undef NGRAPH_OP
 //
 // This sample expands to a list like this:
-// ngraph::op::Abs,
-// ngraph::op::Acos,
+// ngraph::op::v0::Abs,
+// ngraph::op::v0::Acos,
 // ...
 //
 // It's that easy. You can use this for fun and profit.
@@ -159,4 +159,3 @@ NGRAPH_OP(TopK, ngraph::op::v1)
 NGRAPH_OP(Transpose, ngraph::op::v1)
 NGRAPH_OP(Unsqueeze, ngraph::op::v0)
 NGRAPH_OP(VariadicSplit, ngraph::op::v1)
-NGRAPH_OP(Xor, ngraph::op::v0)

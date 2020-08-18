@@ -37,9 +37,9 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 {
     Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
-    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -57,9 +57,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_2_in_3)
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 {
     Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
-    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -77,9 +77,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_1_in_3)
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 {
     Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
-    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -97,9 +97,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_scalar_0_in_3)
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
 {
     Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 8};
-    auto r = make_shared<op::OneHot>(A, Shape{3, 8}, 0);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{3, 8}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -119,9 +119,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_0)
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1)
 {
     Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -141,9 +141,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1)
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 {
     Shape shape_a{8};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{8, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{8, 3}, 1);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{8, 3}, 1);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -194,9 +194,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_1_barely_oob)
 NGRAPH_TEST(${BACKEND_NAME}, one_hot_matrix_0)
 {
     Shape shape_a{3, 3};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{3, 3, 3};
-    auto r = make_shared<op::OneHot>(A, Shape{3, 3, 3}, 0);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{3, 3, 3}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -232,9 +232,9 @@ NGRAPH_TEST(${BACKEND_NAME}, one_hot_vector_many_categories)
     // Imagenet has roughly 20,000 categories
     uint32_t category_count = 20000;
     Shape shape_a{6};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{6, category_count};
-    auto r = make_shared<op::OneHot>(A, Shape{6, category_count}, 1);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{6, category_count}, 1);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

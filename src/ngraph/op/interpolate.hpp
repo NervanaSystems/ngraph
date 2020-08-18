@@ -174,8 +174,6 @@ namespace ngraph
                 InterpolateAttrs m_attrs;
             };
         }
-        using v0::Interpolate;
-        using v0::InterpolateAttrs;
     }
 
     NGRAPH_API

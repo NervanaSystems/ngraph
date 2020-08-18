@@ -19,8 +19,8 @@
 #include "ngraph/attribute_visitor.hpp"
 #include "ngraph/log.hpp"
 #include "ngraph/op/convert.hpp"
+#include "ngraph/op/logical_not.hpp"
 #include "ngraph/op/multiply.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/select.hpp"
 
 using namespace std;
@@ -108,8 +108,9 @@ void op::v1::Select::generate_adjoints(autodiff::Adjoints& adjoints, const Outpu
     auto x = input_value(1);
     auto y = input_value(2);
 
-    auto p_as_x_type = make_shared<op::Convert>(p, x.get_element_type());
-    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y.get_element_type());
+    auto p_as_x_type = make_shared<op::v0::Convert>(p, x.get_element_type());
+    auto not_p_as_y_type =
+        make_shared<op::v0::Convert>(make_shared<op::v1::LogicalNot>(p), y.get_element_type());
 
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);
@@ -157,7 +158,7 @@ shared_ptr<Node> op::v0::Select::clone_with_new_inputs(const OutputVector& new_a
     return make_shared<v0::Select>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
-void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -165,8 +166,9 @@ void op::Select::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
     auto x = input_value(1);
     auto y = input_value(2);
 
-    auto p_as_x_type = make_shared<op::Convert>(p, x.get_element_type());
-    auto not_p_as_y_type = make_shared<op::Convert>(make_shared<op::Not>(p), y.get_element_type());
+    auto p_as_x_type = make_shared<op::v0::Convert>(p, x.get_element_type());
+    auto not_p_as_y_type =
+        make_shared<op::v0::Convert>(make_shared<op::v1::LogicalNot>(p), y.get_element_type());
 
     adjoints.add_delta(x, delta * p_as_x_type);
     adjoints.add_delta(y, delta * not_p_as_y_type);

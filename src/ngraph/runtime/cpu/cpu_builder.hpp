@@ -100,8 +100,7 @@
     return functor
 
 #define REGISTER_OP_BUILDER(OP)                                                                    \
-    GetGlobalBuildDispatcher().insert(                                                             \
-        {type_index(typeid(ngraph::op::OP)), &runtime::cpu::Builder::build<ngraph::op::OP>})
+    GetGlobalBuildDispatcher().insert({type_index(typeid(OP)), &runtime::cpu::Builder::build<OP>})
 
 #define REGISTER_CPU_OP_BUILDER(OP)                                                                \
     GetGlobalBuildDispatcher().insert(                                                             \
@@ -111,8 +110,7 @@
 #define BUILDER_CF_DECL(op_name) CFbuild<op_name>(const ngraph::Node* node)
 
 #define REGISTER_CF_BUILDER(OP)                                                                    \
-    GetGlobalCFDispatcherCPU().insert(                                                             \
-        {type_index(typeid(ngraph::op::OP)), &runtime::cpu::Builder::CFbuild<ngraph::op::OP>})
+    GetGlobalCFDispatcherCPU().insert({type_index(typeid(OP)), &runtime::cpu::Builder::CFbuild<OP>})
 
 #define REGISTER_CPU_CF_BUILDER(OP)                                                                \
     GetGlobalCFDispatcherCPU().insert(                                                             \

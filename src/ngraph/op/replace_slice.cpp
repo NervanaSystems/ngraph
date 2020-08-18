@@ -21,13 +21,13 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ReplaceSlice::type_info;
+constexpr NodeTypeInfo op::v0::ReplaceSlice::type_info;
 
-op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
-                               const Output<Node>& arg1,
-                               const Coordinate& lower_bounds,
-                               const Coordinate& upper_bounds,
-                               const Strides& strides)
+op::v0::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
+                                   const Output<Node>& arg1,
+                                   const Coordinate& lower_bounds,
+                                   const Coordinate& upper_bounds,
+                                   const Strides& strides)
     : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
@@ -36,10 +36,10 @@ op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
-                               const Output<Node>& arg1,
-                               const Coordinate& lower_bounds,
-                               const Coordinate& upper_bounds)
+op::v0::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
+                                   const Output<Node>& arg1,
+                                   const Coordinate& lower_bounds,
+                                   const Coordinate& upper_bounds)
     : Op({arg0, arg1})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
@@ -48,7 +48,7 @@ op::ReplaceSlice::ReplaceSlice(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-void op::ReplaceSlice::validate_and_infer_types()
+void op::v0::ReplaceSlice::validate_and_infer_types()
 {
     // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
     // construct the default value.
@@ -168,14 +168,15 @@ void op::ReplaceSlice::validate_and_infer_types()
     set_output_type(0, merged_args_et, result_shape);
 }
 
-shared_ptr<Node> op::ReplaceSlice::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ReplaceSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ReplaceSlice>(
         new_args.at(0), new_args.at(1), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints,
+                                             const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -184,10 +185,11 @@ void op::ReplaceSlice::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     auto& y_element_type = y.get_element_type();
     auto y_shape = y.get_shape();
 
-    auto zeros_shaped_like_y = op::Constant::create(y_element_type, y_shape, {0.0});
+    auto zeros_shaped_like_y = op::v0::Constant::create(y_element_type, y_shape, {0.0});
 
     adjoints.add_delta(x,
-                       make_shared<op::ReplaceSlice>(
+                       make_shared<op::v0::ReplaceSlice>(
                            delta, zeros_shaped_like_y, m_lower_bounds, m_upper_bounds, m_strides));
-    adjoints.add_delta(y, make_shared<op::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
+    adjoints.add_delta(
+        y, make_shared<op::v0::Slice>(delta, m_lower_bounds, m_upper_bounds, m_strides));
 }

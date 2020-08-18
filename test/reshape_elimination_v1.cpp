@@ -42,10 +42,11 @@ using namespace std;
 TEST(reshape_elimination_v1, reshape_elimination_v1)
 {
     auto generate_func = [](bool zero) {
-        auto arg = std::make_shared<op::Parameter>(element::i64, PartialShape{8, 16, 2, 3});
-        auto pattern = op::Constant::create(element::i64, Shape{4}, vector<int64_t>{8, 16, 2, 3});
+        auto arg = std::make_shared<op::v0::Parameter>(element::i64, PartialShape{8, 16, 2, 3});
+        auto pattern =
+            op::v0::Constant::create(element::i64, Shape{4}, vector<int64_t>{8, 16, 2, 3});
         auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, zero);
-        auto abs = std::make_shared<op::Abs>(reshape_v1);
+        auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
         return std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg});
     };
 
@@ -66,10 +67,10 @@ TEST(reshape_elimination_v1, reshape_elimination_v1)
 
 TEST(reshape_elimination_v1, reshape_elimination_v1_dynamic)
 {
-    auto arg = std::make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto pattern = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto arg = std::make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto pattern = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
     auto reshape_v1 = std::make_shared<op::v1::Reshape>(arg, pattern, false);
-    auto abs = std::make_shared<op::Abs>(reshape_v1);
+    auto abs = std::make_shared<op::v0::Abs>(reshape_v1);
     auto f = std::make_shared<Function>(OutputVector{abs}, ParameterVector{arg, pattern});
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeEliminationV1>();

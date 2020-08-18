@@ -77,7 +77,6 @@ namespace ngraph
                 DepthToSpaceMode mode_from_string(const std::string& mode) const;
             };
         }
-        using v0::DepthToSpace;
     }
 
     NGRAPH_API

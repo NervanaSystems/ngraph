@@ -71,13 +71,13 @@ namespace ngraph
                 float m_extrapolation_value{0};
             };
         }
-        using v0::CropAndResize;
     }
 
-    const std::string& as_string(op::CropAndResize::ResizeMethod);
+    const std::string& as_string(op::v0::CropAndResize::ResizeMethod);
     template <typename T>
     T as_type(const std::string&);
 
     template <>
-    op::CropAndResize::ResizeMethod as_type<op::CropAndResize::ResizeMethod>(const std::string&);
+    op::v0::CropAndResize::ResizeMethod
+        as_type<op::v0::CropAndResize::ResizeMethod>(const std::string&);
 }

@@ -26,15 +26,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Gemm::type_info;
+constexpr NodeTypeInfo op::v0::Gemm::type_info;
 
-op::Gemm::Gemm(const Output<Node>& A,
-               const Output<Node>& B,
-               const Output<Node>& C,
-               double alpha,
-               double beta,
-               bool transA,
-               bool transB)
+op::v0::Gemm::Gemm(const Output<Node>& A,
+                   const Output<Node>& B,
+                   const Output<Node>& C,
+                   double alpha,
+                   double beta,
+                   bool transA,
+                   bool transB)
     : FusedOp({A, B, C})
     , m_alpha{alpha}
     , m_beta{beta}
@@ -44,7 +44,7 @@ op::Gemm::Gemm(const Output<Node>& A,
     constructor_validate_and_infer_types();
 }
 
-OutputVector op::Gemm::decompose_op() const
+OutputVector op::v0::Gemm::decompose_op() const
 {
     auto A = input_value(0);
     auto B = input_value(1);
@@ -63,28 +63,28 @@ OutputVector op::Gemm::decompose_op() const
     B = builder::flatten(B, 1);
 
     // A' * B'
-    std::shared_ptr<Node> a_dot_b = std::make_shared<op::Dot>(A, B);
+    std::shared_ptr<Node> a_dot_b = std::make_shared<op::v0::Dot>(A, B);
 
     // alpha
     std::shared_ptr<Node> alpha_node =
-        std::make_shared<op::Constant>(a_dot_b->get_output_element_type(0),
-                                       a_dot_b->get_output_shape(0),
-                                       std::vector<double>{m_alpha});
+        std::make_shared<op::v0::Constant>(a_dot_b->get_output_element_type(0),
+                                           a_dot_b->get_output_shape(0),
+                                           std::vector<double>{m_alpha});
     // alpha * A' * B'
-    a_dot_b = std::make_shared<op::Multiply>(alpha_node, a_dot_b);
+    a_dot_b = std::make_shared<op::v1::Multiply>(alpha_node, a_dot_b);
 
     // beta * C
-    std::shared_ptr<Node> beta_node = std::make_shared<op::Constant>(
+    std::shared_ptr<Node> beta_node = std::make_shared<op::v0::Constant>(
         C.get_element_type(), C.get_shape(), std::vector<double>{m_beta});
-    C = std::make_shared<op::Multiply>(beta_node, C);
+    C = std::make_shared<op::v1::Multiply>(beta_node, C);
 
     // alpha * A' * B' + beta * C
     // The input tensor `C` should be "unidirectionally broadcastable" to the `a_dot_b` tensor.
     auto broadcasted_c = builder::numpy_broadcast(C, a_dot_b->get_output_shape(0));
-    return {std::make_shared<op::Add>(a_dot_b, broadcasted_c)};
+    return {std::make_shared<op::v1::Add>(a_dot_b, broadcasted_c)};
 }
 
-shared_ptr<Node> op::Gemm::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Gemm::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

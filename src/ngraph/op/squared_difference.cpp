@@ -24,11 +24,11 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::SquaredDifference::type_info;
+constexpr NodeTypeInfo op::v0::SquaredDifference::type_info;
 
-op::SquaredDifference::SquaredDifference(const Output<Node>& x1,
-                                         const Output<Node>& x2,
-                                         const AutoBroadcastSpec& auto_broadcast)
+op::v0::SquaredDifference::SquaredDifference(const Output<Node>& x1,
+                                             const Output<Node>& x2,
+                                             const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({x1, x2})
     , m_autobroadcast(auto_broadcast)
 {
@@ -41,17 +41,18 @@ bool ngraph::op::v0::SquaredDifference::visit_attributes(AttributeVisitor& visit
     return true;
 }
 
-OutputVector op::SquaredDifference::decompose_op() const
+OutputVector op::v0::SquaredDifference::decompose_op() const
 {
     const auto x1 = input_value(0);
     const auto x2 = input_value(1);
 
-    const auto difference = make_shared<op::Subtract>(x1, x2, m_autobroadcast);
+    const auto difference = make_shared<op::v1::Subtract>(x1, x2, m_autobroadcast);
 
     return {difference * difference};
 }
 
-shared_ptr<Node> op::SquaredDifference::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node>
+    op::v0::SquaredDifference::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

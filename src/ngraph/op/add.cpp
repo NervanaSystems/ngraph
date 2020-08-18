@@ -47,7 +47,13 @@ bool op::v1::Add::visit_attributes(AttributeVisitor& visitor)
 
 void op::v1::Add::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
-    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    bool static_shapes =
+        input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static();
+    if (static_shapes && input(0).get_shape() == input(1).get_shape())
+    {
+        // It does not matter if broadcast is enabled since shapes match
+    }
+    else if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }
@@ -63,7 +69,7 @@ void op::v1::Add::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
 
 shared_ptr<Node> ngraph::operator+(const Output<Node>& arg0, const Output<Node>& arg1)
 {
-    return make_shared<op::Add>(arg0, arg1);
+    return make_shared<op::v1::Add>(arg0, arg1);
 }
 
 namespace

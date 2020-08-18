@@ -18,7 +18,7 @@
 #include <pybind11/stl.h>
 
 #include "ngraph/function.hpp"     // ngraph::Function
-#include "ngraph/op/parameter.hpp" // ngraph::op::Parameter
+#include "ngraph/op/parameter.hpp" // ngraph::op::v0::Parameter
 #include "ngraph/output_vector.hpp"
 #include "pyngraph/function.hpp"
 

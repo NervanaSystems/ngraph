@@ -84,6 +84,5 @@ namespace ngraph
                 uint64_t m_fixed_seed;
             };
         }
-        using v0::RandomUniform;
     }
 }

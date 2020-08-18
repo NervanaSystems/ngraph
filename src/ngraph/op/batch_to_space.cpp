@@ -54,9 +54,9 @@ OutputVector op::v1::BatchToSpace::decompose_op() const
                           data_shape.size(),
                           ")");
 
-    const auto block_const = as_type_ptr<op::Constant>(block.get_node_shared_ptr());
-    const auto crops_begin_const = as_type_ptr<op::Constant>(crops_begin.get_node_shared_ptr());
-    const auto crops_end_const = as_type_ptr<op::Constant>(crops_end.get_node_shared_ptr());
+    const auto block_const = as_type_ptr<op::v0::Constant>(block.get_node_shared_ptr());
+    const auto crops_begin_const = as_type_ptr<op::v0::Constant>(crops_begin.get_node_shared_ptr());
+    const auto crops_end_const = as_type_ptr<op::v0::Constant>(crops_end.get_node_shared_ptr());
 
     vector<int64_t> block_values, crops_end_values;
     block_values = block_const->cast_vector<int64_t>();
@@ -93,7 +93,7 @@ OutputVector op::v1::BatchToSpace::decompose_op() const
     }
 
     const auto out_pattern_1 =
-        op::Constant::create(element::i64, Shape{dispersed_shape.size()}, dispersed_shape);
+        op::v0::Constant::create(element::i64, Shape{dispersed_shape.size()}, dispersed_shape);
     const bool special_zero = false;
     auto flat_node = make_shared<ngraph::op::v1::Reshape>(data, out_pattern_1, special_zero)
                          ->add_provenance_group_members_above({data});
@@ -118,7 +118,7 @@ OutputVector op::v1::BatchToSpace::decompose_op() const
     }
 
     const auto out_pattern_2 =
-        op::Constant::create(element::i64, Shape{squeezed_shape.size()}, squeezed_shape);
+        op::v0::Constant::create(element::i64, Shape{squeezed_shape.size()}, squeezed_shape);
     flat_node = make_shared<ngraph::op::v1::Reshape>(flat_node, out_pattern_2, special_zero)
                     ->add_provenance_group_members_above({data});
 
@@ -134,7 +134,7 @@ OutputVector op::v1::BatchToSpace::decompose_op() const
     {
         upperbounds_values.push_back(flat_node_shape.at(i) - crops_end_values.at(i));
     }
-    const auto upperbounds = op::Constant::create(
+    const auto upperbounds = op::v0::Constant::create(
         crops_end.get_element_type(), Shape{upperbounds_values.size()}, upperbounds_values);
 
     vector<int64_t> begin_mask(data_shape.size(), 0);

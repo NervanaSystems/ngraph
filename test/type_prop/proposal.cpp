@@ -25,13 +25,14 @@ using namespace ngraph;
 TEST(type_prop, proposal_invalid_class_probs_rank)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto class_probs = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
+    auto class_logits = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto image_shape = make_shared<op::v0::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal =
+            make_shared<op::v0::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -49,13 +50,14 @@ TEST(type_prop, proposal_invalid_class_probs_rank)
 TEST(type_prop, proposal_invalid_class_logits_rank)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto class_probs = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto class_logits = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
+    auto image_shape = make_shared<op::v0::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal =
+            make_shared<op::v0::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -74,13 +76,14 @@ TEST(type_prop, proposal_invalid_class_logits_rank)
 TEST(type_prop, proposal_invalid_image_shape_rank)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{2, 1});
+    auto class_probs = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto class_logits = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto image_shape = make_shared<op::v0::Parameter>(element::f32, Shape{2, 1});
 
     try
     {
-        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal =
+            make_shared<op::v0::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }
@@ -98,13 +101,14 @@ TEST(type_prop, proposal_invalid_image_shape_rank)
 TEST(type_prop, proposal_invalid_image_shape_size)
 {
     op::ProposalAttrs attrs;
-    auto class_probs = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto class_logits = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto image_shape = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto class_probs = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto class_logits = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto image_shape = make_shared<op::v0::Parameter>(element::f32, Shape{5});
 
     try
     {
-        auto proposal = make_shared<op::Proposal>(class_probs, class_logits, image_shape, attrs);
+        auto proposal =
+            make_shared<op::v0::Proposal>(class_probs, class_logits, image_shape, attrs);
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input tensor rank.";
     }

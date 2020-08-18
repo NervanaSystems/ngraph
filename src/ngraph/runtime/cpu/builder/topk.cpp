@@ -30,10 +30,10 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::TopK)
+            void Builder::BUILDER_DECL(ngraph::op::v0::TopK)
             {
                 auto& functors = external_function->get_functors();
-                const ngraph::op::TopK* topk = static_cast<const ngraph::op::TopK*>(node);
+                const ngraph::op::v0::TopK* topk = static_cast<const ngraph::op::v0::TopK*>(node);
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
@@ -223,7 +223,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_topk_cpp() { REGISTER_OP_BUILDER(TopK); }
+            void register_builders_topk_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::TopK); }
         }
     }
 }

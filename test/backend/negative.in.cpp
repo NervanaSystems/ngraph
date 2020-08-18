@@ -47,8 +47,8 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, negative)
 {
     Shape shape{2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Negative>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v0::Negative>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -67,8 +67,8 @@ NGRAPH_TEST(${BACKEND_NAME}, negative)
 NGRAPH_TEST(${BACKEND_NAME}, negative_i32)
 {
     auto shape_a = Shape{2, 5};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto relu = make_shared<op::Negative>(A);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto relu = make_shared<op::v0::Negative>(A);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, ParameterVector{A});
 
@@ -87,8 +87,8 @@ NGRAPH_TEST(${BACKEND_NAME}, negative_i32)
 NGRAPH_TEST(${BACKEND_NAME}, negative_f32)
 {
     auto shape_a = Shape{2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto relu = make_shared<op::Negative>(A);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto relu = make_shared<op::v0::Negative>(A);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(relu, ParameterVector{A});
 

@@ -27,12 +27,12 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_gather_upgrade_pass)
 {
-    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
-    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto params = make_shared<op::v0::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::v0::Parameter>(element::i64, Shape{4});
     size_t axis = 1;
 
     auto gather_v0 = make_shared<op::v0::Gather>(params, indices, axis);
-    auto result = make_shared<op::Result>(gather_v0);
+    auto result = make_shared<op::v0::Result>(gather_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{params, indices});
 
     ngraph::pass::Manager pass_manager;

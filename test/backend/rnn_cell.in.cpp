@@ -52,12 +52,12 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_no_bias)
     const size_t input_size = 3;
     const size_t hidden_size = 3;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
-    const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto W = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size, input_size});
+    const auto R = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size, hidden_size});
 
-    const auto rnn_cell = make_shared<op::RNNCell>(X, H_t, W, R, hidden_size);
+    const auto rnn_cell = make_shared<op::v0::RNNCell>(X, H_t, W, R, hidden_size);
     auto function = make_shared<Function>(rnn_cell, ParameterVector{X, H_t, W, R});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -102,22 +102,22 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_bias_clip)
     const size_t hidden_size = 3;
     float clip = 2.88f;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
-    const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto W = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size, input_size});
+    const auto R = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size});
 
-    const auto rnn_cell = make_shared<op::RNNCell>(X,
-                                                   H_t,
-                                                   W,
-                                                   R,
-                                                   B,
-                                                   hidden_size,
-                                                   vector<string>{"tanh"},
-                                                   vector<float>{},
-                                                   vector<float>{},
-                                                   clip);
+    const auto rnn_cell = make_shared<op::v0::RNNCell>(X,
+                                                       H_t,
+                                                       W,
+                                                       R,
+                                                       B,
+                                                       hidden_size,
+                                                       vector<string>{"tanh"},
+                                                       vector<float>{},
+                                                       vector<float>{},
+                                                       clip);
     auto function = make_shared<Function>(rnn_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -164,22 +164,22 @@ NGRAPH_TEST(${BACKEND_NAME}, rnn_cell_activation_function)
     const size_t hidden_size = 3;
     float clip = 2.88f;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto W = make_shared<op::Parameter>(element::f32, Shape{hidden_size, input_size});
-    const auto R = make_shared<op::Parameter>(element::f32, Shape{hidden_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{hidden_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto W = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size, input_size});
+    const auto R = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{hidden_size});
 
-    const auto rnn_cell = make_shared<op::RNNCell>(X,
-                                                   H_t,
-                                                   W,
-                                                   R,
-                                                   B,
-                                                   hidden_size,
-                                                   vector<string>{"sigmoid"},
-                                                   vector<float>{},
-                                                   vector<float>{},
-                                                   clip);
+    const auto rnn_cell = make_shared<op::v0::RNNCell>(X,
+                                                       H_t,
+                                                       W,
+                                                       R,
+                                                       B,
+                                                       hidden_size,
+                                                       vector<string>{"sigmoid"},
+                                                       vector<float>{},
+                                                       vector<float>{},
+                                                       clip);
     auto function = make_shared<Function>(rnn_cell, ParameterVector{X, H_t, W, R, B});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

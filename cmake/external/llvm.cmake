@@ -32,7 +32,7 @@ set(NEED_TO_BUILD_LLVM TRUE)
 if(NGRAPH_USE_PREBUILT_MLIR)
     set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH}/build)
 endif()
-set(LLVM_COMMIT_ID e31cfc4cd3e393300002e9c519787c96e3b67bab)
+set(LLVM_COMMIT_ID 189c0833dfd654f08a8655ca765e11e8890a92ae)
 set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
 if(EXISTS "${VCSREVISION}")
     message(STATUS "LLVM: VCSRevision.h found.")
@@ -51,6 +51,9 @@ if(EXISTS "${VCSREVISION}")
 endif()
 
 if(NEED_TO_BUILD_LLVM)
+    if (NGRAPH_USE_PREBUILT_LLVM)
+        message(FATAL_ERROR "LLVM: prebuilt is the wrong hash, expected ${LLVM_COMMIT_ID}")
+    endif()
     if(NOT NGRAPH_OVERWRITE_LLVM_ROOT)
         message(FATAL_ERROR "nGraph is not allowed overwrite contents at LLVM_ROOT: ${LLVM_ROOT} "
             "Set NGRAPH_OVERWRITE_LLVM_ROOT to ON if you would like to overwrite.")
@@ -59,7 +62,7 @@ if(NEED_TO_BUILD_LLVM)
     message(STATUS "LLVM: Fetching source")
 
     set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${LLVM_COMMIT_ID}.zip)
-    set(LLVM_ARCHIVE_URL_HASH db42aa67d214bfe07bc9977fc28eaaf7cc06b127)
+    set(LLVM_ARCHIVE_URL_HASH b7d5601e46ea98b40cb653f9517b00ec8e14d0b5)
 
     FetchContent_Declare(
         llvm

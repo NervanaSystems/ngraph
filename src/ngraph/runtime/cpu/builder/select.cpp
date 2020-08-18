@@ -28,7 +28,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Select)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Select)
             {
                 (void)node;
                 auto& functors = external_function->get_functors();
@@ -63,7 +63,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_select_cpp() { REGISTER_OP_BUILDER(Select); }
+            void register_builders_select_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Select); }
         }
     }
 }

@@ -62,8 +62,8 @@ public:
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
 protected:
-    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
-    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
+    std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
+    std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
     void init();
     llvm::Expected<std::unique_ptr<llvm::TargetMachine>>
         create_default_target_machine(unsigned optLevel);

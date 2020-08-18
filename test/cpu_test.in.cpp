@@ -62,7 +62,7 @@ static string s_manifest = "${MANIFEST}";
 
 namespace
 {
-    class UnhandledOp : public ngraph::op::Abs
+    class UnhandledOp : public ngraph::op::v0::Abs
     {
     public:
         UnhandledOp(const std::shared_ptr<Node>& arg)
@@ -85,7 +85,7 @@ namespace
     {
         test::Uniform<float> rng(-1.0f, 1.0f);
         vector<vector<float>> args;
-        for (shared_ptr<op::Parameter> param : f1->get_parameters())
+        for (shared_ptr<op::v0::Parameter> param : f1->get_parameters())
         {
             vector<float> tensor_val(shape_size(param->get_output_shape(0)));
             rng.initialize(tensor_val);
@@ -103,7 +103,7 @@ namespace
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_unhandled_op)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{});
     auto unhandled = make_shared<UnhandledOp>(A);
     auto f = make_shared<Function>(unhandled, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -112,10 +112,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_unhandled_op)
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_trivial_in_place_relu)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{16, 1});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{16, 1});
     auto add = A + B;
-    auto relu = make_shared<op::Relu>(add);
+    auto relu = make_shared<op::v0::Relu>(add);
     auto f = make_shared<Function>(relu, ParameterVector{A, B});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     (backend->compile(f));
@@ -125,10 +125,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_trivial_in_place_relu)
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_trivial_in_place_relu_fail)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{16, 1});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{16, 1});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{16, 1});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{16, 1});
     auto add = A + B;
-    auto relu = make_shared<op::Relu>(add);
+    auto relu = make_shared<op::v0::Relu>(add);
     auto add2 = relu + add;
     auto f = make_shared<Function>(add2, ParameterVector{A, B});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -149,9 +149,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_abc_tbb)
     }
 
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -189,20 +189,20 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_abc_tbb)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_dnnl_layouts)
 {
     Shape shape_a{1, 16, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{32, 16, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 32, 2, 2};
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
+    auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
     Shape pool_shape{1, 1};
-    auto pool1 = make_shared<op::AvgPool>(conv1, pool_shape);
-    auto pool1_result = make_shared<op::Result>(pool1);
+    auto pool1 = make_shared<op::v0::AvgPool>(conv1, pool_shape);
+    auto pool1_result = make_shared<op::v0::Result>(pool1);
     // Request result in default layout
     pool1_result->set_needs_default_layout(true);
     auto f = make_shared<Function>(ResultVector{pool1_result}, ParameterVector{A, B});
@@ -245,16 +245,16 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations1)
 {
     // Squeeze outermost dimension
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 2, 2});
-        auto B = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
-        auto conv = make_shared<op::Convolution>(A,
-                                                 B,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{1, 1});
-        auto squeeze = make_shared<op::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{32, 2, 2});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 16, 2, 2});
+        auto B = make_shared<op::v0::Parameter>(element::f32, Shape{32, 16, 1, 1});
+        auto conv = make_shared<op::v0::Convolution>(A,
+                                                     B,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0},
+                                                     Strides{1, 1});
+        auto squeeze = make_shared<op::v0::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{32, 2, 2});
         return make_shared<Function>(OutputVector{squeeze}, ParameterVector{A, B});
     };
 
@@ -264,7 +264,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations1)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -284,17 +284,17 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations2)
 {
     // ExpandDims - inner most and internal dims
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 2, 2});
-        auto B = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
-        auto conv = make_shared<op::Convolution>(A,
-                                                 B,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{1, 1});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 16, 2, 2});
+        auto B = make_shared<op::v0::Parameter>(element::f32, Shape{32, 16, 1, 1});
+        auto conv = make_shared<op::v0::Convolution>(A,
+                                                     B,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0},
+                                                     Strides{1, 1});
         auto expand =
-            make_shared<op::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{1, 32, 2, 1, 2, 1});
+            make_shared<op::v0::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{1, 32, 2, 1, 2, 1});
         return make_shared<Function>(OutputVector{expand}, ParameterVector{A, B});
     };
 
@@ -304,7 +304,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations2)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -323,16 +323,16 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations3)
 {
     // Squeeze padded dimension
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 2, 2});
-        auto B = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 1});
-        auto conv = make_shared<op::Convolution>(A,
-                                                 B,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{1, 1});
-        auto squeeze = make_shared<op::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{2, 2});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 16, 2, 2});
+        auto B = make_shared<op::v0::Parameter>(element::f32, Shape{1, 16, 1, 1});
+        auto conv = make_shared<op::v0::Convolution>(A,
+                                                     B,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0},
+                                                     Strides{1, 1});
+        auto squeeze = make_shared<op::v0::Reshape>(conv, AxisVector{0, 1, 2, 3}, Shape{2, 2});
         return make_shared<Function>(OutputVector{squeeze}, ParameterVector{A, B});
     };
 
@@ -342,7 +342,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations3)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -363,26 +363,26 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations4)
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
-        auto B1 = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
-        auto conv1 = make_shared<op::Convolution>(A,
-                                                  B1,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{0, 0},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1});
-        auto squeeze = make_shared<op::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{32, 1, 8});
-        auto relu = make_shared<op::Relu>(squeeze);
-        auto expand = make_shared<op::Reshape>(relu, AxisVector{0, 1, 2}, Shape{1, 32, 1, 8});
-        auto B2 = make_shared<op::Parameter>(element::f32, Shape{8, 32, 1, 1});
-        auto conv2 = make_shared<op::Convolution>(expand,
-                                                  B2,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{0, 0},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 16, 1, 8});
+        auto B1 = make_shared<op::v0::Parameter>(element::f32, Shape{32, 16, 1, 1});
+        auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                      B1,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1});
+        auto squeeze = make_shared<op::v0::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{32, 1, 8});
+        auto relu = make_shared<op::v0::Relu>(squeeze);
+        auto expand = make_shared<op::v0::Reshape>(relu, AxisVector{0, 1, 2}, Shape{1, 32, 1, 8});
+        auto B2 = make_shared<op::v0::Parameter>(element::f32, Shape{8, 32, 1, 1});
+        auto conv2 = make_shared<op::v0::Convolution>(expand,
+                                                      B2,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1});
         return make_shared<Function>(OutputVector{conv2}, ParameterVector{A, B1, B2});
     };
 
@@ -392,7 +392,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations4)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -411,28 +411,28 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations4)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations5)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 16, 1, 8});
-        auto B1 = make_shared<op::Parameter>(element::f32, Shape{32, 16, 1, 1});
-        auto conv1 = make_shared<op::Convolution>(A,
-                                                  B1,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{0, 0},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 16, 1, 8});
+        auto B1 = make_shared<op::v0::Parameter>(element::f32, Shape{32, 16, 1, 1});
+        auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                      B1,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1});
         auto expand =
-            make_shared<op::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{1, 1, 32, 1, 8});
-        auto relu = make_shared<op::Relu>(expand);
+            make_shared<op::v0::Reshape>(conv1, AxisVector{0, 1, 2, 3}, Shape{1, 1, 32, 1, 8});
+        auto relu = make_shared<op::v0::Relu>(expand);
         auto squeeze =
-            make_shared<op::Reshape>(relu, AxisVector{0, 1, 2, 3, 4}, Shape{1, 32, 1, 8});
-        auto B2 = make_shared<op::Parameter>(element::f32, Shape{8, 32, 1, 1});
-        auto conv2 = make_shared<op::Convolution>(squeeze,
-                                                  B2,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{0, 0},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1});
+            make_shared<op::v0::Reshape>(relu, AxisVector{0, 1, 2, 3, 4}, Shape{1, 32, 1, 8});
+        auto B2 = make_shared<op::v0::Parameter>(element::f32, Shape{8, 32, 1, 1});
+        auto conv2 = make_shared<op::v0::Convolution>(squeeze,
+                                                      B2,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1});
         return make_shared<Function>(OutputVector{conv2}, ParameterVector{A, B1, B2});
     };
 
@@ -442,7 +442,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations5)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -462,11 +462,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations6)
 {
     // Squeeze and expand dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{2, 4, 3, 2});
-        auto mul = make_shared<op::Multiply>(A, A);
-        auto sum = make_shared<op::Sum>(mul, AxisVector{0});
-        auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 4, 3, 2});
-        auto sqrt = make_shared<op::Sqrt>(reshape);
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 3, 2});
+        auto mul = make_shared<op::v1::Multiply>(A, A);
+        auto sum = make_shared<op::v0::Sum>(mul, AxisVector{0});
+        auto reshape = make_shared<op::v0::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 4, 3, 2});
+        auto sqrt = make_shared<op::v0::Sqrt>(reshape);
         return make_shared<Function>(OutputVector{sqrt}, ParameterVector{A});
     };
 
@@ -476,7 +476,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations6)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -496,10 +496,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations7)
 {
     // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
-        auto mul = make_shared<op::Multiply>(A, A);
-        auto sum = make_shared<op::Sum>(mul, AxisVector{0, 1});
-        auto reshape = make_shared<op::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 1, 10, 6, 10});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto mul = make_shared<op::v1::Multiply>(A, A);
+        auto sum = make_shared<op::v0::Sum>(mul, AxisVector{0, 1});
+        auto reshape =
+            make_shared<op::v0::Reshape>(sum, AxisVector{0, 1, 2}, Shape{1, 1, 10, 6, 10});
         return make_shared<Function>(OutputVector{reshape}, ParameterVector{A});
     };
 
@@ -509,7 +510,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_reshape_layout_optimizations7)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -529,9 +530,9 @@ NGRAPH_TEST(${BACKEND_NAME}, DISABLED_cpu_test_collapse_dims1)
 {
     // Expand multiple dimensions. Ensure no extra conversions downstream
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
-        auto sum1 = make_shared<op::Sum>(A, AxisVector{1});    // Shape{1, 10, 6, 10}
-        auto sum2 = make_shared<op::Sum>(sum1, AxisVector{0}); // Shape{10, 6, 10}
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto sum1 = make_shared<op::v0::Sum>(A, AxisVector{1});    // Shape{1, 10, 6, 10}
+        auto sum2 = make_shared<op::v0::Sum>(sum1, AxisVector{0}); // Shape{10, 6, 10}
         return make_shared<Function>(OutputVector{sum2}, ParameterVector{A});
     };
 
@@ -541,7 +542,7 @@ NGRAPH_TEST(${BACKEND_NAME}, DISABLED_cpu_test_collapse_dims1)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -556,16 +557,16 @@ NGRAPH_TEST(${BACKEND_NAME}, DISABLED_cpu_test_collapse_dims1)
     }
     // sum1 will have two reshapes added around it. sum2 will be replaced
     // with a reshape
-    EXPECT_EQ(count_ops_of_type<op::Reshape>(cpu_f), 3);
+    EXPECT_EQ(count_ops_of_type<op::v0::Reshape>(cpu_f), 3);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_collapse_dims2)
 {
     // Collapse dims around a dot where one of the inputs is a scalar
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1, 1});
-        auto B = make_shared<op::Parameter>(element::f32, Shape{1, 1});
-        auto dot = make_shared<op::Dot>(A, B, 1);
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 1, 1});
+        auto B = make_shared<op::v0::Parameter>(element::f32, Shape{1, 1});
+        auto dot = make_shared<op::v0::Dot>(A, B, 1);
         return make_shared<Function>(OutputVector{dot}, ParameterVector{A, B});
     };
 
@@ -575,7 +576,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_collapse_dims2)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -593,13 +594,13 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_collapse_dims2)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_layout)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto W = std::make_shared<op::Parameter>(element::f32, Shape{10, 400});
-        auto X = std::make_shared<op::Parameter>(element::f32, Shape{400, 10});
-        auto W_reshape = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{400, 10});
+        auto W = std::make_shared<op::v0::Parameter>(element::f32, Shape{10, 400});
+        auto X = std::make_shared<op::v0::Parameter>(element::f32, Shape{400, 10});
+        auto W_reshape = std::make_shared<op::v0::Reshape>(W, AxisVector{1, 0}, Shape{400, 10});
 
-        auto add1 = std::make_shared<op::Add>(X, W_reshape);
-        auto sub1 = std::make_shared<op::Subtract>(X, W_reshape);
-        auto mul1 = std::make_shared<op::Multiply>(X, W_reshape);
+        auto add1 = std::make_shared<op::v1::Add>(X, W_reshape);
+        auto sub1 = std::make_shared<op::v1::Subtract>(X, W_reshape);
+        auto mul1 = std::make_shared<op::v1::Multiply>(X, W_reshape);
 
         return make_shared<Function>(OutputVector{add1, sub1, mul1}, ParameterVector{W, X});
     };
@@ -609,7 +610,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_layout)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -629,16 +630,17 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_layout)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_post_layout_reshape_convertlayout)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-        auto B = make_shared<op::Parameter>(element::f32, Shape{5, 2, 1, 1});
-        auto conv = make_shared<op::Convolution>(A,
-                                                 B,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{1, 1});
-        auto reshape = make_shared<op::Reshape>(conv, AxisVector{0, 2, 3, 1}, Shape{1, 3, 4, 5});
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+        auto B = make_shared<op::v0::Parameter>(element::f32, Shape{5, 2, 1, 1});
+        auto conv = make_shared<op::v0::Convolution>(A,
+                                                     B,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0},
+                                                     Strides{1, 1});
+        auto reshape =
+            make_shared<op::v0::Reshape>(conv, AxisVector{0, 2, 3, 1}, Shape{1, 3, 4, 5});
         return make_shared<Function>(OutputVector{reshape}, ParameterVector{A, B});
     };
 
@@ -653,10 +655,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_dnnl_layouts_eltwise)
     Shape filter_shape{5, 11, 2, 2};
 
     auto make_function = [&]() {
-        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
-        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
-        auto conv = std::make_shared<op::Convolution>(input, filter, Strides{2, 2}, Strides{1, 1});
-        auto sigmoid = std::make_shared<op::Sigmoid>(conv);
+        auto input = std::make_shared<op::v0::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::v0::Parameter>(element::f32, filter_shape);
+        auto conv =
+            std::make_shared<op::v0::Convolution>(input, filter, Strides{2, 2}, Strides{1, 1});
+        auto sigmoid = std::make_shared<op::v0::Sigmoid>(conv);
         auto f = make_shared<Function>(OutputVector{sigmoid}, ParameterVector{input, filter});
         return f;
     };
@@ -672,14 +675,14 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convolution_large_padding)
     Shape filter_shape{1, 1, 3, 3};
 
     auto make_function = [&]() {
-        auto input = std::make_shared<op::Parameter>(element::f32, input_shape);
-        auto filter = std::make_shared<op::Parameter>(element::f32, filter_shape);
-        auto conv = std::make_shared<op::Convolution>(input,
-                                                      filter,
-                                                      Strides{1, 1},
-                                                      Strides{9, 9},
-                                                      CoordinateDiff{9, 9},
-                                                      CoordinateDiff{9, 9});
+        auto input = std::make_shared<op::v0::Parameter>(element::f32, input_shape);
+        auto filter = std::make_shared<op::v0::Parameter>(element::f32, filter_shape);
+        auto conv = std::make_shared<op::v0::Convolution>(input,
+                                                          filter,
+                                                          Strides{1, 1},
+                                                          Strides{9, 9},
+                                                          CoordinateDiff{9, 9},
+                                                          CoordinateDiff{9, 9});
         auto f = make_shared<Function>(OutputVector{conv}, ParameterVector{input, filter});
         return f;
     };
@@ -707,7 +710,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_mxnet_densenet121)
     test::Uniform<float> rng(-1.0f, 1.0f);
     vector<vector<float>> args;
 
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -772,12 +775,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_mxnet_densenet121)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_destructive_oi_relu)
 {
     auto shape_a = Shape{2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = make_shared<op::Parameter>(element::f32, shape_a);
-    auto C = make_shared<op::Parameter>(element::f32, shape_a);
-    auto add = make_shared<op::Add>(A, B);
-    auto relu = make_shared<op::Relu>(add);
-    auto subtract = make_shared<op::Subtract>(C, relu);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto add = make_shared<op::v1::Add>(A, B);
+    auto relu = make_shared<op::v0::Relu>(add);
+    auto subtract = make_shared<op::v1::Subtract>(C, relu);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
 
@@ -801,12 +804,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_destructive_oi_relu)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_cacheable_no_destructive_oi_relu)
 {
     auto shape_a = Shape{2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a, true);
-    auto B = make_shared<op::Parameter>(element::f32, shape_a, true);
-    auto C = make_shared<op::Parameter>(element::f32, shape_a);
-    auto add = make_shared<op::Add>(A, B);
-    auto relu = make_shared<op::Relu>(add);
-    auto subtract = make_shared<op::Subtract>(C, relu);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a, true);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_a, true);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto add = make_shared<op::v1::Add>(A, B);
+    auto relu = make_shared<op::v0::Relu>(add);
+    auto subtract = make_shared<op::v1::Subtract>(C, relu);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(subtract, ParameterVector{A, B, C});
 
@@ -835,11 +838,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_cacheable_no_destructive_oi_r
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_concat_after_in_place_slice)
 {
     Shape shape_a{4, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = make_shared<op::Slice>(A, Coordinate{0, 0}, Coordinate{2, 4});
-    auto D = make_shared<op::Slice>(B, Coordinate{1, 0}, Coordinate{2, 4});
-    auto E = make_shared<op::Slice>(A, Coordinate{2, 0}, Coordinate{3, 4});
-    auto r = make_shared<op::Concat>(OutputVector{B, D, E}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::v0::Slice>(A, Coordinate{0, 0}, Coordinate{2, 4});
+    auto D = make_shared<op::v0::Slice>(B, Coordinate{1, 0}, Coordinate{2, 4});
+    auto E = make_shared<op::v0::Slice>(A, Coordinate{2, 0}, Coordinate{3, 4});
+    auto r = make_shared<op::v0::Concat>(OutputVector{B, D, E}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -860,16 +863,16 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_concat_after_in_plac
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_memory_reuse_in_place_slice_after_in_place_concat)
 {
     Shape shape{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto add1 = make_shared<op::Add>(A, B);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
-    auto D = make_shared<op::Parameter>(element::f32, shape);
-    auto add2 = make_shared<op::Add>(C, D);
-    auto subtract = make_shared<op::Subtract>(C, A);
-    auto concat = make_shared<op::Concat>(OutputVector{add1, add2, subtract}, 0);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto add1 = make_shared<op::v1::Add>(A, B);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto D = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto add2 = make_shared<op::v1::Add>(C, D);
+    auto subtract = make_shared<op::v1::Subtract>(C, A);
+    auto concat = make_shared<op::v0::Concat>(OutputVector{add1, add2, subtract}, 0);
     Shape shape_r{2, 1};
-    auto slice = make_shared<op::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
+    auto slice = make_shared<op::v0::Slice>(concat, Coordinate{0, 0}, Coordinate{2, 1});
     auto f = make_shared<Function>(slice, ParameterVector{A, B, C, D});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -899,11 +902,12 @@ NGRAPH_TEST(${BACKEND_NAME},
     vector<float> a_data(shape_size(shape_a));
     iota(a_data.begin(), a_data.end(), 1);
 
-    auto A = op::Constant::create(element::f32, shape_a, a_data);
-    auto reshape = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
+    auto A = op::v0::Constant::create(element::f32, shape_a, a_data);
+    auto reshape = make_shared<op::v0::Reshape>(A, AxisVector{0, 1, 2, 3}, shape_r);
     Shape shape{1, 1, 2, 2};
-    auto slice = make_shared<op::Slice>(reshape, Coordinate{1, 0, 0, 0}, Coordinate{2, 1, 2, 2});
-    auto neg = make_shared<op::Negative>(slice);
+    auto slice =
+        make_shared<op::v0::Slice>(reshape, Coordinate{1, 0, 0, 0}, Coordinate{2, 1, 2, 2});
+    auto neg = make_shared<op::v0::Negative>(slice);
     auto f = make_shared<Function>(neg, ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -919,11 +923,11 @@ NGRAPH_TEST(${BACKEND_NAME},
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convert_inplace)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::u8, shape);
-    auto B = op::Constant::create(element::u8, shape, {1, 1, 1, 1});
-    auto C = op::Constant::create(element::i8, shape, {1, 1, 1, 1});
-    auto f =
-        make_shared<Function>(make_shared<op::Convert>(A + B, element::i8) - C, ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape);
+    auto B = op::v0::Constant::create(element::u8, shape, {1, 1, 1, 1});
+    auto C = op::v0::Constant::create(element::i8, shape, {1, 1, 1, 1});
+    auto f = make_shared<Function>(make_shared<op::v0::Convert>(A + B, element::i8) - C,
+                                   ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -944,16 +948,16 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_rotated_pooling)
         auto rotate_order = is_4d ? AxisVector{3, 0, 1, 2} : AxisVector{4, 0, 1, 2, 3};
         auto pool_shape = is_4d ? Shape{1, 2, 4, 4} : Shape{1, 2, 4, 4, 4};
         auto window_shape = is_4d ? Shape{2, 2} : Shape{2, 2, 2};
-        auto input = make_shared<op::Parameter>(element::f32, input_shape); // C, H, W, N
-        auto transpose = make_shared<op::Reshape>(input, rotate_order, pool_shape);
+        auto input = make_shared<op::v0::Parameter>(element::f32, input_shape); // C, H, W, N
+        auto transpose = make_shared<op::v0::Reshape>(input, rotate_order, pool_shape);
         if (avgpool)
         {
-            return make_shared<Function>(make_shared<op::AvgPool>(transpose, window_shape),
+            return make_shared<Function>(make_shared<op::v0::AvgPool>(transpose, window_shape),
                                          ParameterVector{input});
         }
         else
         {
-            return make_shared<Function>(make_shared<op::MaxPool>(transpose, window_shape),
+            return make_shared<Function>(make_shared<op::v0::MaxPool>(transpose, window_shape),
                                          ParameterVector{input});
         }
     };
@@ -981,16 +985,16 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_thread_safe_calls_convolution_2d_2items)
     Shape shape_b{2, 1, 2, 2};
     Shape shape_r{2, 2, 2, 4};
     auto make_graph = [shape_a, shape_b] {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
         return make_shared<Function>(
-            make_shared<op::Convolution>(A,
-                                         B,
-                                         Strides{1, 1},        // move_strides
-                                         Strides{1, 1},        // filter_dilation
-                                         CoordinateDiff{0, 0}, // below_pads
-                                         CoordinateDiff{0, 0}, // above_pads
-                                         Strides{1, 1}),       // data_dilation
+            make_shared<op::v0::Convolution>(A,
+                                             B,
+                                             Strides{1, 1},        // move_strides
+                                             Strides{1, 1},        // filter_dilation
+                                             CoordinateDiff{0, 0}, // below_pads
+                                             CoordinateDiff{0, 0}, // above_pads
+                                             Strides{1, 1}),       // data_dilation
             ParameterVector{A, B});
     };
 
@@ -1055,17 +1059,17 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_convertlayout)
     // Initialize CPU constant folders
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     Shape data_shape{1, 64, 56, 56};
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
     Shape weights_shape{64, 64, 3, 3};
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<float> values_in(shape_size(weights_shape));
     rng.initialize(values_in);
-    auto weights = make_shared<op::Constant>(element::f32, weights_shape, values_in);
+    auto weights = make_shared<op::v0::Constant>(element::f32, weights_shape, values_in);
     Shape bias_shape{64};
-    auto bias = make_shared<op::Parameter>(element::f32, bias_shape);
+    auto bias = make_shared<op::v0::Parameter>(element::f32, bias_shape);
 
-    auto conv = std::make_shared<op::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
-    auto convbias = make_shared<op::ConvolutionBias>(conv, bias);
+    auto conv = std::make_shared<op::v0::Convolution>(data, weights, Strides{1, 1}, Strides{1, 1});
+    auto convbias = make_shared<op::v0::ConvolutionBias>(conv, bias);
 
     auto f = make_shared<Function>(convbias, ParameterVector{data, bias});
     auto handle = backend->compile(f);
@@ -1081,8 +1085,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape)
     Shape shape_out{2, 4, 1};
 
     const vector<float> values_in{0, 1, 2, 3, 4, 5, 6, 7};
-    auto constant = make_shared<op::Constant>(element::f32, shape_in, values_in);
-    auto reshape = make_shared<op::Reshape>(constant, AxisVector{0, 1}, shape_out);
+    auto constant = make_shared<op::v0::Constant>(element::f32, shape_in, values_in);
+    auto reshape = make_shared<op::v0::Reshape>(constant, AxisVector{0, 1}, shape_out);
     auto f = make_shared<Function>(reshape, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -1090,10 +1094,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape)
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::v0::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<float> values_out = new_const->get_vector<float>();
 
@@ -1108,8 +1112,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape_permute)
     Shape shape_out{4, 2};
 
     vector<double> values_in{0, 1, 2, 3, 4, 5, 6, 7};
-    auto constant = make_shared<op::Constant>(element::f64, shape_in, values_in);
-    auto reshape = make_shared<op::Reshape>(constant, AxisVector{1, 0}, shape_out);
+    auto constant = make_shared<op::v0::Constant>(element::f64, shape_in, values_in);
+    auto reshape = make_shared<op::v0::Reshape>(constant, AxisVector{1, 0}, shape_out);
     auto f = make_shared<Function>(reshape, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -1117,10 +1121,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_reshape_permute)
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Reshape>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::Reshape>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::v0::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     const vector<double> values_out = new_const->get_vector<double>();
 
@@ -1136,8 +1140,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_broadcast)
     Shape shape_out{2, 4};
 
     vector<int> values_in{0, 1};
-    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
-    auto broadcast = make_shared<op::Broadcast>(constant, shape_out, AxisSet{1});
+    auto constant = make_shared<op::v0::Constant>(element::i32, shape_in, values_in);
+    auto broadcast = make_shared<op::v0::Broadcast>(constant, shape_out, AxisSet{1});
     auto f = make_shared<Function>(broadcast, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -1145,10 +1149,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_broadcast)
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Broadcast>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::Broadcast>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::v0::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1163,13 +1167,13 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_pad_exterior)
     Shape shape_in{2};
 
     vector<int> values_in{777, 888};
-    auto constant = make_shared<op::Constant>(element::i32, shape_in, values_in);
-    auto pad_value = make_shared<op::Constant>(element::i32, Shape{}, vector<int>{111});
+    auto constant = make_shared<op::v0::Constant>(element::i32, shape_in, values_in);
+    auto pad_value = make_shared<op::v0::Constant>(element::i32, Shape{}, vector<int>{111});
 
     CoordinateDiff padding_below{1};
     CoordinateDiff padding_above{2};
 
-    auto broadcast = make_shared<op::Pad>(constant, pad_value, padding_below, padding_above);
+    auto broadcast = make_shared<op::v0::Pad>(constant, pad_value, padding_below, padding_above);
     auto f = make_shared<Function>(broadcast, ParameterVector{});
 
     pass::Manager pass_manager;
@@ -1177,10 +1181,10 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_pad_exterior)
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
     pass_manager.run_passes(f);
 
-    ASSERT_EQ(count_ops_of_type<op::Pad>(f), 0);
-    ASSERT_EQ(count_ops_of_type<op::Constant>(f), 1);
+    ASSERT_EQ(count_ops_of_type<op::v0::Pad>(f), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Constant>(f), 1);
 
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(0)->get_argument(0));
+    auto new_const = as_type_ptr<op::v0::Constant>(f->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(new_const);
     auto values_out = new_const->get_vector<int>();
 
@@ -1191,7 +1195,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_pad_exterior)
 template <typename T>
 static std::vector<T> get_result_constant(std::shared_ptr<Function> f, size_t pos)
 {
-    auto new_const = as_type_ptr<op::Constant>(f->get_results().at(pos)->get_argument(0));
+    auto new_const = as_type_ptr<op::v0::Constant>(f->get_results().at(pos)->get_argument(0));
     return new_const->get_vector<T>();
 }
 
@@ -1212,48 +1216,48 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     vector<char> values_j{0, 1, 0, 1};
     vector<float> values_k{-0.1f, 0.0f, -1.5f, 2.6f};
     vector<int> values_l{1, 2};
-    auto a = make_shared<op::Constant>(element::i32, shape_in, values_a);
-    auto b = make_shared<op::Constant>(element::i32, shape_in, values_b);
-    auto c = make_shared<op::Constant>(element::i32, shape_in, values_c);
-    auto d = make_shared<op::Constant>(element::i32, shape_in, values_d);
-    auto e = make_shared<op::Constant>(element::i32, shape_in, values_e);
-    auto f = make_shared<op::Constant>(element::i32, shape_in, values_f);
-    auto g = make_shared<op::Constant>(element::i32, shape_in, values_g);
-    auto h = make_shared<op::Constant>(element::i32, shape_in, values_h);
-    auto i = make_shared<op::Constant>(element::boolean, shape_in, values_i);
-    auto j = make_shared<op::Constant>(element::boolean, shape_in, values_j);
-    auto k = make_shared<op::Constant>(element::f32, shape_in, values_k);
-    auto l = make_shared<op::Constant>(element::i32, Shape{2}, values_l);
+    auto a = make_shared<op::v0::Constant>(element::i32, shape_in, values_a);
+    auto b = make_shared<op::v0::Constant>(element::i32, shape_in, values_b);
+    auto c = make_shared<op::v0::Constant>(element::i32, shape_in, values_c);
+    auto d = make_shared<op::v0::Constant>(element::i32, shape_in, values_d);
+    auto e = make_shared<op::v0::Constant>(element::i32, shape_in, values_e);
+    auto f = make_shared<op::v0::Constant>(element::i32, shape_in, values_f);
+    auto g = make_shared<op::v0::Constant>(element::i32, shape_in, values_g);
+    auto h = make_shared<op::v0::Constant>(element::i32, shape_in, values_h);
+    auto i = make_shared<op::v0::Constant>(element::boolean, shape_in, values_i);
+    auto j = make_shared<op::v0::Constant>(element::boolean, shape_in, values_j);
+    auto k = make_shared<op::v0::Constant>(element::f32, shape_in, values_k);
+    auto l = make_shared<op::v0::Constant>(element::i32, Shape{2}, values_l);
 
     auto add = a + b;
     auto sub = a - b;
     auto mul = a * b;
     auto divn = a / b;
-    auto min = make_shared<op::Minimum>(c, a);
-    auto max = make_shared<op::Maximum>(a, c);
-    auto absn = make_shared<op::Abs>(c);
-    auto neg = make_shared<op::Negative>(c);
-    auto sqrt = make_shared<op::Sqrt>(d);
-    auto neg_sqrt = make_shared<op::Sqrt>(c);
-    auto relu = make_shared<op::Relu>(e);
-    auto sign = make_shared<op::Sign>(f);
-    auto equal = make_shared<op::Equal>(g, h);
-    auto not_equal = make_shared<op::NotEqual>(g, h);
-    auto greater = make_shared<op::Greater>(g, h);
-    auto greater_eq = make_shared<op::GreaterEq>(g, h);
-    auto less = make_shared<op::Less>(g, h);
-    auto less_eq = make_shared<op::LessEq>(g, h);
-    auto logical_and = make_shared<op::And>(i, j);
-    auto logical_or = make_shared<op::Or>(i, j);
-    auto logical_xor = make_shared<op::Xor>(i, j);
-    auto ceil = make_shared<op::Ceiling>(k);
-    auto floor = make_shared<op::Floor>(k);
-    auto logical_not = make_shared<op::Not>(j);
+    auto min = make_shared<op::v0::Minimum>(c, a);
+    auto max = make_shared<op::v0::Maximum>(a, c);
+    auto absn = make_shared<op::v0::Abs>(c);
+    auto neg = make_shared<op::v0::Negative>(c);
+    auto sqrt = make_shared<op::v0::Sqrt>(d);
+    auto neg_sqrt = make_shared<op::v0::Sqrt>(c);
+    auto relu = make_shared<op::v0::Relu>(e);
+    auto sign = make_shared<op::v0::Sign>(f);
+    auto equal = make_shared<op::v0::Equal>(g, h);
+    auto not_equal = make_shared<op::v0::NotEqual>(g, h);
+    auto greater = make_shared<op::v0::Greater>(g, h);
+    auto greater_eq = make_shared<op::v0::GreaterEq>(g, h);
+    auto less = make_shared<op::v0::Less>(g, h);
+    auto less_eq = make_shared<op::v0::LessEq>(g, h);
+    auto logical_and = make_shared<op::v1::LogicalAnd>(i, j);
+    auto logical_or = make_shared<op::v1::LogicalOr>(i, j);
+    auto logical_xor = make_shared<op::v1::LogicalXor>(i, j);
+    auto ceil = make_shared<op::v0::Ceiling>(k);
+    auto floor = make_shared<op::v0::Floor>(k);
+    auto logical_not = make_shared<op::v1::LogicalNot>(j);
     // Note: The CPU functors do not actually support autobroadcast yet; instead the pass itself
     // falls back if autobroadcasting is in use. Putting this check here just to make sure the
     // fallback works as expected, but if direct support for autobroadcast is added to the CPU
     // folders we should add more comprehensive tests here. --amprocte
-    auto add_autob_numpy = make_shared<op::Add>(a, l, op::AutoBroadcastType::NUMPY);
+    auto add_autob_numpy = make_shared<op::v1::Add>(a, l, op::AutoBroadcastType::NUMPY);
 
     auto func = make_shared<Function>(
         OutputVector{add,        sub,         mul,        divn,  min,         max,
@@ -1269,29 +1273,29 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
         ngraph::runtime::cpu::GetGlobalCFDispatcherCPU());
     pass_manager.run_passes(func);
 
-    ASSERT_EQ(count_ops_of_type<op::Add>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Subtract>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Multiply>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Divide>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Minimum>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Maximum>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Abs>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Negative>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Sqrt>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Relu>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Sign>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Equal>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::NotEqual>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Greater>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::GreaterEq>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Less>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::LessEq>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::And>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Or>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Xor>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Ceiling>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Floor>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Not>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Add>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Subtract>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Divide>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Minimum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Maximum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Abs>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Negative>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Sqrt>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Relu>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Sign>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Equal>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::NotEqual>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Greater>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::GreaterEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Less>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::LessEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalAnd>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalOr>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalXor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Ceiling>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Floor>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LogicalNot>(func), 0);
 
     // expected values
     vector<int> add_expected{2, 4, 6, 8};
@@ -1364,15 +1368,15 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_conv_test_winograd)
     // dnnl_verbose,exec,reorder,jit:uni,undef,in:f32_nChw16c out:f32_nchw,num:1,64x64x224x224,100.219
     // clang-format on
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto input = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
-        auto filter = make_shared<op::Parameter>(element::f32, Shape{64, 3, 3, 3});
-        auto conv = make_shared<op::Convolution>(input,
-                                                 filter,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{1, 1},
-                                                 CoordinateDiff{1, 1},
-                                                 Strides{1, 1});
+        auto input = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 224, 224});
+        auto filter = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 3, 3});
+        auto conv = make_shared<op::v0::Convolution>(input,
+                                                     filter,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{1, 1},
+                                                     CoordinateDiff{1, 1},
+                                                     Strides{1, 1});
         return make_shared<Function>(conv, ParameterVector{input, filter});
     };
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1380,7 +1384,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_conv_test_winograd)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -1393,16 +1397,16 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_conv_negative_padding)
 {
     auto make_f = [&]() {
         Shape shape_a{1, 16, 2, 2};
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
         Shape shape_b{32, 16, 1, 1};
-        auto B = make_shared<op::Parameter>(element::f32, shape_b);
-        auto conv1 = make_shared<op::Convolution>(A,
-                                                  B,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{-1, -1},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1});
+        auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
+        auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                      B,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{-1, -1},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1});
         return make_shared<Function>(conv1, ParameterVector{A, B});
     };
     compare_backends(make_f(), make_f(), "${BACKEND_NAME}", "INTERPRETER");
@@ -1411,8 +1415,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_conv_negative_padding)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_gauss_error_function_erf_float32)
 {
     auto make_function = []() -> std::shared_ptr<Function> {
-        auto A = make_shared<op::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
-        auto erf = make_shared<op::Erf>(A);
+        auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4, 10, 6, 10});
+        auto erf = make_shared<op::v0::Erf>(A);
         return make_shared<Function>(erf, ParameterVector{A});
     };
 
@@ -1422,7 +1426,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_gauss_error_function_erf_float32)
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : cpu_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : cpu_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -1440,9 +1444,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_gauss_error_function_erf_float32)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_gauss_error_function_erf_int32)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
     auto make_function = [&]() -> std::shared_ptr<Function> {
-        auto erf = make_shared<op::Erf>(A);
+        auto erf = make_shared<op::v0::Erf>(A);
         return make_shared<Function>(erf, ParameterVector{A});
     };
 
@@ -1475,12 +1479,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_with_indices_2d_2channel_2image)
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     Shape shape_r{2, 2, 4, 3};
-    auto data = make_shared<op::Result>(max_pool->output(0));
-    auto indices = make_shared<op::Result>(max_pool->output(1));
+    auto data = make_shared<op::v0::Result>(max_pool->output(0));
+    auto indices = make_shared<op::v0::Result>(max_pool->output(1));
     auto f = make_shared<Function>(ResultVector{data, indices}, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -1548,12 +1552,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_with_indices_bprop_2d_2channel_2i
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     auto max_pool = make_shared<op::MaxPoolWithIndices>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto indices = max_pool->output(1);
     Shape shape_i{2, 2, 4, 3};
-    auto delta = make_shared<op::Parameter>(element::f32, shape_i);
+    auto delta = make_shared<op::v0::Parameter>(element::f32, shape_i);
 
     auto max_pool_bprop = make_shared<op::MaxPoolWithIndicesBackprop>(
         A, delta, indices, window_shape, window_movement_strides, padding_below, padding_above);
@@ -1652,11 +1656,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_bprop_2d_2channel_2image)
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_i{2, 2, 4, 3};
-    auto delta = make_shared<op::Parameter>(element::f32, shape_i);
+    auto delta = make_shared<op::v0::Parameter>(element::f32, shape_i);
 
-    auto max_pool_bprop = make_shared<op::MaxPoolBackprop>(
+    auto max_pool_bprop = make_shared<op::v0::MaxPoolBackprop>(
         A, delta, window_shape, window_movement_strides, padding_below, padding_above);
 
     auto f = make_shared<Function>(max_pool_bprop, ParameterVector{A, delta});
@@ -1754,9 +1758,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_avg_pool_bprop_2d_2channel_2image)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     Shape shape_d{2, 2, 2, 2};
-    auto delta = make_shared<op::Parameter>(element::f32, shape_d);
+    auto delta = make_shared<op::v0::Parameter>(element::f32, shape_d);
 
-    auto avg_pool_bprop = make_shared<op::AvgPoolBackprop>(
+    auto avg_pool_bprop = make_shared<op::v0::AvgPoolBackprop>(
         shape_a, delta, window_shape, window_movement_strides, padding_below, padding_above, false);
 
     auto f = make_shared<Function>(avg_pool_bprop, ParameterVector{delta});
@@ -1809,12 +1813,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_avg_pool_bprop_2d_2channel_2image)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_1d_with_zero_repeats)
 {
     Shape shape_a{2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_re{1};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{0});
+    auto repeats = make_shared<op::v0::Constant>(element::i64, shape_re, vector<int>{0});
     Shape shape_r{0};
 
-    auto tile = make_shared<op::Tile>(A, repeats);
+    auto tile = make_shared<op::v0::Tile>(A, repeats);
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
@@ -1835,12 +1839,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_1d_with_zero_repeats)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_1d)
 {
     Shape shape_a{2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_re{1};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2});
+    auto repeats = make_shared<op::v0::Constant>(element::i64, shape_re, vector<int>{2});
     Shape shape_r{4};
 
-    auto tile = make_shared<op::Tile>(A, repeats);
+    auto tile = make_shared<op::v0::Tile>(A, repeats);
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
@@ -1861,12 +1865,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_1d)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_with_zero_repeats)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_re{2};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 0});
+    auto repeats = make_shared<op::v0::Constant>(element::i64, shape_re, vector<int>{2, 0});
     Shape shape_r{4, 0};
 
-    auto tile = make_shared<op::Tile>(A, repeats);
+    auto tile = make_shared<op::v0::Tile>(A, repeats);
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
@@ -1887,12 +1891,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_with_zero_repeats)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_1axis)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_re{2};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 1});
+    auto repeats = make_shared<op::v0::Constant>(element::i64, shape_re, vector<int>{3, 1});
     Shape shape_r{6, 2};
 
-    auto tile = make_shared<op::Tile>(A, repeats);
+    auto tile = make_shared<op::v0::Tile>(A, repeats);
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
@@ -1914,12 +1918,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_1axis)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_2axes)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_re{2};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{3, 3});
+    auto repeats = make_shared<op::v0::Constant>(element::i64, shape_re, vector<int>{3, 3});
     Shape shape_r{6, 6};
 
-    auto tile = make_shared<op::Tile>(A, repeats);
+    auto tile = make_shared<op::v0::Tile>(A, repeats);
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
@@ -1943,12 +1947,12 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_2d_2axes)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tile_3d)
 {
     Shape shape_a{2, 1, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_re{3};
-    auto repeats = make_shared<op::Constant>(element::i64, shape_re, vector<int>{2, 2, 1});
+    auto repeats = make_shared<op::v0::Constant>(element::i64, shape_re, vector<int>{2, 2, 1});
     Shape shape_r{4, 2, 3};
 
-    auto tile = make_shared<op::Tile>(A, repeats);
+    auto tile = make_shared<op::v0::Tile>(A, repeats);
 
     auto f = make_shared<Function>(tile, ParameterVector{A});
 
@@ -1974,13 +1978,13 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_scatter_add_1d_indices_in_place)
     Shape indices_shape{2};
     Shape updates_shape{2, 3, 3};
     Shape out_shape{2, 3, 3};
-    auto R1 = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto R2 = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto R = make_shared<op::Add>(R1, R2);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
-    auto G = make_shared<op::ScatterAdd>(R, I, U);
-    auto add = make_shared<op::Add>(G, R2);
+    auto R1 = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto R2 = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto R = make_shared<op::v1::Add>(R1, R2);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::v0::ScatterAdd>(R, I, U);
+    auto add = make_shared<op::v1::Add>(G, R2);
     auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2009,13 +2013,13 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_scatter_add_1d_indices_no_in_place)
     Shape indices_shape{2};
     Shape updates_shape{2, 3, 3};
     Shape out_shape{2, 3, 3};
-    auto R1 = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto R2 = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto R = make_shared<op::Add>(R1, R2);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
-    auto G = make_shared<op::ScatterAdd>(R, I, U);
-    auto add = make_shared<op::Add>(G, R);
+    auto R1 = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto R2 = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto R = make_shared<op::v1::Add>(R1, R2);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
+    auto G = make_shared<op::v0::ScatterAdd>(R, I, U);
+    auto add = make_shared<op::v1::Add>(G, R);
     auto f = make_shared<Function>(add, ParameterVector{R1, R2, I, U});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2075,11 +2079,11 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_same_native_layouts)
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_same_rotated_layouts)
 {
-    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
-    auto f1 = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+    auto A = make_shared<op::v0::Parameter>(element::u8, Shape{2, 3});
+    auto f1 = make_shared<Function>(make_shared<op::v0::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
                                     ParameterVector{A});
-    auto B = make_shared<op::Parameter>(element::u8, Shape{2, 3});
-    auto f2 = make_shared<Function>(make_shared<op::Reshape>(B, AxisVector{1, 0}, Shape{3, 2}),
+    auto B = make_shared<op::v0::Parameter>(element::u8, Shape{2, 3});
+    auto f2 = make_shared<Function>(make_shared<op::v0::Reshape>(B, AxisVector{1, 0}, Shape{3, 2}),
                                     ParameterVector{B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -2112,8 +2116,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_same_rotated_layouts)
 
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensor_copy_from_different_layout)
 {
-    auto A = make_shared<op::Parameter>(element::u8, Shape{2, 3});
-    auto f = make_shared<Function>(make_shared<op::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
+    auto A = make_shared<op::v0::Parameter>(element::u8, Shape{2, 3});
+    auto f = make_shared<Function>(make_shared<op::v0::Reshape>(A, AxisVector{1, 0}, Shape{3, 2}),
                                    ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -2152,9 +2156,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_max_pool_bf16)
     vector<float> a_data = {
         0.5f, 1.5f, 0.5f, 2.5f, 1.5f, 0.5f, 3.5f, 2.5f, 0.5f, 0.5f, 2.5f, 0.5f, 0.5f, 0.5f, 1.5f};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
-    auto QMP = make_shared<ngraph::op::MaxPool>(
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto A_bf16 = make_shared<op::v0::Convert>(A, element::bf16);
+    auto QMP = make_shared<ngraph::op::v0::MaxPool>(
         A_bf16, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -2177,23 +2181,23 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convolution_simple_bf16)
     }
 
     Shape shape_a{1, 2, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 2, 2, 2};
 
     vector<float> input = {1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f};
     vector<float> weights = {3.0f, 3.0f, 3.0f, 3.0f};
 
-    auto A_bf16 = make_shared<op::Convert>(A, element::bf16);
-    auto B_bf16 = make_shared<op::Convert>(B, element::bf16);
-    auto conv1 = make_shared<op::Convolution>(A_bf16,
-                                              B_bf16,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
+    auto A_bf16 = make_shared<op::v0::Convert>(A, element::bf16);
+    auto B_bf16 = make_shared<op::v0::Convert>(B, element::bf16);
+    auto conv1 = make_shared<op::v0::Convolution>(A_bf16,
+                                                  B_bf16,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
 
     auto f = make_shared<Function>(conv1, ParameterVector{A, B});
 
@@ -2217,9 +2221,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_convolution_simple_bf16)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_input)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v1::Add>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2241,9 +2245,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_input)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_create_tensor_2_output)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v1::Add>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -2271,9 +2275,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensorview_custom_mem)
     Shape shape{2, 2};
 
     auto make_external = [&]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape);
-        auto B = make_shared<op::Parameter>(element::f32, shape);
-        auto f = make_shared<Function>(make_shared<op::Divide>(A, B), ParameterVector{A, B});
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+        auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+        auto f = make_shared<Function>(make_shared<op::v1::Divide>(A, B), ParameterVector{A, B});
 
         return f;
     };
@@ -2299,9 +2303,9 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_tensorview_custom_mem)
 NGRAPH_TEST(${BACKEND_NAME}, cpu_test_one_hot_scalar_oob_in_3)
 {
     Shape shape_a{};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
     Shape shape_r{3};
-    auto r = make_shared<op::OneHot>(A, Shape{3}, 0);
+    auto r = make_shared<op::v0::OneHot>(A, Shape{3}, 0);
     auto f = make_shared<Function>(r, ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

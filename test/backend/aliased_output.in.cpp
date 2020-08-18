@@ -29,11 +29,11 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, aliased_output)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
     auto C = A + B;
     auto D = A * B;
-    auto E = op::Constant::create(element::f32, shape, {1, 2, 3, 4});
+    auto E = op::v0::Constant::create(element::f32, shape, {1, 2, 3, 4});
     auto f = make_shared<Function>(OutputVector{C, C, D, D, C, E, E}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

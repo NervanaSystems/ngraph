@@ -27,14 +27,14 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::PartialSlice::type_info;
-constexpr NodeTypeInfo op::PartialSliceBackprop::type_info;
+constexpr NodeTypeInfo op::v0::PartialSlice::type_info;
+constexpr NodeTypeInfo op::v0::PartialSliceBackprop::type_info;
 
-op::PartialSlice::PartialSlice(const Output<Node>& data,
-                               const AxisVector& axes,
-                               const std::vector<int64_t>& lower_bounds,
-                               const std::vector<int64_t>& upper_bounds,
-                               const AxisVector& decrease_axes)
+op::v0::PartialSlice::PartialSlice(const Output<Node>& data,
+                                   const AxisVector& axes,
+                                   const std::vector<int64_t>& lower_bounds,
+                                   const std::vector<int64_t>& upper_bounds,
+                                   const AxisVector& decrease_axes)
     : FusedOp({data})
     , m_axes(axes)
     , m_lower_bounds(lower_bounds)
@@ -45,7 +45,7 @@ op::PartialSlice::PartialSlice(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-OutputVector op::PartialSlice::decompose_op() const
+OutputVector op::v0::PartialSlice::decompose_op() const
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     if (data_pshape.is_dynamic())
@@ -82,7 +82,7 @@ OutputVector op::PartialSlice::decompose_op() const
         ng_end[axes[i]] = end;
     }
 
-    auto sliced = std::make_shared<op::Slice>(data, ng_start, ng_end);
+    auto sliced = std::make_shared<op::v0::Slice>(data, ng_start, ng_end);
     auto out_shape = sliced->get_output_shape(0);
     Shape out_reshape_shape{};
 
@@ -115,11 +115,11 @@ OutputVector op::PartialSlice::decompose_op() const
     }
 
     auto out =
-        std::make_shared<op::Reshape>(sliced, get_default_order(out_shape), out_reshape_shape);
+        std::make_shared<op::v0::Reshape>(sliced, get_default_order(out_shape), out_reshape_shape);
     return {out};
 }
 
-shared_ptr<Node> op::PartialSlice::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::PartialSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -129,7 +129,7 @@ shared_ptr<Node> op::PartialSlice::clone_with_new_inputs(const OutputVector& new
         new_args.at(0), m_axes, m_lower_bounds, m_upper_bounds, m_decrease_axes);
 }
 
-void op::PartialSlice::pre_validate_and_infer_types()
+void op::v0::PartialSlice::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
     PartialShape data_pshape = get_input_partial_shape(0);
@@ -146,16 +146,17 @@ void op::PartialSlice::pre_validate_and_infer_types()
     }
 }
 
-void op::PartialSlice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::PartialSlice::generate_adjoints(autodiff::Adjoints& adjoints,
+                                             const OutputVector& deltas)
 {
-    throw ngraph_error("op::PartialSlice::generate_adjoints function is not implemented yet");
+    throw ngraph_error("op::v0::PartialSlice::generate_adjoints function is not implemented yet");
 }
 
-op::PartialSliceBackprop::PartialSliceBackprop(const Output<Node>& data,
-                                               const Output<Node>& dout,
-                                               const AxisVector& axes,
-                                               const std::vector<int64_t>& lower_bounds,
-                                               const std::vector<int64_t>& upper_bounds)
+op::v0::PartialSliceBackprop::PartialSliceBackprop(const Output<Node>& data,
+                                                   const Output<Node>& dout,
+                                                   const AxisVector& axes,
+                                                   const std::vector<int64_t>& lower_bounds,
+                                                   const std::vector<int64_t>& upper_bounds)
     : FusedOp({data, dout})
     , m_axes(axes)
     , m_lower_bounds(lower_bounds)
@@ -165,7 +166,7 @@ op::PartialSliceBackprop::PartialSliceBackprop(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-OutputVector op::PartialSliceBackprop::decompose_op() const
+OutputVector op::v0::PartialSliceBackprop::decompose_op() const
 {
     const PartialShape& data_pshape = get_input_partial_shape(0);
     if (data_pshape.is_dynamic())
@@ -205,16 +206,17 @@ OutputVector op::PartialSliceBackprop::decompose_op() const
     }
 
     auto dout_reshape =
-        std::make_shared<op::Reshape>(dout, get_default_order(dout.get_shape()), reshape);
+        std::make_shared<op::v0::Reshape>(dout, get_default_order(dout.get_shape()), reshape);
 
     std::shared_ptr<ngraph::Node> mask =
-        op::Constant::create(dout.get_element_type(), data_shape, {0});
+        op::v0::Constant::create(dout.get_element_type(), data_shape, {0});
 
-    auto din = std::make_shared<op::ReplaceSlice>(mask, dout_reshape, ng_start, ng_end);
+    auto din = std::make_shared<op::v0::ReplaceSlice>(mask, dout_reshape, ng_start, ng_end);
     return {din};
 }
 
-shared_ptr<Node> op::PartialSliceBackprop::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node>
+    op::v0::PartialSliceBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -225,7 +227,7 @@ shared_ptr<Node> op::PartialSliceBackprop::clone_with_new_inputs(const OutputVec
         new_args.at(0), new_args.at(1), m_axes, m_lower_bounds, m_upper_bounds);
 }
 
-void op::PartialSliceBackprop::pre_validate_and_infer_types()
+void op::v0::PartialSliceBackprop::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
     PartialShape data_pshape = get_input_partial_shape(0);

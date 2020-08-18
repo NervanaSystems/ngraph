@@ -31,9 +31,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::LSTMCell::type_info;
+constexpr NodeTypeInfo op::v0::LSTMCell::type_info;
 
-op::LSTMCell::LSTMCell()
+op::v0::LSTMCell::LSTMCell()
     : m_input_forget(false)
     , m_weights_format(LSTMWeightsFormat::IFCO)
 {
@@ -43,18 +43,18 @@ op::LSTMCell::LSTMCell()
     m_activation_h = get_activation_function(2);
 }
 
-op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& initial_hidden_state,
-                       const Output<Node>& initial_cell_state,
-                       const Output<Node>& W,
-                       const Output<Node>& R,
-                       size_t hidden_size,
-                       op::LSTMWeightsFormat weights_format,
-                       const vector<string>& activations,
-                       const vector<float>& activations_alpha,
-                       const vector<float>& activations_beta,
-                       float clip,
-                       bool input_forget)
+op::v0::LSTMCell::LSTMCell(const Output<Node>& X,
+                           const Output<Node>& initial_hidden_state,
+                           const Output<Node>& initial_cell_state,
+                           const Output<Node>& W,
+                           const Output<Node>& R,
+                           size_t hidden_size,
+                           op::LSTMWeightsFormat weights_format,
+                           const vector<string>& activations,
+                           const vector<float>& activations_alpha,
+                           const vector<float>& activations_beta,
+                           float clip,
+                           bool input_forget)
     : FusedOp({X, initial_hidden_state, initial_cell_state, W, R})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
@@ -68,19 +68,19 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& initial_hidden_state,
-                       const Output<Node>& initial_cell_state,
-                       const Output<Node>& W,
-                       const Output<Node>& R,
-                       const Output<Node>& B,
-                       size_t hidden_size,
-                       op::LSTMWeightsFormat weights_format,
-                       const vector<string>& activations,
-                       const vector<float>& activations_alpha,
-                       const vector<float>& activations_beta,
-                       float clip,
-                       bool input_forget)
+op::v0::LSTMCell::LSTMCell(const Output<Node>& X,
+                           const Output<Node>& initial_hidden_state,
+                           const Output<Node>& initial_cell_state,
+                           const Output<Node>& W,
+                           const Output<Node>& R,
+                           const Output<Node>& B,
+                           size_t hidden_size,
+                           op::LSTMWeightsFormat weights_format,
+                           const vector<string>& activations,
+                           const vector<float>& activations_alpha,
+                           const vector<float>& activations_beta,
+                           float clip,
+                           bool input_forget)
     : FusedOp({X, initial_hidden_state, initial_cell_state, W, R, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
@@ -93,20 +93,20 @@ op::LSTMCell::LSTMCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::LSTMCell::LSTMCell(const Output<Node>& X,
-                       const Output<Node>& initial_hidden_state,
-                       const Output<Node>& initial_cell_state,
-                       const Output<Node>& W,
-                       const Output<Node>& R,
-                       const Output<Node>& B,
-                       const Output<Node>& P,
-                       size_t hidden_size,
-                       op::LSTMWeightsFormat weights_format,
-                       const vector<string>& activations,
-                       const vector<float>& activations_alpha,
-                       const vector<float>& activations_beta,
-                       float clip,
-                       bool input_forget)
+op::v0::LSTMCell::LSTMCell(const Output<Node>& X,
+                           const Output<Node>& initial_hidden_state,
+                           const Output<Node>& initial_cell_state,
+                           const Output<Node>& W,
+                           const Output<Node>& R,
+                           const Output<Node>& B,
+                           const Output<Node>& P,
+                           size_t hidden_size,
+                           op::LSTMWeightsFormat weights_format,
+                           const vector<string>& activations,
+                           const vector<float>& activations_alpha,
+                           const vector<float>& activations_beta,
+                           float clip,
+                           bool input_forget)
     : FusedOp({X, initial_hidden_state, initial_cell_state, W, R, B, P})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
@@ -131,7 +131,7 @@ bool ngraph::op::v0::LSTMCell::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::LSTMCell::pre_validate_and_infer_types()
+void op::v0::LSTMCell::pre_validate_and_infer_types()
 {
     set_output_size(2);
     if (is_dynamic())
@@ -224,7 +224,7 @@ void op::LSTMCell::pre_validate_and_infer_types()
                           ".");
 }
 
-OutputVector op::LSTMCell::decompose_op() const
+OutputVector op::v0::LSTMCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -285,9 +285,9 @@ OutputVector op::LSTMCell::decompose_op() const
     const auto& p_f = p_iof.at(2);
 
     // Xt*(W^T) -- for [iofc] gates.
-    auto Xt_W = make_shared<op::Dot>(X, builder::transpose(W));
+    auto Xt_W = make_shared<op::v0::Dot>(X, builder::transpose(W));
     // Ht-1*(R^T)  -- for [iofc] gates.
-    auto Ht_R = make_shared<op::Dot>(H_t, builder::transpose(R));
+    auto Ht_R = make_shared<op::v0::Dot>(H_t, builder::transpose(R));
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb  -- for [iofc] gates.
     auto gates = add(Xt_W, add(Ht_R, bias));
 
@@ -302,9 +302,9 @@ OutputVector op::LSTMCell::decompose_op() const
     if (m_input_forget)
     {
         // Couple input with forget gate: 1 - i_t
-        f_t = sub(op::Constant::create(i_t.get_element_type(),
-                                       i_t.get_shape(),
-                                       vector<float>(shape_size(i_t.get_shape()), 1.f)),
+        f_t = sub(op::v0::Constant::create(i_t.get_element_type(),
+                                           i_t.get_shape(),
+                                           vector<float>(shape_size(i_t.get_shape()), 1.f)),
                   i_t);
     }
     else
@@ -322,20 +322,20 @@ OutputVector op::LSTMCell::decompose_op() const
     return {H, C};
 }
 
-Output<Node> op::LSTMCell::get_default_bias_input() const
+Output<Node> op::v0::LSTMCell::get_default_bias_input() const
 {
-    return Output<Node>{op::Constant::create(
+    return Output<Node>{op::v0::Constant::create(
         get_input_element_type(0), Shape{s_gates_count * get_hidden_size()}, vector<float>{0.f})};
 }
 
-Output<Node> op::LSTMCell::get_default_peepholes_input() const
+Output<Node> op::v0::LSTMCell::get_default_peepholes_input() const
 {
-    return Output<Node>{op::Constant::create(get_input_element_type(0),
-                                             Shape{s_peepholes_count * get_hidden_size()},
-                                             vector<float>{0.f})};
+    return Output<Node>{op::v0::Constant::create(get_input_element_type(0),
+                                                 Shape{s_peepholes_count * get_hidden_size()},
+                                                 vector<float>{0.f})};
 }
 
-shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) const
+shared_ptr<Node> op::v0::LSTMCell::convert_node_format(const Output<Node>& node) const
 {
     static const std::map<op::LSTMWeightsFormat, std::vector<size_t>> gate_order_conversion_map{
         {op::LSTMWeightsFormat::FICO, {1, 0, 2, 3}},
@@ -351,10 +351,10 @@ shared_ptr<Node> op::LSTMCell::convert_node_format(const Output<Node>& node) con
     {
         nodes_in_new_format.push_back(splitted_node.at(axis));
     }
-    return make_shared<op::Concat>(nodes_in_new_format, 0);
+    return make_shared<op::v0::Concat>(nodes_in_new_format, 0);
 }
 
-shared_ptr<Node> op::LSTMCell::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::LSTMCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 5)

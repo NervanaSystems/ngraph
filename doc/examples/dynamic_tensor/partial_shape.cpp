@@ -33,7 +33,7 @@ int main()
     // Create and compile a graph where the provided info of shape of x is
     // (2,?)
     auto x_shape_info = PartialShape{2, Dimension::dynamic()};
-    auto x = make_shared<op::Parameter>(element::i32, x_shape_info);
+    auto x = make_shared<op::v0::Parameter>(element::i32, x_shape_info);
     auto a = x + x;
     auto f = make_shared<Function>(OutputVector{a}, ParameterVector{x});
     auto be = runtime::Backend::create("CPU", true);

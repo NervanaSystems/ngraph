@@ -32,12 +32,12 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Sum)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Sum)
             {
                 BUILD_REDUCTION_FUNCTOR(Sum, sum);
             }
 
-            void register_builders_sum_cpp() { REGISTER_OP_BUILDER(Sum); }
+            void register_builders_sum_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Sum); }
         }
     }
 }

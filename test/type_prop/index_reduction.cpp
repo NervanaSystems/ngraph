@@ -23,11 +23,11 @@ using namespace ngraph;
 
 TEST(type_prop, index_reduction_scalar)
 {
-    auto a = make_shared<op::Parameter>(element::f32, Shape{});
+    auto a = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto argmin = make_shared<op::ArgMin>(a, 0, element::i32);
+        auto argmin = make_shared<op::v0::ArgMin>(a, 0, element::i32);
         FAIL() << "ArgMin c-tor should throw for scalar shapes";
     }
     catch (const NodeValidationFailure& error)
@@ -42,11 +42,11 @@ TEST(type_prop, index_reduction_scalar)
 
 TEST(type_prop, index_reduction_invalid_rank)
 {
-    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    auto a = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
 
     try
     {
-        auto argmin = make_shared<op::ArgMin>(a, 2, element::i32);
+        auto argmin = make_shared<op::v0::ArgMin>(a, 2, element::i32);
         FAIL() << "ArgMin c-tor should throw for axis out of bounds";
     }
     catch (const NodeValidationFailure& error)
@@ -61,11 +61,11 @@ TEST(type_prop, index_reduction_invalid_rank)
 
 TEST(type_prop, argmin_invalid_zero_reduction_axis)
 {
-    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+    auto a = make_shared<op::v0::Parameter>(element::f32, Shape{2, 0});
 
     try
     {
-        auto argmin = make_shared<op::ArgMin>(a, 1, element::i32);
+        auto argmin = make_shared<op::v0::ArgMin>(a, 1, element::i32);
         FAIL() << "ArgMin c-tor should throw for zero-length reduction axis";
     }
     catch (const NodeValidationFailure& error)
@@ -80,11 +80,11 @@ TEST(type_prop, argmin_invalid_zero_reduction_axis)
 
 TEST(type_prop, argmax_invalid_zero_reduction_axis)
 {
-    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 0});
+    auto a = make_shared<op::v0::Parameter>(element::f32, Shape{2, 0});
 
     try
     {
-        auto argmax = make_shared<op::ArgMax>(a, 1, element::i32);
+        auto argmax = make_shared<op::v0::ArgMax>(a, 1, element::i32);
         FAIL() << "ArgMax c-tor should throw for zero-length reduction axis";
     }
     catch (const NodeValidationFailure& error)
@@ -99,11 +99,11 @@ TEST(type_prop, argmax_invalid_zero_reduction_axis)
 
 TEST(type_prop, index_reduction_invalid_index_type)
 {
-    auto a = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    auto a = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
 
     try
     {
-        auto argmin = make_shared<op::ArgMin>(a, 1, element::f32);
+        auto argmin = make_shared<op::v0::ArgMin>(a, 1, element::f32);
         FAIL() << "ArgMin c-tor should throw for invalid index type";
     }
     catch (const NodeValidationFailure& error)
@@ -118,13 +118,13 @@ TEST(type_prop, index_reduction_invalid_index_type)
 
 TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_dynamic)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto a = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     size_t axis = 228;
     auto output_et = element::dynamic;
 
     try
     {
-        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        auto argmax = make_shared<op::v0::ArgMax>(a, axis, output_et);
         FAIL() << "Invalid output type of element::dynamic not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -139,13 +139,13 @@ TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_dynamic)
 
 TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_invalid)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto a = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     size_t axis = 228;
     auto output_et = element::dynamic;
 
     try
     {
-        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        auto argmax = make_shared<op::v0::ArgMax>(a, axis, output_et);
         FAIL() << "Invalid output type of element::f32 not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -160,11 +160,11 @@ TEST(type_prop, index_reduction_partial_rank_dynamic_output_et_invalid)
 
 TEST(type_prop, index_reduction_partial_rank_dynamic_ok)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto a = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     size_t axis = 228;
     auto output_et = element::i32;
 
-    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+    auto argmax = make_shared<op::v0::ArgMax>(a, axis, output_et);
 
     ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
     ASSERT_TRUE(argmax->get_output_partial_shape(0).rank().is_dynamic());
@@ -172,13 +172,14 @@ TEST(type_prop, index_reduction_partial_rank_dynamic_ok)
 
 TEST(type_prop, index_reduction_partial_rank_static_dynamic_axis_oob)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    auto a =
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
     size_t axis = 4;
     auto output_et = element::i32;
 
     try
     {
-        auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+        auto argmax = make_shared<op::v0::ArgMax>(a, axis, output_et);
         FAIL() << "Out-of-bounds reduction axis not detected (rank-static dynamic argument)";
     }
     catch (const NodeValidationFailure& error)
@@ -193,11 +194,12 @@ TEST(type_prop, index_reduction_partial_rank_static_dynamic_axis_oob)
 
 TEST(type_prop, index_reduction_partial_rank_static_dynamic_ok)
 {
-    auto a = make_shared<op::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    auto a =
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{Dimension::dynamic(), 2, 3, 4});
     size_t axis = 2;
     auto output_et = element::i32;
 
-    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+    auto argmax = make_shared<op::v0::ArgMax>(a, axis, output_et);
 
     ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
     ASSERT_TRUE(
@@ -206,12 +208,12 @@ TEST(type_prop, index_reduction_partial_rank_static_dynamic_ok)
 
 TEST(type_prop, index_reduction_partial_et_dynamic_rank_static_dynamic_ok)
 {
-    auto a =
-        make_shared<op::Parameter>(element::dynamic, PartialShape{Dimension::dynamic(), 2, 3, 4});
+    auto a = make_shared<op::v0::Parameter>(element::dynamic,
+                                            PartialShape{Dimension::dynamic(), 2, 3, 4});
     size_t axis = 2;
     auto output_et = element::i32;
 
-    auto argmax = make_shared<op::ArgMax>(a, axis, output_et);
+    auto argmax = make_shared<op::v0::ArgMax>(a, axis, output_et);
 
     ASSERT_EQ(argmax->get_output_element_type(0), element::i32);
     ASSERT_TRUE(

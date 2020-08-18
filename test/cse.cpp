@@ -40,9 +40,9 @@ using namespace std;
 TEST(CSE, abs_abs)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto abs1 = std::make_shared<op::Abs>(A);
-    auto abs2 = std::make_shared<op::Abs>(A);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto abs1 = std::make_shared<op::v0::Abs>(A);
+    auto abs2 = std::make_shared<op::v0::Abs>(A);
     auto f = std::make_shared<Function>(OutputVector{abs1, abs2}, ParameterVector{A});
     pass::Manager pass_manager;
 
@@ -54,10 +54,10 @@ TEST(CSE, abs_abs)
 TEST(CSE, abs_abs_negative)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto abs1 = std::make_shared<op::Abs>(A);
-    auto abs2 = std::make_shared<op::Abs>(B);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto abs1 = std::make_shared<op::v0::Abs>(A);
+    auto abs2 = std::make_shared<op::v0::Abs>(B);
     auto f = std::make_shared<Function>(OutputVector{abs1, abs2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
@@ -70,10 +70,10 @@ TEST(CSE, abs_abs_negative)
 TEST(CSE, add_add)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto add1 = std::make_shared<op::Add>(A, B);
-    auto add2 = std::make_shared<op::Add>(A, B);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto add1 = std::make_shared<op::v1::Add>(A, B);
+    auto add2 = std::make_shared<op::v1::Add>(A, B);
     auto f = std::make_shared<Function>(OutputVector{add1, add2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
@@ -85,10 +85,10 @@ TEST(CSE, add_add)
 TEST(CSE, add_add_commutative)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto add1 = std::make_shared<op::Add>(A, B);
-    auto add2 = std::make_shared<op::Add>(B, A);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto add1 = std::make_shared<op::v1::Add>(A, B);
+    auto add2 = std::make_shared<op::v1::Add>(B, A);
     auto f = std::make_shared<Function>(OutputVector{add1, add2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
@@ -100,12 +100,12 @@ TEST(CSE, add_add_commutative)
 TEST(CSE, add_add_negative)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto C = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto D = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto add1 = std::make_shared<op::Add>(A, B);
-    auto add2 = std::make_shared<op::Add>(C, D);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto C = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto D = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto add1 = std::make_shared<op::v1::Add>(A, B);
+    auto add2 = std::make_shared<op::v1::Add>(C, D);
     auto f = std::make_shared<Function>(OutputVector{add1, add2}, ParameterVector{A, B, C, D});
     pass::Manager pass_manager;
 
@@ -118,14 +118,14 @@ TEST(CSE, add_add_negative)
 TEST(CSE, abs_add)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto abs_a1 = std::make_shared<op::Abs>(A);
-    auto abs_b1 = std::make_shared<op::Abs>(B);
-    auto abs_a2 = std::make_shared<op::Abs>(A);
-    auto abs_b2 = std::make_shared<op::Abs>(B);
-    auto add1 = std::make_shared<op::Add>(abs_a1, abs_b1);
-    auto add2 = std::make_shared<op::Add>(abs_a2, abs_b2);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto abs_a1 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b1 = std::make_shared<op::v0::Abs>(B);
+    auto abs_a2 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b2 = std::make_shared<op::v0::Abs>(B);
+    auto add1 = std::make_shared<op::v1::Add>(abs_a1, abs_b1);
+    auto add2 = std::make_shared<op::v1::Add>(abs_a2, abs_b2);
     auto f = std::make_shared<Function>(OutputVector{add1, add2}, ParameterVector{A, B});
     pass::Manager pass_manager;
 
@@ -137,20 +137,20 @@ TEST(CSE, abs_add)
 TEST(CSE, abs_add_reshape_broadcast)
 {
     Shape zero_shape{1};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto abs_a1 = std::make_shared<op::Abs>(A);
-    auto abs_b1 = std::make_shared<op::Abs>(B);
-    auto abs_a2 = std::make_shared<op::Abs>(A);
-    auto abs_b2 = std::make_shared<op::Abs>(B);
-    auto add1 = std::make_shared<op::Add>(abs_a1, abs_b1);
-    auto add2 = std::make_shared<op::Add>(abs_a2, abs_b2);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto abs_a1 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b1 = std::make_shared<op::v0::Abs>(B);
+    auto abs_a2 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b2 = std::make_shared<op::v0::Abs>(B);
+    auto add1 = std::make_shared<op::v1::Add>(abs_a1, abs_b1);
+    auto add2 = std::make_shared<op::v1::Add>(abs_a2, abs_b2);
     {
         // success case
-        auto reshape1 = std::make_shared<op::Reshape>(add1, AxisVector{0}, Shape{1, 1});
-        auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
-        auto broadcast1 = std::make_shared<op::Broadcast>(reshape1, Shape{1, 1, 3}, AxisSet{2});
-        auto broadcast2 = std::make_shared<op::Broadcast>(reshape2, Shape{1, 1, 3}, AxisSet{2});
+        auto reshape1 = std::make_shared<op::v0::Reshape>(add1, AxisVector{0}, Shape{1, 1});
+        auto reshape2 = std::make_shared<op::v0::Reshape>(add2, AxisVector{0}, Shape{1, 1});
+        auto broadcast1 = std::make_shared<op::v0::Broadcast>(reshape1, Shape{1, 1, 3}, AxisSet{2});
+        auto broadcast2 = std::make_shared<op::v0::Broadcast>(reshape2, Shape{1, 1, 3}, AxisSet{2});
         auto f =
             std::make_shared<Function>(OutputVector{broadcast1, broadcast2}, ParameterVector{A, B});
         pass::Manager pass_manager;
@@ -161,8 +161,8 @@ TEST(CSE, abs_add_reshape_broadcast)
     }
     {
         // fail case
-        auto reshape1 = std::make_shared<op::Reshape>(add1, AxisVector{0}, Shape{1});
-        auto reshape2 = std::make_shared<op::Reshape>(add2, AxisVector{0}, Shape{1, 1});
+        auto reshape1 = std::make_shared<op::v0::Reshape>(add1, AxisVector{0}, Shape{1});
+        auto reshape2 = std::make_shared<op::v0::Reshape>(add2, AxisVector{0}, Shape{1, 1});
         auto f =
             std::make_shared<Function>(OutputVector{reshape1, reshape2}, ParameterVector{A, B});
         pass::Manager pass_manager;
@@ -173,8 +173,8 @@ TEST(CSE, abs_add_reshape_broadcast)
     }
     {
         // fail case
-        auto broadcast1 = std::make_shared<op::Broadcast>(add1, Shape{1, 2}, AxisSet{1});
-        auto broadcast2 = std::make_shared<op::Broadcast>(add2, Shape{1, 1, 2}, AxisSet{1, 2});
+        auto broadcast1 = std::make_shared<op::v0::Broadcast>(add1, Shape{1, 2}, AxisSet{1});
+        auto broadcast2 = std::make_shared<op::v0::Broadcast>(add2, Shape{1, 1, 2}, AxisSet{1, 2});
         auto f =
             std::make_shared<Function>(OutputVector{broadcast1, broadcast2}, ParameterVector{A, B});
         pass::Manager pass_manager;
@@ -188,19 +188,19 @@ TEST(CSE, abs_add_reshape_broadcast)
 TEST(CSE, abs_add_abs_add)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto abs_a1 = std::make_shared<op::Abs>(A);
-    auto abs_b1 = std::make_shared<op::Abs>(B);
-    auto abs_a2 = std::make_shared<op::Abs>(A);
-    auto abs_b2 = std::make_shared<op::Abs>(B);
-    auto add1 = std::make_shared<op::Add>(abs_a1, abs_b1);
-    auto add2 = std::make_shared<op::Add>(abs_a2, abs_b2);
-    auto abs_add1 = std::make_shared<op::Abs>(add1);
-    auto abs_add2 = std::make_shared<op::Abs>(add2);
-    auto C = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto add3 = std::make_shared<op::Add>(abs_add1, C);
-    auto add4 = std::make_shared<op::Add>(abs_add2, C);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto abs_a1 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b1 = std::make_shared<op::v0::Abs>(B);
+    auto abs_a2 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b2 = std::make_shared<op::v0::Abs>(B);
+    auto add1 = std::make_shared<op::v1::Add>(abs_a1, abs_b1);
+    auto add2 = std::make_shared<op::v1::Add>(abs_a2, abs_b2);
+    auto abs_add1 = std::make_shared<op::v0::Abs>(add1);
+    auto abs_add2 = std::make_shared<op::v0::Abs>(add2);
+    auto C = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto add3 = std::make_shared<op::v1::Add>(abs_add1, C);
+    auto add4 = std::make_shared<op::v1::Add>(abs_add2, C);
     auto f = std::make_shared<Function>(OutputVector{add3, add4}, ParameterVector{A, B, C});
     pass::Manager pass_manager;
 
@@ -212,20 +212,20 @@ TEST(CSE, abs_add_abs_add)
 TEST(CSE, abs_add_abs_add_negative)
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto B = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto abs_a1 = std::make_shared<op::Abs>(A);
-    auto abs_b1 = std::make_shared<op::Abs>(B);
-    auto abs_a2 = std::make_shared<op::Abs>(A);
-    auto abs_b2 = std::make_shared<op::Abs>(B);
-    auto add1 = std::make_shared<op::Add>(abs_a1, abs_b1);
-    auto add2 = std::make_shared<op::Add>(abs_a2, abs_b2);
-    auto abs_add1 = std::make_shared<op::Abs>(add1);
-    auto abs_add2 = std::make_shared<op::Abs>(add2);
-    auto C = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto D = std::make_shared<op::Parameter>(element::i32, zero_shape);
-    auto add3 = std::make_shared<op::Add>(abs_add1, C);
-    auto add4 = std::make_shared<op::Add>(abs_add2, D);
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto abs_a1 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b1 = std::make_shared<op::v0::Abs>(B);
+    auto abs_a2 = std::make_shared<op::v0::Abs>(A);
+    auto abs_b2 = std::make_shared<op::v0::Abs>(B);
+    auto add1 = std::make_shared<op::v1::Add>(abs_a1, abs_b1);
+    auto add2 = std::make_shared<op::v1::Add>(abs_a2, abs_b2);
+    auto abs_add1 = std::make_shared<op::v0::Abs>(add1);
+    auto abs_add2 = std::make_shared<op::v0::Abs>(add2);
+    auto C = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto D = std::make_shared<op::v0::Parameter>(element::i32, zero_shape);
+    auto add3 = std::make_shared<op::v1::Add>(abs_add1, C);
+    auto add4 = std::make_shared<op::v1::Add>(abs_add2, D);
     auto f = std::make_shared<Function>(OutputVector{add3, add4}, ParameterVector{A, B, C, D});
     pass::Manager pass_manager;
 
@@ -244,13 +244,13 @@ template <typename T>
 static void execute_cse_reduction_test()
 {
     Shape zero_shape{0};
-    auto A = std::make_shared<op::Parameter>(element::i32, Shape{3, 5});
+    auto A = std::make_shared<op::v0::Parameter>(element::i32, Shape{3, 5});
     auto a_reduction_op = std::make_shared<T>(A, AxisSet{0, 1});
     auto a_reduction_op2 = std::make_shared<T>(A, AxisSet{0, 1});
     auto a_reduction_op3 = std::make_shared<T>(A, AxisSet{0});
     auto sub_aa = a_reduction_op - a_reduction_op2;
 
-    auto B = std::make_shared<op::Parameter>(element::i32, Shape{3, 5});
+    auto B = std::make_shared<op::v0::Parameter>(element::i32, Shape{3, 5});
     auto b_reduction_op = std::make_shared<T>(B, AxisSet{0, 1});
 
     auto sub_ab = a_reduction_op - b_reduction_op;
@@ -268,31 +268,31 @@ static void execute_cse_reduction_test()
 
 TEST(CSE, reduction_ops)
 {
-    execute_cse_reduction_test<op::Sum>();
-    execute_cse_reduction_test<op::Product>();
+    execute_cse_reduction_test<op::v0::Sum>();
+    execute_cse_reduction_test<op::v0::Product>();
 }
 
 TEST(CSE, constant)
 {
     Shape zero_shape{0};
-    auto iconst0 = op::Constant::create(element::i32, Shape{}, {0});
-    auto iconst0_1 = op::Constant::create(element::i32, Shape{}, {0});
-    auto iconst1 = op::Constant::create(element::i32, Shape{}, {1});
-    auto iconst1_1 = op::Constant::create(element::i32, Shape{}, {1});
-    auto fconst0 = op::Constant::create(element::f32, Shape{}, {0});
-    auto iconst111 = op::Constant::create(element::i32, Shape{3}, {1, 1, 1});
-    auto iconst112 = op::Constant::create(element::i32, Shape{3}, {1, 1, 2});
+    auto iconst0 = op::v0::Constant::create(element::i32, Shape{}, {0});
+    auto iconst0_1 = op::v0::Constant::create(element::i32, Shape{}, {0});
+    auto iconst1 = op::v0::Constant::create(element::i32, Shape{}, {1});
+    auto iconst1_1 = op::v0::Constant::create(element::i32, Shape{}, {1});
+    auto fconst0 = op::v0::Constant::create(element::f32, Shape{}, {0});
+    auto iconst111 = op::v0::Constant::create(element::i32, Shape{3}, {1, 1, 1});
+    auto iconst112 = op::v0::Constant::create(element::i32, Shape{3}, {1, 1, 2});
 
-    auto abs0 = std::make_shared<op::Abs>(iconst0);
-    auto abs0_1 = std::make_shared<op::Abs>(iconst0_1);
+    auto abs0 = std::make_shared<op::v0::Abs>(iconst0);
+    auto abs0_1 = std::make_shared<op::v0::Abs>(iconst0_1);
 
-    auto abs1 = std::make_shared<op::Abs>(iconst1);
-    auto abs1_1 = std::make_shared<op::Abs>(iconst1_1);
+    auto abs1 = std::make_shared<op::v0::Abs>(iconst1);
+    auto abs1_1 = std::make_shared<op::v0::Abs>(iconst1_1);
 
-    auto absf = std::make_shared<op::Abs>(fconst0);
+    auto absf = std::make_shared<op::v0::Abs>(fconst0);
 
-    auto abs111 = std::make_shared<op::Abs>(iconst111);
-    auto abs112 = std::make_shared<op::Abs>(iconst112);
+    auto abs111 = std::make_shared<op::v0::Abs>(iconst111);
+    auto abs112 = std::make_shared<op::v0::Abs>(iconst112);
 
     auto f = std::make_shared<Function>(
         OutputVector{abs0, abs0_1, abs1, abs1_1, absf, abs111, abs112}, ParameterVector{});
@@ -315,9 +315,9 @@ TEST(CSE, one_hot)
     {
         Shape param_shape{8};
         Shape out_shape{8, 16};
-        auto A = std::make_shared<op::Parameter>(element::i32, param_shape);
-        auto onehot1 = std::make_shared<op::OneHot>(A, out_shape, 1);
-        auto onehot2 = std::make_shared<op::OneHot>(A, out_shape, 1);
+        auto A = std::make_shared<op::v0::Parameter>(element::i32, param_shape);
+        auto onehot1 = std::make_shared<op::v0::OneHot>(A, out_shape, 1);
+        auto onehot2 = std::make_shared<op::v0::OneHot>(A, out_shape, 1);
         auto f = std::make_shared<Function>(OutputVector{onehot1, onehot2}, ParameterVector{A});
         pass_manager.run_passes(f);
         ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));
@@ -325,11 +325,11 @@ TEST(CSE, one_hot)
     {
         Shape param_shape{8, 1};
         Shape out_shape{8, 16};
-        auto A = std::make_shared<op::Parameter>(element::i32, param_shape);
-        auto reshape1 = std::make_shared<op::Reshape>(A, AxisVector{0, 1}, Shape{8});
-        auto reshape2 = std::make_shared<op::Reshape>(A, AxisVector{0, 1}, Shape{8});
-        auto onehot1 = std::make_shared<op::OneHot>(reshape1, out_shape, 1);
-        auto onehot2 = std::make_shared<op::OneHot>(reshape2, out_shape, 1);
+        auto A = std::make_shared<op::v0::Parameter>(element::i32, param_shape);
+        auto reshape1 = std::make_shared<op::v0::Reshape>(A, AxisVector{0, 1}, Shape{8});
+        auto reshape2 = std::make_shared<op::v0::Reshape>(A, AxisVector{0, 1}, Shape{8});
+        auto onehot1 = std::make_shared<op::v0::OneHot>(reshape1, out_shape, 1);
+        auto onehot2 = std::make_shared<op::v0::OneHot>(reshape2, out_shape, 1);
         auto f = std::make_shared<Function>(OutputVector{onehot1, onehot2}, ParameterVector{A});
         pass_manager.run_passes(f);
         ASSERT_EQ(f->get_results().at(0)->get_argument(0), f->get_results().at(1)->get_argument(0));

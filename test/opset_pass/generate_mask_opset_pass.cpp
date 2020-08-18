@@ -14,8 +14,8 @@ TEST(opset_transform, opset1_generate_mask_downgrade_pass)
 {
     Shape scalar{};
     const unsigned int seed = 777;
-    auto training = op::Constant::create(element::f32, Shape{}, {1});
-    auto result_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 128});
+    auto training = op::v0::Constant::create(element::f32, Shape{}, {1});
+    auto result_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{2}, {1, 128});
     auto gen_mask =
         make_shared<op::v1::GenerateMask>(training, result_shape, element::f32, seed, 0.5, false);
     auto gen_mask2 =

@@ -58,15 +58,15 @@ constexpr NodeTypeInfo CompatOp::type_info;
 
 TEST(compat, node)
 {
-    auto param = make_shared<op::Parameter>(element::f32, Shape{10});
-    auto c = make_shared<op::Parameter>(element::f32, Shape{10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{10});
+    auto c = make_shared<op::v0::Parameter>(element::f32, Shape{10});
     auto x = make_shared<CompatOp>(param);
-    auto result = make_shared<op::Result>(x);
+    auto result = make_shared<op::v0::Result>(x);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{param});
     autodiff::Adjoints adjoints({result}, {c});
     auto bprop = adjoints.backprop_output(param);
     ASSERT_TRUE(bprop.get_index() == 0);
-    ASSERT_TRUE(is_type<op::v0::Multiply>(bprop.get_node_shared_ptr()));
+    ASSERT_TRUE(is_type<op::v1::Multiply>(bprop.get_node_shared_ptr()));
     set<Output<Node>> params;
     params.insert(bprop.get_node_shared_ptr()->input_value(0));
     params.insert(bprop.get_node_shared_ptr()->input_value(1));

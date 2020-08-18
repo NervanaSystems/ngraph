@@ -186,7 +186,6 @@ namespace ngraph
                 LSTMWeightsFormat m_weights_format;
             };
         }
-        using v0::LSTMSequence;
     }
 
     NGRAPH_API

@@ -48,8 +48,8 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, elu)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
-    auto elu = make_shared<op::Elu>(A, 0.5f);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 2});
+    auto elu = make_shared<op::v0::Elu>(A, 0.5f);
     auto function = make_shared<Function>(OutputVector{elu}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -61,8 +61,8 @@ NGRAPH_TEST(${BACKEND_NAME}, elu)
 
 NGRAPH_TEST(${BACKEND_NAME}, elu_negative_alpha)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 2});
-    auto elu = make_shared<op::Elu>(A, -1.f);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 2});
+    auto elu = make_shared<op::v0::Elu>(A, -1.f);
     auto function = make_shared<Function>(OutputVector{elu}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");

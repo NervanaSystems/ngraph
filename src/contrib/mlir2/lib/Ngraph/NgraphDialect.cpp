@@ -24,11 +24,11 @@ using namespace mlir::ngraph;
 // Ngraph dialect.
 //===----------------------------------------------------------------------===//
 
-NgraphDialect::NgraphDialect(mlir::MLIRContext* context)
-    : Dialect(getDialectNamespace(), context)
-{
-    addOperations<
-#define GET_OP_LIST
-#include "Dialect/Ngraph/NgraphOps.cpp.inc"
-        >();
-}
+// NgraphDialect::NgraphDialect(mlir::MLIRContext* context)
+//     : Dialect(getDialectNamespace(), context)
+// {
+//     addOperations<
+// #define GET_OP_LIST
+// #include "Dialect/Ngraph/NgraphOps.cpp.inc"
+//         >();
+// }

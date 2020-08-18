@@ -48,10 +48,10 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, squared_difference)
 {
-    const auto x1 = make_shared<op::Parameter>(element::f32, Shape{2, 2});
-    const auto x2 = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    const auto x1 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
+    const auto x2 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
 
-    auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
+    auto tested_op = make_shared<op::v0::SquaredDifference>(x1, x2);
     auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -64,10 +64,10 @@ NGRAPH_TEST(${BACKEND_NAME}, squared_difference)
 
 NGRAPH_TEST(${BACKEND_NAME}, squared_difference_broadcast)
 {
-    const auto x1 = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-    const auto x2 = make_shared<op::Parameter>(element::i32, Shape{});
+    const auto x1 = make_shared<op::v0::Parameter>(element::i32, Shape{2, 2});
+    const auto x2 = make_shared<op::v0::Parameter>(element::i32, Shape{});
 
-    auto tested_op = make_shared<op::SquaredDifference>(x1, x2);
+    auto tested_op = make_shared<op::v0::SquaredDifference>(x1, x2);
     auto function = make_shared<Function>(tested_op, ParameterVector{x1, x2});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

@@ -30,9 +30,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::AvgPool)
+            void Builder::BUILDER_DECL(ngraph::op::v0::AvgPool)
             {
-                auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node);
+                auto avg_pool = static_cast<const ngraph::op::v0::AvgPool*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -53,8 +53,8 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto avg_pool_desc =
-                        dnnl_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node,
-                                                                                        false);
+                        dnnl_emitter->get_avg_pooling_forward_desc<ngraph::op::v0::AvgPool>(node,
+                                                                                            false);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(pooling_forward, avg_pool_desc);
 
                     // AvgPool needs 3 primitives: input, result, and pooling_forward.
@@ -123,9 +123,9 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::AvgPoolBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::v0::AvgPoolBackprop)
             {
-                auto apb = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                auto apb = static_cast<const ngraph::op::v0::AvgPoolBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -146,11 +146,11 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto avg_pool_fwd_desc =
-                        dnnl_emitter->get_avg_pooling_forward_desc<ngraph::op::AvgPoolBackprop>(
+                        dnnl_emitter->get_avg_pooling_forward_desc<ngraph::op::v0::AvgPoolBackprop>(
                             node, true);
                     auto avg_pool_desc =
-                        dnnl_emitter->get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
-                            node);
+                        dnnl_emitter
+                            ->get_avg_pooling_backward_desc<ngraph::op::v0::AvgPoolBackprop>(node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD_2ARGS(
                         avg_pooling_backward, avg_pool_fwd_desc, avg_pool_desc);
 
@@ -224,8 +224,8 @@ namespace ngraph
 
             void register_builders_avg_pool_cpp()
             {
-                REGISTER_OP_BUILDER(AvgPool);
-                REGISTER_OP_BUILDER(AvgPoolBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::AvgPool);
+                REGISTER_OP_BUILDER(ngraph::op::v0::AvgPoolBackprop);
             }
         }
     }

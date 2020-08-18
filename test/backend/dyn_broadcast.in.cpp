@@ -29,13 +29,13 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_broadcast)
 {
     // Create a graph for
     //   f(x,shape:i32,axes:32) = Broadcast(x,Convert<i64>(shape),Convert<i64>(axes)).
-    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto shape = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto shape_i64 = make_shared<op::Convert>(shape, element::i64);
-    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+    auto x = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto shape = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto shape_i64 = make_shared<op::v0::Convert>(shape, element::i64);
+    auto axes_i64 = make_shared<op::v0::Convert>(axes, element::i64);
 
-    auto bc = make_shared<op::DynBroadcast>(x, shape_i64, axes_i64);
+    auto bc = make_shared<op::v0::DynBroadcast>(x, shape_i64, axes_i64);
 
     auto f = make_shared<Function>(OutputVector{bc}, ParameterVector{x, shape, axes});
 
@@ -78,11 +78,11 @@ NGRAPH_TEST(${BACKEND_NAME}, broadcast_v1)
 {
     // Create a graph for
     //   f(x,shape:i32,axes:32) = Broadcast(x,Convert<i64>(shape),Convert<i64>(axes)).
-    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto shape = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto axes = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto shape_i64 = make_shared<op::Convert>(shape, element::i64);
-    auto axes_i64 = make_shared<op::Convert>(axes, element::i64);
+    auto x = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto shape = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto axes = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto shape_i64 = make_shared<op::v0::Convert>(shape, element::i64);
+    auto axes_i64 = make_shared<op::v0::Convert>(axes, element::i64);
 
     auto bc = make_shared<op::v1::Broadcast>(x, shape_i64, axes_i64);
 

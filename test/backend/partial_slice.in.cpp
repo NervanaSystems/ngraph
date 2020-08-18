@@ -48,13 +48,13 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, partial_slice_static)
 {
     Shape shape_x{2, 3, 2};
-    auto x = make_shared<op::Parameter>(element::f32, shape_x);
+    auto x = make_shared<op::v0::Parameter>(element::f32, shape_x);
     AxisVector axes{0, 1};
     vector<int64_t> lower_bounds{1, 0};
     vector<int64_t> upper_bounds{2, 2};
     AxisVector decrease_axes{};
     auto f = make_shared<Function>(
-        make_shared<op::PartialSlice>(x, axes, lower_bounds, upper_bounds, decrease_axes),
+        make_shared<op::v0::PartialSlice>(x, axes, lower_bounds, upper_bounds, decrease_axes),
         ParameterVector{x});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -75,13 +75,13 @@ NGRAPH_TEST(${BACKEND_NAME}, partial_slice_static)
 NGRAPH_TEST(${BACKEND_NAME}, partial_slice_partial_shape)
 {
     auto pshape_x = PartialShape{Dimension::dynamic(), 3, Dimension::dynamic()};
-    auto x = make_shared<op::Parameter>(element::f32, pshape_x);
+    auto x = make_shared<op::v0::Parameter>(element::f32, pshape_x);
     AxisVector axes{0, 1};
     vector<int64_t> lower_bounds{1, 0};
     vector<int64_t> upper_bounds{2, 2};
     AxisVector decrease_axes{};
     auto f = make_shared<Function>(
-        make_shared<op::PartialSlice>(x, axes, lower_bounds, upper_bounds, decrease_axes),
+        make_shared<op::v0::PartialSlice>(x, axes, lower_bounds, upper_bounds, decrease_axes),
         ParameterVector{x});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
@@ -103,13 +103,13 @@ NGRAPH_TEST(${BACKEND_NAME}, partial_slice_partial_shape)
 NGRAPH_TEST(${BACKEND_NAME}, partial_slice_unknown_rank)
 {
     auto pshape_x = PartialShape::dynamic();
-    auto x = make_shared<op::Parameter>(element::f32, pshape_x);
+    auto x = make_shared<op::v0::Parameter>(element::f32, pshape_x);
     AxisVector axes{0, 1};
     vector<int64_t> lower_bounds{1, 0};
     vector<int64_t> upper_bounds{2, 2};
     AxisVector decrease_axes{};
     auto f = make_shared<Function>(
-        make_shared<op::PartialSlice>(x, axes, lower_bounds, upper_bounds, decrease_axes),
+        make_shared<op::v0::PartialSlice>(x, axes, lower_bounds, upper_bounds, decrease_axes),
         ParameterVector{x});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);
@@ -132,13 +132,13 @@ NGRAPH_TEST(${BACKEND_NAME}, partial_slice_bprop_unknown_rank)
 {
     auto pshape_x = PartialShape::dynamic();
     auto pshape_dout = PartialShape::dynamic();
-    auto x = make_shared<op::Parameter>(element::f32, pshape_x);
-    auto dout = make_shared<op::Parameter>(element::f32, pshape_dout);
+    auto x = make_shared<op::v0::Parameter>(element::f32, pshape_x);
+    auto dout = make_shared<op::v0::Parameter>(element::f32, pshape_dout);
     AxisVector axes{0, 1};
     vector<int64_t> lower_bounds{1, 0};
     vector<int64_t> upper_bounds{2, 2};
     auto f = make_shared<Function>(
-        make_shared<op::PartialSliceBackprop>(x, dout, axes, lower_bounds, upper_bounds),
+        make_shared<op::v0::PartialSliceBackprop>(x, dout, axes, lower_bounds, upper_bounds),
         ParameterVector{x, dout});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);

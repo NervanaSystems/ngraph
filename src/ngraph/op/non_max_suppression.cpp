@@ -47,9 +47,9 @@ op::v1::NonMaxSuppression::NonMaxSuppression(
     const bool sort_result_descending)
     : Op({boxes,
           scores,
-          op::Constant::create(element::i64, Shape{}, {0}),
-          op::Constant::create(element::f32, Shape{}, {.0f}),
-          op::Constant::create(element::f32, Shape{}, {.0f})})
+          op::v0::Constant::create(element::i64, Shape{}, {0}),
+          op::v0::Constant::create(element::f32, Shape{}, {.0f}),
+          op::v0::Constant::create(element::f32, Shape{}, {.0f})})
     , m_box_encoding{box_encoding}
     , m_sort_result_descending{sort_result_descending}
 {
@@ -79,7 +79,7 @@ shared_ptr<Node>
             new_args.at(1),
             new_args.at(2),
             new_args.at(3),
-            op::Constant::create(element::f32, Shape{}, {.0f}),
+            op::v0::Constant::create(element::f32, Shape{}, {.0f}),
             m_box_encoding,
             m_sort_result_descending);
     }
@@ -89,8 +89,8 @@ shared_ptr<Node>
             new_args.at(0),
             new_args.at(1),
             new_args.at(2),
-            op::Constant::create(element::f32, Shape{}, {.0f}),
-            op::Constant::create(element::f32, Shape{}, {.0f}),
+            op::v0::Constant::create(element::f32, Shape{}, {.0f}),
+            op::v0::Constant::create(element::f32, Shape{}, {.0f}),
             m_box_encoding,
             m_sort_result_descending);
     }
@@ -195,7 +195,7 @@ int64_t op::v1::NonMaxSuppression::max_boxes_output_from_input() const
     int64_t max_output_boxes{0};
 
     const auto max_output_boxes_input =
-        as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+        as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
     max_output_boxes = max_output_boxes_input->cast_vector<int64_t>().at(0);
 
     return max_output_boxes;
@@ -253,9 +253,9 @@ op::v3::NonMaxSuppression::NonMaxSuppression(
     const element::Type& output_type)
     : Op({boxes,
           scores,
-          op::Constant::create(element::i64, Shape{}, {0}),
-          op::Constant::create(element::f32, Shape{}, {.0f}),
-          op::Constant::create(element::f32, Shape{}, {.0f})})
+          op::v0::Constant::create(element::i64, Shape{}, {0}),
+          op::v0::Constant::create(element::f32, Shape{}, {.0f}),
+          op::v0::Constant::create(element::f32, Shape{}, {.0f})})
     , m_box_encoding{box_encoding}
     , m_sort_result_descending{sort_result_descending}
     , m_output_type{output_type}
@@ -287,7 +287,7 @@ shared_ptr<Node>
             new_args.at(1),
             new_args.at(2),
             new_args.at(3),
-            op::Constant::create(element::f32, Shape{}, {.0f}),
+            op::v0::Constant::create(element::f32, Shape{}, {.0f}),
             m_box_encoding,
             m_sort_result_descending,
             m_output_type);
@@ -298,8 +298,8 @@ shared_ptr<Node>
             new_args.at(0),
             new_args.at(1),
             new_args.at(2),
-            op::Constant::create(element::f32, Shape{}, {.0f}),
-            op::Constant::create(element::f32, Shape{}, {.0f}),
+            op::v0::Constant::create(element::f32, Shape{}, {.0f}),
+            op::v0::Constant::create(element::f32, Shape{}, {.0f}),
             m_box_encoding,
             m_sort_result_descending,
             m_output_type);
@@ -405,7 +405,7 @@ int64_t op::v3::NonMaxSuppression::max_boxes_output_from_input() const
     int64_t max_output_boxes{0};
 
     const auto max_output_boxes_input =
-        as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
+        as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
     max_output_boxes = max_output_boxes_input->cast_vector<int64_t>().at(0);
 
     return max_output_boxes;

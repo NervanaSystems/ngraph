@@ -63,6 +63,5 @@ namespace ngraph
                 bool m_transpose_b;
             };
         }
-        using v0::MatMul;
     }
 }

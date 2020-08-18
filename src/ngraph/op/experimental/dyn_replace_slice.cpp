@@ -24,18 +24,18 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DynReplaceSlice::type_info;
+constexpr NodeTypeInfo op::v0::DynReplaceSlice::type_info;
 
-op::DynReplaceSlice::DynReplaceSlice(const Output<Node>& arg,
-                                     const Output<Node>& replacement,
-                                     const Output<Node>& lower_bounds,
-                                     const Output<Node>& upper_bounds,
-                                     const Output<Node>& strides,
-                                     const AxisSet& lower_bounds_mask,
-                                     const AxisSet& upper_bounds_mask,
-                                     const AxisSet& new_axis,
-                                     const AxisSet& shrink_axis,
-                                     const AxisSet& ellipsis_mask)
+op::v0::DynReplaceSlice::DynReplaceSlice(const Output<Node>& arg,
+                                         const Output<Node>& replacement,
+                                         const Output<Node>& lower_bounds,
+                                         const Output<Node>& upper_bounds,
+                                         const Output<Node>& strides,
+                                         const AxisSet& lower_bounds_mask,
+                                         const AxisSet& upper_bounds_mask,
+                                         const AxisSet& new_axis,
+                                         const AxisSet& shrink_axis,
+                                         const AxisSet& ellipsis_mask)
     : Op({arg, replacement, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
@@ -46,7 +46,7 @@ op::DynReplaceSlice::DynReplaceSlice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::DynReplaceSlice::validate_and_infer_types()
+void op::v0::DynReplaceSlice::validate_and_infer_types()
 {
     auto arg_et = get_input_element_type(0);
     auto replacement_et = get_input_element_type(1);
@@ -107,9 +107,9 @@ void op::DynReplaceSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(3);
     set_input_is_relevant_to_shape(4);
 
-    auto lower_bounds = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
-    auto upper_bounds = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
-    auto strides = as_type_ptr<op::Constant>(input_value(4).get_node_shared_ptr());
+    auto lower_bounds = as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
+    auto upper_bounds = as_type_ptr<op::v0::Constant>(input_value(3).get_node_shared_ptr());
+    auto strides = as_type_ptr<op::v0::Constant>(input_value(4).get_node_shared_ptr());
 
     // TODO(amprocte): We can get a bit more information here about the ranks of arg and
     // replacement by inspecting the attributes.
@@ -139,7 +139,7 @@ void op::DynReplaceSlice::validate_and_infer_types()
     set_output_type(0, result_et, arg_shape);
 }
 
-shared_ptr<Node> op::DynReplaceSlice::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::DynReplaceSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynReplaceSlice>(new_args.at(0),
@@ -154,8 +154,8 @@ shared_ptr<Node> op::DynReplaceSlice::clone_with_new_inputs(const OutputVector& 
                                         m_ellipsis_mask);
 }
 
-void op::DynReplaceSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                            const OutputVector& /* deltas */)
+void op::v0::DynReplaceSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynReplaceSlice");
 }

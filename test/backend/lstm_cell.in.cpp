@@ -53,16 +53,16 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_no_bias_no_peepholes)
     const size_t hidden_size = 3;
     const size_t gates_count = 4;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
     const auto lstm_cell =
-        make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size, op::LSTMWeightsFormat::IOFC);
+        make_shared<op::v0::LSTMCell>(X, H_t, C_t, W, R, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
                                              ParameterVector{X, H_t, C_t, W, R});
@@ -115,17 +115,17 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes)
     const size_t hidden_size = 3;
     const size_t gates_count = 4;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
-    const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    const auto P = make_shared<op::v0::Parameter>(element::f32, Shape{3 * hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(
+    const auto lstm_cell = make_shared<op::v0::LSTMCell>(
         X, H_t, C_t, W, R, B, P, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
@@ -186,19 +186,19 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_zero_bias_peepholes_constant)
     const size_t hidden_size = 3;
     const size_t gates_count = 4;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Constant>(
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::v0::Constant>(
         element::f32, Shape{gates_count * hidden_size}, std::vector<float>{0.f});
-    const auto P =
-        make_shared<op::Constant>(element::f32, Shape{3 * hidden_size}, std::vector<float>{0.f});
+    const auto P = make_shared<op::v0::Constant>(
+        element::f32, Shape{3 * hidden_size}, std::vector<float>{0.f});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(
+    const auto lstm_cell = make_shared<op::v0::LSTMCell>(
         X, H_t, C_t, W, R, B, P, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
@@ -253,16 +253,16 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_fixed_no_bias_no_peepholes)
     const size_t hidden_size = 3;
     const size_t gates_count = 4;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
 
     const auto lstm_cell =
-        make_shared<op::LSTMCell>(X, H_t, C_t, W, R, hidden_size, op::LSTMWeightsFormat::IOFC);
+        make_shared<op::v0::LSTMCell>(X, H_t, C_t, W, R, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
                                              ParameterVector{X, H_t, C_t, W, R});
@@ -302,17 +302,17 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes)
     const size_t hidden_size = 3;
     const size_t gates_count = 4;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
-    const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    const auto P = make_shared<op::v0::Parameter>(element::f32, Shape{3 * hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(
+    const auto lstm_cell = make_shared<op::v0::LSTMCell>(
         X, H_t, C_t, W, R, B, P, hidden_size, op::LSTMWeightsFormat::IOFC);
 
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
@@ -394,30 +394,30 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_bias_peepholes_clip_input_forget)
     const float clip_threshold = 3.5f;
     bool input_forget = true;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
-    const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    const auto P = make_shared<op::v0::Parameter>(element::f32, Shape{3 * hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X,
-                                                     H_t,
-                                                     C_t,
-                                                     W,
-                                                     R,
-                                                     B,
-                                                     P,
-                                                     hidden_size,
-                                                     op::LSTMWeightsFormat::IOFC,
-                                                     vector<string>{"sigmoid", "tanh", "tanh"},
-                                                     vector<float>{},
-                                                     vector<float>{},
-                                                     clip_threshold,
-                                                     input_forget);
+    const auto lstm_cell = make_shared<op::v0::LSTMCell>(X,
+                                                         H_t,
+                                                         C_t,
+                                                         W,
+                                                         R,
+                                                         B,
+                                                         P,
+                                                         hidden_size,
+                                                         op::LSTMWeightsFormat::IOFC,
+                                                         vector<string>{"sigmoid", "tanh", "tanh"},
+                                                         vector<float>{},
+                                                         vector<float>{},
+                                                         clip_threshold,
+                                                         input_forget);
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
                                              ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");
@@ -500,30 +500,30 @@ NGRAPH_TEST(${BACKEND_NAME}, lstm_cell_activaction_functions)
     vector<float> activation_alpha{0.f, 0.f, 1.8345f};
     vector<float> activation_beta{0.f, 0.f, 3.05f};
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto C_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
-    const auto P = make_shared<op::Parameter>(element::f32, Shape{3 * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size});
+    const auto P = make_shared<op::v0::Parameter>(element::f32, Shape{3 * hidden_size});
 
-    const auto lstm_cell = make_shared<op::LSTMCell>(X,
-                                                     H_t,
-                                                     C_t,
-                                                     W,
-                                                     R,
-                                                     B,
-                                                     P,
-                                                     hidden_size,
-                                                     op::LSTMWeightsFormat::IOFC,
-                                                     activations,
-                                                     activation_alpha,
-                                                     activation_beta,
-                                                     clip_threshold,
-                                                     input_forget);
+    const auto lstm_cell = make_shared<op::v0::LSTMCell>(X,
+                                                         H_t,
+                                                         C_t,
+                                                         W,
+                                                         R,
+                                                         B,
+                                                         P,
+                                                         hidden_size,
+                                                         op::LSTMWeightsFormat::IOFC,
+                                                         activations,
+                                                         activation_alpha,
+                                                         activation_beta,
+                                                         clip_threshold,
+                                                         input_forget);
     auto ht_function = make_shared<Function>(OutputVector{lstm_cell->output(0)},
                                              ParameterVector{X, H_t, C_t, W, R, B, P});
     auto ht_test_case = ngraph::test::NgraphTestCase(ht_function, "${BACKEND_NAME}");

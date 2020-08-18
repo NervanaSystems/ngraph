@@ -52,11 +52,11 @@ NGRAPH_TEST(${BACKEND_NAME}, transpose)
     // Create a graph for f(x,perm) = Transpose(x,Convert<i64>(perm)). We'll do the permutation in
     // i32 and cast it to i64, just for fun (and to mirror the TensorFlow test I am porting here).
     //
-    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto perm = make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
-    auto perm_i64 = make_shared<op::Convert>(perm, element::i64);
+    auto x = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto perm = make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()});
+    auto perm_i64 = make_shared<op::v0::Convert>(perm, element::i64);
 
-    auto x_transpose = make_shared<op::Transpose>(x, perm_i64);
+    auto x_transpose = make_shared<op::v1::Transpose>(x, perm_i64);
 
     auto f = make_shared<Function>(OutputVector{x_transpose}, ParameterVector{x, perm});
 
@@ -95,12 +95,13 @@ NGRAPH_TEST(${BACKEND_NAME}, transpose)
 
 NGRAPH_TEST(${BACKEND_NAME}, space_to_batch)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 3});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 2, 3});
     auto block_shape =
-        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 2, 3, 2});
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 2, 3, 2});
     auto pads_begin =
-        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
+    auto pads_end =
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
     auto space_to_batch =
         make_shared<op::v1::SpaceToBatch>(data, block_shape, pads_begin, pads_end);
     auto function = make_shared<Function>(OutputVector{space_to_batch}, ParameterVector{data});
@@ -117,12 +118,13 @@ NGRAPH_TEST(${BACKEND_NAME}, space_to_batch)
 
 NGRAPH_TEST(${BACKEND_NAME}, batch_to_space)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{12, 1, 1, 2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{12, 1, 1, 2});
     auto block_shape =
-        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 2, 3, 2});
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, vector<int64_t>{1, 2, 3, 2});
     auto pads_begin =
-        make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
-    auto pads_end = make_shared<op::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 1, 0});
+    auto pads_end =
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, vector<int64_t>{0, 0, 0, 1});
     auto batch_to_space =
         make_shared<op::v1::BatchToSpace>(data, block_shape, pads_begin, pads_end);
     auto function = make_shared<Function>(OutputVector{batch_to_space}, ParameterVector{data});
@@ -139,9 +141,9 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_to_space)
 
 NGRAPH_TEST(${BACKEND_NAME}, space_to_depth_block_first)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});
-    const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
-    auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 2);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 4, 4});
+    const auto mode = ngraph::op::v0::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    auto space_to_depth = make_shared<op::v0::SpaceToDepth>(A, mode, 2);
     auto function = make_shared<Function>(OutputVector{space_to_depth}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -160,9 +162,9 @@ NGRAPH_TEST(${BACKEND_NAME}, space_to_depth_block_first)
 
 NGRAPH_TEST(${BACKEND_NAME}, space_to_depth_depth_first)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4, 4});
-    const auto mode = ngraph::op::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST;
-    auto space_to_depth = make_shared<op::SpaceToDepth>(A, mode, 2);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 4, 4});
+    const auto mode = ngraph::op::v0::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST;
+    auto space_to_depth = make_shared<op::v0::SpaceToDepth>(A, mode, 2);
     auto function = make_shared<Function>(OutputVector{space_to_depth}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -178,9 +180,9 @@ NGRAPH_TEST(${BACKEND_NAME}, space_to_depth_depth_first)
 
 NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_block_first)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 2, 2});
-    auto depth_to_space =
-        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 8, 2, 2});
+    auto depth_to_space = make_shared<op::v0::DepthToSpace>(
+        A, op::v0::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, 2);
     auto function = make_shared<Function>(OutputVector{depth_to_space}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -197,9 +199,9 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_block_first)
 
 NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_depth_first)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 8, 2, 2});
-    auto depth_to_space =
-        make_shared<op::DepthToSpace>(A, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 8, 2, 2});
+    auto depth_to_space = make_shared<op::v0::DepthToSpace>(
+        A, op::v0::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, 2);
     auto function = make_shared<Function>(OutputVector{depth_to_space}, ParameterVector{A});
 
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -220,9 +222,9 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_block_first)
     Shape dts_input_shape{2, 32, 2, 4, 2, 4};
     size_t block_size = 2;
 
-    auto dts_input = make_shared<op::Parameter>(element::f32, dts_input_shape);
-    auto depth_to_space = make_shared<op::DepthToSpace>(
-        dts_input, op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, block_size);
+    auto dts_input = make_shared<op::v0::Parameter>(element::f32, dts_input_shape);
+    auto depth_to_space = make_shared<op::v0::DepthToSpace>(
+        dts_input, op::v0::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST, block_size);
     auto dts_func = make_shared<Function>(OutputVector{depth_to_space}, ParameterVector{dts_input});
 
     auto dts_input_tensor = backend->create_tensor(element::f32, dts_input_shape);
@@ -237,9 +239,9 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_block_first)
     auto dts_result = read_vector<float>(dts_output_tensor);
 
     // use depth_to_space output as space_to_depth input
-    auto std_input = make_shared<op::Parameter>(element::f32, dts_output_shape);
-    auto space_to_depth = make_shared<op::SpaceToDepth>(
-        std_input, op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST, block_size);
+    auto std_input = make_shared<op::v0::Parameter>(element::f32, dts_output_shape);
+    auto space_to_depth = make_shared<op::v0::SpaceToDepth>(
+        std_input, op::v0::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST, block_size);
     auto std_func = make_shared<Function>(OutputVector{space_to_depth}, ParameterVector{std_input});
 
     auto std_input_tensor = backend->create_tensor(element::f32, dts_output_shape);
@@ -260,9 +262,9 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_depth_first)
     Shape dts_input_shape{2, 32, 2, 4, 2, 4};
     size_t block_size = 2;
 
-    auto dts_input = make_shared<op::Parameter>(element::f32, dts_input_shape);
-    auto depth_to_space = make_shared<op::DepthToSpace>(
-        dts_input, op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, block_size);
+    auto dts_input = make_shared<op::v0::Parameter>(element::f32, dts_input_shape);
+    auto depth_to_space = make_shared<op::v0::DepthToSpace>(
+        dts_input, op::v0::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST, block_size);
     auto dts_func = make_shared<Function>(OutputVector{depth_to_space}, ParameterVector{dts_input});
 
     auto dts_input_tensor = backend->create_tensor(element::f32, dts_input_shape);
@@ -277,9 +279,9 @@ NGRAPH_TEST(${BACKEND_NAME}, depth_to_space_space_to_depth_depth_first)
     auto dts_result = read_vector<float>(dts_output_tensor);
 
     // use depth_to_space output as space_to_depth input
-    auto std_input = make_shared<op::Parameter>(element::f32, dts_output_shape);
-    auto space_to_depth = make_shared<op::SpaceToDepth>(
-        std_input, op::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST, block_size);
+    auto std_input = make_shared<op::v0::Parameter>(element::f32, dts_output_shape);
+    auto space_to_depth = make_shared<op::v0::SpaceToDepth>(
+        std_input, op::v0::SpaceToDepth::SpaceToDepthMode::DEPTH_FIRST, block_size);
     auto std_func = make_shared<Function>(OutputVector{space_to_depth}, ParameterVector{std_input});
 
     auto std_input_tensor = backend->create_tensor(element::f32, dts_output_shape);

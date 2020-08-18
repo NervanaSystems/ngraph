@@ -40,8 +40,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -59,8 +60,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_2D_i32)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -78,8 +80,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_3D_i32)
 {
     Shape shape{3, 3, 4};
     Shape rshape{3, 4};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 1, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 1, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -101,8 +104,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_3D_i64)
 {
     Shape shape{3, 3, 4};
     Shape rshape{3, 4};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 1, element::i64), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 1, element::i64), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -124,8 +128,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_i64)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 3, element::i64), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 3, element::i64), ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -160,8 +165,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3_i64)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 3, element::i64), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 3, element::i64), ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -202,8 +208,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_4D_axis_3)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 3, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 3, element::i32), ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -244,8 +251,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_unsigned_max)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::u32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::u32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -264,8 +272,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_trivial)
 {
     Shape shape{4, 3}; // HW -> (0,1)
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -283,8 +292,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_2D_i32)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -302,8 +312,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_i32)
 {
     Shape shape{3, 3, 4};
     Shape rshape{3, 4};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 1, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 1, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -325,8 +336,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_i64)
 {
     Shape shape{3, 3, 4};
     Shape rshape{3, 4};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 1, element::i64), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 1, element::i64), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -348,8 +360,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_i64)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 3, element::i64), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 3, element::i64), ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::f32, shape);
@@ -384,8 +397,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_0) // Along Channels
 {
     Shape shape{3, 4, 2}; // CHW ->(0,1,2)
     Shape rshape{4, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -424,8 +438,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_1) // Along Height
 {
     Shape shape{3, 4, 2}; // CHW ->(0,1,2)
     Shape rshape{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 1, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 1, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -462,8 +477,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_3D_axis_2) // Along Width
 {
     Shape shape{3, 4, 2}; // CHW ->(0,1,2)
     Shape rshape{3, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 2, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 2, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -500,8 +516,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 3, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 3, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -546,8 +563,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_i32)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -565,8 +583,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_4D_axis_3_i64_in_i32)
 {
     Shape shape{2, 2, 5, 5}; // NCHW ->(0,1,2,3)
     Shape rshape{2, 2, 5};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 3, element::i64), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 3, element::i64), ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
     // Create some tensors for input/output
     auto a = backend->create_tensor(element::i32, shape);
@@ -609,8 +628,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmax_unsigned_max)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::u32, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMax>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::u32, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMax>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -628,8 +648,9 @@ NGRAPH_TEST(${BACKEND_NAME}, argmin_trivial_in_double)
 {
     Shape shape{4, 3};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto f = make_shared<Function>(make_shared<op::ArgMin>(A, 0, element::i32), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape);
+    auto f =
+        make_shared<Function>(make_shared<op::v0::ArgMin>(A, 0, element::i32), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

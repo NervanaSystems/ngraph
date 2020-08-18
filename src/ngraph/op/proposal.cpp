@@ -21,19 +21,19 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Proposal::type_info;
+constexpr NodeTypeInfo op::v0::Proposal::type_info;
 
-op::Proposal::Proposal(const Output<Node>& class_probs,
-                       const Output<Node>& class_logits,
-                       const Output<Node>& image_shape,
-                       const ProposalAttrs& attrs)
+op::v0::Proposal::Proposal(const Output<Node>& class_probs,
+                           const Output<Node>& class_logits,
+                           const Output<Node>& image_shape,
+                           const ProposalAttrs& attrs)
     : Op({class_probs, class_logits, image_shape})
     , m_attrs(attrs)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Proposal::validate_and_infer_types()
+void op::v0::Proposal::validate_and_infer_types()
 {
     set_input_is_relevant_to_shape(2);
 
@@ -84,13 +84,13 @@ void op::Proposal::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Proposal::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Proposal::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Proposal>(new_args.at(0), new_args.at(1), new_args.at(2), m_attrs);
 }
 
-bool op::Proposal::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Proposal::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("attrs.base_size", m_attrs.base_size);
     visitor.on_attribute("attrs.pre_nms_topn", m_attrs.pre_nms_topn);
