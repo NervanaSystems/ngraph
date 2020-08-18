@@ -51,6 +51,9 @@ if(EXISTS "${VCSREVISION}")
 endif()
 
 if(NEED_TO_BUILD_LLVM)
+    if (NGRAPH_USE_PREBUILT_LLVM)
+        message(FATAL_ERROR "LLVM: prebuilt is the wrong hash, expected ${LLVM_COMMIT_ID}")
+    endif()
     if(NOT NGRAPH_OVERWRITE_LLVM_ROOT)
         message(FATAL_ERROR "nGraph is not allowed overwrite contents at LLVM_ROOT: ${LLVM_ROOT} "
             "Set NGRAPH_OVERWRITE_LLVM_ROOT to ON if you would like to overwrite.")
