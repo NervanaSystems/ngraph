@@ -333,7 +333,7 @@ TEST(provenance, add_tags_above)
     auto a = make_shared<op::Add>(x, y);
     auto b = make_shared<op::Multiply>(x, y);
     auto c = make_shared<op::Subtract>(a, b);
-    auto d = make_shared<op::Abs>(c);
+    auto d = make_shared<op::v0::Abs>(c);
 
     // Add tags to Subtract and all nodes until Parameters (all above c, until params x, y)
     c->add_provenance_tags_above(OutputVector{x, y}, {"tag_above_c - until_params"});
@@ -496,7 +496,7 @@ TEST(provenance, empty_group)
 {
     auto p1 = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
     p1->add_provenance_tag("P1");
-    auto abs = make_shared<op::Abs>(p1);
+    auto abs = make_shared<op::v0::Abs>(p1);
     // Make sure group is empty
     abs->add_provenance_group_members_above({abs});
     abs->add_provenance_tag("abs");

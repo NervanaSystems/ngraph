@@ -153,7 +153,7 @@ TEST(cpu_fusion, cpu_fusion_pass_basic)
     auto dot = make_shared<op::Dot>(A, B);
     auto broadcast = make_shared<op::Broadcast>(C, dot->get_output_shape(0), AxisSet{0});
     auto add = dot + broadcast;
-    auto graph = make_shared<op::Abs>(add);
+    auto graph = make_shared<op::v0::Abs>(add);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
@@ -172,7 +172,7 @@ TEST(cpu_fusion, matmul_f64)
     auto C = make_shared<op::Parameter>(element::f64, shape_b);
 
     auto dot = make_shared<op::Dot>(A, B);
-    auto graph = make_shared<op::Abs>(dot);
+    auto graph = make_shared<op::v0::Abs>(dot);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
@@ -193,7 +193,7 @@ TEST(cpu_fusion, commutative_matmul_bias)
     auto dot = make_shared<op::Dot>(A, B);
     auto broadcast = make_shared<op::Broadcast>(C, dot->get_output_shape(0), AxisSet{0});
     auto add = broadcast + dot;
-    auto graph = make_shared<op::Abs>(add);
+    auto graph = make_shared<op::v0::Abs>(add);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{A, B, C});
@@ -215,7 +215,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_bias)
     auto broadcast = std::make_shared<op::Broadcast>(b, mmb->get_output_shape(0), AxisSet{0});
     auto add = mmb + broadcast;
 
-    auto graph = make_shared<op::Abs>(add);
+    auto graph = make_shared<op::v0::Abs>(add);
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
     auto func = make_shared<Function>(graph, ParameterVector{W, x, b});
@@ -235,7 +235,7 @@ TEST(cpu_fusion, cpu_fusion_pass_matmul_no_bias)
     auto reshape_w = std::make_shared<op::Reshape>(W, AxisVector{1, 0}, Shape{2, 4});
     auto reshape_x = std::make_shared<op::Reshape>(x, AxisVector{1, 0}, Shape{4, 1});
     auto re_dot = make_shared<op::Dot>(reshape_w, reshape_x);
-    auto graph = make_shared<op::Abs>(re_dot);
+    auto graph = make_shared<op::v0::Abs>(re_dot);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<runtime::cpu::pass::CPUFusion>(pass::FusionType::REGULAR_FUSIONS);
@@ -280,8 +280,8 @@ TEST(cpu_fusion, fuse_conv_relu)
     auto weights = std::make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
     auto convolution = std::make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
     auto relu = std::make_shared<op::Relu>(convolution);
-    auto abs_node =
-        std::make_shared<op::Abs>(std::make_shared<op::Abs>(std::make_shared<op::Abs>(relu)));
+    auto abs_node = std::make_shared<op::v0::Abs>(
+        std::make_shared<op::v0::Abs>(std::make_shared<op::v0::Abs>(relu)));
     auto func = make_shared<Function>(abs_node, ParameterVector{A, weights});
 
     pass::Manager pass_manager;
@@ -303,10 +303,10 @@ shared_ptr<Function> gen_conv_bias_add(bool param_input, bool result_output)
         make_shared<op::Broadcast>(bias, conv->get_output_shape(0), AxisSet{0, 2, 3});
     auto convbias = conv + bias_broadcast;
     auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
-    auto abs_B = make_shared<op::Abs>(B);
+    auto abs_B = make_shared<op::v0::Abs>(B);
     auto add =
         param_input ? make_shared<op::Add>(convbias, B) : make_shared<op::Add>(convbias, abs_B);
-    auto abs = make_shared<op::Abs>(add);
+    auto abs = make_shared<op::v0::Abs>(add);
 
     return result_output ? make_shared<Function>(add, ParameterVector{A, weights, bias, B})
                          : make_shared<Function>(abs, ParameterVector{A, weights, bias, B});
@@ -338,9 +338,9 @@ shared_ptr<Function> gen_conv_add(bool param_input, bool result_output)
     auto weights = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
     auto conv = make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
     auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
-    auto abs_B = make_shared<op::Abs>(B);
+    auto abs_B = make_shared<op::v0::Abs>(B);
     auto add = param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
-    auto abs = make_shared<op::Abs>(add);
+    auto abs = make_shared<op::v0::Abs>(add);
 
     return result_output ? make_shared<Function>(add, ParameterVector{A, weights, B})
                          : make_shared<Function>(abs, ParameterVector{A, weights, B});
@@ -393,7 +393,7 @@ TEST(cpu_fusion, weight_fusion)
                                                                     Strides{1, 1});
 
     auto conv_relu = std::make_shared<op::Relu>(conv);
-    auto conv_bprop_abs = std::make_shared<op::Abs>(conv_bprop);
+    auto conv_bprop_abs = std::make_shared<op::v0::Abs>(conv_bprop);
 
     auto f = make_shared<Function>(OutputVector{conv_relu, conv_bprop_abs},
                                    ParameterVector{param, data_conv, dummy_arg_conv_bprop});
@@ -447,7 +447,7 @@ static std::shared_ptr<ngraph::Function> make_forward_function()
     Shape window_shape{2, 2};
     auto max_pool = std::make_shared<op::MaxPool>(input, window_shape);
     auto neg = std::make_shared<op::Negative>(max_pool);
-    auto absn = std::make_shared<op::Abs>(max_pool);
+    auto absn = std::make_shared<op::v0::Abs>(max_pool);
     return std::make_shared<Function>(OutputVector{max_pool, neg, absn}, ParameterVector{input});
 }
 

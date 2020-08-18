@@ -232,8 +232,8 @@ namespace ngraph
 
             void register_builders_broadcast_cpp()
             {
-                REGISTER_CF_BUILDER(Broadcast);
-                REGISTER_OP_BUILDER(Broadcast);
+                REGISTER_CF_BUILDER(ngraph::op::v0::Broadcast);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Broadcast);
             }
         }
     }

@@ -46,10 +46,10 @@ bool ngraph::op::v1::Mod::visit_attributes(AttributeVisitor& visitor)
 
 OutputVector op::v1::Mod::decompose_op() const
 {
-    const auto dividend = make_shared<op::Abs>(input_value(0));
+    const auto dividend = make_shared<op::v0::Abs>(input_value(0));
     const auto dividend_sign = make_shared<op::Sign>(input_value(0));
     const auto dividend_et = dividend->get_output_element_type(0);
-    const auto divisor = make_shared<op::Abs>(input_value(1));
+    const auto divisor = make_shared<op::v0::Abs>(input_value(1));
 
     // truncated(a / b)
     auto division = make_shared<op::Convert>(

@@ -391,10 +391,10 @@ namespace ngraph
 
             void register_builders_max_pool_cpp()
             {
-                REGISTER_OP_BUILDER(MaxPool);
-                REGISTER_OP_BUILDER(MaxPoolBackprop);
-                REGISTER_OP_BUILDER(MaxPoolWithIndices);
-                REGISTER_OP_BUILDER(MaxPoolWithIndicesBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::MaxPool);
+                REGISTER_OP_BUILDER(ngraph::op::v0::MaxPoolBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::MaxPoolWithIndices);
+                REGISTER_OP_BUILDER(ngraph::op::MaxPoolWithIndicesBackprop);
             }
         }
     }

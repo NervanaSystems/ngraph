@@ -68,7 +68,7 @@ function<std::string(EMIT_ARGS)> runtime::gpu::GPU_Emitter::get_emit_function(co
 
 std::string runtime::gpu::GPU_Emitter::emit_Abs(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Abs>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::v0::Abs>(compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Acos(EMIT_ARGS)
@@ -81,7 +81,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
     return emit_elementwise<ngraph::op::Add>(compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_LogicalAnd(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::LogicalAnd>(
         compiled_function, function_name, node, args, out);
@@ -665,7 +665,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Negative(EMIT_ARGS)
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Not(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_LogicalNot(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::LogicalNot>(
         compiled_function, function_name, node, args, out);
@@ -699,7 +699,7 @@ std::string runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
     return compiled_function->add_to_runtime(index, function_name, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Or(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_LogicalOr(EMIT_ARGS)
 {
     return emit_elementwise<ngraph::op::LogicalOr>(
         compiled_function, function_name, node, args, out);
@@ -1373,7 +1373,7 @@ std::string runtime::gpu::GPU_Emitter::emit_StopGradient(EMIT_ARGS)
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_Xor(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_LogicalXor(EMIT_ARGS)
 {
     throw unsupported_op("Unsupported op '" + node->description() + "'");
 }

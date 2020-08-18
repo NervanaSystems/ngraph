@@ -71,7 +71,7 @@ NGRAPH_TEST(${BACKEND_NAME}, tensor_constant_with_op)
 {
     Shape shape{2, 2, 2};
     auto A = op::Constant::create(element::f32, shape, {-1, 2, 3, -4, 5, -6, -7, 8});
-    auto f = make_shared<Function>(make_shared<op::Abs>(A), ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::v0::Abs>(A), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -223,7 +223,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_topk_cpp() { REGISTER_OP_BUILDER(TopK); }
+            void register_builders_topk_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::TopK); }
         }
     }
 }

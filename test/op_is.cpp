@@ -26,7 +26,7 @@ namespace
 {
     void op_is_Abs()
     {
-        op::Abs node;
+        op::v0::Abs node;
         EXPECT_TRUE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());

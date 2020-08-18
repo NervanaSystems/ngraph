@@ -709,7 +709,7 @@ TEST(eval, evaluate_convert)
 TEST(eval, evaluate_abs)
 {
     auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto abs = make_shared<op::Abs>(p);
+    auto abs = make_shared<op::v0::Abs>(p);
     auto fun = make_shared<Function>(OutputVector{abs}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},

@@ -22,7 +22,7 @@ examples:
 .. code-block:: cpp 
 
     auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto absn = make_shared<op::Abs>(a);
+    auto absn = make_shared<op::v0::Abs>(a);
     auto neg1 = make_shared<op::Negative>(absn);
     auto neg2 = make_shared<op::Negative>(neg1);
 
@@ -35,7 +35,7 @@ examples:
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto c = a + b;
-    auto absn = make_shared<op::Abs>(c);
+    auto absn = make_shared<op::v0::Abs>(c);
     auto neg1 = make_shared<op::Negative>(absn);
     auto neg2 = make_shared<op::Negative>(neg1);
 

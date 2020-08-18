@@ -413,7 +413,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_abs)
 
     auto make_graph = [shape]() {
         auto X = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Abs>(X), ParameterVector{X});
+        return make_shared<Function>(make_shared<op::v0::Abs>(X), ParameterVector{X});
     };
 
     auto f = make_graph();

@@ -161,7 +161,7 @@ namespace
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_abs)
 {
-    make_unary_empty_test<op::Abs>("${BACKEND_NAME}");
+    make_unary_empty_test<op::v0::Abs>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_ceiling)
