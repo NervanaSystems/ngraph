@@ -83,7 +83,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Add(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_And(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::And>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::LogicalAnd>(
+        compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_ArgMax(EMIT_ARGS)
@@ -666,7 +667,8 @@ std::string runtime::gpu::GPU_Emitter::emit_Negative(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Not(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Not>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::LogicalNot>(
+        compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_NotEqual(EMIT_ARGS)
@@ -699,7 +701,8 @@ std::string runtime::gpu::GPU_Emitter::emit_OneHot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Or(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::Or>(compiled_function, function_name, node, args, out);
+    return emit_elementwise<ngraph::op::LogicalOr>(
+        compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Pad(EMIT_ARGS)

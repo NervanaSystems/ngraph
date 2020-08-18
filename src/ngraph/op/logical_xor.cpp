@@ -14,27 +14,33 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/or.hpp"
+#include "ngraph/op/logical_xor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/reference/or.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::LogicalOr::type_info;
+constexpr NodeTypeInfo op::v1::LogicalXor::type_info;
 
-op::v1::LogicalOr::LogicalOr(const Output<Node>& arg0,
-                             const Output<Node>& arg1,
-                             const AutoBroadcastSpec& auto_broadcast)
+op::v1::LogicalXor::LogicalXor(const Output<Node>& arg0,
+                               const Output<Node>& arg1,
+                               const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::v1::LogicalOr::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v1::LogicalXor::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
-    return make_shared<v1::LogicalOr>(new_args.at(0), new_args.at(1), this->get_autob());
+    return make_shared<v1::LogicalXor>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+bool ngraph::op::v1::LogicalXor::visit_attributes(AttributeVisitor& visitor)
+{
+    BinaryElementwiseLogical::visit_attributes(visitor);
+    return true;
 }
 
 namespace
@@ -45,19 +51,19 @@ namespace
                   const HostTensorPtr& out,
                   const op::AutoBroadcastSpec& broadcast_spec)
     {
-        runtime::reference::logical_or(arg0->get_data_ptr<ET>(),
-                                       arg1->get_data_ptr<ET>(),
-                                       out->get_data_ptr<ET>(),
-                                       arg0->get_shape(),
-                                       arg1->get_shape(),
-                                       broadcast_spec);
+        runtime::reference::logical_xor(arg0->get_data_ptr<ET>(),
+                                        arg1->get_data_ptr<ET>(),
+                                        out->get_data_ptr<ET>(),
+                                        arg0->get_shape(),
+                                        arg1->get_shape(),
+                                        broadcast_spec);
         return true;
     }
 
-    bool evaluate_logor(const HostTensorPtr& arg0,
-                        const HostTensorPtr& arg1,
-                        const HostTensorPtr& out,
-                        const op::AutoBroadcastSpec& broadcast_spec)
+    bool evaluate_logxor(const HostTensorPtr& arg0,
+                         const HostTensorPtr& arg1,
+                         const HostTensorPtr& out,
+                         const op::AutoBroadcastSpec& broadcast_spec)
     {
         bool rc = true;
         out->set_broadcast(broadcast_spec, arg0, arg1);
@@ -91,29 +97,8 @@ namespace
     }
 }
 
-bool op::v1::LogicalOr::evaluate(const HostTensorVector& outputs,
-                                 const HostTensorVector& inputs) const
+bool op::v1::LogicalXor::evaluate(const HostTensorVector& outputs,
+                                  const HostTensorVector& inputs) const
 {
-    return evaluate_logor(inputs[0], inputs[1], outputs[0], get_autob());
-}
-
-constexpr NodeTypeInfo op::v0::Or::type_info;
-
-op::v0::Or::Or(const Output<Node>& arg0,
-               const Output<Node>& arg1,
-               const AutoBroadcastSpec& auto_broadcast)
-    : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
-{
-    constructor_validate_and_infer_types();
-}
-
-shared_ptr<Node> op::v0::Or::clone_with_new_inputs(const OutputVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<v0::Or>(new_args.at(0), new_args.at(1), this->get_autob());
-}
-
-bool op::v0::Or::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
-{
-    return evaluate_logor(inputs[0], inputs[1], outputs[0], get_autob());
+    return evaluate_logxor(inputs[0], inputs[1], outputs[0], get_autob());
 }

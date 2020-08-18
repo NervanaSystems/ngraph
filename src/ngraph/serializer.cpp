@@ -45,8 +45,15 @@ static PartialShape read_partial_shape(json j);
 namespace
 {
 #define OBSOLETE_OPS                                                                               \
+    NGRAPH_OP(Add, 0)                                                                              \
+    NGRAPH_OP(And, 0)                                                                              \
+    NGRAPH_OP(Divide, 0)                                                                           \
     NGRAPH_OP(GetOutputElement, 0)                                                                 \
-    NGRAPH_OP(Add, 0)
+    NGRAPH_OP(Multiply, 0)                                                                         \
+    NGRAPH_OP(Not, 0)                                                                              \
+    NGRAPH_OP(Or, 0)                                                                               \
+    NGRAPH_OP(Subtract, 0)                                                                         \
+    NGRAPH_OP(Xor, 0)
 
     // This expands the op list in op_tbl.hpp into a list of enumerations that look like this:
     // Abs,
@@ -922,7 +929,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::And_v0:
         {
-            node = make_shared<op::And>(
+            node = make_shared<op::LogicalAnd>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -1334,7 +1341,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         case OP_TYPEID::Divide_v0:
         {
             bool pythondiv = get_or_default(node_js, "pythondiv", true);
-            node = make_shared<op::v0::Divide>(
+            node = make_shared<op::v1::Divide>(
                 args[0], args[1], pythondiv, read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -1867,7 +1874,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Multiply_v0:
         {
-            node = make_shared<op::v0::Multiply>(
+            node = make_shared<op::v1::Multiply>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -1912,7 +1919,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Not_v0:
         {
-            node = make_shared<op::Not>(args[0]);
+            node = make_shared<op::v1::LogicalNot>(args[0]);
             break;
         }
         case OP_TYPEID::OneHot_v0:
@@ -1933,7 +1940,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Or_v0:
         {
-            node = make_shared<op::v0::Or>(
+            node = make_shared<op::v1::LogicalOr>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -2498,7 +2505,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Xor_v0:
         {
-            node = make_shared<op::v0::Xor>(
+            node = make_shared<op::v1::LogicalXor>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -2674,15 +2681,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::AllReduce_v0: { break;
-    }
-    case OP_TYPEID::And_v0:
-    {
-        auto tmp = static_cast<const op::And*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
     }
     case OP_TYPEID::Any_v0:
     {
@@ -2944,18 +2942,6 @@ json JSONSerializer::serialize_node(const Node& n)
         node["type"] = write_element_type(tmp->get_output_element_type(0));
         node["mode"] = tmp->get_mode();
         node["block_size"] = tmp->get_block_size();
-        break;
-    }
-    case OP_TYPEID::Divide_v0:
-    {
-        const op::util::BinaryElementwiseArithmetic* bea_node = nullptr;
-        auto tmp = static_cast<const op::v0::Divide*>(&n);
-        bea_node = tmp;
-        node["pythondiv"] = tmp->is_pythondiv();
-        if (bea_node != nullptr && bea_node->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(bea_node->get_autob());
-        }
         break;
     }
     case OP_TYPEID::Dot_v0:
@@ -3245,16 +3231,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Multiply_v0:
-    {
-        const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v0::Multiply*>(&n);
-        if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::MVN_v0:
     {
         auto tmp = static_cast<const op::MVN*>(&n);
@@ -3282,8 +3258,6 @@ json JSONSerializer::serialize_node(const Node& n)
         }
         break;
     }
-    case OP_TYPEID::Not_v0: { break;
-    }
     case OP_TYPEID::OneHot_v0:
     {
         if (op_version == 0)
@@ -3296,15 +3270,6 @@ json JSONSerializer::serialize_node(const Node& n)
         {
             auto tmp = static_cast<const op::v1::OneHot*>(&n);
             node["axis"] = tmp->get_axis();
-        }
-        break;
-    }
-    case OP_TYPEID::Or_v0:
-    {
-        auto tmp = static_cast<const op::v0::Or*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
         }
         break;
     }
@@ -3562,15 +3527,6 @@ json JSONSerializer::serialize_node(const Node& n)
     }
     case OP_TYPEID::StopGradient_v0: { break;
     }
-    case OP_TYPEID::Subtract_v0:
-    {
-        auto tmp = static_cast<const op::Subtract*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
-    }
     case OP_TYPEID::Sum_v0:
     {
         auto tmp = static_cast<const op::Sum*>(&n);
@@ -3666,15 +3622,6 @@ json JSONSerializer::serialize_node(const Node& n)
         break;
     }
     case OP_TYPEID::Unsqueeze_v0: { break;
-    }
-    case OP_TYPEID::Xor_v0:
-    {
-        auto tmp = static_cast<const op::v0::Xor*>(&n);
-        if (tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
-        {
-            node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
-        }
-        break;
     }
     case OP_TYPEID::UnknownOp:
     default:

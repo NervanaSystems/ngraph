@@ -610,9 +610,9 @@ TEST(provenance, opset1_upgrade_pass_graph)
     auto y = make_shared<op::Parameter>(element::i32, PartialShape{2, 3, 4});
 
     auto a = make_shared<op::v1::Add>(x, y);
-    auto b = make_shared<op::v0::Subtract>(x, y);
+    auto b = make_shared<op::v1::Subtract>(x, y);
     auto c = make_shared<op::v0::Abs>(b);
-    auto d = make_shared<op::v0::Multiply>(a, b);
+    auto d = make_shared<op::v1::Multiply>(a, b);
 
     auto f = make_shared<Function>(d, ParameterVector{x, y});
 
@@ -623,17 +623,7 @@ TEST(provenance, opset1_upgrade_pass_graph)
     for (auto node : f->get_ordered_ops())
     {
         auto tags = node->get_provenance_tags();
-        if (as_type_ptr<op::v1::Multiply>(node))
-        {
-            EXPECT_EQ(tags.size(), 1);
-            EXPECT_TRUE(tags.find("<Opset1_Upgrade (v0 Multiply)>") != tags.end());
-        }
-        else if (as_type_ptr<op::v1::Subtract>(node))
-        {
-            EXPECT_EQ(tags.size(), 1);
-            EXPECT_TRUE(tags.find("<Opset1_Upgrade (v0 Subtract)>") != tags.end());
-        }
-        else if (as_type_ptr<op::v0::Abs>(node))
+        if (as_type_ptr<op::v0::Abs>(node))
         {
             EXPECT_TRUE(tags.empty());
         }
@@ -661,17 +651,7 @@ TEST(provenance, opset0_downgrade_pass_graph)
     for (auto node : f->get_ordered_ops())
     {
         auto tags = node->get_provenance_tags();
-        if (as_type_ptr<op::v0::Multiply>(node))
-        {
-            EXPECT_EQ(tags.size(), 1);
-            EXPECT_TRUE(tags.find("<Opset0_Downgrade (v1 Multiply)>") != tags.end());
-        }
-        else if (as_type_ptr<op::v0::Subtract>(node))
-        {
-            EXPECT_EQ(tags.size(), 1);
-            EXPECT_TRUE(tags.find("<Opset0_Downgrade (v1 Subtract)>") != tags.end());
-        }
-        else if (as_type_ptr<op::v0::Abs>(node))
+        if (as_type_ptr<op::v0::Abs>(node))
         {
             EXPECT_TRUE(tags.empty());
         }

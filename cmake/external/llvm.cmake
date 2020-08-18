@@ -16,10 +16,6 @@
 
 include(FetchContent)
 
-set(LLVM_COMMIT_ID e31cfc4cd3e393300002e9c519787c96e3b67bab)
-set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${LLVM_COMMIT_ID}.zip)
-set(LLVM_ARCHIVE_URL_HASH db42aa67d214bfe07bc9977fc28eaaf7cc06b127)
-
 set(NGRAPH_EXTERNAL_LLVM_BUILD_DIR "" CACHE STRING "Path to prebuilt LLVM build tree.")
 
 if(NGRAPH_USE_PREBUILT_MLIR)
@@ -30,6 +26,7 @@ if(NOT ("${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}" STREQUAL ""))
     set(TRY_EXTERNAL_LLVM_BUILD TRUE)
 endif()
 
+set(LLVM_COMMIT_ID 189c0833dfd654f08a8655ca765e11e8890a92ae)
 if(TRY_EXTERNAL_LLVM_BUILD)
     set(VCSREVISION "${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}/include/llvm/Support/VCSRevision.h")
     if(EXISTS "${VCSREVISION}")
@@ -67,6 +64,9 @@ if(USE_EXTERNAL_LLVM_BUILD)
 else()
     message(STATUS "LLVM: Building LLVM from source")
     message(STATUS "LLVM: Fetching source")
+
+    set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${LLVM_COMMIT_ID}.zip)
+    set(LLVM_ARCHIVE_URL_HASH b7d5601e46ea98b40cb653f9517b00ec8e14d0b5)
 
     FetchContent_Declare(
         llvm
