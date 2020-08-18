@@ -39,7 +39,7 @@
 // #undef NGRAPH_OP
 //
 // This sample expands to a list like this:
-// ngraph::op::Abs,
+// ngraph::op::v0::Abs,
 // ngraph::op::Acos,
 // ...
 //

@@ -110,7 +110,10 @@ namespace ngraph
                 }
             }
 
-            void register_builders_quantized_matmul_cpp() { REGISTER_OP_BUILDER(QuantizedMatmul); }
+            void register_builders_quantized_matmul_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::QuantizedMatmul);
+            }
         }
     }
 }

@@ -224,8 +224,8 @@ namespace ngraph
 
             void register_builders_avg_pool_cpp()
             {
-                REGISTER_OP_BUILDER(AvgPool);
-                REGISTER_OP_BUILDER(AvgPoolBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::AvgPool);
+                REGISTER_OP_BUILDER(ngraph::op::v0::AvgPoolBackprop);
             }
         }
     }

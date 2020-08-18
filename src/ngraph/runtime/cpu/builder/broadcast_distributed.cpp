@@ -49,7 +49,7 @@ namespace ngraph
 
             void register_builders_broadcast_distributed_cpp()
             {
-                REGISTER_OP_BUILDER(BroadcastDistributed);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BroadcastDistributed);
             }
         }
     }

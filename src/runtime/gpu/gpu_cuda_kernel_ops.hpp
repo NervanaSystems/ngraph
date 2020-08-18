@@ -36,7 +36,7 @@ namespace ngraph
             struct CudaOpMap;
 
             template <>
-            struct CudaOpMap<ngraph::op::Abs>
+            struct CudaOpMap<ngraph::op::v0::Abs>
             {
                 static constexpr const char* op = "fabsf";
                 static constexpr const char* math_kernel = nullptr;

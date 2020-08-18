@@ -87,7 +87,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_add_cpp() { REGISTER_OP_BUILDER(Add); }
+            void register_builders_add_cpp() { REGISTER_OP_BUILDER(ngraph::op::v1::Add); }
         }
     }
 }

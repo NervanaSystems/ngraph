@@ -295,7 +295,7 @@ TEST(pattern, matcher)
     ASSERT_TRUE(n.match(a, a));
     ASSERT_EQ(n.get_matched_values(), (OutputVector{a}));
 
-    auto abs = make_shared<op::Abs>(a);
+    auto abs = make_shared<op::v0::Abs>(a);
     auto any = std::make_shared<pattern::op::Skip>(a);
     ASSERT_TRUE(n.match(any, abs));
     ASSERT_EQ(n.get_matched_values(), (OutputVector{abs, a}));
@@ -400,7 +400,7 @@ TEST(pattern, matcher)
 
     ASSERT_FALSE(n.match(label, a - b));
 
-    ASSERT_TRUE(n.match(make_shared<op::Abs>(label), make_shared<op::Abs>(add)));
+    ASSERT_TRUE(n.match(make_shared<op::v0::Abs>(label), make_shared<op::v0::Abs>(add)));
     ASSERT_EQ(n.get_pattern_map()[label], add);
 
     // Correct argument order
@@ -512,7 +512,7 @@ TEST(pattern, previous_matches)
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto pattern = std::make_shared<pattern::op::Label>(b);
-    auto abs = make_shared<op::Abs>(a);
+    auto abs = make_shared<op::v0::Abs>(a);
     auto add = abs + b;
     {
         Matcher n(pattern + b);
@@ -534,15 +534,15 @@ TEST(pattern, test_sort)
 
     auto a = make_shared<op::Parameter>(element::i32, shape);
     auto b = make_shared<op::Parameter>(element::i32, shape);
-    auto abs1 = make_shared<op::Abs>(a);
-    auto abs2 = make_shared<op::Abs>(b);
+    auto abs1 = make_shared<op::v0::Abs>(a);
+    auto abs2 = make_shared<op::v0::Abs>(b);
     auto add = abs1 + abs2;
 
     auto pa = make_shared<op::Parameter>(element::i32, shape);
     auto pb = make_shared<op::Parameter>(element::i32, shape);
-    auto pabs1 = make_shared<op::Abs>(pa);
+    auto pabs1 = make_shared<op::v0::Abs>(pa);
     auto pabs1_label = std::make_shared<pattern::op::Label>(pabs1);
-    auto pabs2 = make_shared<op::Abs>(b);
+    auto pabs2 = make_shared<op::v0::Abs>(b);
     auto padd = pabs1_label + pabs2;
 
     {
@@ -563,7 +563,7 @@ TEST(pattern, recurrent_pattern)
     auto b = make_shared<op::Parameter>(element::i32, shape);
     auto rpattern = std::make_shared<pattern::op::Label>(b);
     auto iconst0 = construct_constant_node(0);
-    auto abs = make_shared<op::Abs>(a);
+    auto abs = make_shared<op::v0::Abs>(a);
     auto add1 = iconst0 + b;
     auto add2 = iconst0 + add1;
     auto add3 = iconst0 + add2;
@@ -687,12 +687,12 @@ TEST(pattern, recurrent_graph_rewrite)
         auto add_a1 = a + iconst0;
         auto add_a2 = add_a1 + iconst0;
         auto add_a3 = add_a2 + iconst0;
-        auto abs_add_a3 = std::make_shared<op::Abs>(add_a3);
+        auto abs_add_a3 = std::make_shared<op::v0::Abs>(add_a3);
 
         auto b = make_shared<op::Parameter>(element::i32, shape);
         auto add_b1 = b + iconst0;
         auto add_b2 = add_b1 + iconst0;
-        auto abs_add_b2 = std::make_shared<op::Abs>(add_b2);
+        auto abs_add_b2 = std::make_shared<op::v0::Abs>(add_b2);
 
         auto graph = abs_add_a3 * abs_add_b2;
 
@@ -743,18 +743,18 @@ TEST(pattern, is_contained_match)
 {
     Shape shape{};
     auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto absn = make_shared<op::Abs>(a);
+    auto absn = make_shared<op::v0::Abs>(a);
     TestMatcher n;
 
     auto label_a = std::make_shared<pattern::op::Label>(a);
-    auto label_abs = make_shared<op::Abs>(a);
+    auto label_abs = make_shared<op::v0::Abs>(a);
     ASSERT_TRUE(n.match(label_abs, absn));
     auto result_absn = make_shared<op::Result>(absn);
     ASSERT_TRUE(n.is_contained_match());
 
-    auto absn2 = make_shared<op::Abs>(absn);
+    auto absn2 = make_shared<op::v0::Abs>(absn);
     auto result_absn2 = make_shared<op::Result>(absn2);
-    auto label_abs2 = make_shared<op::Abs>(label_abs);
+    auto label_abs2 = make_shared<op::v0::Abs>(label_abs);
     ASSERT_TRUE(n.match(label_abs2, absn2));
     ASSERT_FALSE(n.is_contained_match());
 }

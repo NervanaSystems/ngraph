@@ -56,13 +56,13 @@ NGRAPH_TEST(${BACKEND_NAME}, replace_slice_matrix_inplace)
 {
     Shape shape_a{4, 4};
     auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto abs_A = make_shared<op::Abs>(A);
+    auto abs_A = make_shared<op::v0::Abs>(A);
 
     Shape shape_b{3, 2};
     auto B = make_shared<op::Parameter>(element::f32, shape_b);
     Shape shape_r{4, 4};
     auto r = make_shared<op::ReplaceSlice>(abs_A, B, Coordinate{0, 1}, Coordinate{3, 3});
-    auto abs_r = make_shared<op::Abs>(r);
+    auto abs_r = make_shared<op::v0::Abs>(r);
     auto f = make_shared<Function>(abs_r, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

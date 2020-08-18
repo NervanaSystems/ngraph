@@ -84,8 +84,8 @@ namespace ngraph
 
             void register_builders_reduce_function_cpp()
             {
-                REGISTER_OP_BUILDER(Any);
-                REGISTER_OP_BUILDER(All);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Any);
+                REGISTER_OP_BUILDER(ngraph::op::v0::All);
             }
         }
     }

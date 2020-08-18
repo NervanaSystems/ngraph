@@ -818,10 +818,10 @@ namespace
             make_shared<op::Broadcast>(bias, conv->get_output_shape(0), AxisSet{0, 2, 3});
         auto convbias = conv + bias_broadcast;
         auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
-        auto abs_B = make_shared<op::Abs>(B);
+        auto abs_B = make_shared<op::v0::Abs>(B);
         auto add =
             param_input ? make_shared<op::Add>(convbias, B) : make_shared<op::Add>(convbias, abs_B);
-        auto abs = make_shared<op::Abs>(add);
+        auto abs = make_shared<op::v0::Abs>(add);
 
         return result_output ? make_shared<Function>(add, ParameterVector{A, weights, bias, B})
                              : make_shared<Function>(abs, ParameterVector{A, weights, bias, B});
@@ -853,9 +853,9 @@ namespace
         auto weights = make_shared<op::Parameter>(element::f32, Shape{1, 1, 1, 1});
         auto conv = make_shared<op::Convolution>(A, weights, Strides{1, 1}, Strides{1, 1});
         auto B = make_shared<op::Parameter>(element::f32, Shape{2, 1, 2, 2});
-        auto abs_B = make_shared<op::Abs>(B);
+        auto abs_B = make_shared<op::v0::Abs>(B);
         auto add = param_input ? make_shared<op::Add>(conv, B) : make_shared<op::Add>(conv, abs_B);
-        auto abs = make_shared<op::Abs>(add);
+        auto abs = make_shared<op::v0::Abs>(add);
 
         return result_output ? make_shared<Function>(add, ParameterVector{A, weights, B})
                              : make_shared<Function>(abs, ParameterVector{A, weights, B});
@@ -2220,14 +2220,14 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_fuse_update_slice_inplace)
 {
     auto make_function = [](bool fuse = true) {
         auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
-        auto abs = std::make_shared<op::Abs>(input);
+        auto abs = std::make_shared<op::v0::Abs>(input);
         Shape lower_bounds{1, 0, 0};
         Shape upper_bounds{2, 32, 16};
         auto slice = std::make_shared<op::Slice>(abs, lower_bounds, upper_bounds);
         auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 32, 16});
         auto add = std::make_shared<op::Add>(slice, update);
         auto rs = std::make_shared<op::ReplaceSlice>(abs, add, lower_bounds, upper_bounds);
-        auto out = std::make_shared<op::Abs>(rs);
+        auto out = std::make_shared<op::v0::Abs>(rs);
         if (fuse)
         {
             return make_shared<Function>(OutputVector{out}, ParameterVector{input, update});
@@ -2319,7 +2319,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_fuse_update_slice_strided_inplace)
 {
     auto make_function = [](bool fuse = true) {
         auto input = std::make_shared<op::Parameter>(element::f32, Shape{4, 32, 16});
-        auto abs = std::make_shared<op::Abs>(input);
+        auto abs = std::make_shared<op::v0::Abs>(input);
         Shape lower_bounds{1, 0, 0};
         Shape upper_bounds{2, 32, 16};
         Strides strides{1, 4, 2};
@@ -2327,7 +2327,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_fuse_update_slice_strided_inplace)
         auto update = std::make_shared<op::Parameter>(element::f32, Shape{1, 8, 8});
         auto add = std::make_shared<op::Add>(slice, update);
         auto rs = std::make_shared<op::ReplaceSlice>(abs, add, lower_bounds, upper_bounds, strides);
-        auto out = std::make_shared<op::Abs>(rs);
+        auto out = std::make_shared<op::v0::Abs>(rs);
         if (fuse)
         {
             return make_shared<Function>(OutputVector{out}, ParameterVector{input, update});

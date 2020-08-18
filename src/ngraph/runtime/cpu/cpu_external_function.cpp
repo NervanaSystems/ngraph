@@ -319,7 +319,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Dot), &runtime::cpu::CPU_Emitter::emit<op::Dot>},
     {TI(ngraph::op::Multiply), &runtime::cpu::CPU_Emitter::emit<op::Multiply>},
     {TI(ngraph::op::Parameter), &runtime::cpu::CPU_Emitter::nop},
-    {TI(ngraph::op::Abs), &runtime::cpu::CPU_Emitter::emit<op::Abs>},
+    {TI(ngraph::op::v0::Abs), &runtime::cpu::CPU_Emitter::emit<op::v0::Abs>},
     {TI(ngraph::op::Any), &runtime::cpu::CPU_Emitter::emit<op::Any>},
     {TI(ngraph::op::All), &runtime::cpu::CPU_Emitter::emit<op::All>},
     {TI(ngraph::op::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::BatchMatMul>},
