@@ -152,7 +152,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_cumsum_cpp() { REGISTER_OP_BUILDER(CumSum); }
+            void register_builders_cumsum_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::CumSum); }
         }
     }
 }

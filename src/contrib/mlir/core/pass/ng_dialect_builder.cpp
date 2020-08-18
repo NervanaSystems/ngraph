@@ -472,8 +472,8 @@ mlir::Operation*
 
 template <>
 mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::Abs>(NgDialectConversionPass& NgDialectObj,
-                                                       const ngraph::Node* ngNode)
+    NgDialectConversionPass::createOp<ngraph::op::v0::Abs>(NgDialectConversionPass& NgDialectObj,
+                                                           const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGAbsOp>(ngNode);
 }
@@ -716,7 +716,7 @@ mlir::Operation* NgDialectConversionPass::createGenericOp(const ngraph::Node* ng
 const NgDialectConversionPass::MLIRCompOpMap& NgDialectConversionPass::getOpDispatcher()
 {
     static MLIRCompOpMap opDispatcher{
-#define MLIR_OP(OP) {ngraph::op::OP::type_info, &NgDialectConversionPass::createOp<ngraph::op::OP>},
+#define MLIR_OP(OP) {OP::type_info, &NgDialectConversionPass::createOp<OP>},
 #include "contrib/mlir/core/ops_supported.inc"
     };
     return opDispatcher;

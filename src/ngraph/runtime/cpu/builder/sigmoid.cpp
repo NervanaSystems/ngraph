@@ -216,10 +216,10 @@ namespace ngraph
 
             void register_builders_sigmoid_cpp()
             {
-                REGISTER_OP_BUILDER(Sigmoid);
-                REGISTER_OP_BUILDER(SigmoidBackprop);
-                REGISTER_OP_BUILDER(SigmoidMultiply);
-                REGISTER_OP_BUILDER(SigmoidMultiplyBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Sigmoid);
+                REGISTER_OP_BUILDER(ngraph::op::v0::SigmoidBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::SigmoidMultiply);
+                REGISTER_OP_BUILDER(ngraph::op::SigmoidMultiplyBackprop);
             }
         }
     }

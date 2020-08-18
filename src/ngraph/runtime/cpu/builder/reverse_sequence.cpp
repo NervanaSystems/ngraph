@@ -79,7 +79,10 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_reverse_sequence_cpp() { REGISTER_OP_BUILDER(ReverseSequence); }
+            void register_builders_reverse_sequence_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::ReverseSequence);
+            }
         }
     }
 }

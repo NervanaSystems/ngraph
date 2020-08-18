@@ -62,7 +62,7 @@ static string s_manifest = "${MANIFEST}";
 
 namespace
 {
-    class UnhandledOp : public ngraph::op::Abs
+    class UnhandledOp : public ngraph::op::v0::Abs
     {
     public:
         UnhandledOp(const std::shared_ptr<Node>& arg)
@@ -1231,7 +1231,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto divn = a / b;
     auto min = make_shared<op::Minimum>(c, a);
     auto max = make_shared<op::Maximum>(a, c);
-    auto absn = make_shared<op::Abs>(c);
+    auto absn = make_shared<op::v0::Abs>(c);
     auto neg = make_shared<op::Negative>(c);
     auto sqrt = make_shared<op::Sqrt>(d);
     auto neg_sqrt = make_shared<op::Sqrt>(c);
@@ -1275,7 +1275,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::Divide>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Minimum>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Maximum>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::Abs>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v0::Abs>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Negative>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Sqrt>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::Relu>(func), 0);

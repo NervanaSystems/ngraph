@@ -248,8 +248,8 @@ namespace ngraph
 
             void register_builders_reshape_cpp()
             {
-                REGISTER_CF_BUILDER(Reshape);
-                REGISTER_OP_BUILDER(Reshape);
+                REGISTER_CF_BUILDER(ngraph::op::v0::Reshape);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Reshape);
             }
         }
     }

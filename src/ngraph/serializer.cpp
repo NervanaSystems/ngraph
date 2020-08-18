@@ -902,7 +902,7 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         {
         case OP_TYPEID::Abs_v0:
         {
-            node = make_shared<op::Abs>(args[0]);
+            node = make_shared<op::v0::Abs>(args[0]);
             break;
         }
         case OP_TYPEID::Acos_v0:

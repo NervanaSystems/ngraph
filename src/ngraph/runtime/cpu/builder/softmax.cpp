@@ -207,7 +207,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_softmax_cpp() { REGISTER_OP_BUILDER(Softmax); }
+            void register_builders_softmax_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Softmax); }
         }
     }
 }

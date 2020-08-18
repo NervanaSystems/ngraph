@@ -172,7 +172,7 @@ static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node
     initialize_ops_to_cse_handlers()
 {
     return unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
-        {{TI(op::Abs), cse_unarywise},
+        {{TI(op::v0::Abs), cse_unarywise},
          {TI(op::Acos), cse_unarywise},
          {TI(op::Asin), cse_unarywise},
          {TI(op::Atan), cse_unarywise},

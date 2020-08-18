@@ -195,7 +195,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_rnn_cpp() { REGISTER_OP_BUILDER(Rnn); }
+            void register_builders_rnn_cpp() { REGISTER_OP_BUILDER(ngraph::op::Rnn); }
         }
     }
 }

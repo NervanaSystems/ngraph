@@ -269,8 +269,8 @@ namespace ngraph
 
             void register_builders_quantized_dot_cpp()
             {
-                REGISTER_OP_BUILDER(QuantizedDotBias);
-                REGISTER_OP_BUILDER(QuantizedDot);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedDotBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedDot);
             }
         }
     }

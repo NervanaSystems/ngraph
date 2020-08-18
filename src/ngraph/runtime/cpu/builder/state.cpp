@@ -139,7 +139,10 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_state_cpp() { REGISTER_OP_BUILDER(GenerateMask); }
+            void register_builders_state_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::GenerateMask);
+            }
         }
     }
 }

@@ -73,7 +73,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_erf_cpp() { REGISTER_OP_BUILDER(Erf); }
+            void register_builders_erf_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Erf); }
         }
     }
 }

@@ -164,7 +164,10 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_random_uniform_cpp() { REGISTER_OP_BUILDER(RandomUniform); }
+            void register_builders_random_uniform_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::RandomUniform);
+            }
         }
     }
 }
