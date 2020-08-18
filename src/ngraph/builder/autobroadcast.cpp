@@ -177,7 +177,7 @@ namespace ngraph
             if (!broadcast_axes.empty())
             {
                 broadcasted_node =
-                    make_shared<op::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
+                    make_shared<op::v0::Broadcast>(broadcasted_node, output_shape, broadcast_axes);
             }
 
             return broadcasted_node;
@@ -228,11 +228,11 @@ namespace ngraph
             auto trimmed_value = value;
             if (value_shape != trimmed_value_shape)
             {
-                trimmed_value = make_shared<op::Reshape>(
+                trimmed_value = make_shared<op::v0::Reshape>(
                     value, get_default_order(value_shape), trimmed_value_shape);
             }
 
-            auto value_bcast = make_shared<op::Broadcast>(trimmed_value, output_shape, axes);
+            auto value_bcast = make_shared<op::v0::Broadcast>(trimmed_value, output_shape, axes);
 
             return move(value_bcast);
         }
@@ -362,13 +362,13 @@ namespace ngraph
             // Remove dimensions with length=1 from front
             new_right_shape.erase(begin(new_right_shape), next(begin(new_right_shape), num_ones));
 
-            auto reshape_right =
-                make_shared<op::Reshape>(right, get_default_order(right_shape), new_right_shape);
+            auto reshape_right = make_shared<op::v0::Reshape>(
+                right, get_default_order(right_shape), new_right_shape);
 
             // Move broadcast start axis parameter to right
             start_match_axis += num_ones;
 
-            auto broadcast_right = make_shared<op::Broadcast>(
+            auto broadcast_right = make_shared<op::v0::Broadcast>(
                 reshape_right,
                 left_shape,
                 calculate_broadcast_axes(left_shape, new_right_shape, start_match_axis));
@@ -484,14 +484,15 @@ namespace ngraph
                 vector<size_t> mapping(input_shape.size());
                 iota(begin(mapping), end(mapping), start_match_axis);
 
-                return op::Constant::create(element::i64, Shape{mapping.size()}, mapping);
+                return op::v0::Constant::create(element::i64, Shape{mapping.size()}, mapping);
             }
 
             Output<Node> get_axes_mapping_output(const Shape& output_shape,
                                                  const AxisSet& broadcast_axes)
             {
                 vector<size_t> axes_mapping{get_axes_mapping(output_shape, broadcast_axes)};
-                return op::Constant::create(element::i64, Shape{axes_mapping.size()}, axes_mapping);
+                return op::v0::Constant::create(
+                    element::i64, Shape{axes_mapping.size()}, axes_mapping);
             }
 
             Output<Node> make_broadcast(const Output<Node>& node,
@@ -500,7 +501,8 @@ namespace ngraph
             {
                 return make_shared<op::v1::Broadcast>(
                     node,
-                    op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    op::v0::Constant::create(
+                        element::i64, Shape{target_shape.size()}, target_shape),
                     get_axes_mapping_output(target_shape, broadcast_axes));
             }
 
@@ -510,7 +512,8 @@ namespace ngraph
             {
                 return make_shared<op::v1::Broadcast>(
                     node,
-                    op::Constant::create(element::i64, Shape{target_shape.size()}, target_shape),
+                    op::v0::Constant::create(
+                        element::i64, Shape{target_shape.size()}, target_shape),
                     get_axes_mapping_output(target_shape, node.get_shape(), start_match_axis));
             }
         }

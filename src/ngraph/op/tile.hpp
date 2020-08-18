@@ -49,6 +49,5 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Tile;
     }
 }

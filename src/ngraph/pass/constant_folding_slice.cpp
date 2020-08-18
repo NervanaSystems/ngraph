@@ -22,8 +22,8 @@ using namespace std;
 using namespace ngraph;
 
 template <class T>
-shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
-                                             shared_ptr<op::Slice> slice)
+shared_ptr<op::v0::Constant> fold_constant_slice(shared_ptr<op::v0::Constant> constant,
+                                                 shared_ptr<op::v0::Slice> slice)
 {
     const Shape& out_shape = slice->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
@@ -37,14 +37,14 @@ shared_ptr<op::Constant> fold_constant_slice(shared_ptr<op::Constant> constant,
                                  slice->get_strides(),
                                  out_shape);
 
-    return make_shared<op::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
+    return make_shared<op::v0::Constant>(constant->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_slice()
 {
     auto data_label = make_shared<pattern::op::Label>(
-        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto slice_op = make_shared<op::Slice>(
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::v0::Constant>());
+    auto slice_op = make_shared<op::v0::Slice>(
         data_label, Coordinate{1, 1, 1}, Coordinate{2, 3, 4}, Strides{1, 1, 2});
 
     auto constant_slice_callback = [data_label](pattern::Matcher& m) {
@@ -53,13 +53,14 @@ void pass::ConstantFolding::construct_constant_slice()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
-        auto slice = m.get_match_root_as<op::Slice>();
-        NGRAPH_CHECK(slice, "match root node ", *m.get_match_root(), " not of type `op::Slice`");
+        auto data_node = static_pointer_cast<op::v0::Constant>(pattern_map[data_label]);
+        auto slice = m.get_match_root_as<op::v0::Slice>();
+        NGRAPH_CHECK(
+            slice, "match root node ", *m.get_match_root(), " not of type `op::v0::Slice`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(slice));
 
-        std::shared_ptr<op::Constant> replacement;
+        std::shared_ptr<op::v0::Constant> replacement;
 
         switch (slice->get_output_element_type(0))
         {

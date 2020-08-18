@@ -298,7 +298,7 @@ void op::util::BroadcastBase::generate_adjoints(autodiff::Adjoints& adjoints,
     auto broadcast_axes = get_broadcast_axes();
     if (broadcast_axes.first)
     {
-        adjoints.add_delta(x, make_shared<op::Sum>(delta, broadcast_axes.second));
+        adjoints.add_delta(x, make_shared<op::v0::Sum>(delta, broadcast_axes.second));
     }
     else
     {

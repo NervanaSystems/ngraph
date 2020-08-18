@@ -41,7 +41,7 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
     Shape shape_r1{1, 3};
 
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
-    auto reshape1 = make_shared<op::Reshape>(op, AxisVector{0}, shape_r1);
+    auto reshape1 = make_shared<op::v0::Reshape>(op, AxisVector{0}, shape_r1);
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_identity_reshape_pattern against node = "
@@ -49,8 +49,8 @@ void pass::ReshapeElimination::construct_identity_reshape_pattern()
         auto pattern_map = m.get_pattern_value_map();
         auto gop = pattern_map[op];
 
-        auto r1 = m.get_match_root_as<op::Reshape>();
-        NGRAPH_CHECK(r1, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
+        auto r1 = m.get_match_root_as<op::v0::Reshape>();
+        NGRAPH_CHECK(r1, "match root node ", *m.get_match_root(), " not of type `op::v0::Reshape`");
 
         if (r1->get_output_shape(0) != gop.get_shape())
         {
@@ -80,8 +80,8 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
     Shape shape_r1{1, 3};
 
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
-    auto reshape1 = make_shared<op::Reshape>(op, AxisVector{0}, shape_r1);
-    auto reshape2 = make_shared<op::Reshape>(reshape1, AxisVector{0, 1}, shape_op);
+    auto reshape1 = make_shared<op::v0::Reshape>(op, AxisVector{0}, shape_r1);
+    auto reshape2 = make_shared<op::v0::Reshape>(reshape1, AxisVector{0, 1}, shape_op);
 
     auto callback = [op](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_reshapex2_pattern against node = "
@@ -90,9 +90,9 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 
         auto gop = m.get_pattern_value_map()[op];
 
-        auto r2 = m.get_match_root_as<op::Reshape>();
-        NGRAPH_CHECK(r2, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
-        auto r1 = static_pointer_cast<op::Reshape>(r2->get_argument(0));
+        auto r2 = m.get_match_root_as<op::v0::Reshape>();
+        NGRAPH_CHECK(r2, "match root node ", *m.get_match_root(), " not of type `op::v0::Reshape`");
+        auto r1 = static_pointer_cast<op::v0::Reshape>(r2->get_argument(0));
 
         if (gop.get_shape() != m.get_match_value().get_shape())
         {
@@ -103,9 +103,9 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
                 r2->get_input_order() == get_default_order(r1->get_output_shape(0)) &&
                 r1->get_users().size() == 1)
             {
-                m.get_match_value().replace(
-                    make_shared<op::Reshape>(gop, r1->get_input_order(), r2->get_output_shape(0))
-                        ->output(0));
+                m.get_match_value().replace(make_shared<op::v0::Reshape>(
+                                                gop, r1->get_input_order(), r2->get_output_shape(0))
+                                                ->output(0));
                 return true;
             }
             else
@@ -153,18 +153,18 @@ void pass::ReshapeElimination::construct_reshapex2_pattern()
 void pass::ReshapeElimination::construct_dot_transpose_pattern()
 {
     // dot(A,B).T = dot (B.T, A.T)
-    auto dot_pred = [](Output<Node> n) { return is_type<op::Dot>(n.get_node()); };
+    auto dot_pred = [](Output<Node> n) { return is_type<op::v0::Dot>(n.get_node()); };
 
     auto pdot = make_shared<pattern::op::Label>(element::f32, Shape{2, 1}, dot_pred);
-    auto preshape = make_shared<op::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
+    auto preshape = make_shared<op::v0::Reshape>(pdot, AxisVector{1, 0}, Shape{1, 2});
 
     auto callback = [](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for construct_dot_transpose_pattern against node = "
                      << m.get_match_root()->get_name();
 
-        auto mtranspose = m.get_match_root_as<op::Reshape>();
+        auto mtranspose = m.get_match_root_as<op::v0::Reshape>();
         NGRAPH_CHECK(
-            mtranspose, "match root node ", *m.get_match_root(), " not of type `op::Reshape`");
+            mtranspose, "match root node ", *m.get_match_root(), " not of type `op::v0::Reshape`");
         // this also checks the rank
         if (mtranspose->get_input_order() != AxisVector{1, 0})
         {
@@ -190,7 +190,7 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
         }
         auto reshape0_shape =
             Shape{arg0->get_output_shape(0).at(1), arg0->get_output_shape(0).at(0)};
-        auto reshape0 = make_shared<op::Reshape>(arg0, AxisVector{1, 0}, reshape0_shape);
+        auto reshape0 = make_shared<op::v0::Reshape>(arg0, AxisVector{1, 0}, reshape0_shape);
 
         auto arg1 = mdot->get_argument(1);
         if (arg1->get_output_shape(0).size() != 2)
@@ -201,9 +201,9 @@ void pass::ReshapeElimination::construct_dot_transpose_pattern()
         }
         auto reshape1_shape =
             Shape{arg1->get_output_shape(0).at(1), arg1->get_output_shape(0).at(0)};
-        auto reshape1 = make_shared<op::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
+        auto reshape1 = make_shared<op::v0::Reshape>(arg1, AxisVector{1, 0}, reshape1_shape);
 
-        auto tdot = make_shared<op::Dot>(reshape1, reshape0);
+        auto tdot = make_shared<op::v0::Dot>(reshape1, reshape0);
         m.get_match_value().replace(tdot->output(0));
         return true;
     };
@@ -218,7 +218,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
     Shape shape_r{1, 3};
 
     auto op = make_shared<pattern::op::Label>(element::f32, shape_op);
-    auto reshape = make_shared<op::Reshape>(op, AxisVector{0}, shape_r);
+    auto reshape = make_shared<op::v0::Reshape>(op, AxisVector{0}, shape_r);
     auto reshape_label =
         make_shared<pattern::op::Label>(reshape, get_no_fan_out_function(), OutputVector{reshape});
 
@@ -238,7 +238,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         // Need to check if the user of the last bound op is a reshape since the last reshape is
         // allowed to have fan-out but the matcher will discard any reshape if it has fan-out
         auto user_of_last_bound_reshape_op = last_bound_reshape_op.get_node()->get_users(true)[0];
-        if (is_type<op::Reshape>(user_of_last_bound_reshape_op))
+        if (is_type<op::v0::Reshape>(user_of_last_bound_reshape_op))
         {
             reshape_node_vector.push_back(user_of_last_bound_reshape_op);
             last_bound_reshape_op = reshape_node_vector.back();
@@ -257,7 +257,7 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
         for (auto it = std::next(reshape_node_vector.begin()); it != reshape_node_vector.end();
              it++)
         {
-            auto r = as_type_ptr<op::Reshape>(it->get_node_shared_ptr());
+            auto r = as_type_ptr<op::v0::Reshape>(it->get_node_shared_ptr());
 
             // Check that the input to r is the last reshape stored in the
             // subpattern vector
@@ -293,14 +293,15 @@ void pass::RecurrentReshapeElimination::construct_recurrent_reshape()
             }
 
             auto first_reshape =
-                as_type_ptr<op::Reshape>(sub_pattern.front().get_node_shared_ptr());
+                as_type_ptr<op::v0::Reshape>(sub_pattern.front().get_node_shared_ptr());
             auto input_to_first_reshape = first_reshape->get_argument(0);
-            auto last_reshape = as_type_ptr<op::Reshape>(sub_pattern.back().get_node_shared_ptr());
+            auto last_reshape =
+                as_type_ptr<op::v0::Reshape>(sub_pattern.back().get_node_shared_ptr());
 
             auto new_input_order = first_reshape->get_input_order();
             auto new_out_shape = last_reshape->get_output_shape(0);
 
-            auto new_reshape = std::make_shared<op::Reshape>(
+            auto new_reshape = std::make_shared<op::v0::Reshape>(
                 input_to_first_reshape, new_input_order, new_out_shape);
 
             replace_node(last_reshape, new_reshape);

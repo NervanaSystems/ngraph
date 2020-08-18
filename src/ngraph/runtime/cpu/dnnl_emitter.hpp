@@ -81,7 +81,8 @@ namespace ngraph
             {
                 auto qc = static_cast<const OP*>(node);
                 std::vector<float> scale_val = {1.0f};
-                auto scale_const_op = as_type_ptr<ngraph::op::Constant>(qc->get_arguments()[index]);
+                auto scale_const_op =
+                    as_type_ptr<ngraph::op::v0::Constant>(qc->get_arguments()[index]);
                 if (scale_const_op != nullptr)
                 {
                     scale_val = scale_const_op->template get_vector<float>();
@@ -92,9 +93,9 @@ namespace ngraph
 
             template <typename OP,
                       typename std::enable_if<
-                          (std::is_same<OP, ngraph::op::Convolution>::value ||
-                           std::is_same<OP, ngraph::op::QuantizedConvolution>::value ||
-                           std::is_same<OP, ngraph::op::GroupConvolution>::value),
+                          (std::is_same<OP, ngraph::op::v0::Convolution>::value ||
+                           std::is_same<OP, ngraph::op::v0::QuantizedConvolution>::value ||
+                           std::is_same<OP, ngraph::op::v0::GroupConvolution>::value),
                           std::nullptr_t>::type = nullptr>
             bool has_relu(const ngraph::Node* /* node */)
             {
@@ -103,9 +104,9 @@ namespace ngraph
 
             template <typename OP,
                       typename std::enable_if<
-                          (!std::is_same<OP, ngraph::op::Convolution>::value &&
-                           !std::is_same<OP, ngraph::op::QuantizedConvolution>::value &&
-                           !std::is_same<OP, ngraph::op::GroupConvolution>::value),
+                          (!std::is_same<OP, ngraph::op::v0::Convolution>::value &&
+                           !std::is_same<OP, ngraph::op::v0::QuantizedConvolution>::value &&
+                           !std::is_same<OP, ngraph::op::v0::GroupConvolution>::value),
                           std::nullptr_t>::type = nullptr>
             bool has_relu(const ngraph::Node* node)
             {
@@ -251,8 +252,8 @@ namespace ngraph
 
                     dnnl::post_ops ops;
 
-                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
-                        has_relu<ngraph::op::QuantizedDotBias>(node))
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::v0::QuantizedDotBias>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope
@@ -261,13 +262,13 @@ namespace ngraph
                             ops_scale, dnnl::algorithm::eltwise_relu, ops_alpha, ops_beta);
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedDot>())
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedDot>())
                     {
                         auto scale_val = extract_scale_value<OP>(node, 2);
                         return build_quantized_inner_product_forward(
                             data_desc, weights_desc, result_desc, scale_val[0], ops);
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedDotBias>())
+                    else if (std::is_same<OP, ngraph::op::v0::QuantizedDotBias>())
                     {
                         auto scale_val = extract_scale_value<OP>(node, 3);
                         auto bias_desc = dnnl_utils::get_input_dnnl_md(node, 2);
@@ -513,24 +514,24 @@ namespace ngraph
                 size_t get_scale_index()
                 {
                     size_t index = 0;
-                    if (std::is_same<OP, ngraph::op::Quantize>() ||
-                        std::is_same<OP, ngraph::op::Dequantize>())
+                    if (std::is_same<OP, ngraph::op::v0::Quantize>() ||
+                        std::is_same<OP, ngraph::op::v0::Dequantize>())
                     {
                         index = 1;
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
+                    else if (std::is_same<OP, ngraph::op::v0::QuantizedConvolution>() ||
                              std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
-                             std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>())
+                             std::is_same<OP, ngraph::op::v0::QuantizedConvolutionRelu>())
                     {
                         index = 2;
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
-                             std::is_same<OP, ngraph::op::QuantizedDotBias>())
+                    else if (std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBias>() ||
+                             std::is_same<OP, ngraph::op::v0::QuantizedDotBias>())
                     {
                         index = 3;
                     }
-                    else if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
-                             std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    else if (std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasAdd>() ||
+                             std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>())
                     {
                         index = 4;
                     }
@@ -544,7 +545,7 @@ namespace ngraph
                     auto index = get_scale_index<OP>();
                     std::vector<T> scale_val = {0};
                     auto scale_const_op =
-                        as_type_ptr<ngraph::op::Constant>(node->get_arguments()[index]);
+                        as_type_ptr<ngraph::op::v0::Constant>(node->get_arguments()[index]);
                     if (scale_const_op != nullptr)
                     {
                         scale_val = scale_const_op->template get_vector<T>();
@@ -556,13 +557,13 @@ namespace ngraph
                 template <typename OP>
                 bool has_bias()
                 {
-                    if (std::is_same<OP, ngraph::op::ConvolutionBias>() ||
-                        std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::ConvolutionBiasBackpropFiltersBias>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>() ||
-                        std::is_same<OP, ngraph::op::QuantizedDotBias>() ||
+                    if (std::is_same<OP, ngraph::op::v0::ConvolutionBias>() ||
+                        std::is_same<OP, ngraph::op::v0::ConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::v0::ConvolutionBiasBackpropFiltersBias>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBias>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedDotBias>() ||
                         std::is_same<OP, ngraph::op::GroupConvolutionBias>())
                     {
                         return true;
@@ -576,11 +577,11 @@ namespace ngraph
                 template <typename OP>
                 bool is_quantized_conv()
                 {
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolution>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionRelu>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBias>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedConvolution>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionRelu>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBias>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>())
                     {
                         return true;
                     }
@@ -594,7 +595,7 @@ namespace ngraph
                 bool is_quantized_inner_product()
                 {
                     if (std::is_same<OP, ngraph::op::QuantizedMatmul>() ||
-                        std::is_same<OP, ngraph::op::QuantizedDotBias>())
+                        std::is_same<OP, ngraph::op::v0::QuantizedDotBias>())
                     {
                         return true;
                     }
@@ -669,17 +670,18 @@ namespace ngraph
                 {
                     dnnl::post_ops ops;
 
-                    if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
+                    if (std::is_same<OP, ngraph::op::v0::ConvolutionBiasAdd>() ||
                         std::is_same<OP, ngraph::op::ConvolutionAdd>())
                     {
                         ops.append_sum(1.f);
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>())
                     {
                         auto sum_scale_val =
-                            extract_scale_value<ngraph::op::QuantizedConvolutionBiasAdd>(node, 5);
+                            extract_scale_value<ngraph::op::v0::QuantizedConvolutionBiasAdd>(node,
+                                                                                             5);
                         ops.append_sum(sum_scale_val[0]);
                     }
 
@@ -737,8 +739,8 @@ namespace ngraph
                 {
                     dnnl::post_ops ops;
 
-                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
-                        has_relu<ngraph::op::QuantizedDotBias>(node))
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::v0::QuantizedDotBias>(node))
                     {
                         const float ops_scale = 1.f;
                         const float ops_alpha = -0.f; // relu negative slope
@@ -898,7 +900,7 @@ namespace ngraph
                     }
 
                     dnnl::algorithm convolution_algo = dnnl_utils::get_conv_algo();
-                    if (std::is_same<OP, ngraph::op::ConvolutionBackpropData>())
+                    if (std::is_same<OP, ngraph::op::v0::ConvolutionBackpropData>())
                     {
                         auto weights_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                         CHANGE_FORMAT
@@ -917,7 +919,7 @@ namespace ngraph
                             DNNL_DIMS(convolution->get_padding_below_forward()),
                             DNNL_DIMS(convolution->get_padding_above_forward()) PADDING);
                     }
-                    else if (std::is_same<OP, ngraph::op::ConvolutionBackpropFilters>())
+                    else if (std::is_same<OP, ngraph::op::v0::ConvolutionBackpropFilters>())
                     {
                         auto src_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                         auto diff_dst_desc = dnnl_utils::get_input_dnnl_md(node, 1);

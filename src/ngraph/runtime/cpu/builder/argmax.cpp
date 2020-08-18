@@ -30,11 +30,12 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ArgMax)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ArgMax)
             {
                 auto& functors = external_function->get_functors();
 
-                const ngraph::op::ArgMax* argmax = static_cast<const ngraph::op::ArgMax*>(node);
+                const ngraph::op::v0::ArgMax* argmax =
+                    static_cast<const ngraph::op::v0::ArgMax*>(node);
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());

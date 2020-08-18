@@ -162,8 +162,5 @@ namespace ngraph
                 bool m_with_relu;
             };
         }
-        using v0::QuantizedConvolutionBias;
-        using v0::QuantizedConvolutionBiasAdd;
-        using v0::QuantizedConvolutionBiasSignedAdd;
     }
 }

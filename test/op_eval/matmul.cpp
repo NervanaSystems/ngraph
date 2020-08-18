@@ -28,9 +28,9 @@ using namespace ngraph;
 
 TEST(op_eval, matmul_dynamic_1D_arg)
 {
-    auto arg0 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // inner vector contains shapes for arg0, arg1, matmul expected result
@@ -59,9 +59,9 @@ TEST(op_eval, matmul_dynamic_1D_arg)
 
 TEST(op_eval, matmul_dynamic_0_elem_arg)
 {
-    auto arg0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // inner vector contains shapes for arg0, arg1, matmul expected result
@@ -85,9 +85,9 @@ TEST(op_eval, matmul_dynamic_0_elem_arg)
 
 TEST(op_eval, matmul_dynamic_2D_args)
 {
-    auto arg0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // tensor shape for arg0, arg1, matmul result
@@ -107,9 +107,9 @@ TEST(op_eval, matmul_dynamic_2D_args)
 
 TEST(op_eval, matmul_dynamic_2D_transpose0)
 {
-    auto arg0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, true, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, true, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // tensor shapes for arg0, arg1, matmul result
@@ -128,9 +128,9 @@ TEST(op_eval, matmul_dynamic_2D_transpose0)
 
 TEST(op_eval, matmul_dynamic_2D_transpose1)
 {
-    auto arg0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, true);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, true);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // tensor shapes for arg0, arg1, matmul result
@@ -149,9 +149,9 @@ TEST(op_eval, matmul_dynamic_2D_transpose1)
 
 TEST(op_eval, matmul_dynamic_same_batch_size)
 {
-    auto arg0 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // tensor shapes for arg0, arg1, matmul result
@@ -177,9 +177,9 @@ TEST(op_eval, matmul_dynamic_same_batch_size)
 
 TEST(op_eval, matmul_dynamic_broadcast)
 {
-    auto arg0 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // inner vector contains shapes for arg0, arg1, matmul expected result
@@ -229,9 +229,9 @@ TEST(op_eval, matmul_dynamic_broadcast)
 
 TEST(op_eval, matmul_dynamic_broadcast_transpose0)
 {
-    auto arg0 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, true, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, true, false);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // inner vector contains shapes for arg0, arg1, matmul expected result
@@ -265,9 +265,9 @@ TEST(op_eval, matmul_dynamic_broadcast_transpose0)
 
 TEST(op_eval, matmul_dynamic_broadcast_transpose1)
 {
-    auto arg0 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto arg1 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto matmul = make_shared<op::MatMul>(arg0, arg1, false, true);
+    auto arg0 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto matmul = make_shared<op::v0::MatMul>(arg0, arg1, false, true);
     auto fun = make_shared<Function>(OutputVector{matmul}, ParameterVector{arg0, arg1});
 
     // inner vector contains shapes for arg0, arg1, matmul expected result

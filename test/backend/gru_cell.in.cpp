@@ -55,13 +55,13 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_bias_clip)
     float clip = 2.88f;
     bool linear_before_reset = false;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size});
 
     const auto gru_cell = make_shared<op::v3::GRUCell>(X,
                                                        H_t,
@@ -128,13 +128,14 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_linear_before_reset)
     float clip = 2.88f;
     bool linear_before_reset = true;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B =
+        make_shared<op::v0::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
     const auto gru_cell = make_shared<op::v3::GRUCell>(X,
                                                        H_t,
@@ -200,13 +201,14 @@ NGRAPH_TEST(${BACKEND_NAME}, gru_cell_activation_function)
     float clip = 2.88f;
     bool linear_before_reset = true;
 
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{batch_size, input_size});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, input_size});
     const auto W =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, input_size});
     const auto R =
-        make_shared<op::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
-    const auto H_t = make_shared<op::Parameter>(element::f32, Shape{batch_size, hidden_size});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
+        make_shared<op::v0::Parameter>(element::f32, Shape{gates_count * hidden_size, hidden_size});
+    const auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{batch_size, hidden_size});
+    const auto B =
+        make_shared<op::v0::Parameter>(element::f32, Shape{(gates_count + 1) * hidden_size});
 
     const auto gru_cell = make_shared<op::v3::GRUCell>(X,
                                                        H_t,

@@ -58,15 +58,15 @@ bool validate_list(const NodeVector& nodes)
 
 shared_ptr<Function> make_test_graph()
 {
-    auto arg_0 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_2 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_3 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_4 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_5 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_0 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_1 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_2 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_3 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_4 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_5 = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
     auto t0 = make_shared<op::v1::Add>(arg_0, arg_1);
-    auto t1 = make_shared<op::Dot>(t0, arg_2);
+    auto t1 = make_shared<op::v0::Dot>(t0, arg_2);
     auto t2 = make_shared<op::v1::Multiply>(t0, arg_3);
 
     auto t3 = make_shared<op::v1::Add>(t1, arg_4);

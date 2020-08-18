@@ -30,9 +30,9 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, multiple_result)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape);
     auto A_add_B = make_shared<op::v1::Add>(A, B);
     auto A_add_B_mul_C = make_shared<op::v1::Multiply>(A_add_B, C);
 

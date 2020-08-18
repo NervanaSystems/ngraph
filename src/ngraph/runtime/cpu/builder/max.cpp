@@ -32,7 +32,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Max)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Max)
             {
                 BUILD_REDUCTION_FUNCTOR(Max, max);
             }

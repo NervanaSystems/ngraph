@@ -75,8 +75,8 @@ namespace
         {
             oet = element::boolean;
         }
-        auto A = make_shared<op::Parameter>(iet, Shape{2, 3});
-        auto B = make_shared<op::Parameter>(iet, Shape{3});
+        auto A = make_shared<op::v0::Parameter>(iet, Shape{2, 3});
+        auto B = make_shared<op::v0::Parameter>(iet, Shape{3});
         auto f = make_shared<Function>(make_shared<optype>(A, B, autob), ParameterVector{A, B});
 
         auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -115,29 +115,33 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
                                                      {5, 12, 21, 20, 30, 42});
     check_auto_bcast<op::v1::Divide, float, float>({{4, 5, 6, 7, 8, 9}, {1, 2, 3}},
                                                    {4, 2.5f, 2, 7, 4, 3});
-    check_auto_bcast<op::Maximum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                {1, 5, 8, 4, 5, 8});
-    check_auto_bcast<op::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                {1, 2, 3, 1, 5, 6});
-    check_auto_bcast<op::Power, float, float>({{1, 2, 3, 4, 5, 6}, {1, 2, 3}},
-                                              {1, 4, 27, 4, 25, 216},
-                                              op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY),
-                                              true);
+    check_auto_bcast<op::v0::Maximum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                    {1, 5, 8, 4, 5, 8});
+    check_auto_bcast<op::v0::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                    {1, 2, 3, 1, 5, 6});
+    check_auto_bcast<op::v0::Power, float, float>(
+        {{1, 2, 3, 4, 5, 6}, {1, 2, 3}},
+        {1, 4, 27, 4, 25, 216},
+        op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY),
+        true);
 
     check_auto_bcast<op::v1::LogicalAnd, char, char>({{1, 0, 1, 0, 0, 1}, {1, 0, 1}},
                                                      {1, 0, 1, 0, 0, 1});
     check_auto_bcast<op::v1::LogicalOr, char, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}},
                                                     {1, 0, 1, 1, 1, 1});
 
-    check_auto_bcast<op::Equal, uint8_t, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 1, 0, 0, 0, 0});
-    check_auto_bcast<op::Greater, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 0, 0, 1, 0, 0});
-    check_auto_bcast<op::GreaterEq, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                 {1, 0, 0, 1, 1, 0});
-    check_auto_bcast<op::Less, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 0, 0, 1});
-    check_auto_bcast<op::LessEq, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                {1, 1, 1, 0, 1, 1});
-    check_auto_bcast<op::NotEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                  {0, 1, 1, 1, 0, 1});
+    check_auto_bcast<op::v0::Equal, uint8_t, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}},
+                                                   {1, 1, 0, 0, 0, 0});
+    check_auto_bcast<op::v0::Greater, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                   {0, 0, 0, 1, 0, 0});
+    check_auto_bcast<op::v0::GreaterEq, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                     {1, 0, 0, 1, 1, 0});
+    check_auto_bcast<op::v0::Less, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                  {0, 1, 1, 0, 0, 1});
+    check_auto_bcast<op::v0::LessEq, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                    {1, 1, 1, 0, 1, 1});
+    check_auto_bcast<op::v0::NotEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                      {0, 1, 1, 1, 0, 1});
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
@@ -151,28 +155,28 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
         {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {5, 12, 21, 20, 30, 42}, autob);
     check_auto_bcast<op::v1::Divide, float, float>(
         {{4, 5, 6, 7, 8, 9}, {1, 2, 3}}, {4, 2.5f, 2, 7, 4, 3}, autob);
-    check_auto_bcast<op::Maximum, float, float>(
+    check_auto_bcast<op::v0::Maximum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 5, 8, 4, 5, 8}, autob);
-    check_auto_bcast<op::Minimum, float, float>(
+    check_auto_bcast<op::v0::Minimum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 2, 3, 1, 5, 6}, autob);
-    check_auto_bcast<op::Power, float, float>(
+    check_auto_bcast<op::v0::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}}, {1, 4, 27, 4, 25, 216}, autob, true);
     check_auto_bcast<op::v1::LogicalAnd, char, char>(
         {{1, 0, 1, 0, 0, 1}, {1, 0, 1}}, {1, 0, 1, 0, 0, 1}, autob);
     check_auto_bcast<op::v1::LogicalOr, char, char>(
         {{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 0, 1, 1, 1, 1}, autob);
 
-    check_auto_bcast<op::Equal, uint8_t, char>(
+    check_auto_bcast<op::v0::Equal, uint8_t, char>(
         {{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 1, 0, 0, 0, 0}, autob);
-    check_auto_bcast<op::Greater, float, char>(
+    check_auto_bcast<op::v0::Greater, float, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 0, 0, 1, 0, 0}, autob);
-    check_auto_bcast<op::GreaterEq, float, char>(
+    check_auto_bcast<op::v0::GreaterEq, float, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 0, 0, 1, 1, 0}, autob);
-    check_auto_bcast<op::Less, uint8_t, char>(
+    check_auto_bcast<op::v0::Less, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 0, 0, 1}, autob);
-    check_auto_bcast<op::LessEq, uint8_t, char>(
+    check_auto_bcast<op::v0::LessEq, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 1, 1, 0, 1, 1}, autob);
-    check_auto_bcast<op::NotEqual, uint8_t, char>(
+    check_auto_bcast<op::v0::NotEqual, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 1, 0, 1}, autob);
 }
 
@@ -180,8 +184,8 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
 {
     auto pshape_a = PartialShape::dynamic();
     auto pshape_b = PartialShape::dynamic();
-    auto a = make_shared<op::Parameter>(element::f32, pshape_a);
-    auto b = make_shared<op::Parameter>(element::f32, pshape_b);
+    auto a = make_shared<op::v0::Parameter>(element::f32, pshape_a);
+    auto b = make_shared<op::v0::Parameter>(element::f32, pshape_b);
 
     op::AutoBroadcastSpec autob = op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, -1);
     auto f = make_shared<Function>(make_shared<op::v1::Add>(a, b, autob), ParameterVector{a, b});
@@ -224,8 +228,8 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd_dynamic)
 
 NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_string_cast)
 {
-    auto a = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto b = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto a = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto b = make_shared<op::v0::Parameter>(element::f32, Shape{1});
 
     auto add = make_shared<op::v1::Add>(a, b, "NUMPY");
     ASSERT_EQ(add->get_autob(), op::AutoBroadcastType::NUMPY);

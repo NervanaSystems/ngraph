@@ -23,20 +23,20 @@ using namespace ngraph;
 
 TEST(type_prop, scale_shift_no_broadcast)
 {
-    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto shift = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    auto data = make_shared<op::v0::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::v0::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::v0::Parameter>(element::f64, Shape{3, 6});
+    auto scale_shift_func = make_shared<op::v0::ScaleShift>(data, scale, shift);
     EXPECT_EQ(scale_shift_func->get_output_element_type(0), element::f64);
     EXPECT_EQ(scale_shift_func->get_output_shape(0), (Shape{3, 6}));
 }
 
 TEST(type_prop, scale_shift)
 {
-    auto data = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto scale = make_shared<op::Parameter>(element::f64, Shape{3, 6});
-    auto shift = make_shared<op::Parameter>(element::f64, Shape{});
-    auto scale_shift_func = make_shared<op::ScaleShift>(data, scale, shift);
+    auto data = make_shared<op::v0::Parameter>(element::f64, Shape{3, 6});
+    auto scale = make_shared<op::v0::Parameter>(element::f64, Shape{3, 6});
+    auto shift = make_shared<op::v0::Parameter>(element::f64, Shape{});
+    auto scale_shift_func = make_shared<op::v0::ScaleShift>(data, scale, shift);
     EXPECT_EQ(scale_shift_func->get_output_element_type(0), element::f64);
     EXPECT_EQ(scale_shift_func->get_output_shape(0), (Shape{3, 6}));
 }

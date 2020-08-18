@@ -31,7 +31,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
-        if (auto bnbp = std::dynamic_pointer_cast<op::BatchNormTrainingBackprop>(n))
+        if (auto bnbp = std::dynamic_pointer_cast<op::v0::BatchNormTrainingBackprop>(n))
         {
             // batch norm bprop annotations are used to indicate if variance is in inverse stddev
             // format
@@ -40,10 +40,10 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
 
             // pass must be run prior to GOE elimination
             // collect all batch norm inputs to batch norm backward op
-            std::vector<std::shared_ptr<op::BatchNormTraining>> bns;
+            std::vector<std::shared_ptr<op::v0::BatchNormTraining>> bns;
             for (auto& arg : bnbp->get_arguments())
             {
-                if (auto bn = std::dynamic_pointer_cast<op::BatchNormTraining>(arg))
+                if (auto bn = std::dynamic_pointer_cast<op::v0::BatchNormTraining>(arg))
                 {
                     bns.push_back(bn);
                 }
@@ -52,7 +52,7 @@ bool ngraph::runtime::gpu::pass::BatchNormCache::run_on_function(
             // only replace if some of the inputs to backprop are from fprop directly
             if (bns.size())
             {
-                if (auto target = std::dynamic_pointer_cast<op::BatchNormTraining>(bns.front()))
+                if (auto target = std::dynamic_pointer_cast<op::v0::BatchNormTraining>(bns.front()))
                 {
                     auto replacement = std::make_shared<op::gpu::BatchNormTrainingWithStats>(
                         target->get_eps_value(),

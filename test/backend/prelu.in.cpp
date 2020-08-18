@@ -50,9 +50,9 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu)
 {
     Shape shape{3, 2};
     Shape rshape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto prelu = make_shared<op::PRelu>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto prelu = make_shared<op::v0::PRelu>(A, B);
     auto f0 = make_shared<Function>(OutputVector{prelu}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -73,9 +73,9 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu_shared_slope)
 {
     Shape shape{3, 2};
     Shape rshape{};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto prelu = make_shared<op::PRelu>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto prelu = make_shared<op::v0::PRelu>(A, B);
     auto f0 = make_shared<Function>(OutputVector{prelu}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -96,9 +96,9 @@ NGRAPH_TEST(${BACKEND_NAME}, prelu_negative_slope)
 {
     Shape shape{3, 2};
     Shape rshape{};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, rshape);
-    auto prelu = make_shared<op::PRelu>(A, B);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, rshape);
+    auto prelu = make_shared<op::v0::PRelu>(A, B);
     auto f0 = make_shared<Function>(OutputVector{prelu}, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

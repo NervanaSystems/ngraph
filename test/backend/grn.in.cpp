@@ -49,10 +49,10 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
 {
     const Shape data_shape{1, 2, 3, 4};
-    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
     float bias{1e-6f};
 
-    const auto grn = make_shared<op::GRN>(data, bias);
+    const auto grn = make_shared<op::v0::GRN>(data, bias);
     const auto function = make_shared<Function>(OutputVector{grn}, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -73,10 +73,10 @@ NGRAPH_TEST(${BACKEND_NAME}, grn_4d)
 NGRAPH_TEST(${BACKEND_NAME}, grn_2d_with_bias)
 {
     const Shape data_shape{3, 4};
-    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
+    const auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
     float bias{2.25f};
 
-    const auto grn = make_shared<op::GRN>(data, bias);
+    const auto grn = make_shared<op::v0::GRN>(data, bias);
     const auto function = make_shared<Function>(OutputVector{grn}, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

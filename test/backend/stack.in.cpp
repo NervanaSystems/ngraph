@@ -49,13 +49,13 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, stack_matrix_rowise)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_c{2, 2};
-    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape_c);
     Shape shape_r{3, 2, 2};
-    auto f = make_shared<Function>(make_shared<op::Stack>(OutputVector{A, B, C}, 0),
+    auto f = make_shared<Function>(make_shared<op::v0::Stack>(OutputVector{A, B, C}, 0),
                                    ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -79,13 +79,13 @@ NGRAPH_TEST(${BACKEND_NAME}, stack_matrix_rowise)
 NGRAPH_TEST(${BACKEND_NAME}, stack_matrix_colwise)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_c{2, 2};
-    auto C = make_shared<op::Parameter>(element::f32, shape_c);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape_c);
     Shape shape_r{2, 3, 2};
-    auto f = make_shared<Function>(make_shared<op::Stack>(OutputVector{A, B, C}, 1),
+    auto f = make_shared<Function>(make_shared<op::v0::Stack>(OutputVector{A, B, C}, 1),
                                    ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -109,13 +109,13 @@ NGRAPH_TEST(${BACKEND_NAME}, stack_matrix_colwise)
 NGRAPH_TEST(${BACKEND_NAME}, stack_negative_axis)
 {
     auto pshape_a = PartialShape::dynamic();
-    auto A = make_shared<op::Parameter>(element::f32, pshape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, pshape_a);
     auto pshape_b = PartialShape::dynamic();
-    auto B = make_shared<op::Parameter>(element::f32, pshape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, pshape_b);
     auto pshape_c = PartialShape::dynamic();
-    auto C = make_shared<op::Parameter>(element::f32, pshape_c);
+    auto C = make_shared<op::v0::Parameter>(element::f32, pshape_c);
     auto pshape_r = PartialShape::dynamic();
-    auto f = make_shared<Function>(make_shared<op::Stack>(OutputVector{A, B, C}, -1),
+    auto f = make_shared<Function>(make_shared<op::v0::Stack>(OutputVector{A, B, C}, -1),
                                    ParameterVector{A, B, C});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}", true);

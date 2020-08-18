@@ -20,22 +20,22 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::BroadcastDistributed::type_info;
+constexpr NodeTypeInfo op::v0::BroadcastDistributed::type_info;
 
-op::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int64_t root_id)
+op::v0::BroadcastDistributed::BroadcastDistributed(const Output<Node>& arg, int64_t root_id)
     : Op({arg})
     , m_root_id(root_id)
 {
     constructor_validate_and_infer_types();
 }
 
-bool op::BroadcastDistributed::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::BroadcastDistributed::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("root_id", m_root_id);
     return true;
 }
 
-void op::BroadcastDistributed::validate_and_infer_types()
+void op::v0::BroadcastDistributed::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
@@ -48,18 +48,19 @@ void op::BroadcastDistributed::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::BroadcastDistributed::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node>
+    op::v0::BroadcastDistributed::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<BroadcastDistributed>(new_args.at(0), m_root_id);
 }
 
-int64_t op::BroadcastDistributed::get_root_id() const
+int64_t op::v0::BroadcastDistributed::get_root_id() const
 {
     return m_root_id;
 }
 
-void op::BroadcastDistributed::set_root_id(int64_t root_id)
+void op::v0::BroadcastDistributed::set_root_id(int64_t root_id)
 {
     m_root_id = root_id;
 }

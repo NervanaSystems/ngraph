@@ -101,5 +101,5 @@ Output<Node> op::util::RNNCellBase::clip(const Output<Node>& data) const
         return data;
     }
 
-    return make_shared<op::Clamp>(data, -m_clip, m_clip)->output(0);
+    return make_shared<op::v0::Clamp>(data, -m_clip, m_clip)->output(0);
 }

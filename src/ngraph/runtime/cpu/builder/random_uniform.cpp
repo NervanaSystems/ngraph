@@ -34,7 +34,7 @@ namespace ngraph
                                              const vector<TensorWrapper>& out,
                                              CPU_ExternalFunction* external_function)
             {
-                auto ru = static_cast<const ngraph::op::RandomUniform*>(node);
+                auto ru = static_cast<const ngraph::op::v0::RandomUniform*>(node);
                 CPUKernelFunctor functor;
 
                 auto arg0_buffer_index =
@@ -88,7 +88,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::RandomUniform)
+            void Builder::BUILDER_DECL(ngraph::op::v0::RandomUniform)
             {
                 auto& functors = external_function->get_functors();
                 CPUKernelFunctor functor;

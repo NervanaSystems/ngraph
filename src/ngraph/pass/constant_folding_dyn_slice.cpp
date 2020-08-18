@@ -26,11 +26,11 @@ using namespace std;
 using namespace ngraph;
 
 template <class T>
-Output<Node> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
-                                     shared_ptr<op::Constant> lb,
-                                     shared_ptr<op::Constant> ub,
-                                     shared_ptr<op::Constant> strides,
-                                     shared_ptr<op::DynSlice> slice)
+Output<Node> fold_constant_dyn_slice(shared_ptr<op::v0::Constant> data,
+                                     shared_ptr<op::v0::Constant> lb,
+                                     shared_ptr<op::v0::Constant> ub,
+                                     shared_ptr<op::v0::Constant> strides,
+                                     shared_ptr<op::v0::DynSlice> slice)
 {
     SlicePlan plan = make_slice_plan(data->get_output_shape(0),
                                      lb->get_vector<int64_t>(),
@@ -68,7 +68,7 @@ Output<Node> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
                                    plan.reshape_out_shape,
                                    plan.reverse_axes);
 
-    return make_shared<op::Constant>(
+    return make_shared<op::v0::Constant>(
                data->get_output_element_type(0), plan.reshape_out_shape, reverse_out_data)
         ->output(0);
 }
@@ -76,22 +76,22 @@ Output<Node> fold_constant_dyn_slice(shared_ptr<op::Constant> data,
 void pass::ConstantFolding::construct_constant_dyn_slice()
 {
     auto data_label = make_shared<pattern::op::Label>(
-        element::f32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto lb_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
-    auto ub_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
-    auto strides_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{3}, pattern::has_class<op::Constant>());
-    auto dyn_slice_op = make_shared<op::DynSlice>(data_label,
-                                                  lb_label,
-                                                  ub_label,
-                                                  strides_label,
-                                                  AxisSet{},
-                                                  AxisSet{},
-                                                  AxisSet{},
-                                                  AxisSet{},
-                                                  AxisSet{});
+        element::f32, Shape{2, 3, 4}, pattern::has_class<op::v0::Constant>());
+    auto lb_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{3}, pattern::has_class<op::v0::Constant>());
+    auto ub_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{3}, pattern::has_class<op::v0::Constant>());
+    auto strides_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{3}, pattern::has_class<op::v0::Constant>());
+    auto dyn_slice_op = make_shared<op::v0::DynSlice>(data_label,
+                                                      lb_label,
+                                                      ub_label,
+                                                      strides_label,
+                                                      AxisSet{},
+                                                      AxisSet{},
+                                                      AxisSet{},
+                                                      AxisSet{},
+                                                      AxisSet{});
 
     auto constant_dyn_slice_callback = [data_label, lb_label, ub_label, strides_label](
                                            pattern::Matcher& m) {
@@ -100,13 +100,13 @@ void pass::ConstantFolding::construct_constant_dyn_slice()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto data_node = static_pointer_cast<op::Constant>(pattern_map[data_label]);
-        auto lb_node = static_pointer_cast<op::Constant>(pattern_map[lb_label]);
-        auto ub_node = static_pointer_cast<op::Constant>(pattern_map[ub_label]);
-        auto strides_node = static_pointer_cast<op::Constant>(pattern_map[strides_label]);
-        auto dyn_slice = m.get_match_root_as<op::DynSlice>();
+        auto data_node = static_pointer_cast<op::v0::Constant>(pattern_map[data_label]);
+        auto lb_node = static_pointer_cast<op::v0::Constant>(pattern_map[lb_label]);
+        auto ub_node = static_pointer_cast<op::v0::Constant>(pattern_map[ub_label]);
+        auto strides_node = static_pointer_cast<op::v0::Constant>(pattern_map[strides_label]);
+        auto dyn_slice = m.get_match_root_as<op::v0::DynSlice>();
         NGRAPH_CHECK(
-            dyn_slice, "match root node ", *m.get_match_root(), " not of type `op::DynSlice`");
+            dyn_slice, "match root node ", *m.get_match_root(), " not of type `op::v0::DynSlice`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dyn_slice));
 

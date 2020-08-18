@@ -235,8 +235,5 @@ namespace ngraph
                 AxisSet m_initial_broadcast_axes;
             };
         }
-
-        using v0::Broadcast;
-        using v0::BroadcastLike;
     }
 }

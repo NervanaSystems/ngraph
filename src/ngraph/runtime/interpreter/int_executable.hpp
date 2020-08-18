@@ -176,8 +176,8 @@ public:
 protected:
     INTExecutable(const std::string& model_string);
 
-    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
-    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
+    std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
+    std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
     int get_alignment() const { return 64; }
     bool m_is_compiled = false;
     bool m_nan_check_enabled = false;
@@ -240,7 +240,7 @@ protected:
         }
         case OP_TYPEID::All_v0:
         {
-            const op::All* all = static_cast<const op::All*>(&node);
+            const op::v0::All* all = static_cast<const op::v0::All*>(&node);
             reference::all(args[0]->get_data_ptr<const char>(),
                            out[0]->get_data_ptr<char>(),
                            node.get_input_shape(0),
@@ -250,8 +250,8 @@ protected:
         }
         case OP_TYPEID::AllReduce_v0:
         {
-            const ngraph::op::AllReduce* allreduce =
-                static_cast<const ngraph::op::AllReduce*>(&node);
+            const ngraph::op::v0::AllReduce* allreduce =
+                static_cast<const ngraph::op::v0::AllReduce*>(&node);
             reference::allreduce<T>(args[0]->get_data_ptr<T>(),
                                     out[0]->get_data_ptr<T>(),
                                     node.get_input_element_type(0),
@@ -261,7 +261,7 @@ protected:
         }
         case OP_TYPEID::Any_v0:
         {
-            const op::Any* any = static_cast<const op::Any*>(&node);
+            const op::v0::Any* any = static_cast<const op::v0::Any*>(&node);
             reference::any(args[0]->get_data_ptr<const char>(),
                            out[0]->get_data_ptr<char>(),
                            node.get_input_shape(0),
@@ -271,7 +271,7 @@ protected:
         }
         case OP_TYPEID::ArgMin_v0:
         {
-            const op::ArgMin* argmin = static_cast<const op::ArgMin*>(&node);
+            const op::v0::ArgMin* argmin = static_cast<const op::v0::ArgMin*>(&node);
             auto element_type = node.get_output_element_type(0);
             if (element_type == element::i64)
             {
@@ -297,7 +297,7 @@ protected:
         }
         case OP_TYPEID::ArgMax_v0:
         {
-            const op::ArgMax* argmax = static_cast<const op::ArgMax*>(&node);
+            const op::v0::ArgMax* argmax = static_cast<const op::v0::ArgMax*>(&node);
             auto element_type = node.get_output_element_type(0);
             if (element_type == element::i64)
             {
@@ -346,7 +346,7 @@ protected:
         }
         case OP_TYPEID::AvgPool_v0:
         {
-            const op::AvgPool* avg_pool = static_cast<const op::AvgPool*>(&node);
+            const op::v0::AvgPool* avg_pool = static_cast<const op::v0::AvgPool*>(&node);
 
             reference::avg_pool<T>(args[0]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -372,8 +372,8 @@ protected:
 
         case OP_TYPEID::BatchNormTraining_v0:
         {
-            const ngraph::op::BatchNormTraining* bn =
-                static_cast<const ngraph::op::BatchNormTraining*>(&node);
+            const ngraph::op::v0::BatchNormTraining* bn =
+                static_cast<const ngraph::op::v0::BatchNormTraining*>(&node);
             reference::batch_norm_training<T>(bn->get_eps_value(),
                                               args[0]->get_data_ptr<const T>(),
                                               args[1]->get_data_ptr<const T>(),
@@ -386,8 +386,8 @@ protected:
         }
         case OP_TYPEID::BatchNormInference_v0:
         {
-            const ngraph::op::BatchNormInference* bn =
-                static_cast<const ngraph::op::BatchNormInference*>(&node);
+            const ngraph::op::v0::BatchNormInference* bn =
+                static_cast<const ngraph::op::v0::BatchNormInference*>(&node);
             reference::batch_norm_inference<T>(bn->get_eps_value(),
                                                args[0]->get_data_ptr<const T>(),
                                                args[1]->get_data_ptr<const T>(),
@@ -400,8 +400,8 @@ protected:
         }
         case OP_TYPEID::BatchNormTrainingBackprop_v0:
         {
-            const ngraph::op::BatchNormTrainingBackprop* bn_bprop =
-                static_cast<const ngraph::op::BatchNormTrainingBackprop*>(&node);
+            const ngraph::op::v0::BatchNormTrainingBackprop* bn_bprop =
+                static_cast<const ngraph::op::v0::BatchNormTrainingBackprop*>(&node);
             reference::batch_norm_backprop(bn_bprop->get_eps_value(),
                                            args[0]->get_data_ptr<const T>(),
                                            args[1]->get_data_ptr<const T>(),
@@ -417,7 +417,7 @@ protected:
         }
         case OP_TYPEID::AvgPoolBackprop_v0:
         {
-            const op::AvgPoolBackprop* apb = static_cast<const op::AvgPoolBackprop*>(&node);
+            const op::v0::AvgPoolBackprop* apb = static_cast<const op::v0::AvgPoolBackprop*>(&node);
             reference::avg_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
                                             out[0]->get_data_ptr<T>(),
                                             node.get_input_shape(0),
@@ -431,7 +431,7 @@ protected:
         }
         case OP_TYPEID::Broadcast_v0:
         {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
+            const op::v0::Broadcast* broadcast = static_cast<const op::v0::Broadcast*>(&node);
             Shape in_shape = node.get_input_shape(0);
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
@@ -444,8 +444,8 @@ protected:
         }
         case OP_TYPEID::BroadcastDistributed_v0:
         {
-            const ngraph::op::BroadcastDistributed* broadcast =
-                static_cast<const ngraph::op::BroadcastDistributed*>(&node);
+            const ngraph::op::v0::BroadcastDistributed* broadcast =
+                static_cast<const ngraph::op::v0::BroadcastDistributed*>(&node);
             int rank_ID;
             rank_ID = get_distributed_interface()->get_rank();
             int root_id = broadcast->get_root_id();
@@ -479,7 +479,7 @@ protected:
         }
         case OP_TYPEID::Clamp_v0:
         {
-            const op::Clamp* clamp = static_cast<const op::Clamp*>(&node);
+            const op::v0::Clamp* clamp = static_cast<const op::v0::Clamp*>(&node);
             reference::clamp<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 clamp->get_min<T>(),
@@ -489,7 +489,7 @@ protected:
         }
         case OP_TYPEID::Concat_v0:
         {
-            const op::Concat* concat = static_cast<const op::Concat*>(&node);
+            const op::v0::Concat* concat = static_cast<const op::v0::Concat*>(&node);
             std::vector<const T*> in_args;
             std::vector<Shape> in_shapes;
             for (size_t i = 0; i < node.get_input_size(); i++)
@@ -506,14 +506,14 @@ protected:
         }
         case OP_TYPEID::Constant_v0:
         {
-            const op::Constant* c = static_cast<const op::Constant*>(&node);
+            const op::v0::Constant* c = static_cast<const op::v0::Constant*>(&node);
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::constant<T>(c->get_data_ptr<T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Convert_v0:
         {
-            // const op::Convert* c = static_cast<const op::Convert*>(&node);
+            // const op::v0::Convert* c = static_cast<const op::v0::Convert*>(&node);
             element::Type type = node.get_output_element_type(0);
             std::stringstream ss;
             size_t element_count = shape_size(node.get_output_shape(0));
@@ -584,7 +584,7 @@ protected:
         }
         case OP_TYPEID::Convolution_v0:
         {
-            const op::Convolution* c = static_cast<const op::Convolution*>(&node);
+            const op::v0::Convolution* c = static_cast<const op::v0::Convolution*>(&node);
             reference::convolution<T>(args[0]->get_data_ptr<const T>(),
                                       args[1]->get_data_ptr<const T>(),
                                       out[0]->get_data_ptr<T>(),
@@ -601,8 +601,8 @@ protected:
         }
         case OP_TYPEID::ConvolutionBackpropFilters_v0:
         {
-            const op::ConvolutionBackpropFilters* c =
-                static_cast<const op::ConvolutionBackpropFilters*>(&node);
+            const op::v0::ConvolutionBackpropFilters* c =
+                static_cast<const op::v0::ConvolutionBackpropFilters*>(&node);
             reference::convolution_backprop_filter<T>(
                 args[0]->get_data_ptr<const T>(), // input
                 args[1]->get_data_ptr<const T>(), // delta_convolution_output
@@ -620,8 +620,8 @@ protected:
         case OP_TYPEID::ConvolutionBackpropData_v0:
         {
             // Note that args[1] and args[0] are switched here from the usual order.
-            const op::ConvolutionBackpropData* c =
-                static_cast<const op::ConvolutionBackpropData*>(&node);
+            const op::v0::ConvolutionBackpropData* c =
+                static_cast<const op::v0::ConvolutionBackpropData*>(&node);
             reference::convolution_backprop_in<T>(args[1]->get_data_ptr<const T>(),
                                                   args[0]->get_data_ptr<const T>(),
                                                   out[0]->get_data_ptr<T>(),
@@ -651,7 +651,7 @@ protected:
         }
         case OP_TYPEID::CumSum_v0:
         {
-            const op::CumSum* cumsum = static_cast<const op::CumSum*>(&node);
+            const op::v0::CumSum* cumsum = static_cast<const op::v0::CumSum*>(&node);
             auto axis_et = node.get_input_element_type(1);
             if (axis_et == element::i32)
             {
@@ -680,7 +680,7 @@ protected:
         }
         case OP_TYPEID::Dequantize_v0:
         {
-            const op::Dequantize* dequantize = static_cast<const op::Dequantize*>(&node);
+            const op::v0::Dequantize* dequantize = static_cast<const op::v0::Dequantize*>(&node);
             auto type = dequantize->get_output_element_type(0);
 
             if (type == element::f32)
@@ -726,7 +726,7 @@ protected:
         }
         case OP_TYPEID::Dot_v0:
         {
-            const op::Dot* dot = static_cast<const op::Dot*>(&node);
+            const op::v0::Dot* dot = static_cast<const op::v0::Dot*>(&node);
 
             reference::dot(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
@@ -744,7 +744,8 @@ protected:
         }
         case OP_TYPEID::EmbeddingLookup_v0:
         {
-            const op::EmbeddingLookup* embed = static_cast<const op::EmbeddingLookup*>(&node);
+            const op::v0::EmbeddingLookup* embed =
+                static_cast<const op::v0::EmbeddingLookup*>(&node);
             auto type = embed->input(0).get_element_type();
             size_t element_count = shape_size(embed->get_input_shape(0));
 
@@ -789,7 +790,7 @@ protected:
         }
         case OP_TYPEID::Equal_v0:
         {
-            auto equal = static_cast<const op::Equal*>(&node);
+            auto equal = static_cast<const op::v0::Equal*>(&node);
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
@@ -815,7 +816,7 @@ protected:
 #ifdef INTERPRETER_USE_HYBRID
         case OP_TYPEID::FunctionCall_v0:
         {
-            auto f = static_cast<const runtime::hybrid::op::FunctionCall*>(&node);
+            auto f = static_cast<const runtime::hybrid::op::v0::FunctionCall*>(&node);
             auto backend = f->get_backend();
             auto executable = f->get_executable();
 
@@ -846,7 +847,7 @@ protected:
         }
         case OP_TYPEID::Gather_v0:
         {
-            const op::Gather* gather = static_cast<const op::Gather*>(&node);
+            const op::v0::Gather* gather = static_cast<const op::v0::Gather*>(&node);
             if (node.get_input_element_type(1) == element::i64)
             {
                 reference::gather<T, int64_t>(args[0]->get_data_ptr<T>(),
@@ -904,7 +905,7 @@ protected:
             bool use_seed = static_cast<bool>(args[2]->get_data_ptr<const int32_t>()[0]);
             if (m_states.count(&node) == 0)
             {
-                const op::GenerateMask* gm = static_cast<const op::GenerateMask*>(&node);
+                const op::v0::GenerateMask* gm = static_cast<const op::v0::GenerateMask*>(&node);
                 auto seed = use_seed ? gm->get_seed() : 0;
                 m_states[&node] =
                     std::unique_ptr<State>(new BernoulliRNGState(seed, gm->get_probability()));
@@ -929,7 +930,7 @@ protected:
         }
         case OP_TYPEID::Greater_v0:
         {
-            auto greater = static_cast<const op::Greater*>(&node);
+            auto greater = static_cast<const op::v0::Greater*>(&node);
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
@@ -940,7 +941,7 @@ protected:
         }
         case OP_TYPEID::GreaterEq_v0:
         {
-            auto greater_eq = static_cast<const op::GreaterEq*>(&node);
+            auto greater_eq = static_cast<const op::v0::GreaterEq*>(&node);
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
@@ -951,7 +952,7 @@ protected:
         }
         case OP_TYPEID::Less_v0:
         {
-            auto less = static_cast<const op::Less*>(&node);
+            auto less = static_cast<const op::v0::Less*>(&node);
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
@@ -962,7 +963,7 @@ protected:
         }
         case OP_TYPEID::LessEq_v0:
         {
-            auto less_eq = static_cast<const op::LessEq*>(&node);
+            auto less_eq = static_cast<const op::v0::LessEq*>(&node);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
@@ -1031,7 +1032,7 @@ protected:
         }
         case OP_TYPEID::LRN_v0:
         {
-            const op::LRN* lrn = static_cast<const op::LRN*>(&node);
+            const op::v0::LRN* lrn = static_cast<const op::v0::LRN*>(&node);
             reference::lrn<T>(args[0]->get_data_ptr<const T>(),
                               lrn->get_reduction_axes(),
                               out[0]->get_data_ptr<T>(),
@@ -1044,7 +1045,7 @@ protected:
         }
         case OP_TYPEID::MatMul_v0:
         {
-            const op::MatMul* op = static_cast<const op::MatMul*>(&node);
+            const op::v0::MatMul* op = static_cast<const op::v0::MatMul*>(&node);
             reference::matmul<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
@@ -1057,7 +1058,7 @@ protected:
         }
         case OP_TYPEID::Max_v0:
         {
-            const op::Max* max = static_cast<const op::Max*>(&node);
+            const op::v0::Max* max = static_cast<const op::v0::Max*>(&node);
             reference::max<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
@@ -1066,7 +1067,7 @@ protected:
         }
         case OP_TYPEID::Maximum_v0:
         {
-            auto maximum = static_cast<const op::Maximum*>(&node);
+            auto maximum = static_cast<const op::v0::Maximum*>(&node);
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1077,7 +1078,7 @@ protected:
         }
         case OP_TYPEID::MaxPool_v0:
         {
-            const op::MaxPool* max_pool = static_cast<const op::MaxPool*>(&node);
+            const op::v0::MaxPool* max_pool = static_cast<const op::v0::MaxPool*>(&node);
 
             reference::max_pool<T>(args[0]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -1091,8 +1092,8 @@ protected:
         }
         case OP_TYPEID::MaxPoolBackprop_v0:
         {
-            const op::MaxPoolBackprop* max_pool_backprop =
-                static_cast<const op::MaxPoolBackprop*>(&node);
+            const op::v0::MaxPoolBackprop* max_pool_backprop =
+                static_cast<const op::v0::MaxPoolBackprop*>(&node);
 
             reference::max_pool_backprop<T>(args[0]->get_data_ptr<const T>(),
                                             args[1]->get_data_ptr<const T>(),
@@ -1107,7 +1108,7 @@ protected:
         }
         case OP_TYPEID::Min_v0:
         {
-            const op::Min* min = static_cast<const op::Min*>(&node);
+            const op::v0::Min* min = static_cast<const op::v0::Min*>(&node);
             reference::min<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
@@ -1116,7 +1117,7 @@ protected:
         }
         case OP_TYPEID::Minimum_v0:
         {
-            auto minimum = static_cast<const op::Minimum*>(&node);
+            auto minimum = static_cast<const op::v0::Minimum*>(&node);
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1145,7 +1146,7 @@ protected:
         }
         case OP_TYPEID::NotEqual_v0:
         {
-            auto not_equal = static_cast<const op::NotEqual*>(&node);
+            auto not_equal = static_cast<const op::v0::NotEqual*>(&node);
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
@@ -1156,7 +1157,7 @@ protected:
         }
         case OP_TYPEID::OneHot_v0:
         {
-            const op::OneHot* oh = static_cast<const op::OneHot*>(&node);
+            const op::v0::OneHot* oh = static_cast<const op::v0::OneHot*>(&node);
             reference::one_hot<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
@@ -1167,12 +1168,12 @@ protected:
         case OP_TYPEID::Parameter_v0: break;
         case OP_TYPEID::Passthrough_v0:
         {
-            const op::Passthrough* passthrough = static_cast<const op::Passthrough*>(&node);
+            const op::v0::Passthrough* passthrough = static_cast<const op::v0::Passthrough*>(&node);
             throw unsupported_op{"Unsupported op 'Passthrough_v0'"};
         }
         case OP_TYPEID::Pad_v0:
         {
-            const op::Pad* pad = static_cast<const op::Pad*>(&node);
+            const op::v0::Pad* pad = static_cast<const op::v0::Pad*>(&node);
 
             reference::pad(args[0]->get_data_ptr<const T>(),
                            args[1]->get_data_ptr<const T>(),
@@ -1186,7 +1187,7 @@ protected:
         }
         case OP_TYPEID::Power_v0:
         {
-            auto power = static_cast<const op::Power*>(&node);
+            auto power = static_cast<const op::v0::Power*>(&node);
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
@@ -1197,7 +1198,7 @@ protected:
         }
         case OP_TYPEID::Product_v0:
         {
-            const op::Product* product = static_cast<const op::Product*>(&node);
+            const op::v0::Product* product = static_cast<const op::v0::Product*>(&node);
             reference::product<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_input_shape(0),
@@ -1206,7 +1207,7 @@ protected:
         }
         case OP_TYPEID::Quantize_v0:
         {
-            const op::Quantize* quantize = static_cast<const op::Quantize*>(&node);
+            const op::v0::Quantize* quantize = static_cast<const op::v0::Quantize*>(&node);
             auto type = quantize->get_output_element_type(0);
 
             if (type == element::u8)
@@ -1254,8 +1255,8 @@ protected:
 
         case OP_TYPEID::QuantizedConvolution_v0:
         {
-            const op::QuantizedConvolution* qc =
-                static_cast<const op::QuantizedConvolution*>(&node);
+            const op::v0::QuantizedConvolution* qc =
+                static_cast<const op::v0::QuantizedConvolution*>(&node);
 
             auto input_element_type = qc->get_input_element_type(0);
             auto filter_element_type = qc->get_input_element_type(1);
@@ -1366,7 +1367,7 @@ protected:
         case OP_TYPEID::QuantizedDotBias_v0:
         case OP_TYPEID::QuantizedDot_v0:
         {
-            const op::QuantizedDot* qd = static_cast<const op::QuantizedDot*>(&node);
+            const op::v0::QuantizedDot* qd = static_cast<const op::v0::QuantizedDot*>(&node);
 
             auto input0_element_type = qd->get_input_element_type(0);
             auto input1_element_type = qd->get_input_element_type(1);
@@ -1457,7 +1458,7 @@ protected:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t memSize = element_count * sizeof(T);
-            const auto* op = static_cast<const ngraph::op::Recv*>(&node);
+            const auto* op = static_cast<const ngraph::op::v0::Recv*>(&node);
             int src_id = op->get_src_id();
 
             reference::recv<T>(
@@ -1468,7 +1469,7 @@ protected:
         }
         case OP_TYPEID::RandomUniform_v0:
         {
-            const op::RandomUniform* ru = static_cast<const op::RandomUniform*>(&node);
+            const op::v0::RandomUniform* ru = static_cast<const op::v0::RandomUniform*>(&node);
 
             T min_val = args[0]->get_data_ptr<const T>()[0];
             T max_val = args[1]->get_data_ptr<const T>()[0];
@@ -1500,7 +1501,7 @@ protected:
         }
         case OP_TYPEID::Range_v0:
         {
-            const op::Range* op = static_cast<const op::Range*>(&node);
+            const op::v0::Range* op = static_cast<const op::v0::Range*>(&node);
             reference::range<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_shape(),
@@ -1525,7 +1526,7 @@ protected:
         }
         case OP_TYPEID::ReplaceSlice_v0:
         {
-            const op::ReplaceSlice* slice = static_cast<const op::ReplaceSlice*>(&node);
+            const op::v0::ReplaceSlice* slice = static_cast<const op::v0::ReplaceSlice*>(&node);
             reference::replace_slice<T>(args[0]->get_data_ptr<const T>(),
                                         args[1]->get_data_ptr<const T>(),
                                         out[0]->get_data_ptr<T>(),
@@ -1538,7 +1539,7 @@ protected:
         }
         case OP_TYPEID::Reshape_v0:
         {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
+            const op::v0::Reshape* reshape = static_cast<const op::v0::Reshape*>(&node);
             reference::reshape(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
                                node.get_input_shape(0),
@@ -1548,7 +1549,7 @@ protected:
         }
         case OP_TYPEID::Result_v0:
         {
-            const op::Result* res = static_cast<const op::Result*>(&node);
+            const op::v0::Result* res = static_cast<const op::v0::Result*>(&node);
             reference::result(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               shape_size(res->get_output_shape(0)));
@@ -1556,7 +1557,7 @@ protected:
         }
         case OP_TYPEID::Reverse_v0:
         {
-            const op::Reverse* reverse = static_cast<const op::Reverse*>(&node);
+            const op::v0::Reverse* reverse = static_cast<const op::v0::Reverse*>(&node);
             reference::reverse(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
                                node.get_input_shape(0),
@@ -1566,7 +1567,8 @@ protected:
         }
         case OP_TYPEID::ReverseSequence_v0:
         {
-            const op::ReverseSequence* reverse = static_cast<const op::ReverseSequence*>(&node);
+            const op::v0::ReverseSequence* reverse =
+                static_cast<const op::v0::ReverseSequence*>(&node);
 
             if (node.get_input_element_type(1) == element::i32)
             {
@@ -1664,7 +1666,7 @@ protected:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             size_t memSize = element_count * sizeof(T);
-            const auto* op = static_cast<const ngraph::op::Send*>(&node);
+            const auto* op = static_cast<const ngraph::op::v0::Send*>(&node);
             int dest_id = op->get_dest_id();
 
             reference::send<T>(args[0]->get_data_ptr<const T>(),
@@ -1724,7 +1726,7 @@ protected:
         }
         case OP_TYPEID::Slice_v0:
         {
-            const op::Slice* slice = static_cast<const op::Slice*>(&node);
+            const op::v0::Slice* slice = static_cast<const op::v0::Slice*>(&node);
             reference::slice<T>(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 node.get_input_shape(0),
@@ -1736,7 +1738,7 @@ protected:
         }
         case OP_TYPEID::Softmax_v0:
         {
-            const op::Softmax* softmax = static_cast<const op::Softmax*>(&node);
+            const op::v0::Softmax* softmax = static_cast<const op::v0::Softmax*>(&node);
             reference::softmax<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   node.get_output_shape(0),
@@ -1765,7 +1767,7 @@ protected:
         }
         case OP_TYPEID::Sum_v0:
         {
-            const op::Sum* sum = static_cast<const op::Sum*>(&node);
+            const op::v0::Sum* sum = static_cast<const op::v0::Sum*>(&node);
             reference::sum<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               node.get_input_shape(0),
@@ -1788,7 +1790,7 @@ protected:
         }
         case OP_TYPEID::TopK_v0:
         {
-            const op::TopK* topk = static_cast<const op::TopK*>(&node);
+            const op::v0::TopK* topk = static_cast<const op::v0::TopK*>(&node);
             if (node.get_output_element_type(0) == element::i64)
             {
                 reference::topk<T, int64_t>(args[0]->get_data_ptr<const T>(),

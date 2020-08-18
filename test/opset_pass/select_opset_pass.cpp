@@ -13,12 +13,12 @@ using namespace ngraph;
 
 TEST(opset_transform, opset0_select_downgrade_pass)
 {
-    auto cond = make_shared<op::Parameter>(element::boolean, Shape{2});
-    auto ptrue = make_shared<op::Parameter>(element::f32, Shape{4, 2});
-    auto pfalse = make_shared<op::Parameter>(element::f32, Shape{4, 2});
+    auto cond = make_shared<op::v0::Parameter>(element::boolean, Shape{2});
+    auto ptrue = make_shared<op::v0::Parameter>(element::f32, Shape{4, 2});
+    auto pfalse = make_shared<op::v0::Parameter>(element::f32, Shape{4, 2});
 
     auto v1_node = make_shared<op::v1::Select>(cond, ptrue, pfalse);
-    auto result = make_shared<op::Result>(v1_node);
+    auto result = make_shared<op::v0::Result>(v1_node);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{cond, ptrue, pfalse});
 
     ngraph::pass::Manager pass_manager;
@@ -36,12 +36,12 @@ TEST(opset_transform, opset0_select_downgrade_pass)
 
 TEST(opset_transform, opset1_select_upgrade_pass)
 {
-    auto cond = make_shared<op::Parameter>(element::boolean, Shape{4, 2});
-    auto ptrue = make_shared<op::Parameter>(element::f32, Shape{4, 2});
-    auto pfalse = make_shared<op::Parameter>(element::f32, Shape{4, 2});
+    auto cond = make_shared<op::v0::Parameter>(element::boolean, Shape{4, 2});
+    auto ptrue = make_shared<op::v0::Parameter>(element::f32, Shape{4, 2});
+    auto pfalse = make_shared<op::v0::Parameter>(element::f32, Shape{4, 2});
 
     auto v0_node = make_shared<op::v0::Select>(cond, ptrue, pfalse);
-    auto result = make_shared<op::Result>(v0_node);
+    auto result = make_shared<op::v0::Result>(v0_node);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{cond, ptrue, pfalse});
 
     ngraph::pass::Manager pass_manager;

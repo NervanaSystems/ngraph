@@ -46,23 +46,25 @@ namespace ngraph
             auto output_scale = quantization_utils::get_scale(min_output, max_output, output_type);
 
             // For Builders the zero point is assumed to be zero (for now)
-            auto input0_zero_point = op::Constant::create(input0.get_element_type(), Shape{}, {0});
-            auto input1_zero_point = op::Constant::create(input1.get_element_type(), Shape{}, {0});
-            auto output_zero_point = op::Constant::create(output_type, Shape{}, {0});
+            auto input0_zero_point =
+                op::v0::Constant::create(input0.get_element_type(), Shape{}, {0});
+            auto input1_zero_point =
+                op::v0::Constant::create(input1.get_element_type(), Shape{}, {0});
+            auto output_zero_point = op::v0::Constant::create(output_type, Shape{}, {0});
 
-            return make_shared<op::QuantizedDot>(input0,
-                                                 input1,
-                                                 reduction_axes_count,
-                                                 input0_scale,
-                                                 input0_zero_point,
-                                                 input1_scale,
-                                                 input1_zero_point,
-                                                 output_scale,
-                                                 output_zero_point,
-                                                 output_type,
-                                                 input0_axes,
-                                                 input1_axes,
-                                                 output_axes)
+            return make_shared<op::v0::QuantizedDot>(input0,
+                                                     input1,
+                                                     reduction_axes_count,
+                                                     input0_scale,
+                                                     input0_zero_point,
+                                                     input1_scale,
+                                                     input1_zero_point,
+                                                     output_scale,
+                                                     output_zero_point,
+                                                     output_type,
+                                                     input0_axes,
+                                                     input1_axes,
+                                                     output_axes)
                 ->add_provenance_group_members_above({input0, input1});
         }
 
@@ -96,13 +98,13 @@ namespace ngraph
                 AxisSet quantization_axes;
                 auto bias_scale = quantization_utils::get_bias_scale(
                     min_input, max_input, min_filter, max_filter);
-                op::Quantize::RoundMode round_mode =
-                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+                op::v0::Quantize::RoundMode round_mode =
+                    op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                mybias = make_shared<op::Quantize>(
+                mybias = make_shared<op::v0::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
-            return make_shared<op::QuantizedDotBias>(
+            return make_shared<op::v0::QuantizedDotBias>(
                        input, filters, mybias, requantization_scale, requantize, with_relu)
                 ->add_provenance_group_members_above({input,
                                                       filters,

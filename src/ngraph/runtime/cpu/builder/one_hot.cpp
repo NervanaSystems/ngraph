@@ -28,9 +28,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::OneHot)
+            void Builder::BUILDER_DECL(ngraph::op::v0::OneHot)
             {
-                auto oh = static_cast<const ngraph::op::OneHot*>(node);
+                auto oh = static_cast<const ngraph::op::v0::OneHot*>(node);
                 auto one_hot_axis = oh->get_one_hot_axis();
                 auto arg_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();

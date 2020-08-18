@@ -31,7 +31,7 @@
 using namespace ngraph;
 using namespace std;
 
-constexpr NodeTypeInfo op::LSTMSequence::type_info;
+constexpr NodeTypeInfo op::v0::LSTMSequence::type_info;
 bool ngraph::op::v0::LSTMSequence::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("hidden_size", m_hidden_size);
@@ -46,7 +46,7 @@ bool ngraph::op::v0::LSTMSequence::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-OutputVector op::LSTMSequence::decompose_op() const
+OutputVector op::v0::LSTMSequence::decompose_op() const
 {
     OutputVector results;
     if (m_direction == direction::FORWARD || m_direction == direction::REVERSE)
@@ -60,17 +60,17 @@ OutputVector op::LSTMSequence::decompose_op() const
 
         // Stack together respective outputs from both forward and reverse passess.
         shared_ptr<Node> Y{
-            make_shared<op::Concat>(OutputVector{fwd_results.at(0), rev_results.at(0)}, 1)};
+            make_shared<op::v0::Concat>(OutputVector{fwd_results.at(0), rev_results.at(0)}, 1)};
         shared_ptr<Node> Y_h{
-            make_shared<op::Concat>(OutputVector{fwd_results.at(1), rev_results.at(1)}, 0)};
+            make_shared<op::v0::Concat>(OutputVector{fwd_results.at(1), rev_results.at(1)}, 0)};
         shared_ptr<Node> Y_c{
-            make_shared<op::Concat>(OutputVector{fwd_results.at(2), rev_results.at(2)}, 0)};
+            make_shared<op::v0::Concat>(OutputVector{fwd_results.at(2), rev_results.at(2)}, 0)};
         results = OutputVector{Y, Y_h, Y_c};
     }
     return results;
 }
 
-shared_ptr<Node> op::LSTMSequence::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::LSTMSequence::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 8)
@@ -116,23 +116,23 @@ shared_ptr<Node> op::LSTMSequence::clone_with_new_inputs(const OutputVector& new
     }
 }
 
-shared_ptr<Node> op::LSTMSequence::get_masked_node(const Output<Node>& data,
-                                                   int32_t time_step,
-                                                   size_t batch_axis,
-                                                   const Output<Node>& default_value) const
+shared_ptr<Node> op::v0::LSTMSequence::get_masked_node(const Output<Node>& data,
+                                                       int32_t time_step,
+                                                       size_t batch_axis,
+                                                       const Output<Node>& default_value) const
 {
     Output<Node> mask_value = default_value;
     // Create zero mask value node.
     if (!mask_value.get_node_shared_ptr())
     {
-        mask_value = op::Constant::create(data.get_element_type(),
-                                          data.get_shape(),
-                                          vector<float>(shape_size(data.get_shape()), 0.f));
+        mask_value = op::v0::Constant::create(data.get_element_type(),
+                                              data.get_shape(),
+                                              vector<float>(shape_size(data.get_shape()), 0.f));
     }
 
     // Create predicate nodes. The condition is whether current time step value
     // is greater than sequence length for respective batch inputs.
-    shared_ptr<Node> curr_time_step_node = op::Constant::create(
+    shared_ptr<Node> curr_time_step_node = op::v0::Constant::create(
         element::i32, data.get_shape(), vector<int32_t>(shape_size(data.get_shape()), time_step));
 
     Output<Node> batch_seq_length =
@@ -142,14 +142,14 @@ shared_ptr<Node> op::LSTMSequence::get_masked_node(const Output<Node>& data,
 
     // Create mask node deciding whether or not to mask batch data.
     shared_ptr<Node> mask_condition =
-        make_shared<op::Greater>(curr_time_step_node, batch_seq_length);
+        make_shared<op::v0::Greater>(curr_time_step_node, batch_seq_length);
 
     // Select values depnding on mask_condition.
     // Select(<condition>, <true_value>, <false_value>)
-    return make_shared<op::Select>(mask_condition, mask_value, data);
+    return make_shared<op::v0::Select>(mask_condition, mask_value, data);
 }
 
-OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
+OutputVector op::v0::LSTMSequence::lstm_pass(bool is_reverse) const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -183,7 +183,7 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
 
     if (is_reverse)
     {
-        X = make_shared<op::ReverseSequence>(X, seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
+        X = make_shared<op::v0::ReverseSequence>(X, seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
     }
 
     OutputVector in_seqs = builder::split(X, X->get_output_shape(0).at(0));
@@ -197,20 +197,20 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     int32_t time_step{1};
     for (const auto& in_x : in_seqs)
     {
-        shared_ptr<Node> lstm_cell = make_shared<op::LSTMCell>(in_x,
-                                                               H_t,
-                                                               C_t,
-                                                               W,
-                                                               R,
-                                                               B,
-                                                               P,
-                                                               m_hidden_size,
-                                                               m_weights_format,
-                                                               m_activations,
-                                                               m_activations_alpha,
-                                                               m_activations_beta,
-                                                               m_clip_threshold,
-                                                               m_input_forget);
+        shared_ptr<Node> lstm_cell = make_shared<op::v0::LSTMCell>(in_x,
+                                                                   H_t,
+                                                                   C_t,
+                                                                   W,
+                                                                   R,
+                                                                   B,
+                                                                   P,
+                                                                   m_hidden_size,
+                                                                   m_weights_format,
+                                                                   m_activations,
+                                                                   m_activations_alpha,
+                                                                   m_activations_beta,
+                                                                   m_clip_threshold,
+                                                                   m_input_forget);
 
         Output<Node> H = lstm_cell->output(0);
         Output<Node> C = lstm_cell->output(1);
@@ -231,12 +231,12 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     }
     // The tensor that concats all the intermediate output values of the hidden.
     // It has shape [seq_length, batch_size, hidden_size]
-    shared_ptr<Node> Y{make_shared<op::Concat>(h_list, 0)};
+    shared_ptr<Node> Y{make_shared<op::v0::Concat>(h_list, 0)};
 
     // Get back the original order of the output data.
     if (is_reverse)
     {
-        Y = make_shared<op::ReverseSequence>(Y, seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
+        Y = make_shared<op::v0::ReverseSequence>(Y, seq_lengths, 1 /*batch_axis*/, 0 /*seq_axis*/);
     }
 
     // Expand Y so that it has expected shape:
@@ -250,7 +250,7 @@ OutputVector op::LSTMSequence::lstm_pass(bool is_reverse) const
     return {Y, Y_h, Y_c};
 }
 
-shared_ptr<Node> op::LSTMSequence::prepare_input(Output<Node> node, bool is_reverse) const
+shared_ptr<Node> op::v0::LSTMSequence::prepare_input(Output<Node> node, bool is_reverse) const
 {
     // In bidirectional mode inputs are stacked together, so we must split them.
     Output<Node> tmp = node;

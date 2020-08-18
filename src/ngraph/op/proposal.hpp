@@ -83,6 +83,5 @@ namespace ngraph
                 ProposalAttrs m_attrs;
             };
         }
-        using v0::Proposal;
     }
 }

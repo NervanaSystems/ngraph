@@ -26,7 +26,7 @@
 #include "ngraph/ops.hpp"
 
 using namespace ngraph::descriptor;
-using namespace ngraph::op;
+using namespace ngraph::op::v0;
 using namespace ngraph::pass;
 
 int MLIRSubgraphExtractionPass::MLIRSubgraph::m_curr_graph_id = 0;
@@ -498,7 +498,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
     }
 
     // Dot is 2D only
-    if (is_type<ngraph::op::Dot>(node))
+    if (is_type<ngraph::op::v0::Dot>(node))
     {
         if (node->get_input_shape(0).size() != 2 || node->get_input_shape(1).size() != 2)
         {
@@ -510,7 +510,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (auto conv_node = as_type_ptr<ngraph::op::Convolution>(node))
+    if (auto conv_node = as_type_ptr<ngraph::op::v0::Convolution>(node))
     {
         // No padding for now
         auto pad_below = conv_node->get_padding_below();
@@ -524,18 +524,18 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                std::all_of(window_dilation.begin(), window_dilation.end(), is_one);
     }
 
-    if (is_type<ngraph::op::ConvolutionBias>(node))
+    if (is_type<ngraph::op::v0::ConvolutionBias>(node))
     {
         // ConvBias is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
         {
             return false;
         }
-        return can_use_dnnl_conv_callback<ngraph::op::ConvolutionBias>(node.get());
+        return can_use_dnnl_conv_callback<ngraph::op::v0::ConvolutionBias>(node.get());
     }
 
     // DNNL only supports softmax across single axis
-    if (auto softmax = as_type_ptr<ngraph::op::Softmax>(node))
+    if (auto softmax = as_type_ptr<ngraph::op::v0::Softmax>(node))
     {
         // Softmax is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
@@ -549,7 +549,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                node->get_input_element_type(0) == element::f32 && softmax->get_axes().size() == 1;
     }
 
-    if (auto avg_pool = as_type_ptr<ngraph::op::AvgPool>(node))
+    if (auto avg_pool = as_type_ptr<ngraph::op::v0::AvgPool>(node))
     {
         // AvgPool is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
@@ -564,7 +564,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                node->get_input_element_type(0) == element::f32;
     }
 
-    if (auto avg_pool_backprop = as_type_ptr<ngraph::op::AvgPoolBackprop>(node))
+    if (auto avg_pool_backprop = as_type_ptr<ngraph::op::v0::AvgPoolBackprop>(node))
     {
         // AvgPoolBackprop is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
@@ -579,7 +579,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                node->get_input_element_type(0) == element::f32;
     }
 
-    if (auto max_pool_backprop = as_type_ptr<ngraph::op::MaxPoolBackprop>(node))
+    if (auto max_pool_backprop = as_type_ptr<ngraph::op::v0::MaxPoolBackprop>(node))
     {
         // MaxPoolBackprop is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
@@ -594,7 +594,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                node->get_input_element_type(0) == element::f32;
     }
 
-    if (auto max_pool = as_type_ptr<ngraph::op::MaxPool>(node))
+    if (auto max_pool = as_type_ptr<ngraph::op::v0::MaxPool>(node))
     {
         // MaxPool is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK"))
@@ -609,7 +609,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
                node->get_input_element_type(0) == element::f32;
     }
 
-    if (is_type<ngraph::op::MatMul>(node))
+    if (is_type<ngraph::op::v0::MatMul>(node))
     {
         // MatMul is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||
@@ -619,7 +619,7 @@ bool MLIRSubgraphExtractionPass::is_supported_mlir_op(std::shared_ptr<Node> node
         }
     }
 
-    if (is_type<ngraph::op::Gemm>(node))
+    if (is_type<ngraph::op::v0::Gemm>(node))
     {
         // Gemm is only supported through callback
         if (!getenv_bool("NGRAPH_MLIR_CALLBACK") || node->get_input_shape(0).size() != 2 ||

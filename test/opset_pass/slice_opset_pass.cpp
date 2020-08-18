@@ -28,14 +28,14 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_dyn_slice_upgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{7, 4, 6, 8});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{7, 4, 6, 8});
     Coordinate lower_bounds{2, 1, 4, 0};
     Coordinate upper_bounds{4, 3, 5, 1};
     Strides strides{1, 2, 1, 2};
 
     auto slice_v0 = make_shared<op::v0::Slice>(arg, lower_bounds, upper_bounds, strides);
 
-    const auto result = make_shared<op::Result>(slice_v0);
+    const auto result = make_shared<op::v0::Result>(slice_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -46,13 +46,13 @@ TEST(opset_transform, opset1_dyn_slice_upgrade_pass)
     const auto strided_slice_v1 = as_type_ptr<op::v1::StridedSlice>(pass_replacement_node);
     ASSERT_TRUE(strided_slice_v1);
     auto begin_const =
-        as_type_ptr<op::Constant>(strided_slice_v1->input_value(1).get_node_shared_ptr());
+        as_type_ptr<op::v0::Constant>(strided_slice_v1->input_value(1).get_node_shared_ptr());
     ASSERT_TRUE(begin_const);
     auto end_const =
-        as_type_ptr<op::Constant>(strided_slice_v1->input_value(2).get_node_shared_ptr());
+        as_type_ptr<op::v0::Constant>(strided_slice_v1->input_value(2).get_node_shared_ptr());
     ASSERT_TRUE(end_const);
     auto strides_const =
-        as_type_ptr<op::Constant>(strided_slice_v1->input_value(3).get_node_shared_ptr());
+        as_type_ptr<op::v0::Constant>(strided_slice_v1->input_value(3).get_node_shared_ptr());
     ASSERT_TRUE(strides_const);
 
     EXPECT_EQ(strided_slice_v1->get_begin_mask(), vector<int64_t>(4, 0));
@@ -67,14 +67,14 @@ TEST(opset_transform, opset1_dyn_slice_upgrade_pass)
 
 TEST(opset_transform, opset1_strided_slice_downgrade_pass)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{5, 7, 6, 8});
-    auto begin = op::Constant::create(element::i64, Shape{4}, {1, 2, 1, 2});
-    auto end = op::Constant::create(element::i64, Shape{4}, {3, 4, 5, 6});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{5, 7, 6, 8});
+    auto begin = op::v0::Constant::create(element::i64, Shape{4}, {1, 2, 1, 2});
+    auto end = op::v0::Constant::create(element::i64, Shape{4}, {3, 4, 5, 6});
 
     auto strided_slice_v1 = make_shared<op::v1::StridedSlice>(
         data, begin, end, vector<int64_t>{0, 0, 1, 0}, vector<int64_t>{1, 0, 0, 0});
 
-    const auto result = make_shared<op::Result>(strided_slice_v1);
+    const auto result = make_shared<op::v0::Result>(strided_slice_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -91,14 +91,14 @@ TEST(opset_transform, opset1_strided_slice_downgrade_pass)
 
 TEST(opset_transform, opset1_strided_slice_downgrade_pass_dynamic_input_shape)
 {
-    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto begin = op::Constant::create(element::i64, Shape{4}, {1, 2, 1, 2});
-    auto end = op::Constant::create(element::i64, Shape{4}, {3, 4, 5, 6});
+    auto data = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto begin = op::v0::Constant::create(element::i64, Shape{4}, {1, 2, 1, 2});
+    auto end = op::v0::Constant::create(element::i64, Shape{4}, {3, 4, 5, 6});
 
     auto strided_slice_v1 = make_shared<op::v1::StridedSlice>(
         data, begin, end, vector<int64_t>{0, 0, 1, 0}, vector<int64_t>{1, 0, 0, 0});
 
-    const auto result = make_shared<op::Result>(strided_slice_v1);
+    const auto result = make_shared<op::v0::Result>(strided_slice_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -124,14 +124,14 @@ TEST(opset_transform, opset1_strided_slice_downgrade_pass_dynamic_input_shape)
 
 TEST(opset_transform, opset1_strided_slice_downgrade_pass_end_not_constant)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{5, 7, 6, 8});
-    auto begin = op::Constant::create(element::i64, Shape{4}, {1, 2, 1, 2});
-    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{5, 7, 6, 8});
+    auto begin = op::v0::Constant::create(element::i64, Shape{4}, {1, 2, 1, 2});
+    auto end = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto strided_slice_v1 = make_shared<op::v1::StridedSlice>(
         data, begin, end, vector<int64_t>{0, 0, 1, 0}, vector<int64_t>{1, 0, 0, 0});
 
-    const auto result = make_shared<op::Result>(strided_slice_v1);
+    const auto result = make_shared<op::v0::Result>(strided_slice_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, end});
 
     ngraph::pass::Manager pass_manager;

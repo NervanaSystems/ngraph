@@ -77,12 +77,12 @@ TEST(benchmark, concat_32x1x200_axis1_6)
         OutputVector params_as_nodes(n_arrays);
         for (size_t i = 0; i < n_arrays; i++)
         {
-            auto param = make_shared<op::Parameter>(element::f32, shape_of_each_array);
+            auto param = make_shared<op::v0::Parameter>(element::f32, shape_of_each_array);
             params[i] = param;
             params_as_nodes[i] = param;
         }
 
-        auto concat = make_shared<op::Concat>(params_as_nodes, concatenation_axis);
+        auto concat = make_shared<op::v0::Concat>(params_as_nodes, concatenation_axis);
         auto f = make_shared<Function>(concat, params);
 
         auto backend = runtime::Backend::create(backend_name);

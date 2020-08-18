@@ -19,16 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Send::type_info;
+constexpr NodeTypeInfo op::v0::Send::type_info;
 
-op::Send::Send(const Output<Node>& arg, int dest_id)
+op::v0::Send::Send(const Output<Node>& arg, int dest_id)
     : Op({arg})
     , m_dest_id(dest_id)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Send::validate_and_infer_types()
+void op::v0::Send::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
@@ -41,13 +41,13 @@ void op::Send::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::Send::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Send::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Send>(new_args.at(0), m_dest_id);
 }
 
-int op::Send::get_dest_id() const
+int op::v0::Send::get_dest_id() const
 {
     return m_dest_id;
 }

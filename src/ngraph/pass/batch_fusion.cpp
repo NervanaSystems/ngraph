@@ -59,7 +59,7 @@ std::shared_ptr<Node> set_or_check_if_same(std::shared_ptr<Node> oldn, std::shar
     }
 }
 
-static bool is_trivial_convolution(std::shared_ptr<op::Convolution> conv)
+static bool is_trivial_convolution(std::shared_ptr<op::v0::Convolution> conv)
 {
     Strides stride_1{1, 1};
     CoordinateDiff pad_0{0, 0};
@@ -74,14 +74,14 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     auto data_label = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 4, 9});
     auto weights_label = std::make_shared<pattern::op::Label>(element::f32, Shape{4, 2, 3});
 
-    auto slice_data = std::make_shared<op::Slice>(
+    auto slice_data = std::make_shared<op::v0::Slice>(
         data_label, Coordinate{0, 0, 0}, Coordinate{1, 2, 9}, Strides{1, 1, 1});
-    auto slice_weights = std::make_shared<op::Slice>(
+    auto slice_weights = std::make_shared<op::v0::Slice>(
         weights_label, Coordinate{0, 0, 0}, Coordinate{2, 2, 3}, Strides{1, 1, 1});
 
     auto slice_weights_label =
         std::make_shared<pattern::op::Label>(slice_weights, nullptr, OutputVector{slice_weights});
-    auto conv = std::make_shared<op::Convolution>(slice_data, slice_weights_label);
+    auto conv = std::make_shared<op::v0::Convolution>(slice_data, slice_weights_label);
     auto matcher = std::make_shared<pattern::Matcher>(conv);
 
     NGRAPH_DEBUG << "In simplify_concat (group convolution) for " << n->get_name();
@@ -89,8 +89,8 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     std::shared_ptr<Node> data;
     std::shared_ptr<Node> weights;
 
-    auto concat = std::static_pointer_cast<op::Concat>(n);
-    std::shared_ptr<op::Convolution> sconv;
+    auto concat = std::static_pointer_cast<op::v0::Concat>(n);
+    std::shared_ptr<op::v0::Convolution> sconv;
 
     OutputVector slices;
 
@@ -109,7 +109,7 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
             return {nullptr};
         }
 
-        sconv = std::static_pointer_cast<op::Convolution>(arg);
+        sconv = std::static_pointer_cast<op::v0::Convolution>(arg);
 
         if (arg->get_input_shape(0).size() != 4)
         {
@@ -151,17 +151,17 @@ std::shared_ptr<Node> fuse_group_convolution(const std::shared_ptr<Node>& n)
     const size_t CONCAT_AXIS_OC = 0;
     if (!slices.empty())
     {
-        weights = std::make_shared<op::Concat>(slices, CONCAT_AXIS_OC);
+        weights = std::make_shared<op::v0::Concat>(slices, CONCAT_AXIS_OC);
     }
 
-    auto new_conv = std::make_shared<op::GroupConvolution>(data,
-                                                           weights,
-                                                           sconv->get_window_movement_strides(),
-                                                           sconv->get_window_dilation_strides(),
-                                                           sconv->get_padding_below(),
-                                                           sconv->get_padding_above(),
-                                                           sconv->get_data_dilation_strides(),
-                                                           n->get_arguments().size());
+    auto new_conv = std::make_shared<op::v0::GroupConvolution>(data,
+                                                               weights,
+                                                               sconv->get_window_movement_strides(),
+                                                               sconv->get_window_dilation_strides(),
+                                                               sconv->get_padding_below(),
+                                                               sconv->get_padding_above(),
+                                                               sconv->get_data_dilation_strides(),
+                                                               n->get_arguments().size());
 
     return move(new_conv);
 }
@@ -170,17 +170,18 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
 {
     const int num_op_branches = 2;
     std::shared_ptr<pattern::op::Label> input[num_op_branches];
-    std::shared_ptr<op::Reshape> reshape[num_op_branches];
+    std::shared_ptr<op::v0::Reshape> reshape[num_op_branches];
     for (int i = 0; i < num_op_branches; ++i)
     {
         input[i] = std::make_shared<pattern::op::Label>(element::f32, Shape{3, 2, 2});
         auto slice =
-            std::make_shared<op::Slice>(input[i], Coordinate{0, 0, 0}, Coordinate{1, 2, 2});
-        auto skip = std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::Reshape>());
-        reshape[i] = std::make_shared<op::Reshape>(skip, AxisVector{0, 1, 2}, Shape{2, 2});
+            std::make_shared<op::v0::Slice>(input[i], Coordinate{0, 0, 0}, Coordinate{1, 2, 2});
+        auto skip =
+            std::make_shared<pattern::op::Skip>(slice, pattern::has_class<op::v0::Reshape>());
+        reshape[i] = std::make_shared<op::v0::Reshape>(skip, AxisVector{0, 1, 2}, Shape{2, 2});
     }
-    auto dot = std::make_shared<op::Dot>(reshape[0], reshape[1]);
-    auto final_reshape = std::make_shared<op::Reshape>(dot, AxisVector{0, 1}, Shape{1, 2, 2});
+    auto dot = std::make_shared<op::v0::Dot>(reshape[0], reshape[1]);
+    auto final_reshape = std::make_shared<op::v0::Reshape>(dot, AxisVector{0, 1}, Shape{1, 2, 2});
 
     auto matcher = std::make_shared<pattern::Matcher>(final_reshape);
     std::shared_ptr<Node> fuse_input[num_op_branches];
@@ -203,7 +204,7 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
                 auto& input_node = pattern_map[input[i]];
                 do
                 {
-                    if (is_type<op::Reshape>(iter))
+                    if (is_type<op::v0::Reshape>(iter))
                     {
                         ++reshape_count[i];
                         if (reshape_count[i] == num_expected_reshape_with_trans)
@@ -235,7 +236,7 @@ std::shared_ptr<Node> fuse_batch_mat_mul_transpose(const std::shared_ptr<Node>& 
     }
     if (fuse_input[0] && fuse_input[1])
     {
-        return std::make_shared<op::BatchMatMulTranspose>(
+        return std::make_shared<op::v0::BatchMatMulTranspose>(
             fuse_input[0], fuse_input[1], transpose[0], transpose[1]);
     }
     return {nullptr};
@@ -248,7 +249,7 @@ bool ngraph::pass::BatchFusion::run_on_function(std::shared_ptr<Function> func)
     for (auto n : func->get_ordered_ops())
     {
         const Node& node = *n;
-        if (TI(node) == TI(op::Concat))
+        if (TI(node) == TI(op::v0::Concat))
         {
             if (m_fusion_type.is_set(FusionType::DIFFERENTIABLE_FUSIONS))
             {

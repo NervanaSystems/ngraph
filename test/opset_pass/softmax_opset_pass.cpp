@@ -29,9 +29,9 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_axis)
 {
     const size_t axis = 2;
     const AxisSet axes{axis};
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4});
     auto softmax_s0 = make_shared<op::v0::Softmax>(arg, axes);
-    auto result = make_shared<op::Result>(softmax_s0);
+    auto result = make_shared<op::v0::Result>(softmax_s0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;
@@ -48,9 +48,9 @@ TEST(opset_transform, opset1_softmax_upgrade_pass_axis)
 TEST(opset_transform, opset1_softmax_upgrade_pass_axis_exception)
 {
     const AxisSet axes{1, 2};
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4});
     auto softmax_s0 = make_shared<op::v0::Softmax>(arg, axes);
-    auto result = make_shared<op::Result>(softmax_s0);
+    auto result = make_shared<op::v0::Result>(softmax_s0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
 
     ngraph::pass::Manager pass_manager;

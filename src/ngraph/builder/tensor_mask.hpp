@@ -75,7 +75,7 @@ namespace ngraph
             }
 
             // broadcast sequence lengths to mask shape along all non-batch axes
-            auto broadcast_sequence_lengths = std::make_shared<ngraph::op::Broadcast>(
+            auto broadcast_sequence_lengths = std::make_shared<ngraph::op::v0::Broadcast>(
                 sequence_lengths, mask_shape, non_batch_axes);
 
             // create sequence data [0, ..., max_sequence_length]
@@ -84,15 +84,15 @@ namespace ngraph
             std::iota(sequence_data.begin(), sequence_data.end(), sequence_begin);
 
             // create sequence constant
-            auto sequence = std::make_shared<ngraph::op::Constant>(
+            auto sequence = std::make_shared<ngraph::op::v0::Constant>(
                 element::u32, Shape{max_sequence_length}, sequence_data);
 
             // convert sequence to input type
-            auto convert_sequence = std::make_shared<ngraph::op::Convert>(
+            auto convert_sequence = std::make_shared<ngraph::op::v0::Convert>(
                 sequence, sequence_lengths->get_output_element_type(0));
 
             // broadcast sequence to mask shape along all non-sequence axes
-            auto broadcast_sequence = std::make_shared<ngraph::op::Broadcast>(
+            auto broadcast_sequence = std::make_shared<ngraph::op::v0::Broadcast>(
                 convert_sequence, mask_shape, non_sequence_axes);
 
             // mask = sequence_length < sequence

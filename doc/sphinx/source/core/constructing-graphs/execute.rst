@@ -87,7 +87,7 @@ immutable; that is, when constructing a node, we need to supply all of its
 inputs. We get this process started with ops that have no inputs, since any op 
 with no inputs is going to first need some inputs.
 
-``op::Parameter`` specifes the tensors that will be passed to the computation. 
+``op::v0::Parameter`` specifes the tensors that will be passed to the computation. 
 They receive their values from outside of the graph, so they have no inputs. 
 They have attributes for the element type and the shape of the tensor that will 
 be passed to them.
@@ -121,9 +121,9 @@ Once the graph is built, we need to package it in a ``Function``:
 
 The first argument to the constuctor specifies the nodes that the function will 
 return; in this case, the product. An ``OutputVector`` is a vector of references to 
-outputs of ``op::Node``.  The second argument specifies the parameters of the 
+outputs of ``op::v0::Node``.  The second argument specifies the parameters of the 
 function, in the order they are to be passed to the compiled function. A 
-``ParameterVector`` is a vector of shared pointers to ``op::Parameter``. 
+``ParameterVector`` is a vector of shared pointers to ``op::v0::Parameter``. 
 
 .. important:: The parameter vector must include **every** parameter used in 
    the computation of the results.

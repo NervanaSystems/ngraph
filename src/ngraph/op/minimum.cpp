@@ -57,10 +57,12 @@ void op::v0::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto x = input_value(0);
     auto y = input_value(1);
 
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::v0::Less>(x, y), x.get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::v0::Less>(y, x), y.get_element_type()));
+    adjoints.add_delta(x,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Less>(x, y),
+                                                            x.get_element_type()));
+    adjoints.add_delta(y,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Less>(y, x),
+                                                            y.get_element_type()));
 }
 
 namespace
@@ -151,10 +153,12 @@ void op::v1::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto x = input_value(0);
     auto y = input_value(1);
 
-    adjoints.add_delta(
-        x, delta * make_shared<op::Convert>(make_shared<op::v1::Less>(x, y), x.get_element_type()));
-    adjoints.add_delta(
-        y, delta * make_shared<op::Convert>(make_shared<op::v1::Less>(y, x), y.get_element_type()));
+    adjoints.add_delta(x,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Less>(x, y),
+                                                            x.get_element_type()));
+    adjoints.add_delta(y,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Less>(y, x),
+                                                            y.get_element_type()));
 }
 
 bool op::v1::Minimum::evaluate(const HostTensorVector& outputs,

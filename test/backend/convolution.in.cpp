@@ -31,24 +31,24 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
 {
     Shape shape_a{1, 2, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 2, 2, 2};
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
-    auto conv2 = make_shared<op::Convolution>(conv1,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
+    auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
+    auto conv2 = make_shared<op::v0::Convolution>(conv1,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
     auto f = make_shared<Function>(conv2, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -70,17 +70,17 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_outlining)
 NGRAPH_TEST(${BACKEND_NAME}, convolution_simple)
 {
     Shape shape_a{1, 2, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 2, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 2, 2, 2};
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{0, 0},
-                                              CoordinateDiff{0, 0},
-                                              Strides{1, 1});
+    auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{0, 0},
+                                                  CoordinateDiff{0, 0},
+                                                  Strides{1, 1});
 
     auto f = make_shared<Function>(conv1, ParameterVector{A, B});
 
@@ -103,17 +103,17 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple)
 NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
 {
     Shape shape_a{1, 1, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{1, 1, 1, 1};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{1, 1, 5, 5};
-    auto conv1 = make_shared<op::Convolution>(A,
-                                              B,
-                                              Strides{1, 1},
-                                              Strides{1, 1},
-                                              CoordinateDiff{1, 1},
-                                              CoordinateDiff{2, 2},
-                                              Strides{1, 1});
+    auto conv1 = make_shared<op::v0::Convolution>(A,
+                                                  B,
+                                                  Strides{1, 1},
+                                                  Strides{1, 1},
+                                                  CoordinateDiff{1, 1},
+                                                  CoordinateDiff{2, 2},
+                                                  Strides{1, 1});
 
     auto f = make_shared<Function>(conv1, ParameterVector{A, B});
 
@@ -142,12 +142,12 @@ NGRAPH_TEST(${BACKEND_NAME}, convolution_simple_padding)
 NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
 {
     Shape shape_filter{6, 3, 3, 3};
-    auto filters = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto filters = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_delta{2, 6, 3, 3};
-    auto deltas = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto deltas = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_data_batch_shape{2, 3, 5, 5};
     auto data_batch_shape =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto strides = Strides{1, 1};
     auto dilations = Strides{1, 1};
     auto padding_begin = CoordinateDiff{0, 0};
@@ -199,11 +199,11 @@ NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_data)
 NGRAPH_TEST(${BACKEND_NAME}, dyn_convolution_backprop_filter)
 {
     Shape shape_data{64, 3, 100};
-    auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto data = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     Shape shape_delta{64, 128, 96};
-    auto deltas = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto deltas = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto filters_shape =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto strides = Strides{1};
     auto dilations = Strides{1};
     auto padding_begin = CoordinateDiff{2};

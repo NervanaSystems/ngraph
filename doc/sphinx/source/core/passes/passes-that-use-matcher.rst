@@ -26,8 +26,8 @@ Register ``simplify_neg`` handler
             return std::unordered_map<std::type_index, std::function<bool(std::shared_ptr<Node>)>>({
                 {TI(op::v1::Add), simplify_add},
                 {TI(op::v1::Multiply), simplify_multiply},
-                {TI(op::Sum), simplify_sum},
-                {TI(op::Negative), simplify_neg}
+                {TI(op::v0::Sum), simplify_sum},
+                {TI(op::v0::Negative), simplify_neg}
             });
         }
 
@@ -90,7 +90,7 @@ Pattern for capturing
                 }
                 auto mpattern = m.get_match_root();
 
-                auto cg = shared_ptr(new op::Relu(pattern_map[val]));
+                auto cg = shared_ptr(new op::v0::Relu(pattern_map[val]));
                 m.get_match_value().replace(cg->output(0));
                 return true;
             };
@@ -116,8 +116,8 @@ Equivalent to ``"A(BC)+A"`` in regexes
 .. code-block:: cpp
 
    Shape shape{};
-    auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto a = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto b = make_shared<op::v0::Parameter>(element::i32, shape);
     auto rpattern = std::make_shared<pattern::op::Label>(b);
     auto iconst0 = ngraph::make_zero(element::i32, shape);
     auto abs = make_shared<op::v0::Abs>(a);

@@ -34,13 +34,13 @@ TEST(type_prop, crop_and_resize_valid)
     PartialShape result_shape{num_boxes, H_crop, W_crop, C_image};
 
     auto image =
-        make_shared<op::Parameter>(element::f32, PartialShape{N, H_image, W_image, C_image});
-    auto boxes = make_shared<op::Parameter>(element::f32, PartialShape{num_boxes, 4});
-    auto box_indices = make_shared<op::Parameter>(element::i32, PartialShape{num_boxes});
-    auto crop_shape = op::Constant::create(element::i32, Shape{2}, {H_crop, W_crop});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{N, H_image, W_image, C_image});
+    auto boxes = make_shared<op::v0::Parameter>(element::f32, PartialShape{num_boxes, 4});
+    auto box_indices = make_shared<op::v0::Parameter>(element::i32, PartialShape{num_boxes});
+    auto crop_shape = op::v0::Constant::create(element::i32, Shape{2}, {H_crop, W_crop});
 
-    auto crop_and_resize = make_shared<op::CropAndResize>(
-        image, boxes, box_indices, crop_shape, op::CropAndResize::ResizeMethod::bilinear, 0);
+    auto crop_and_resize = make_shared<op::v0::CropAndResize>(
+        image, boxes, box_indices, crop_shape, op::v0::CropAndResize::ResizeMethod::bilinear, 0);
     auto result = crop_and_resize->output(0);
     ASSERT_EQ(result.get_shape(), result_shape.to_shape());
     ASSERT_EQ(result.get_element_type(), image->get_output_element_type(0));
@@ -59,15 +59,20 @@ TEST(type_prop, crop_and_resize_not_constant)
     PartialShape result_shape{num_boxes, H_crop, W_crop, C_image};
 
     auto image =
-        make_shared<op::Parameter>(element::f32, PartialShape{N, H_image, W_image, C_image});
-    auto boxes = make_shared<op::Parameter>(element::f32, PartialShape{num_boxes, 4});
-    auto box_indices = make_shared<op::Parameter>(element::i32, PartialShape{num_boxes});
-    auto crop_shape = make_shared<op::Parameter>(element::i32, PartialShape{2});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{N, H_image, W_image, C_image});
+    auto boxes = make_shared<op::v0::Parameter>(element::f32, PartialShape{num_boxes, 4});
+    auto box_indices = make_shared<op::v0::Parameter>(element::i32, PartialShape{num_boxes});
+    auto crop_shape = make_shared<op::v0::Parameter>(element::i32, PartialShape{2});
 
     try
     {
-        auto crop_and_resize = make_shared<op::CropAndResize>(
-            image, boxes, box_indices, crop_shape, op::CropAndResize::ResizeMethod::bilinear, 0);
+        auto crop_and_resize =
+            make_shared<op::v0::CropAndResize>(image,
+                                               boxes,
+                                               box_indices,
+                                               crop_shape,
+                                               op::v0::CropAndResize::ResizeMethod::bilinear,
+                                               0);
         FAIL() << "CropAndReshape without constant crop shape should fail";
     }
     catch (const NodeValidationFailure& error)

@@ -151,7 +151,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
                        make_shared<op::v1::ConvolutionBackpropData>(
                            delta,
                            f,
-                           op::Constant::create(element::i64, Shape{x_shape.size()}, x_shape),
+                           op::v0::Constant::create(element::i64, Shape{x_shape.size()}, x_shape),
                            m_strides,
                            m_pads_begin,
                            m_pads_end,
@@ -162,7 +162,7 @@ void op::v1::Convolution::generate_adjoints(autodiff::Adjoints& adjoints,
                        make_shared<op::v1::ConvolutionBackpropFilters>(
                            x,
                            delta,
-                           op::Constant::create(element::i64, Shape{x_shape.size()}, f_shape),
+                           op::v0::Constant::create(element::i64, Shape{x_shape.size()}, f_shape),
                            m_strides,
                            m_dilations,
                            m_pads_begin,
@@ -230,7 +230,7 @@ bool op::v1::ConvolutionBackpropData::is_dynamic() const
     bool is_dynamic = Node::is_dynamic();
     if (get_input_size() == 3 && !is_dynamic)
     {
-        return !is_type<op::Constant>(input_value(2).get_node());
+        return !is_type<op::v0::Constant>(input_value(2).get_node());
     }
     return is_dynamic;
 }
@@ -251,7 +251,7 @@ const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
     bool is_output_shape_present = get_input_size() == 3;
     if (is_output_shape_present)
     {
-        if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
+        if (auto const_op = as_type<op::v0::Constant>(input_value(2).get_node()))
         {
             shape = const_op->get_shape_val();
         }
@@ -266,7 +266,7 @@ const PartialShape op::v1::ConvolutionBackpropData::get_output_shape() const
 void op::v1::ConvolutionBackpropData::set_output_shape(const Shape& shape)
 {
     this->input(2).replace_source_output(
-        op::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
+        op::v0::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
             ->output(0));
 }
 
@@ -491,7 +491,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
         new_shape[0] = n.get_shape()[1];
         new_shape[1] = n.get_shape()[0];
 
-        return make_shared<op::Reshape>(n, ax_order, new_shape);
+        return make_shared<op::v0::Reshape>(n, ax_order, new_shape);
     };
 
     delta = swap_NC(delta);
@@ -504,7 +504,7 @@ void op::v1::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
     {
         axes.insert(i);
     }
-    filter_deconv_bprop = make_shared<ngraph::op::Reverse>(filter_deconv_bprop, axes);
+    filter_deconv_bprop = make_shared<ngraph::op::v0::Reverse>(filter_deconv_bprop, axes);
     adjoints.add_delta(f, filter_deconv_bprop);
 }
 
@@ -567,7 +567,7 @@ bool op::v1::ConvolutionBackpropFilters::visit_attributes(AttributeVisitor& visi
 const Shape op::v1::ConvolutionBackpropFilters::get_filters_shape() const
 {
     Shape shape;
-    if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
+    if (auto const_op = as_type<op::v0::Constant>(input_value(2).get_node()))
     {
         shape = const_op->get_shape_val();
     }
@@ -1053,7 +1053,7 @@ void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
         new_shape[0] = n.get_shape()[1];
         new_shape[1] = n.get_shape()[0];
 
-        return make_shared<op::Reshape>(n, ax_order, new_shape);
+        return make_shared<op::v0::Reshape>(n, ax_order, new_shape);
     };
 
     delta = swap_NC(delta);
@@ -1071,7 +1071,7 @@ void op::v0::ConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjo
     {
         axes.insert(i);
     }
-    filter_deconv_bprop = make_shared<ngraph::op::Reverse>(filter_deconv_bprop, axes);
+    filter_deconv_bprop = make_shared<ngraph::op::v0::Reverse>(filter_deconv_bprop, axes);
     adjoints.add_delta(f, filter_deconv_bprop);
 }
 

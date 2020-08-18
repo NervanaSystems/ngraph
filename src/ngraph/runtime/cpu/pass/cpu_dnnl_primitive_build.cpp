@@ -922,14 +922,14 @@ namespace ngraph
                     writer << "dnnl::memory::dims{" << join(pad_above) << "});\n";
 
                     writer << "dnnl::post_ops ops;\n";
-                    if (std::is_same<OP, ngraph::op::ConvolutionBiasAdd>() ||
+                    if (std::is_same<OP, ngraph::op::v0::ConvolutionBiasAdd>() ||
                         std::is_same<OP, ngraph::op::ConvolutionAdd>())
                     {
                         writer << "ops.append_sum(1.f);\n";
                     }
 
-                    if (std::is_same<OP, ngraph::op::QuantizedConvolutionBiasAdd>() ||
-                        std::is_same<OP, ngraph::op::QuantizedConvolutionBiasSignedAdd>())
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasAdd>() ||
+                        std::is_same<OP, ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>())
                     {
                         writer << "ops.append_sum(dyn_post_op_scales[0]);\n";
                     }
@@ -1278,9 +1278,9 @@ namespace ngraph
 
                     // query scratchpad size
                     auto bwd_desc = dnnl_emitter.get_convolution_backward_data_desc<
-                        ngraph::op::ConvolutionBackpropData>(node);
+                        ngraph::op::v0::ConvolutionBackpropData>(node);
                     auto fwd_desc = dnnl_emitter.get_convolution_forward_desc_for_backward_op<
-                        ngraph::op::ConvolutionBackpropData>(node);
+                        ngraph::op::v0::ConvolutionBackpropData>(node);
                     scratchpad_size =
                         dnnl_emitter.query_scratchpad_convolution_backward_data(fwd_desc, bwd_desc);
 
@@ -1481,7 +1481,8 @@ namespace ngraph
 
                     // query scratchpad size
                     auto max_pool_desc =
-                        dnnl_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPool>(node, false);
+                        dnnl_emitter.get_max_pooling_forward_desc<ngraph::op::v0::MaxPool>(node,
+                                                                                           false);
                     scratchpad_size = dnnl_emitter.query_scratchpad_pooling_forward(max_pool_desc);
 
                     auto window_shape = pool->get_window_shape();
@@ -1546,7 +1547,8 @@ namespace ngraph
 
                     // query scratchpad size
                     auto avg_pool_desc =
-                        dnnl_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPool>(node, false);
+                        dnnl_emitter.get_avg_pooling_forward_desc<ngraph::op::v0::AvgPool>(node,
+                                                                                           false);
                     scratchpad_size = dnnl_emitter.query_scratchpad_pooling_forward(avg_pool_desc);
 
                     auto window_shape = pool->get_window_shape();
@@ -1693,7 +1695,7 @@ namespace ngraph
                 {
                     auto diff_dst_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                     auto diff_src_desc = dnnl_utils::get_output_dnnl_md(node, 0);
-                    auto pool = static_cast<const ngraph::op::AvgPoolBackprop*>(node);
+                    auto pool = static_cast<const ngraph::op::v0::AvgPoolBackprop*>(node);
                     auto window_shape = pool->get_window_shape();
                     auto window_strides = pool->get_window_movement_strides();
                     auto padding_below = pool->get_padding_below();
@@ -1704,10 +1706,10 @@ namespace ngraph
 
                     // query scratchpad size
                     auto avg_pool_fwd_desc =
-                        dnnl_emitter.get_avg_pooling_forward_desc<ngraph::op::AvgPoolBackprop>(
+                        dnnl_emitter.get_avg_pooling_forward_desc<ngraph::op::v0::AvgPoolBackprop>(
                             node, true);
                     auto avg_pool_desc =
-                        dnnl_emitter.get_avg_pooling_backward_desc<ngraph::op::AvgPoolBackprop>(
+                        dnnl_emitter.get_avg_pooling_backward_desc<ngraph::op::v0::AvgPoolBackprop>(
                             node);
                     scratchpad_size = dnnl_emitter.query_scratchpad_avg_pooling_backward(
                         avg_pool_fwd_desc, avg_pool_desc);
@@ -1780,10 +1782,10 @@ namespace ngraph
 
                     // query scratchpad size
                     auto fwd_pool_desc =
-                        dnnl_emitter.get_max_pooling_forward_desc<ngraph::op::MaxPoolBackprop>(
+                        dnnl_emitter.get_max_pooling_forward_desc<ngraph::op::v0::MaxPoolBackprop>(
                             node, true);
                     auto bwd_pool_desc =
-                        dnnl_emitter.get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
+                        dnnl_emitter.get_max_pooling_backward_desc<ngraph::op::v0::MaxPoolBackprop>(
                             node);
                     scratchpad_size = dnnl_emitter.query_scratchpad_max_pooling_backward(
                         fwd_pool_desc, bwd_pool_desc);
@@ -1994,7 +1996,7 @@ namespace ngraph
                     {
                         Shape weights_shape_groups;
                         if (auto gconv =
-                                as_type_ptr<ngraph::op::GroupConvolution>(node->get_users()[0]))
+                                as_type_ptr<ngraph::op::v0::GroupConvolution>(node->get_users()[0]))
                         {
                             weights_shape_groups = gconv->get_weights_dimensions();
                         }
@@ -2468,7 +2470,7 @@ namespace ngraph
                 template <>
                 void DNNLPrimitiveBuildPass::CONSTRUCT_PRIMITIVE_BUILD_STRING_DECL(Softmax)
                 {
-                    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+                    auto softmax = static_cast<const ngraph::op::v0::Softmax*>(node);
 
                     if (softmax->get_axes().size() != 1)
                     {
@@ -2669,8 +2671,8 @@ namespace ngraph
                     writer << "*cg_ctx->dnnl_descriptors[" << desc_index + 2 << "]);\n";
 
                     writer << "\ndnnl::post_ops ops;\n";
-                    if (std::is_same<OP, ngraph::op::QuantizedDotBias>() &&
-                        has_relu<ngraph::op::QuantizedDotBias>(node))
+                    if (std::is_same<OP, ngraph::op::v0::QuantizedDotBias>() &&
+                        has_relu<ngraph::op::v0::QuantizedDotBias>(node))
                     {
                         writer << "const float ops_scale = 1.f;\n";
                         writer << "const float ops_alpha = -0.f; // relu negative slope\n";

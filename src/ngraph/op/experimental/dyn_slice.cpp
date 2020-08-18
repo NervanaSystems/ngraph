@@ -24,17 +24,17 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DynSlice::type_info;
+constexpr NodeTypeInfo op::v0::DynSlice::type_info;
 
-op::DynSlice::DynSlice(const Output<Node>& arg,
-                       const Output<Node>& lower_bounds,
-                       const Output<Node>& upper_bounds,
-                       const Output<Node>& strides,
-                       const AxisSet& lower_bounds_mask,
-                       const AxisSet& upper_bounds_mask,
-                       const AxisSet& new_axis,
-                       const AxisSet& shrink_axis,
-                       const AxisSet& ellipsis_mask)
+op::v0::DynSlice::DynSlice(const Output<Node>& arg,
+                           const Output<Node>& lower_bounds,
+                           const Output<Node>& upper_bounds,
+                           const Output<Node>& strides,
+                           const AxisSet& lower_bounds_mask,
+                           const AxisSet& upper_bounds_mask,
+                           const AxisSet& new_axis,
+                           const AxisSet& shrink_axis,
+                           const AxisSet& ellipsis_mask)
     : Op({arg, lower_bounds, upper_bounds, strides})
     , m_lower_bounds_mask(lower_bounds_mask)
     , m_upper_bounds_mask(upper_bounds_mask)
@@ -45,7 +45,7 @@ op::DynSlice::DynSlice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::DynSlice::validate_and_infer_types()
+void op::v0::DynSlice::validate_and_infer_types()
 {
     auto lower_bounds_et = get_input_element_type(1);
     auto upper_bounds_et = get_input_element_type(2);
@@ -86,9 +86,9 @@ void op::DynSlice::validate_and_infer_types()
     set_input_is_relevant_to_shape(2);
     set_input_is_relevant_to_shape(3);
 
-    auto lower_bounds = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
-    auto upper_bounds = as_type_ptr<op::Constant>(input_value(2).get_node_shared_ptr());
-    auto strides = as_type_ptr<op::Constant>(input_value(3).get_node_shared_ptr());
+    auto lower_bounds = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
+    auto upper_bounds = as_type_ptr<op::v0::Constant>(input_value(2).get_node_shared_ptr());
+    auto strides = as_type_ptr<op::v0::Constant>(input_value(3).get_node_shared_ptr());
 
     if (lower_bounds && upper_bounds && strides)
     {
@@ -111,7 +111,7 @@ void op::DynSlice::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::DynSlice::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::DynSlice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynSlice>(new_args.at(0),
@@ -125,8 +125,8 @@ shared_ptr<Node> op::DynSlice::clone_with_new_inputs(const OutputVector& new_arg
                                  m_ellipsis_mask);
 }
 
-void op::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                     const OutputVector& /* deltas */)
+void op::v0::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                         const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
 }

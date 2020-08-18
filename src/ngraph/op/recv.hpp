@@ -49,6 +49,5 @@ namespace ngraph
                 int m_src_id;
             };
         }
-        using v0::Recv;
     }
 }

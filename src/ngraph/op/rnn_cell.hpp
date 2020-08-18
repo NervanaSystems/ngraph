@@ -150,6 +150,5 @@ namespace ngraph
                 static constexpr std::size_t s_gates_count{1};
             };
         }
-        using v0::RNNCell;
     }
 }
