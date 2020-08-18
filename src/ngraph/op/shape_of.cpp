@@ -114,7 +114,7 @@ namespace
             if (evaluate_shape_of(result_tensor,
                                   make_shared<HostTensor>(output_type, partial_shape)))
             {
-                replacement = make_shared<op::Constant>(result_tensor);
+                replacement = make_shared<op::v0::Constant>(result_tensor);
                 return true;
             }
             return false;
@@ -156,7 +156,7 @@ namespace
                 }
             }
 
-            replacement = std::make_shared<op::Concat>(dimensions, 0);
+            replacement = std::make_shared<op::v0::Concat>(dimensions, 0);
             return true;
         }
         return false;
@@ -164,7 +164,7 @@ namespace
 }
 
 bool op::v3::ShapeOf::evaluate(const HostTensorVector& output_values,
-                               const HostTensorVector& input_values)
+                               const HostTensorVector& input_values) const
 {
     return evaluate_shape_of(output_values[0], input_values[0]);
 }
@@ -203,7 +203,7 @@ shared_ptr<Node> op::v0::ShapeOf::clone_with_new_inputs(const OutputVector& new_
 }
 
 bool op::v0::ShapeOf::evaluate(const HostTensorVector& output_values,
-                               const HostTensorVector& input_values)
+                               const HostTensorVector& input_values) const
 {
     return evaluate_shape_of(output_values[0], input_values[0]);
 }

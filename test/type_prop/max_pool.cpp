@@ -24,9 +24,9 @@ using namespace ngraph;
 TEST(type_prop, max_pool_1d_deduce)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
     Shape window_shape{10};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 91}));
@@ -38,10 +38,10 @@ TEST(type_prop, max_pool_1d_deduce)
 TEST(type_prop, max_pool_1d_deduce_strided)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
     Shape window_shape{10};
     auto move_strides = Strides{2};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 46}));
@@ -53,10 +53,10 @@ TEST(type_prop, max_pool_1d_deduce_strided)
 TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 5});
     Shape window_shape{2};
     auto move_strides = Strides{2};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 2}));
@@ -68,10 +68,10 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_uneven)
 TEST(type_prop, max_pool_1d_deduce_strided_small_even)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 6});
     Shape window_shape{2};
     auto move_strides = Strides{2};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 3}));
@@ -83,9 +83,9 @@ TEST(type_prop, max_pool_1d_deduce_strided_small_even)
 TEST(type_prop, max_pool_2d_deduce)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
     Shape window_shape{10, 20};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 91, 131}));
@@ -97,10 +97,10 @@ TEST(type_prop, max_pool_2d_deduce)
 TEST(type_prop, max_pool_2d_deduce_strided)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
     Shape window_shape{10, 20};
     auto move_strides = Strides{2, 3};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 46, 44}));
@@ -112,10 +112,10 @@ TEST(type_prop, max_pool_2d_deduce_strided)
 TEST(type_prop, max_pool_3d_deduce_strided_small)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
     Shape window_shape{2, 3, 2};
     auto move_strides = Strides{2, 3, 4};
-    auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+    auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
     EXPECT_EQ(max_pool->get_output_element_type(0), element::f32);
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 3, 2, 3}));
@@ -127,18 +127,18 @@ TEST(type_prop, max_pool_3d_deduce_strided_small)
 TEST(type_prop, max_pool_ceil_mode)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{64, 3, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 10});
     Shape window_shape{2};
     auto move_strides = Strides{4};
     Shape padding_below{4};
     Shape padding_above{5};
-    auto max_pool = make_shared<op::MaxPool>(param,
-                                             window_shape,
-                                             move_strides,
-                                             padding_below,
-                                             padding_above,
-                                             op::PadType::EXPLICIT,
-                                             true);
+    auto max_pool = make_shared<op::v0::MaxPool>(param,
+                                                 window_shape,
+                                                 move_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 op::PadType::EXPLICIT,
+                                                 true);
 
     // ceil((10 + 9 - 2)/4) + 1
     EXPECT_EQ(max_pool->get_output_shape(0), (Shape{64, 3, 6}));
@@ -147,11 +147,11 @@ TEST(type_prop, max_pool_ceil_mode)
 TEST(type_prop, max_pool_invalid_0d_input)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{});
     Shape window_shape{};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
@@ -169,11 +169,11 @@ TEST(type_prop, max_pool_invalid_0d_input)
 TEST(type_prop, max_pool_invalid_1d_input)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{2});
     Shape window_shape{};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
@@ -191,11 +191,11 @@ TEST(type_prop, max_pool_invalid_1d_input)
 TEST(type_prop, max_pool_invalid_2d_input)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 6});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{2, 6});
     Shape window_shape{};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
@@ -213,11 +213,11 @@ TEST(type_prop, max_pool_invalid_2d_input)
 TEST(type_prop, max_pool_invalid_0_batch_size)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{0, 6, 1});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{0, 6, 1});
     Shape window_shape{1};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
@@ -235,11 +235,11 @@ TEST(type_prop, max_pool_invalid_0_batch_size)
 TEST(type_prop, max_pool_invalid_0_channels)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 0, 1});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 0, 1});
     Shape window_shape{1};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 channels not detected";
@@ -257,11 +257,11 @@ TEST(type_prop, max_pool_invalid_0_channels)
 TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
     Shape window_shape{3, 3, 3};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many window dimensions not detected";
@@ -284,11 +284,11 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_many)
 TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
     Shape window_shape{3};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few window dimensions not detected";
@@ -311,12 +311,12 @@ TEST(type_prop, max_pool_invalid_wrong_number_of_window_dimensions_too_few)
 TEST(type_prop, max_pool_invalid_movement_stride_rank)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
     Shape window_shape{3, 3};
     auto move_strides = Strides{2, 3, 8};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
@@ -339,11 +339,11 @@ TEST(type_prop, max_pool_invalid_movement_stride_rank)
 TEST(type_prop, max_pool_invalid_input_data_size_0)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 0, 10});
     Shape window_shape{3, 3};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
@@ -363,11 +363,11 @@ TEST(type_prop, max_pool_invalid_input_data_size_0)
 TEST(type_prop, max_pool_invalid_window_size_0)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
     Shape window_shape{3, 0};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
@@ -387,11 +387,11 @@ TEST(type_prop, max_pool_invalid_window_size_0)
 TEST(type_prop, max_pool_invalid_dilated_too_large)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 8, 8});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 8, 8});
     Shape window_shape{9, 9};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized window not detected";
@@ -411,12 +411,12 @@ TEST(type_prop, max_pool_invalid_dilated_too_large)
 TEST(type_prop, max_pool_invalid_movement_stride_0)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
     Shape window_shape{3, 3};
     auto move_strides = Strides{0, 1};
     try
     {
-        auto max_pool = make_shared<op::MaxPool>(param, window_shape, move_strides);
+        auto max_pool = make_shared<op::v0::MaxPool>(param, window_shape, move_strides);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0-length movement stride axis not detected";
@@ -441,8 +441,8 @@ TEST(type_prop, max_pool_partial_rank_dynamic_ok)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{0, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
-    auto mp = make_shared<op::MaxPool>(
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
+    auto mp = make_shared<op::v0::MaxPool>(
         param, window_shape, window_movement_strides, padding_below, padding_above);
 
     ASSERT_EQ(mp->get_output_element_type(0), element::f32);
@@ -457,11 +457,11 @@ TEST(type_prop, max_pool_partial_rank_dynamic_attrib_rank_mismatch)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{0, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
 
     try
     {
-        auto mp = make_shared<op::MaxPool>(
+        auto mp = make_shared<op::v0::MaxPool>(
             param, window_shape, window_movement_strides, padding_below, padding_above);
         FAIL() << "Mismatch of attribute ranks not detected";
     }
@@ -488,8 +488,8 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_ok)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{0, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
-    auto mp = make_shared<op::MaxPool>(
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
+    auto mp = make_shared<op::v0::MaxPool>(
         param, window_shape, window_movement_strides, padding_below, padding_above);
 
     ASSERT_EQ(mp->get_output_element_type(0), element::f32);
@@ -504,8 +504,8 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_some_dims_known_ok)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{0, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
-    auto mp = make_shared<op::MaxPool>(
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
+    auto mp = make_shared<op::v0::MaxPool>(
         param, window_shape, window_movement_strides, padding_below, padding_above);
 
     ASSERT_EQ(mp->get_output_element_type(0), element::f32);
@@ -521,11 +521,11 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_attrib_rank_mismatch)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{0, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
 
     try
     {
-        auto mp = make_shared<op::MaxPool>(
+        auto mp = make_shared<op::v0::MaxPool>(
             param, window_shape, window_movement_strides, padding_below, padding_above);
         FAIL() << "Mismatch of attribute ranks not detected";
     }
@@ -552,11 +552,11 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_window_not_too_big)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{0, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
 
     try
     {
-        auto mp = make_shared<op::MaxPool>(
+        auto mp = make_shared<op::v0::MaxPool>(
             param, window_shape, window_movement_strides, padding_below, padding_above);
         FAIL() << "Oversized window not detected";
     }
@@ -580,8 +580,8 @@ TEST(type_prop, max_pool_partial_rank_static_dynamic_padded_window_not_too_big)
     Shape padding_below{0, 0, 0, 0};
     Shape padding_above{1, 0, 0, 0};
 
-    auto param = make_shared<op::Parameter>(element::f32, arg_shape);
-    auto mp = make_shared<op::MaxPool>(
+    auto param = make_shared<op::v0::Parameter>(element::f32, arg_shape);
+    auto mp = make_shared<op::v0::MaxPool>(
         param, window_shape, window_movement_strides, padding_below, padding_above);
 
     ASSERT_EQ(mp->get_output_element_type(0), element::f32);

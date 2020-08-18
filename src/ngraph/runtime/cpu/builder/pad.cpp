@@ -32,7 +32,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Pad)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Pad)
             {
                 using namespace std::placeholders;
 
@@ -42,7 +42,7 @@ namespace ngraph
                 auto padding_value_index = external_function->get_buffer_index(args[1].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                auto pad = static_cast<const ngraph::op::Pad*>(node);
+                auto pad = static_cast<const ngraph::op::v0::Pad*>(node);
 
                 auto arg_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
@@ -116,9 +116,9 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Pad)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Pad)
             {
-                auto pad = static_cast<const ngraph::op::Pad*>(node);
+                auto pad = static_cast<const ngraph::op::v0::Pad*>(node);
 
                 auto arg_shape = pad->get_input_shape(0);
                 auto out_shape = pad->get_output_shape(0);
@@ -178,8 +178,8 @@ namespace ngraph
 
             void register_builders_pad_cpp()
             {
-                REGISTER_OP_BUILDER(Pad);
-                REGISTER_CF_BUILDER(Pad);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Pad);
+                REGISTER_CF_BUILDER(ngraph::op::v0::Pad);
             }
         }
     }

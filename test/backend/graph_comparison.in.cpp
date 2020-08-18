@@ -324,7 +324,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     OutputVector new_results;
     for (auto n : func->get_ordered_ops())
     {
-        // Don't include op::Results otherwise Function c-tor will complain
+        // Don't include op::v0::Results otherwise Function c-tor will complain
         if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
             !(n->get_output_size() > 1))
         {
@@ -340,7 +340,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     unordered_map<ngraph::Node*, std::shared_ptr<ngraph::Node>> isolated_node_to_original_node;
     for (auto n : func->get_ordered_ops())
     {
-        // Don't include op::Results otherwise Function c-tor will complain
+        // Don't include op::v0::Results otherwise Function c-tor will complain
         if (!n->is_output() && !n->is_parameter() && !n->is_constant() &&
             !(n->get_output_size() > 1))
         {
@@ -353,7 +353,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
                     !(arg->get_output_size() > 1))
                 {
                     // Create new isolated arg which we'll fill in with reference results
-                    auto isolated_param = make_shared<op::Parameter>(
+                    auto isolated_param = make_shared<op::v0::Parameter>(
                         arg->get_output_element_type(0), arg->get_output_shape(0));
                     isolated_op_args.push_back(isolated_param);
                     isolated_parameters.push_back(isolated_param);
@@ -379,7 +379,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
     vector<shared_ptr<runtime::Tensor>> ref_args;
     vector<shared_ptr<runtime::Tensor>> bk_args;
     default_random_engine engine(2112);
-    for (shared_ptr<op::Parameter> param : new_func->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : new_func->get_parameters())
     {
         auto data = make_shared<ngraph::runtime::HostTensor>(param->get_element_type(),
                                                              param->get_output_shape(0));
@@ -489,7 +489,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, serialized_graph_files, compare_backends_with_gra
 
 // The set of graphs tested is not currently significant. These graphs were
 // chosen because they're already availabe and demonstrate the technique.
-NGRAPH_INSTANTIATE_TEST_CASE_P(
+NGRAPH_INSTANTIATE_TEST_SUITE_P(
     ${BACKEND_NAME},
     tf_resnet8_files,
     serialized_graph_files,

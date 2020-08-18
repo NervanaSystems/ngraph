@@ -27,12 +27,12 @@ TEST(type_prop, scatter_nd_add_fail_indices_element_type)
     Shape indices_shape{1};
     Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i16, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i16, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices element type";
     }
@@ -52,12 +52,12 @@ TEST(type_prop, scatter_nd_add_fail_indices_rank)
     Shape indices_shape{};
     Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices rank";
     }
@@ -78,12 +78,12 @@ TEST(type_prop, scatter_nd_add_fail_indices_last_dim)
     Shape indices_shape{2, 4};
     Shape updates_shape{2, 3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect indices innermost dim";
     }
@@ -105,12 +105,12 @@ TEST(type_prop, scatter_nd_add_fail_updates_element_type)
     Shape indices_shape{1};
     Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates element type";
     }
@@ -131,12 +131,12 @@ TEST(type_prop, scatter_nd_add_fail_updates_rank)
     Shape indices_shape{1};
     Shape updates_shape{3, 3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates rank";
     }
@@ -158,12 +158,12 @@ TEST(type_prop, scatter_nd_add_fail_updates_shape)
     Shape indices_shape{1};
     Shape updates_shape{2, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterNDAdd>(R, I, U);
+        auto G = make_shared<op::v0::ScatterNDAdd>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect updates shape";
     }
@@ -186,12 +186,12 @@ TEST(type_prop, scatter_nd_fail_updates_element_type)
     Shape indices_shape{1};
     Shape updates_shape{3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::i32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::i32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterND>(R, I, U);
+        auto G = make_shared<op::v0::ScatterND>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Created ScatterND op with incorrect updates element type.";
     }
@@ -213,12 +213,12 @@ TEST(type_prop, scatter_nd_fail_updates_rank)
     Shape indices_shape{1};
     Shape updates_shape{3, 3, 3};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterND>(R, I, U);
+        auto G = make_shared<op::v0::ScatterND>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Created ScatterND op with incorrect updates rank";
     }
@@ -241,12 +241,12 @@ TEST(type_prop, scatter_nd_fail_updates_shape)
     Shape indices_shape{4};
     Shape updates_shape{2};
     Shape out_shape{3, 3, 3};
-    auto R = make_shared<op::Parameter>(element::f32, ref_shape);
-    auto I = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto U = make_shared<op::Parameter>(element::f32, updates_shape);
+    auto R = make_shared<op::v0::Parameter>(element::f32, ref_shape);
+    auto I = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto U = make_shared<op::v0::Parameter>(element::f32, updates_shape);
     try
     {
-        auto G = make_shared<op::ScatterND>(R, I, U);
+        auto G = make_shared<op::v0::ScatterND>(R, I, U);
         // Should have thrown, so fail if it didn't
         FAIL() << "Created ScatterND op with incorrect indices shape";
     }

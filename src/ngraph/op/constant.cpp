@@ -25,18 +25,18 @@
 using namespace ngraph;
 using namespace std;
 
-constexpr NodeTypeInfo op::Constant::type_info;
+constexpr NodeTypeInfo op::v0::Constant::type_info;
 
-op::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
+op::v0::Constant::Constant(const shared_ptr<runtime::Tensor>& tensor)
     : Constant(tensor->get_element_type(), tensor->get_shape())
 {
     tensor->read(get_data_ptr_nc(), tensor->get_size_in_bytes());
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
 
-op::Constant::Constant(const element::Type& type,
-                       Shape shape,
-                       const std::vector<std::string>& values)
+op::v0::Constant::Constant(const element::Type& type,
+                           Shape shape,
+                           const std::vector<std::string>& values)
     : Constant(type, shape)
 {
     NODE_VALIDATION_CHECK(this,
@@ -271,7 +271,7 @@ op::Constant::Constant(const element::Type& type,
     }
 }
 
-op::Constant::Constant(const element::Type& type, const Shape& shape)
+op::v0::Constant::Constant(const element::Type& type, const Shape& shape)
     : m_element_type(type)
     , m_shape(shape)
 {
@@ -279,14 +279,14 @@ op::Constant::Constant(const element::Type& type, const Shape& shape)
     constructor_validate_and_infer_types();
 }
 
-void* op::Constant::allocate_buffer()
+void* op::v0::Constant::allocate_buffer()
 {
     m_data = make_shared<runtime::AlignedBuffer>(shape_size(m_shape) * m_element_type.size(),
                                                  host_alignment());
     return get_data_ptr_nc();
 }
 
-op::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
+op::v0::Constant::Constant(const element::Type& type, const Shape& shape, const void* data)
     : Constant(type, shape)
 {
     size_t size = ceil(shape_size(m_shape) * m_element_type.bitwidth() / 8.f);
@@ -295,7 +295,7 @@ op::Constant::Constant(const element::Type& type, const Shape& shape, const void
     m_all_elements_bitwise_identical = are_all_data_elements_bitwise_identical();
 }
 
-op::Constant::Constant(const Constant& other)
+op::v0::Constant::Constant(const Constant& other)
     : Constant(other.m_element_type, other.m_shape)
 {
     m_data = other.m_data;
@@ -303,9 +303,9 @@ op::Constant::Constant(const Constant& other)
     constructor_validate_and_infer_types();
 }
 
-op::Constant::~Constant() {}
+op::v0::Constant::~Constant() {}
 
-string op::Constant::convert_value_to_string(size_t index) const
+string op::v0::Constant::convert_value_to_string(size_t index) const
 {
     string rc;
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
@@ -344,7 +344,7 @@ string op::Constant::convert_value_to_string(size_t index) const
     return rc;
 }
 
-vector<string> op::Constant::get_value_strings() const
+vector<string> op::v0::Constant::get_value_strings() const
 {
     vector<string> rc;
 
@@ -444,7 +444,7 @@ vector<string> op::Constant::get_value_strings() const
     return rc;
 }
 
-Shape op::Constant::get_shape_val() const
+Shape op::v0::Constant::get_shape_val() const
 {
     NGRAPH_CHECK(m_element_type.is_integral_number());
     std::vector<int64_t> out_shape = cast_vector<int64_t>();
@@ -455,7 +455,7 @@ Shape op::Constant::get_shape_val() const
     return output_shape;
 }
 
-Strides op::Constant::get_strides_val() const
+Strides op::v0::Constant::get_strides_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
     std::vector<int64_t> out_strides = cast_vector<int64_t>();
@@ -467,7 +467,7 @@ Strides op::Constant::get_strides_val() const
     return output_strides;
 }
 
-Coordinate op::Constant::get_coordinate_val() const
+Coordinate op::v0::Constant::get_coordinate_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
     std::vector<int64_t> out_coordinate = cast_vector<int64_t>();
@@ -479,7 +479,7 @@ Coordinate op::Constant::get_coordinate_val() const
     return output_coordinate;
 }
 
-CoordinateDiff op::Constant::get_coordinate_diff_val() const
+CoordinateDiff op::v0::Constant::get_coordinate_diff_val() const
 {
     NGRAPH_CHECK(m_element_type == element::i64);
     std::vector<int64_t> out_coordinate_diff = cast_vector<int64_t>();
@@ -491,7 +491,7 @@ CoordinateDiff op::Constant::get_coordinate_diff_val() const
     return output_coordinate_diff;
 }
 
-AxisVector op::Constant::get_axis_vector_val() const
+AxisVector op::v0::Constant::get_axis_vector_val() const
 {
     NGRAPH_CHECK(m_element_type.is_integral_number());
     std::vector<int64_t> out_axis_vector = cast_vector<int64_t>();
@@ -503,7 +503,7 @@ AxisVector op::Constant::get_axis_vector_val() const
     return output_axis_vector;
 }
 
-AxisSet op::Constant::get_axis_set_val() const
+AxisSet op::v0::Constant::get_axis_set_val() const
 {
     NGRAPH_CHECK(m_element_type.is_integral_number());
     std::vector<int64_t> out_axis_set = cast_vector<int64_t>();
@@ -515,14 +515,14 @@ AxisSet op::Constant::get_axis_set_val() const
     return output_axis_set;
 }
 
-shared_ptr<Node> op::Constant::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Constant::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Constant>(*this);
 }
 
 template <typename T>
-static bool test_bitwise_identical(const op::Constant* constant)
+static bool test_bitwise_identical(const op::v0::Constant* constant)
 {
     const size_t size = shape_size(constant->get_output_shape(0));
     bool data_is_constant = true;
@@ -542,7 +542,7 @@ static bool test_bitwise_identical(const op::Constant* constant)
     return data_is_constant;
 }
 
-bool op::Constant::are_all_data_elements_bitwise_identical() const
+bool op::v0::Constant::are_all_data_elements_bitwise_identical() const
 {
     bool rc = false;
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
@@ -604,27 +604,28 @@ bool op::v0::Constant::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-bool op::v0::Constant::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Constant::evaluate(const HostTensorVector& outputs,
+                                const HostTensorVector& inputs) const
 {
     auto output = outputs[0];
     output->write(get_data_ptr(), output->get_size_in_bytes());
     return true;
 }
 
-constexpr NodeTypeInfo op::ScalarConstantLike::type_info;
+constexpr NodeTypeInfo op::v0::ScalarConstantLike::type_info;
 
-shared_ptr<op::Constant> op::ScalarConstantLike::as_constant() const
+shared_ptr<op::v0::Constant> op::v0::ScalarConstantLike::as_constant() const
 {
-    return std::make_shared<op::Constant>(m_element_type, m_shape, get_data_ptr());
+    return std::make_shared<op::v0::Constant>(m_element_type, m_shape, get_data_ptr());
 }
 
 std::shared_ptr<Node>
-    op::ScalarConstantLike::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::ScalarConstantLike::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return std::make_shared<ScalarConstantLike>(new_args.at(0), m_value);
 }
 
-void op::ScalarConstantLike::infer_element_type()
+void op::v0::ScalarConstantLike::infer_element_type()
 {
     m_element_type = get_input_element_type(0);
     if (nullptr == m_data)

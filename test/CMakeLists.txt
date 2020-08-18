@@ -86,10 +86,6 @@ set(SRC
     opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
-    opset_pass/logical_and_opset_pass.cpp
-    opset_pass/logical_not_opset_pass.cpp
-    opset_pass/logical_or_opset_pass.cpp
-    opset_pass/logical_xor_opset_pass.cpp
     opset_pass/one_hot_opset_pass.cpp
     opset_pass/gather_opset_pass.cpp
     opset_pass/generate_mask_opset_pass.cpp
@@ -577,7 +573,7 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE DNNL::dnnl)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_CPU_ENABLE)
+    set_property(SOURCE backend_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)

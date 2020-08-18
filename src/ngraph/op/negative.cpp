@@ -22,9 +22,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Negative::type_info;
+constexpr NodeTypeInfo op::v0::Negative::type_info;
 
-op::Negative::Negative(const Output<Node>& arg)
+op::v0::Negative::Negative(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -35,7 +35,7 @@ bool ngraph::op::v0::Negative::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Negative::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Negative::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Negative>(new_args.at(0));
@@ -90,12 +90,13 @@ namespace
     }
 }
 
-bool op::Negative::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Negative::evaluate(const HostTensorVector& outputs,
+                                const HostTensorVector& inputs) const
 {
     return evaluate_negative(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
 
-void op::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -106,5 +107,5 @@ void op::Negative::generate_adjoints(autodiff::Adjoints& adjoints, const OutputV
 
 shared_ptr<Node> ngraph::operator-(const Output<Node>& arg0)
 {
-    return make_shared<op::Negative>(arg0);
+    return make_shared<op::v0::Negative>(arg0);
 }

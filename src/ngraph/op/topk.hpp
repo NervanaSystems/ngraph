@@ -103,7 +103,7 @@ namespace ngraph
                 SortType get_sort() const { return m_sort; }
                 size_t get_default_output_index() const override { return no_default_index(); }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 element::Type m_index_element_type;
@@ -113,7 +113,7 @@ namespace ngraph
                                                const OutputVector& deltas) override;
                 Shape compute_output_shape(const Shape input_shape,
                                            const int64_t k,
-                                           const size_t axis);
+                                           const size_t axis) const;
             };
         }
 
@@ -187,7 +187,7 @@ namespace ngraph
                 void set_k(size_t k);
                 size_t get_default_output_index() const override { return no_default_index(); }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 int64_t m_axis;
@@ -203,10 +203,11 @@ namespace ngraph
                                                          const element::Type& k_element_type) const;
 
                 template <typename T>
-                size_t validate_and_get_k(const std::shared_ptr<op::Constant>& k_constant) const;
+                size_t
+                    validate_and_get_k(const std::shared_ptr<op::v0::Constant>& k_constant) const;
                 Shape compute_output_shape(const std::string& node_description,
                                            const PartialShape input_partial_shape,
-                                           const int64_t k);
+                                           const int64_t k) const;
                 void set_axis(const Rank input_rank, const int64_t axis);
             };
         }
@@ -253,7 +254,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual size_t
@@ -261,7 +262,5 @@ namespace ngraph
                                               const element::Type& k_element_type) const override;
             };
         }
-
-        using v0::TopK;
     }
 }

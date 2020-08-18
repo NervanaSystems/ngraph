@@ -21,40 +21,6 @@
 using namespace std;
 using namespace ngraph;
 
-// ------------------------------------ v0 -------------------------------------
-
-constexpr NodeTypeInfo op::v0::Multiply::type_info;
-
-op::v0::Multiply::Multiply(const Output<Node>& arg0,
-                           const Output<Node>& arg1,
-                           const AutoBroadcastSpec& auto_broadcast)
-    : BinaryElementwiseArithmetic(arg0, arg1, auto_broadcast)
-{
-    constructor_validate_and_infer_types();
-}
-
-shared_ptr<Node> op::v0::Multiply::clone_with_new_inputs(const OutputVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<op::v0::Multiply>(new_args.at(0), new_args.at(1), this->get_autob());
-}
-
-void op::v0::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
-{
-    if (get_autob().m_type != op::AutoBroadcastType::NONE)
-    {
-        throw ngraph_error("Autodiff not supported with auto broadcasting");
-    }
-
-    auto delta = deltas.at(0);
-
-    auto x = input_value(0);
-    auto y = input_value(1);
-
-    adjoints.add_delta(x, delta * y);
-    adjoints.add_delta(y, x * delta);
-}
-
 namespace
 {
     template <element::Type_t ET>
@@ -107,13 +73,6 @@ namespace
     }
 }
 
-bool op::v0::Multiply::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
-{
-    return evaluate_multiply(inputs[0], inputs[1], outputs[0], get_autob());
-}
-
-// ------------------------------------ v1 -------------------------------------
-
 constexpr NodeTypeInfo op::v1::Multiply::type_info;
 
 op::v1::Multiply::Multiply(const Output<Node>& arg0,
@@ -132,7 +91,13 @@ shared_ptr<Node> op::v1::Multiply::clone_with_new_inputs(const OutputVector& new
 
 void op::v1::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
-    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    bool static_shapes =
+        input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static();
+    if (static_shapes && input(0).get_shape() == input(1).get_shape())
+    {
+        // It does not matter if broadcast is enabled since shapes match
+    }
+    else if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }
@@ -146,7 +111,8 @@ void op::v1::Multiply::generate_adjoints(autodiff::Adjoints& adjoints, const Out
     adjoints.add_delta(y, x * delta);
 }
 
-bool op::v1::Multiply::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Multiply::evaluate(const HostTensorVector& outputs,
+                                const HostTensorVector& inputs) const
 {
     return evaluate_multiply(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -155,5 +121,5 @@ bool op::v1::Multiply::evaluate(const HostTensorVector& outputs, const HostTenso
 
 shared_ptr<Node> ngraph::operator*(const Output<Node>& arg0, const Output<Node>& arg1)
 {
-    return make_shared<op::Multiply>(arg0, arg1);
+    return make_shared<op::v1::Multiply>(arg0, arg1);
 }

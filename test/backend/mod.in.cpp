@@ -43,8 +43,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_3x2_3x2_int32)
 {
     Shape shape{3, 2};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -64,8 +64,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_3x3_3x3_negative_mix_int32)
 {
     Shape shape{3, 3};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto B = make_shared<op::Parameter>(element::i32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -85,8 +85,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_3x2_3x2_f32)
 {
     Shape shape{3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -117,8 +117,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_3x2_scalar_int32)
     Shape shape_a{3, 2};
     Shape shape_b{};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto B = make_shared<op::Parameter>(element::i32, shape_b);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape_b);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -139,8 +139,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_scalar_3x2_int32)
     Shape shape_a{};
     Shape shape_b{3, 2};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto B = make_shared<op::Parameter>(element::i32, shape_b);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape_b);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -161,8 +161,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_3_2x2x3_int32)
     Shape shape_a{3};
     Shape shape_b{2, 2, 3};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto B = make_shared<op::Parameter>(element::i32, shape_b);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape_b);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -184,8 +184,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_2x2x3_3_int32)
     Shape shape_a{2, 2, 3};
     Shape shape_b{3};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto B = make_shared<op::Parameter>(element::i32, shape_b);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape_b);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -208,8 +208,8 @@ NGRAPH_TEST(${BACKEND_NAME}, mod_2x3x1x1_4x5_int32)
     Shape shape_b{4, 5};
     Shape shape_o{2, 3, 4, 5};
 
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto B = make_shared<op::Parameter>(element::i32, shape_b);
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i32, shape_b);
     auto f = make_shared<Function>(make_shared<op::v1::Mod>(A, B), ParameterVector{A, B});
 
     vector<int32_t> a_data{20, 31, 42, 56, 68, 102};

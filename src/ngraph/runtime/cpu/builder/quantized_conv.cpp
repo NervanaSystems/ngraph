@@ -34,9 +34,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolution)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedConvolution)
             {
-                auto qconvolution = static_cast<const ngraph::op::QuantizedConvolution*>(node);
+                auto qconvolution = static_cast<const ngraph::op::v0::QuantizedConvolution*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -62,10 +62,12 @@ namespace ngraph
 
                     auto conv_desc =
                         dnnl_emitter
-                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolution>(node);
+                            ->get_convolution_forward_desc<ngraph::op::v0::QuantizedConvolution>(
+                                node);
                     auto conv_attr =
                         dnnl_emitter
-                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolution>(node);
+                            ->get_convolution_forward_attr<ngraph::op::v0::QuantizedConvolution>(
+                                node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -327,7 +329,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionRelu)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedConvolutionRelu)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -343,14 +345,10 @@ namespace ngraph
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto scales_size = shape_size(args[2].get_shape());
 
-                    auto conv_desc =
-                        dnnl_emitter
-                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionRelu>(
-                                node);
-                    auto conv_attr =
-                        dnnl_emitter
-                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionRelu>(
-                                node);
+                    auto conv_desc = dnnl_emitter->get_convolution_forward_desc<
+                        ngraph::op::v0::QuantizedConvolutionRelu>(node);
+                    auto conv_attr = dnnl_emitter->get_convolution_forward_attr<
+                        ngraph::op::v0::QuantizedConvolutionRelu>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -413,7 +411,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionBias)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedConvolutionBias)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -431,14 +429,10 @@ namespace ngraph
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto scales_size = shape_size(args[3].get_shape());
 
-                    auto conv_desc =
-                        dnnl_emitter
-                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBias>(
-                                node);
-                    auto conv_attr =
-                        dnnl_emitter
-                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBias>(
-                                node);
+                    auto conv_desc = dnnl_emitter->get_convolution_forward_desc<
+                        ngraph::op::v0::QuantizedConvolutionBias>(node);
+                    auto conv_attr = dnnl_emitter->get_convolution_forward_attr<
+                        ngraph::op::v0::QuantizedConvolutionBias>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -504,7 +498,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedConvolutionBiasAdd)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -529,14 +523,10 @@ namespace ngraph
 
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
-                    auto conv_desc =
-                        dnnl_emitter
-                            ->get_convolution_forward_desc<ngraph::op::QuantizedConvolutionBiasAdd>(
-                                node);
-                    auto conv_attr =
-                        dnnl_emitter
-                            ->get_convolution_forward_attr<ngraph::op::QuantizedConvolutionBiasAdd>(
-                                node);
+                    auto conv_desc = dnnl_emitter->get_convolution_forward_desc<
+                        ngraph::op::v0::QuantizedConvolutionBiasAdd>(node);
+                    auto conv_attr = dnnl_emitter->get_convolution_forward_attr<
+                        ngraph::op::v0::QuantizedConvolutionBiasAdd>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -636,7 +626,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedConvolutionBiasSignedAdd)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -662,9 +652,9 @@ namespace ngraph
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
 
                     auto conv_desc = dnnl_emitter->get_convolution_forward_desc<
-                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
+                        ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>(node);
                     auto conv_attr = dnnl_emitter->get_convolution_forward_attr<
-                        ngraph::op::QuantizedConvolutionBiasSignedAdd>(node);
+                        ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -765,11 +755,11 @@ namespace ngraph
 
             void register_builders_quantized_conv_cpp()
             {
-                REGISTER_OP_BUILDER(QuantizedConvolution);
-                REGISTER_OP_BUILDER(QuantizedConvolutionRelu);
-                REGISTER_OP_BUILDER(QuantizedConvolutionBias);
-                REGISTER_OP_BUILDER(QuantizedConvolutionBiasAdd);
-                REGISTER_OP_BUILDER(QuantizedConvolutionBiasSignedAdd);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolution);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionRelu);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionBiasAdd);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedConvolutionBiasSignedAdd);
             }
         }
     }

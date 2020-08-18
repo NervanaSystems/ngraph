@@ -24,16 +24,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Sigmoid::type_info;
-constexpr NodeTypeInfo op::SigmoidBackprop::type_info;
+constexpr NodeTypeInfo op::v0::Sigmoid::type_info;
+constexpr NodeTypeInfo op::v0::SigmoidBackprop::type_info;
 
-shared_ptr<Node> op::Sigmoid::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Sigmoid::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Sigmoid>(new_args.at(0));
 }
 
-op::Sigmoid::Sigmoid(const Output<Node>& arg)
+op::v0::Sigmoid::Sigmoid(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -88,27 +88,28 @@ namespace
     }
 }
 
-bool op::Sigmoid::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Sigmoid::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_sigmoid(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
 
-op::SigmoidBackprop::SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta)
+op::v0::SigmoidBackprop::SigmoidBackprop(const Output<Node>& arg, const Output<Node>& delta)
     : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::SigmoidBackprop::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::SigmoidBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<SigmoidBackprop>(new_args.at(0), new_args.at(1));
 }
 
-void op::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Sigmoid::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::SigmoidBackprop>(input_value(0), delta);
+    auto backprop = make_shared<op::v0::SigmoidBackprop>(input_value(0), delta);
     adjoints.add_delta(input_value(0), backprop);
 }

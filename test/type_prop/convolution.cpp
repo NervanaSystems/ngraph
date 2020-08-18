@@ -24,9 +24,9 @@ using namespace ngraph;
 TEST(type_prop, conv_1d_deduce)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
-    auto conv = make_shared<op::Convolution>(param0, param1);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
+    auto conv = make_shared<op::v0::Convolution>(param0, param1);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91}));
 
@@ -42,16 +42,16 @@ TEST(type_prop, conv_1d_back_data_batch_deduce)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         Strides{1},
-                                                         Strides{1},
-                                                         CoordinateDiff{0},
-                                                         CoordinateDiff{0},
-                                                         Strides{1});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             Strides{1},
+                                                             Strides{1},
+                                                             CoordinateDiff{0},
+                                                             CoordinateDiff{0},
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -68,16 +68,16 @@ TEST(type_prop, conv_1d_back_filters_deduce)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            Strides{1},
-                                                            Strides{1},
-                                                            CoordinateDiff{0},
-                                                            CoordinateDiff{0},
-                                                            Strides{1});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 91}); // output delta
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                Strides{1},
+                                                                Strides{1},
+                                                                CoordinateDiff{0},
+                                                                CoordinateDiff{0},
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -92,13 +92,13 @@ TEST(type_prop, conv_1d_back_filters_deduce)
 TEST(type_prop, conv_1d_deduce_padded)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::Convolution>(
+    auto conv = make_shared<op::v0::Convolution>(
         param0, param1, move_strides, dilation_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 96}));
@@ -115,20 +115,20 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_padded)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
     auto move_strides = Strides{1};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         dilation_strides,
-                                                         padding_below,
-                                                         padding_above,
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -145,20 +145,20 @@ TEST(type_prop, conv_1d_back_filters_deduce_padded)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 96}); // output delta
     auto move_strides = Strides{1};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            dilation_strides,
-                                                            padding_below,
-                                                            padding_above,
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                dilation_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -173,10 +173,10 @@ TEST(type_prop, conv_1d_back_filters_deduce_padded)
 TEST(type_prop, conv_1d_deduce_strided)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 46}));
 
@@ -192,17 +192,17 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         Strides{1},
-                                                         CoordinateDiff{0},
-                                                         CoordinateDiff{0},
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             Strides{1},
+                                                             CoordinateDiff{0},
+                                                             CoordinateDiff{0},
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -219,17 +219,17 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 46}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            Strides{1},
-                                                            CoordinateDiff{0},
-                                                            CoordinateDiff{0},
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                Strides{1},
+                                                                CoordinateDiff{0},
+                                                                CoordinateDiff{0},
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -244,13 +244,13 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided)
 TEST(type_prop, conv_1d_deduce_strided_padded)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{2};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::Convolution>(
+    auto conv = make_shared<op::v0::Convolution>(
         param0, param1, move_strides, dilation_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 48}));
@@ -267,20 +267,20 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_padded)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
     auto move_strides = Strides{2};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         dilation_strides,
-                                                         padding_below,
-                                                         padding_above,
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             dilation_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -297,20 +297,20 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 48}); // output delta
     auto move_strides = Strides{2};
     auto dilation_strides = Strides{1};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            dilation_strides,
-                                                            padding_below,
-                                                            padding_above,
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                dilation_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -325,10 +325,10 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_padded)
 TEST(type_prop, conv_1d_deduce_strided_small_uneven)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 5});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2});
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 2}));
 
@@ -344,17 +344,17 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_uneven)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 5};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         Strides{1},
-                                                         CoordinateDiff{0},
-                                                         CoordinateDiff{0},
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             Strides{1},
+                                                             CoordinateDiff{0},
+                                                             CoordinateDiff{0},
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -371,17 +371,17 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
     // Deduce type
     // Shape data_batch_shape{64, 3, 5};
     Shape filters_shape{128, 3, 2};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 5});   // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 2}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            Strides{1},
-                                                            CoordinateDiff{0},
-                                                            CoordinateDiff{0},
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                Strides{1},
+                                                                CoordinateDiff{0},
+                                                                CoordinateDiff{0},
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -396,10 +396,10 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_small_uneven)
 TEST(type_prop, conv_1d_deduce_strided_small_even)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 6});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2});
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 3}));
 
@@ -415,17 +415,17 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_strided_small_even)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 6};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         Strides{1},
-                                                         CoordinateDiff{0},
-                                                         CoordinateDiff{0},
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             Strides{1},
+                                                             CoordinateDiff{0},
+                                                             CoordinateDiff{0},
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -442,17 +442,17 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
     // Deduce type
     // Shape data_batch_shape{64, 3, 6};
     Shape filters_shape{128, 3, 2};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 6});   // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 3}); // output delta
     auto move_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            Strides{1},
-                                                            CoordinateDiff{0},
-                                                            CoordinateDiff{0},
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                Strides{1},
+                                                                CoordinateDiff{0},
+                                                                CoordinateDiff{0},
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -467,11 +467,11 @@ TEST(type_prop, conv_1d_back_filters_deduce_strided_small_even)
 TEST(type_prop, conv_1d_deduce_window_dilated)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides, dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 82}));
 
@@ -487,18 +487,18 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         dilate_strides,
-                                                         CoordinateDiff{0},
-                                                         CoordinateDiff{0},
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             dilate_strides,
+                                                             CoordinateDiff{0},
+                                                             CoordinateDiff{0},
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -515,18 +515,18 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 82}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            dilate_strides,
-                                                            CoordinateDiff{0},
-                                                            CoordinateDiff{0},
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                dilate_strides,
+                                                                CoordinateDiff{0},
+                                                                CoordinateDiff{0},
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -541,13 +541,13 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated)
 TEST(type_prop, conv_1d_deduce_window_dilated_padded)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::Convolution>(
+    auto conv = make_shared<op::v0::Convolution>(
         param0, param1, move_strides, dilate_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 87}));
@@ -564,20 +564,20 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_padded)
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});  // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});  // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         dilate_strides,
-                                                         padding_below,
-                                                         padding_above,
-                                                         Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             dilate_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -594,20 +594,20 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});  // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 87}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            dilate_strides,
-                                                            padding_below,
-                                                            padding_above,
-                                                            Strides{1});
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                dilate_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                Strides{1});
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -622,20 +622,20 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_padded)
 TEST(type_prop, conv_1d_deduce_window_dilated_data_dilated_padded)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
     auto data_dilate_strides = Strides{3};
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             move_strides,
-                                             dilate_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 move_strides,
+                                                 dilate_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 285}));
 
@@ -651,21 +651,21 @@ TEST(type_prop, conv_1d_back_data_batch_deduce_window_dilated_data_dilated_padde
 {
     // Deduce type
     Shape data_batch_shape{64, 3, 100};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10});   // filters
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10});   // filters
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
     auto data_dilate_strides = Strides{3};
-    auto conv = make_shared<op::ConvolutionBackpropData>(data_batch_shape,
-                                                         param0,
-                                                         param1,
-                                                         move_strides,
-                                                         dilate_strides,
-                                                         padding_below,
-                                                         padding_above,
-                                                         data_dilate_strides);
+    auto conv = make_shared<op::v0::ConvolutionBackpropData>(data_batch_shape,
+                                                             param0,
+                                                             param1,
+                                                             move_strides,
+                                                             dilate_strides,
+                                                             padding_below,
+                                                             padding_above,
+                                                             data_dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), data_batch_shape);
 
@@ -682,21 +682,21 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
     // Deduce type
     // Shape data_batch_shape{64, 3, 100};
     Shape filters_shape{128, 3, 10};
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100});   // data batch
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 128, 285}); // output delta
     auto move_strides = Strides{1};
     auto dilate_strides = Strides{2};
     auto padding_below = CoordinateDiff{2};
     auto padding_above = CoordinateDiff{3};
     auto data_dilate_strides = Strides{3};
-    auto conv = make_shared<op::ConvolutionBackpropFilters>(param0,
-                                                            filters_shape,
-                                                            param1,
-                                                            move_strides,
-                                                            dilate_strides,
-                                                            padding_below,
-                                                            padding_above,
-                                                            data_dilate_strides);
+    auto conv = make_shared<op::v0::ConvolutionBackpropFilters>(param0,
+                                                                filters_shape,
+                                                                param1,
+                                                                move_strides,
+                                                                dilate_strides,
+                                                                padding_below,
+                                                                padding_above,
+                                                                data_dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), filters_shape);
 
@@ -711,9 +711,9 @@ TEST(type_prop, conv_1d_back_filters_deduce_window_dilated_data_dilated_padded)
 TEST(type_prop, conv_2d_deduce)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
-    auto conv = make_shared<op::Convolution>(param0, param1);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto conv = make_shared<op::v0::Convolution>(param0, param1);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91, 131}));
 
@@ -728,13 +728,13 @@ TEST(type_prop, conv_2d_deduce)
 TEST(type_prop, conv_2d_deduce_padded)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{1, 1};
     auto dilate_strides = Strides{1, 1};
     auto padding_below = CoordinateDiff{2, 3};
     auto padding_above = CoordinateDiff{3, 4};
-    auto conv = make_shared<op::Convolution>(
+    auto conv = make_shared<op::v0::Convolution>(
         param0, param1, move_strides, dilate_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 96, 138}));
@@ -750,13 +750,13 @@ TEST(type_prop, conv_2d_deduce_padded)
 TEST(type_prop, conv_2d_deduce_padded_neg)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{1, 1};
     auto dilate_strides = Strides{1, 1};
     auto padding_below = CoordinateDiff{2, -3};
     auto padding_above = CoordinateDiff{3, -4};
-    auto conv = make_shared<op::Convolution>(
+    auto conv = make_shared<op::v0::Convolution>(
         param0, param1, move_strides, dilate_strides, padding_below, padding_above);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 96, 124}));
@@ -781,17 +781,17 @@ TEST_P(DeduceAutoPadTest, same_upper)
     image_shape.insert(image_shape.begin(), {1, 1}); // Add {N, C}
     auto filter_shape = std::get<1>(GetParam());
     filter_shape.insert(filter_shape.begin(), {1, 1}); // Add {O, I}
-    auto param0 = make_shared<op::Parameter>(element::f32, image_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filter_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, image_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filter_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             std::get<2>(GetParam()),
-                                             std::get<3>(GetParam()),
-                                             CoordinateDiff(),
-                                             CoordinateDiff(),
-                                             Strides(),
-                                             op::PadType::SAME_UPPER);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 std::get<2>(GetParam()),
+                                                 std::get<3>(GetParam()),
+                                                 CoordinateDiff(),
+                                                 CoordinateDiff(),
+                                                 Strides(),
+                                                 op::PadType::SAME_UPPER);
     EXPECT_EQ(conv->get_padding_below(), std::get<4>(GetParam()));
     EXPECT_EQ(conv->get_padding_above(), std::get<5>(GetParam()));
 
@@ -800,12 +800,12 @@ TEST_P(DeduceAutoPadTest, same_upper)
                                    [](size_t i) { return i <= 1; });
     if (no_dilation)
     {
-        auto max_pool = make_shared<op::MaxPool>(param0,
-                                                 std::get<1>(GetParam()),
-                                                 std::get<2>(GetParam()),
-                                                 Shape(),
-                                                 Shape(),
-                                                 op::PadType::SAME_UPPER);
+        auto max_pool = make_shared<op::v0::MaxPool>(param0,
+                                                     std::get<1>(GetParam()),
+                                                     std::get<2>(GetParam()),
+                                                     Shape(),
+                                                     Shape(),
+                                                     op::PadType::SAME_UPPER);
         CoordinateDiff padding_below(max_pool->get_padding_below().begin(),
                                      max_pool->get_padding_below().end());
         CoordinateDiff padding_above(max_pool->get_padding_above().begin(),
@@ -813,13 +813,13 @@ TEST_P(DeduceAutoPadTest, same_upper)
         EXPECT_EQ(padding_below, std::get<4>(GetParam()));
         EXPECT_EQ(padding_above, std::get<5>(GetParam()));
 
-        auto avg_pool = make_shared<op::AvgPool>(param0,
-                                                 std::get<1>(GetParam()),
-                                                 std::get<2>(GetParam()),
-                                                 Shape(),
-                                                 Shape(),
-                                                 false,
-                                                 op::PadType::SAME_UPPER);
+        auto avg_pool = make_shared<op::v0::AvgPool>(param0,
+                                                     std::get<1>(GetParam()),
+                                                     std::get<2>(GetParam()),
+                                                     Shape(),
+                                                     Shape(),
+                                                     false,
+                                                     op::PadType::SAME_UPPER);
         CoordinateDiff pad_below(avg_pool->get_padding_below().begin(),
                                  avg_pool->get_padding_below().end());
         CoordinateDiff pad_above(avg_pool->get_padding_above().begin(),
@@ -835,73 +835,73 @@ TEST_P(DeduceAutoPadTest, same_lower)
     image_shape.insert(image_shape.begin(), {1, 1}); // Add {N, C}
     auto filter_shape = std::get<1>(GetParam());
     filter_shape.insert(filter_shape.begin(), {1, 1}); // Add {O, I}
-    auto param0 = make_shared<op::Parameter>(element::f32, image_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filter_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, image_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filter_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             std::get<2>(GetParam()),
-                                             std::get<3>(GetParam()),
-                                             CoordinateDiff(),
-                                             CoordinateDiff(),
-                                             Strides(),
-                                             op::PadType::SAME_LOWER);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 std::get<2>(GetParam()),
+                                                 std::get<3>(GetParam()),
+                                                 CoordinateDiff(),
+                                                 CoordinateDiff(),
+                                                 Strides(),
+                                                 op::PadType::SAME_LOWER);
     EXPECT_EQ(conv->get_padding_above(), std::get<4>(GetParam()));
     EXPECT_EQ(conv->get_padding_below(), std::get<5>(GetParam()));
 }
 
-INSTANTIATE_TEST_CASE_P(type_prop,
-                        DeduceAutoPadTest,
-                        ::testing::Values(std::make_tuple(Shape{5, 6},
-                                                          Shape{3, 4},
-                                                          Strides{2, 1},
-                                                          Strides{1, 1},
-                                                          CoordinateDiff{1, 1},
-                                                          CoordinateDiff{1, 2}),
-                                          std::make_tuple(Shape{3, 3},
-                                                          Shape{2, 2},
-                                                          Strides{1, 1},
-                                                          Strides{1, 1},
-                                                          CoordinateDiff{0, 0},
-                                                          CoordinateDiff{1, 1}),
-                                          std::make_tuple(Shape{28, 28},
-                                                          Shape{3, 3},
-                                                          Strides{2, 2},
-                                                          Strides{1, 1},
-                                                          CoordinateDiff{0, 0},
-                                                          CoordinateDiff{1, 1}),
-                                          std::make_tuple(Shape{100, 150},
-                                                          Shape{10, 20},
-                                                          Strides{1, 1},
-                                                          Strides{1, 1},
-                                                          CoordinateDiff{4, 9},
-                                                          CoordinateDiff{5, 10}),
-                                          std::make_tuple(Shape{2},
-                                                          Shape{1},
-                                                          Strides{3},
-                                                          Strides{1},
-                                                          CoordinateDiff{0},
-                                                          CoordinateDiff{0}),
-                                          std::make_tuple(Shape{10, 1},
-                                                          Shape{4, 1},
-                                                          Strides{1, 1},
-                                                          Strides{2, 1},
-                                                          CoordinateDiff{3, 0},
-                                                          CoordinateDiff{3, 0}),
-                                          std::make_tuple(Shape{10, 5, 6},
-                                                          Shape{3, 3, 4},
-                                                          Strides{1, 2, 1},
-                                                          Strides{2, 1, 1},
-                                                          CoordinateDiff{2, 1, 1},
-                                                          CoordinateDiff{2, 1, 2})), );
+INSTANTIATE_TEST_SUITE_P(type_prop,
+                         DeduceAutoPadTest,
+                         ::testing::Values(std::make_tuple(Shape{5, 6},
+                                                           Shape{3, 4},
+                                                           Strides{2, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{1, 1},
+                                                           CoordinateDiff{1, 2}),
+                                           std::make_tuple(Shape{3, 3},
+                                                           Shape{2, 2},
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{0, 0},
+                                                           CoordinateDiff{1, 1}),
+                                           std::make_tuple(Shape{28, 28},
+                                                           Shape{3, 3},
+                                                           Strides{2, 2},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{0, 0},
+                                                           CoordinateDiff{1, 1}),
+                                           std::make_tuple(Shape{100, 150},
+                                                           Shape{10, 20},
+                                                           Strides{1, 1},
+                                                           Strides{1, 1},
+                                                           CoordinateDiff{4, 9},
+                                                           CoordinateDiff{5, 10}),
+                                           std::make_tuple(Shape{2},
+                                                           Shape{1},
+                                                           Strides{3},
+                                                           Strides{1},
+                                                           CoordinateDiff{0},
+                                                           CoordinateDiff{0}),
+                                           std::make_tuple(Shape{10, 1},
+                                                           Shape{4, 1},
+                                                           Strides{1, 1},
+                                                           Strides{2, 1},
+                                                           CoordinateDiff{3, 0},
+                                                           CoordinateDiff{3, 0}),
+                                           std::make_tuple(Shape{10, 5, 6},
+                                                           Shape{3, 3, 4},
+                                                           Strides{1, 2, 1},
+                                                           Strides{2, 1, 1},
+                                                           CoordinateDiff{2, 1, 1},
+                                                           CoordinateDiff{2, 1, 2})));
 
 TEST(type_prop, conv_2d_deduce_strided)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{2, 3};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 46, 44}));
 
@@ -916,11 +916,11 @@ TEST(type_prop, conv_2d_deduce_strided)
 TEST(type_prop, conv_2d_deduce_strided_window_dilated)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{2, 3};
     auto dilate_strides = Strides{3, 2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides, dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 37, 38}));
 
@@ -935,20 +935,20 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated)
 TEST(type_prop, conv_2d_deduce_strided_window_dilated_data_dilated)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 100, 150});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 10, 20});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 100, 150});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 10, 20});
     auto move_strides = Strides{2, 3};
     auto dilate_strides = Strides{3, 2};
     auto padding_below = CoordinateDiff{0, 0};
     auto padding_above = CoordinateDiff{0, 0};
     auto data_dilate_strides = Strides{2, 3};
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             move_strides,
-                                             dilate_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 move_strides,
+                                                 dilate_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 86, 137}));
 
@@ -963,11 +963,11 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_data_dilated)
 TEST(type_prop, conv_2d_deduce_strided_window_dilated_small)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 7, 8});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2, 3});
     auto move_strides = Strides{2, 3};
     auto dilate_strides = Strides{3, 2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides, dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 2, 2}));
 
@@ -982,11 +982,11 @@ TEST(type_prop, conv_2d_deduce_strided_window_dilated_small)
 TEST(type_prop, conv_3d_deduce_strided_window_dilated_small)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2, 3, 2});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2, 3, 2});
     auto move_strides = Strides{2, 3, 4};
     auto dilate_strides = Strides{3, 2, 2};
-    auto conv = make_shared<op::Convolution>(param0, param1, move_strides, dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0, param1, move_strides, dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 2, 2, 2}));
 
@@ -1001,20 +1001,20 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_small)
 TEST(type_prop, conv_3d_deduce_strided_window_dilated_data_dilated_small)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{128, 3, 2, 3, 2});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 7, 8, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{128, 3, 2, 3, 2});
     auto move_strides = Strides{2, 3, 4};
     auto dilate_strides = Strides{3, 2, 2};
     auto padding_below = CoordinateDiff{0, 0, 0};
     auto padding_above = CoordinateDiff{0, 0, 0};
     auto data_dilate_strides = Strides{2, 3, 2};
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             move_strides,
-                                             dilate_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilate_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 move_strides,
+                                                 dilate_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilate_strides);
     EXPECT_EQ(conv->get_output_element_type(0), element::f32);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 5, 6, 5}));
 
@@ -1029,11 +1029,11 @@ TEST(type_prop, conv_3d_deduce_strided_window_dilated_data_dilated_small)
 TEST(type_prop, conv_invalid_element_type_mismatch)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{3, 3, 3, 3});
-    auto param1 = make_shared<op::Parameter>(element::i32, Shape{3, 3, 2, 2});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{3, 3, 3, 3});
+    auto param1 = make_shared<op::v0::Parameter>(element::i32, Shape{3, 3, 2, 2});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with element type mismatch not detected";
@@ -1052,11 +1052,11 @@ TEST(type_prop, conv_invalid_element_type_mismatch)
 TEST(type_prop, conv_invalid_0d_input)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 0D input not detected";
@@ -1077,11 +1077,11 @@ TEST(type_prop, conv_invalid_0d_input)
 TEST(type_prop, conv_invalid_1d_input)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{2});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 1D input not detected";
@@ -1102,11 +1102,11 @@ TEST(type_prop, conv_invalid_1d_input)
 TEST(type_prop, conv_invalid_2d_input)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{2, 6});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{2, 6});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 6});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 6});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid 2D input not detected";
@@ -1127,11 +1127,11 @@ TEST(type_prop, conv_invalid_2d_input)
 TEST(type_prop, conv_invalid_0_batch_size)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{0, 6, 1});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{0, 6, 1});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{0, 6, 1});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{0, 6, 1});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 batch size not detected";
@@ -1149,11 +1149,11 @@ TEST(type_prop, conv_invalid_0_batch_size)
 TEST(type_prop, conv_invalid_0_input_channels)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 0, 1});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 0, 1});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 0, 1});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{5, 0, 1});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 input channels not detected";
@@ -1173,11 +1173,11 @@ TEST(type_prop, conv_invalid_0_input_channels)
 TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{5, 2, 3, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too many filter dimensions not detected";
@@ -1195,11 +1195,11 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_many)
 TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{5, 2, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{5, 2, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with too few filter dimensions not detected";
@@ -1217,11 +1217,11 @@ TEST(type_prop, conv_invalid_wrong_number_of_filter_dimensions_too_few)
 TEST(type_prop, conv_invalid_0_output_channels)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{0, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{0, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with 0 output channels not detected";
@@ -1239,11 +1239,11 @@ TEST(type_prop, conv_invalid_0_output_channels)
 TEST(type_prop, conv_invalid_input_channel_mismatch)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 3, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 3, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with channel count mismatch not detected";
@@ -1264,11 +1264,11 @@ TEST(type_prop, conv_invalid_input_channel_mismatch)
 TEST(type_prop, conv_invalid_movement_stride_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1, Strides{2, 3, 8});
+        auto conv = make_shared<op::v0::Convolution>(param0, param1, Strides{2, 3, 8});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong movement stride rank not detected";
@@ -1293,11 +1293,12 @@ TEST(type_prop, conv_invalid_movement_stride_rank)
 TEST(type_prop, conv_invalid_window_dilation_stride_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1, Strides{2, 3}, Strides{2, 3, 8});
+        auto conv =
+            make_shared<op::v0::Convolution>(param0, param1, Strides{2, 3}, Strides{2, 3, 8});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong window dilation stride rank not detected";
@@ -1322,17 +1323,17 @@ TEST(type_prop, conv_invalid_window_dilation_stride_rank)
 TEST(type_prop, conv_invalid_data_dilation_stride_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 Strides{2, 3},
-                                                 Strides{2, 3},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{2, 3, 8});
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     Strides{2, 3},
+                                                     Strides{2, 3},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0},
+                                                     Strides{2, 3, 8});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong data dilation stride rank not detected";
@@ -1357,16 +1358,16 @@ TEST(type_prop, conv_invalid_data_dilation_stride_rank)
 TEST(type_prop, conv_invalid_padding_below_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 Strides{2, 3},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{0, 0, 0},
-                                                 CoordinateDiff{0, 0});
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     Strides{2, 3},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{0, 0, 0},
+                                                     CoordinateDiff{0, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-below rank not detected";
@@ -1391,16 +1392,16 @@ TEST(type_prop, conv_invalid_padding_below_rank)
 TEST(type_prop, conv_invalid_padding_above_rank)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 Strides{2, 3},
-                                                 Strides{2, 3},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0, 0});
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     Strides{2, 3},
+                                                     Strides{2, 3},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong padding-above rank not detected";
@@ -1425,16 +1426,16 @@ TEST(type_prop, conv_invalid_padding_above_rank)
 TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{-4, 0},
-                                                 CoordinateDiff{-7, 0});
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{-4, 0},
+                                                     CoordinateDiff{-7, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with negative-length post-padding spatial axis not detected";
@@ -1454,16 +1455,16 @@ TEST(type_prop, conv_invalid_input_spatial_size_negative_after_padding)
 TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 Strides{1, 1},
-                                                 Strides{1, 1},
-                                                 CoordinateDiff{-4, 0},
-                                                 CoordinateDiff{-6, 0});
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     Strides{1, 1},
+                                                     Strides{1, 1},
+                                                     CoordinateDiff{-4, 0},
+                                                     CoordinateDiff{-6, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length post-padding spatial axis not detected";
@@ -1483,11 +1484,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_zero_after_padding)
 TEST(type_prop, conv_invalid_input_spatial_size_0)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 0, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 0, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length spatial axis not detected";
@@ -1507,11 +1508,11 @@ TEST(type_prop, conv_invalid_input_spatial_size_0)
 TEST(type_prop, conv_invalid_window_size_0)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 0});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 0});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1);
+        auto conv = make_shared<op::v0::Convolution>(param0, param1);
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with zero-length window axis not detected";
@@ -1531,11 +1532,11 @@ TEST(type_prop, conv_invalid_window_size_0)
 TEST(type_prop, conv_invalid_window_dilation_stride_0)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1, Strides{2, 3}, Strides{2, 0});
+        auto conv = make_shared<op::v0::Convolution>(param0, param1, Strides{2, 3}, Strides{2, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length window dilation stride axis not detected";
@@ -1555,17 +1556,17 @@ TEST(type_prop, conv_invalid_window_dilation_stride_0)
 TEST(type_prop, conv_invalid_data_dilation_stride_0)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 Strides{2, 3},
-                                                 Strides{2, 3},
-                                                 CoordinateDiff{0, 0},
-                                                 CoordinateDiff{0, 0},
-                                                 Strides{2, 0});
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     Strides{2, 3},
+                                                     Strides{2, 3},
+                                                     CoordinateDiff{0, 0},
+                                                     CoordinateDiff{0, 0},
+                                                     Strides{2, 0});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length data dilation stride axis not detected";
@@ -1585,11 +1586,11 @@ TEST(type_prop, conv_invalid_data_dilation_stride_0)
 TEST(type_prop, conv_invalid_dilated_window_too_large)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 8, 8});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 8, 8});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1, Strides{1, 1}, Strides{4, 4});
+        auto conv = make_shared<op::v0::Convolution>(param0, param1, Strides{1, 1}, Strides{4, 4});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with oversized dilated window not detected";
@@ -1609,11 +1610,11 @@ TEST(type_prop, conv_invalid_dilated_window_too_large)
 TEST(type_prop, conv_invalid_movement_stride_0)
 {
     // Deduce type
-    auto param0 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 10, 10});
-    auto param1 = make_shared<op::Parameter>(element::f32, Shape{6, 2, 3, 3});
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 10, 10});
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, Shape{6, 2, 3, 3});
     try
     {
-        auto conv = make_shared<op::Convolution>(param0, param1, Strides{0, 1});
+        auto conv = make_shared<op::v0::Convolution>(param0, param1, Strides{0, 1});
 
         // Should have thrown, so fail if it didn't
         FAIL() << "Invalid input with wrong 0-length movement stride axis not detected";
@@ -1640,16 +1641,16 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_ok)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -1665,18 +1666,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_strides_rank_wrong
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Window stride rank mismatch not detected";
     }
@@ -1706,18 +1707,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_strides_dim_zero)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Window stride with dimension zero not detected";
     }
@@ -1743,18 +1744,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_dilation_rank_wron
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Window dilation rank mismatch not detected";
     }
@@ -1784,18 +1785,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_window_dilation_dim_zero)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Window dilation with dimension zero not detected";
     }
@@ -1821,18 +1822,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_padding_below_rank_wrong)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Padding below rank mismatch not detected";
     }
@@ -1862,18 +1863,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_padding_above_rank_wrong)
     CoordinateDiff padding_above{0, 0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Padding above rank mismatch not detected";
     }
@@ -1903,18 +1904,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_data_dilation_rank_wrong)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Data dilation rank mismatch not detected";
     }
@@ -1944,18 +1945,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_dynamic_data_dilation_dim_zero)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 0};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Data dilation with dimension zero not detected";
     }
@@ -1981,16 +1982,16 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_ok)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -2006,18 +2007,18 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_data_batch_rank_wr
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Data batch rank mismatch not detected";
     }
@@ -2049,16 +2050,16 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_batch_size_known_o
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2076,18 +2077,18 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_batch_size_known_z
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Zero batch size not detected";
     }
@@ -2112,16 +2113,16 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_input_channel_coun
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -2138,18 +2139,18 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_dynamic_input_channel_coun
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Zero input channel count not detected";
     }
@@ -2176,16 +2177,16 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_output_channel_cou
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2202,18 +2203,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_output_channel_cou
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Zero output channel count not detected";
     }
@@ -2237,16 +2238,16 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_input_channel_coun
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -2262,18 +2263,18 @@ TEST(type_prop, conv_partial_rank_dynamic_rank_static_dynamic_input_channel_coun
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Zero input channel count not detected";
     }
@@ -2299,16 +2300,16 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_ok)
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -2324,18 +2325,18 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_arg_ranks_m
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Argument rank mismatch not detected";
     }
@@ -2362,16 +2363,16 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_input_chann
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -2389,18 +2390,18 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_input_chann
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Input channel count mismatch not detected";
     }
@@ -2427,16 +2428,16 @@ TEST(type_prop, conv_partial_rank_static_dynamic_rank_static_dynamic_all_nonspat
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2454,16 +2455,16 @@ TEST(type_prop,
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2482,18 +2483,18 @@ TEST(
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Oversize filter not detected";
     }
@@ -2521,16 +2522,16 @@ TEST(
     CoordinateDiff padding_above{-1, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2549,16 +2550,16 @@ TEST(
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{2, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2577,16 +2578,16 @@ TEST(
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{2, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2605,18 +2606,18 @@ TEST(
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Oversize filter after window dilation not detected";
     }
@@ -2644,18 +2645,18 @@ TEST(
     CoordinateDiff padding_above{0, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Zero dimension in data batch not detected";
     }
@@ -2683,16 +2684,16 @@ TEST(
     CoordinateDiff padding_above{0, -1};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_EQ(conv->get_output_element_type(0), element::f32);
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2711,18 +2712,18 @@ TEST(
     CoordinateDiff padding_above{0, -20};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Zero padded dimension in data batch not detected";
     }
@@ -2750,18 +2751,18 @@ TEST(
     CoordinateDiff padding_above{0, -20};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
-        auto conv = make_shared<op::Convolution>(param0,
-                                                 param1,
-                                                 window_movement_strides,
-                                                 window_dilation_strides,
-                                                 padding_below,
-                                                 padding_above,
-                                                 data_dilation_strides);
+        auto conv = make_shared<op::v0::Convolution>(param0,
+                                                     param1,
+                                                     window_movement_strides,
+                                                     window_dilation_strides,
+                                                     padding_below,
+                                                     padding_above,
+                                                     data_dilation_strides);
 
         FAIL() << "Negative padded dimension in data batch not detected";
     }
@@ -2789,16 +2790,16 @@ TEST(type_prop, conv_partial_dynamic_et)
     CoordinateDiff padding_above{-1, 0};
     Strides data_dilation_strides{1, 1};
 
-    auto param0 = make_shared<op::Parameter>(element::dynamic, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::dynamic, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::dynamic, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::dynamic, filters_shape);
 
-    auto conv = make_shared<op::Convolution>(param0,
-                                             param1,
-                                             window_movement_strides,
-                                             window_dilation_strides,
-                                             padding_below,
-                                             padding_above,
-                                             data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(param0,
+                                                 param1,
+                                                 window_movement_strides,
+                                                 window_dilation_strides,
+                                                 padding_below,
+                                                 padding_above,
+                                                 data_dilation_strides);
 
     ASSERT_TRUE(conv->get_output_element_type(0).is_dynamic());
     ASSERT_TRUE(conv->get_output_partial_shape(0).same_scheme(
@@ -2808,10 +2809,10 @@ TEST(type_prop, conv_partial_dynamic_et)
 TEST(type_prop, conv_bprop_filter_v1_output_partial_shape_dynamic)
 {
     Shape shape_data{64, 3, 100};
-    auto data = make_shared<op::Parameter>(element::f32, shape_data);
+    auto data = make_shared<op::v0::Parameter>(element::f32, shape_data);
     Shape shape_delta{64, 128, 96};
-    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
-    auto filters_shape = make_shared<op::Parameter>(element::i64, Shape{128, 3, 10});
+    auto deltas = make_shared<op::v0::Parameter>(element::f32, shape_delta);
+    auto filters_shape = make_shared<op::v0::Parameter>(element::i64, Shape{128, 3, 10});
     auto strides = Strides{1};
     auto dilations = Strides{1};
     auto padding_begin = CoordinateDiff{2};
@@ -2825,11 +2826,11 @@ TEST(type_prop, conv_bprop_filter_v1_output_partial_shape_dynamic)
 TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
 {
     Shape shape_filter{6, 3, 3, 3};
-    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    auto filters = make_shared<op::v0::Parameter>(element::f32, shape_filter);
     Shape shape_delta{2, 6, 3, 3};
-    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto deltas = make_shared<op::v0::Parameter>(element::f32, shape_delta);
     Shape shape_data_batch_shape{2, 3, 5, 5};
-    auto data_batch_shape = make_shared<op::Parameter>(element::i64, Shape{2, 3, 5, 5});
+    auto data_batch_shape = make_shared<op::v0::Parameter>(element::i64, Shape{2, 3, 5, 5});
     auto strides = Strides{1, 1};
     auto dilations = Strides{1, 1};
     auto padding_begin = CoordinateDiff{0, 0};
@@ -2844,9 +2845,9 @@ TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic)
 TEST(type_prop, conv_bprop_data_v1_output_partial_shape_dynamic_static_rank)
 {
     PartialShape shape_filter{20, 10, 3, 3};
-    auto filters = make_shared<op::Parameter>(element::f32, shape_filter);
+    auto filters = make_shared<op::v0::Parameter>(element::f32, shape_filter);
     PartialShape shape_delta{Dimension(), 20, 224, 224};
-    auto deltas = make_shared<op::Parameter>(element::f32, shape_delta);
+    auto deltas = make_shared<op::v0::Parameter>(element::f32, shape_delta);
     auto strides = Strides{2, 2};
     auto dilations = Strides{1, 1};
     auto padding_begin = CoordinateDiff{1, 1};
@@ -2871,8 +2872,8 @@ TEST(type_prop, conv_v1_partial_rank)
     CoordinateDiff padding_below{0, 0};
     CoordinateDiff padding_above{0, 0};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     auto conv = make_shared<op::v1::Convolution>(param0,
                                                  param1,
@@ -2890,9 +2891,9 @@ TEST(type_prop, deformable_conv_incorrect_group)
     const PartialShape deformable_values_shape{1, 50, 5, 5};
     const PartialShape filters_shape{4, 3, 5, 5};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, deformable_values_shape);
-    auto param2 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, deformable_values_shape);
+    auto param2 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {
@@ -2939,9 +2940,9 @@ TEST(type_prop, deformable_conv_incorrect_deformable_group)
     const PartialShape deformable_values_shape{1, 50, 5, 5};
     const PartialShape filters_shape{3, 3, 5, 5};
 
-    auto param0 = make_shared<op::Parameter>(element::f32, data_batch_shape);
-    auto param1 = make_shared<op::Parameter>(element::f32, deformable_values_shape);
-    auto param2 = make_shared<op::Parameter>(element::f32, filters_shape);
+    auto param0 = make_shared<op::v0::Parameter>(element::f32, data_batch_shape);
+    auto param1 = make_shared<op::v0::Parameter>(element::f32, deformable_values_shape);
+    auto param2 = make_shared<op::v0::Parameter>(element::f32, filters_shape);
 
     try
     {

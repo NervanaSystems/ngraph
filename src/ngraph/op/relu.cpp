@@ -23,16 +23,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Relu::type_info;
-constexpr NodeTypeInfo op::ReluBackprop::type_info;
+constexpr NodeTypeInfo op::v0::Relu::type_info;
+constexpr NodeTypeInfo op::v0::ReluBackprop::type_info;
 
-op::Relu::Relu(const Output<Node>& arg)
+op::v0::Relu::Relu(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Relu::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Relu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Relu>(new_args.at(0));
@@ -87,27 +87,27 @@ namespace
     }
 }
 
-bool op::Relu::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Relu::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_relu(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }
 
-op::ReluBackprop::ReluBackprop(const Output<Node>& arg, const Output<Node>& delta)
+op::v0::ReluBackprop::ReluBackprop(const Output<Node>& arg, const Output<Node>& delta)
     : BinaryElementwiseArithmetic(arg, delta, AutoBroadcastSpec::NONE)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::ReluBackprop::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ReluBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<ReluBackprop>(new_args.at(0), new_args.at(1));
 }
 
-void op::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Relu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
-    auto backprop = make_shared<op::ReluBackprop>(output(0), delta);
+    auto backprop = make_shared<op::v0::ReluBackprop>(output(0), delta);
     adjoints.add_delta(input_value(0), backprop);
 }

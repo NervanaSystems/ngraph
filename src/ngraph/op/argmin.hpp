@@ -49,6 +49,5 @@ namespace ngraph
                 virtual std::shared_ptr<Node> get_default_value() const override;
             };
         }
-        using v0::ArgMin;
     }
 }

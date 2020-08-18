@@ -237,7 +237,6 @@ if (NGRAPH_CPU_ENABLE)
     if (NGRAPH_CPU_CODEGEN_ENABLE)
         target_link_libraries(cpu_backend PRIVATE codegen)
     endif()
-    target_include_directories(cpu_backend SYSTEM PUBLIC DNNL::dnnl)
 
     if (NOT APPLE AND NOT MSVC)
         # CPU backend uses third-party libraries like Eigen that might be linked in and

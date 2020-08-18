@@ -208,8 +208,5 @@ namespace ngraph
                 double m_epsilon;
             };
         }
-        using v0::BatchNormInference;
-        using v0::BatchNormTraining;
-        using v0::BatchNormTrainingBackprop;
     }
 }

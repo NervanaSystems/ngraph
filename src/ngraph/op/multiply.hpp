@@ -22,41 +22,6 @@ namespace ngraph
 {
     namespace op
     {
-        namespace v0
-        {
-            /// \brief Elementwise multiplication operation.
-            class NGRAPH_API Multiply : public util::BinaryElementwiseArithmetic
-            {
-            public:
-                static constexpr NodeTypeInfo type_info{"Multiply", 0};
-                const NodeTypeInfo& get_type_info() const override { return type_info; }
-                /// \brief Constructs a multiplication operation.
-                Multiply()
-                    : util::BinaryElementwiseArithmetic(AutoBroadcastSpec::NONE)
-                {
-                }
-                /// \brief Constructs a multiplication operation.
-                ///
-                /// \param arg0 Node that produces the first input tensor.
-                /// \param arg1 Node that produces the second input tensor.
-                /// \param auto_broadcast Auto broadcast specification
-                Multiply(const Output<Node>& arg0,
-                         const Output<Node>& arg1,
-                         const AutoBroadcastSpec& auto_broadcast = AutoBroadcastSpec());
-
-                virtual std::shared_ptr<Node>
-                    clone_with_new_inputs(const OutputVector& new_args) const override;
-
-                virtual bool is_commutative() const override { return true; }
-                bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
-
-            protected:
-                virtual void generate_adjoints(autodiff::Adjoints& adjoints,
-                                               const OutputVector& deltas) override;
-            };
-        }
-
         namespace v1
         {
             /// \brief Elementwise multiplication operation.
@@ -86,15 +51,13 @@ namespace ngraph
 
                 virtual bool is_commutative() const override { return true; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
             };
         }
-
-        using v0::Multiply;
     }
 
     NGRAPH_API

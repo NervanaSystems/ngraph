@@ -31,7 +31,7 @@ namespace ngraph
             CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"GroupConvolutionBias", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            GroupConvolutionBias(const std::shared_ptr<op::GroupConvolution>& conv,
+            GroupConvolutionBias(const std::shared_ptr<op::v0::GroupConvolution>& conv,
                                  const Output<Node>& bias,
                                  const size_t groups,
                                  const Shape& output_shape,

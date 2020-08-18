@@ -19,20 +19,20 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DynPad::type_info;
+constexpr NodeTypeInfo op::v0::DynPad::type_info;
 
-op::DynPad::DynPad(const Output<Node>& arg,
-                   const Output<Node>& padding_below,
-                   const Output<Node>& padding_above,
-                   const Output<Node>& padding_value,
-                   op::PadMode pad_mode)
+op::v0::DynPad::DynPad(const Output<Node>& arg,
+                       const Output<Node>& padding_below,
+                       const Output<Node>& padding_above,
+                       const Output<Node>& padding_value,
+                       op::PadMode pad_mode)
     : Op({arg, padding_below, padding_above, padding_value})
     , m_pad_mode(pad_mode)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::DynPad::validate_and_infer_types()
+void op::v0::DynPad::validate_and_infer_types()
 {
     auto arg_t = get_input_element_type(0);
     auto padding_value_t = get_input_element_type(3);
@@ -103,7 +103,7 @@ void op::DynPad::validate_and_infer_types()
     set_output_type(0, arg_t, out_shape);
 }
 
-shared_ptr<Node> op::DynPad::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::DynPad::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynPad>(
@@ -111,8 +111,8 @@ shared_ptr<Node> op::DynPad::clone_with_new_inputs(const OutputVector& new_args)
 }
 
 // TODO: This function is not implemented!
-void op::DynPad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                   const OutputVector& /* deltas */)
+void op::v0::DynPad::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                       const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynPad");
 }

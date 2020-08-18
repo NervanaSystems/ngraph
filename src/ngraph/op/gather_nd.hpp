@@ -50,6 +50,5 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-        using v0::GatherND;
     }
 }

@@ -32,12 +32,12 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Max)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Max)
             {
                 BUILD_REDUCTION_FUNCTOR(Max, max);
             }
 
-            void register_builders_max_cpp() { REGISTER_OP_BUILDER(Max); }
+            void register_builders_max_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Max); }
         }
     }
 }

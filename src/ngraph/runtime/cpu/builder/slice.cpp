@@ -32,14 +32,15 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Slice)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Slice)
             {
                 auto& functors = external_function->get_functors();
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
 
-                const ngraph::op::Slice* slice = static_cast<const ngraph::op::Slice*>(node);
+                const ngraph::op::v0::Slice* slice =
+                    static_cast<const ngraph::op::v0::Slice*>(node);
 
                 auto arg_shape = args[0].get_shape();
                 auto out_shape = out[0].get_shape();
@@ -223,7 +224,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_slice_cpp() { REGISTER_OP_BUILDER(Slice); }
+            void register_builders_slice_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Slice); }
         }
     }
 }

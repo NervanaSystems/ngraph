@@ -55,7 +55,7 @@ namespace ngraph
                 }
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 ngraph::element::Type m_destination_type;
@@ -63,6 +63,5 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Convert;
     }
 }

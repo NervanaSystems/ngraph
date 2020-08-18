@@ -31,9 +31,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::MaxPool)
+            void Builder::BUILDER_DECL(ngraph::op::v0::MaxPool)
             {
-                auto max_pool = static_cast<const ngraph::op::MaxPool*>(node);
+                auto max_pool = static_cast<const ngraph::op::v0::MaxPool*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -52,8 +52,8 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto max_pool_desc =
-                        dnnl_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPool>(node,
-                                                                                        false);
+                        dnnl_emitter->get_max_pooling_forward_desc<ngraph::op::v0::MaxPool>(node,
+                                                                                            false);
                     size_t scratchpad_size = QUERY_SCRATCHPAD(pooling_forward, max_pool_desc);
 
                     // MaxPool needs 3 primitives: input, result, and pooling_forward.
@@ -119,9 +119,9 @@ namespace ngraph
                 }
             }
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::MaxPoolBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::v0::MaxPoolBackprop)
             {
-                auto mpb = static_cast<const ngraph::op::MaxPoolBackprop*>(node);
+                auto mpb = static_cast<const ngraph::op::v0::MaxPoolBackprop*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -142,11 +142,11 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto fwd_pool_desc =
-                        dnnl_emitter->get_max_pooling_forward_desc<ngraph::op::MaxPoolBackprop>(
+                        dnnl_emitter->get_max_pooling_forward_desc<ngraph::op::v0::MaxPoolBackprop>(
                             node, true);
                     auto bwd_pool_desc =
-                        dnnl_emitter->get_max_pooling_backward_desc<ngraph::op::MaxPoolBackprop>(
-                            node);
+                        dnnl_emitter
+                            ->get_max_pooling_backward_desc<ngraph::op::v0::MaxPoolBackprop>(node);
                     auto fprop_src_desc = dnnl_utils::get_input_dnnl_md(node, 0);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(max_pooling_backward, fwd_pool_desc, bwd_pool_desc);
@@ -391,10 +391,10 @@ namespace ngraph
 
             void register_builders_max_pool_cpp()
             {
-                REGISTER_OP_BUILDER(MaxPool);
-                REGISTER_OP_BUILDER(MaxPoolBackprop);
-                REGISTER_OP_BUILDER(MaxPoolWithIndices);
-                REGISTER_OP_BUILDER(MaxPoolWithIndicesBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::MaxPool);
+                REGISTER_OP_BUILDER(ngraph::op::v0::MaxPoolBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::MaxPoolWithIndices);
+                REGISTER_OP_BUILDER(ngraph::op::MaxPoolWithIndicesBackprop);
             }
         }
     }

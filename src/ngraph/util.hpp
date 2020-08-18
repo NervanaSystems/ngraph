@@ -32,6 +32,7 @@
 #include <vector>
 
 #include "ngraph/axis_vector.hpp"
+#include "ngraph/coordinate_diff.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/node.hpp"
 #include "ngraph/shape.hpp"
@@ -244,6 +245,9 @@ namespace ngraph
 
     extern template NGRAPH_API Coordinate apply_permutation<Coordinate>(Coordinate input,
                                                                         AxisVector order);
+
+    extern template NGRAPH_API CoordinateDiff
+        apply_permutation<CoordinateDiff>(CoordinateDiff input, AxisVector order);
 
     extern template NGRAPH_API Strides apply_permutation<Strides>(Strides input, AxisVector order);
 

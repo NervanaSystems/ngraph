@@ -30,11 +30,11 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::LRN)
+            void Builder::BUILDER_DECL(ngraph::op::v0::LRN)
             {
                 auto& functors = external_function->get_functors();
 
-                const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
+                const ngraph::op::v0::LRN* lrn = static_cast<const ngraph::op::v0::LRN*>(node);
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
@@ -144,7 +144,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_lrn_cpp() { REGISTER_OP_BUILDER(LRN); }
+            void register_builders_lrn_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::LRN); }
         }
     }
 }

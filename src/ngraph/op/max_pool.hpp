@@ -135,7 +135,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -151,7 +151,7 @@ namespace ngraph
             private:
                 void update_auto_padding(const PartialShape& in_shape,
                                          Shape& new_padding_above,
-                                         Shape& new_padding_below);
+                                         Shape& new_padding_below) const;
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
@@ -286,7 +286,7 @@ namespace ngraph
                 virtual std::shared_ptr<Node> get_default_value() const override;
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -302,7 +302,7 @@ namespace ngraph
             private:
                 void update_auto_padding(const PartialShape& in_shape,
                                          Shape& new_pads_end,
-                                         Shape& new_pads_begin);
+                                         Shape& new_pads_begin) const;
             };
 
             class NGRAPH_API MaxPoolBackprop : public Op
@@ -348,8 +348,5 @@ namespace ngraph
                 Shape m_pads_end;
             };
         }
-
-        using v0::MaxPool;
-        using v0::MaxPoolBackprop;
     }
 }

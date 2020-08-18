@@ -50,7 +50,7 @@ bool pass::MemoryLayout::run_on_function(shared_ptr<Function> function)
         {
             auto op = std::static_pointer_cast<op::Op>(node);
             // concat and slice in_place_oi should be treated differently
-            if (!is_type<op::Concat>(node) && !is_type<op::Slice>(node))
+            if (!is_type<op::v0::Concat>(node) && !is_type<op::v0::Slice>(node))
             {
                 if (auto op_annotations = op->get_op_annotations())
                 {

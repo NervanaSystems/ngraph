@@ -20,6 +20,8 @@ endif()
 
 include(FetchContent)
 
+message(STATUS "Fetching pybind11")
+
 set(PYBIND11_GIT_TAG v2.5.0)
 set(PYBIND11_GIT_URL https://github.com/pybind/pybind11.git)
 

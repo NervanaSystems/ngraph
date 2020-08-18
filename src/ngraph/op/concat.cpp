@@ -24,22 +24,22 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Concat::type_info;
+constexpr NodeTypeInfo op::v0::Concat::type_info;
 
-op::Concat::Concat(const OutputVector& args, int64_t axis)
+op::v0::Concat::Concat(const OutputVector& args, int64_t axis)
     : Op(args)
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 }
 
-bool op::Concat::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Concat::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("axis", m_axis);
     return true;
 }
 
-void op::Concat::validate_and_infer_types()
+void op::v0::Concat::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this, get_input_size() >= 1, "At least one argument required.");
 
@@ -102,13 +102,13 @@ void op::Concat::validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::Concat::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Concat::clone_with_new_inputs(const OutputVector& new_args) const
 {
     // TODO(amprocte): Should we check the new_args count here?
     return make_shared<Concat>(new_args, m_axis);
 }
 
-void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -132,7 +132,7 @@ void op::Concat::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVec
 
         adjoints.add_delta(
             value,
-            make_shared<op::Slice>(
+            make_shared<op::v0::Slice>(
                 delta, arg_delta_slice_lower, arg_delta_slice_upper, arg_delta_slice_strides));
 
         pos = next_pos;
@@ -196,7 +196,7 @@ namespace
     }
 }
 
-bool op::Concat::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Concat::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     auto concat_axis = get_axis() < 0 ? get_axis() + inputs[0]->get_shape().size() : get_axis();
     return evaluate_concat(inputs, outputs[0], concat_axis);

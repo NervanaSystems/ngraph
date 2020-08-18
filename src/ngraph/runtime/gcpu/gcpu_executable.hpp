@@ -91,7 +91,7 @@ private:
         {
         case ngraph::runtime::interpreter::OP_TYPEID::Broadcast_v0:
         {
-            const op::Broadcast* broadcast = static_cast<const op::Broadcast*>(&node);
+            const op::v0::Broadcast* broadcast = static_cast<const op::v0::Broadcast*>(&node);
             Shape in_shape = node.get_input_shape(0);
             Shape out_shape = node.get_output_shape(0);
             AxisSet broadcast_axes = broadcast->get_broadcast_axes();
@@ -104,7 +104,7 @@ private:
         }
         case ngraph::runtime::interpreter::OP_TYPEID::Reshape_v0:
         {
-            const op::Reshape* reshape = static_cast<const op::Reshape*>(&node);
+            const op::v0::Reshape* reshape = static_cast<const op::v0::Reshape*>(&node);
             opt_kernel::reshape(args[0]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
                                 node.get_input_shape(0),

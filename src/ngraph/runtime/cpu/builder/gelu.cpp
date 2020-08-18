@@ -31,7 +31,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Gelu)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Gelu)
             {
                 auto& functors = external_function->get_functors();
 
@@ -144,8 +144,8 @@ namespace ngraph
 
             void register_builders_gelu_cpp()
             {
-                REGISTER_OP_BUILDER(Gelu);
-                REGISTER_OP_BUILDER(GeluBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Gelu);
+                REGISTER_OP_BUILDER(ngraph::op::GeluBackprop);
             }
         }
     }

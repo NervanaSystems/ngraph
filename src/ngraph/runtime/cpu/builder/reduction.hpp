@@ -20,7 +20,7 @@
     auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());               \
     auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());                \
                                                                                                    \
-    auto op = static_cast<const ngraph::op::OP*>(node);                                            \
+    auto op = static_cast<const ngraph::op::v0::OP*>(node);                                        \
                                                                                                    \
     auto arg_shape = args[0].get_shape();                                                          \
     auto arg_rank = arg_shape.size();                                                              \

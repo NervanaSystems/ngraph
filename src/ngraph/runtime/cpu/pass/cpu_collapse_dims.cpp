@@ -94,7 +94,7 @@ static void collapse_dims(std::vector<size_t>& shape,
 static bool collapse_broadcast(std::shared_ptr<Node> n)
 {
     bool replaced = false;
-    auto node = std::static_pointer_cast<op::Broadcast>(n).get();
+    auto node = std::static_pointer_cast<op::v0::Broadcast>(n).get();
     auto input_shape = node->get_input_shape(0);
     auto output_shape = node->get_output_shape(0);
     auto operated_axes = node->get_broadcast_axes();
@@ -107,8 +107,8 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
     {
         // Null broadcast operation, replace with reshape
         AxisVector axis_order = ngraph::get_default_order(input_shape);
-        auto reshape =
-            std::make_shared<op::Reshape>(node->input_value(0), axis_order, n->get_output_shape(0));
+        auto reshape = std::make_shared<op::v0::Reshape>(
+            node->input_value(0), axis_order, n->get_output_shape(0));
         ngraph::replace_node(n, reshape);
         replaced = true;
     }
@@ -116,16 +116,16 @@ static bool collapse_broadcast(std::shared_ptr<Node> n)
     {
         // Reshape arg to collapsed input_shape
         AxisVector input_axis_order = ngraph::get_default_order(input_shape);
-        auto reshape_input = std::make_shared<op::Reshape>(
+        auto reshape_input = std::make_shared<op::v0::Reshape>(
             node->input_value(0), input_axis_order, Shape(cshape.rshape));
 
-        auto broadcast = std::make_shared<op::Broadcast>(
+        auto broadcast = std::make_shared<op::v0::Broadcast>(
             reshape_input, Shape(cshape.fshape), AxisSet(cshape.axis_set));
 
         // Reshape collapsed output to original output_shape
         AxisVector output_axis_order = ngraph::get_default_order(cshape.fshape);
         auto reshape_output =
-            std::make_shared<op::Reshape>(broadcast, output_axis_order, output_shape);
+            std::make_shared<op::v0::Reshape>(broadcast, output_axis_order, output_shape);
         ngraph::replace_node(n, reshape_output);
         replaced = true;
     }
@@ -156,8 +156,8 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
     {
         // Null reduction operation
         AxisVector axis_order = ngraph::get_default_order(input_shape);
-        auto reshape =
-            std::make_shared<op::Reshape>(node->input_value(0), axis_order, n->get_output_shape(0));
+        auto reshape = std::make_shared<op::v0::Reshape>(
+            node->input_value(0), axis_order, n->get_output_shape(0));
         ngraph::replace_node(n, reshape);
         replaced = true;
     }
@@ -165,7 +165,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
     {
         // Reshape arg to collapsed input_shape
         AxisVector input_axis_order = ngraph::get_default_order(input_shape);
-        auto reshape_input = std::make_shared<op::Reshape>(
+        auto reshape_input = std::make_shared<op::v0::Reshape>(
             node->input_value(0), input_axis_order, Shape(cshape.fshape));
 
         auto reduction = std::make_shared<T>(reshape_input, AxisSet(cshape.axis_set));
@@ -173,7 +173,7 @@ static bool collapse_reduction(std::shared_ptr<Node> n)
         // Reshape collapsed output to original output_shape
         AxisVector output_axis_order = ngraph::get_default_order(cshape.rshape);
         auto reshape_output =
-            std::make_shared<op::Reshape>(reduction, output_axis_order, output_shape);
+            std::make_shared<op::v0::Reshape>(reduction, output_axis_order, output_shape);
         ngraph::replace_node(n, reshape_output);
         replaced = true;
     }
@@ -212,17 +212,17 @@ static bool collapse_dot(std::shared_ptr<Node> n)
     {
         // Reshape A to cshape_A.fshape
         AxisVector A_axis_order = ngraph::get_default_order(A_shape);
-        auto reshape_A = std::make_shared<op::Reshape>(
+        auto reshape_A = std::make_shared<op::v0::Reshape>(
             node->input_value(0), A_axis_order, Shape(cshape_A.fshape));
 
         // Reshape B to cshape_B.fshape
         AxisVector B_axis_order = ngraph::get_default_order(B_shape);
-        auto reshape_B = std::make_shared<op::Reshape>(
+        auto reshape_B = std::make_shared<op::v0::Reshape>(
             node->input_value(1), B_axis_order, Shape(cshape_B.fshape));
 
-        auto cdot =
-            std::make_shared<op::Dot>(reshape_A, reshape_B, reduction_count ? 1 : reduction_count);
-        auto reshape_output = std::make_shared<op::Reshape>(
+        auto cdot = std::make_shared<op::v0::Dot>(
+            reshape_A, reshape_B, reduction_count ? 1 : reduction_count);
+        auto reshape_output = std::make_shared<op::v0::Reshape>(
             cdot, ngraph::get_default_order(cdot->get_output_shape(0)), node->get_output_shape(0));
         ngraph::replace_node(n, reshape_output);
 
@@ -241,29 +241,29 @@ bool runtime::cpu::pass::CPUCollapseDims::run_on_function(std::shared_ptr<ngraph
     bool replaced = false;
     for (auto n : f->get_ordered_ops())
     {
-        if (is_type<op::Broadcast>(n))
+        if (is_type<op::v0::Broadcast>(n))
         {
             replaced |= collapse_broadcast(n);
         }
-        else if (is_type<op::Max>(n))
+        else if (is_type<op::v0::Max>(n))
         {
-            replaced |= collapse_reduction<op::Max>(n);
+            replaced |= collapse_reduction<op::v0::Max>(n);
         }
-        else if (is_type<op::Min>(n))
+        else if (is_type<op::v0::Min>(n))
         {
-            replaced |= collapse_reduction<op::Min>(n);
+            replaced |= collapse_reduction<op::v0::Min>(n);
         }
-        else if (is_type<op::Product>(n))
+        else if (is_type<op::v0::Product>(n))
         {
-            replaced |= collapse_reduction<op::Product>(n);
+            replaced |= collapse_reduction<op::v0::Product>(n);
         }
-        else if (is_type<op::Sum>(n))
+        else if (is_type<op::v0::Sum>(n))
         {
-            replaced |= collapse_reduction<op::Sum>(n);
+            replaced |= collapse_reduction<op::v0::Sum>(n);
         }
-        else if (is_type<op::Dot>(n))
+        else if (is_type<op::v0::Dot>(n))
         {
-            replaced |= collapse_dot<op::Dot>(n);
+            replaced |= collapse_dot<op::v0::Dot>(n);
         }
     }
 

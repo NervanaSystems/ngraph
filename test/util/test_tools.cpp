@@ -58,21 +58,21 @@ bool validate_list(const NodeVector& nodes)
 
 shared_ptr<Function> make_test_graph()
 {
-    auto arg_0 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_1 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_2 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_3 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_4 = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg_5 = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg_0 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_1 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_2 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_3 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_4 = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg_5 = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
-    auto t0 = make_shared<op::Add>(arg_0, arg_1);
-    auto t1 = make_shared<op::Dot>(t0, arg_2);
-    auto t2 = make_shared<op::Multiply>(t0, arg_3);
+    auto t0 = make_shared<op::v1::Add>(arg_0, arg_1);
+    auto t1 = make_shared<op::v0::Dot>(t0, arg_2);
+    auto t2 = make_shared<op::v1::Multiply>(t0, arg_3);
 
-    auto t3 = make_shared<op::Add>(t1, arg_4);
-    auto t4 = make_shared<op::Add>(t2, arg_5);
+    auto t3 = make_shared<op::v1::Add>(t1, arg_4);
+    auto t4 = make_shared<op::v1::Add>(t2, arg_5);
 
-    auto r0 = make_shared<op::Add>(t3, t4);
+    auto r0 = make_shared<op::v1::Add>(t3, t4);
 
     auto f0 = make_shared<Function>(r0, ParameterVector{arg_0, arg_1, arg_2, arg_3, arg_4, arg_5});
 
@@ -262,7 +262,7 @@ std::shared_ptr<Function> make_function_from_file(const std::string& file_name)
 constexpr NodeTypeInfo ngraph::TestOpMultiOut::type_info;
 
 bool ngraph::TestOpMultiOut::evaluate(const HostTensorVector& outputs,
-                                      const HostTensorVector& inputs)
+                                      const HostTensorVector& inputs) const
 {
     inputs[0]->read(outputs[0]->get_data_ptr(), inputs[0]->get_size_in_bytes());
     inputs[1]->read(outputs[1]->get_data_ptr(), inputs[1]->get_size_in_bytes());

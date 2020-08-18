@@ -38,7 +38,7 @@ op::v0::Sum::Sum(const Output<Node>& arg, const Output<Node>& reduction_axes)
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Sum::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Sum::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<op::v0::Sum>(new_args.at(0), new_args.at(1));
@@ -51,7 +51,7 @@ void op::v0::Sum::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     auto x = input_value(0);
     auto& x_shape = x.get_shape();
 
-    adjoints.add_delta(x, make_shared<op::Broadcast>(delta, x_shape, get_reduction_axes()));
+    adjoints.add_delta(x, make_shared<op::v0::Broadcast>(delta, x_shape, get_reduction_axes()));
 }
 
 shared_ptr<Node> op::v0::Sum::get_default_value() const
@@ -101,7 +101,7 @@ namespace
     }
 }
 
-bool op::v0::Sum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Sum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_sum(inputs[0], outputs[0], get_reduction_axes());
 }

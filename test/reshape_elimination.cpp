@@ -52,9 +52,9 @@ TEST(reshape_elimination, remove_reshape)
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
-    size_t count_before = count_ops_of_type<op::Reshape>(func);
+    size_t count_before = count_ops_of_type<op::v0::Reshape>(func);
     pass_manager.run_passes(func);
-    size_t count_after = count_ops_of_type<op::Reshape>(func);
+    size_t count_after = count_ops_of_type<op::v0::Reshape>(func);
     ASSERT_TRUE(count_after < count_before);
 }
 
@@ -66,9 +66,9 @@ TEST(reshape_elimination, remove_tranpose)
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
-    size_t count_before = count_ops_of_type<op::Reshape>(func);
+    size_t count_before = count_ops_of_type<op::v0::Reshape>(func);
     pass_manager.run_passes(func);
-    size_t count_after = count_ops_of_type<op::Reshape>(func);
+    size_t count_after = count_ops_of_type<op::v0::Reshape>(func);
     ASSERT_TRUE(count_after < count_before);
 }
 
@@ -80,9 +80,9 @@ TEST(reshape_elimination, bn_bprop_rewrite)
     const string json_string = file_util::read_file_to_string(json_path);
     stringstream ss(json_string);
     shared_ptr<Function> func = ngraph::deserialize(ss);
-    size_t count_before = count_ops_of_type<op::Reshape>(func);
+    size_t count_before = count_ops_of_type<op::v0::Reshape>(func);
     pass_manager.run_passes(func);
-    size_t count_after = count_ops_of_type<op::Reshape>(func);
+    size_t count_after = count_ops_of_type<op::v0::Reshape>(func);
     ASSERT_TRUE(count_after < count_before);
 }
 #endif
@@ -91,10 +91,11 @@ TEST(reshape_elimination, bn_bprop_rewrite)
 TEST(reshape_elimination, transpose_reshape_pattern_fuse)
 {
     auto generate_func = []() {
-        auto input = make_shared<op::Parameter>(element::f32, Shape{8, 2, 4, 6});
-        auto transpose = make_shared<op::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
+        auto input = make_shared<op::v0::Parameter>(element::f32, Shape{8, 2, 4, 6});
+        auto transpose =
+            make_shared<op::v0::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
         auto reshape =
-            make_shared<op::Reshape>(transpose, AxisVector{0, 1, 2, 3}, Shape{8, 4, 2, 6});
+            make_shared<op::v0::Reshape>(transpose, AxisVector{0, 1, 2, 3}, Shape{8, 4, 2, 6});
         return make_shared<Function>(reshape, ParameterVector{input});
     };
 
@@ -104,8 +105,8 @@ TEST(reshape_elimination, transpose_reshape_pattern_fuse)
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.run_passes(fuse_func);
-    ASSERT_TRUE(count_ops_of_type<op::Reshape>(fuse_func) == 1);
-    ASSERT_TRUE(count_ops_of_type<op::Reshape>(nofuse_func) == 2);
+    ASSERT_TRUE(count_ops_of_type<op::v0::Reshape>(fuse_func) == 1);
+    ASSERT_TRUE(count_ops_of_type<op::v0::Reshape>(nofuse_func) == 2);
 
     test::Uniform<float> rng(0.0f, 100.0f);
     vector<vector<float>> args;
@@ -122,36 +123,37 @@ TEST(reshape_elimination, transpose_reshape_pattern_fuse)
 
 TEST(reshape_elimination, transpose_reshape_pattern_nofuse)
 {
-    auto input = make_shared<op::Parameter>(element::f32, Shape{8, 2, 4, 6});
-    auto transpose = make_shared<op::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
-    auto reshape = make_shared<op::Reshape>(transpose, AxisVector{2, 1, 0, 3}, Shape{8, 4, 2, 6});
+    auto input = make_shared<op::v0::Parameter>(element::f32, Shape{8, 2, 4, 6});
+    auto transpose = make_shared<op::v0::Reshape>(input, AxisVector{0, 2, 1, 3}, Shape{8, 2, 4, 6});
+    auto reshape =
+        make_shared<op::v0::Reshape>(transpose, AxisVector{2, 1, 0, 3}, Shape{8, 4, 2, 6});
     auto f = make_shared<Function>(reshape, ParameterVector{input});
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeElimination>();
     pass_manager.run_passes(f);
-    ASSERT_TRUE(count_ops_of_type<op::Reshape>(f) == 2);
+    ASSERT_TRUE(count_ops_of_type<op::v0::Reshape>(f) == 2);
 }
 
 TEST(reshape_elimination, dot_transpose_to_dot_w_transpose_args)
 {
     Shape shape_w{2, 4};
     Shape shape_x{4, 1};
-    auto W = make_shared<op::Parameter>(element::f32, shape_w);
-    auto x = make_shared<op::Parameter>(element::f32, shape_x);
+    auto W = make_shared<op::v0::Parameter>(element::f32, shape_w);
+    auto x = make_shared<op::v0::Parameter>(element::f32, shape_x);
 
-    auto dot = make_shared<op::Dot>(W, x);
-    auto reshape_dot = std::make_shared<op::Reshape>(dot, AxisVector{1, 0}, Shape{1, 2});
-    auto graph = make_shared<op::Abs>(reshape_dot);
+    auto dot = make_shared<op::v0::Dot>(W, x);
+    auto reshape_dot = std::make_shared<op::v0::Reshape>(dot, AxisVector{1, 0}, Shape{1, 2});
+    auto graph = make_shared<op::v0::Abs>(reshape_dot);
 
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::ReshapeElimination>();
     auto func = make_shared<Function>(graph, ParameterVector{W, x});
     pass_manager.run_passes(func);
     auto gdot = graph->get_argument(0);
-    ASSERT_TRUE(as_type_ptr<op::Dot>(gdot));
-    ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(0)));
-    ASSERT_TRUE(as_type_ptr<op::Reshape>(gdot->get_argument(1)));
+    ASSERT_TRUE(as_type_ptr<op::v0::Dot>(gdot));
+    ASSERT_TRUE(as_type_ptr<op::v0::Reshape>(gdot->get_argument(0)));
+    ASSERT_TRUE(as_type_ptr<op::v0::Reshape>(gdot->get_argument(1)));
     ASSERT_EQ(gdot->get_argument(0)->get_argument(0), x);
     ASSERT_EQ(gdot->get_argument(1)->get_argument(0), W);
     ASSERT_EQ(gdot->get_output_shape(0), (Shape{1, 2}));
@@ -162,7 +164,7 @@ TEST(reshape_elimination, recurrent_reshapes)
 {
     Shape shape_a{2, 2, 3, 3, 2, 4};
     auto generate_func = [shape_a]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
         Shape shape_r_1{3, 2, 2, 4, 6};
         Shape shape_r_2{6, 8, 3, 2};
         Shape shape_r_3{6, 8, 6};
@@ -170,12 +172,12 @@ TEST(reshape_elimination, recurrent_reshapes)
         Shape shape_r_5{2, 3, 2, 2, 2, 3, 2};
         Shape shape_r_6{48, 6};
 
-        auto r_1 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
-        auto r_2 = make_shared<op::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
-        auto r_3 = make_shared<op::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
-        auto r_4 = make_shared<op::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
-        auto r_5 = make_shared<op::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
-        auto r_6 = make_shared<op::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
+        auto r_1 = make_shared<op::v0::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
+        auto r_2 = make_shared<op::v0::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
+        auto r_3 = make_shared<op::v0::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
+        auto r_4 = make_shared<op::v0::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
+        auto r_5 = make_shared<op::v0::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
+        auto r_6 = make_shared<op::v0::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
 
         auto f = make_shared<Function>(r_6, ParameterVector{A});
         return f;
@@ -202,7 +204,7 @@ TEST(reshape_elimination, recurrent_reshapes)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 1);
 }
 
@@ -210,7 +212,7 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
 {
     Shape shape_a{2, 2, 3, 3, 2, 4};
     auto generate_func = [shape_a]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
         Shape shape_r_1{3, 2, 2, 4, 6};
         Shape shape_r_2{6, 8, 3, 2};
         Shape shape_r_3{6, 8, 6};
@@ -219,13 +221,13 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
         Shape shape_r_6{48, 6};
         Shape shape_r_7{2, 2, 3, 3, 2, 4};
 
-        auto r_1 = make_shared<op::Reshape>(A, AxisVector{0, 1, 2, 3, 4, 5}, shape_r_1);
-        auto r_2 = make_shared<op::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
-        auto r_3 = make_shared<op::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
-        auto r_4 = make_shared<op::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
-        auto r_5 = make_shared<op::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
-        auto r_6 = make_shared<op::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
-        auto r_7 = make_shared<op::Reshape>(r_6, AxisVector{0, 1}, shape_r_7);
+        auto r_1 = make_shared<op::v0::Reshape>(A, AxisVector{0, 1, 2, 3, 4, 5}, shape_r_1);
+        auto r_2 = make_shared<op::v0::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
+        auto r_3 = make_shared<op::v0::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
+        auto r_4 = make_shared<op::v0::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
+        auto r_5 = make_shared<op::v0::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
+        auto r_6 = make_shared<op::v0::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
+        auto r_7 = make_shared<op::v0::Reshape>(r_6, AxisVector{0, 1}, shape_r_7);
         auto f = make_shared<Function>(r_7, ParameterVector{A});
         return f;
     };
@@ -253,7 +255,7 @@ TEST(reshape_elimination, recurrent_reshapes_elimination)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 0);
 }
 
@@ -261,12 +263,12 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
 {
     Shape shape_a{4, 6, 10, 2};
     auto generate_func = [shape_a]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
         Shape shape_r_1{6, 4, 5, 4};
         Shape shape_r_2{24, 20};
-        auto reshape_1 = make_shared<op::Reshape>(A, AxisVector{0, 3, 2, 1}, shape_r_1);
-        auto reshape_2 = make_shared<op::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_r_2);
-        auto reshape_3 = make_shared<op::Reshape>(reshape_2, AxisVector{0, 1}, shape_a);
+        auto reshape_1 = make_shared<op::v0::Reshape>(A, AxisVector{0, 3, 2, 1}, shape_r_1);
+        auto reshape_2 = make_shared<op::v0::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_r_2);
+        auto reshape_3 = make_shared<op::v0::Reshape>(reshape_2, AxisVector{0, 1}, shape_a);
         auto f_ = make_shared<Function>(OutputVector{reshape_2, reshape_3}, ParameterVector{A});
         return f_;
     };
@@ -292,7 +294,7 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 2);
 }
 
@@ -300,13 +302,13 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
 {
     Shape shape_a{12, 8, 1, 1};
     auto generate_func = [shape_a]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
-        auto reshape_1 = make_shared<op::Reshape>(A, AxisVector{0, 3, 2, 1}, Shape{4, 3, 8, 1});
-        auto reshape_2 = make_shared<op::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_a);
+        auto reshape_1 = make_shared<op::v0::Reshape>(A, AxisVector{0, 3, 2, 1}, Shape{4, 3, 8, 1});
+        auto reshape_2 = make_shared<op::v0::Reshape>(reshape_1, AxisVector{0, 1, 2, 3}, shape_a);
         auto reshape_3 =
-            make_shared<op::Reshape>(reshape_2, AxisVector{0, 1, 2, 3}, Shape{4, 3, 8, 1});
-        auto abs_1 = make_shared<op::Abs>(reshape_3);
+            make_shared<op::v0::Reshape>(reshape_2, AxisVector{0, 1, 2, 3}, Shape{4, 3, 8, 1});
+        auto abs_1 = make_shared<op::v0::Abs>(reshape_3);
         auto f_ = make_shared<Function>(OutputVector{abs_1, reshape_3}, ParameterVector{A});
         return f_;
     };
@@ -332,7 +334,7 @@ TEST(reshape_elimination, recurrent_reshapes_fan_out_at_end)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 1);
 }
 
@@ -340,7 +342,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
 {
     Shape shape_a{2, 2, 3, 3, 2, 4};
     auto generate_func = [shape_a]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
         Shape shape_r_1{3, 2, 2, 4, 6};
         Shape shape_r_2{6, 8, 3, 2};
         Shape shape_r_3{6, 8, 6};
@@ -348,12 +350,12 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
         Shape shape_r_5{2, 3, 2, 2, 2, 3, 2};
         Shape shape_r_6{48, 6};
 
-        auto r_1 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
-        auto r_2 = make_shared<op::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
-        auto r_3 = make_shared<op::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
-        auto r_4 = make_shared<op::Reshape>(r_3, AxisVector{1, 0, 2}, shape_r_4);
-        auto r_5 = make_shared<op::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
-        auto r_6 = make_shared<op::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
+        auto r_1 = make_shared<op::v0::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
+        auto r_2 = make_shared<op::v0::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
+        auto r_3 = make_shared<op::v0::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
+        auto r_4 = make_shared<op::v0::Reshape>(r_3, AxisVector{1, 0, 2}, shape_r_4);
+        auto r_5 = make_shared<op::v0::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
+        auto r_6 = make_shared<op::v0::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
 
         auto f = make_shared<Function>(r_6, ParameterVector{A});
         return f;
@@ -382,7 +384,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_fusions)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 2);
 }
 
@@ -391,13 +393,13 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
     Shape shape_a{8, 6, 1, 1};
     Shape shape_r{2, 24};
     auto generate_func = [shape_a, shape_r]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
-        auto reshape_1 = make_shared<op::Reshape>(A, AxisVector{3, 0, 2, 1}, shape_r);
-        auto abs_1 = make_shared<op::Abs>(reshape_1);
-        auto reshape_2 = make_shared<op::Reshape>(abs_1, AxisVector{0, 1}, shape_a);
-        auto abs_2 = make_shared<op::Abs>(reshape_2);
-        auto reshape_3 = make_shared<op::Reshape>(abs_2, AxisVector{0, 1, 2, 3}, shape_a);
+        auto reshape_1 = make_shared<op::v0::Reshape>(A, AxisVector{3, 0, 2, 1}, shape_r);
+        auto abs_1 = make_shared<op::v0::Abs>(reshape_1);
+        auto reshape_2 = make_shared<op::v0::Reshape>(abs_1, AxisVector{0, 1}, shape_a);
+        auto abs_2 = make_shared<op::v0::Abs>(reshape_2);
+        auto reshape_3 = make_shared<op::v0::Reshape>(abs_2, AxisVector{0, 1, 2, 3}, shape_a);
         auto f_ = make_shared<Function>(OutputVector{reshape_3}, ParameterVector{A});
         return f_;
     };
@@ -423,7 +425,7 @@ TEST(reshape_elimination, nonrecurrent_reshapes)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 3);
 }
 
@@ -431,7 +433,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
 {
     Shape shape_a{2, 2, 3, 3, 2, 4};
     auto generate_func = [shape_a]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
         Shape shape_r_1{3, 2, 2, 4, 6};
         Shape shape_r_2{6, 8, 3, 2};
         Shape shape_r_3{6, 8, 6};
@@ -439,15 +441,15 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
         Shape shape_r_5{2, 3, 2, 2, 2, 3, 2};
         Shape shape_r_6{48, 6};
 
-        auto r_1 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
-        auto r_2 = make_shared<op::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
-        auto r_3 = make_shared<op::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
-        auto r_4 = make_shared<op::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
-        auto r_5 = make_shared<op::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
-        auto r_6 = make_shared<op::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
+        auto r_1 = make_shared<op::v0::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_1);
+        auto r_2 = make_shared<op::v0::Reshape>(r_1, AxisVector{0, 1, 2, 3, 4}, shape_r_2);
+        auto r_3 = make_shared<op::v0::Reshape>(r_2, AxisVector{0, 1, 2, 3}, shape_r_3);
+        auto r_4 = make_shared<op::v0::Reshape>(r_3, AxisVector{0, 1, 2}, shape_r_4);
+        auto r_5 = make_shared<op::v0::Reshape>(r_4, AxisVector{0, 1, 2, 3, 4}, shape_r_5);
+        auto r_6 = make_shared<op::v0::Reshape>(r_5, AxisVector{0, 1, 2, 3, 4, 5, 6}, shape_r_6);
 
-        auto r_7 = make_shared<op::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_2);
-        auto r_8 = make_shared<op::Reshape>(r_7, AxisVector{0, 1, 2, 3}, shape_r_3);
+        auto r_7 = make_shared<op::v0::Reshape>(A, AxisVector{2, 4, 0, 5, 3, 1}, shape_r_2);
+        auto r_8 = make_shared<op::v0::Reshape>(r_7, AxisVector{0, 1, 2, 3}, shape_r_3);
 
         auto f = make_shared<Function>(OutputVector{r_6, r_8}, ParameterVector{A});
         return f;
@@ -476,7 +478,7 @@ TEST(reshape_elimination, recurrent_reshapes_multiple_branches)
 
     EXPECT_TRUE(test::all_close(baseline_results.at(0), optimized_results.at(0)));
 
-    size_t num_reshapes_optimized = count_ops_of_type<op::Reshape>(optimized_f);
+    size_t num_reshapes_optimized = count_ops_of_type<op::v0::Reshape>(optimized_f);
     ASSERT_EQ(num_reshapes_optimized, 2);
 }
 #endif

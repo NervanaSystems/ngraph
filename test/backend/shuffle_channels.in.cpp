@@ -48,8 +48,8 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_simple)
 {
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{1, 15, 2, 2});
-    auto tested_op = make_shared<op::ShuffleChannels>(data, 1, 5);
+    const auto data = make_shared<op::v0::Parameter>(element::i32, Shape{1, 15, 2, 2});
+    auto tested_op = make_shared<op::v0::ShuffleChannels>(data, 1, 5);
     auto function = make_shared<Function>(tested_op, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -72,8 +72,8 @@ NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_negative_axis)
     // in this test the output is the same as in shuffle_channels_simple but
     // the axis value is negative and the C(channels) value is in a different dimension(0) of the
     // shape
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{15, 2, 1, 2});
-    auto tested_op = make_shared<op::ShuffleChannels>(data, -4, 5);
+    const auto data = make_shared<op::v0::Parameter>(element::i32, Shape{15, 2, 1, 2});
+    auto tested_op = make_shared<op::v0::ShuffleChannels>(data, -4, 5);
     auto function = make_shared<Function>(tested_op, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -93,8 +93,8 @@ NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_negative_axis)
 
 NGRAPH_TEST(${BACKEND_NAME}, shuffle_channels_float)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{6, 1, 1, 1});
-    auto tested_op = make_shared<op::ShuffleChannels>(data, 0, 2);
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{6, 1, 1, 1});
+    auto tested_op = make_shared<op::v0::ShuffleChannels>(data, 0, 2);
     auto function = make_shared<Function>(tested_op, ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

@@ -24,7 +24,7 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Clamp::type_info;
+constexpr NodeTypeInfo op::v0::Clamp::type_info;
 
 namespace
 {
@@ -36,7 +36,7 @@ namespace
         return true;
     }
 
-    bool evaluate_clamp(const HostTensorPtr& arg, const HostTensorPtr& out, const op::Clamp* op)
+    bool evaluate_clamp(const HostTensorPtr& arg, const HostTensorPtr& out, const op::v0::Clamp* op)
     {
         bool rc = true;
         size_t count = shape_size(op->get_input_shape(0));
@@ -72,12 +72,12 @@ namespace
     }
 }
 
-bool op::v0::Clamp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Clamp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_clamp(inputs[0], outputs[0], this);
 }
 
-op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
+op::v0::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
     : FusedOp({data})
     , m_min{min}
     , m_max{max}
@@ -85,14 +85,14 @@ op::Clamp::Clamp(const Output<Node>& data, const double min, const double max)
     constructor_validate_and_infer_types();
 }
 
-void op::Clamp::pre_validate_and_infer_types()
+void op::v0::Clamp::pre_validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(
         this, m_min < m_max, "The 'min' parameter needs to be less than 'max' for Clamp");
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-OutputVector op::Clamp::decompose_op() const
+OutputVector op::v0::Clamp::decompose_op() const
 {
     const auto data = input_value(0);
     const auto type = data.get_element_type();
@@ -105,50 +105,50 @@ OutputVector op::Clamp::decompose_op() const
     {
     case element::Type_t::i8:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<int8_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<int8_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<int8_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<int8_t>());
         break;
     }
     case element::Type_t::i16:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<int16_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<int16_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<int16_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<int16_t>());
         break;
     }
     case element::Type_t::i32:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<int32_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<int32_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<int32_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<int32_t>());
         break;
     }
     case element::Type_t::i64:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<int64_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<int64_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<int64_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<int64_t>());
         break;
     }
     case element::Type_t::u8:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint8_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint8_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<uint8_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<uint8_t>());
         break;
     }
     case element::Type_t::u16:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint16_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint16_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<uint16_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<uint16_t>());
         break;
     }
     case element::Type_t::u32:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint32_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint32_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<uint32_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<uint32_t>());
         break;
     }
     case element::Type_t::u64:
     {
-        clamp_min = make_shared<op::Constant>(type, shape, get_min<uint64_t>());
-        clamp_max = make_shared<op::Constant>(type, shape, get_max<uint64_t>());
+        clamp_min = make_shared<op::v0::Constant>(type, shape, get_min<uint64_t>());
+        clamp_max = make_shared<op::v0::Constant>(type, shape, get_max<uint64_t>());
         break;
     }
     case element::Type_t::f16:
@@ -178,11 +178,11 @@ OutputVector op::Clamp::decompose_op() const
     default: throw runtime_error("Unsupported data type in op Clamp"); break;
     }
 
-    auto max = make_shared<op::Maximum>(clamp_min, data);
-    return {make_shared<op::Minimum>(clamp_max, max)};
+    auto max = make_shared<op::v0::Maximum>(clamp_min, data);
+    return {make_shared<op::v0::Minimum>(clamp_max, max)};
 }
 
-shared_ptr<Node> op::Clamp::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Clamp::clone_with_new_inputs(const OutputVector& new_args) const
 {
     NODE_VALIDATION_CHECK(this,
                           new_args.size() == 1,
@@ -192,7 +192,7 @@ shared_ptr<Node> op::Clamp::clone_with_new_inputs(const OutputVector& new_args) 
     return make_shared<Clamp>(new_args.at(0), m_min, m_max);
 }
 
-bool op::Clamp::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Clamp::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("min", m_min);
     visitor.on_attribute("max", m_max);

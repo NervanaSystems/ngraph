@@ -23,14 +23,14 @@ using namespace ngraph;
 
 TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -38,15 +38,15 @@ TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_static_ok)
 
 TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_static_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -54,14 +54,14 @@ TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_static_dynamic_param
 
 TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -69,15 +69,15 @@ TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_dynamic_params_stati
 
 TEST(type_prop, dynreplaceslice_arg_rank_static_dynamic_replacement_static_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
@@ -87,16 +87,16 @@ TEST(type_prop, dynreplaceslice_arg_rank_static_dynamic_replacement_static_param
 TEST(type_prop,
      dynreplaceslice_arg_rank_static_dynamic_replacement_rank_static_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
@@ -105,15 +105,15 @@ TEST(type_prop,
 
 TEST(type_prop, dynreplaceslice_arg_rank_static_dynamic_replacement_rank_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
@@ -122,16 +122,16 @@ TEST(type_prop, dynreplaceslice_arg_rank_static_dynamic_replacement_rank_dynamic
 
 TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 2, 4});
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -140,17 +140,17 @@ TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_rank_static
 TEST(type_prop,
      dynreplaceslice_arg_static_replacement_rank_static_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -158,16 +158,16 @@ TEST(type_prop,
 
 TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -176,17 +176,17 @@ TEST(type_prop, dynreplaceslice_arg_static_replacement_rank_dynamic_params_rank_
 TEST(type_prop,
      dynreplaceslice_arg_rank_static_dynamic_replacement_static_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
@@ -197,18 +197,18 @@ TEST(
     type_prop,
     dynreplaceslice_arg_rank_static_dynamic_replacement_rank_static_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
@@ -218,17 +218,17 @@ TEST(
 TEST(type_prop,
      dynreplaceslice_arg_rank_static_dynamic_replacement_rank_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(
@@ -237,14 +237,14 @@ TEST(type_prop,
 
 TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -253,15 +253,15 @@ TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_stati
 
 TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{4});
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -270,14 +270,14 @@ TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic
 
 TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -286,14 +286,14 @@ TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params
 
 TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -303,15 +303,15 @@ TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_rank_
 TEST(type_prop,
      dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -321,14 +321,14 @@ TEST(type_prop,
 TEST(type_prop,
      dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
@@ -336,14 +336,14 @@ TEST(type_prop,
 
 TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_rank_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -353,15 +353,15 @@ TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_static_params_rank_
 TEST(type_prop,
      dynreplaceslice_arg_rank_dynamic_replacement_rank_static_dynamic_params_rank_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto replacement =
-        make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+        make_shared<op::v0::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     // TODO(amprocte): We should be able to infer PartialShape::dynamic(4) here.
@@ -370,14 +370,14 @@ TEST(type_prop,
 
 TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params_rank_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
@@ -385,14 +385,14 @@ TEST(type_prop, dynreplaceslice_arg_rank_dynamic_replacement_rank_dynamic_params
 
 TEST(type_prop, dynreplaceslice_static_shape)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
-    auto replacement = make_shared<op::Parameter>(element::f32, Shape{1, 2, 1, 1, 3});
-    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
-    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
-    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 1, 1, 3});
+    auto lower_bounds = op::v0::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::v0::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::v0::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_EQ(r->get_output_shape(0), (Shape{2, 3, 4, 5, 6}));
@@ -400,16 +400,16 @@ TEST(type_prop, dynreplaceslice_static_shape)
 
 TEST(type_prop, dynreplaceslice_static_shape_replacement_inconsistent)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 1, 1, 4});
-    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
-    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
-    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 2, 1, 1, 4});
+    auto lower_bounds = op::v0::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::v0::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::v0::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
 
     try
     {
-        auto r =
-            make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        auto r = make_shared<op::v0::DynReplaceSlice>(
+            arg, replacement, lower_bounds, upper_bounds, strides);
         FAIL() << "Did not detect mismatch of replacement shape";
     }
     catch (const NodeValidationFailure& error)
@@ -445,29 +445,29 @@ struct DeduceDynReplaceSliceTest : ::testing::TestWithParam<DynReplaceSliceParam
 TEST_P(DeduceDynReplaceSliceTest, output_shape)
 {
     auto tp = GetParam();
-    auto arg = make_shared<op::Parameter>(element::f32, tp.arg_shape);
-    auto replacement = make_shared<op::Parameter>(element::f32, tp.replacement_shape);
+    auto arg = make_shared<op::v0::Parameter>(element::f32, tp.arg_shape);
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, tp.replacement_shape);
     auto lower_bounds =
-        op::Constant::create(element::i64, tp.lower_bounds_shape, tp.lower_bounds_val);
+        op::v0::Constant::create(element::i64, tp.lower_bounds_shape, tp.lower_bounds_val);
     auto upper_bounds =
-        op::Constant::create(element::i64, tp.upper_bounds_shape, tp.upper_bounds_val);
-    auto strides = op::Constant::create(element::i64, tp.strides_shape, tp.strides_val);
+        op::v0::Constant::create(element::i64, tp.upper_bounds_shape, tp.upper_bounds_val);
+    auto strides = op::v0::Constant::create(element::i64, tp.strides_shape, tp.strides_val);
 
-    auto r = make_shared<op::DynReplaceSlice>(arg,
-                                              replacement,
-                                              lower_bounds,
-                                              upper_bounds,
-                                              strides,
-                                              tp.lower_bounds_mask,
-                                              tp.upper_bounds_mask,
-                                              tp.new_axis,
-                                              tp.shrink_axis,
-                                              tp.ellipsis_mask);
+    auto r = make_shared<op::v0::DynReplaceSlice>(arg,
+                                                  replacement,
+                                                  lower_bounds,
+                                                  upper_bounds,
+                                                  strides,
+                                                  tp.lower_bounds_mask,
+                                                  tp.upper_bounds_mask,
+                                                  tp.new_axis,
+                                                  tp.shrink_axis,
+                                                  tp.ellipsis_mask);
 
     EXPECT_EQ(r->get_output_shape(0), tp.arg_shape);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     type_prop,
     DeduceDynReplaceSliceTest,
     ::testing::Values(
@@ -602,7 +602,7 @@ void DynReplaceSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
 {
     try
     {
-        auto r = make_shared<op::DynReplaceSlice>(param_0, param_1, param_2, param_3, param_4);
+        auto r = make_shared<op::v0::DynReplaceSlice>(param_0, param_1, param_2, param_3, param_4);
         FAIL() << "Did not detect attributes not vector";
     }
     catch (const NodeValidationFailure& error)
@@ -617,78 +617,81 @@ void DynReplaceSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
 
 TEST(type_prop, dynreplaceslice_arg_static_replacement_static_params_rank_static_dynamic_not_vector)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     {
         lower_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{2, 2});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        arg = make_shared<op::Parameter>(
+        arg = make_shared<op::v0::Parameter>(
             element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
         lower_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
 
     {
         upper_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{2, 2});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        arg = make_shared<op::Parameter>(
+        arg = make_shared<op::v0::Parameter>(
             element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
         upper_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
 
     {
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        strides =
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{2, 2});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        arg = make_shared<op::Parameter>(
+        arg = make_shared<op::v0::Parameter>(
             element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        strides =
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        replacement =
-            make_shared<op::Parameter>(element::f32, PartialShape{2, Dimension::dynamic(), 2, 4});
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        replacement = make_shared<op::v0::Parameter>(element::f32,
+                                                     PartialShape{2, Dimension::dynamic(), 2, 4});
+        strides =
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynReplaceSlice_Test_Shape_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
 }
 
 TEST(type_prop, dynreplaceslice_params_et_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::dynamic, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::dynamic, Shape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::dynamic, Shape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::dynamic, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::dynamic, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::dynamic, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::dynamic, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::dynamic, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::dynamic);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -696,14 +699,14 @@ TEST(type_prop, dynreplaceslice_params_et_dynamic_ok)
 
 TEST(type_prop, dynreplaceslice_params_et_dynamic_inferrable_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::dynamic, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::boolean, Shape{2, 4, 2, 4});
-    auto lower_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::dynamic, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::dynamic, Shape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::dynamic, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::boolean, Shape{2, 4, 2, 4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::dynamic, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::dynamic, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::dynamic, Shape{4});
 
     auto r =
-        make_shared<op::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
+        make_shared<op::v0::DynReplaceSlice>(arg, replacement, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::boolean);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 8}));
@@ -717,7 +720,7 @@ void DynReplaceSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
 {
     try
     {
-        auto r = make_shared<op::DynReplaceSlice>(param_0, param_1, param_2, param_3, param_4);
+        auto r = make_shared<op::v0::DynReplaceSlice>(param_0, param_1, param_2, param_3, param_4);
         FAIL() << "Did not detect parameter element type not i64";
     }
     catch (const NodeValidationFailure& error)
@@ -732,23 +735,23 @@ void DynReplaceSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
 
 TEST(type_prop, dynreplaceslice_params_et_wrong)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto replacement = make_shared<op::Parameter>(element::f32, Shape{2, 4, 2, 4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto replacement = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 2, 4});
 
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     {
-        lower_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        lower_bounds = make_shared<op::v0::Parameter>(element::boolean, Shape{4});
         DynReplaceSlice_Test_Type_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        upper_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        upper_bounds = make_shared<op::v0::Parameter>(element::boolean, Shape{4});
         DynReplaceSlice_Test_Type_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
     {
-        strides = make_shared<op::Parameter>(element::boolean, Shape{4});
+        strides = make_shared<op::v0::Parameter>(element::boolean, Shape{4});
         DynReplaceSlice_Test_Type_Except(arg, replacement, lower_bounds, upper_bounds, strides);
     }
 }

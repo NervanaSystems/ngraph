@@ -36,12 +36,12 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Dequantize)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Dequantize)
             {
                 auto& functors = external_function->get_functors();
 
-                const ngraph::op::Dequantize* dequantize =
-                    static_cast<const ngraph::op::Dequantize*>(node);
+                const ngraph::op::v0::Dequantize* dequantize =
+                    static_cast<const ngraph::op::v0::Dequantize*>(node);
                 CPUKernelFunctor functor;
 
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
@@ -57,7 +57,7 @@ namespace ngraph
                         QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
                     auto scale_const_op =
-                        as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
+                        as_type_ptr<ngraph::op::v0::Constant>(dequantize->get_argument(1));
 
                     if (scale_const_op == nullptr)
                     {
@@ -324,11 +324,11 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Quantize)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Quantize)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
-                    auto quantize = static_cast<const ngraph::op::Quantize*>(node);
+                    auto quantize = static_cast<const ngraph::op::v0::Quantize*>(node);
                     auto& functors = external_function->get_functors();
                     auto arg0_buffer_index =
                         external_function->get_buffer_index(args[0].get_name());
@@ -339,8 +339,8 @@ namespace ngraph
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(reorder, input_desc, result_desc);
 
-                    auto scale_const_op =
-                        as_type_ptr<ngraph::op::Constant>(quantize->get_input_node_shared_ptr(1));
+                    auto scale_const_op = as_type_ptr<ngraph::op::v0::Constant>(
+                        quantize->get_input_node_shared_ptr(1));
                     if (scale_const_op == nullptr)
                     {
                         auto arg1_buffer_index =
@@ -447,8 +447,8 @@ namespace ngraph
                 {
                     auto& functors = external_function->get_functors();
 
-                    const ngraph::op::Quantize* quantize =
-                        static_cast<const ngraph::op::Quantize*>(node);
+                    const ngraph::op::v0::Quantize* quantize =
+                        static_cast<const ngraph::op::v0::Quantize*>(node);
                     CPUKernelFunctor functor;
 
                     auto arg0_buffer_index =
@@ -462,7 +462,7 @@ namespace ngraph
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();
                     auto daxes = quantize->get_axes();
-                    ngraph::op::Quantize::RoundMode round_mode = quantize->get_round_mode();
+                    ngraph::op::v0::Quantize::RoundMode round_mode = quantize->get_round_mode();
 
                     if (args[0].get_element_type() == element::f32)
                     {
@@ -627,8 +627,8 @@ namespace ngraph
 
             void register_builders_quantization_cpp()
             {
-                REGISTER_OP_BUILDER(Dequantize);
-                REGISTER_OP_BUILDER(Quantize);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Dequantize);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Quantize);
             }
         }
     }

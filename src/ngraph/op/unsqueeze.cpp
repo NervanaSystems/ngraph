@@ -26,15 +26,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Unsqueeze::type_info;
+constexpr NodeTypeInfo op::v0::Unsqueeze::type_info;
 
-op::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
+op::v0::Unsqueeze::Unsqueeze(const Output<Node>& data, const Output<Node>& axes)
     : FusedOp({data, axes})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Unsqueeze::pre_validate_and_infer_types()
+void op::v0::Unsqueeze::pre_validate_and_infer_types()
 {
     const auto data = input_value(0);
     auto data_partial_shape = data.get_partial_shape();
@@ -74,7 +74,7 @@ void op::Unsqueeze::pre_validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape{output_shape});
 }
 
-OutputVector op::Unsqueeze::decompose_op() const
+OutputVector op::v0::Unsqueeze::decompose_op() const
 {
     NODE_VALIDATION_CHECK(
         this,
@@ -84,7 +84,7 @@ OutputVector op::Unsqueeze::decompose_op() const
     auto data_shape = data.get_shape();
     auto output_shape = get_output_shape(0);
     AxisVector input_order{ngraph::get_default_order(data_shape.size())};
-    return {make_shared<ngraph::op::Reshape>(data, input_order, output_shape)};
+    return {make_shared<ngraph::op::v0::Reshape>(data, input_order, output_shape)};
 }
 
 bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
@@ -92,7 +92,7 @@ bool ngraph::op::v0::Unsqueeze::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Unsqueeze::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Unsqueeze::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -171,7 +171,8 @@ namespace
     }
 }
 
-bool op::v0::Unsqueeze::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Unsqueeze::evaluate(const HostTensorVector& outputs,
+                                 const HostTensorVector& inputs) const
 {
     return evaluate_unsqueeze(inputs[0], inputs[1], outputs[0]);
 }

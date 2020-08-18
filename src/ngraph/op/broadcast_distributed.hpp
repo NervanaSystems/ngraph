@@ -45,6 +45,5 @@ namespace ngraph
                 int64_t m_root_id;
             };
         }
-        using v0::BroadcastDistributed;
     }
 }

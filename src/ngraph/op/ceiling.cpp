@@ -23,15 +23,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Ceiling::type_info;
+constexpr NodeTypeInfo op::v0::Ceiling::type_info;
 
-op::Ceiling::Ceiling(const Output<Node>& arg)
+op::v0::Ceiling::Ceiling(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Ceiling::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Ceiling::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Ceiling>(new_args.at(0));
@@ -95,7 +95,8 @@ namespace
     }
 }
 
-bool op::Ceiling::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Ceiling::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_ceiling(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

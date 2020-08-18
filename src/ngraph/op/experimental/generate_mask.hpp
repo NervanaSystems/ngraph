@@ -134,7 +134,5 @@ namespace ngraph
                 double m_probability{0.0};
             };
         }
-
-        using v0::GenerateMask;
     }
 }

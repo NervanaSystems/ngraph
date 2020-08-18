@@ -60,7 +60,6 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v0::Abs, opset1::Abs)
     CHECK_OPSET(op::v0::Acos, opset1::Acos)
     // TODO: CHECK_OPSET(op::v0::Acosh, opset1::Acosh)
-    CHECK_OPSET(op::v1::Add, opset1::Add)
     CHECK_OPSET(op::v0::Asin, opset1::Asin)
     // TODO: CHECK_OPSET(op::v0::Asinh, opset1::Asinh)
     CHECK_OPSET(op::v1::LogicalAnd, opset1::LogicalAnd)
@@ -167,7 +166,6 @@ TEST(opset, check_opset1)
     CHECK_OPSET(op::v1::Transpose, opset1::Transpose)
     CHECK_OPSET(op::v0::Unsqueeze, opset1::Unsqueeze)
     CHECK_OPSET(op::v1::VariadicSplit, opset1::VariadicSplit)
-    CHECK_OPSET(op::v0::Xor, opset1::Xor)
 }
 
 class NewOp : public op::Op

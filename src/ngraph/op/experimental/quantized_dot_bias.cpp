@@ -22,14 +22,14 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::QuantizedDotBias::type_info;
+constexpr NodeTypeInfo op::v0::QuantizedDotBias::type_info;
 
-op::QuantizedDotBias::QuantizedDotBias(const Output<Node>& data,
-                                       const Output<Node>& weights,
-                                       const Output<Node>& bias,
-                                       const Output<Node>& scale,
-                                       bool requantize,
-                                       bool with_relu)
+op::v0::QuantizedDotBias::QuantizedDotBias(const Output<Node>& data,
+                                           const Output<Node>& weights,
+                                           const Output<Node>& bias,
+                                           const Output<Node>& scale,
+                                           bool requantize,
+                                           bool with_relu)
     : Op({data, weights, bias, scale})
     , m_requantize(requantize)
     , m_with_relu(with_relu)

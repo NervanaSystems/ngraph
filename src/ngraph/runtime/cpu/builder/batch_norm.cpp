@@ -228,12 +228,12 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchNormTraining)
+            void Builder::BUILDER_DECL(ngraph::op::v0::BatchNormTraining)
             {
                 if (!dnnl_utils::use_dnnl_kernel(node))
                 {
-                    const ngraph::op::BatchNormTraining* batchnorm =
-                        static_cast<const ngraph::op::BatchNormTraining*>(node);
+                    const ngraph::op::v0::BatchNormTraining* batchnorm =
+                        static_cast<const ngraph::op::v0::BatchNormTraining*>(node);
 
                     if (args.size() == 3)
                     {
@@ -336,18 +336,18 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm<ngraph::op::BatchNormTraining>(
+                    build_batch_norm<ngraph::op::v0::BatchNormTraining>(
                         external_function, node, args, out, false, true);
                 }
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchNormInference)
+            void Builder::BUILDER_DECL(ngraph::op::v0::BatchNormInference)
             {
                 if (!dnnl_utils::use_dnnl_kernel(node))
                 {
-                    const ngraph::op::BatchNormInference* batchnorm =
-                        static_cast<const ngraph::op::BatchNormInference*>(node);
+                    const ngraph::op::v0::BatchNormInference* batchnorm =
+                        static_cast<const ngraph::op::v0::BatchNormInference*>(node);
 
                     auto& functors = external_function->get_functors();
 
@@ -397,18 +397,18 @@ namespace ngraph
                 }
                 else
                 {
-                    build_batch_norm<ngraph::op::BatchNormInference>(
+                    build_batch_norm<ngraph::op::v0::BatchNormInference>(
                         external_function, node, args, out, false, false);
                 }
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BatchNormTrainingBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::v0::BatchNormTrainingBackprop)
             {
                 if (!dnnl_utils::use_dnnl_kernel(node))
                 {
-                    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
-                        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
+                    const ngraph::op::v0::BatchNormTrainingBackprop* batchnorm =
+                        static_cast<const ngraph::op::v0::BatchNormTrainingBackprop*>(node);
 
                     auto& functors = external_function->get_functors();
 
@@ -521,8 +521,8 @@ namespace ngraph
                     auto batchnorm_index = dnnl_emitter->reserve_primitive_space(8);
                     auto& deps = dnnl_emitter->get_primitive_deps(batchnorm_index);
 
-                    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
-                        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
+                    const ngraph::op::v0::BatchNormTrainingBackprop* batchnorm =
+                        static_cast<const ngraph::op::v0::BatchNormTrainingBackprop*>(node);
                     auto eps = batchnorm->get_eps_value();
                     (void)eps; // Use depends on mkl-dnn version
                     size_t scratchpad_size =
@@ -623,11 +623,11 @@ namespace ngraph
 
             void register_builders_batch_norm_cpp()
             {
-                REGISTER_OP_BUILDER(BatchNormTraining);
-                REGISTER_OP_BUILDER(BatchNormInference);
-                REGISTER_OP_BUILDER(BatchNormTrainingRelu);
-                REGISTER_OP_BUILDER(BatchNormInferenceRelu);
-                REGISTER_OP_BUILDER(BatchNormTrainingBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BatchNormTraining);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BatchNormInference);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormTrainingRelu);
+                REGISTER_OP_BUILDER(ngraph::op::BatchNormInferenceRelu);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BatchNormTrainingBackprop);
             }
         }
     }

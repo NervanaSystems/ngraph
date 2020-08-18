@@ -27,15 +27,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Squeeze::type_info;
+constexpr NodeTypeInfo op::v0::Squeeze::type_info;
 
-op::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
+op::v0::Squeeze::Squeeze(const Output<Node>& data, const Output<Node>& axes)
     : FusedOp({data, axes})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Squeeze::pre_validate_and_infer_types()
+void op::v0::Squeeze::pre_validate_and_infer_types()
 {
     auto data = input_value(0);
     auto axes_node = input_value(1).get_node_shared_ptr();
@@ -112,7 +112,7 @@ bool ngraph::op::v0::Squeeze::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-OutputVector op::Squeeze::decompose_op() const
+OutputVector op::v0::Squeeze::decompose_op() const
 {
     NODE_VALIDATION_CHECK(
         this,
@@ -122,10 +122,10 @@ OutputVector op::Squeeze::decompose_op() const
     auto data_shape = data.get_shape();
     auto output_data_shape = get_output_shape(0);
     AxisVector input_order{get_default_order(data_shape.size())};
-    return {make_shared<op::Reshape>(data, input_order, output_data_shape)};
+    return {make_shared<op::v0::Reshape>(data, input_order, output_data_shape)};
 }
 
-shared_ptr<Node> op::Squeeze::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Squeeze::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
     {
@@ -211,7 +211,8 @@ namespace
     }
 }
 
-bool op::v0::Squeeze::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Squeeze::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_squeeze(inputs[0], inputs[1], outputs[0]);
 }

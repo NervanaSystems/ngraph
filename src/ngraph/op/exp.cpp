@@ -23,9 +23,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Exp::type_info;
+constexpr NodeTypeInfo op::v0::Exp::type_info;
 
-op::Exp::Exp(const Output<Node>& arg)
+op::v0::Exp::Exp(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -36,13 +36,13 @@ bool ngraph::op::v0::Exp::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Exp::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Exp::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Exp>(new_args.at(0));
 }
 
-void op::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Exp::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -99,7 +99,7 @@ namespace
     }
 }
 
-bool op::Exp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Exp::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_exp(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

@@ -93,11 +93,11 @@ namespace
     }
 }
 
-constexpr NodeTypeInfo op::Reshape::type_info;
+constexpr NodeTypeInfo op::v0::Reshape::type_info;
 
-op::Reshape::Reshape(const Output<Node>& arg,
-                     const AxisVector& input_order,
-                     const Shape& output_shape)
+op::v0::Reshape::Reshape(const Output<Node>& arg,
+                         const AxisVector& input_order,
+                         const Shape& output_shape)
     : Op({arg})
     , m_input_order(input_order)
     , m_output_shape(output_shape)
@@ -105,7 +105,7 @@ op::Reshape::Reshape(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::Reshape::validate_and_infer_types()
+void op::v0::Reshape::validate_and_infer_types()
 {
     auto& input_shape = get_input_partial_shape(0);
     auto input_rank = input_shape.rank();
@@ -177,20 +177,20 @@ void op::Reshape::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), m_output_shape);
 }
 
-shared_ptr<Node> op::Reshape::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Reshape::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Reshape>(new_args.at(0), m_input_order, m_output_shape);
 }
 
-bool op::Reshape::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Reshape::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("input_order", m_input_order);
     visitor.on_attribute("output_shape", m_output_shape);
     return true;
 }
 
-void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -214,16 +214,17 @@ void op::Reshape::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVe
     {
         input_order[i] = i;
     }
-    auto reshape = make_shared<op::Reshape>(delta, input_order, permuted_x_shape);
+    auto reshape = make_shared<op::v0::Reshape>(delta, input_order, permuted_x_shape);
     if (is_permuted)
     {
-        reshape = make_shared<op::Reshape>(reshape, x_input_order, x_shape);
+        reshape = make_shared<op::v0::Reshape>(reshape, x_input_order, x_shape);
     }
 
     adjoints.add_delta(input_value(0), reshape);
 }
 
-bool op::v0::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Reshape::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_reshape(inputs[0], outputs[0], get_input_order());
 }
@@ -261,7 +262,7 @@ void op::v1::Reshape::validate_and_infer_types()
 
     set_input_is_relevant_to_shape(1);
 
-    if (auto const_shape = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
+    if (auto const_shape = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr()))
     {
         std::vector<int64_t> out_shape_val = const_shape->cast_vector<int64_t>();
         NODE_VALIDATION_CHECK(this,
@@ -384,7 +385,8 @@ void op::v1::Reshape::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     throw ngraph_error("generate_adjoints not implemented for Reshape");
 }
 
-bool op::v1::Reshape::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Reshape::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     // infer and set output shape if the output shape contain -1
     // and zero value dimension

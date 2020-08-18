@@ -83,6 +83,5 @@ namespace ngraph
                 AxisSet m_ellipsis_mask;
             };
         }
-        using v0::DynSlice;
     }
 }

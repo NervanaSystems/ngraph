@@ -24,9 +24,9 @@ namespace ngraph
         {
             std::shared_ptr<Node> max_abs(const Output<Node>& a, const Output<Node>& b)
             {
-                auto abs_a = std::make_shared<op::Abs>(a);
-                auto abs_b = std::make_shared<op::Abs>(b);
-                return std::make_shared<op::Maximum>(abs_a, abs_b)
+                auto abs_a = std::make_shared<op::v0::Abs>(a);
+                auto abs_b = std::make_shared<op::v0::Abs>(b);
+                return std::make_shared<op::v0::Maximum>(abs_a, abs_b)
                     ->add_provenance_group_members_above({a, b});
             }
 
@@ -53,17 +53,18 @@ namespace ngraph
                 if (bump_by_eps)
                 {
                     auto zero = make_constant(type, shape, 0);
-                    min_range = std::make_shared<op::Minimum>(zero, input_min_range);
+                    min_range = std::make_shared<op::v0::Minimum>(zero, input_min_range);
 
                     auto max_abs_input_range = max_abs(input_min_range, input_max_range);
 
                     auto one = make_constant(type, shape, 1);
                     auto hundred = make_constant(type, shape, 100);
                     auto epsilon =
-                        std::make_shared<op::Maximum>(one, max_abs_input_range) / hundred;
+                        std::make_shared<op::v0::Maximum>(one, max_abs_input_range) / hundred;
 
-                    max_range = std::make_shared<op::Maximum>(input_max_range, min_range + epsilon);
-                    max_range = std::make_shared<op::Maximum>(zero, max_range);
+                    max_range =
+                        std::make_shared<op::v0::Maximum>(input_max_range, min_range + epsilon);
+                    max_range = std::make_shared<op::v0::Maximum>(zero, max_range);
                 }
 
                 size_t bw = quant_type.bitwidth();

@@ -110,7 +110,7 @@ void op::v0::MaxPool::validate_and_infer_types()
 
 void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape,
                                           Shape& new_padding_above,
-                                          Shape& new_padding_below)
+                                          Shape& new_padding_below) const
 {
     if (m_pad_type == PadType::SAME_UPPER || m_pad_type == PadType::SAME_LOWER)
     {
@@ -132,7 +132,7 @@ void op::v0::MaxPool::update_auto_padding(const PartialShape& in_shape,
 
 void op::v1::MaxPool::update_auto_padding(const PartialShape& in_shape,
                                           Shape& new_pads_end,
-                                          Shape& new_pads_begin)
+                                          Shape& new_pads_begin) const
 {
     if (m_auto_pad == PadType::SAME_UPPER || m_auto_pad == PadType::SAME_LOWER)
     {
@@ -293,14 +293,14 @@ void op::v0::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto delta = deltas.at(0);
 
     auto operand = input_value(0);
-    auto backprop =
-        make_shared<op::v0::MaxPoolBackprop>(operand,
-                                             delta,
-                                             static_pointer_cast<op::MaxPool>(shared_from_this()),
-                                             m_window_shape,
-                                             m_window_movement_strides,
-                                             m_padding_below,
-                                             m_padding_above);
+    auto backprop = make_shared<op::v0::MaxPoolBackprop>(
+        operand,
+        delta,
+        static_pointer_cast<op::v0::MaxPool>(shared_from_this()),
+        m_window_shape,
+        m_window_movement_strides,
+        m_padding_below,
+        m_padding_above);
 
     adjoints.add_delta(operand, backprop);
 }
@@ -393,7 +393,7 @@ shared_ptr<Node> op::v1::MaxPool::clone_with_new_inputs(const OutputVector& new_
 
 shared_ptr<Node> op::v1::MaxPool::get_default_value() const
 {
-    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
+    return op::v0::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }
 
 constexpr NodeTypeInfo op::v1::MaxPoolBackprop::type_info;
@@ -497,14 +497,14 @@ void op::v1::MaxPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto delta = deltas.at(0);
 
     auto operand = input_value(0);
-    auto backprop =
-        make_shared<op::v1::MaxPoolBackprop>(operand,
-                                             delta,
-                                             static_pointer_cast<op::MaxPool>(shared_from_this()),
-                                             m_strides,
-                                             m_pads_begin,
-                                             m_pads_end,
-                                             m_kernel);
+    auto backprop = make_shared<op::v1::MaxPoolBackprop>(
+        operand,
+        delta,
+        static_pointer_cast<op::v0::MaxPool>(shared_from_this()),
+        m_strides,
+        m_pads_begin,
+        m_pads_end,
+        m_kernel);
 
     adjoints.add_delta(operand, backprop);
 }
@@ -572,7 +572,8 @@ namespace
     }
 }
 
-bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     auto arg_shape = inputs[0]->get_partial_shape();
     auto padding_below_s = get_padding_below();
@@ -597,7 +598,8 @@ bool op::v0::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensor
                             get_padding_above());
 }
 
-bool op::v1::MaxPool::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::MaxPool::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     auto arg_shape = inputs[0]->get_partial_shape();
     auto pads_begin_s = get_pads_begin();

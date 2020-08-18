@@ -63,9 +63,9 @@ TEST(serialize, main)
 {
     // First create "f(A,B,C) = (A+B)*C".
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape);
     auto f = make_shared<Function>((A + B) * C, ParameterVector{A, B, C}, "f");
 
     string js = serialize(f, 4);
@@ -102,9 +102,9 @@ TEST(serialize, friendly_name)
 {
     // First create "f(A,B,C) = (A+B)*C".
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto C = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto C = make_shared<op::v0::Parameter>(element::f32, shape);
     auto sum = A + B;
     auto product = sum * C;
     auto f = make_shared<Function>(product, ParameterVector{A, B, C}, "f");
@@ -170,7 +170,7 @@ TEST(serialize, constant)
 {
     const string tmp_file = "serialize_constant.cpio";
     Shape shape{2, 2, 2};
-    auto A = op::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
+    auto A = op::v0::Constant::create(element::f32, shape, {1, 2, 3, 4, 5, 6, 7, 8});
     auto f = make_shared<Function>(A, ParameterVector{});
 
     EXPECT_EQ((vector<float>{1, 2, 3, 4, 5, 6, 7, 8}), A->get_vector<float>());
@@ -181,7 +181,7 @@ TEST(serialize, constant)
     bool found = false;
     for (shared_ptr<Node> node : g->get_ops())
     {
-        shared_ptr<op::Constant> c = as_type_ptr<op::Constant>(node);
+        shared_ptr<op::v0::Constant> c = as_type_ptr<op::v0::Constant>(node);
         if (c)
         {
             found = true;
@@ -223,7 +223,7 @@ TEST(serialize, passthrough)
     using estuple = std::tuple<element::Type, PartialShape>;
 
     Shape shape{2, 2, 2};
-    auto p = make_shared<op::Passthrough>(
+    auto p = make_shared<op::v0::Passthrough>(
         "SerializationTest",
         "Plain",
         "Hello, world!",
@@ -237,10 +237,10 @@ TEST(serialize, passthrough)
     file_util::remove_file(tmp_file);
     ASSERT_THAT(g, NotNull());
 
-    std::shared_ptr<op::Passthrough> pt;
+    std::shared_ptr<op::v0::Passthrough> pt;
     for (const auto& op : g->get_ops())
     {
-        pt = as_type_ptr<op::Passthrough>(op);
+        pt = as_type_ptr<op::v0::Passthrough>(op);
         if (pt)
         {
             break;
@@ -262,10 +262,10 @@ TEST(serialize, constant_infinity_nan)
     vector<float> b_data{5.f, 5.f, 5.f, 5.f, 5.f, 5.f};
     vector<float> c_data{0.05f, 0.05f, 0.05f, 0.05f, 0.05f, 0.05001f, 0.05f};
     vector<int64_t> d_data{-100, -10, -1, 0, 50, 5000000000001};
-    auto A = make_shared<op::Constant>(element::f32, Shape{5}, a_data);
-    auto B = make_shared<op::Constant>(element::f32, Shape{6}, b_data);
-    auto C = make_shared<op::Constant>(element::f32, Shape{7}, c_data);
-    auto D = make_shared<op::Constant>(element::i64, Shape{d_data.size()}, d_data);
+    auto A = make_shared<op::v0::Constant>(element::f32, Shape{5}, a_data);
+    auto B = make_shared<op::v0::Constant>(element::f32, Shape{6}, b_data);
+    auto C = make_shared<op::v0::Constant>(element::f32, Shape{7}, c_data);
+    auto D = make_shared<op::v0::Constant>(element::i64, Shape{d_data.size()}, d_data);
     A->set_friendly_name("A");
     B->set_friendly_name("B");
     C->set_friendly_name("C");
@@ -275,27 +275,27 @@ TEST(serialize, constant_infinity_nan)
     string s = serialize(f, 4);
     shared_ptr<Function> g = deserialize(s);
 
-    shared_ptr<op::Constant> a;
-    shared_ptr<op::Constant> b;
-    shared_ptr<op::Constant> c;
-    shared_ptr<op::Constant> d;
+    shared_ptr<op::v0::Constant> a;
+    shared_ptr<op::v0::Constant> b;
+    shared_ptr<op::v0::Constant> c;
+    shared_ptr<op::v0::Constant> d;
     for (auto node : g->get_ops())
     {
         if (node->get_friendly_name() == "A")
         {
-            a = as_type_ptr<op::Constant>(node);
+            a = as_type_ptr<op::v0::Constant>(node);
         }
         else if (node->get_friendly_name() == "B")
         {
-            b = as_type_ptr<op::Constant>(node);
+            b = as_type_ptr<op::v0::Constant>(node);
         }
         else if (node->get_friendly_name() == "C")
         {
-            c = as_type_ptr<op::Constant>(node);
+            c = as_type_ptr<op::v0::Constant>(node);
         }
         else if (node->get_friendly_name() == "D")
         {
-            d = as_type_ptr<op::Constant>(node);
+            d = as_type_ptr<op::v0::Constant>(node);
         }
     }
     ASSERT_TRUE(a);
@@ -322,10 +322,10 @@ TEST(serialize, constant_infinity_nan)
 
 TEST(serialize, non_zero_node_output)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
-    auto topk = make_shared<op::TopK>(arg, 0, element::i32, 5, true);
-    auto abs = make_shared<op::Abs>(Output<Node>(topk, 1));
-    auto result = make_shared<op::Result>(abs);
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{10});
+    auto topk = make_shared<op::v0::TopK>(arg, 0, element::i32, 5, true);
+    auto abs = make_shared<op::v0::Abs>(Output<Node>(topk, 1));
+    auto result = make_shared<op::v0::Result>(abs);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -333,14 +333,14 @@ TEST(serialize, non_zero_node_output)
     auto g_abs = g_result->input_value(0).get_node_shared_ptr();
     auto topk_out = g_abs->input_value(0);
     EXPECT_EQ(topk_out.get_index(), 1);
-    ASSERT_TRUE(is_type<op::TopK>(topk_out.get_node()));
+    ASSERT_TRUE(is_type<op::v0::TopK>(topk_out.get_node()));
 }
 
 TEST(serialize, opset1_softmax)
 {
-    const auto arg = make_shared<op::Parameter>(element::f32, Shape{10});
+    const auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{10});
     const auto softmax = make_shared<op::v1::Softmax>(arg, 0);
-    const auto result = make_shared<op::Result>(softmax);
+    const auto result = make_shared<op::v0::Result>(softmax);
     const auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
 
@@ -352,12 +352,12 @@ TEST(serialize, opset1_softmax)
 
 TEST(serialize, opset1_gather)
 {
-    auto params = make_shared<op::Parameter>(element::f32, Shape{5, 6});
-    auto indices = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto axis = make_shared<op::Parameter>(element::i64, Shape{1});
+    auto params = make_shared<op::v0::Parameter>(element::f32, Shape{5, 6});
+    auto indices = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto axis = make_shared<op::v0::Parameter>(element::i64, Shape{1});
     auto gather_v1 = make_shared<op::v1::Gather>(params, indices, axis);
 
-    auto result = make_shared<op::Result>(gather_v1);
+    auto result = make_shared<op::v0::Result>(gather_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{params, indices, axis});
     string s = serialize(f);
 
@@ -369,11 +369,11 @@ TEST(serialize, opset1_gather)
 
 TEST(serialize, opset1_product)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
     auto keep_dims = true;
-    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto axes = make_shared<op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto reduce_prod = make_shared<op::v1::ReduceProd>(arg, axes, keep_dims);
-    auto result = make_shared<op::Result>(reduce_prod);
+    auto result = make_shared<op::v0::Result>(reduce_prod);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
 
@@ -388,11 +388,11 @@ TEST(serialize, opset1_product)
 
 TEST(serialize, opset1_sum)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
     auto keep_dims = true;
-    auto axes = make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+    auto axes = make_shared<op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto reduce_sum = make_shared<op::v1::ReduceSum>(arg, axes, keep_dims);
-    auto result = make_shared<op::Result>(reduce_sum);
+    auto result = make_shared<op::v0::Result>(reduce_sum);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
 
@@ -407,14 +407,14 @@ TEST(serialize, opset1_sum)
 
 TEST(serialize, opset1_pad)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
-    auto pads_begin = make_shared<op::Parameter>(element::i64, Shape{1});
-    auto pads_end = make_shared<op::Parameter>(element::i64, Shape{2});
-    auto arg_pad_value = make_shared<op::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{4, 5, 6});
+    auto pads_begin = make_shared<op::v0::Parameter>(element::i64, Shape{1});
+    auto pads_end = make_shared<op::v0::Parameter>(element::i64, Shape{2});
+    auto arg_pad_value = make_shared<op::v0::Parameter>(element::f32, Shape{});
     auto pad_mode = op::PadMode::EDGE;
     auto pad = make_shared<op::v1::Pad>(arg, pads_begin, pads_end, arg_pad_value, pad_mode);
 
-    auto result = make_shared<op::Result>(pad);
+    auto result = make_shared<op::v0::Result>(pad);
     auto f = make_shared<Function>(ResultVector{result},
                                    ParameterVector{arg, pads_begin, pads_end, arg_pad_value});
     string s = serialize(f);
@@ -429,46 +429,46 @@ TEST(serialize, opset1_pad)
 TEST(serialize, tensor_iterator_raw)
 {
     // That which we iterate over
-    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
+    auto X = make_shared<op::v0::Parameter>(element::f32, Shape{32, 40, 10});
 
     // Common to all cells
-    auto WH = make_shared<op::Parameter>(element::f32, Shape{20, 20});
-    auto WX = make_shared<op::Parameter>(element::f32, Shape{10, 20});
-    auto bH = make_shared<op::Parameter>(element::f32, Shape{20});
-    auto WY = make_shared<op::Parameter>(element::f32, Shape{20, 5});
-    auto bY = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto WH = make_shared<op::v0::Parameter>(element::f32, Shape{20, 20});
+    auto WX = make_shared<op::v0::Parameter>(element::f32, Shape{10, 20});
+    auto bH = make_shared<op::v0::Parameter>(element::f32, Shape{20});
+    auto WY = make_shared<op::v0::Parameter>(element::f32, Shape{20, 5});
+    auto bY = make_shared<op::v0::Parameter>(element::f32, Shape{5});
 
     // Initial values
-    auto Hinit = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
+    auto Hinit = make_shared<op::v0::Parameter>(element::f32, Shape{32, 1, 20});
 
     // Set up the cell body, a function from (Hi, Xi) -> (Ho, Yo)
     // Cell parameters
-    auto Hi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 20});
-    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 1, 10});
-    auto WH_body = make_shared<op::Parameter>(element::f32, Shape{20, 20});
-    auto WX_body = make_shared<op::Parameter>(element::f32, Shape{10, 20});
-    auto bH_body = make_shared<op::Parameter>(element::f32, Shape{20});
-    auto WY_body = make_shared<op::Parameter>(element::f32, Shape{20, 5});
-    auto bY_body = make_shared<op::Parameter>(element::f32, Shape{5});
+    auto Hi = make_shared<op::v0::Parameter>(element::f32, Shape{32, 1, 20});
+    auto Xi = make_shared<op::v0::Parameter>(element::f32, Shape{32, 1, 10});
+    auto WH_body = make_shared<op::v0::Parameter>(element::f32, Shape{20, 20});
+    auto WX_body = make_shared<op::v0::Parameter>(element::f32, Shape{10, 20});
+    auto bH_body = make_shared<op::v0::Parameter>(element::f32, Shape{20});
+    auto WY_body = make_shared<op::v0::Parameter>(element::f32, Shape{20, 5});
+    auto bY_body = make_shared<op::v0::Parameter>(element::f32, Shape{5});
 
     // Body
-    auto Ho = make_shared<op::Reshape>(
-        make_shared<op::Relu>(
-            make_shared<op::Dot>(make_shared<op::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}),
-                                 WX_body) +
-            make_shared<op::Dot>(make_shared<op::Reshape>(Hi, AxisVector{0, 1, 2}, Shape{32, 20}),
-                                 WH_body) +
-            make_shared<op::Broadcast>(bH_body, Shape{32, 20}, AxisSet{0})),
+    auto Ho = make_shared<op::v0::Reshape>(
+        make_shared<op::v0::Relu>(
+            make_shared<op::v0::Dot>(
+                make_shared<op::v0::Reshape>(Xi, AxisVector{0, 1, 2}, Shape{32, 10}), WX_body) +
+            make_shared<op::v0::Dot>(
+                make_shared<op::v0::Reshape>(Hi, AxisVector{0, 1, 2}, Shape{32, 20}), WH_body) +
+            make_shared<op::v0::Broadcast>(bH_body, Shape{32, 20}, AxisSet{0})),
         AxisVector{0, 1},
         Shape{32, 1, 20});
-    auto Yo = make_shared<op::Relu>(
-        make_shared<op::Dot>(make_shared<op::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}),
-                             WY_body) +
-        make_shared<op::Broadcast>(bY_body, Shape{32, 5}, AxisSet{0}));
-    auto body = make_shared<op::TensorIterator::BodyLambda>(
+    auto Yo = make_shared<op::v0::Relu>(
+        make_shared<op::v0::Dot>(
+            make_shared<op::v0::Reshape>(Ho, AxisVector{0, 1, 2}, Shape{32, 20}), WY_body) +
+        make_shared<op::v0::Broadcast>(bY_body, Shape{32, 5}, AxisSet{0}));
+    auto body = make_shared<op::v0::TensorIterator::BodyLambda>(
         OutputVector{Yo, Ho}, ParameterVector{Xi, Hi, WH_body, WX_body, WY_body, bH_body, bY_body});
 
-    auto tensor_iterator = make_shared<op::TensorIterator>();
+    auto tensor_iterator = make_shared<op::v0::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
     // start=0, stride=1, part_size=1, end=39, axis=1
@@ -487,7 +487,8 @@ TEST(serialize, tensor_iterator_raw)
     // start=0, stride=1, part_size=1, end=39, axis=1
     auto out1 = tensor_iterator->get_concatenated_slices(Ho, 0, 1, 1, 39, 1);
 
-    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto results =
+        ResultVector{make_shared<op::v0::Result>(out0), make_shared<op::v0::Result>(out1)};
     auto f = make_shared<Function>(results, ParameterVector{X, Hinit, WH, WX, bH, WY, bY});
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -527,33 +528,33 @@ TEST(serialize, tensor_iterator_lstm)
     const size_t L = 10; // Sequence length
     const size_t I = 8;  // Input size
     const size_t H = 32; // Hidden size
-    auto SENT = make_shared<op::Parameter>(element::f32, Shape{N, L, I});
+    auto SENT = make_shared<op::v0::Parameter>(element::f32, Shape{N, L, I});
 
-    auto H_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
-    auto C_init = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto H_init = make_shared<op::v0::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_init = make_shared<op::v0::Parameter>(element::f32, Shape{N, 1, H});
 
-    auto W = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
-    auto R = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
-    auto H_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
-    auto C_t = make_shared<op::Parameter>(element::f32, Shape{N, 1, H});
+    auto W = make_shared<op::v0::Parameter>(element::f32, Shape{4 * H, I});
+    auto R = make_shared<op::v0::Parameter>(element::f32, Shape{4 * H, H});
+    auto H_t = make_shared<op::v0::Parameter>(element::f32, Shape{N, 1, H});
+    auto C_t = make_shared<op::v0::Parameter>(element::f32, Shape{N, 1, H});
 
     // Body
-    auto X = make_shared<op::Parameter>(element::f32, Shape{N, 1, I});
-    auto W_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, I});
-    auto R_body = make_shared<op::Parameter>(element::f32, Shape{4 * H, H});
-    auto LSTM_cell =
-        make_shared<op::LSTMCell>(make_shared<op::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
-                                  make_shared<op::Reshape>(H_t, AxisVector{0, 1, 2}, Shape{N, H}),
-                                  make_shared<op::Reshape>(C_t, AxisVector{0, 1, 2}, Shape{N, H}),
-                                  W_body,
-                                  R_body,
-                                  H);
-    auto H_o = make_shared<op::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
-    auto C_o = make_shared<op::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
-    auto body = make_shared<op::TensorIterator::BodyLambda>(
+    auto X = make_shared<op::v0::Parameter>(element::f32, Shape{N, 1, I});
+    auto W_body = make_shared<op::v0::Parameter>(element::f32, Shape{4 * H, I});
+    auto R_body = make_shared<op::v0::Parameter>(element::f32, Shape{4 * H, H});
+    auto LSTM_cell = make_shared<op::v0::LSTMCell>(
+        make_shared<op::v0::Reshape>(X, AxisVector{0, 1, 2}, Shape{N, I}),
+        make_shared<op::v0::Reshape>(H_t, AxisVector{0, 1, 2}, Shape{N, H}),
+        make_shared<op::v0::Reshape>(C_t, AxisVector{0, 1, 2}, Shape{N, H}),
+        W_body,
+        R_body,
+        H);
+    auto H_o = make_shared<op::v0::Reshape>(LSTM_cell->output(0), AxisVector{0, 1}, Shape{N, 1, H});
+    auto C_o = make_shared<op::v0::Reshape>(LSTM_cell->output(1), AxisVector{0, 1}, Shape{N, 1, H});
+    auto body = make_shared<op::v0::TensorIterator::BodyLambda>(
         OutputVector{H_o, C_o}, ParameterVector{X, H_t, C_t, W_body, R_body});
 
-    auto tensor_iterator = make_shared<op::TensorIterator>();
+    auto tensor_iterator = make_shared<op::v0::TensorIterator>();
     tensor_iterator->set_body(body);
     // start=0, stride=1, part_size=1, end=39, axis=1
     tensor_iterator->set_sliced_input(X, SENT, 0, 1, 1, -1, 1);
@@ -568,7 +569,8 @@ TEST(serialize, tensor_iterator_lstm)
     // Output 1 is last Co, result 1 of body
     auto out1 = tensor_iterator->get_iter_value(C_o, -1);
 
-    auto results = ResultVector{make_shared<op::Result>(out0), make_shared<op::Result>(out1)};
+    auto results =
+        ResultVector{make_shared<op::v0::Result>(out0), make_shared<op::v0::Result>(out1)};
     auto f = make_shared<Function>(results, ParameterVector{SENT, H_init, C_init, W, R});
     string s = serialize(f);
     shared_ptr<Function> g = deserialize(s);
@@ -577,22 +579,22 @@ TEST(serialize, tensor_iterator_lstm)
 TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
 {
     // That which we iterate over
-    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
-    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
-    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto X = make_shared<op::v0::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::v0::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::v0::Parameter>(element::f32, Shape{32, 2, 10});
 
     // Set up the cell body, a function from (Xi, Yi) -> (Zo)
     // Body parameters
-    auto Xi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
-    auto Yi = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
-    auto M_body = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto Xi = make_shared<op::v0::Parameter>(element::f32, Shape{32, 2, 10});
+    auto Yi = make_shared<op::v0::Parameter>(element::f32, Shape{32, 2, 10});
+    auto M_body = make_shared<op::v0::Parameter>(element::f32, Shape{32, 2, 10});
 
     // Body
     auto Zo = (Xi + Yi) * M_body;
-    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
-                                                            ParameterVector{Xi, Yi, M_body});
+    auto body = make_shared<op::v0::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                                ParameterVector{Xi, Yi, M_body});
 
-    auto tensor_iterator = make_shared<op::TensorIterator>();
+    auto tensor_iterator = make_shared<op::v0::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
     // start=0, stride=2, part_size=2, end=39, axis=1
@@ -608,8 +610,8 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
     // start=0, stride=2, part_size=2, end=39, axis=1
     auto out1 = tensor_iterator->get_concatenated_slices(Zo, 0, 2, 2, 39, 1);
 
-    auto result0 = make_shared<op::Result>(out0);
-    auto result1 = make_shared<op::Result>(out1);
+    auto result0 = make_shared<op::v0::Result>(out0);
+    auto result1 = make_shared<op::v0::Result>(out1);
     Shape out0_shape{32, 2, 10};
     Shape out1_shape{32, 40, 10};
 
@@ -625,22 +627,22 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2)
 TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
 {
     // That which we iterate over
-    auto X = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
-    auto Y = make_shared<op::Parameter>(element::f32, Shape{32, 40, 10});
-    auto M = make_shared<op::Parameter>(element::f32, Shape{32, 2, 10});
+    auto X = make_shared<op::v0::Parameter>(element::f32, Shape{32, 40, 10});
+    auto Y = make_shared<op::v0::Parameter>(element::f32, Shape{32, 40, 10});
+    auto M = make_shared<op::v0::Parameter>(element::f32, Shape{32, 2, 10});
 
     // Set up the cell body, a function from (Xi, Yi) -> (Zo)
     // Body parameters
-    auto Xi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto Yi = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto M_body = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto Xi = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto Yi = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto M_body = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
 
     // Body
     auto Zo = (Xi + Yi) * M_body;
-    auto body = make_shared<op::TensorIterator::BodyLambda>(OutputVector{Zo},
-                                                            ParameterVector{Xi, Yi, M_body});
+    auto body = make_shared<op::v0::TensorIterator::BodyLambda>(OutputVector{Zo},
+                                                                ParameterVector{Xi, Yi, M_body});
 
-    auto tensor_iterator = make_shared<op::TensorIterator>();
+    auto tensor_iterator = make_shared<op::v0::TensorIterator>();
     tensor_iterator->set_body(body);
     // The Xi are the elements of Xseq
     // start=0, stride=2, part_size=2, end=38, axis=1
@@ -657,17 +659,19 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
         if (std::strcmp(type_info.name, "InvariantInputDescription") == 0)
         {
             auto input_desc =
-                as_type_ptr<ngraph::op::TensorIterator::InvariantInputDescription>(desc);
+                as_type_ptr<ngraph::op::v0::TensorIterator::InvariantInputDescription>(desc);
             EXPECT_NE(input_desc, nullptr);
         }
         else if (std::strcmp(type_info.name, "SliceInputDescription") == 0)
         {
-            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::SliceInputDescription>(desc);
+            auto input_desc =
+                as_type_ptr<ngraph::op::v0::TensorIterator::SliceInputDescription>(desc);
             EXPECT_NE(input_desc, nullptr);
         }
         else if (std::strcmp(type_info.name, "MergedInputDescription") == 0)
         {
-            auto input_desc = as_type_ptr<ngraph::op::TensorIterator::MergedInputDescription>(desc);
+            auto input_desc =
+                as_type_ptr<ngraph::op::v0::TensorIterator::MergedInputDescription>(desc);
             EXPECT_NE(input_desc, nullptr);
         }
     }
@@ -685,18 +689,19 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
         if (std::strcmp(type_info.name, "ConcatOutputDescription") == 0)
         {
             auto output_desc =
-                as_type_ptr<ngraph::op::TensorIterator::ConcatOutputDescription>(desc);
+                as_type_ptr<ngraph::op::v0::TensorIterator::ConcatOutputDescription>(desc);
             EXPECT_NE(output_desc, nullptr);
         }
         else if (std::strcmp(type_info.name, "BodyOutputDescription") == 0)
         {
-            auto output_desc = as_type_ptr<ngraph::op::TensorIterator::BodyOutputDescription>(desc);
+            auto output_desc =
+                as_type_ptr<ngraph::op::v0::TensorIterator::BodyOutputDescription>(desc);
             EXPECT_NE(output_desc, nullptr);
         }
     }
 
-    auto result0 = make_shared<op::Result>(out0);
-    auto result1 = make_shared<op::Result>(out1);
+    auto result0 = make_shared<op::v0::Result>(out0);
+    auto result1 = make_shared<op::v0::Result>(out1);
     Shape out0_shape{32, 2, 10};
     Shape out1_shape{32, 38, 10};
 
@@ -713,10 +718,10 @@ TEST(serialize, tensor_iterator_2_slice_inputs_part_size_2_dynamic)
 
 TEST(serialize, opset1_strided_slice)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto begin = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto end = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto begin = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto end = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     const std::vector<int64_t> begin_mask{1, 0, 1, 0};
     const std::vector<int64_t> end_mask{1, 1, 1, 0};
@@ -734,7 +739,7 @@ TEST(serialize, opset1_strided_slice)
                                                               shrink_axis_mask,
                                                               ellipsis_mask);
 
-    auto result = make_shared<op::Result>(strided_slice_in);
+    auto result = make_shared<op::v0::Result>(strided_slice_in);
     auto f =
         make_shared<Function>(ResultVector{result}, ParameterVector{data, begin, end, strides});
     string s = serialize(f);
@@ -754,8 +759,8 @@ TEST(serialize, opset1_strided_slice)
 
 TEST(serialize, opset1_binary_convolution)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
-    auto filter = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto filter = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 2, 2});
     const Strides strides{1, 1};
     const CoordinateDiff pads_begin{0, 0};
     const CoordinateDiff pads_end{0, 0};
@@ -767,7 +772,7 @@ TEST(serialize, opset1_binary_convolution)
     auto binary_conv_in = make_shared<op::v1::BinaryConvolution>(
         data, filter, strides, pads_begin, pads_end, dilations, mode, pad_value, auto_pad);
 
-    auto result = make_shared<op::Result>(binary_conv_in);
+    auto result = make_shared<op::v0::Result>(binary_conv_in);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filter});
     string s = serialize(f);
 
@@ -789,9 +794,9 @@ TEST(serialize, opset1_binary_convolution)
 
 TEST(serialize, opset1_interpolate)
 {
-    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
-    op::InterpolateAttrs attrs;
+    auto image = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto output_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+    op::v0::InterpolateAttrs attrs;
     attrs.axes = {2, 3};
     attrs.mode = "linear";
     attrs.align_corners = true;
@@ -799,17 +804,17 @@ TEST(serialize, opset1_interpolate)
     attrs.pads_begin = {0, 0, 0, 0};
     attrs.pads_end = {0, 0, 0, 0};
 
-    auto op = make_shared<op::Interpolate>(image, output_shape, attrs);
-    auto result = make_shared<op::Result>(op);
+    auto op = make_shared<op::v0::Interpolate>(image, output_shape, attrs);
+    auto result = make_shared<op::v0::Result>(op);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
     string s = serialize(f);
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_interpolate = g_result->get_input_node_shared_ptr(0);
-    auto g_op = as_type_ptr<op::Interpolate>(g_interpolate);
+    auto g_op = as_type_ptr<op::v0::Interpolate>(g_interpolate);
     ASSERT_TRUE(g_op);
-    op::InterpolateAttrs g_attrs = g_op->get_attrs();
+    op::v0::InterpolateAttrs g_attrs = g_op->get_attrs();
     EXPECT_EQ(g_attrs.axes, attrs.axes);
     EXPECT_EQ(g_attrs.mode, attrs.mode);
     EXPECT_EQ(g_attrs.align_corners, attrs.align_corners);
@@ -825,8 +830,8 @@ TEST(serialize, opset3_interpolate)
     using CoordinateTransformMode = op::v3::Interpolate::CoordinateTransformMode;
     using InterpolateAttrs = op::v3::Interpolate::InterpolateAttrs;
 
-    auto image = make_shared<op::Parameter>(element::f32, Shape{2, 2, 33, 65});
-    auto output_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
+    auto image = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 33, 65});
+    auto output_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{2}, {15, 30});
     InterpolateAttrs attrs;
     attrs.axes = {2, 3};
     attrs.mode = InterpolateMode::linear;
@@ -836,7 +841,7 @@ TEST(serialize, opset3_interpolate)
     attrs.pads_end = {0, 0, 0, 0};
 
     auto op = make_shared<Interpolate>(image, output_shape, attrs);
-    auto result = make_shared<op::Result>(op);
+    auto result = make_shared<op::v0::Result>(op);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{image});
     string s = serialize(f);
 
@@ -856,19 +861,19 @@ TEST(serialize, opset3_interpolate)
 
 TEST(serialize, depth_to_space)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6});
-    auto mode = op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST;
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{4, 5, 6});
+    auto mode = op::v0::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST;
     size_t block_size = 2;
-    auto depth_to_space_in = make_shared<op::DepthToSpace>(arg, mode, block_size);
+    auto depth_to_space_in = make_shared<op::v0::DepthToSpace>(arg, mode, block_size);
 
-    auto result = make_shared<op::Result>(depth_to_space_in);
+    auto result = make_shared<op::v0::Result>(depth_to_space_in);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_depth_to_space = g_result->get_input_node_shared_ptr(0);
-    auto depth_to_space_out = as_type_ptr<op::DepthToSpace>(g_depth_to_space);
+    auto depth_to_space_out = as_type_ptr<op::v0::DepthToSpace>(g_depth_to_space);
     ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
@@ -876,19 +881,19 @@ TEST(serialize, depth_to_space)
 
 TEST(serialize, space_to_depth)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{4, 6, 8});
-    auto mode = op::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{4, 6, 8});
+    auto mode = op::v0::SpaceToDepth::SpaceToDepthMode::BLOCKS_FIRST;
     size_t block_size = 2;
-    auto space_to_depth_in = make_shared<op::SpaceToDepth>(arg, mode, block_size);
+    auto space_to_depth_in = make_shared<op::v0::SpaceToDepth>(arg, mode, block_size);
 
-    auto result = make_shared<op::Result>(space_to_depth_in);
+    auto result = make_shared<op::v0::Result>(space_to_depth_in);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{arg});
     string s = serialize(f);
 
     shared_ptr<Function> g = deserialize(s);
     auto g_result = g->get_results().at(0);
     auto g_space_to_depth = g_result->get_input_node_shared_ptr(0);
-    auto depth_to_space_out = as_type_ptr<op::SpaceToDepth>(g_space_to_depth);
+    auto depth_to_space_out = as_type_ptr<op::v0::SpaceToDepth>(g_space_to_depth);
     ASSERT_TRUE(depth_to_space_out);
     EXPECT_EQ(depth_to_space_out->get_block_size(), block_size);
     EXPECT_EQ(depth_to_space_out->get_mode(), mode);
@@ -896,9 +901,9 @@ TEST(serialize, space_to_depth)
 
 TEST(serialize, deformable_psroi_pooling)
 {
-    auto input = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto coords = make_shared<op::Parameter>(element::f32, Shape{1, 1});
-    auto offsets = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto input = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto coords = make_shared<op::v0::Parameter>(element::f32, Shape{1, 1});
+    auto offsets = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
     const int64_t output_dim = 1;
     const int64_t group_size = 2;
     const float spatial_scale = 3;
@@ -920,7 +925,7 @@ TEST(serialize, deformable_psroi_pooling)
                                                                          trans_std,
                                                                          part_size);
 
-    auto result = make_shared<op::Result>(def_psroi_pool_in);
+    auto result = make_shared<op::v0::Result>(def_psroi_pool_in);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{input, coords, offsets});
     string s = serialize(f);
 
@@ -946,16 +951,16 @@ TEST(serialize, strip_goe)
 {
     // Shape input_shape{2, 3};
     // Shape channel_shape{input_shape[1]};
-    // auto input = make_shared<op::Parameter>(element::f32, input_shape);
-    // auto gamma = make_shared<op::Parameter>(element::f32, channel_shape);
-    // auto beta = make_shared<op::Parameter>(element::f32, channel_shape);
-    // auto bn = make_shared<op::BatchNormTraining>(input, gamma, beta, 0.0);
-    // auto goe0 = make_shared<op::GetOutputElement>(bn, 0);
-    // auto goe1 = make_shared<op::GetOutputElement>(bn, 1);
-    // auto goe2 = make_shared<op::GetOutputElement>(bn, 2);
-    // auto result0 = make_shared<op::Result>(goe0->output(0));
-    // auto result1 = make_shared<op::Result>(goe1->output(0));
-    // auto result2 = make_shared<op::Result>(goe2->output(0));
+    // auto input = make_shared<op::v0::Parameter>(element::f32, input_shape);
+    // auto gamma = make_shared<op::v0::Parameter>(element::f32, channel_shape);
+    // auto beta = make_shared<op::v0::Parameter>(element::f32, channel_shape);
+    // auto bn = make_shared<op::v0::BatchNormTraining>(input, gamma, beta, 0.0);
+    // auto goe0 = make_shared<op::v0::GetOutputElement>(bn, 0);
+    // auto goe1 = make_shared<op::v0::GetOutputElement>(bn, 1);
+    // auto goe2 = make_shared<op::v0::GetOutputElement>(bn, 2);
+    // auto result0 = make_shared<op::v0::Result>(goe0->output(0));
+    // auto result1 = make_shared<op::v0::Result>(goe1->output(0));
+    // auto result2 = make_shared<op::v0::Result>(goe2->output(0));
     // auto function = make_shared<Function>(ResultVector{result0, result1, result2},
     // ParameterVector{input, gamma, beta}); string s = serialize(function); cout << s << endl;
 

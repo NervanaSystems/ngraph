@@ -48,9 +48,8 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 bool visit_attributes(AttributeVisitor& visitor) override { return true; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
             };
         }
-        using v3::Asinh;
     }
 }

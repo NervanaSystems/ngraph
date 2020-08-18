@@ -29,7 +29,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::BroadcastDistributed)
+            void Builder::BUILDER_DECL(ngraph::op::v0::BroadcastDistributed)
             {
                 (void)out;
                 auto& functors = external_function->get_functors();
@@ -37,7 +37,7 @@ namespace ngraph
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto count = static_cast<int>(args[0].get_size());
                 auto data_type = args[0].get_element_type();
-                auto broadcast = static_cast<const ngraph::op::BroadcastDistributed*>(node);
+                auto broadcast = static_cast<const ngraph::op::v0::BroadcastDistributed*>(node);
                 auto root_id = broadcast->get_root_id();
                 auto functor = [&, count, data_type, arg_buffer_index, root_id](
                                    CPURuntimeContext* ctx, CPUExecutionContext* /* ectx */) {
@@ -49,7 +49,7 @@ namespace ngraph
 
             void register_builders_broadcast_distributed_cpp()
             {
-                REGISTER_OP_BUILDER(BroadcastDistributed);
+                REGISTER_OP_BUILDER(ngraph::op::v0::BroadcastDistributed);
             }
         }
     }

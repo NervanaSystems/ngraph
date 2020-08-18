@@ -42,7 +42,7 @@ bool runtime::gpu::pass::TensorMemoryReservation::run_on_function(shared_ptr<Fun
     // constant memory reservation
     for (auto const& node : f->get_ops())
     {
-        if (auto constant = std::dynamic_pointer_cast<ngraph::op::Constant>(node))
+        if (auto constant = std::dynamic_pointer_cast<ngraph::op::v0::Constant>(node))
         {
             const descriptor::Tensor& tv = node->get_output_tensor(0);
             size_t idx = m_allocator.reserve_argspace(constant->get_data_ptr(), tv.size());

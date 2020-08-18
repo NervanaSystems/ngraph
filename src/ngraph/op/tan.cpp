@@ -25,9 +25,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Tan::type_info;
+constexpr NodeTypeInfo op::v0::Tan::type_info;
 
-op::Tan::Tan(const Output<Node>& arg)
+op::v0::Tan::Tan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -38,19 +38,19 @@ bool ngraph::op::v0::Tan::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Tan::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Tan::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Tan>(new_args.at(0));
 }
 
-void op::Tan::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Tan::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input_value(0);
 
-    auto c = make_shared<op::Cos>(x);
+    auto c = make_shared<op::v0::Cos>(x);
 
     adjoints.add_delta(x, delta / (c * c));
 }
@@ -104,7 +104,7 @@ namespace
     }
 }
 
-bool op::Tan::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Tan::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_tan(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

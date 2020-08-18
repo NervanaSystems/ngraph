@@ -20,17 +20,17 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DynBroadcast::type_info;
+constexpr NodeTypeInfo op::v0::DynBroadcast::type_info;
 
-op::DynBroadcast::DynBroadcast(const Output<Node>& arg,
-                               const Output<Node>& shape,
-                               const Output<Node>& broadcast_axes)
+op::v0::DynBroadcast::DynBroadcast(const Output<Node>& arg,
+                                   const Output<Node>& shape,
+                                   const Output<Node>& broadcast_axes)
     : Op({arg, shape, broadcast_axes})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::DynBroadcast::validate_and_infer_types()
+void op::v0::DynBroadcast::validate_and_infer_types()
 {
     // shape node should have integer data type. For now we only allow i64
     // TODO: potenially make the type more flexible to include other integer types
@@ -65,7 +65,7 @@ void op::DynBroadcast::validate_and_infer_types()
     PartialShape result_shape{PartialShape::dynamic()};
     if (input_value(1).get_node_shared_ptr()->is_constant())
     {
-        result_shape = static_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr())
+        result_shape = static_pointer_cast<op::v0::Constant>(input_value(1).get_node_shared_ptr())
                            ->get_shape_val();
     }
 
@@ -74,7 +74,7 @@ void op::DynBroadcast::validate_and_infer_types()
     if (input_value(2).get_node_shared_ptr()->is_constant())
     {
         axes_known = true;
-        broadcast_axes = static_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr())
+        broadcast_axes = static_pointer_cast<op::v0::Constant>(input_value(2).get_node_shared_ptr())
                              ->get_axis_set_val();
     }
 
@@ -123,15 +123,15 @@ void op::DynBroadcast::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), result_shape);
 }
 
-shared_ptr<Node> op::DynBroadcast::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::DynBroadcast::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<DynBroadcast>(new_args.at(0), new_args.at(1), new_args.at(2));
 }
 
 // TODO: This function is not implemented!
-void op::DynBroadcast::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                         const OutputVector& /* deltas */)
+void op::v0::DynBroadcast::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                             const OutputVector& /* deltas */)
 {
     throw ngraph_error("generate_adjoints not implemented for DynBroadcast");
 }

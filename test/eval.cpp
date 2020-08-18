@@ -41,12 +41,12 @@
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/gather.hpp"
 #include "ngraph/op/log.hpp"
+#include "ngraph/op/logical_not.hpp"
 #include "ngraph/op/max_pool.hpp"
 #include "ngraph/op/min.hpp"
 #include "ngraph/op/minimum.hpp"
 #include "ngraph/op/negative.hpp"
 #include "ngraph/op/non_zero.hpp"
-#include "ngraph/op/not.hpp"
 #include "ngraph/op/parameter.hpp"
 #include "ngraph/op/range.hpp"
 #include "ngraph/op/relu.hpp"
@@ -111,7 +111,7 @@ TEST(eval, bad_get_data_ptr)
 
 TEST(eval, max_eval_parameter)
 {
-    auto p = make_shared<op::Parameter>(element::i64, Shape{});
+    auto p = make_shared<op::v0::Parameter>(element::i64, Shape{});
 
     auto result = maximum_value(p);
     EXPECT_FALSE(result.first);
@@ -120,7 +120,7 @@ TEST(eval, max_eval_parameter)
 
 TEST(eval, max_eval_constant)
 {
-    auto c = op::Constant::create<int64_t>(element::i64, Shape{}, {27});
+    auto c = op::v0::Constant::create<int64_t>(element::i64, Shape{}, {27});
     auto result = maximum_value(c);
     ASSERT_TRUE(result.first);
     EXPECT_EQ(result.second, 27);
@@ -128,9 +128,9 @@ TEST(eval, max_eval_constant)
 
 TEST(eval, max_eval_minimum_constant)
 {
-    auto c = op::Constant::create<int64_t>(element::i64, Shape{}, {27});
-    auto p = make_shared<op::Parameter>(element::i64, Shape{});
-    auto m = make_shared<op::Minimum>(c, p);
+    auto c = op::v0::Constant::create<int64_t>(element::i64, Shape{}, {27});
+    auto p = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto m = make_shared<op::v0::Minimum>(c, p);
     auto result = maximum_value(m);
     ASSERT_TRUE(result.first);
     EXPECT_EQ(result.second, 27);
@@ -157,7 +157,7 @@ TEST(eval, max_eval_reduce_min)
 
 TEST(eval, evaluate_shape_of)
 {
-    auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
+    auto p = make_shared<op::v0::Parameter>(element::f32, PartialShape{-1, -1});
     auto so = make_shared<op::v0::ShapeOf>(p);
     auto fun = make_shared<Function>(OutputVector{so}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
@@ -173,12 +173,12 @@ TEST(eval, evaluate_shape_of)
 
 TEST(eval, evaluate_dynamic_range_sum)
 {
-    auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto p_stop = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto p_step = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p_start = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
+    auto p_stop = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
+    auto p_step = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
+    auto p1 = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
     auto range = make_shared<op::v0::Range>(p_start, p_stop, p_step);
-    auto add = make_shared<op::v1::Add>(range, p1);
+    auto add = make_shared<op::v1::Add>(range, p1, op::AutoBroadcastType::NUMPY);
     auto fun =
         make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
     auto result_tensor = make_shared<HostTensor>();
@@ -197,12 +197,12 @@ TEST(eval, evaluate_dynamic_range_sum)
 #ifdef NGRAPH_EVAL_ENABLE
 TEST(eval, DISABLED_EVAL_dynamic_range_sum)
 {
-    auto p_start = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto p_stop = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto p_step = make_shared<op::Parameter>(element::f32, PartialShape{});
-    auto p1 = make_shared<op::Parameter>(element::f32, PartialShape{});
+    auto p_start = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
+    auto p_stop = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
+    auto p_step = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
+    auto p1 = make_shared<op::v0::Parameter>(element::f32, PartialShape{});
     auto range = make_shared<op::v0::Range>(p_start, p_stop, p_step);
-    auto add = make_shared<op::v1::Add>(range, p1);
+    auto add = make_shared<op::v1::Add>(range, p1, op::AutoBroadcastType::NUMPY);
     auto fun =
         make_shared<Function>(OutputVector{add}, ParameterVector{p_start, p_stop, p_step, p1});
     auto backend = runtime::Backend::create("EVAL");
@@ -228,8 +228,8 @@ TEST(eval, DISABLED_EVAL_dynamic_range_sum)
 TEST(eval, evaluate_broadcast_v3_bidirectional)
 {
     Shape shape_a{4, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = op::Constant::create<int32_t>(element::i32, Shape{3}, {2, 1, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = op::v0::Constant::create<int32_t>(element::i32, Shape{3}, {2, 1, 4});
     auto bcast_v3 =
         make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
@@ -248,8 +248,8 @@ TEST(eval, evaluate_broadcast_v3_bidirectional)
 TEST(eval, evaluate_broadcast_v3_bidirectional_dyn)
 {
     Shape shape_a{4, 1};
-    auto A = make_shared<op::Parameter>(element::i32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i32, Shape{3});
     auto bcast_v3 =
         make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
@@ -269,8 +269,8 @@ TEST(eval, evaluate_broadcast_v3_bidirectional_dyn)
 TEST(eval, evaluate_broadcast_v3_numpy)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
     auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
 
@@ -290,8 +290,8 @@ TEST(eval, evaluate_broadcast_v3_numpy)
 TEST(eval, evaluate_broadcast_v3_numpy_dyn)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i32, Shape{3});
     auto bcast_v3 = make_shared<op::v3::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
 
@@ -314,8 +314,8 @@ TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
 {
     Shape in_shape{1, 4, 1};
 
-    auto A = make_shared<op::Parameter>(element::f32, in_shape);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, in_shape);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {1, 1, 4});
     auto bcast_v3_num = make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::NUMPY);
     auto fun_num = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
 
@@ -328,7 +328,7 @@ TEST(eval, evaluate_broadcast_v3_numpy_vs_bidi)
     vector<float> expec{1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4};
     ASSERT_EQ(expec, result_val);
 
-    auto target_shape2 = op::Constant::create<int64_t>(element::i64, Shape{2}, {1, 4});
+    auto target_shape2 = op::v0::Constant::create<int64_t>(element::i64, Shape{2}, {1, 4});
     auto bcast_v3 =
         make_shared<op::v3::Broadcast>(A, target_shape2, op::BroadcastType::BIDIRECTIONAL);
     auto fun_bidi = make_shared<Function>(OutputVector{bcast_v3_num}, ParameterVector{A});
@@ -348,8 +348,8 @@ TEST(eval, evaluate_broadcast_v3_bidi_4d)
     Shape in_shape{4, 1, 1};
     Shape expec_shape{1, 4, 2, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, in_shape);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{4}, {1, 1, 2, 2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, in_shape);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{4}, {1, 1, 2, 2});
     auto bcast_v3 =
         make_shared<op::v3::Broadcast>(A, target_shape, op::BroadcastType::BIDIRECTIONAL);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
@@ -367,8 +367,8 @@ TEST(eval, evaluate_broadcast_v3_bidi_4d)
 TEST(eval, evaluate_broadcast_v3_pdpd)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
     auto bcast_v3 = make_shared<op::v3::Broadcast>(
         A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
@@ -389,8 +389,8 @@ TEST(eval, evaluate_broadcast_v3_pdpd)
 TEST(eval, evaluate_broadcast_v3_pdpd_dyn)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i32, Shape{3});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i32, Shape{3});
     auto bcast_v3 = make_shared<op::v3::Broadcast>(
         A, target_shape, op::BroadcastModeSpec(op::BroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
@@ -413,8 +413,8 @@ TEST(eval, evaluate_broadcast_v3_pdpd_dyn)
 TEST(eval, evaluate_broadcast_v1_numpy)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
     auto bcast_v3 = make_shared<op::v1::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
 
@@ -434,8 +434,8 @@ TEST(eval, evaluate_broadcast_v1_numpy)
 TEST(eval, evaluate_broadcast_v1_numpy_dyn)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
     auto bcast_v3 = make_shared<op::v1::Broadcast>(A, target_shape);
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
 
@@ -457,8 +457,8 @@ TEST(eval, evaluate_broadcast_v1_numpy_dyn)
 TEST(eval, evaluate_broadcast_v1_pdpd)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 6});
     auto bcast_v3 = make_shared<op::v1::Broadcast>(
         A, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
@@ -479,8 +479,8 @@ TEST(eval, evaluate_broadcast_v1_pdpd)
 TEST(eval, evaluate_broadcast_v1_pdpd_dyn)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
     auto bcast_v3 = make_shared<op::v1::Broadcast>(
         A, target_shape, op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A, target_shape});
@@ -503,9 +503,9 @@ TEST(eval, evaluate_broadcast_v1_pdpd_dyn)
 TEST(eval, evaluate_broadcast_v1_explicit)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
-    auto axes_mapping = op::Constant::create<int32_t>(element::i32, Shape{2}, {1, 2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {2, 3, 1});
+    auto axes_mapping = op::v0::Constant::create<int32_t>(element::i32, Shape{2}, {1, 2});
     auto bcast_v3 = make_shared<op::v1::Broadcast>(
         A, target_shape, axes_mapping, op::AutoBroadcastSpec(op::AutoBroadcastType::EXPLICIT));
     auto fun = make_shared<Function>(OutputVector{bcast_v3}, ParameterVector{A});
@@ -523,9 +523,9 @@ TEST(eval, evaluate_broadcast_v1_explicit)
 TEST(eval, evaluate_broadcast_v1_explicit_dyn)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto axes_mapping = make_shared<op::v0::Parameter>(element::i32, Shape{2});
 
     auto bcast_v1 = make_shared<op::v1::Broadcast>(
         A, target_shape, axes_mapping, op::AutoBroadcastSpec(op::AutoBroadcastType::EXPLICIT));
@@ -548,9 +548,9 @@ TEST(eval, evaluate_broadcast_v1_explicit_dyn)
 TEST(eval, evaluate_broadcast_v3_explicit_dyn)
 {
     Shape shape_a{3, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto target_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto axes_mapping = make_shared<op::Parameter>(element::i32, Shape{2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto target_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto axes_mapping = make_shared<op::v0::Parameter>(element::i32, Shape{2});
 
     auto bcast_v3 = make_shared<op::v3::Broadcast>(
         A, target_shape, axes_mapping, op::BroadcastModeSpec(op::BroadcastType::EXPLICIT));
@@ -573,7 +573,7 @@ TEST(eval, evaluate_broadcast_v3_explicit_dyn)
 TEST(eval, evaluate_broadcast_v0)
 {
     Shape shape_a{2, 4};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape target_shape = Shape{2, 3, 4};
     auto bcast_v0 = make_shared<op::v0::Broadcast>(A, target_shape, AxisSet{1});
     auto fun = make_shared<Function>(OutputVector{bcast_v0}, ParameterVector{A});
@@ -590,8 +590,8 @@ TEST(eval, evaluate_broadcast_v0)
 
 TEST(eval, test_op_multi_out)
 {
-    auto p = make_shared<op::Parameter>(element::f32, PartialShape{2, 3});
-    auto p2 = make_shared<op::Parameter>(element::f64, PartialShape{2, 2});
+    auto p = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 3});
+    auto p2 = make_shared<op::v0::Parameter>(element::f64, PartialShape{2, 2});
     auto so = make_shared<TestOpMultiOut>(p, p2);
     auto fun =
         make_shared<Function>(OutputVector{so->output(0), so->output(1)}, ParameterVector{p, p2});
@@ -614,8 +614,8 @@ TEST(eval, test_op_multi_out)
 
 TEST(eval, evaluate_reshape_v1)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});
-    auto pattern = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 5});
+    auto pattern = make_shared<op::v0::Parameter>(element::i64, Shape{2});
     auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, false);
     auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
     auto result_tensor = make_shared<HostTensor>();
@@ -632,8 +632,8 @@ TEST(eval, evaluate_reshape_v1)
 
 TEST(eval, evaluate_reshape_v1_negative_index)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 5});
-    auto pattern = make_shared<op::Parameter>(element::i64, Shape{2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 5});
+    auto pattern = make_shared<op::v0::Parameter>(element::i64, Shape{2});
     auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, false);
     auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
     auto result_tensor = make_shared<HostTensor>();
@@ -650,8 +650,8 @@ TEST(eval, evaluate_reshape_v1_negative_index)
 
 TEST(eval, evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
-    auto pattern = make_shared<op::Parameter>(element::i64, Shape{6});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2, 2});
+    auto pattern = make_shared<op::v0::Parameter>(element::i64, Shape{6});
     auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, true);
     auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
     auto result_tensor = make_shared<HostTensor>();
@@ -669,8 +669,8 @@ TEST(eval, evaluate_reshape_v1_negative_index_zero_dim_zero_flag)
 
 TEST(eval, evaluate_reshape_v1_pattern_int16)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2, 2});
-    auto pattern = make_shared<op::Parameter>(element::i16, Shape{6});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2, 2});
+    auto pattern = make_shared<op::v0::Parameter>(element::i16, Shape{6});
     auto dyn_reshape = make_shared<op::v1::Reshape>(data, pattern, true);
     auto func = make_shared<Function>(OutputVector{dyn_reshape}, ParameterVector{data, pattern});
     auto result_tensor = make_shared<HostTensor>();
@@ -688,7 +688,7 @@ TEST(eval, evaluate_reshape_v1_pattern_int16)
 
 TEST(eval, evaluate_convert)
 {
-    auto p = make_shared<op::Parameter>(element::f32, PartialShape{-1, -1});
+    auto p = make_shared<op::v0::Parameter>(element::f32, PartialShape{-1, -1});
     auto convert = make_shared<op::v0::Convert>(p, element::i64);
     auto fun = make_shared<Function>(OutputVector{convert}, ParameterVector{p});
 
@@ -708,8 +708,8 @@ TEST(eval, evaluate_convert)
 
 TEST(eval, evaluate_abs)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto abs = make_shared<op::Abs>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3});
+    auto abs = make_shared<op::v0::Abs>(p);
     auto fun = make_shared<Function>(OutputVector{abs}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -723,8 +723,8 @@ TEST(eval, evaluate_abs)
 
 TEST(eval, evaluate_erf)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto erf = make_shared<op::Erf>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3});
+    auto erf = make_shared<op::v0::Erf>(p);
     auto fun = make_shared<Function>(OutputVector{erf}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -743,8 +743,8 @@ TEST(eval, evaluate_erf)
 
 TEST(eval, evaluate_exp)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto exp = make_shared<op::Exp>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3});
+    auto exp = make_shared<op::v0::Exp>(p);
     auto fun = make_shared<Function>(OutputVector{exp}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -763,8 +763,8 @@ TEST(eval, evaluate_exp)
 
 TEST(eval, evaluate_floor)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 2});
-    auto floor = make_shared<op::Floor>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
+    auto floor = make_shared<op::v0::Floor>(p);
     auto fun = make_shared<Function>(OutputVector{floor}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate(
@@ -778,8 +778,8 @@ TEST(eval, evaluate_floor)
 
 TEST(eval, evaluate_floor_int32)
 {
-    auto p = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-    auto floor = make_shared<op::Floor>(p);
+    auto p = make_shared<op::v0::Parameter>(element::i32, Shape{2, 2});
+    auto floor = make_shared<op::v0::Floor>(p);
     auto fun = make_shared<Function>(OutputVector{floor}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -793,8 +793,8 @@ TEST(eval, evaluate_floor_int32)
 
 TEST(eval, evaluate_log)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
-    auto log = make_shared<op::Log>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2});
+    auto log = make_shared<op::v0::Log>(p);
     auto fun = make_shared<Function>(OutputVector{log}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(
@@ -816,8 +816,8 @@ TEST(eval, evaluate_log)
 
 TEST(eval, evaluate_negative_f32)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 5});
-    auto negate = make_shared<op::Negative>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 5});
+    auto negate = make_shared<op::v0::Negative>(p);
     auto fun = make_shared<Function>(OutputVector{negate}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate(
@@ -833,8 +833,8 @@ TEST(eval, evaluate_negative_f32)
 
 TEST(eval, evaluate_negative_i32)
 {
-    auto p = make_shared<op::Parameter>(element::i32, Shape{2, 5});
-    auto negate = make_shared<op::Negative>(p);
+    auto p = make_shared<op::v0::Parameter>(element::i32, Shape{2, 5});
+    auto negate = make_shared<op::v0::Negative>(p);
     auto fun = make_shared<Function>(OutputVector{negate}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -848,8 +848,8 @@ TEST(eval, evaluate_negative_i32)
 
 TEST(eval, evaluate_relu_2Ffprop_f32)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 5});
-    auto relu = make_shared<op::Relu>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 5});
+    auto relu = make_shared<op::v0::Relu>(p);
     auto fun = make_shared<Function>(OutputVector{relu}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -863,8 +863,8 @@ TEST(eval, evaluate_relu_2Ffprop_f32)
 
 TEST(eval, evaluate_relu_2Ffprop_i32)
 {
-    auto p = make_shared<op::Parameter>(element::i32, Shape{2, 5});
-    auto relu = make_shared<op::Relu>(p);
+    auto p = make_shared<op::v0::Parameter>(element::i32, Shape{2, 5});
+    auto relu = make_shared<op::v0::Relu>(p);
     auto fun = make_shared<Function>(OutputVector{relu}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -878,8 +878,8 @@ TEST(eval, evaluate_relu_2Ffprop_i32)
 
 TEST(eval, evaluate_round)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{5});
-    auto round = make_shared<op::Round>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{5});
+    auto round = make_shared<op::v0::Round>(p);
     auto fun = make_shared<Function>(OutputVector{round}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate(
@@ -893,8 +893,8 @@ TEST(eval, evaluate_round)
 
 TEST(eval, evaluate_round_2D)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{3, 5});
-    auto round = make_shared<op::Round>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{3, 5});
+    auto round = make_shared<op::v0::Round>(p);
     auto fun = make_shared<Function>(OutputVector{round}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
     ASSERT_TRUE(fun->evaluate({result},
@@ -923,8 +923,8 @@ TEST(eval, evaluate_round_2D)
 
 TEST(eval, evaluate_sigmoid)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{1, 1, 2, 2});
-    auto sigmoid = make_shared<op::Sigmoid>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{1, 1, 2, 2});
+    auto sigmoid = make_shared<op::v0::Sigmoid>(p);
     auto fun = make_shared<Function>(OutputVector{sigmoid}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -942,8 +942,8 @@ TEST(eval, evaluate_sigmoid)
 
 TEST(eval, evaluate_sign)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 3});
-    auto sign = make_shared<op::Sign>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3});
+    auto sign = make_shared<op::v0::Sign>(p);
     auto fun = make_shared<Function>(OutputVector{sign}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -958,8 +958,8 @@ TEST(eval, evaluate_sign)
 
 TEST(eval, evaluate_sin)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
-    auto sin = make_shared<op::Sin>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{11});
+    auto sin = make_shared<op::v0::Sin>(p);
     auto fun = make_shared<Function>(OutputVector{sin}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -985,8 +985,8 @@ TEST(eval, evaluate_sin)
 
 TEST(eval, evaluate_sinh)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
-    auto sinh = make_shared<op::Sinh>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{6});
+    auto sinh = make_shared<op::v0::Sinh>(p);
     auto fun = make_shared<Function>(OutputVector{sinh}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1001,8 +1001,8 @@ TEST(eval, evaluate_sinh)
 
 TEST(eval, evaluate_sqrt)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
-    auto sqrt = make_shared<op::Sqrt>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{6});
+    auto sqrt = make_shared<op::v0::Sqrt>(p);
     auto fun = make_shared<Function>(OutputVector{sqrt}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1016,8 +1016,8 @@ TEST(eval, evaluate_sqrt)
 
 TEST(eval, evaluate_acos)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
-    auto acos = make_shared<op::Acos>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{11});
+    auto acos = make_shared<op::v0::Acos>(p);
     auto fun = make_shared<Function>(OutputVector{acos}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1033,8 +1033,8 @@ TEST(eval, evaluate_acos)
 
 TEST(eval, evaluate_asin)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
-    auto asin = make_shared<op::Asin>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{11});
+    auto asin = make_shared<op::v0::Asin>(p);
     auto fun = make_shared<Function>(OutputVector{asin}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1051,8 +1051,8 @@ TEST(eval, evaluate_asin)
 
 TEST(eval, evaluate_atan)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
-    auto atan = make_shared<op::Atan>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{11});
+    auto atan = make_shared<op::v0::Atan>(p);
     auto fun = make_shared<Function>(OutputVector{atan}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1069,8 +1069,8 @@ TEST(eval, evaluate_atan)
 
 TEST(eval, evaluate_ceiling)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{2, 2});
-    auto ceil = make_shared<op::Ceiling>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
+    auto ceil = make_shared<op::v0::Ceiling>(p);
     auto fun = make_shared<Function>(OutputVector{ceil}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1085,8 +1085,8 @@ TEST(eval, evaluate_ceiling)
 
 TEST(eval, evaluate_cos)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
-    auto cos = make_shared<op::Cos>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{11});
+    auto cos = make_shared<op::v0::Cos>(p);
     auto fun = make_shared<Function>(OutputVector{cos}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1103,8 +1103,8 @@ TEST(eval, evaluate_cos)
 
 TEST(eval, evaluate_cosh)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
-    auto cosh = make_shared<op::Cosh>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{6});
+    auto cosh = make_shared<op::v0::Cosh>(p);
     auto fun = make_shared<Function>(OutputVector{cosh}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1120,8 +1120,8 @@ TEST(eval, evaluate_cosh)
 
 TEST(eval, evaluate_tan)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{11});
-    auto tan = make_shared<op::Tan>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{11});
+    auto tan = make_shared<op::v0::Tan>(p);
     auto fun = make_shared<Function>(OutputVector{tan}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1138,8 +1138,8 @@ TEST(eval, evaluate_tan)
 
 TEST(eval, evaluate_tanh)
 {
-    auto p = make_shared<op::Parameter>(element::f32, Shape{6});
-    auto tanh = make_shared<op::Tanh>(p);
+    auto p = make_shared<op::v0::Parameter>(element::f32, Shape{6});
+    auto tanh = make_shared<op::v0::Tanh>(p);
     auto fun = make_shared<Function>(OutputVector{tanh}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1155,8 +1155,8 @@ TEST(eval, evaluate_tanh)
 
 TEST(eval, evaluate_not)
 {
-    auto p = make_shared<op::Parameter>(element::boolean, Shape{2, 2});
-    auto op_not = make_shared<op::Not>(p);
+    auto p = make_shared<op::v0::Parameter>(element::boolean, Shape{2, 2});
+    auto op_not = make_shared<op::v1::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1170,8 +1170,8 @@ TEST(eval, evaluate_not)
 
 TEST(eval, evaluate_not_i32)
 {
-    auto p = make_shared<op::Parameter>(element::i32, Shape{2, 2});
-    auto op_not = make_shared<op::Not>(p);
+    auto p = make_shared<op::v0::Parameter>(element::i32, Shape{2, 2});
+    auto op_not = make_shared<op::v1::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{op_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
 
@@ -1185,7 +1185,7 @@ TEST(eval, evaluate_not_i32)
 
 TEST(eval, evaluate_logical_not)
 {
-    auto p = make_shared<op::Parameter>(element::boolean, Shape{2, 2});
+    auto p = make_shared<op::v0::Parameter>(element::boolean, Shape{2, 2});
     auto logical_not = make_shared<op::v1::LogicalNot>(p);
     auto fun = make_shared<Function>(OutputVector{logical_not}, ParameterVector{p});
     auto result = make_shared<HostTensor>();
@@ -1200,8 +1200,8 @@ TEST(eval, evaluate_logical_not)
 
 TEST(eval, evaluate_dynamic_gather)
 {
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
     auto gather = make_shared<op::v0::Gather>(arg1, arg2);
     auto fun = make_shared<Function>(OutputVector{gather}, ParameterVector{arg1, arg2});
     auto result_tensor = make_shared<HostTensor>();
@@ -1217,9 +1217,9 @@ TEST(eval, evaluate_dynamic_gather)
 
 TEST(eval, evaluate_dynamic_axis_gather)
 {
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg3 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
     auto gather = make_shared<op::v1::Gather>(arg1, arg2, arg3);
     auto fun = make_shared<Function>(OutputVector{gather}, ParameterVector{arg1, arg2, arg3});
     auto result_tensor = make_shared<HostTensor>();
@@ -1237,8 +1237,8 @@ TEST(eval, evaluate_dynamic_axis_gather)
 
 TEST(eval, evaluate_dynamic_concat)
 {
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto concat = make_shared<op::v0::Concat>(OutputVector{arg1, arg2}, 1);
     auto fun = make_shared<Function>(OutputVector{concat}, ParameterVector{arg1, arg2});
     auto result_tensor = make_shared<HostTensor>();
@@ -1276,17 +1276,23 @@ void test_eval(shared_ptr<Function> fun,
 
 TEST(eval, eval_transpose)
 {
-    auto x = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto x = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     ParameterVector axes;
-    axes.push_back(make_shared<op::Parameter>(element::i8, PartialShape{Dimension::dynamic()}));
-    axes.push_back(make_shared<op::Parameter>(element::i16, PartialShape{Dimension::dynamic()}));
-    axes.push_back(make_shared<op::Parameter>(element::i32, PartialShape{Dimension::dynamic()}));
-    axes.push_back(make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::v0::Parameter>(element::i8, PartialShape{Dimension::dynamic()}));
+    axes.push_back(
+        make_shared<op::v0::Parameter>(element::i16, PartialShape{Dimension::dynamic()}));
+    axes.push_back(
+        make_shared<op::v0::Parameter>(element::i32, PartialShape{Dimension::dynamic()}));
+    axes.push_back(
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()}));
 
-    axes.push_back(make_shared<op::Parameter>(element::u8, PartialShape{Dimension::dynamic()}));
-    axes.push_back(make_shared<op::Parameter>(element::u16, PartialShape{Dimension::dynamic()}));
-    axes.push_back(make_shared<op::Parameter>(element::u32, PartialShape{Dimension::dynamic()}));
-    axes.push_back(make_shared<op::Parameter>(element::u64, PartialShape{Dimension::dynamic()}));
+    axes.push_back(make_shared<op::v0::Parameter>(element::u8, PartialShape{Dimension::dynamic()}));
+    axes.push_back(
+        make_shared<op::v0::Parameter>(element::u16, PartialShape{Dimension::dynamic()}));
+    axes.push_back(
+        make_shared<op::v0::Parameter>(element::u32, PartialShape{Dimension::dynamic()}));
+    axes.push_back(
+        make_shared<op::v0::Parameter>(element::u64, PartialShape{Dimension::dynamic()}));
 
     std::vector<Shape> x_shapes{Shape{2, 3}, Shape{2, 3}, Shape{2, 2, 3}};
 
@@ -1335,7 +1341,7 @@ TEST(eval, eval_transpose)
 TEST(eval, max_pool_v0_dynamic)
 {
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto f =
         make_shared<Function>(make_shared<op::v0::MaxPool>(A, window_shape), ParameterVector{A});
     auto result_tensor = make_shared<HostTensor>();
@@ -1354,7 +1360,7 @@ TEST(eval, max_pool_v0_dynamic)
 TEST(eval, max_pool_v1_dynamic)
 {
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto f = make_shared<Function>(
         make_shared<op::v1::MaxPool>(
             A, Strides(), Shape(), Shape(), window_shape, op::RoundingType::FLOOR),
@@ -1375,10 +1381,10 @@ TEST(eval, evaluate_static_scatter_elements_update_basic)
 {
     const Shape data_shape{3, 3};
     const Shape indices_shape{2, 3};
-    auto arg1 = make_shared<op::Parameter>(element::f32, data_shape);
-    auto arg2 = make_shared<op::Parameter>(element::i32, indices_shape);
-    auto arg3 = make_shared<op::Parameter>(element::f32, indices_shape);
-    auto arg4 = make_shared<op::Parameter>(element::i64, Shape{});
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, indices_shape);
+    auto arg3 = make_shared<op::v0::Parameter>(element::f32, indices_shape);
+    auto arg4 = make_shared<op::v0::Parameter>(element::i64, Shape{});
     auto scatter_elements_update =
         make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
     auto fun = make_shared<Function>(OutputVector{scatter_elements_update},
@@ -1404,10 +1410,10 @@ TEST(eval, evaluate_dynamic_scatter_elements_update_basic)
     const Shape data_shape{3, 3};
     const Shape indices_shape{2, 3};
 
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg3 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto scatter_elements_update =
         make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
@@ -1436,10 +1442,10 @@ TEST(eval, evaluate_dynamic_scatter_elements_update_negative_axis)
     const Shape indices_shape{2, 3};
     const Shape axis_shape{};
 
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg3 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto scatter_elements_update =
         make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
@@ -1467,10 +1473,10 @@ TEST(eval, evaluate_dynamic_scatter_elements_update_1d_axis)
     const Shape data_shape{3, 3};
     const Shape indices_shape{2, 3};
 
-    auto arg1 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg3 = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto scatter_elements_update =
         make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
@@ -1498,10 +1504,10 @@ TEST(eval, evaluate_dynamic_scatter_elements_update_3d_i16)
     const Shape data_shape{3, 3, 3};
     const Shape indices_shape{2, 2, 3};
 
-    auto arg1 = make_shared<op::Parameter>(element::i16, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i16, PartialShape::dynamic());
-    auto arg3 = make_shared<op::Parameter>(element::i16, PartialShape::dynamic());
-    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i16, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i16, PartialShape::dynamic());
+    auto arg3 = make_shared<op::v0::Parameter>(element::i16, PartialShape::dynamic());
+    auto arg4 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto scatter_elements_update =
         make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
@@ -1531,10 +1537,10 @@ TEST(eval, evaluate_dynamic_scatter_elements_update_one_elem_i32)
     const Shape data_shape{3, 3, 3};
     const Shape indices_shape{1, 1, 1};
 
-    auto arg1 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg2 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg3 = make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
-    auto arg4 = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg1 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg2 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg3 = make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
+    auto arg4 = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     auto scatter_elements_update =
         make_shared<op::v3::ScatterElementsUpdate>(arg1, arg2, arg3, arg4);
@@ -1562,8 +1568,8 @@ TEST(eval, topk_v1)
     Shape shape{2, 3, 2};
     Shape rshape{2, 2, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    const auto k = op::Constant::create(element::i32, Shape{}, {2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    const auto k = op::v0::Constant::create(element::i32, Shape{}, {2});
     auto B = make_shared<op::v1::TopK>(A, k, 1, "max", "index", element::i32);
 
     auto fun = make_shared<Function>(OutputVector{B->output(0), B->output(1)}, ParameterVector{A});
@@ -1592,8 +1598,8 @@ TEST(eval, topk_v1_dyn)
 {
     Shape shape{2, 3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto k = make_shared<op::Parameter>(element::u32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto k = make_shared<op::v0::Parameter>(element::u32, Shape{});
     auto B = make_shared<op::v1::TopK>(A, k, 1, "max", "index", element::i32);
 
     auto fun =
@@ -1622,8 +1628,8 @@ TEST(eval, topk_v3_dyn)
 {
     Shape shape{2, 3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto k = make_shared<op::Parameter>(element::u32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto k = make_shared<op::v0::Parameter>(element::u32, Shape{});
     auto B = make_shared<op::v3::TopK>(A, k, 1, "max", "index", element::i32);
 
     auto fun =
@@ -1652,8 +1658,8 @@ TEST(eval, topk_v3_dyn_values)
 {
     Shape shape{2, 3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto k = make_shared<op::Parameter>(element::u32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto k = make_shared<op::v0::Parameter>(element::u32, Shape{});
     auto B = make_shared<op::v3::TopK>(A, k, 1, "max", "value", element::i32);
 
     auto fun =
@@ -1682,8 +1688,8 @@ TEST(eval, topk_v3_dyn_values_k0)
 {
     Shape shape{2, 3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto k = make_shared<op::Parameter>(element::u32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto k = make_shared<op::v0::Parameter>(element::u32, Shape{});
     auto B = make_shared<op::v3::TopK>(A, k, 1, "max", "value", element::i32);
 
     auto fun =
@@ -1712,9 +1718,9 @@ TEST(eval, topk_v0_dyn)
 {
     Shape shape{2, 3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto k = make_shared<op::Parameter>(element::i64, Shape{});
-    auto axis = make_shared<op::Parameter>(element::i64, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto k = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto axis = make_shared<op::v0::Parameter>(element::i64, Shape{});
 
     element::Type result_et{element::i32};
     bool compute_max = true;
@@ -1750,9 +1756,9 @@ TEST(eval, topk_v0_dyn_k0)
 {
     Shape shape{2, 3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto k = make_shared<op::Parameter>(element::i64, Shape{});
-    auto axis = make_shared<op::Parameter>(element::i64, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto k = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto axis = make_shared<op::v0::Parameter>(element::i64, Shape{});
 
     element::Type result_et{element::i32};
     bool compute_max = true;
@@ -1786,8 +1792,8 @@ TEST(eval, topk_v0_dyn_k0)
 
 TEST(eval, topk_v3_param_dyn_values_k0)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto k = make_shared<op::Parameter>(element::u32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto k = make_shared<op::v0::Parameter>(element::u32, Shape{});
     auto B = make_shared<op::v3::TopK>(A, k, 1, "max", "value", element::i32);
 
     auto fun =
@@ -1814,8 +1820,8 @@ TEST(eval, topk_v3_param_dyn_values_k0)
 
 TEST(eval, topk_v3_param_dyn_values_k2)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto k = make_shared<op::Parameter>(element::u32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto k = make_shared<op::v0::Parameter>(element::u32, Shape{});
     auto B = make_shared<op::v3::TopK>(A, k, 1, "max", "value", element::i32);
 
     auto fun =
@@ -1842,9 +1848,9 @@ TEST(eval, topk_v3_param_dyn_values_k2)
 
 TEST(eval, topk_v0_param_dyn_k2)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto k = make_shared<op::Parameter>(element::i64, Shape{});
-    auto axis = make_shared<op::Parameter>(element::i64, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto k = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto axis = make_shared<op::v0::Parameter>(element::i64, Shape{});
 
     element::Type result_et{element::i32};
     bool compute_max = true;
@@ -1878,9 +1884,9 @@ TEST(eval, topk_v0_param_dyn_k2)
 
 TEST(eval, topk_v0_param_dyn_k0)
 {
-    auto A = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto k = make_shared<op::Parameter>(element::i64, Shape{});
-    auto axis = make_shared<op::Parameter>(element::i64, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto k = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto axis = make_shared<op::v0::Parameter>(element::i64, Shape{});
 
     element::Type result_et{element::i32};
     bool compute_max = true;

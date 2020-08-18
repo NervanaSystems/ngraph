@@ -41,7 +41,7 @@ namespace ngraph
                 size_t& size,
                 bool& skip_reshape)
             {
-                auto reshape = static_cast<const ngraph::op::Reshape*>(node);
+                auto reshape = static_cast<const ngraph::op::v0::Reshape*>(node);
 
                 arg_shape = reshape->get_input_shape(0);
                 auto arg_rank = arg_shape.size();
@@ -109,7 +109,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Reshape)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Reshape)
             {
                 std::function<decltype(runtime::cpu::kernel::reshape_1d<float, 2>)> kernel;
                 std::function<decltype(runtime::cpu::kernel::reshape_ref<float>)> ref_kernel;
@@ -162,7 +162,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Reshape)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Reshape)
             {
                 auto& functors = external_function->get_functors();
 
@@ -248,8 +248,8 @@ namespace ngraph
 
             void register_builders_reshape_cpp()
             {
-                REGISTER_CF_BUILDER(Reshape);
-                REGISTER_OP_BUILDER(Reshape);
+                REGISTER_CF_BUILDER(ngraph::op::v0::Reshape);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Reshape);
             }
         }
     }

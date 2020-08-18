@@ -170,19 +170,19 @@ TEST(gpu_test, topk_fanout_graph_transform)
 {
     Shape shape{2, 3, 2};
     Shape out_shape{2, 2, 2};
-    auto A_gpu = make_shared<op::Parameter>(element::f32, shape);
-    auto A_int32_gpu_1 = make_shared<op::Parameter>(element::i32, out_shape);
-    auto A_int32_gpu_2 = make_shared<op::Parameter>(element::i32, out_shape);
-    auto A_f32_gpu_1 = make_shared<op::Parameter>(element::f32, out_shape);
-    auto A_f32_gpu_2 = make_shared<op::Parameter>(element::f32, out_shape);
-    auto B_gpu = make_shared<op::TopK>(A_gpu, 1, element::i32, 2, true);
+    auto A_gpu = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto A_int32_gpu_1 = make_shared<op::v0::Parameter>(element::i32, out_shape);
+    auto A_int32_gpu_2 = make_shared<op::v0::Parameter>(element::i32, out_shape);
+    auto A_f32_gpu_1 = make_shared<op::v0::Parameter>(element::f32, out_shape);
+    auto A_f32_gpu_2 = make_shared<op::v0::Parameter>(element::f32, out_shape);
+    auto B_gpu = make_shared<op::v0::TopK>(A_gpu, 1, element::i32, 2, true);
     auto C_gpu_0 = B_gpu->output(0);
     auto C_gpu_1 = B_gpu->output(1);
 
-    auto gpu_R_0 = make_shared<op::Add>(A_int32_gpu_1, C_gpu_0);
-    auto gpu_R_1 = make_shared<op::Add>(A_int32_gpu_2, C_gpu_0);
-    auto gpu_R_2 = make_shared<op::Add>(A_f32_gpu_1, C_gpu_1);
-    auto gpu_R_3 = make_shared<op::Add>(A_f32_gpu_2, C_gpu_1);
+    auto gpu_R_0 = make_shared<op::v1::Add>(A_int32_gpu_1, C_gpu_0);
+    auto gpu_R_1 = make_shared<op::v1::Add>(A_int32_gpu_2, C_gpu_0);
+    auto gpu_R_2 = make_shared<op::v1::Add>(A_f32_gpu_1, C_gpu_1);
+    auto gpu_R_3 = make_shared<op::v1::Add>(A_f32_gpu_2, C_gpu_1);
 
     auto gpu_f = make_shared<Function>(
         OutputVector{gpu_R_0, gpu_R_1, gpu_R_2, gpu_R_3},
@@ -216,7 +216,7 @@ TEST(gpu_test, topk_fanout_graph_transform)
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r2), MIN_FLOAT_TOLERANCE_BITS));
     EXPECT_TRUE(test::all_close_f(
         vector<float>{4, 4, 3, 3, 3, 4, 2, 3}, read_vector<float>(r3), MIN_FLOAT_TOLERANCE_BITS));
-    auto reshape_count = count_ops_of_type<ngraph::op::Reshape>(gpu_f);
+    auto reshape_count = count_ops_of_type<ngraph::op::v0::Reshape>(gpu_f);
     EXPECT_EQ(reshape_count, 10);
 }
 
@@ -259,10 +259,10 @@ TEST(gpu_test, maxpool_bprop_larger_than_cache)
     Shape shape_x{1, 1, 1, num_elements};
     Shape shape_y{1, 1, 1, num_pooled_elements};
 
-    auto x = make_shared<op::Parameter>(element::f32, shape_x);
-    auto dy = make_shared<op::Parameter>(element::f32, shape_y);
+    auto x = make_shared<op::v0::Parameter>(element::f32, shape_x);
+    auto dy = make_shared<op::v0::Parameter>(element::f32, shape_y);
     auto bprop =
-        make_shared<Function>(make_shared<op::MaxPoolBackprop>(
+        make_shared<Function>(make_shared<op::v0::MaxPoolBackprop>(
                                   x, dy, window_shape, move_strides, padding_below, padding_above),
                               ParameterVector{x, dy});
 

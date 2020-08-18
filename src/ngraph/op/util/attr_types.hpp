@@ -167,6 +167,7 @@ namespace ngraph
             EXPLICIT = NONE,
             NUMPY,
             PDPD,
+            DEFAULT = NUMPY
         };
 
         NGRAPH_API

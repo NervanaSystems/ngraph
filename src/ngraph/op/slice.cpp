@@ -21,12 +21,12 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Slice::type_info;
+constexpr NodeTypeInfo op::v0::Slice::type_info;
 
-op::Slice::Slice(const Output<Node>& arg,
-                 const Coordinate& lower_bounds,
-                 const Coordinate& upper_bounds,
-                 const Strides& strides)
+op::v0::Slice::Slice(const Output<Node>& arg,
+                     const Coordinate& lower_bounds,
+                     const Coordinate& upper_bounds,
+                     const Strides& strides)
     : Op({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
@@ -35,9 +35,9 @@ op::Slice::Slice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-op::Slice::Slice(const Output<Node>& arg,
-                 const Coordinate& lower_bounds,
-                 const Coordinate& upper_bounds)
+op::v0::Slice::Slice(const Output<Node>& arg,
+                     const Coordinate& lower_bounds,
+                     const Coordinate& upper_bounds)
     : Op({arg})
     , m_lower_bounds(lower_bounds)
     , m_upper_bounds(upper_bounds)
@@ -46,7 +46,7 @@ op::Slice::Slice(const Output<Node>& arg,
     constructor_validate_and_infer_types();
 }
 
-void op::Slice::validate_and_infer_types()
+void op::v0::Slice::validate_and_infer_types()
 {
     // An empty stride vector with lower_bounds/upper_bounds filled in means that we need to
     // construct the default value.
@@ -127,13 +127,13 @@ void op::Slice::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), PartialShape{result_dims});
 }
 
-shared_ptr<Node> op::Slice::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Slice::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Slice>(new_args.at(0), m_lower_bounds, m_upper_bounds, m_strides);
 }
 
-void op::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Slice::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -204,7 +204,7 @@ namespace
     }
 }
 
-bool op::Slice::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Slice::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_slice(inputs[0], outputs[0], m_lower_bounds, m_upper_bounds, m_strides);
 }

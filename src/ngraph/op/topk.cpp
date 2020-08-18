@@ -42,8 +42,8 @@ op::v0::TopK::TopK(const Output<Node>& arg,
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
-    set_argument(1, op::Constant::create(element::i64, Shape{1}, {k})->output(0));
-    set_argument(2, op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
+    set_argument(1, op::v0::Constant::create(element::i64, Shape{1}, {k})->output(0));
+    set_argument(2, op::v0::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
     add_provenance_group_member(input_value(1).get_node_shared_ptr());
     add_provenance_group_member(input_value(2).get_node_shared_ptr());
     constructor_validate_and_infer_types();
@@ -60,7 +60,7 @@ op::v0::TopK::TopK(const Output<Node>& arg,
     , m_compute_max(compute_max)
     , m_sort(sort)
 {
-    set_argument(2, op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
+    set_argument(2, op::v0::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0));
     add_provenance_group_member(input_value(2).get_node_shared_ptr());
     constructor_validate_and_infer_types();
 }
@@ -82,7 +82,7 @@ op::v0::TopK::TopK(const Output<Node>& arg,
 size_t op::v0::TopK::get_k() const
 {
     size_t k = 0;
-    if (auto const_op = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr()))
+    if (auto const_op = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr()))
     {
         k = const_op->cast_vector<int64_t>()[0];
     }
@@ -98,7 +98,7 @@ void op::v0::TopK::set_k(size_t k)
 {
     shared_ptr<Node> current_const =
         get_input_size() == 1 ? nullptr : input_value(1).get_node_shared_ptr();
-    auto replacement_const = op::Constant::create(element::i64, Shape{1}, {k})->output(0);
+    auto replacement_const = op::v0::Constant::create(element::i64, Shape{1}, {k})->output(0);
     this->input(1).replace_source_output(replacement_const);
     replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
@@ -113,7 +113,7 @@ size_t op::v0::TopK::get_top_k_axis() const
 
 Dimension op::v0::TopK::get_top_k_axis_dynamic() const
 {
-    auto const_op = dynamic_pointer_cast<op::Constant>(input_value(2).get_node_shared_ptr());
+    auto const_op = dynamic_pointer_cast<op::v0::Constant>(input_value(2).get_node_shared_ptr());
     if (const_op)
     {
         return const_op->cast_vector<int64_t>()[0];
@@ -127,7 +127,8 @@ Dimension op::v0::TopK::get_top_k_axis_dynamic() const
 void op::v0::TopK::set_top_k_axis(size_t top_k_axis)
 {
     shared_ptr<Node> current_const = input_value(2).get_node_shared_ptr();
-    auto replacement_const = op::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0);
+    auto replacement_const =
+        op::v0::Constant::create(element::i64, Shape{1}, {top_k_axis})->output(0);
     this->input(2).replace_source_output(replacement_const);
     replace_provenance_group_member(current_const, replacement_const.get_node_shared_ptr());
 }
@@ -238,7 +239,7 @@ namespace
                                  const size_t axis,
                                  const size_t k,
                                  const bool compute_max,
-                                 const op::TopK::SortType sort)
+                                 const op::v0::TopK::SortType sort)
     {
         using T = typename element_type_traits<INPUT_ET>::value_type;
         using U = typename element_type_traits<INDEX_ET>::value_type;
@@ -269,7 +270,7 @@ namespace
                   const size_t axis,
                   const size_t k,
                   const bool max,
-                  const op::TopK::SortType sort,
+                  const op::v0::TopK::SortType sort,
                   const element::Type index_et)
     {
         bool rc = true;
@@ -295,7 +296,7 @@ namespace
                        const size_t axis,
                        const size_t k,
                        const bool max,
-                       const op::TopK::SortType sort,
+                       const op::v0::TopK::SortType sort,
                        const element::Type index_et)
     {
         bool rc = true;
@@ -384,7 +385,7 @@ namespace
 
 Shape op::v0::TopK::compute_output_shape(const Shape input_shape,
                                          const int64_t k,
-                                         const size_t axis)
+                                         const size_t axis) const
 {
     Shape output_shape{input_shape};
     if (k != 0)
@@ -394,7 +395,7 @@ Shape op::v0::TopK::compute_output_shape(const Shape input_shape,
     return output_shape;
 }
 
-bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     // check data types for arg, k and output element type
     Shape arg_shape = inputs[0]->get_shape();
@@ -536,18 +537,18 @@ void op::v1::TopK::validate_and_infer_types()
 
 Shape op::v1::TopK::compute_output_shape(const std::string& node_description,
                                          const PartialShape input_partial_shape,
-                                         const int64_t k)
+                                         const int64_t k) const
 {
     PartialShape output_shape{input_partial_shape};
 
-    m_normalized_axis = ngraph::normalize_axis(node_description, m_axis, output_shape.rank());
+    auto normalized_axis = ngraph::normalize_axis(node_description, m_axis, output_shape.rank());
     if (k != 0)
     {
-        output_shape[m_normalized_axis] = k;
+        output_shape[normalized_axis] = k;
     }
     else
     {
-        output_shape[m_normalized_axis] = input_partial_shape[m_normalized_axis];
+        output_shape[normalized_axis] = input_partial_shape[normalized_axis];
     }
 
     return output_shape.get_shape();
@@ -598,7 +599,7 @@ size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
                           k_element_type,
                           ").");
 
-    const auto k_constant = as_type_ptr<op::Constant>(node);
+    const auto k_constant = as_type_ptr<op::v0::Constant>(node);
 
     size_t k = 0;
 
@@ -621,7 +622,7 @@ size_t op::v1::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
 }
 
 template <typename T>
-size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::Constant>& k_constant) const
+size_t op::v1::TopK::validate_and_get_k(const shared_ptr<op::v0::Constant>& k_constant) const
 {
     const auto k_const_contents = k_constant->get_vector<T>();
 
@@ -678,15 +679,24 @@ size_t op::v1::TopK::get_k() const
 void op::v1::TopK::set_k(size_t k)
 {
     this->input(1).replace_source_output(
-        op::Constant::create(element::i64, Shape{}, {k})->output(0));
+        op::v0::Constant::create(element::i64, Shape{}, {k})->output(0));
 }
 
-bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     Shape arg_shape = inputs[0]->get_shape();
     // 1. get axis, mode (max/min), sort_type
-    set_axis(arg_shape.size(), m_axis);
-    size_t axis = get_axis();
+    Rank input_rank = arg_shape.size();
+    size_t axis;
+    if (input_rank.is_static())
+    {
+        axis = ngraph::normalize_axis(this, m_axis, input_rank);
+    }
+    else
+    {
+        axis = UNKNOWN_NORMALIZED_AXIS;
+    }
+
     bool compute_max = get_mode() == TopKMode::max ? true : false;
     SortType sort_type = get_sort_type();
 
@@ -770,7 +780,7 @@ void op::v3::TopK::validate_and_infer_types()
 size_t op::v3::TopK::read_k_from_constant_node(const shared_ptr<Node>& node,
                                                const element::Type& k_element_type) const
 {
-    const auto k_constant = as_type_ptr<op::Constant>(node);
+    const auto k_constant = as_type_ptr<op::v0::Constant>(node);
 
     size_t k = 0;
 
@@ -808,7 +818,7 @@ shared_ptr<Node> op::v3::TopK::clone_with_new_inputs(const OutputVector& new_arg
     return std::move(new_v3_topk);
 }
 
-bool op::v3::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v3::TopK::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return op::v1::TopK::evaluate(outputs, inputs);
 }

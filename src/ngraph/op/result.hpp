@@ -48,7 +48,7 @@ namespace ngraph
                 void set_needs_default_layout(bool val) { m_needs_default_layout = val; }
                 bool needs_default_layout() const { return m_needs_default_layout; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
                 bool constant_fold(OutputVector& output_values,
                                    const OutputVector& inputs_values) override;
 
@@ -60,10 +60,8 @@ namespace ngraph
                 bool m_needs_default_layout{false};
             };
         }
-
-        using v0::Result;
     }
-    using ResultVector = std::vector<std::shared_ptr<op::Result>>;
+    using ResultVector = std::vector<std::shared_ptr<op::v0::Result>>;
 
     template <>
     class NGRAPH_API AttributeAdapter<ResultVector> : public VisitorAdapter

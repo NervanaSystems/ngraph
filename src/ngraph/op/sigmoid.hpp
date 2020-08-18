@@ -39,7 +39,7 @@ namespace ngraph
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
             };
 
             /// \brief Elementwise SigmoidBackprop operation.
@@ -63,7 +63,5 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-        using v0::Sigmoid;
-        using v0::SigmoidBackprop;
     }
 }

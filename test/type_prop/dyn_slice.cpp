@@ -23,12 +23,12 @@ using namespace ngraph;
 
 TEST(type_prop, dynslice_arg_static_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -36,13 +36,13 @@ TEST(type_prop, dynslice_arg_static_params_static_ok)
 
 TEST(type_prop, dynslice_arg_rank_static_dynamic_params_static_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -50,14 +50,14 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_static_ok)
 
 TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -65,15 +65,15 @@ TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_ok)
 
 TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -81,14 +81,14 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_static_dynamic_ok)
 
 TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_static_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     auto lower_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
     auto upper_bounds =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
@@ -96,12 +96,12 @@ TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_static_dynamic_ok)
 
 TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
@@ -109,13 +109,13 @@ TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_dynamic_ok)
 
 TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -123,12 +123,12 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
 
 TEST(type_prop, dynslice_static_shape)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
-    auto lower_bounds = op::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
-    auto upper_bounds = op::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
-    auto strides = op::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5, 6});
+    auto lower_bounds = op::v0::Constant::create(element::i64, Shape{5}, {0, 1, 2, 3, 1});
+    auto upper_bounds = op::v0::Constant::create(element::i64, Shape{5}, {1, 3, 3, 5, 6});
+    auto strides = op::v0::Constant::create(element::i64, Shape{5}, {1, 1, 1, 2, 2});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_EQ(r->get_output_shape(0), (Shape{1, 2, 1, 1, 3}));
@@ -157,25 +157,25 @@ struct DeduceDynSliceTest : ::testing::TestWithParam<DynSliceParams>
 TEST_P(DeduceDynSliceTest, output_shape)
 {
     auto tp = GetParam();
-    auto arg = make_shared<op::Parameter>(element::f32, tp.shapes[0]);
-    auto lower_bounds = op::Constant::create(element::i64, tp.shapes[1], tp.vals[0]);
-    auto upper_bounds = op::Constant::create(element::i64, tp.shapes[2], tp.vals[1]);
-    auto strides = op::Constant::create(element::i64, tp.shapes[3], tp.vals[2]);
+    auto arg = make_shared<op::v0::Parameter>(element::f32, tp.shapes[0]);
+    auto lower_bounds = op::v0::Constant::create(element::i64, tp.shapes[1], tp.vals[0]);
+    auto upper_bounds = op::v0::Constant::create(element::i64, tp.shapes[2], tp.vals[1]);
+    auto strides = op::v0::Constant::create(element::i64, tp.shapes[3], tp.vals[2]);
 
-    auto r = make_shared<op::DynSlice>(arg,
-                                       lower_bounds,
-                                       upper_bounds,
-                                       strides,
-                                       tp.attrs[0],
-                                       tp.attrs[1],
-                                       tp.attrs[2],
-                                       tp.attrs[3],
-                                       tp.attrs[4]);
+    auto r = make_shared<op::v0::DynSlice>(arg,
+                                           lower_bounds,
+                                           upper_bounds,
+                                           strides,
+                                           tp.attrs[0],
+                                           tp.attrs[1],
+                                           tp.attrs[2],
+                                           tp.attrs[3],
+                                           tp.attrs[4]);
 
     EXPECT_EQ(r->get_output_shape(0), tp.shapes[4]);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     type_prop,
     DeduceDynSliceTest,
     ::testing::Values(
@@ -279,7 +279,7 @@ void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
 {
     try
     {
-        auto r = make_shared<op::DynSlice>(param_0, param_1, param_2, param_3);
+        auto r = make_shared<op::v0::DynSlice>(param_0, param_1, param_2, param_3);
         FAIL() << "Did not detect input order not vector";
     }
     catch (const NodeValidationFailure& error)
@@ -294,69 +294,71 @@ void DynSlice_Test_Shape_Except(const shared_ptr<Node>& param_0,
 
 TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_not_vector)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto strides = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape{2, 4, 6, 8});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto strides = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
 
     {
         lower_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        lower_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        lower_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{2, 2});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        arg = make_shared<op::Parameter>(
+        arg = make_shared<op::v0::Parameter>(
             element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
         lower_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
 
     {
         upper_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        upper_bounds = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        upper_bounds = make_shared<op::v0::Parameter>(element::i64, PartialShape{2, 2});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        arg = make_shared<op::Parameter>(
+        arg = make_shared<op::v0::Parameter>(
             element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
         upper_bounds =
-            make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
 
     {
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        strides =
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, 2});
+        strides = make_shared<op::v0::Parameter>(element::i64, PartialShape{2, 2});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        arg = make_shared<op::Parameter>(
+        arg = make_shared<op::v0::Parameter>(
             element::f32, PartialShape{2, Dimension::dynamic(), Dimension::dynamic(), 8});
-        strides = make_shared<op::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
+        strides =
+            make_shared<op::v0::Parameter>(element::i64, PartialShape{2, Dimension::dynamic()});
         DynSlice_Test_Shape_Except(arg, lower_bounds, upper_bounds, strides);
     }
 }
 
 TEST(type_prop, dynslice_params_et_dynamic_ok)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
     EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -369,7 +371,7 @@ void DynSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
 {
     try
     {
-        auto r = make_shared<op::DynSlice>(param_0, param_1, param_2, param_3);
+        auto r = make_shared<op::v0::DynSlice>(param_0, param_1, param_2, param_3);
         FAIL() << "Did not detect parameter element type not i64";
     }
     catch (const NodeValidationFailure& error)
@@ -384,34 +386,34 @@ void DynSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
 
 TEST(type_prop, dynslice_params_et_wrong)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 4, 6, 8});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4, 6, 8});
 
-    auto lower_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto upper_bounds = make_shared<op::Parameter>(element::i64, Shape{4});
-    auto strides = make_shared<op::Parameter>(element::i64, Shape{4});
+    auto lower_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto upper_bounds = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+    auto strides = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     {
-        lower_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        lower_bounds = make_shared<op::v0::Parameter>(element::boolean, Shape{4});
         DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        upper_bounds = make_shared<op::Parameter>(element::boolean, Shape{4});
+        upper_bounds = make_shared<op::v0::Parameter>(element::boolean, Shape{4});
         DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
     }
     {
-        strides = make_shared<op::Parameter>(element::boolean, Shape{4});
+        strides = make_shared<op::v0::Parameter>(element::boolean, Shape{4});
         DynSlice_Test_Type_Except(arg, lower_bounds, upper_bounds, strides);
     }
 }
 
 TEST(DeduceDynSliceTest, dynslice_arg_dimension_dynamic_output_dimension_dynamic)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape{3, Dimension::dynamic()});
-    auto lower_bounds = op::Constant::create(element::i64, {2}, {1, 2});
-    auto upper_bounds = op::Constant::create(element::i64, {2}, {2, 3});
-    auto strides = op::Constant::create(element::i64, {2}, {1, 1});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape{3, Dimension::dynamic()});
+    auto lower_bounds = op::v0::Constant::create(element::i64, {2}, {1, 2});
+    auto upper_bounds = op::v0::Constant::create(element::i64, {2}, {2, 3});
+    auto strides = op::v0::Constant::create(element::i64, {2}, {1, 1});
 
-    auto r = make_shared<op::DynSlice>(arg, lower_bounds, upper_bounds, strides);
+    auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     auto output_val = PartialShape{1, Dimension::dynamic()};
     EXPECT_TRUE(output_val.compatible(r->get_output_partial_shape(0)));

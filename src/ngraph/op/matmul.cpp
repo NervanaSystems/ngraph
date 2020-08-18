@@ -26,12 +26,12 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::MatMul::type_info;
+constexpr NodeTypeInfo op::v0::MatMul::type_info;
 
-op::MatMul::MatMul(const Output<Node>& A,
-                   const Output<Node>& B,
-                   const bool& transpose_a,
-                   const bool& transpose_b)
+op::v0::MatMul::MatMul(const Output<Node>& A,
+                       const Output<Node>& B,
+                       const bool& transpose_a,
+                       const bool& transpose_b)
     : FusedOp(OutputVector{A, B})
     , m_transpose_a{transpose_a}
     , m_transpose_b{transpose_b}
@@ -46,7 +46,7 @@ bool ngraph::op::v0::MatMul::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::MatMul::pre_validate_and_infer_types()
+void op::v0::MatMul::pre_validate_and_infer_types()
 {
     element::Type result_et;
     NODE_VALIDATION_CHECK(
@@ -68,7 +68,7 @@ void op::MatMul::pre_validate_and_infer_types()
     }
 }
 
-OutputVector op::MatMul::decompose_op() const
+OutputVector op::v0::MatMul::decompose_op() const
 {
     auto A = input_value(0);
     auto B = input_value(1);
@@ -98,7 +98,7 @@ OutputVector op::MatMul::decompose_op() const
     return factory.make_matmul_op();
 }
 
-shared_ptr<Node> op::MatMul::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::MatMul::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<MatMul>(new_args.at(0), new_args.at(1), m_transpose_a, m_transpose_b);
@@ -236,7 +236,7 @@ namespace
     }
 }
 
-bool op::MatMul::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::MatMul::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_matmul(inputs[0], inputs[1], outputs[0], get_transpose_a(), get_transpose_b());
 }

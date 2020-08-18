@@ -33,7 +33,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedDotBias)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedDotBias)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -57,11 +57,13 @@ namespace ngraph
                     auto scales_size = shape_size(args[3].get_shape());
 
                     auto ip_desc =
-                        dnnl_emitter->get_inner_product_forward_desc<ngraph::op::QuantizedDotBias>(
-                            node);
+                        dnnl_emitter
+                            ->get_inner_product_forward_desc<ngraph::op::v0::QuantizedDotBias>(
+                                node);
                     auto ip_attr =
-                        dnnl_emitter->get_inner_product_forward_attr<ngraph::op::QuantizedDotBias>(
-                            node);
+                        dnnl_emitter
+                            ->get_inner_product_forward_attr<ngraph::op::v0::QuantizedDotBias>(
+                                node);
                     size_t scratchpad_size = QUERY_SCRATCHPAD_2ARGS(ip_forward, ip_desc, ip_attr);
 
                     size_t ip_index = dnnl_emitter->inner_product_forward_init(true);
@@ -123,7 +125,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::QuantizedDot)
+            void Builder::BUILDER_DECL(ngraph::op::v0::QuantizedDot)
             {
                 (void)node;
                 auto& functors = external_function->get_functors();
@@ -269,8 +271,8 @@ namespace ngraph
 
             void register_builders_quantized_dot_cpp()
             {
-                REGISTER_OP_BUILDER(QuantizedDotBias);
-                REGISTER_OP_BUILDER(QuantizedDot);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedDotBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::QuantizedDot);
             }
         }
     }

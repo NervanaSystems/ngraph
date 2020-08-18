@@ -54,8 +54,8 @@ NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten)
 {
     FlattenTestParams p = GetParam();
 
-    auto value = make_shared<op::Parameter>(element::i32, p.in_shape);
-    auto axis = make_shared<op::Parameter>(element::i64, Shape{});
+    auto value = make_shared<op::v0::Parameter>(element::i32, p.in_shape);
+    auto axis = make_shared<op::v0::Parameter>(element::i64, Shape{});
     auto flattened = builder::flatten(value, axis);
     auto f = make_shared<Function>(OutputVector{flattened}, ParameterVector{value, axis});
 
@@ -84,7 +84,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten)
     }
 }
 
-NGRAPH_INSTANTIATE_TEST_CASE_P(
+NGRAPH_INSTANTIATE_TEST_SUITE_P(
     ${BACKEND_NAME},
     flatten,
     FlattenTest,

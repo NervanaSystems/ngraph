@@ -73,7 +73,6 @@ namespace ngraph
                 SpaceToDepthMode m_mode;
             };
         }
-        using v0::SpaceToDepth;
     }
 
     NGRAPH_API

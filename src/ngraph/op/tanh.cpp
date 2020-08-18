@@ -24,9 +24,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Tanh::type_info;
+constexpr NodeTypeInfo op::v0::Tanh::type_info;
 
-op::Tanh::Tanh(const Output<Node>& arg)
+op::v0::Tanh::Tanh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
@@ -37,13 +37,13 @@ bool ngraph::op::v0::Tanh::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-shared_ptr<Node> op::Tanh::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Tanh::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Tanh>(new_args.at(0));
 }
 
-void op::Tanh::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Tanh::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
@@ -101,7 +101,7 @@ namespace
     }
 }
 
-bool op::Tanh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Tanh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_tanh(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

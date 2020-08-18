@@ -25,10 +25,10 @@ using namespace ngraph;
 // shapes.
 TEST(specialize_function, et_shape_static)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto p1 = std::make_shared<op::Parameter>(element::i32, Shape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, Shape{1, 2, 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -47,10 +47,10 @@ TEST(specialize_function, et_shape_static)
 // Test specialization of dynamic element types.
 TEST(specialize_function, et_dynamic_shape_static)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3});
-    auto p1 = std::make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::dynamic, Shape{1, 2, 3});
+    auto p1 = std::make_shared<op::v0::Parameter>(element::dynamic, Shape{1, 2, 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -69,10 +69,10 @@ TEST(specialize_function, et_dynamic_shape_static)
 // Test specialization of rank-dynamic shapes.
 TEST(specialize_function, et_static_shape_rank_dynamic)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -91,10 +91,10 @@ TEST(specialize_function, et_static_shape_rank_dynamic)
 // Test specialization of rank-static dynamic shapes.
 TEST(specialize_function, et_static_shape_rank_static_dynamic)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape::dynamic(3));
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape::dynamic(3));
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic(3));
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic(3));
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -113,10 +113,10 @@ TEST(specialize_function, et_static_shape_rank_static_dynamic)
 // Test specialization of values to a shape-dynamic parameters.
 TEST(specialize_function, et_static_shape_rank_static_dynamic_subst_val)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape::dynamic(3));
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape::dynamic(3));
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic(3));
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic(3));
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -133,11 +133,11 @@ TEST(specialize_function, et_static_shape_rank_static_dynamic_subst_val)
     ASSERT_EQ(g->get_output_shape(0), (Shape{1, 2, 3}));
     ASSERT_EQ(g->get_output_element_type(0), element::f32);
 
-    auto plus_node = as_type_ptr<op::Add>(g->get_results().at(0)->get_argument(0));
+    auto plus_node = as_type_ptr<op::v1::Add>(g->get_results().at(0)->get_argument(0));
     ASSERT_TRUE(plus_node);
-    auto convert_node = as_type_ptr<op::Convert>(plus_node->get_argument(1));
+    auto convert_node = as_type_ptr<op::v0::Convert>(plus_node->get_argument(1));
     ASSERT_TRUE(convert_node);
-    auto const_node = as_type_ptr<op::Constant>(convert_node->get_argument(0));
+    auto const_node = as_type_ptr<op::v0::Constant>(convert_node->get_argument(0));
     ASSERT_TRUE(const_node);
 
     ASSERT_EQ(const_node->get_output_element_type(0), element::i32);
@@ -150,10 +150,10 @@ TEST(specialize_function, et_static_shape_rank_static_dynamic_subst_val)
 // (The input shapes we provide at specialization time are inconsistent.)
 TEST(specialize_function, et_static_shape_rank_dynamic_validation_fails)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape::dynamic());
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic());
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -175,10 +175,10 @@ TEST(specialize_function, et_static_shape_rank_dynamic_validation_fails)
 // (The input element types we provide at specialization time are inconsistent.)
 TEST(specialize_function, et_dynamic_shape_static_validation_fails)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3});
-    auto p1 = std::make_shared<op::Parameter>(element::dynamic, Shape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::dynamic, Shape{1, 2, 3});
+    auto p1 = std::make_shared<op::v0::Parameter>(element::dynamic, Shape{1, 2, 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -203,10 +203,10 @@ TEST(specialize_function, et_dynamic_shape_static_validation_fails)
 // reconstruct the graph.)
 TEST(specialize_function, et_static_shape_rank_static_dynamic_rank_mismatch)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape::dynamic(3));
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape::dynamic(3));
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic(3));
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape::dynamic(3));
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -231,11 +231,11 @@ TEST(specialize_function, et_static_shape_rank_static_dynamic_rank_mismatch)
 // reconstruct the graph.)
 TEST(specialize_function, et_static_shape_rank_static_dynamic_dim_mismatch)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 2, 3});
     auto p1 =
-        std::make_shared<op::Parameter>(element::i32, PartialShape{1, Dimension::dynamic(), 3});
+        std::make_shared<op::v0::Parameter>(element::i32, PartialShape{1, Dimension::dynamic(), 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -255,10 +255,10 @@ TEST(specialize_function, et_static_shape_rank_static_dynamic_dim_mismatch)
 // Test for failure when we supply the wrong number of replacement element types.
 TEST(specialize_function, et_count_wrong)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape{1, 2, 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -278,10 +278,10 @@ TEST(specialize_function, et_count_wrong)
 // Test for failure when we supply the wrong number of replacement shapes.
 TEST(specialize_function, shape_count_wrong)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape{1, 2, 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -302,10 +302,10 @@ TEST(specialize_function, shape_count_wrong)
 // Test for failure when we supply the wrong number of replacement parameter values.
 TEST(specialize_function, value_count_wrong)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 2, 3});
-    auto p1 = std::make_shared<op::Parameter>(element::i32, PartialShape{1, 2, 3});
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 2, 3});
+    auto p1 = std::make_shared<op::v0::Parameter>(element::i32, PartialShape{1, 2, 3});
 
-    auto k = std::make_shared<op::Convert>(p1, element::f32);
+    auto k = std::make_shared<op::v0::Convert>(p1, element::f32);
     auto a = p0 + k;
 
     auto f = std::make_shared<Function>(a, ParameterVector{p0, p1});
@@ -325,12 +325,12 @@ TEST(specialize_function, value_count_wrong)
 // Test checks that constant sharing is working
 TEST(specialize_function, share_constants)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 64, 64});
-    auto mul_const = op::Constant::create(element::f32, Shape{1, 3, 1, 1}, {1, 2, 3});
-    auto mul = std::make_shared<op::Multiply>(p0, mul_const, op::AutoBroadcastType::NUMPY);
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 3, 64, 64});
+    auto mul_const = op::v0::Constant::create(element::f32, Shape{1, 3, 1, 1}, {1, 2, 3});
+    auto mul = std::make_shared<op::v1::Multiply>(p0, mul_const, op::AutoBroadcastType::NUMPY);
 
-    auto add_const = op::Constant::create(element::f32, Shape{1, 3, 1, 1}, {4, 5, 6});
-    auto add = std::make_shared<op::Multiply>(mul, add_const, op::AutoBroadcastType::NUMPY);
+    auto add_const = op::v0::Constant::create(element::f32, Shape{1, 3, 1, 1}, {4, 5, 6});
+    auto add = std::make_shared<op::v1::Multiply>(mul, add_const, op::AutoBroadcastType::NUMPY);
 
     auto f = std::make_shared<Function>(add, ParameterVector{p0});
 
@@ -344,14 +344,14 @@ TEST(specialize_function, share_constants)
 // Test checks that constant sharing works when constant folding replaces constants
 TEST(specialize_function, share_constants_with_cf)
 {
-    auto p0 = std::make_shared<op::Parameter>(element::f32, PartialShape{1, 3, 64, 64});
-    auto mul_const = op::Constant::create(element::f32, Shape{1, 3, 1, 1}, {1, 2, 3});
-    auto mul = std::make_shared<op::Multiply>(p0, mul_const, op::AutoBroadcastType::NUMPY);
+    auto p0 = std::make_shared<op::v0::Parameter>(element::f32, PartialShape{1, 3, 64, 64});
+    auto mul_const = op::v0::Constant::create(element::f32, Shape{1, 3, 1, 1}, {1, 2, 3});
+    auto mul = std::make_shared<op::v1::Multiply>(p0, mul_const, op::AutoBroadcastType::NUMPY);
 
-    auto add_const_1 = op::Constant::create(element::f32, Shape{1, 3, 1, 1}, {4, 5, 6});
-    auto add_const_2 = op::Constant::create(element::f32, Shape{1, 3, 1, 1}, {1, 2, 3});
-    auto add_const = std::make_shared<op::Add>(add_const_1, add_const_2);
-    auto add = std::make_shared<op::Add>(mul, add_const, op::AutoBroadcastType::NUMPY);
+    auto add_const_1 = op::v0::Constant::create(element::f32, Shape{1, 3, 1, 1}, {4, 5, 6});
+    auto add_const_2 = op::v0::Constant::create(element::f32, Shape{1, 3, 1, 1}, {1, 2, 3});
+    auto add_const = std::make_shared<op::v1::Add>(add_const_1, add_const_2);
+    auto add = std::make_shared<op::v1::Add>(mul, add_const, op::AutoBroadcastType::NUMPY);
 
     auto f = std::make_shared<Function>(add, ParameterVector{p0});
 

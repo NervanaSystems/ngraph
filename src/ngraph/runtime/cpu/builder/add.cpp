@@ -32,7 +32,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Add)
+            void Builder::BUILDER_DECL(ngraph::op::v1::Add)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -87,7 +87,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_add_cpp() { REGISTER_OP_BUILDER(Add); }
+            void register_builders_add_cpp() { REGISTER_OP_BUILDER(ngraph::op::v1::Add); }
         }
     }
 }

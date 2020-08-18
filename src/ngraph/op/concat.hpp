@@ -56,7 +56,7 @@ namespace ngraph
                 int64_t get_axis() const { return m_axis; }
                 void set_axis(int64_t axis) { m_axis = axis; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -67,6 +67,5 @@ namespace ngraph
                 int64_t m_concat_axis = -1;
             };
         }
-        using v0::Concat;
     }
 }

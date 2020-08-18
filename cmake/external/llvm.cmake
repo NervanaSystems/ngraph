@@ -32,9 +32,7 @@ set(NEED_TO_BUILD_LLVM TRUE)
 if(NGRAPH_USE_PREBUILT_MLIR)
     set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH}/build)
 endif()
-# TODO: remove this file after CI is updated.
-include(cmake/external_mlir.cmake)
-set(MLIR_COMMIT_ID ${MLIR_LLVM_COMMIT_ID})
+set(LLVM_COMMIT_ID 189c0833dfd654f08a8655ca765e11e8890a92ae)
 set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
 if(EXISTS "${VCSREVISION}")
     message(STATUS "LLVM: VCSRevision.h found.")
@@ -45,9 +43,7 @@ if(EXISTS "${VCSREVISION}")
     else()
         string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
         set(LONG_REV ${CMAKE_MATCH_1})
-        string(TOLOWER ${LONG_REV} LONG_REV)
-        string(TOLOWER ${MLIR_COMMIT_ID} MLIR_COMMIT_ID)
-        if(LONG_REV STREQUAL MLIR_COMMIT_ID)
+        if(LONG_REV STREQUAL LLVM_COMMIT_ID)
             message(STATUS "LLVM: Revision Matches.")
             set(NEED_TO_BUILD_LLVM FALSE)
         endif()
@@ -55,14 +51,18 @@ if(EXISTS "${VCSREVISION}")
 endif()
 
 if(NEED_TO_BUILD_LLVM)
+    if (NGRAPH_USE_PREBUILT_LLVM)
+        message(FATAL_ERROR "LLVM: prebuilt is the wrong hash, expected ${LLVM_COMMIT_ID}")
+    endif()
     if(NOT NGRAPH_OVERWRITE_LLVM_ROOT)
         message(FATAL_ERROR "nGraph is not allowed overwrite contents at LLVM_ROOT: ${LLVM_ROOT} "
             "Set NGRAPH_OVERWRITE_LLVM_ROOT to ON if you would like to overwrite.")
     endif()
     message(STATUS "LLVM: Building LLVM from source")
+    message(STATUS "LLVM: Fetching source")
 
-    set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${MLIR_COMMIT_ID}.zip)
-    set(LLVM_ARCHIVE_URL_HASH 3423b3d6dd461628c367ac56a5bc351763200c4e)
+    set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${LLVM_COMMIT_ID}.zip)
+    set(LLVM_ARCHIVE_URL_HASH b7d5601e46ea98b40cb653f9517b00ec8e14d0b5)
 
     FetchContent_Declare(
         llvm
@@ -90,9 +90,6 @@ if(NEED_TO_BUILD_LLVM)
             -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
             -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp\;mlir
             -DLLVM_ENABLE_RTTI=ON
-            -DLLVM_ENABLE_TERMINFO=OFF
-            -DLLVM_ENABLE_ZLIB=OFF
-            -DLLVM_BUILD_UTILS=ON
             -DLLVM_INSTALL_UTILS=ON
             -DLLVM_TARGETS_TO_BUILD=host
             ${LLVM_CMAKE_ARGS}
@@ -106,9 +103,6 @@ if(NEED_TO_BUILD_LLVM)
             -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
             -DLLVM_ENABLE_PROJECTS:STRING=mlir
             -DLLVM_ENABLE_RTTI=ON
-            -DLLVM_ENABLE_TERMINFO=OFF
-            -DLLVM_ENABLE_ZLIB=OFF
-            -DLLVM_BUILD_UTILS=ON
             -DLLVM_INSTALL_UTILS=ON
             -DLLVM_TARGETS_TO_BUILD=host
             ${LLVM_CMAKE_ARGS}

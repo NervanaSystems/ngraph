@@ -684,6 +684,4 @@ namespace ngraph
                                                  size_t batch_axis_result,
                                                  size_t output_channel_axis_result);}
 
-        using v0::Convolution;
-        using v0::ConvolutionBackpropData;
         using v0::ConvolutionBackpropFilters;}}

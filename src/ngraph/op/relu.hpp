@@ -46,7 +46,7 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
@@ -72,7 +72,5 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
             };
         }
-        using v0::Relu;
-        using v0::ReluBackprop;
     }
 }

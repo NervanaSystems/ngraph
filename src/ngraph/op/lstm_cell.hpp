@@ -272,7 +272,6 @@ namespace ngraph
                 static constexpr std::size_t s_peepholes_count{3};
             };
         }
-        using v0::LSTMCell;
     }
 
     NGRAPH_API

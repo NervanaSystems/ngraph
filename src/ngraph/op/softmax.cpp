@@ -39,7 +39,7 @@ op::v0::Softmax::Softmax(const Output<Node>& arg, const AxisSet& axes)
 {
     set_argument(
         1,
-        op::Constant::create(element::i64, Shape{axes.to_vector().size()}, axes.to_vector())
+        op::v0::Constant::create(element::i64, Shape{axes.to_vector().size()}, axes.to_vector())
             ->output(0));
     add_provenance_group_member(input_value(1).get_node_shared_ptr());
     constructor_validate_and_infer_types();
@@ -59,7 +59,7 @@ bool op::v0::Softmax::are_axes_constant() const
 const AxisSet op::v0::Softmax::get_axes() const
 {
     AxisSet axes;
-    auto const_op = dynamic_pointer_cast<op::Constant>(input_value(1).get_node_shared_ptr());
+    auto const_op = dynamic_pointer_cast<op::v0::Constant>(input_value(1).get_node_shared_ptr());
     if (const_op)
     {
         axes = const_op->get_axis_set_val();
@@ -75,7 +75,7 @@ void op::v0::Softmax::set_axes(const AxisSet& axes)
 {
     shared_ptr<Node> current_const = input_value(1).get_node_shared_ptr();
     shared_ptr<Node> replacement_const =
-        op::Constant::create(element::i64, Shape{axes.to_vector().size()}, axes.to_vector());
+        op::v0::Constant::create(element::i64, Shape{axes.to_vector().size()}, axes.to_vector());
     this->input(1).replace_source_output(replacement_const->output(0));
     replace_provenance_group_member(current_const, replacement_const);
 }
@@ -133,7 +133,7 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto axes = get_axes();
 
     auto z = delta * shared_from_this();
-    auto zsum = make_shared<op::Sum>(z, axes);
+    auto zsum = make_shared<op::v0::Sum>(z, axes);
 
     Shape shape;
     for (size_t i = 0; i < get_output_shape(0).size(); ++i)
@@ -148,9 +148,9 @@ void op::v0::Softmax::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
         }
     }
     auto order = ngraph::get_default_order(zsum->get_output_shape(0));
-    auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
+    auto zreshape = make_shared<op::v0::Reshape>(zsum, order, shape);
 
-    auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
+    auto adjoint = z - builder::make_with_numpy_broadcast<op::v1::Multiply>(output(0), zreshape);
 
     auto x = input_value(0);
     adjoints.add_delta(x, adjoint);
@@ -178,7 +178,8 @@ namespace
     }
 }
 
-bool op::v0::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Softmax::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     outputs[0]->set_unary(inputs[0]);
     return evaluate_softmax(inputs[0], outputs[0], get_axes());
@@ -223,7 +224,8 @@ shared_ptr<Node> op::v1::Softmax::clone_with_new_inputs(const OutputVector& new_
     return make_shared<op::v1::Softmax>(new_args.at(0), m_axis);
 }
 
-bool op::v1::Softmax::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Softmax::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     outputs[0]->set_unary(inputs[0]);
     return evaluate_softmax(inputs[0], outputs[0], AxisSet{m_axis});
@@ -244,7 +246,7 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
     std::iota(std::begin(axes), std::end(axes), m_axis);
     AxisSet axes_set{axes};
 
-    auto zsum = make_shared<op::Sum>(z, axes_set);
+    auto zsum = make_shared<op::v0::Sum>(z, axes_set);
 
     Shape shape;
     for (size_t i = 0; i < get_shape().size(); ++i)
@@ -259,9 +261,9 @@ void op::v1::Softmax::generate_adjoints(autodiff::Adjoints& /* adjoints */,
         }
     }
     auto order = ngraph::get_default_order(zsum->get_shape());
-    auto zreshape = make_shared<op::Reshape>(zsum, order, shape);
+    auto zreshape = make_shared<op::v0::Reshape>(zsum, order, shape);
 
-    auto adjoint = z - builder::make_with_numpy_broadcast<op::Multiply>(output(0), zreshape);
+    auto adjoint = z - builder::make_with_numpy_broadcast<op::v1::Multiply>(output(0), zreshape);
 
     auto x = input_value(0);
     adjoints.add_delta(x, adjoint);

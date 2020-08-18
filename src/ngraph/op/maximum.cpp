@@ -56,12 +56,12 @@ void op::v0::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
     auto x = input_value(0);
     auto y = input_value(1);
-    adjoints.add_delta(
-        x,
-        delta * make_shared<op::Convert>(make_shared<op::v0::Greater>(x, y), x.get_element_type()));
-    adjoints.add_delta(
-        y,
-        delta * make_shared<op::Convert>(make_shared<op::v0::Greater>(y, x), y.get_element_type()));
+    adjoints.add_delta(x,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Greater>(x, y),
+                                                            x.get_element_type()));
+    adjoints.add_delta(y,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Greater>(y, x),
+                                                            y.get_element_type()));
 }
 
 namespace
@@ -116,7 +116,8 @@ namespace
     }
 }
 
-bool op::v0::Maximum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Maximum::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_maximum(inputs[0], inputs[1], outputs[0], get_autob());
 }
@@ -150,15 +151,16 @@ void op::v1::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
     auto x = input_value(0);
     auto y = input_value(1);
-    adjoints.add_delta(
-        x,
-        delta * make_shared<op::Convert>(make_shared<op::v1::Greater>(x, y), x.get_element_type()));
-    adjoints.add_delta(
-        y,
-        delta * make_shared<op::Convert>(make_shared<op::v1::Greater>(y, x), y.get_element_type()));
+    adjoints.add_delta(x,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Greater>(x, y),
+                                                            x.get_element_type()));
+    adjoints.add_delta(y,
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Greater>(y, x),
+                                                            y.get_element_type()));
 }
 
-bool op::v1::Maximum::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::Maximum::evaluate(const HostTensorVector& outputs,
+                               const HostTensorVector& inputs) const
 {
     return evaluate_maximum(inputs[0], inputs[1], outputs[0], get_autob());
 }

@@ -71,12 +71,11 @@ namespace ngraph
                 using Node::set_output_type;
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 element::Type m_output_type = element::i64;
             };
         }
-        using v3::NonZero;
     }
 }

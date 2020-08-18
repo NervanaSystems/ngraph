@@ -312,12 +312,12 @@ class ReplaceSliceTestWriter:
             failure_reasons.append('slice shape and replacement shape do not match')
 
         self._stream.write('\n')
-        self._stream.write('                                       // test %d\n' % self._test_counter)
-        self._stream.write('                                       // slices are: %s\n' % print_slices(slices))
-        self._stream.write('                                       // dtype is: %s\n' % self._dtype)
-        self._stream.write('                                       // input shape is: %s\n' % print_shape(self._shape))
-        self._stream.write('                                       // slice shape is: %s\n' % print_shape(slice_shape))
-        self._stream.write('                                       // replacement shape is: %s\n' % print_shape(value.shape))
+        self._stream.write('                                        // test %d\n' % self._test_counter)
+        self._stream.write('                                        // slices are: %s\n' % print_slices(slices))
+        self._stream.write('                                        // dtype is: %s\n' % self._dtype)
+        self._stream.write('                                        // input shape is: %s\n' % print_shape(self._shape))
+        self._stream.write('                                        // slice shape is: %s\n' % print_shape(slice_shape))
+        self._stream.write('                                        // replacement shape is: %s\n' % print_shape(value.shape))
 
         # If numpy fails for any reason, we expect failure.
         try:
@@ -339,27 +339,27 @@ class ReplaceSliceTestWriter:
             result_values = data_out
 
         if is_failed:
-            self._stream.write('                                       // failure is expected (%s)\n' % ','.join(failure_reasons))
+            self._stream.write('                                        // failure is expected (%s)\n' % ','.join(failure_reasons))
         else:
-            self._stream.write('                                       // expected output shape is %s\n' % print_shape(data_in.shape))
+            self._stream.write('                                        // expected output shape is %s\n' % print_shape(data_in.shape))
 
-        self._stream.write('                                       make_shared<DynReplaceSliceTestParams<%s,%s>>(\n'
-                           '                                           %s,\n'
-                           '                                           %s,\n'
-                           '                                           %s,\n'
-                           '                                           %s,\n'
-                           '                                           %s,\n'
-                           '                                           std::vector<int64_t>{%s},\n'
-                           '                                           std::vector<int64_t>{%s},\n'
-                           '                                           std::vector<int64_t>{%s},\n'
-                           '                                           AxisSet{%s},\n'
-                           '                                           AxisSet{%s},\n'
-                           '                                           AxisSet{%s},\n'
-                           '                                           AxisSet{%s},\n'
-                           '                                           AxisSet{%s},\n'
-                           '                                           std::vector<%s>{%s},\n'
-                           '                                           std::vector<%s>{%s}\n'
-                           '                                       ),\n'
+        self._stream.write('                                        make_shared<DynReplaceSliceTestParams<%s,%s>>(\n'
+                           '                                            %s,\n'
+                           '                                            %s,\n'
+                           '                                            %s,\n'
+                           '                                            %s,\n'
+                           '                                            %s,\n'
+                           '                                            std::vector<int64_t>{%s},\n'
+                           '                                            std::vector<int64_t>{%s},\n'
+                           '                                            std::vector<int64_t>{%s},\n'
+                           '                                            AxisSet{%s},\n'
+                           '                                            AxisSet{%s},\n'
+                           '                                            AxisSet{%s},\n'
+                           '                                            AxisSet{%s},\n'
+                           '                                            AxisSet{%s},\n'
+                           '                                            std::vector<%s>{%s},\n'
+                           '                                            std::vector<%s>{%s}\n'
+                           '                                        ),\n'
                                 % (np_dt_to_c(self._dtype), np_dt_to_c(value.dtype),
 
                                     'false' if is_failed else 'true',
@@ -539,13 +539,13 @@ NGRAPH_TEST_P(${BACKEND_NAME}, DynReplaceSliceTest, dyn_replace_slice)
     auto output = backend->create_dynamic_tensor(t->input_element_type, PartialShape::dynamic());
 
     auto setup = [&t, &backend, &output]() {
-        auto arg = std::make_shared<op::Parameter>(t->input_element_type, t->input_shape);
-        auto repl = std::make_shared<op::Parameter>(t->replacement_element_type, t->replacement_shape);
-        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{t->lb_values.size()});
-        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{t->ub_values.size()});
-        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{t->strides_values.size()});
+        auto arg = std::make_shared<op::v0::Parameter>(t->input_element_type, t->input_shape);
+        auto repl = std::make_shared<op::v0::Parameter>(t->replacement_element_type, t->replacement_shape);
+        auto lb = std::make_shared<op::v0::Parameter>(element::i64, Shape{t->lb_values.size()});
+        auto ub = std::make_shared<op::v0::Parameter>(element::i64, Shape{t->ub_values.size()});
+        auto strides = std::make_shared<op::v0::Parameter>(element::i64, Shape{t->strides_values.size()});
 
-        auto rsl = std::make_shared<op::DynReplaceSlice>(arg, repl,
+        auto rsl = std::make_shared<op::v0::DynReplaceSlice>(arg, repl,
                                                          lb, ub, strides,
                                                          t->lb_mask, t->ub_mask, t->new_mask,
                                                          t->shrink_mask, t->ellipsis_mask);
@@ -572,7 +572,7 @@ NGRAPH_TEST_P(${BACKEND_NAME}, DynReplaceSliceTest, dyn_replace_slice)
     {
         setup();
         EXPECT_EQ(output->get_element_type(), t->input_element_type);
-        EXPECT_EQ(output->get_output_shape(0), t->input_shape);
+        EXPECT_EQ(output->get_shape(), t->input_shape);
         t->check_result_values(output);
     }
     else
@@ -583,15 +583,15 @@ NGRAPH_TEST_P(${BACKEND_NAME}, DynReplaceSliceTest, dyn_replace_slice)
     }
 }
 
-NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME},
-                               dyn_replace_slice,
-                               DynReplaceSliceTest,
-                               (::testing::ValuesIn(
-                                   std::vector<std::shared_ptr<DynReplaceSliceTestParamsBase>>{''')
+NGRAPH_INSTANTIATE_TEST_SUITE_P(${BACKEND_NAME},
+                                dyn_replace_slice,
+                                DynReplaceSliceTest,
+                                (::testing::ValuesIn(
+                                    std::vector<std::shared_ptr<DynReplaceSliceTestParamsBase>>{''')
 
 def write_footer(f):
     f.write('''\
-                                   })));
+                                    })));
 // clang-format on
 ''')
 

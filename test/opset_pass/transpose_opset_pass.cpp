@@ -27,12 +27,12 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_transpose_downgrade_pass)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6, 7});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{4, 5, 6, 7});
     AxisVector order{2, 1, 3, 0};
-    const auto order_node = op::Constant::create(element::i64, Shape{order.size()}, order);
+    const auto order_node = op::v0::Constant::create(element::i64, Shape{order.size()}, order);
 
     auto transpose = make_shared<op::v1::Transpose>(data, order_node);
-    auto result = make_shared<op::Result>(transpose);
+    auto result = make_shared<op::v0::Result>(transpose);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -49,12 +49,12 @@ TEST(opset_transform, opset1_transpose_downgrade_pass)
 
 TEST(opset_transform, opset1_transpose_downgrade_pass_data_shape_not_staic)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
+    const auto data = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
     AxisVector order{2, 1, 3, 0};
-    const auto order_node = op::Constant::create(element::i64, Shape{order.size()}, order);
+    const auto order_node = op::v0::Constant::create(element::i64, Shape{order.size()}, order);
 
     auto transpose = make_shared<op::v1::Transpose>(data, order_node);
-    auto result = make_shared<op::Result>(transpose);
+    auto result = make_shared<op::v0::Result>(transpose);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -79,11 +79,11 @@ TEST(opset_transform, opset1_transpose_downgrade_pass_data_shape_not_staic)
 
 TEST(opset_transform, opset1_transpose_downgrade_pass_order_not_constant)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{4, 5, 6, 7});
-    const auto order_node = make_shared<op::Parameter>(element::i64, Shape{4});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{4, 5, 6, 7});
+    const auto order_node = make_shared<op::v0::Parameter>(element::i64, Shape{4});
 
     auto transpose = make_shared<op::v1::Transpose>(data, order_node);
-    auto result = make_shared<op::Result>(transpose);
+    auto result = make_shared<op::v0::Result>(transpose);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, order_node});
 
     ngraph::pass::Manager pass_manager;

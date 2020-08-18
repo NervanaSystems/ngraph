@@ -70,6 +70,5 @@ namespace ngraph
                 bool m_transpose_arg1;
             };
         }
-        using v0::BatchMatMulTranspose;
     }
 }

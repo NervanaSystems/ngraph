@@ -1530,7 +1530,7 @@ size_t runtime::gpu::CUDAEmitter::build_cudnn_bn_inv_var(const std::vector<std::
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDAEmitter::build_primitive(const op::MaxPool* node)
+size_t runtime::gpu::CUDAEmitter::build_primitive(const op::v0::MaxPool* node)
 {
     auto& input_shape = node->get_input_shape(0);
     auto& result_shape = node->get_input_shape(0);
@@ -2440,7 +2440,7 @@ size_t runtime::gpu::CUDAEmitter::build_broadcast(const std::array<std::string, 
     return this->m_primitive_emitter->register_primitive(broadcast, hash);
 }
 
-size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
+size_t runtime::gpu::CUDAEmitter::build_primitive(const op::v0::Convolution* node)
 {
     std::stringstream ss;
     ss << "convolution_fprop_" << runtime::gpu::kernel::emit_type_string(node);
@@ -2563,7 +2563,8 @@ size_t runtime::gpu::CUDAEmitter::build_primitive(const op::Convolution* node)
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDAEmitter::build_primitive(const op::ReplaceSlice* node, bool in_place_op)
+size_t runtime::gpu::CUDAEmitter::build_primitive(const op::v0::ReplaceSlice* node,
+                                                  bool in_place_op)
 {
     auto& input_shape = node->get_input_shape(0);
     auto& replace_shape = node->get_input_shape(1);

@@ -14,16 +14,16 @@
 // limitations under the License.
 //*****************************************************************************
 
-#include "ngraph/op/and.hpp"
+#include "ngraph/op/logical_xor.hpp"
 #include "ngraph/runtime/host_tensor.hpp"
-#include "ngraph/runtime/reference/and.hpp"
+#include "ngraph/runtime/reference/xor.hpp"
 
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::v1::LogicalAnd::type_info;
+constexpr NodeTypeInfo op::v1::LogicalXor::type_info;
 
-op::v1::LogicalAnd::LogicalAnd(const Output<Node>& arg0,
+op::v1::LogicalXor::LogicalXor(const Output<Node>& arg0,
                                const Output<Node>& arg1,
                                const AutoBroadcastSpec& auto_broadcast)
     : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
@@ -31,16 +31,16 @@ op::v1::LogicalAnd::LogicalAnd(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-bool op::v1::LogicalAnd::visit_attributes(AttributeVisitor& visitor)
+shared_ptr<Node> op::v1::LogicalXor::clone_with_new_inputs(const OutputVector& new_args) const
+{
+    check_new_args_count(this, new_args);
+    return make_shared<v1::LogicalXor>(new_args.at(0), new_args.at(1), this->get_autob());
+}
+
+bool ngraph::op::v1::LogicalXor::visit_attributes(AttributeVisitor& visitor)
 {
     BinaryElementwiseLogical::visit_attributes(visitor);
     return true;
-}
-
-shared_ptr<Node> op::v1::LogicalAnd::clone_with_new_inputs(const OutputVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<v1::LogicalAnd>(new_args.at(0), new_args.at(1), this->get_autob());
 }
 
 namespace
@@ -51,7 +51,7 @@ namespace
                   const HostTensorPtr& out,
                   const op::AutoBroadcastSpec& broadcast_spec)
     {
-        runtime::reference::logical_and(arg0->get_data_ptr<ET>(),
+        runtime::reference::logical_xor(arg0->get_data_ptr<ET>(),
                                         arg1->get_data_ptr<ET>(),
                                         out->get_data_ptr<ET>(),
                                         arg0->get_shape(),
@@ -60,7 +60,7 @@ namespace
         return true;
     }
 
-    bool evaluate_logand(const HostTensorPtr& arg0,
+    bool evaluate_logxor(const HostTensorPtr& arg0,
                          const HostTensorPtr& arg1,
                          const HostTensorPtr& out,
                          const op::AutoBroadcastSpec& broadcast_spec)
@@ -97,34 +97,8 @@ namespace
     }
 }
 
-bool op::v1::LogicalAnd::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v1::LogicalXor::evaluate(const HostTensorVector& outputs,
+                                  const HostTensorVector& inputs) const
 {
-    return evaluate_logand(inputs[0], inputs[1], outputs[0], get_autob());
-}
-
-constexpr NodeTypeInfo op::v0::And::type_info;
-
-op::v0::And::And(const Output<Node>& arg0,
-                 const Output<Node>& arg1,
-                 const AutoBroadcastSpec& auto_broadcast)
-    : BinaryElementwiseLogical(arg0, arg1, auto_broadcast)
-{
-    constructor_validate_and_infer_types();
-}
-
-bool op::v0::And::visit_attributes(AttributeVisitor& visitor)
-{
-    BinaryElementwiseLogical::visit_attributes(visitor);
-    return true;
-}
-
-shared_ptr<Node> op::v0::And::clone_with_new_inputs(const OutputVector& new_args) const
-{
-    check_new_args_count(this, new_args);
-    return make_shared<v0::And>(new_args.at(0), new_args.at(1), this->get_autob());
-}
-
-bool op::v0::And::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
-{
-    return evaluate_logand(inputs[0], inputs[1], outputs[0], get_autob());
+    return evaluate_logxor(inputs[0], inputs[1], outputs[0], get_autob());
 }

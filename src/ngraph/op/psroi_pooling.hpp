@@ -73,6 +73,5 @@ namespace ngraph
                 std::string m_mode;
             };
         }
-        using v0::PSROIPooling;
     }
 }

@@ -36,7 +36,7 @@ namespace ngraph
                 Shape& out_shape,
                 size_t& size)
             {
-                auto broadcast = static_cast<const ngraph::op::Broadcast*>(node);
+                auto broadcast = static_cast<const ngraph::op::v0::Broadcast*>(node);
                 auto broadcast_axes = broadcast->get_broadcast_axes();
 
                 auto arg_shape = broadcast->get_input_shape(0);
@@ -162,7 +162,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::Broadcast)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Broadcast)
             {
                 std::function<decltype(runtime::cpu::kernel::broadcast<float, 2>)> kernel;
                 Shape expanded_input_shape, out_shape;
@@ -188,7 +188,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Broadcast)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Broadcast)
             {
                 auto& functors = external_function->get_functors();
 
@@ -232,8 +232,8 @@ namespace ngraph
 
             void register_builders_broadcast_cpp()
             {
-                REGISTER_CF_BUILDER(Broadcast);
-                REGISTER_OP_BUILDER(Broadcast);
+                REGISTER_CF_BUILDER(ngraph::op::v0::Broadcast);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Broadcast);
             }
         }
     }

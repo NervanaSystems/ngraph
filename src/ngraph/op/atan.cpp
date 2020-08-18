@@ -33,32 +33,32 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Atan::type_info;
+constexpr NodeTypeInfo op::v0::Atan::type_info;
 
-op::Atan::Atan(const Output<Node>& arg)
+op::v0::Atan::Atan(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Atan::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Atan::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Atan>(new_args.at(0));
 }
 
-void op::Atan::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Atan::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input_value(0);
 
-    auto one = make_shared<op::Constant>(x.get_element_type(), Shape{}, vector<string>{"1"});
+    auto one = make_shared<op::v0::Constant>(x.get_element_type(), Shape{}, vector<string>{"1"});
 
     AxisSet axes;
     for (size_t i = 0; i < x.get_shape().size(); i++)
         axes.insert(i);
-    auto ones = make_shared<op::Broadcast>(one, x.get_shape(), axes);
+    auto ones = make_shared<op::v0::Broadcast>(one, x.get_shape(), axes);
 
     adjoints.add_delta(x, delta / (ones + x * x));
 }
@@ -112,7 +112,7 @@ namespace
     }
 }
 
-bool op::Atan::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Atan::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_atan(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

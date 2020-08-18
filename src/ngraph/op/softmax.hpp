@@ -62,7 +62,7 @@ namespace ngraph
                 void set_axes(const AxisSet& axes);
 
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -100,7 +100,7 @@ namespace ngraph
                 size_t get_axis() const { return m_axis; }
                 void set_axis(const size_t axis) { m_axis = axis; }
                 bool evaluate(const HostTensorVector& outputs,
-                              const HostTensorVector& inputs) override;
+                              const HostTensorVector& inputs) const override;
 
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
@@ -112,6 +112,5 @@ namespace ngraph
         }
 
         // default opset version
-        using v0::Softmax;
     }
 }

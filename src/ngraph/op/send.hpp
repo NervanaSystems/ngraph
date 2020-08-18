@@ -49,6 +49,5 @@ namespace ngraph
                 int m_dest_id;
             };
         }
-        using v0::Send;
     }
 }

@@ -22,17 +22,17 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ScaleShift::type_info;
+constexpr NodeTypeInfo op::v0::ScaleShift::type_info;
 
-op::ScaleShift::ScaleShift(const Output<Node>& data,
-                           const Output<Node>& scale,
-                           const Output<Node>& shift)
+op::v0::ScaleShift::ScaleShift(const Output<Node>& data,
+                               const Output<Node>& scale,
+                               const Output<Node>& shift)
     : FusedOp({data, scale, shift})
 {
     constructor_validate_and_infer_types();
 }
 
-OutputVector op::ScaleShift::decompose_op() const
+OutputVector op::v0::ScaleShift::decompose_op() const
 {
     auto data = input_value(0);
     auto scale = input_value(1);
@@ -47,7 +47,7 @@ OutputVector op::ScaleShift::decompose_op() const
     return {scale * data + shift};
 }
 
-shared_ptr<Node> op::ScaleShift::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ScaleShift::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {

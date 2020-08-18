@@ -78,9 +78,9 @@ namespace
             {
                 reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
             }
-            auto reshaped_product = make_shared<op::Reshape>(replacement_node->output(0),
-                                                             get_default_order(output_shape),
-                                                             reshaped_output_shape);
+            auto reshaped_product = make_shared<op::v0::Reshape>(replacement_node->output(0),
+                                                                 get_default_order(output_shape),
+                                                                 reshaped_output_shape);
             return reshaped_product;
         }
         else
@@ -91,10 +91,6 @@ namespace
 
     // Default is that we did nothing
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Add> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Add, op::v1::Add>(node);
-    }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::AvgPool> node)
     {
@@ -123,7 +119,7 @@ namespace
     {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         const auto forward_arg_shape =
-            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+            static_pointer_cast<op::v0::Constant>(node->input_value(1).get_node_shared_ptr())
                 ->get_shape_val();
         const auto delta = node->input_value(0);
         const auto include_padding_in_avg_computation = !node->get_exclude_pad();
@@ -156,12 +152,12 @@ namespace
         if (arg_rank.is_static() && arg_rank.get_length() == 0 &&
             !target_shape_input.get_node_shared_ptr()->is_constant())
         {
-            replacement_node = make_shared<op::DynBroadcast>(
+            replacement_node = make_shared<op::v0::DynBroadcast>(
                 arg,
                 target_shape_input,
-                make_shared<op::Range>(make_zero(element::i64, {}),
-                                       make_shared<op::ShapeOf>(target_shape_input),
-                                       make_constant_from_string("1", element::i64, {})));
+                make_shared<op::v0::Range>(make_zero(element::i64, {}),
+                                           make_shared<op::v0::ShapeOf>(target_shape_input),
+                                           make_constant_from_string("1", element::i64, {})));
         }
         else
         {
@@ -274,7 +270,7 @@ namespace
     {
         NGRAPH_CHECK(node->input_value(2).get_node_shared_ptr()->is_constant());
         auto filters_shape =
-            static_pointer_cast<op::Constant>(node->input_value(2).get_node_shared_ptr())
+            static_pointer_cast<op::v0::Constant>(node->input_value(2).get_node_shared_ptr())
                 ->get_shape_val();
         const auto data_arg = node->input_value(0);
         const auto delta_arg = node->input_value(1);
@@ -299,7 +295,7 @@ namespace
         const auto input_arg1 = node->input_value(1);
         const auto autob = node->get_autob();
         const bool pydiv = node->is_pythondiv();
-        auto replacement_node = make_shared<op::v0::Divide>(input_arg0, input_arg1, pydiv, autob);
+        auto replacement_node = make_shared<op::v1::Divide>(input_arg0, input_arg1, pydiv, autob);
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -314,7 +310,7 @@ namespace
             input_rank.is_static())
         {
             const auto output_shape = node->get_output_shape(0);
-            replacement_node = make_shared<op::Reshape>(
+            replacement_node = make_shared<op::v0::Reshape>(
                 node->input_value(0), get_default_order(input_rank.get_length()), output_shape);
         }
         else
@@ -333,7 +329,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Gather> node)
     {
-        auto axis_node = as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
+        auto axis_node = as_type_ptr<op::v0::Constant>(node->input_value(2).get_node_shared_ptr());
 
         NGRAPH_CHECK(axis_node,
                      "Unable to convert Gather:v1 to Gather:v0 if axis is not constant. Node: ",
@@ -356,7 +352,7 @@ namespace
     {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant());
         auto mask_shape =
-            static_pointer_cast<op::Constant>(node->input_value(1).get_node_shared_ptr())
+            static_pointer_cast<op::v0::Constant>(node->input_value(1).get_node_shared_ptr())
                 ->get_shape_val();
         auto seed = node->get_seed();
         auto use_seed = node->get_use_seed();
@@ -386,14 +382,14 @@ namespace
         const auto filters_arg = node->input_value(1);
         const auto strides = node->get_strides();
         const size_t num_spatial_dims = strides.size();
-        auto replacement_node = make_shared<op::GroupConvolution>(data_arg,
-                                                                  filters_arg,
-                                                                  node->get_strides(),
-                                                                  node->get_dilations(),
-                                                                  node->get_pads_begin(),
-                                                                  node->get_pads_end(),
-                                                                  Strides(num_spatial_dims, 1),
-                                                                  node->get_auto_pad());
+        auto replacement_node = make_shared<op::v0::GroupConvolution>(data_arg,
+                                                                      filters_arg,
+                                                                      node->get_strides(),
+                                                                      node->get_dilations(),
+                                                                      node->get_pads_begin(),
+                                                                      node->get_pads_end(),
+                                                                      Strides(num_spatial_dims, 1),
+                                                                      node->get_auto_pad());
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -432,7 +428,7 @@ namespace
         auto reshaped_filters = builder::opset1::reshape(node->input_value(1), filters_shape);
 
         auto replacement_node = make_shared<op::v0::GroupConvolutionBackpropData>(
-            op::Constant::create(data_arg.get_element_type(), output_shape, {0}),
+            op::v0::Constant::create(data_arg.get_element_type(), output_shape, {0}),
             reshaped_filters,
             data_arg,
             node->get_strides(),
@@ -452,28 +448,6 @@ namespace
     shared_ptr<Node> op_cast(shared_ptr<op::v1::LessEqual> node)
     {
         return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalAnd> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalNot> node)
-    {
-        auto replacement_node = make_shared<op::v0::Not>(node->input_value(0));
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalOr> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LogicalXor> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Xor, op::v1::LogicalXor>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)
@@ -542,11 +516,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Multiply> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::NotEqual> node)
     {
         return op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
@@ -565,8 +534,8 @@ namespace
         NGRAPH_CHECK(output_pshape.is_static(), "output shape must be static", *node);
         const auto output_shape = output_pshape.to_shape();
 
-        auto one_hot = std::make_shared<ngraph::op::Convert>(
-            std::make_shared<ngraph::op::OneHot>(indices, output_shape, axis),
+        auto one_hot = std::make_shared<ngraph::op::v0::Convert>(
+            std::make_shared<ngraph::op::v0::OneHot>(indices, output_shape, axis),
             on_value.get_element_type());
 
         auto broadcasted_values = builder::numpy_broadcast_outputs({one_hot, on_value, off_value});
@@ -589,8 +558,8 @@ namespace
         }
         else
         {
-            pad_value =
-                make_shared<op::Constant>(pad_arg.get_element_type(), Shape{}, vector<float>{0.f});
+            pad_value = make_shared<op::v0::Constant>(
+                pad_arg.get_element_type(), Shape{}, vector<float>{0.f});
         }
         auto replacement_node = make_shared<op::v0::Pad>(
             pad_arg, pad_value, node->get_pads_begin(), node->get_pads_end(), node->get_pad_mode());
@@ -634,12 +603,12 @@ namespace
             {
                 reshaped_output_shape.insert(reshaped_output_shape.begin() + axis, 1);
             }
-            count_node = make_shared<op::Reshape>(
+            count_node = make_shared<op::v0::Reshape>(
                 count_node->output(0), get_default_order(output_shape), reshaped_output_shape);
         }
 
         const auto replacement_node =
-            std::make_shared<op::v0::Divide>(sum_node, count_node, op::AutoBroadcastSpec::NUMPY);
+            std::make_shared<op::v1::Divide>(sum_node, count_node, op::AutoBroadcastSpec::NUMPY);
         replace_node(node, replacement_node);
         return replacement_node;
     }
@@ -672,7 +641,7 @@ namespace
                      "Unable to convert Reverse:v1 to Reverse:v0 "
                      "if reduction axes are not constant. Node: ",
                      *node);
-        const auto axes_node_const = as_type_ptr<op::Constant>(axes_node);
+        const auto axes_node_const = as_type_ptr<op::v0::Constant>(axes_node);
         AxisSet axes{};
         if (node->get_mode() == op::v1::Reverse::Mode::INDEX)
         {
@@ -727,10 +696,11 @@ namespace
                      *node);
 
         const auto begin_const =
-            as_type_ptr<op::Constant>(node->input_value(1).get_node_shared_ptr());
+            as_type_ptr<op::v0::Constant>(node->input_value(1).get_node_shared_ptr());
         const auto end_const =
-            as_type_ptr<op::Constant>(node->input_value(2).get_node_shared_ptr());
-        const auto strides = as_type_ptr<op::Constant>(node->input_value(3).get_node_shared_ptr());
+            as_type_ptr<op::v0::Constant>(node->input_value(2).get_node_shared_ptr());
+        const auto strides =
+            as_type_ptr<op::v0::Constant>(node->input_value(3).get_node_shared_ptr());
 
         NGRAPH_CHECK(begin_const && end_const && strides,
                      "Unable to convert StridedSlice:v1 to Slice:v0 "
@@ -756,14 +726,14 @@ namespace
         if (p.reshape_in_shape != p.reshape_out_shape)
         {
             replacement_node =
-                make_shared<op::Reshape>(replacement_node,
-                                         ngraph::get_default_order(p.reshape_in_shape),
-                                         p.reshape_out_shape);
+                make_shared<op::v0::Reshape>(replacement_node,
+                                             ngraph::get_default_order(p.reshape_in_shape),
+                                             p.reshape_out_shape);
         }
 
         if (!p.reverse_axes.empty())
         {
-            replacement_node = make_shared<op::Reverse>(replacement_node, p.reverse_axes);
+            replacement_node = make_shared<op::v0::Reverse>(replacement_node, p.reverse_axes);
         }
 
         replace_node(node, replacement_node);
@@ -791,11 +761,6 @@ namespace
 
         replace_node(node, replacement_node);
         return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Subtract> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::TopK> node)
@@ -840,7 +805,7 @@ namespace
                      "Unable to convert Transpose:v1 to Reshape:v0 "
                      "if order node is not constant. Node: ",
                      *node);
-        const auto order_const = as_type_ptr<op::Constant>(order_node);
+        const auto order_const = as_type_ptr<op::v0::Constant>(order_node);
 
         auto order = order_const->get_axis_vector_val();
         Shape out_shape = data_shape;
@@ -871,7 +836,7 @@ namespace
                      "if 'split_lengths' input is not constant. Node: ",
                      *node);
 
-        const auto splits = as_type_ptr<op::Constant>(split_lengths)->cast_vector<int64_t>();
+        const auto splits = as_type_ptr<op::v0::Constant>(split_lengths)->cast_vector<int64_t>();
         const std::vector<size_t> splits_unsigned{splits.begin(), splits.end()};
 
         auto replacement_node =

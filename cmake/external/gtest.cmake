@@ -22,10 +22,10 @@ include(ExternalProject)
 #------------------------------------------------------------------------------
 
 SET(GTEST_GIT_REPO_URL https://github.com/google/googletest.git)
-SET(GTEST_GIT_LABEL release-1.8.1)
+SET(GTEST_GIT_LABEL release-1.10.0)
 
-set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/googlemock)
-set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR}/gtest)
+set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/lib)
+set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR})
 
 if(WIN32)
     list(APPEND GTEST_CMAKE_ARGS
@@ -92,6 +92,9 @@ if(LINUX OR APPLE OR WIN32)
         debug ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmockd${CMAKE_STATIC_LIBRARY_SUFFIX}
         optimized ${GTEST_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX}
         optimized ${GMOCK_OUTPUT_DIR}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+    if(NOT WIN32)
+        target_link_libraries(libgtest INTERFACE pthread)
+    endif()
 else()
     message(FATAL_ERROR "libgtest: Unsupported platform.")
 endif()

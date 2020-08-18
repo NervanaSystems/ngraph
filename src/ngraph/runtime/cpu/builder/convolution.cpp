@@ -34,9 +34,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Convolution)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Convolution)
             {
-                auto convolution = static_cast<const ngraph::op::Convolution*>(node);
+                auto convolution = static_cast<const ngraph::op::v0::Convolution*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -52,9 +52,11 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto conv_desc =
-                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::Convolution>(node);
+                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::v0::Convolution>(
+                            node);
                     auto conv_attr =
-                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::Convolution>(node);
+                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::v0::Convolution>(
+                            node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -215,7 +217,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBias)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ConvolutionBias)
             {
                 auto& functors = external_function->get_functors();
 
@@ -228,10 +230,10 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto conv_desc =
-                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::ConvolutionBias>(
+                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::v0::ConvolutionBias>(
                             node);
                     auto conv_attr =
-                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBias>(
+                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::v0::ConvolutionBias>(
                             node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
@@ -286,7 +288,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasAdd)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ConvolutionBiasAdd)
             {
                 auto& functors = external_function->get_functors();
 
@@ -301,11 +303,13 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto conv_desc =
-                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::ConvolutionBiasAdd>(
-                            node);
+                        dnnl_emitter
+                            ->get_convolution_forward_desc<ngraph::op::v0::ConvolutionBiasAdd>(
+                                node);
                     auto conv_attr =
-                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::ConvolutionBiasAdd>(
-                            node);
+                        dnnl_emitter
+                            ->get_convolution_forward_attr<ngraph::op::v0::ConvolutionBiasAdd>(
+                                node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -446,9 +450,10 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBackpropData)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ConvolutionBackpropData)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBackpropData*>(node);
+                auto convolution =
+                    static_cast<const ngraph::op::v0::ConvolutionBackpropData*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -463,9 +468,9 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto bwd_desc = dnnl_emitter->get_convolution_backward_data_desc<
-                        ngraph::op::ConvolutionBackpropData>(node);
+                        ngraph::op::v0::ConvolutionBackpropData>(node);
                     auto fwd_desc = dnnl_emitter->get_convolution_forward_desc_for_backward_op<
-                        ngraph::op::ConvolutionBackpropData>(node);
+                        ngraph::op::v0::ConvolutionBackpropData>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_backward_data, fwd_desc, bwd_desc);
 
@@ -561,9 +566,10 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBackpropFilters)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ConvolutionBackpropFilters)
             {
-                auto convolution = static_cast<const ngraph::op::ConvolutionBackpropFilters*>(node);
+                auto convolution =
+                    static_cast<const ngraph::op::v0::ConvolutionBackpropFilters*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -578,9 +584,9 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto bwd_desc = dnnl_emitter->get_convolution_backward_weights_desc<
-                        ngraph::op::ConvolutionBackpropFilters>(node);
+                        ngraph::op::v0::ConvolutionBackpropFilters>(node);
                     auto fwd_desc = dnnl_emitter->get_convolution_forward_desc_for_backward_op<
-                        ngraph::op::ConvolutionBackpropFilters>(node);
+                        ngraph::op::v0::ConvolutionBackpropFilters>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
 
@@ -677,7 +683,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ConvolutionBiasBackpropFiltersBias)
             {
                 auto& functors = external_function->get_functors();
 
@@ -690,9 +696,9 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto bwd_desc = dnnl_emitter->get_convolution_backward_weights_desc<
-                        ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
+                        ngraph::op::v0::ConvolutionBiasBackpropFiltersBias>(node);
                     auto fwd_desc = dnnl_emitter->get_convolution_forward_desc_for_backward_op<
-                        ngraph::op::ConvolutionBiasBackpropFiltersBias>(node);
+                        ngraph::op::v0::ConvolutionBiasBackpropFiltersBias>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_backward_weights, fwd_desc, bwd_desc);
 
@@ -748,7 +754,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::GroupConvolution)
+            void Builder::BUILDER_DECL(ngraph::op::v0::GroupConvolution)
             {
                 auto& functors = external_function->get_functors();
 
@@ -760,11 +766,11 @@ namespace ngraph
                 {
                     auto& dnnl_emitter = external_function->get_dnnl_emitter();
                     auto conv_desc =
-                        dnnl_emitter->get_convolution_forward_desc<ngraph::op::GroupConvolution>(
-                            node);
+                        dnnl_emitter
+                            ->get_convolution_forward_desc<ngraph::op::v0::GroupConvolution>(node);
                     auto conv_attr =
-                        dnnl_emitter->get_convolution_forward_attr<ngraph::op::GroupConvolution>(
-                            node);
+                        dnnl_emitter
+                            ->get_convolution_forward_attr<ngraph::op::v0::GroupConvolution>(node);
                     size_t scratchpad_size =
                         QUERY_SCRATCHPAD_2ARGS(convolution_forward, conv_desc, conv_attr);
 
@@ -964,17 +970,17 @@ namespace ngraph
 
             void register_builders_convolution_cpp()
             {
-                REGISTER_OP_BUILDER(Convolution);
-                REGISTER_OP_BUILDER(ConvolutionRelu);
-                REGISTER_OP_BUILDER(ConvolutionBias);
-                REGISTER_OP_BUILDER(ConvolutionBiasAdd);
-                REGISTER_OP_BUILDER(ConvolutionBackpropData);
-                REGISTER_OP_BUILDER(ConvolutionBackpropFilters);
-                REGISTER_OP_BUILDER(ConvolutionBiasBackpropFiltersBias);
-                REGISTER_OP_BUILDER(GroupConvolution);
-                REGISTER_OP_BUILDER(ConvolutionAdd);
-                REGISTER_OP_BUILDER(GroupConvolutionBias);
-                REGISTER_OP_BUILDER(DeconvolutionBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Convolution);
+                REGISTER_OP_BUILDER(ngraph::op::ConvolutionRelu);
+                REGISTER_OP_BUILDER(ngraph::op::v0::ConvolutionBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::ConvolutionBiasAdd);
+                REGISTER_OP_BUILDER(ngraph::op::v0::ConvolutionBackpropData);
+                REGISTER_OP_BUILDER(ngraph::op::v0::ConvolutionBackpropFilters);
+                REGISTER_OP_BUILDER(ngraph::op::v0::ConvolutionBiasBackpropFiltersBias);
+                REGISTER_OP_BUILDER(ngraph::op::v0::GroupConvolution);
+                REGISTER_OP_BUILDER(ngraph::op::ConvolutionAdd);
+                REGISTER_OP_BUILDER(ngraph::op::GroupConvolutionBias);
+                REGISTER_OP_BUILDER(ngraph::op::DeconvolutionBias);
             }
         }
     }

@@ -153,7 +153,7 @@ const string& runtime::Backend::get_backend_shared_library_search_directory()
 
 bool runtime::Backend::executable_can_create_tensors()
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape());
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape());
     auto function = make_shared<Function>(OutputVector{A}, ParameterVector{A});
     auto exec = compile(function);
     bool exec_can_create_tensors = false;

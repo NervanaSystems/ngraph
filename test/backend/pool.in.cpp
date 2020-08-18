@@ -40,9 +40,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_1image)
 {
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::MaxPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -69,8 +70,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_uint8)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     Shape shape_r{1, 1, 2, 3};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto QMP = make_shared<ngraph::op::MaxPool>(
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto QMP = make_shared<ngraph::op::v0::MaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -92,8 +93,8 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_int8)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     Shape shape_r{1, 1, 2, 3};
-    auto A = make_shared<op::Parameter>(element::i8, shape_a);
-    auto QMP = make_shared<ngraph::op::MaxPool>(
+    auto A = make_shared<op::v0::Parameter>(element::i8, shape_a);
+    auto QMP = make_shared<ngraph::op::v0::MaxPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(OutputVector{QMP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -115,8 +116,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_uint8)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     Shape shape_r{1, 1, 2, 3};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto QAP = make_shared<ngraph::op::AvgPool>(
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto QAP = make_shared<ngraph::op::v0::AvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(OutputVector{QAP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -138,8 +139,8 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_int8)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     Shape shape_r{1, 1, 2, 3};
-    auto A = make_shared<op::Parameter>(element::i8, shape_a);
-    auto QAP = make_shared<ngraph::op::AvgPool>(
+    auto A = make_shared<op::v0::Parameter>(element::i8, shape_a);
+    auto QAP = make_shared<ngraph::op::v0::AvgPool>(
         A, window_shape, window_movement_strides, padding_below, padding_above);
     auto f = make_shared<Function>(OutputVector{QAP}, ParameterVector{A});
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -156,9 +157,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_1channel_2image)
 {
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::MaxPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -183,9 +185,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_1d_2channel_2image)
 {
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 12};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::MaxPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -216,9 +219,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 4, 3};
-    auto f = make_shared<Function>(make_shared<op::MaxPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::MaxPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -286,10 +290,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_2channel_2image_asym_pad)
     auto window_movement_strides = Strides{2, 2};
     Shape padding_below{0, 0};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 2, 2};
     auto f = make_shared<Function>(
-        make_shared<op::MaxPool>(
+        make_shared<op::v0::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
         ParameterVector{A});
 
@@ -354,10 +358,10 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
 {
     Shape padding_below{2, 0};
     Shape padding_above{1, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 7, 5};
     auto f = make_shared<Function>(
-        make_shared<op::MaxPool>(
+        make_shared<op::v0::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
         ParameterVector{A});
 
@@ -393,10 +397,10 @@ NGRAPH_TEST_F(${BACKEND_NAME}, MaxPool2D1ChannelTests, max_pool_2d_1channel_1ima
 {
     Shape padding_below{1, 0};
     Shape padding_above{1, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 6, 5};
     auto f = make_shared<Function>(
-        make_shared<op::MaxPool>(
+        make_shared<op::v0::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
         ParameterVector{A});
 
@@ -437,10 +441,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_padded_negative_values)
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 1};
     Shape padding_above{0, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 1, 15};
     auto f = make_shared<Function>(
-        make_shared<op::MaxPool>(
+        make_shared<op::v0::MaxPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above),
         ParameterVector{A});
 
@@ -467,10 +471,10 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_2d_1channel_1image_strided)
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::MaxPool>(A, window_shape, window_movement_strides), ParameterVector{A});
+        make_shared<op::v0::MaxPool>(A, window_shape, window_movement_strides), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -503,19 +507,19 @@ NGRAPH_TEST(${BACKEND_NAME}, max_pool_3d)
     auto move_strides = Strides{2, 3, 4};
     Shape padding_below{5, 6, 4};
     Shape padding_above{6, 4, 5};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
     auto cpu_f = make_shared<Function>(
-        make_shared<op::MaxPool>(A, window_shape, move_strides, padding_below, padding_above),
+        make_shared<op::v0::MaxPool>(A, window_shape, move_strides, padding_below, padding_above),
         ParameterVector{A});
     auto int_f = make_shared<Function>(
-        make_shared<op::MaxPool>(B, window_shape, move_strides, padding_below, padding_above),
+        make_shared<op::v0::MaxPool>(B, window_shape, move_strides, padding_below, padding_above),
         ParameterVector{B});
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : int_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -534,9 +538,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_1channel_1image)
 {
     Shape shape_a{1, 1, 14};
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::AvgPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -570,9 +575,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_1channel_2image)
 {
     Shape shape_a{2, 1, 14};
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 12};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::AvgPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -620,9 +626,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_1d_2channel_2image)
 {
     Shape shape_a{2, 2, 14};
     Shape window_shape{3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 12};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::AvgPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -698,9 +705,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image)
 {
     Shape shape_a{2, 2, 5, 5};
     Shape window_shape{2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 2, 4, 3};
-    auto f = make_shared<Function>(make_shared<op::AvgPool>(A, window_shape), ParameterVector{A});
+    auto f =
+        make_shared<Function>(make_shared<op::v0::AvgPool>(A, window_shape), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -767,10 +775,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_strided)
     Shape shape_a{1, 1, 8, 8};
     Shape window_shape{2, 3};
     auto window_movement_strides = Strides{3, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(A, window_shape, window_movement_strides), ParameterVector{A});
+        make_shared<op::v0::AvgPool>(A, window_shape, window_movement_strides), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -806,10 +814,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded_do_not_include_i
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{1, 1};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 4, 4};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -838,10 +846,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_1channel_1image_padded_include_in_compu
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{1, 1};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{1, 1, 4, 4};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -870,10 +878,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_do_not_include_i
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{1, 1};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 4, 4};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -909,10 +917,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_include_in_compu
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{1, 1};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 4, 4};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -949,10 +957,10 @@ NGRAPH_TEST(${BACKEND_NAME},
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{1, 1};
     Shape padding_above{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -985,10 +993,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_below_inclu
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{1, 1};
     Shape padding_above{0, 0};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -1022,10 +1030,10 @@ NGRAPH_TEST(${BACKEND_NAME},
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 0};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -1058,10 +1066,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_padded_only_above_inclu
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{0, 0};
     Shape padding_above{1, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -1094,10 +1102,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_padded_do_not_inclu
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{2, 2};
     Shape padding_above{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 5, 5};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -1135,10 +1143,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_padded_include_in_c
     auto window_movement_strides = Strides{1, 1};
     Shape padding_below{2, 2};
     Shape padding_above{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 5, 5};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -1177,10 +1185,10 @@ NGRAPH_TEST(${BACKEND_NAME},
     auto window_movement_strides = Strides{2, 2};
     Shape padding_below{2, 2};
     Shape padding_above{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -1213,10 +1221,10 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_2d_2channel_2image_3x3_strided_padded_incl
     auto window_movement_strides = Strides{2, 2};
     Shape padding_below{2, 2};
     Shape padding_above{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 3};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -1250,10 +1258,10 @@ NGRAPH_TEST(${BACKEND_NAME},
     auto window_movement_strides = Strides{2, 3};
     Shape padding_below{2, 2};
     Shape padding_above{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 2};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, false),
         ParameterVector{A});
 
@@ -1285,10 +1293,10 @@ NGRAPH_TEST(${BACKEND_NAME},
     auto window_movement_strides = Strides{2, 3};
     Shape padding_below{2, 2};
     Shape padding_above{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_r{2, 1, 3, 2};
     auto f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, window_movement_strides, padding_below, padding_above, true),
         ParameterVector{A});
 
@@ -1328,21 +1336,21 @@ NGRAPH_TEST_P(${BACKEND_NAME}, avg_pool_3d_params, avg_pool_3d_uneven_strided_pa
     auto move_strides = Strides{2, 3, 4};
     Shape padding_below{2, 3, 1};
     Shape padding_above{3, 1, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_a);
 
     auto cpu_f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             A, window_shape, move_strides, padding_below, padding_above, include_pad),
         ParameterVector{A});
     auto int_f = make_shared<Function>(
-        make_shared<op::AvgPool>(
+        make_shared<op::v0::AvgPool>(
             B, window_shape, move_strides, padding_below, padding_above, include_pad),
         ParameterVector{B});
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : int_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -1364,9 +1372,9 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
     Shape padding_below{0, 0};
     Shape padding_above{0, 0};
     Shape shape_d{2, 2, 2, 2};
-    auto delta = make_shared<op::Parameter>(element::f32, shape_d);
+    auto delta = make_shared<op::v0::Parameter>(element::f32, shape_d);
     auto forward_arg_shape =
-        make_shared<op::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
+        make_shared<op::v0::Parameter>(element::i64, PartialShape{Dimension::dynamic()});
 
     auto avg_pool_bprop = make_shared<op::v1::AvgPoolBackprop>(delta,
                                                                forward_arg_shape,
@@ -1435,4 +1443,4 @@ NGRAPH_TEST(${BACKEND_NAME}, avg_pool_bprop_2d_2channel_2image_dyn_shape)
 }
 
 // avg_pool_3d case generation
-NGRAPH_INSTANTIATE_TEST_CASE_P(${BACKEND_NAME}, include_pad, avg_pool_3d_params, testing::Bool());
+NGRAPH_INSTANTIATE_TEST_SUITE_P(${BACKEND_NAME}, include_pad, avg_pool_3d_params, testing::Bool());

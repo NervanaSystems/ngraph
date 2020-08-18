@@ -36,133 +36,133 @@ namespace ngraph
             struct CudaOpMap;
 
             template <>
-            struct CudaOpMap<ngraph::op::Abs>
+            struct CudaOpMap<ngraph::op::v0::Abs>
             {
                 static constexpr const char* op = "fabsf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Acos>
+            struct CudaOpMap<ngraph::op::v0::Acos>
             {
                 static constexpr const char* op = "acosf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Asin>
+            struct CudaOpMap<ngraph::op::v0::Asin>
             {
                 static constexpr const char* op = "asinf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Atan>
+            struct CudaOpMap<ngraph::op::v0::Atan>
             {
                 static constexpr const char* op = "atanf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Ceiling>
+            struct CudaOpMap<ngraph::op::v0::Ceiling>
             {
                 static constexpr const char* op = "ceilf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Cos>
+            struct CudaOpMap<ngraph::op::v0::Cos>
             {
                 static constexpr const char* op = "cosf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Cosh>
+            struct CudaOpMap<ngraph::op::v0::Cosh>
             {
                 static constexpr const char* op = "coshf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Exp>
+            struct CudaOpMap<ngraph::op::v0::Exp>
             {
                 static constexpr const char* op = "expf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Floor>
+            struct CudaOpMap<ngraph::op::v0::Floor>
             {
                 static constexpr const char* op = "floorf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Log>
+            struct CudaOpMap<ngraph::op::v0::Log>
             {
                 static constexpr const char* op = "logf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Max>
+            struct CudaOpMap<ngraph::op::v0::Max>
             {
                 static constexpr const char* op = "fmaxf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Min>
+            struct CudaOpMap<ngraph::op::v0::Min>
             {
                 static constexpr const char* op = "fminf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sin>
+            struct CudaOpMap<ngraph::op::v0::Sin>
             {
                 static constexpr const char* op = "sinf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sinh>
+            struct CudaOpMap<ngraph::op::v0::Sinh>
             {
                 static constexpr const char* op = "sinhf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sqrt>
+            struct CudaOpMap<ngraph::op::v0::Sqrt>
             {
                 static constexpr const char* op = "sqrtf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Tan>
+            struct CudaOpMap<ngraph::op::v0::Tan>
             {
                 static constexpr const char* op = "tanf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Tanh>
+            struct CudaOpMap<ngraph::op::v0::Tanh>
             {
                 static constexpr const char* op = "tanhf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Power>
+            struct CudaOpMap<ngraph::op::v0::Power>
             {
                 static constexpr const char* op = "powf";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Subtract>
+            struct CudaOpMap<ngraph::op::v1::Subtract>
             {
                 static constexpr const char* op = "subtractf";
                 static constexpr const char* math_kernel = "x0-x1";
@@ -170,105 +170,105 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Divide>
+            struct CudaOpMap<ngraph::op::v1::Divide>
             {
                 static constexpr const char* op = "fdividef";
                 static constexpr const char* math_kernel = nullptr;
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sign>
+            struct CudaOpMap<ngraph::op::v0::Sign>
             {
                 static constexpr const char* op = "sign";
                 static constexpr const char* math_kernel = "(x0 > 0) - (x0 < 0)";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Convert>
+            struct CudaOpMap<ngraph::op::v0::Convert>
             {
                 static constexpr const char* op = "convert";
                 static constexpr const char* math_kernel = "x0";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Equal>
+            struct CudaOpMap<ngraph::op::v0::Equal>
             {
                 static constexpr const char* op = "equal";
                 static constexpr const char* math_kernel = "x0 == x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::NotEqual>
+            struct CudaOpMap<ngraph::op::v0::NotEqual>
             {
                 static constexpr const char* op = "not_equal";
                 static constexpr const char* math_kernel = "x0 != x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Greater>
+            struct CudaOpMap<ngraph::op::v0::Greater>
             {
                 static constexpr const char* op = "greater";
                 static constexpr const char* math_kernel = "x0 > x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::GreaterEq>
+            struct CudaOpMap<ngraph::op::v0::GreaterEq>
             {
                 static constexpr const char* op = "greater_equal";
                 static constexpr const char* math_kernel = "x0 >= x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Less>
+            struct CudaOpMap<ngraph::op::v0::Less>
             {
                 static constexpr const char* op = "less";
                 static constexpr const char* math_kernel = "x0 < x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::LessEq>
+            struct CudaOpMap<ngraph::op::v0::LessEq>
             {
                 static constexpr const char* op = "less_equal";
                 static constexpr const char* math_kernel = "x0 <= x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Relu>
+            struct CudaOpMap<ngraph::op::v0::Relu>
             {
                 static constexpr const char* op = "relu";
                 static constexpr const char* math_kernel = "fmaxf(0,x0)";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Not>
+            struct CudaOpMap<ngraph::op::v1::LogicalNot>
             {
                 static constexpr const char* op = "logical_not";
                 static constexpr const char* math_kernel = "!x0";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Negative>
+            struct CudaOpMap<ngraph::op::v0::Negative>
             {
                 static constexpr const char* op = "negative";
                 static constexpr const char* math_kernel = "-x0";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Select>
+            struct CudaOpMap<ngraph::op::v0::Select>
             {
                 static constexpr const char* op = "select";
                 static constexpr const char* math_kernel = "(x0 == 0) ? x2 : x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::ReluBackprop>
+            struct CudaOpMap<ngraph::op::v0::ReluBackprop>
             {
                 static constexpr const char* op = "relu_backprop";
                 static constexpr const char* math_kernel = "x1 * int(x0 > 0)";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::And>
+            struct CudaOpMap<ngraph::op::v1::LogicalAnd>
             {
                 static constexpr const char* op = "logical_and";
                 static constexpr const char* math_kernel = "x0 & x1";
@@ -276,7 +276,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Or>
+            struct CudaOpMap<ngraph::op::v1::LogicalOr>
             {
                 static constexpr const char* op = "logical_or";
                 static constexpr const char* math_kernel = "x0 | x1";
@@ -284,7 +284,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Add>
+            struct CudaOpMap<ngraph::op::v1::Add>
             {
                 static constexpr const char* op = "add";
                 static constexpr const char* math_kernel = "x0 + x1";
@@ -292,14 +292,14 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Multiply>
+            struct CudaOpMap<ngraph::op::v1::Multiply>
             {
                 static constexpr const char* op = "mul";
                 static constexpr const char* math_kernel = "x0 * x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Minimum>
+            struct CudaOpMap<ngraph::op::v0::Minimum>
             {
                 static constexpr const char* op = "min";
                 static constexpr const char* math_kernel = "x0 > x1 ? x1 : x0";
@@ -307,7 +307,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::Maximum>
+            struct CudaOpMap<ngraph::op::v0::Maximum>
             {
                 static constexpr const char* op = "max";
                 static constexpr const char* math_kernel = "x0 > x1 ? x0 : x1";
@@ -315,7 +315,7 @@ namespace ngraph
             };
 
             // template <>
-            // struct CudaOpMap<ngraph::op::Nop>
+            // struct CudaOpMap<ngraph::op::v0::Nop>
             // {
             //     static constexpr const char* op = "";
             //     static constexpr const char* math_kernel = "";
@@ -323,14 +323,14 @@ namespace ngraph
             // };
 
             template <>
-            struct CudaOpMap<ngraph::op::Sigmoid>
+            struct CudaOpMap<ngraph::op::v0::Sigmoid>
             {
                 static constexpr const char* op = "sigmoid";
                 static constexpr const char* math_kernel = "1 / (1 + expf(-x0))";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::SigmoidBackprop>
+            struct CudaOpMap<ngraph::op::v0::SigmoidBackprop>
             {
                 static constexpr const char* op = "sigmoid_backprop";
                 static constexpr const char* math_kernel = "x1 / (2 + expf(-x0) + expf(x0))";

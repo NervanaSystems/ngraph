@@ -49,6 +49,5 @@ namespace ngraph
                 Strides m_strides;
             };
         }
-        using v0::ReorgYolo;
     }
 }

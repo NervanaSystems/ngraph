@@ -24,32 +24,32 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Cosh::type_info;
+constexpr NodeTypeInfo op::v0::Cosh::type_info;
 
-op::Cosh::Cosh(const Output<Node>& arg)
+op::v0::Cosh::Cosh(const Output<Node>& arg)
     : UnaryElementwiseArithmetic(arg)
 {
     constructor_validate_and_infer_types();
 }
 
-bool op::Cosh::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::Cosh::visit_attributes(AttributeVisitor& visitor)
 {
     return true;
 }
 
-shared_ptr<Node> op::Cosh::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Cosh::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Cosh>(new_args.at(0));
 }
 
-void op::Cosh::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Cosh::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input_value(0);
 
-    adjoints.add_delta(x, delta * (make_shared<op::Sinh>(x)));
+    adjoints.add_delta(x, delta * (make_shared<op::v0::Sinh>(x)));
 }
 
 namespace
@@ -101,7 +101,7 @@ namespace
     }
 }
 
-bool op::Cosh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs)
+bool op::v0::Cosh::evaluate(const HostTensorVector& outputs, const HostTensorVector& inputs) const
 {
     return evaluate_cosh(inputs[0], outputs[0], shape_size(get_output_shape(0)));
 }

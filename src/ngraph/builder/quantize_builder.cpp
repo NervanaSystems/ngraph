@@ -30,7 +30,7 @@ namespace ngraph
                                          const Output<Node>& max,
                                          const ngraph::element::Type& quant_type,
                                          const ngraph::AxisSet& axes,
-                                         op::Quantize::RoundMode round_mode)
+                                         op::v0::Quantize::RoundMode round_mode)
         {
             auto real_type = input.get_element_type();
 
@@ -52,7 +52,7 @@ namespace ngraph
 
             auto zero = make_constant(quant_type, shape, 0);
             auto scale = quantization_utils::get_scale(min, max, quant_type, true);
-            return make_shared<op::Quantize>(input, scale, zero, quant_type, axes, round_mode)
+            return make_shared<op::v0::Quantize>(input, scale, zero, quant_type, axes, round_mode)
                 ->add_provenance_group_members_above({input, min, max});
         }
     }
