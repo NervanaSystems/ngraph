@@ -287,7 +287,6 @@ namespace
             static const std::map<std::string, OpsetFunction> s_opsets{
                 {"opset0", OpsetFunction(ngraph::get_opset0)},
                 {"opset1", OpsetFunction(ngraph::get_opset1)},
-                {"opset2", OpsetFunction(ngraph::get_opset2)},
                 {"opset3", OpsetFunction(ngraph::get_opset3)},
             };
 

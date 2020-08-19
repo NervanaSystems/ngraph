@@ -38,7 +38,6 @@
 #include "ngraph/op/slice.hpp"
 #include "ngraph/op/subtract.hpp"
 #include "ngraph/op/sum.hpp"
-#include "ngraph/opset/opset2.hpp"
 #include "ngraph/opset/opset3.hpp"
 #include "ngraph/pattern/matcher.hpp"
 #include "ngraph/rt_info.hpp"
@@ -812,7 +811,6 @@ static unordered_map<NodeTypeInfo, function<bool(shared_ptr<Node>)>> initialize_
          {op::v1::Multiply::type_info, simplify_multiply},
          {opset3::Gather::type_info, simplify_gather},
          {op::v0::Concat::type_info, simplify_concat},
-         {opset2::ShapeOf::type_info, simplify_gather_shapeof},
          {opset3::ShapeOf::type_info, simplify_gather_shapeof},
          {op::v0::Sum::type_info,
           function<bool(shared_ptr<Node>)>{simplify_reduction<op::v0::Sum, get_sum_constant>}},
