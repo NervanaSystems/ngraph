@@ -21,18 +21,18 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::QuantizedConvolutionBias::type_info;
+constexpr NodeTypeInfo op::v0::QuantizedConvolutionBias::type_info;
 
-op::QuantizedConvolutionBias::QuantizedConvolutionBias(const Output<Node>& data_batch,
-                                                       const Output<Node>& filters,
-                                                       const Output<Node>& bias,
-                                                       const Strides& window_movement_strides,
-                                                       const Strides& window_dilation_strides,
-                                                       const CoordinateDiff& padding_below,
-                                                       const CoordinateDiff& padding_above,
-                                                       const Strides& data_dilation_strides,
-                                                       const Output<Node>& scale,
-                                                       const bool with_relu)
+op::v0::QuantizedConvolutionBias::QuantizedConvolutionBias(const Output<Node>& data_batch,
+                                                           const Output<Node>& filters,
+                                                           const Output<Node>& bias,
+                                                           const Strides& window_movement_strides,
+                                                           const Strides& window_dilation_strides,
+                                                           const CoordinateDiff& padding_below,
+                                                           const CoordinateDiff& padding_above,
+                                                           const Strides& data_dilation_strides,
+                                                           const Output<Node>& scale,
+                                                           const bool with_relu)
     : Op({data_batch, filters, bias, scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -70,7 +70,7 @@ op::QuantizedConvolutionBias::QuantizedConvolutionBias(const Output<Node>& data_
 }
 
 shared_ptr<Node>
-    op::QuantizedConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::QuantizedConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 4)
     {
@@ -89,20 +89,21 @@ shared_ptr<Node>
                                                  m_with_relu);
 }
 
-constexpr NodeTypeInfo op::QuantizedConvolutionBiasAdd::type_info;
+constexpr NodeTypeInfo op::v0::QuantizedConvolutionBiasAdd::type_info;
 
-op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const Output<Node>& data_batch,
-                                                             const Output<Node>& filters,
-                                                             const Output<Node>& bias,
-                                                             const Output<Node>& sum_input,
-                                                             const Strides& window_movement_strides,
-                                                             const Strides& window_dilation_strides,
-                                                             const CoordinateDiff& padding_below,
-                                                             const CoordinateDiff& padding_above,
-                                                             const Strides& data_dilation_strides,
-                                                             const Output<Node>& scale,
-                                                             const Output<Node>& sum_scale,
-                                                             const bool with_relu)
+op::v0::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(
+    const Output<Node>& data_batch,
+    const Output<Node>& filters,
+    const Output<Node>& bias,
+    const Output<Node>& sum_input,
+    const Strides& window_movement_strides,
+    const Strides& window_dilation_strides,
+    const CoordinateDiff& padding_below,
+    const CoordinateDiff& padding_above,
+    const Strides& data_dilation_strides,
+    const Output<Node>& scale,
+    const Output<Node>& sum_scale,
+    const bool with_relu)
     : Op({data_batch, filters, bias, sum_input, scale, sum_scale})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -140,7 +141,7 @@ op::QuantizedConvolutionBiasAdd::QuantizedConvolutionBiasAdd(const Output<Node>&
 }
 
 shared_ptr<Node>
-    op::QuantizedConvolutionBiasAdd::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::QuantizedConvolutionBiasAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 6)
     {
@@ -161,9 +162,9 @@ shared_ptr<Node>
                                                     m_with_relu);
 }
 
-constexpr NodeTypeInfo op::QuantizedConvolutionBiasSignedAdd::type_info;
+constexpr NodeTypeInfo op::v0::QuantizedConvolutionBiasSignedAdd::type_info;
 
-op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
+op::v0::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
     const Output<Node>& data_batch,
     const Output<Node>& filters,
     const Output<Node>& bias,
@@ -213,8 +214,8 @@ op::QuantizedConvolutionBiasSignedAdd::QuantizedConvolutionBiasSignedAdd(
                                                          ));
 }
 
-shared_ptr<Node>
-    op::QuantizedConvolutionBiasSignedAdd::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::QuantizedConvolutionBiasSignedAdd::clone_with_new_inputs(
+    const OutputVector& new_args) const
 {
     if (new_args.size() != 6)
     {

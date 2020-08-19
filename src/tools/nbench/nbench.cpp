@@ -397,7 +397,7 @@ OPTIONS
                         size_t size = node->get_output_element_type(0).size() * shape_size(shape);
                         total_parameter_bytes += size;
                     }
-                    else if (is_type<op::Result>(node))
+                    else if (is_type<op::v0::Result>(node))
                     {
                         total_result_count++;
                         const Shape& shape = node->get_input_shape(0);

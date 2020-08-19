@@ -25,7 +25,7 @@ using namespace ngraph;
 // data types. Used by fold_constant_convert and fold_constant_convert_helper0, which respectively
 // determine the appropriate C++ types for "TI" (input type) and "TO" (output type).
 template <typename TI, typename TO>
-Output<Node> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
+Output<Node> fold_constant_convert_helper1(shared_ptr<op::v0::Constant> constant,
                                            const element::Type& output_element_type)
 {
     const Shape& out_shape = constant->get_output_shape(0);
@@ -35,14 +35,14 @@ Output<Node> fold_constant_convert_helper1(shared_ptr<op::Constant> constant,
     runtime::reference::convert<TI, TO>(
         constant->get_vector<TI>().data(), data_ptr, shape_size(out_shape));
 
-    return make_shared<op::Constant>(output_element_type, out_shape, data_ptr)->output(0);
+    return make_shared<op::v0::Constant>(output_element_type, out_shape, data_ptr)->output(0);
 }
 
 // Helper for mapping element::Types to runtime::reference::convert, which is templated in C++
 // data types. Used by fold_constant_convert, which determines the appropriate C++ type for "TI"
 // (input type).
 template <typename TI>
-Output<Node> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
+Output<Node> fold_constant_convert_helper0(shared_ptr<op::v0::Constant> constant,
                                            const element::Type& output_element_type)
 {
 #if defined(__GNUC__) && !(__GNUC__ == 4 && __GNUC_MINOR__ == 8)
@@ -95,7 +95,7 @@ Output<Node> fold_constant_convert_helper0(shared_ptr<op::Constant> constant,
 #endif
 }
 
-static Output<Node> fold_constant_convert(shared_ptr<op::Constant> constant,
+static Output<Node> fold_constant_convert(shared_ptr<op::v0::Constant> constant,
                                           const element::Type& output_element_type)
 {
     auto& input_element_type = constant->get_output_element_type(0);
@@ -158,8 +158,8 @@ static Output<Node> fold_constant_convert(shared_ptr<op::Constant> constant,
 void pass::ConstantFolding::construct_constant_convert()
 {
     auto constant_label = make_shared<pattern::op::Label>(
-        element::i32, Shape{2, 3, 4}, pattern::has_class<op::Constant>());
-    auto convert_op = make_shared<op::Convert>(constant_label, element::i64);
+        element::i32, Shape{2, 3, 4}, pattern::has_class<op::v0::Constant>());
+    auto convert_op = make_shared<op::v0::Convert>(constant_label, element::i64);
 
     auto constant_convert_callback = [constant_label](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In callback for constant_convert_callback against node = "
@@ -167,10 +167,12 @@ void pass::ConstantFolding::construct_constant_convert()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = static_pointer_cast<op::Constant>(pattern_map[constant_label]);
-        auto convert_match = m.get_match_root_as<op::Convert>();
-        NGRAPH_CHECK(
-            convert_match, "match root node ", *m.get_match_root(), " not of type `op::Convert`");
+        auto constant_match = static_pointer_cast<op::v0::Constant>(pattern_map[constant_label]);
+        auto convert_match = m.get_match_root_as<op::v0::Convert>();
+        NGRAPH_CHECK(convert_match,
+                     "match root node ",
+                     *m.get_match_root(),
+                     " not of type `op::v0::Convert`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(convert_match));
 

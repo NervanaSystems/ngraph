@@ -40,9 +40,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x0_0x2)
     Shape shape_b{0, 2};
     Shape shape_r{2, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
-    auto f = make_shared<Function>(make_shared<op::MatMul>(A, B), ParameterVector{A, B});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
+    auto f = make_shared<Function>(make_shared<op::v0::MatMul>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -66,11 +66,11 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_0x2_2x0)
 {
     Shape shape_a{0, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 0};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{0, 0};
-    auto f = make_shared<Function>(make_shared<op::MatMul>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v0::MatMul>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -90,11 +90,11 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_3x2_2x0)
 {
     Shape shape_a{3, 2};
 
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
     Shape shape_b{2, 0};
-    auto B = make_shared<op::Parameter>(element::f32, shape_b);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
     Shape shape_r{3, 0};
-    auto f = make_shared<Function>(make_shared<op::MatMul>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v0::MatMul>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -113,10 +113,10 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_3x2_2x0)
 NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2_2x2)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
     Shape shape_r{2, 2};
-    auto f = make_shared<Function>(make_shared<op::MatMul>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v0::MatMul>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -137,9 +137,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x3_3x3)
     Shape shape_in1{2, 3};
     Shape shape_in2{3, 3};
     Shape shape_out{2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, false);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -164,9 +164,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x3_3x3_int64)
     Shape shape_in1{2, 3};
     Shape shape_in2{3, 3};
     Shape shape_out{2, 3};
-    auto A = make_shared<op::Parameter>(element::i64, shape_in1);
-    auto B = make_shared<op::Parameter>(element::i64, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, false);
+    auto A = make_shared<op::v0::Parameter>(element::i64, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::i64, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -191,9 +191,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_3x2_3x3_transpose)
     Shape shape_in1{3, 2};
     Shape shape_in2{3, 3};
     Shape shape_out{2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, true, false);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, true, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -218,9 +218,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_3x2_2x3_transpose)
     Shape shape_in1{3, 2};
     Shape shape_in2{2, 3};
     Shape shape_out{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, true, true);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, true, true);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -245,9 +245,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x3x2_3x3_transpose)
     Shape shape_in1{2, 3, 2};
     Shape shape_in2{3, 3};
     Shape shape_out{2, 2, 3};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, true, false);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, true, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -273,9 +273,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2_2)
     Shape shape_in1{2};
     Shape shape_in2{2};
     Shape shape_out{};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, false);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -298,9 +298,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x1x3_transpose)
     Shape shape_in1{2, 2, 3};
     Shape shape_in2{2, 1, 3};
     Shape shape_out{2, 2, 1};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, true);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, true);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -330,9 +330,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x1x3_transpose_int64)
     Shape shape_in1{2, 2, 3};
     Shape shape_in2{2, 1, 3};
     Shape shape_out{2, 2, 1};
-    auto A = make_shared<op::Parameter>(element::i64, shape_in1);
-    auto B = make_shared<op::Parameter>(element::i64, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, true);
+    auto A = make_shared<op::v0::Parameter>(element::i64, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::i64, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, true);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -361,9 +361,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_2x2x3_2x3x1_int64)
     Shape shape_in1{2, 2, 3};
     Shape shape_in2{2, 3, 1};
     Shape shape_out{2, 2, 1};
-    auto A = make_shared<op::Parameter>(element::i64, shape_in1);
-    auto B = make_shared<op::Parameter>(element::i64, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, false);
+    auto A = make_shared<op::v0::Parameter>(element::i64, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::i64, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -392,9 +392,9 @@ NGRAPH_TEST(${BACKEND_NAME}, matmul_1x2x3_1x4x3x2)
     Shape shape_in1{1, 2, 3};
     Shape shape_in2{1, 4, 3, 2};
     Shape shape_out{1, 4, 2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape_in1);
-    auto B = make_shared<op::Parameter>(element::f32, shape_in2);
-    auto matmul = make_shared<op::MatMul>(A, B, false, false);
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_in1);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape_in2);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, false, false);
     auto f = make_shared<Function>(matmul, ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");

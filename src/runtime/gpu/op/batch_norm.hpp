@@ -30,7 +30,7 @@ namespace ngraph
     {
         namespace gpu
         {
-            class BatchNormTrainingWithStats : public ngraph::op::BatchNormTraining
+            class BatchNormTrainingWithStats : public ngraph::op::v0::BatchNormTraining
             {
             public:
                 BatchNormTrainingWithStats(double eps,

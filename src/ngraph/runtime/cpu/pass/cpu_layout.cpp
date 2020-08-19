@@ -334,7 +334,7 @@ namespace ngraph
 
                     // Convert filters to DNNL shape
                     // o,i,h,w -> g,o,i,h,w (e.g., {6, 2, 1, 1}, groups = 2 -> {2, 3, 1, 1, 1})
-                    if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(node))
+                    if (auto gconv = as_type_ptr<ngraph::op::v0::GroupConvolution>(node))
                     {
                         arg1_shape = gconv->get_weights_dimensions();
                     }
@@ -528,13 +528,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolution)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::QuantizedConvolution)
                 {
                     if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolution, false>(
+                        ConvolutionLayout<ngraph::op::v0::QuantizedConvolution, false>(
                             node, i_mds, o_mds);
 
                         auto input_scale_md = dnnl_utils::create_default_dnnl_md(
@@ -567,13 +567,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Convolution)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Convolution)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::Convolution, false>(node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::v0::Convolution, false>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -585,13 +585,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::GroupConvolution)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::GroupConvolution)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::GroupConvolution, false>(node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::v0::GroupConvolution, false>(
+                            node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -622,13 +623,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBias)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::ConvolutionBias)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionBias, true>(node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::v0::ConvolutionBias, true>(
+                            node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -639,13 +641,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBias)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::QuantizedConvolutionBias)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBias, true>(
+                        ConvolutionLayout<ngraph::op::v0::QuantizedConvolutionBias, true>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = dnnl_utils::create_default_dnnl_md(
@@ -663,13 +665,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBiasAdd)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::QuantizedConvolutionBiasAdd)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBiasAdd, true>(
+                        ConvolutionLayout<ngraph::op::v0::QuantizedConvolutionBiasAdd, true>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = dnnl_utils::create_default_dnnl_md(
@@ -691,13 +693,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionBiasSignedAdd)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::QuantizedConvolutionBiasSignedAdd)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionBiasSignedAdd, true>(
+                        ConvolutionLayout<ngraph::op::v0::QuantizedConvolutionBiasSignedAdd, true>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = dnnl_utils::create_default_dnnl_md(
@@ -719,13 +721,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedDotBias)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::QuantizedDotBias)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        InnerProductLayout<ngraph::op::QuantizedDotBias, true>(node, i_mds, o_mds);
+                        InnerProductLayout<ngraph::op::v0::QuantizedDotBias, true>(
+                            node, i_mds, o_mds);
 
                         auto scale_input_md = dnnl_utils::create_default_dnnl_md(
                             node.get(), 3, false, memory::FORMAT::x);
@@ -782,13 +785,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::QuantizedConvolutionRelu)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::QuantizedConvolutionRelu)
                 {
                     if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::QuantizedConvolutionRelu, false>(
+                        ConvolutionLayout<ngraph::op::v0::QuantizedConvolutionRelu, false>(
                             node, i_mds, o_mds);
 
                         auto scale_input_md = dnnl_utils::create_default_dnnl_md(
@@ -806,13 +809,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBiasAdd)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::ConvolutionBiasAdd)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionLayout<ngraph::op::ConvolutionBiasAdd, true>(node, i_mds, o_mds);
+                        ConvolutionLayout<ngraph::op::v0::ConvolutionBiasAdd, true>(
+                            node, i_mds, o_mds);
                         // Force second input to sum to use the same layout as convolution output
                         i_mds.push_back(o_mds[0]);
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -918,12 +922,12 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBackpropData)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::ConvolutionBackpropData)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         auto convolution =
-                            static_cast<const ngraph::op::ConvolutionBackpropData*>(node.get());
+                            static_cast<const ngraph::op::v0::ConvolutionBackpropData*>(node.get());
 
                         auto arg0_shape = node->get_input_shape(0);
                         auto arg1_shape = node->get_input_shape(1);
@@ -1096,13 +1100,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBackpropFilters)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::ConvolutionBackpropFilters)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConvolutionBackpropFiltersLayout<ngraph::op::ConvolutionBackpropFilters,
+                        ConvolutionBackpropFiltersLayout<ngraph::op::v0::ConvolutionBackpropFilters,
                                                          false>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -1115,14 +1119,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::ConvolutionBiasBackpropFiltersBias)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::ConvolutionBiasBackpropFiltersBias)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
                         ConvolutionBackpropFiltersLayout<
-                            ngraph::op::ConvolutionBiasBackpropFiltersBias,
+                            ngraph::op::v0::ConvolutionBiasBackpropFiltersBias,
                             true>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -1139,7 +1143,7 @@ namespace ngraph
                                    vector<memory::desc>& i_mds,
                                    vector<memory::desc>& o_mds)
                 {
-                    auto avg_pool = static_cast<const ngraph::op::AvgPool*>(node.get());
+                    auto avg_pool = static_cast<const ngraph::op::v0::AvgPool*>(node.get());
 
                     auto arg0_shape = node->get_input_shape(0);
                     auto result_shape = node->get_output_shape(0);
@@ -1204,14 +1208,14 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::AvgPool)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::AvgPool)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
 
-                        AvgPoolLayout<ngraph::op::AvgPool>(node, i_mds, o_mds);
+                        AvgPoolLayout<ngraph::op::v0::AvgPool>(node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
@@ -1223,11 +1227,12 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::AvgPoolBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::AvgPoolBackprop)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
-                        auto avg_pool = static_cast<const ngraph::op::AvgPoolBackprop*>(node.get());
+                        auto avg_pool =
+                            static_cast<const ngraph::op::v0::AvgPoolBackprop*>(node.get());
 
                         auto arg0_shape = node->get_input_shape(0);
                         auto result_shape = node->get_output_shape(0);
@@ -1382,7 +1387,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Quantize)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Quantize)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
@@ -1432,7 +1437,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Dequantize)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Dequantize)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
@@ -1496,13 +1501,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::MaxPool)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::MaxPool)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        MaxPoolLayout<ngraph::op::MaxPool, prop_kind::forward_inference>(
+                        MaxPoolLayout<ngraph::op::v0::MaxPool, prop_kind::forward_inference>(
                             node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -1600,13 +1605,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::MaxPoolBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::MaxPoolBackprop)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        MaxPoolBackpropLayout<ngraph::op::MaxPoolBackprop, false>(
+                        MaxPoolBackpropLayout<ngraph::op::v0::MaxPoolBackprop, false>(
                             node, i_mds, o_mds);
 
                         node = insert_input_conversions(external_function, node, i_mds);
@@ -1638,9 +1643,9 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Result)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Result)
                 {
-                    auto result = static_cast<const ngraph::op::Result*>(node.get());
+                    auto result = static_cast<const ngraph::op::v0::Result*>(node.get());
                     auto cpu_tvl = dynamic_pointer_cast<runtime::cpu::LayoutDescriptor>(
                         node->get_input_tensor(0).get_tensor_layout());
 
@@ -1659,7 +1664,7 @@ namespace ngraph
                     }
                 }
 
-                static bool can_be_rotated(const ngraph::op::Reshape* reshape,
+                static bool can_be_rotated(const ngraph::op::v0::Reshape* reshape,
                                            const dnnl::memory::desc& md)
                 {
                     (void)md;
@@ -1681,7 +1686,7 @@ namespace ngraph
                     return true;
                 }
 
-                static bool can_be_squeezed(const ngraph::op::Reshape* reshape,
+                static bool can_be_squeezed(const ngraph::op::v0::Reshape* reshape,
                                             const dnnl::memory::desc& md,
                                             AxisVector& squeezed_axis)
                 {
@@ -1717,7 +1722,7 @@ namespace ngraph
                     return true;
                 }
 
-                static bool can_be_expanded(const ngraph::op::Reshape* reshape,
+                static bool can_be_expanded(const ngraph::op::v0::Reshape* reshape,
                                             const dnnl::memory::desc& /* md */,
                                             AxisVector& expanded_axis)
                 {
@@ -1748,9 +1753,9 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Reshape)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Reshape)
                 {
-                    auto reshape = static_cast<ngraph::op::Reshape*>(node.get());
+                    auto reshape = static_cast<ngraph::op::v0::Reshape*>(node.get());
                     bool skip_reshape = false;
                     bool skip_input_reorder = false;
 
@@ -1842,7 +1847,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::LRN)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::LRN)
                 {
                     if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node.get()))
                     {
@@ -1858,7 +1863,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::SigmoidBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::SigmoidBackprop)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
@@ -1879,7 +1884,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::ReluBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::ReluBackprop)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
@@ -1946,13 +1951,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormTraining)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::BatchNormTraining)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        BatchNormLayout<ngraph::op::BatchNormTraining>(node, i_mds, o_mds);
+                        BatchNormLayout<ngraph::op::v0::BatchNormTraining>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -1963,13 +1968,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormInference)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::BatchNormInference)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        BatchNormLayout<ngraph::op::BatchNormInference>(node, i_mds, o_mds);
+                        BatchNormLayout<ngraph::op::v0::BatchNormInference>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -2014,7 +2019,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::BatchNormTrainingBackprop)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::BatchNormTrainingBackprop)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
@@ -2062,12 +2067,12 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Slice)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Slice)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
-                        const ngraph::op::Slice* slice =
-                            static_cast<const ngraph::op::Slice*>(node.get());
+                        const ngraph::op::v0::Slice* slice =
+                            static_cast<const ngraph::op::v0::Slice*>(node.get());
                         auto lower_bounds = slice->get_lower_bounds();
                         auto result_shape = slice->get_output_shape(0);
 
@@ -2179,13 +2184,13 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Concat)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Concat)
                 {
                     if (dnnl_utils::use_dnnl_kernel(node.get()))
                     {
                         vector<memory::desc> i_mds;
                         vector<memory::desc> o_mds;
-                        ConcatLayout<ngraph::op::Concat>(node, i_mds, o_mds);
+                        ConcatLayout<ngraph::op::v0::Concat>(node, i_mds, o_mds);
                         node = insert_input_conversions(external_function, node, i_mds);
                         set_output_layouts(node, o_mds);
                     }
@@ -2228,7 +2233,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Softmax)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Softmax)
                 {
                     // Softmax cannot use the default unary layout method since the kernels
                     // need to know the reduction dimension
@@ -2246,7 +2251,7 @@ namespace ngraph
                 }
 
                 template <>
-                void CPULayout::LAYOUT_DECL(ngraph::op::Convert)
+                void CPULayout::LAYOUT_DECL(ngraph::op::v0::Convert)
                 {
                     auto input_md = dnnl_utils::get_input_dnnl_md(node.get(), 0);
                     auto tv = node->get_output_tensor_ptr(0);
@@ -2282,74 +2287,77 @@ namespace ngraph
 #define TI(x) type_index(typeid(x))
 
 static const runtime::cpu::pass::LayoutOpMap s_dispatcher{
-    {TI(ngraph::op::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Concat>},
-    {TI(ngraph::op::Convert), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convert>},
-    {TI(ngraph::op::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPool>},
-    {TI(ngraph::op::AvgPoolBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::AvgPoolBackprop>},
-    {TI(ngraph::op::QuantizedConvolution),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolution>},
-    {TI(ngraph::op::Convolution), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Convolution>},
-    {TI(ngraph::op::GroupConvolution),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolution>},
-    {TI(ngraph::op::ConvolutionBackpropData),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropData>},
-    {TI(ngraph::op::ConvolutionBackpropFilters),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBackpropFilters>},
-    {TI(ngraph::op::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPool>},
-    {TI(ngraph::op::Quantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Quantize>},
-    {TI(ngraph::op::Dequantize), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Dequantize>},
+    {TI(ngraph::op::v0::Concat), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Concat>},
+    {TI(ngraph::op::v0::Convert), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Convert>},
+    {TI(ngraph::op::v0::AvgPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::AvgPool>},
+    {TI(ngraph::op::v0::AvgPoolBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::AvgPoolBackprop>},
+    {TI(ngraph::op::v0::QuantizedConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::QuantizedConvolution>},
+    {TI(ngraph::op::v0::Convolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Convolution>},
+    {TI(ngraph::op::v0::GroupConvolution),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::GroupConvolution>},
+    {TI(ngraph::op::v0::ConvolutionBackpropData),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::ConvolutionBackpropData>},
+    {TI(ngraph::op::v0::ConvolutionBackpropFilters),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::ConvolutionBackpropFilters>},
+    {TI(ngraph::op::v0::MaxPool), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::MaxPool>},
+    {TI(ngraph::op::v0::Quantize),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Quantize>},
+    {TI(ngraph::op::v0::Dequantize),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Dequantize>},
     {TI(ngraph::op::MaxPoolWithIndices),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndices>},
-    {TI(ngraph::op::MaxPoolBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolBackprop>},
+    {TI(ngraph::op::v0::MaxPoolBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::MaxPoolBackprop>},
     {TI(ngraph::op::MaxPoolWithIndicesBackprop),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::MaxPoolWithIndicesBackprop>},
-    {TI(ngraph::op::ConvolutionBias),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBias>},
+    {TI(ngraph::op::v0::ConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::ConvolutionBias>},
     {TI(ngraph::op::ConvolutionRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionRelu>},
-    {TI(ngraph::op::ConvolutionBiasAdd),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasAdd>},
-    {TI(ngraph::op::ConvolutionBiasBackpropFiltersBias),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionBiasBackpropFiltersBias>},
-    {TI(ngraph::op::BatchNormTraining),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTraining>},
-    {TI(ngraph::op::BatchNormInference),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInference>},
+    {TI(ngraph::op::v0::ConvolutionBiasAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::ConvolutionBiasAdd>},
+    {TI(ngraph::op::v0::ConvolutionBiasBackpropFiltersBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::ConvolutionBiasBackpropFiltersBias>},
+    {TI(ngraph::op::v0::BatchNormTraining),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::BatchNormTraining>},
+    {TI(ngraph::op::v0::BatchNormInference),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::BatchNormInference>},
     {TI(ngraph::op::BatchNormInferenceRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormInferenceRelu>},
     {TI(ngraph::op::BatchNormTrainingRelu),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingRelu>},
-    {TI(ngraph::op::BatchNormTrainingBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::BatchNormTrainingBackprop>},
-    {TI(ngraph::op::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::LRN>},
-    {TI(ngraph::op::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Reshape>},
-    {TI(ngraph::op::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Result>},
-    {TI(ngraph::op::ReluBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::ReluBackprop>},
-    {TI(ngraph::op::SigmoidBackprop),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::SigmoidBackprop>},
+    {TI(ngraph::op::v0::BatchNormTrainingBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::BatchNormTrainingBackprop>},
+    {TI(ngraph::op::v0::LRN), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::LRN>},
+    {TI(ngraph::op::v0::Reshape), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Reshape>},
+    {TI(ngraph::op::v0::Result), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Result>},
+    {TI(ngraph::op::v0::ReluBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::ReluBackprop>},
+    {TI(ngraph::op::v0::SigmoidBackprop),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::SigmoidBackprop>},
     {TI(ngraph::op::Lstm), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Lstm>},
     {TI(ngraph::op::Rnn), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Rnn>},
-    {TI(ngraph::op::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Softmax>},
+    {TI(ngraph::op::v0::Softmax), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Softmax>},
     {TI(ngraph::op::ConvolutionAdd),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::ConvolutionAdd>},
-    {TI(ngraph::op::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::Slice>},
-    {TI(ngraph::op::QuantizedConvolutionRelu),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionRelu>},
-    {TI(ngraph::op::QuantizedConvolutionBias),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBias>},
-    {TI(ngraph::op::QuantizedConvolutionBiasAdd),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasAdd>},
-    {TI(ngraph::op::QuantizedConvolutionBiasSignedAdd),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedConvolutionBiasSignedAdd>},
+    {TI(ngraph::op::v0::Slice), &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::Slice>},
+    {TI(ngraph::op::v0::QuantizedConvolutionRelu),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::QuantizedConvolutionRelu>},
+    {TI(ngraph::op::v0::QuantizedConvolutionBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::QuantizedConvolutionBias>},
+    {TI(ngraph::op::v0::QuantizedConvolutionBiasAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::QuantizedConvolutionBiasAdd>},
+    {TI(ngraph::op::v0::QuantizedConvolutionBiasSignedAdd),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::QuantizedConvolutionBiasSignedAdd>},
     {TI(ngraph::op::GroupConvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::GroupConvolutionBias>},
     {TI(ngraph::op::DeconvolutionBias),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::DeconvolutionBias>},
-    {TI(ngraph::op::QuantizedDotBias),
-     &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedDotBias>},
+    {TI(ngraph::op::v0::QuantizedDotBias),
+     &runtime::cpu::pass::CPULayout::layout<ngraph::op::v0::QuantizedDotBias>},
     {TI(ngraph::op::QuantizedMatmul),
      &runtime::cpu::pass::CPULayout::layout<ngraph::op::QuantizedMatmul>},
 };

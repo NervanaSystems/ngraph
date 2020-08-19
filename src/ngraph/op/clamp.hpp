@@ -93,6 +93,5 @@ namespace ngraph
                 double m_max;
             };
         }
-        using v0::Clamp;
     }
 }

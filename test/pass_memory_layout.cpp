@@ -223,8 +223,8 @@ TEST(memory_layout, constant)
     pass_manager.register_pass<pass::MemoryLayout>();
 
     Shape shape{1};
-    auto c = op::Constant::create(element::i32, shape, {5});
-    auto f = make_shared<Function>(make_shared<op::Negative>(c), ParameterVector{});
+    auto c = op::v0::Constant::create(element::i32, shape, {5});
+    auto f = make_shared<Function>(make_shared<op::v0::Negative>(c), ParameterVector{});
 
     pass_manager.run_passes(f);
     auto sorted = f->get_ordered_ops();

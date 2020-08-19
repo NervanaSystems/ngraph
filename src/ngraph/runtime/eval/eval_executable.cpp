@@ -100,9 +100,9 @@ bool runtime::eval::EVALExecutable::call(const vector<shared_ptr<runtime::Tensor
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
-        if (!is_type<op::Result>(output))
+        if (!is_type<op::v0::Result>(output))
         {
-            throw ngraph_error("One of function's outputs isn't op::Result");
+            throw ngraph_error("One of function's outputs isn't op::v0::Result");
         }
         descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});

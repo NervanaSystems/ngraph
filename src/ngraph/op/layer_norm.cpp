@@ -33,15 +33,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::LayerNorm::type_info;
-constexpr NodeTypeInfo op::LayerNormBackprop::type_info;
+constexpr NodeTypeInfo op::v0::LayerNorm::type_info;
+constexpr NodeTypeInfo op::v0::LayerNormBackprop::type_info;
 
-op::LayerNorm::LayerNorm(const Output<Node>& data,
-                         const Output<Node>& scale,
-                         const Output<Node>& bias,
-                         bool keep_stats,
-                         int64_t begin_norm_axis,
-                         double epsilon)
+op::v0::LayerNorm::LayerNorm(const Output<Node>& data,
+                             const Output<Node>& scale,
+                             const Output<Node>& bias,
+                             bool keep_stats,
+                             int64_t begin_norm_axis,
+                             double epsilon)
     : FusedOp({data, scale, bias})
     , m_keep_stats(keep_stats)
     , m_use_affine(true)
@@ -51,10 +51,10 @@ op::LayerNorm::LayerNorm(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::LayerNorm::LayerNorm(const Output<Node>& data,
-                         bool keep_stats,
-                         int64_t begin_norm_axis,
-                         double epsilon)
+op::v0::LayerNorm::LayerNorm(const Output<Node>& data,
+                             bool keep_stats,
+                             int64_t begin_norm_axis,
+                             double epsilon)
     : FusedOp({data})
     , m_keep_stats(keep_stats)
     , m_use_affine(false)
@@ -65,7 +65,7 @@ op::LayerNorm::LayerNorm(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-OutputVector op::LayerNorm::decompose_op() const
+OutputVector op::v0::LayerNorm::decompose_op() const
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     if (data_shape.is_dynamic())
@@ -102,7 +102,7 @@ OutputVector op::LayerNorm::decompose_op() const
     {
         post_axis_set.insert(i);
     }
-    auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, post_axis_set);
+    auto b_mean = make_shared<ngraph::op::v0::Broadcast>(mean, shape, post_axis_set);
 
     // Compute variance
     auto var = builder::variance(data, post_reduction_axes);
@@ -110,8 +110,8 @@ OutputVector op::LayerNorm::decompose_op() const
     // Compute standard deviation with epsilon
     auto epsilon = builder::make_constant(
         var->get_output_element_type(0), var->get_output_shape(0), m_epsilon);
-    auto stddev = make_shared<op::Sqrt>(var + epsilon);
-    auto b_stddev = make_shared<op::Broadcast>(stddev, shape, post_axis_set);
+    auto stddev = make_shared<op::v0::Sqrt>(var + epsilon);
+    auto b_stddev = make_shared<op::v0::Broadcast>(stddev, shape, post_axis_set);
 
     // Get normalized input
     auto norm = (data - b_mean) / b_stddev;
@@ -130,11 +130,11 @@ OutputVector op::LayerNorm::decompose_op() const
         if (shape.size() - n_axis != scale_shape.size())
         {
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
-            scale = make_shared<op::Reshape>(scale, AxisVector{0}, reshape_shape);
-            bias = make_shared<op::Reshape>(bias, AxisVector{0}, reshape_shape);
+            scale = make_shared<op::v0::Reshape>(scale, AxisVector{0}, reshape_shape);
+            bias = make_shared<op::v0::Reshape>(bias, AxisVector{0}, reshape_shape);
         }
-        auto b_scale = make_shared<op::Broadcast>(scale, shape, pre_axis_set);
-        auto b_bias = make_shared<op::Broadcast>(bias, shape, pre_axis_set);
+        auto b_scale = make_shared<op::v0::Broadcast>(scale, shape, pre_axis_set);
+        auto b_bias = make_shared<op::v0::Broadcast>(bias, shape, pre_axis_set);
         norm = norm * b_scale + b_bias;
     }
 
@@ -149,7 +149,7 @@ OutputVector op::LayerNorm::decompose_op() const
     return retval;
 }
 
-shared_ptr<Node> op::LayerNorm::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::LayerNorm::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1 && new_args.size() != 3)
     {
@@ -170,7 +170,7 @@ shared_ptr<Node> op::LayerNorm::clone_with_new_inputs(const OutputVector& new_ar
     }
 }
 
-void op::LayerNorm::pre_validate_and_infer_types()
+void op::v0::LayerNorm::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 
@@ -234,7 +234,7 @@ void op::LayerNorm::pre_validate_and_infer_types()
     set_output_type(0, input_element_type, norm_shape);
 }
 
-void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     auto data = input_value(0);
@@ -246,7 +246,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const Output
         {
             auto mean = outputs()[1];
             auto variance = outputs()[2];
-            auto bprop = make_shared<op::LayerNormBackprop>(
+            auto bprop = make_shared<op::v0::LayerNormBackprop>(
                 data, delta, mean, variance, scale, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
             adjoints.add_delta(scale, bprop->outputs()[1]);
@@ -254,7 +254,7 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const Output
         }
         else
         {
-            auto bprop = make_shared<op::LayerNormBackprop>(
+            auto bprop = make_shared<op::v0::LayerNormBackprop>(
                 data, delta, scale, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
             adjoints.add_delta(scale, bprop->outputs()[1]);
@@ -267,26 +267,26 @@ void op::LayerNorm::generate_adjoints(autodiff::Adjoints& adjoints, const Output
         {
             auto mean = outputs()[1];
             auto variance = outputs()[2];
-            auto bprop = make_shared<op::LayerNormBackprop>(
+            auto bprop = make_shared<op::v0::LayerNormBackprop>(
                 data, delta, mean, variance, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
         }
         else
         {
             auto bprop =
-                make_shared<op::LayerNormBackprop>(data, delta, m_begin_norm_axis, m_epsilon);
+                make_shared<op::v0::LayerNormBackprop>(data, delta, m_begin_norm_axis, m_epsilon);
             adjoints.add_delta(data, bprop->outputs()[0]);
         }
     }
 }
 
-op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
-                                         const Output<Node>& delta,
-                                         const Output<Node>& mean,
-                                         const Output<Node>& variance,
-                                         const Output<Node>& scale,
-                                         int64_t begin_norm_axis,
-                                         double epsilon)
+op::v0::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
+                                             const Output<Node>& delta,
+                                             const Output<Node>& mean,
+                                             const Output<Node>& variance,
+                                             const Output<Node>& scale,
+                                             int64_t begin_norm_axis,
+                                             double epsilon)
     : FusedOp({data, delta, mean, variance, scale})
     , m_use_stats(true)
     , m_use_affine(true)
@@ -296,12 +296,12 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
-                                         const Output<Node>& delta,
-                                         const Output<Node>& mean,
-                                         const Output<Node>& variance,
-                                         int64_t begin_norm_axis,
-                                         double epsilon)
+op::v0::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
+                                             const Output<Node>& delta,
+                                             const Output<Node>& mean,
+                                             const Output<Node>& variance,
+                                             int64_t begin_norm_axis,
+                                             double epsilon)
     : FusedOp({data, delta, mean, variance})
     , m_use_stats(true)
     , m_use_affine(false)
@@ -311,11 +311,11 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
-                                         const Output<Node>& delta,
-                                         const Output<Node>& scale,
-                                         int64_t begin_norm_axis,
-                                         double epsilon)
+op::v0::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
+                                             const Output<Node>& delta,
+                                             const Output<Node>& scale,
+                                             int64_t begin_norm_axis,
+                                             double epsilon)
     : FusedOp({data, delta, scale})
     , m_use_stats(false)
     , m_use_affine(true)
@@ -325,10 +325,10 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
-                                         const Output<Node>& delta,
-                                         int64_t begin_norm_axis,
-                                         double epsilon)
+op::v0::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
+                                             const Output<Node>& delta,
+                                             int64_t begin_norm_axis,
+                                             double epsilon)
     : FusedOp({data, delta})
     , m_use_stats(false)
     , m_use_affine(false)
@@ -339,7 +339,7 @@ op::LayerNormBackprop::LayerNormBackprop(const Output<Node>& data,
 }
 
 // All input shape should be static by this point
-OutputVector op::LayerNormBackprop::decompose_op() const
+OutputVector op::v0::LayerNormBackprop::decompose_op() const
 {
     const PartialShape& data_shape = get_input_partial_shape(0);
     if (data_shape.is_dynamic())
@@ -394,7 +394,7 @@ OutputVector op::LayerNormBackprop::decompose_op() const
     {
         post_axis_set.insert(i);
     }
-    auto b_mean = make_shared<ngraph::op::Broadcast>(mean, shape, post_axis_set);
+    auto b_mean = make_shared<ngraph::op::v0::Broadcast>(mean, shape, post_axis_set);
 
     // Get variance
     auto var =
@@ -402,8 +402,8 @@ OutputVector op::LayerNormBackprop::decompose_op() const
 
     // Compute standard deviation with epsilon
     auto epsilon = builder::make_constant(var.get_element_type(), var.get_shape(), m_epsilon);
-    auto stddev = make_shared<op::Sqrt>(var + epsilon);
-    auto b_stddev = make_shared<op::Broadcast>(stddev, shape, post_axis_set);
+    auto stddev = make_shared<op::v0::Sqrt>(var + epsilon);
+    auto b_stddev = make_shared<op::v0::Broadcast>(stddev, shape, post_axis_set);
 
     // Get normalized input
     auto norm = (data - b_mean) / b_stddev;
@@ -427,15 +427,15 @@ OutputVector op::LayerNormBackprop::decompose_op() const
         {
             scale_flattened = true;
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
-            scale = make_shared<op::Reshape>(scale, AxisVector{0}, reshape_shape);
+            scale = make_shared<op::v0::Reshape>(scale, AxisVector{0}, reshape_shape);
         }
-        auto b_scale = make_shared<op::Broadcast>(scale, shape, pre_axis_set);
+        auto b_scale = make_shared<op::v0::Broadcast>(scale, shape, pre_axis_set);
         d_data = d_data * b_scale;
     }
-    auto d_mean = make_shared<op::Broadcast>(
+    auto d_mean = make_shared<op::v0::Broadcast>(
         builder::mean(-d_data, post_reduction_axes), shape, post_axis_set);
     auto d_stddev =
-        norm * make_shared<op::Broadcast>(
+        norm * make_shared<op::v0::Broadcast>(
                    builder::mean(-d_data * norm, post_reduction_axes), shape, post_axis_set);
     d_data = d_data + d_mean + d_stddev;
 
@@ -447,8 +447,8 @@ OutputVector op::LayerNormBackprop::decompose_op() const
     {
         std::vector<size_t> pre_reduction_axes(n_axis);
         std::iota(pre_reduction_axes.begin(), pre_reduction_axes.end(), 0);
-        auto d_bias = make_shared<op::Sum>(delta, pre_reduction_axes);
-        auto d_scale = make_shared<op::Sum>(delta * norm, pre_reduction_axes);
+        auto d_bias = make_shared<op::v0::Sum>(delta, pre_reduction_axes);
+        auto d_scale = make_shared<op::v0::Sum>(delta * norm, pre_reduction_axes);
         if (scale_flattened)
         {
             std::vector<size_t> flatten_axes_vector(shape.size() - n_axis);
@@ -457,9 +457,9 @@ OutputVector op::LayerNormBackprop::decompose_op() const
             Shape reshape_shape(shape.begin() + m_begin_norm_axis, shape.end());
             size_t reshape_size = shape_size(reshape_shape);
             auto flatten_d_scale =
-                make_shared<op::Reshape>(d_scale, flatten_axes, Shape{reshape_size});
+                make_shared<op::v0::Reshape>(d_scale, flatten_axes, Shape{reshape_size});
             auto flatten_d_bias =
-                make_shared<op::Reshape>(d_bias, flatten_axes, Shape{reshape_size});
+                make_shared<op::v0::Reshape>(d_bias, flatten_axes, Shape{reshape_size});
             retval.emplace_back(flatten_d_scale);
             retval.emplace_back(flatten_d_bias);
         }
@@ -472,7 +472,8 @@ OutputVector op::LayerNormBackprop::decompose_op() const
     return retval;
 }
 
-shared_ptr<Node> op::LayerNormBackprop::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node>
+    op::v0::LayerNormBackprop::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() < 2 || new_args.size() > 5)
     {
@@ -509,7 +510,7 @@ shared_ptr<Node> op::LayerNormBackprop::clone_with_new_inputs(const OutputVector
     }
 }
 
-void op::LayerNormBackprop::pre_validate_and_infer_types()
+void op::v0::LayerNormBackprop::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
 

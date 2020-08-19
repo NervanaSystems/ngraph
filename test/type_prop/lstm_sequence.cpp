@@ -23,26 +23,27 @@ using namespace ngraph;
 
 TEST(type_prop, lstm_sequence)
 {
-    const auto X = make_shared<op::Parameter>(element::f32, Shape{1, 2, 4});
-    const auto W = make_shared<op::Parameter>(element::f32, Shape{1, 12, 4});
-    const auto R = make_shared<op::Parameter>(element::f32, Shape{1, 12, 3});
-    const auto initial_hidden_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    const auto initial_cell_state = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    const auto B = make_shared<op::Parameter>(element::f32, Shape{1, 12});
-    const auto sequence_lengths = make_shared<op::Parameter>(element::i32, Shape{2});
+    const auto X = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 4});
+    const auto W = make_shared<op::v0::Parameter>(element::f32, Shape{1, 12, 4});
+    const auto R = make_shared<op::v0::Parameter>(element::f32, Shape{1, 12, 3});
+    const auto initial_hidden_state = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto initial_cell_state = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
+    const auto B = make_shared<op::v0::Parameter>(element::f32, Shape{1, 12});
+    const auto sequence_lengths = make_shared<op::v0::Parameter>(element::i32, Shape{2});
     const auto hidden_size = 3;
 
-    const auto lstm_sequence = make_shared<op::LSTMSequence>(X,
-                                                             initial_hidden_state,
-                                                             initial_cell_state,
-                                                             sequence_lengths,
-                                                             W,
-                                                             R,
-                                                             B,
-                                                             hidden_size,
-                                                             op::LSTMSequence::direction::FORWARD);
+    const auto lstm_sequence =
+        make_shared<op::v0::LSTMSequence>(X,
+                                          initial_hidden_state,
+                                          initial_cell_state,
+                                          sequence_lengths,
+                                          W,
+                                          R,
+                                          B,
+                                          hidden_size,
+                                          op::v0::LSTMSequence::direction::FORWARD);
     EXPECT_EQ(lstm_sequence->get_hidden_size(), hidden_size);
-    EXPECT_EQ(lstm_sequence->get_direction(), op::LSTMSequence::direction::FORWARD);
+    EXPECT_EQ(lstm_sequence->get_direction(), op::v0::LSTMSequence::direction::FORWARD);
     EXPECT_EQ(lstm_sequence->get_weights_format(), op::LSTMWeightsFormat::IFCO);
     EXPECT_TRUE(lstm_sequence->get_activations_alpha().empty());
     EXPECT_TRUE(lstm_sequence->get_activations_beta().empty());

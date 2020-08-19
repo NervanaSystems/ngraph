@@ -85,6 +85,5 @@ namespace ngraph
                 AxisSet m_reduction_axes;
             };
         }
-        using v0::MVN;
     }
 }

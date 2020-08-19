@@ -29,11 +29,11 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::GenerateMask)
+            void Builder::BUILDER_DECL(ngraph::op::v0::GenerateMask)
             {
                 auto& functors = external_function->get_functors();
 
-                auto gm = static_cast<const ngraph::op::GenerateMask*>(node);
+                auto gm = static_cast<const ngraph::op::v0::GenerateMask*>(node);
                 CPUKernelFunctor functor;
 
                 auto arg_buffer_index = external_function->get_buffer_index(args[0].get_name());

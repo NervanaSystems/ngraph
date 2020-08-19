@@ -48,10 +48,10 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts)
 {
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{6});
-    const auto axis = op::Constant::create(element::i64, Shape{}, {0});
+    const auto data = make_shared<op::v0::Parameter>(element::i32, Shape{6});
+    const auto axis = op::v0::Constant::create(element::i64, Shape{}, {0});
 
-    const auto tested_op = make_shared<op::Split>(data, axis, 3);
+    const auto tested_op = make_shared<op::v0::Split>(data, axis, 3);
     const auto function = make_shared<Function>(tested_op->decompose_op(), ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -66,11 +66,11 @@ NGRAPH_TEST(${BACKEND_NAME}, split_3_equal_parts)
 
 NGRAPH_TEST(${BACKEND_NAME}, split_var_len_parts)
 {
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{2, 6});
+    const auto data = make_shared<op::v0::Parameter>(element::i32, Shape{2, 6});
 
     const std::vector<size_t> splits = {2, 4};
-    const auto axis = op::Constant::create(element::i64, Shape{}, {1});
-    const auto tested_op = make_shared<op::Split>(data, axis, splits);
+    const auto axis = op::v0::Constant::create(element::i64, Shape{}, {1});
+    const auto tested_op = make_shared<op::v0::Split>(data, axis, splits);
     const auto function = make_shared<Function>(tested_op->decompose_op(), ParameterVector{data});
 
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");

@@ -185,8 +185,8 @@ size_t DNNLEmitter::build_dequantization(const ngraph::Node* node,
                                          const dnnl::memory::desc& input_desc,
                                          const dnnl::memory::desc& result_desc)
 {
-    auto dequantize = static_cast<const ngraph::op::Dequantize*>(node);
-    auto scale_const_op = as_type_ptr<ngraph::op::Constant>(dequantize->get_argument(1));
+    auto dequantize = static_cast<const ngraph::op::v0::Dequantize*>(node);
+    auto scale_const_op = as_type_ptr<ngraph::op::v0::Constant>(dequantize->get_argument(1));
     std::vector<float> scale = {1.0f};
     if (scale_const_op != nullptr)
     {
@@ -218,7 +218,7 @@ size_t DNNLEmitter::build_reorder(const dnnl::memory::desc& input_desc,
 
 dnnl::lrn_forward::desc DNNLEmitter::get_lrn_forward_desc(const ngraph::Node* node)
 {
-    const ngraph::op::LRN* lrn = static_cast<const ngraph::op::LRN*>(node);
+    const ngraph::op::v0::LRN* lrn = static_cast<const ngraph::op::v0::LRN*>(node);
 
     auto alpha = static_cast<float>(lrn->get_alpha());
     auto beta = static_cast<float>(lrn->get_beta());
@@ -285,8 +285,8 @@ dnnl::eltwise_backward::desc DNNLEmitter::get_sigmoid_backward_desc(const ngraph
 dnnl::batch_normalization_backward::desc
     DNNLEmitter::get_batchnorm_backward_desc(const ngraph::Node* node)
 {
-    const ngraph::op::BatchNormTrainingBackprop* batchnorm =
-        static_cast<const ngraph::op::BatchNormTrainingBackprop*>(node);
+    const ngraph::op::v0::BatchNormTrainingBackprop* batchnorm =
+        static_cast<const ngraph::op::v0::BatchNormTrainingBackprop*>(node);
     auto eps = batchnorm->get_eps_value();
 
     auto input_desc = dnnl_utils::get_input_dnnl_md(node, 2);
@@ -301,7 +301,7 @@ dnnl::batch_normalization_backward::desc
 
 dnnl::softmax_forward::desc DNNLEmitter::get_softmax_forward_desc(const ngraph::Node* node)
 {
-    auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+    auto softmax = static_cast<const ngraph::op::v0::Softmax*>(node);
 
     auto axes = softmax->get_axes();
     if (axes.size() != 1)

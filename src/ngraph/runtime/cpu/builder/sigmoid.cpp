@@ -31,7 +31,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Sigmoid)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Sigmoid)
             {
                 auto& functors = external_function->get_functors();
 
@@ -80,7 +80,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::SigmoidBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::v0::SigmoidBackprop)
             {
                 auto& functors = external_function->get_functors();
 

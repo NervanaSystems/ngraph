@@ -32,6 +32,6 @@ namespace ngraph
                                               const Output<Node>& max,
                                               const ngraph::element::Type& quant_type,
                                               const ngraph::AxisSet& axes,
-                                              op::Quantize::RoundMode round_mode);
+                                              op::v0::Quantize::RoundMode round_mode);
     }
 }

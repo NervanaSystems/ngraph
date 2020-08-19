@@ -89,6 +89,5 @@ namespace ngraph
                 static constexpr int PER_SAMPLE_WEIGHTS = 5;
             };
         }
-        using v3::EmbeddingSegmentsSum;
     }
 }

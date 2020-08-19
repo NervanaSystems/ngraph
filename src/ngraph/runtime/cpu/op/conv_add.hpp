@@ -30,7 +30,7 @@ namespace ngraph
             CPU_BACKEND_API
             static constexpr NodeTypeInfo type_info{"ConvolutionAdd", 0};
             const NodeTypeInfo& get_type_info() const override { return type_info; }
-            ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
+            ConvolutionAdd(const std::shared_ptr<op::v0::Convolution>& conv,
                            const Output<Node>& sum_input,
                            bool with_relu);
 

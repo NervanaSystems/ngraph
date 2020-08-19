@@ -69,7 +69,7 @@ void op::v0::Reverse::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
     auto x = input_value(0);
 
-    adjoints.add_delta(x, make_shared<op::Reverse>(delta, m_reversed_axes));
+    adjoints.add_delta(x, make_shared<op::v0::Reverse>(delta, m_reversed_axes));
 }
 
 constexpr NodeTypeInfo op::v1::Reverse::type_info;
@@ -144,7 +144,7 @@ void op::v1::Reverse::validate_and_infer_types()
 
         if (rev_axes_node->is_constant())
         {
-            const auto rev_axes_constant = as_type_ptr<op::Constant>(rev_axes_node);
+            const auto rev_axes_constant = as_type_ptr<op::v0::Constant>(rev_axes_node);
 
             if (m_mode == Mode::INDEX)
             {

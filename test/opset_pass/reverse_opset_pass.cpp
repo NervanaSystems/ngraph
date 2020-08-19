@@ -28,11 +28,11 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_reverse_upgrade_pass)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2});
     const AxisSet reverse_axes{1, 2};
 
     const auto reverse_v0 = make_shared<op::v0::Reverse>(data, reverse_axes);
-    const auto result = make_shared<op::Result>(reverse_v0);
+    const auto result = make_shared<op::v0::Result>(reverse_v0);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -51,13 +51,13 @@ TEST(opset_transform, opset1_reverse_upgrade_pass)
 
 TEST(opset_transform, opset0_reverse_downgrade_pass_index_mode)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2});
     const auto reverse_axes =
-        make_shared<op::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
+        make_shared<op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{1, 2});
     auto mode = op::v1::Reverse::Mode::INDEX;
 
     const auto reverse_v1 = make_shared<op::v1::Reverse>(data, reverse_axes, mode);
-    const auto result = make_shared<op::Result>(reverse_v1);
+    const auto result = make_shared<op::v0::Result>(reverse_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -72,13 +72,13 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_index_mode)
 
 TEST(opset_transform, opset0_reverse_downgrade_pass_mask_mode)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2});
     const auto reverse_axes =
-        make_shared<op::Constant>(element::boolean, Shape{3}, vector<bool>{true, false, true});
+        make_shared<op::v0::Constant>(element::boolean, Shape{3}, vector<bool>{true, false, true});
     auto mode = op::v1::Reverse::Mode::MASK;
 
     const auto reverse_v1 = make_shared<op::v1::Reverse>(data, reverse_axes, mode);
-    const auto result = make_shared<op::Result>(reverse_v1);
+    const auto result = make_shared<op::v0::Result>(reverse_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -93,11 +93,11 @@ TEST(opset_transform, opset0_reverse_downgrade_pass_mask_mode)
 
 TEST(opset_transform, opset0_reverse_downgrade_pass_axes_not_constant)
 {
-    const auto data = make_shared<op::Parameter>(element::f32, Shape{2, 2, 2});
-    const auto axes = make_shared<op::Parameter>(element::boolean, Shape{3});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 2});
+    const auto axes = make_shared<op::v0::Parameter>(element::boolean, Shape{3});
 
     const auto reverse_v1 = make_shared<op::v1::Reverse>(data, axes, op::v1::Reverse::Mode::MASK);
-    const auto result = make_shared<op::Result>(reverse_v1);
+    const auto result = make_shared<op::v0::Result>(reverse_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, axes});
 
     ngraph::pass::Manager pass_manager;

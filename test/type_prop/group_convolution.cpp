@@ -24,33 +24,33 @@ using namespace ngraph;
 TEST(type_prop, group_conv)
 {
     // Deduce type
-    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 4, 100, 150});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
-    auto conv = make_shared<op::GroupConvolution>(data,
-                                                  filters,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{0, 0},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1},
-                                                  2);
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{64, 4, 100, 150});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    auto conv = make_shared<op::v0::GroupConvolution>(data,
+                                                      filters,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1},
+                                                      2);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 91, 131}));
 }
 
 TEST(type_prop, group_conv_auto)
 {
     // Deduce type
-    auto data = make_shared<op::Parameter>(element::f32, Shape{64, 4, 100, 150});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{128, 2, 10, 20});
-    auto conv = make_shared<op::GroupConvolution>(data,
-                                                  filters,
-                                                  Strides{1, 1},
-                                                  Strides{1, 1},
-                                                  CoordinateDiff{0, 0},
-                                                  CoordinateDiff{0, 0},
-                                                  Strides{1, 1},
-                                                  2,
-                                                  op::PadType::AUTO);
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{64, 4, 100, 150});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{128, 2, 10, 20});
+    auto conv = make_shared<op::v0::GroupConvolution>(data,
+                                                      filters,
+                                                      Strides{1, 1},
+                                                      Strides{1, 1},
+                                                      CoordinateDiff{0, 0},
+                                                      CoordinateDiff{0, 0},
+                                                      Strides{1, 1},
+                                                      2,
+                                                      op::PadType::AUTO);
     EXPECT_EQ(conv->get_output_shape(0), (Shape{64, 128, 100, 150}));
     EXPECT_EQ(conv->get_padding_below(), (CoordinateDiff{4, 9}));
     EXPECT_EQ(conv->get_padding_above(), (CoordinateDiff{5, 10}));
@@ -61,9 +61,9 @@ TEST(type_prop, group_conv_invalid_groups)
     // Deduce type
     try
     {
-        auto conv = make_shared<op::GroupConvolution>(
-            make_shared<op::Parameter>(element::f32, Shape{64, 20, 100, 150}),
-            make_shared<op::Parameter>(element::f32, Shape{30, 10, 10, 20}),
+        auto conv = make_shared<op::v0::GroupConvolution>(
+            make_shared<op::v0::Parameter>(element::f32, Shape{64, 20, 100, 150}),
+            make_shared<op::v0::Parameter>(element::f32, Shape{30, 10, 10, 20}),
             Strides{1, 1},
             Strides{1, 1},
             CoordinateDiff{0, 0},
@@ -84,9 +84,9 @@ TEST(type_prop, group_conv_invalid_groups)
     }
     try
     {
-        auto conv = make_shared<op::GroupConvolution>(
-            make_shared<op::Parameter>(element::f32, Shape{64, 30, 100, 150}),
-            make_shared<op::Parameter>(element::f32, Shape{20, 10, 10, 20}),
+        auto conv = make_shared<op::v0::GroupConvolution>(
+            make_shared<op::v0::Parameter>(element::f32, Shape{64, 30, 100, 150}),
+            make_shared<op::v0::Parameter>(element::f32, Shape{20, 10, 10, 20}),
             Strides{1, 1},
             Strides{1, 1},
             CoordinateDiff{0, 0},
@@ -106,9 +106,9 @@ TEST(type_prop, group_conv_invalid_groups)
     }
     try
     {
-        auto conv = make_shared<op::GroupConvolution>(
-            make_shared<op::Parameter>(element::f32, Shape{64, 30, 100, 150}),
-            make_shared<op::Parameter>(element::f32, Shape{30, 20, 10, 20}),
+        auto conv = make_shared<op::v0::GroupConvolution>(
+            make_shared<op::v0::Parameter>(element::f32, Shape{64, 30, 100, 150}),
+            make_shared<op::v0::Parameter>(element::f32, Shape{30, 20, 10, 20}),
             Strides{1, 1},
             Strides{1, 1},
             CoordinateDiff{0, 0},

@@ -35,11 +35,13 @@ op::v0::GenerateMask::GenerateMask(const Output<Node>& training,
     , m_seed(seed)
     , m_probability(prob)
 {
-    set_argument(1, make_shared<op::Constant>(element::u64, Shape{shape.size()}, shape));
-    set_argument(2,
-                 make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
-    set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
-    set_argument(4, make_shared<op::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
+    set_argument(1, make_shared<op::v0::Constant>(element::u64, Shape{shape.size()}, shape));
+    set_argument(
+        2, make_shared<op::v0::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
+    set_argument(3,
+                 make_shared<op::v0::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
+    set_argument(4,
+                 make_shared<op::v0::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
     add_provenance_group_member(input_value(1).get_node_shared_ptr());
     add_provenance_group_member(input_value(2).get_node_shared_ptr());
     add_provenance_group_member(input_value(3).get_node_shared_ptr());
@@ -81,10 +83,12 @@ op::v1::GenerateMask::GenerateMask(const Output<Node>& training,
     , m_seed(seed)
     , m_probability(prob)
 {
-    set_argument(2,
-                 make_shared<op::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
-    set_argument(3, make_shared<op::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
-    set_argument(4, make_shared<op::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
+    set_argument(
+        2, make_shared<op::v0::Constant>(element::i32, Shape{}, std::vector<int32_t>{use_seed}));
+    set_argument(3,
+                 make_shared<op::v0::Constant>(element::u64, Shape{}, std::vector<uint64_t>{seed}));
+    set_argument(4,
+                 make_shared<op::v0::Constant>(element::f64, Shape{}, std::vector<double>{prob}));
     add_provenance_group_member(input_value(2).get_node_shared_ptr());
     add_provenance_group_member(input_value(3).get_node_shared_ptr());
     add_provenance_group_member(input_value(4).get_node_shared_ptr());
@@ -101,7 +105,7 @@ shared_ptr<Node> op::v1::GenerateMask::clone_with_new_inputs(const OutputVector&
 const Shape op::v1::GenerateMask::get_mask_shape() const
 {
     Shape shape;
-    if (auto const_op = as_type<op::Constant>(input_value(1).get_node()))
+    if (auto const_op = as_type<op::v0::Constant>(input_value(1).get_node()))
     {
         shape = const_op->get_shape_val();
     }

@@ -23,20 +23,20 @@ using namespace ngraph;
 
 TEST(type_prop, gemm)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
-    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{3, 4});
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_output_element_type(0), element::f32);
     EXPECT_EQ(gemm_func->get_output_shape(0), (Shape{3, 4}));
 }
 
 TEST(type_prop, gemm_broadcast_input_C)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{});
-    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C);
     EXPECT_EQ(gemm_func->get_output_element_type(0), element::f32);
     EXPECT_EQ(gemm_func->get_output_shape(0), (Shape{3, 4}));
 }

@@ -42,12 +42,13 @@ namespace
                                      const Shape& expected_output_shape,
                                      const std::vector<T>& expected_values)
     {
-        auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
+        auto arg = std::make_shared<op::v0::Parameter>(input_element_type, input_shape);
         auto begin_op =
-            make_shared<ngraph::op::Parameter>(element::i64, Shape{begin_values.size()});
-        auto end_op = make_shared<ngraph::op::Parameter>(element::i64, Shape{end_values.size()});
+            make_shared<ngraph::op::v0::Parameter>(element::i64, Shape{begin_values.size()});
+        auto end_op =
+            make_shared<ngraph::op::v0::Parameter>(element::i64, Shape{end_values.size()});
         auto strides_op =
-            make_shared<ngraph::op::Parameter>(element::i64, Shape{strides_values.size()});
+            make_shared<ngraph::op::v0::Parameter>(element::i64, Shape{strides_values.size()});
 
         std::vector<T> input_values(shape_size(input_shape));
         std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
@@ -102,10 +103,11 @@ namespace
                                                      const Shape& expected_output_shape,
                                                      const std::vector<T>& expected_values)
     {
-        auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
+        auto arg = std::make_shared<op::v0::Parameter>(input_element_type, input_shape);
         auto begin_op =
-            make_shared<ngraph::op::Parameter>(element::i64, Shape{begin_values.size()});
-        auto end_op = make_shared<ngraph::op::Parameter>(element::i64, Shape{end_values.size()});
+            make_shared<ngraph::op::v0::Parameter>(element::i64, Shape{begin_values.size()});
+        auto end_op =
+            make_shared<ngraph::op::v0::Parameter>(element::i64, Shape{end_values.size()});
 
         std::vector<T> input_values(shape_size(input_shape));
         std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));

@@ -48,11 +48,11 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{3, 4});
 
-    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C);
     auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
@@ -68,11 +68,11 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm)
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm_C)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{3, 4});
 
-    auto gemm_func = make_shared<op::Gemm>(A, B, C);
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C);
     auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
@@ -88,11 +88,11 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_C)
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
-    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C, 0.5);
     auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
@@ -108,11 +108,11 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_input_C)
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_0_input_C)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4});
 
-    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C, 0.5);
     auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A
@@ -129,11 +129,11 @@ NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_0_input_C)
 
 NGRAPH_TEST(${BACKEND_NAME}, gemm_broadcast_axes_1_input_C)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{3, 1});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{3, 1});
 
-    auto gemm_func = make_shared<op::Gemm>(A, B, C, 0.5);
+    auto gemm_func = make_shared<op::v0::Gemm>(A, B, C, 0.5);
     auto function = make_shared<Function>(OutputVector{gemm_func}, ParameterVector{A, B, C});
     auto test_case = test::NgraphTestCase(function, "${BACKEND_NAME}");
     // A

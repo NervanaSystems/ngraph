@@ -59,19 +59,20 @@ namespace ngraph
         std::shared_ptr<Node> l2_norm(const Output<Node>& node, const AxisSet& reduction_axes)
         {
             auto x2 = node * node;
-            auto x2sum = std::make_shared<op::Sum>(x2, reduction_axes);
+            auto x2sum = std::make_shared<op::v0::Sum>(x2, reduction_axes);
 
-            return std::make_shared<op::Sqrt>(x2sum)->add_provenance_group_members_above({node});
+            return std::make_shared<op::v0::Sqrt>(x2sum)->add_provenance_group_members_above(
+                {node});
         }
 
         std::shared_ptr<Node> mean(const Output<Node>& value, const AxisSet& reduction_axes)
         {
-            auto xsum = std::make_shared<op::Sum>(value, reduction_axes);
+            auto xsum = std::make_shared<op::v0::Sum>(value, reduction_axes);
 
             auto N = get_num_elements(value.get_shape(), reduction_axes);
             const auto& et = value.get_element_type();
 
-            auto divisor = op::Constant::create(et, xsum->get_output_shape(0), {N});
+            auto divisor = op::v0::Constant::create(et, xsum->get_output_shape(0), {N});
 
             return (xsum / divisor)->add_provenance_group_members_above({value});
         }
@@ -80,7 +81,7 @@ namespace ngraph
                                       const AxisSet& reduction_axes,
                                       const bool bessel_correction)
         {
-            return std::make_shared<op::Sqrt>(variance(node, reduction_axes, bessel_correction))
+            return std::make_shared<op::v0::Sqrt>(variance(node, reduction_axes, bessel_correction))
                 ->add_provenance_group_members_above({node});
         }
 
@@ -102,11 +103,11 @@ namespace ngraph
 
             ngraph::AxisVector order = ngraph::get_default_order(mu->get_output_shape(0));
 
-            mu = std::make_shared<op::Reshape>(mu, order, reshape);
+            mu = std::make_shared<op::v0::Reshape>(mu, order, reshape);
 
-            Output<Node> diff = make_with_numpy_broadcast<op::Subtract>(value, mu);
+            Output<Node> diff = make_with_numpy_broadcast<op::v1::Subtract>(value, mu);
 
-            diff = std::make_shared<op::Sum>(diff * diff, reduction_axes);
+            diff = std::make_shared<op::v0::Sum>(diff * diff, reduction_axes);
 
             const auto& et = value.get_element_type();
             auto N = get_num_elements(value.get_shape(), reduction_axes);
@@ -114,12 +115,12 @@ namespace ngraph
             std::shared_ptr<Node> result;
             if (bessel_correction)
             {
-                auto N1const = op::Constant::create(et, diff.get_shape(), {N - 1});
+                auto N1const = op::v0::Constant::create(et, diff.get_shape(), {N - 1});
                 result = diff / N1const;
             }
             else
             {
-                auto Nconst = op::Constant::create(et, diff.get_shape(), {N});
+                auto Nconst = op::v0::Constant::create(et, diff.get_shape(), {N});
                 result = diff / Nconst;
             }
             return result->add_provenance_group_members_above({value});

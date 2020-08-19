@@ -58,8 +58,6 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-
-        using v1::Multiply;
     }
 
     NGRAPH_API

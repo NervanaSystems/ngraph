@@ -52,9 +52,9 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose)
 {
     Shape shape0 = Shape{2, 2, 3};
     Shape shape1 = Shape{2, 3, 4};
-    auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
-    auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
-    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, false, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, shape0);
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, shape1);
+    auto bmmt = make_shared<op::v0::BatchMatMulTranspose>(arg0, arg1, false, false);
     auto f0 = make_shared<Function>(OutputVector{bmmt}, ParameterVector{arg0, arg1});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -77,9 +77,9 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_transpose_with_transpose)
 {
     Shape shape0 = Shape{2, 3, 2};
     Shape shape1 = Shape{2, 3, 4};
-    auto arg0 = make_shared<op::Parameter>(element::f32, shape0);
-    auto arg1 = make_shared<op::Parameter>(element::f32, shape1);
-    auto bmmt = make_shared<op::BatchMatMulTranspose>(arg0, arg1, true, false);
+    auto arg0 = make_shared<op::v0::Parameter>(element::f32, shape0);
+    auto arg1 = make_shared<op::v0::Parameter>(element::f32, shape1);
+    auto bmmt = make_shared<op::v0::BatchMatMulTranspose>(arg0, arg1, true, false);
     auto f0 = make_shared<Function>(OutputVector{bmmt}, ParameterVector{arg0, arg1});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -107,11 +107,11 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     auto make_dot = [](ParameterVector& a_params, ParameterVector& b_params) {
         Shape shape_a{2, 3};
         Shape shape_b{3, 2};
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
         a_params.push_back(A);
         b_params.push_back(B);
-        return make_shared<op::Dot>(A, B);
+        return make_shared<op::v0::Dot>(A, B);
     };
 
     ParameterVector dot_a_params;
@@ -119,7 +119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     auto dot1 = make_dot(dot_a_params, dot_b_params);
     auto dot2 = make_dot(dot_a_params, dot_b_params);
     auto dot3 = make_dot(dot_a_params, dot_b_params);
-    auto dot_concat = make_shared<op::Concat>(OutputVector{dot1, dot2, dot3}, 0);
+    auto dot_concat = make_shared<op::v0::Concat>(OutputVector{dot1, dot2, dot3}, 0);
     ParameterVector dot_params(dot_a_params);
     dot_params.insert(dot_params.end(), dot_b_params.begin(), dot_b_params.end());
     auto ref_f = make_shared<Function>(dot_concat, dot_params);
@@ -127,11 +127,11 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
     auto make_batchmatmul = [](ParameterVector& params) {
         Shape shape_a{3, 2, 3};
         Shape shape_b{3, 3, 2};
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto B = make_shared<op::Parameter>(element::f32, shape_b);
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
         params.push_back(A);
         params.push_back(B);
-        return make_shared<op::BatchMatMul>(A, B);
+        return make_shared<op::v0::BatchMatMul>(A, B);
     };
 
     ParameterVector batchmatmul_params;
@@ -140,7 +140,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 
     test::Uniform<float> dot_rng(-1.0f, 1.0f);
     vector<vector<float>> dot_args;
-    for (shared_ptr<op::Parameter> param : dot_params)
+    for (shared_ptr<op::v0::Parameter> param : dot_params)
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         dot_rng.initialize(tensor_val);
@@ -149,7 +149,7 @@ NGRAPH_TEST(${BACKEND_NAME}, batch_mat_mul_forward)
 
     test::Uniform<float> batchmatmul_rng(-1.0f, 1.0f);
     vector<vector<float>> batchmatmul_args;
-    for (shared_ptr<op::Parameter> param : batchmatmul_params)
+    for (shared_ptr<op::v0::Parameter> param : batchmatmul_params)
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         batchmatmul_rng.initialize(tensor_val);
@@ -177,7 +177,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_batch_mat_mul_transpose_forward)
     test::Uniform<float> rng(0.0f, 1.0f);
     vector<vector<float>> args;
 
-    for (shared_ptr<op::Parameter> param : int_f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : int_f->get_parameters())
     {
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
         rng.initialize(tensor_val);
@@ -201,7 +201,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_batchmatmultranspose_tensor2_tensor2)
 
     test::Uniform<float> rng(-1.0f, 1.0f);
     std::vector<std::shared_ptr<ngraph::runtime::Tensor>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         args.push_back(rng.initialize(backend->create_tensor<float>(param->get_output_shape(0))));
     }

@@ -48,10 +48,10 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, conv_bias_1d)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 2});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 1});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto conv_bias = make_shared<op::v0::ConvolutionBias>(data, filters, bias);
     auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -72,10 +72,10 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_1d)
 
 NGRAPH_TEST(${BACKEND_NAME}, conv_bias_2d)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2, 2});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 2, 2});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 1, 1});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto conv_bias = make_shared<op::v0::ConvolutionBias>(data, filters, bias);
     auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -96,10 +96,10 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_2d)
 
 NGRAPH_TEST(${BACKEND_NAME}, conv_bias_3d)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 1, 2, 2});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1, 1});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 1, 2, 2});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 1, 1, 1});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto conv_bias = make_shared<op::v0::ConvolutionBias>(data, filters, bias);
     auto f0 = make_shared<Function>(OutputVector{conv_bias}, ParameterVector{data, filters, bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -120,20 +120,20 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_3d)
 
 NGRAPH_TEST(${BACKEND_NAME}, conv_bias_bprop_2d)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2, 2});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 2, 2});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 1, 1});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 2, 2});
     auto conv_bprop =
-        make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
-                                                            filters->get_output_shape(0),
-                                                            bias->get_output_shape(0),
-                                                            delta,
-                                                            Strides{1, 1},
-                                                            Strides{1, 1},
-                                                            CoordinateDiff{0, 0},
-                                                            CoordinateDiff{0, 0},
-                                                            Strides{1, 1});
+        make_shared<op::v0::ConvolutionBiasBackpropFiltersBias>(data,
+                                                                filters->get_output_shape(0),
+                                                                bias->get_output_shape(0),
+                                                                delta,
+                                                                Strides{1, 1},
+                                                                Strides{1, 1},
+                                                                CoordinateDiff{0, 0},
+                                                                CoordinateDiff{0, 0},
+                                                                Strides{1, 1});
     auto goe0 = conv_bprop->output(0);
     auto goe1 = conv_bprop->output(1);
     auto f0 = make_shared<Function>(OutputVector{goe0, goe1}, ParameterVector{data, delta});
@@ -157,12 +157,12 @@ NGRAPH_TEST(${BACKEND_NAME}, conv_bias_bprop_2d)
 
 NGRAPH_TEST(${BACKEND_NAME}, conv_bias_add_2d)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2, 2});
-    auto filters = make_shared<op::Parameter>(element::f32, Shape{2, 3, 1, 1});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto add = make_shared<op::Parameter>(element::f32, Shape{1, 2, 2, 2});
-    auto conv_bias = make_shared<op::ConvolutionBias>(data, filters, bias);
-    auto conv_bias_add = make_shared<op::ConvolutionBiasAdd>(conv_bias, add);
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 2, 2});
+    auto filters = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 1, 1});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto add = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 2, 2});
+    auto conv_bias = make_shared<op::v0::ConvolutionBias>(data, filters, bias);
+    auto conv_bias_add = make_shared<op::v0::ConvolutionBiasAdd>(conv_bias, add);
     auto f0 = make_shared<Function>(OutputVector{conv_bias_add},
                                     ParameterVector{data, filters, bias, add});
 

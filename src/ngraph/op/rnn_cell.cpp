@@ -29,23 +29,23 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::RNNCell::type_info;
+constexpr NodeTypeInfo op::v0::RNNCell::type_info;
 
-op::RNNCell::RNNCell()
+op::v0::RNNCell::RNNCell()
 {
     m_activations = {"tanh"};
     m_activation_f = get_activation_function(0);
 }
 
-op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     size_t hidden_size,
-                     const vector<string>& activations,
-                     const vector<float>& activations_alpha,
-                     const vector<float>& activations_beta,
-                     float clip)
+op::v0::RNNCell::RNNCell(const Output<Node>& X,
+                         const Output<Node>& initial_hidden_state,
+                         const Output<Node>& W,
+                         const Output<Node>& R,
+                         size_t hidden_size,
+                         const vector<string>& activations,
+                         const vector<float>& activations_alpha,
+                         const vector<float>& activations_beta,
+                         float clip)
     : FusedOp({X, initial_hidden_state, W, R})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
@@ -54,16 +54,16 @@ op::RNNCell::RNNCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-op::RNNCell::RNNCell(const Output<Node>& X,
-                     const Output<Node>& initial_hidden_state,
-                     const Output<Node>& W,
-                     const Output<Node>& R,
-                     const Output<Node>& B,
-                     size_t hidden_size,
-                     const vector<string>& activations,
-                     const vector<float>& activations_alpha,
-                     const vector<float>& activations_beta,
-                     float clip)
+op::v0::RNNCell::RNNCell(const Output<Node>& X,
+                         const Output<Node>& initial_hidden_state,
+                         const Output<Node>& W,
+                         const Output<Node>& R,
+                         const Output<Node>& B,
+                         size_t hidden_size,
+                         const vector<string>& activations,
+                         const vector<float>& activations_alpha,
+                         const vector<float>& activations_beta,
+                         float clip)
     : FusedOp({X, initial_hidden_state, W, R, B})
     , RNNCellBase(hidden_size, clip, activations, activations_alpha, activations_beta)
     , m_activation_f{get_activation_function(0)}
@@ -71,12 +71,12 @@ op::RNNCell::RNNCell(const Output<Node>& X,
     constructor_validate_and_infer_types();
 }
 
-bool op::RNNCell::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::RNNCell::visit_attributes(AttributeVisitor& visitor)
 {
     return op::util::RNNCellBase::visit_attributes(visitor);
 }
 
-void op::RNNCell::pre_validate_and_infer_types()
+void op::v0::RNNCell::pre_validate_and_infer_types()
 {
     if (is_dynamic())
     {
@@ -146,7 +146,7 @@ void op::RNNCell::pre_validate_and_infer_types()
                           ".");
 }
 
-OutputVector op::RNNCell::decompose_op() const
+OutputVector op::v0::RNNCell::decompose_op() const
 {
     // ------ VARIABLE'S NAMES AND ACRONYM DEFINITIONS ------
     // The names used below are analogous to the one used in ONNX documentation.
@@ -180,9 +180,9 @@ OutputVector op::RNNCell::decompose_op() const
     Output<Node> bias = input_value(4);
 
     // Xt*(W^T)
-    auto Xt_W = std::make_shared<op::Dot>(X, builder::transpose(W));
+    auto Xt_W = std::make_shared<op::v0::Dot>(X, builder::transpose(W));
     // Ht-1*(R^T)
-    auto Ht_R = std::make_shared<op::Dot>(H_t, builder::transpose(R));
+    auto Ht_R = std::make_shared<op::v0::Dot>(H_t, builder::transpose(R));
     // Xt*(W^T) + Ht-1*(R^T) + Wb + Rb
     auto i_t = add(Xt_W, add(Ht_R, bias))->output(0);
 
@@ -192,15 +192,15 @@ OutputVector op::RNNCell::decompose_op() const
     return {i_t};
 }
 
-Output<Node> op::RNNCell::get_default_bias_input() const
+Output<Node> op::v0::RNNCell::get_default_bias_input() const
 {
     return Output<Node>{
-        op::Constant::create(get_input_element_type(0),
-                             Shape{s_gates_count * get_hidden_size()},
-                             vector<float>(s_gates_count * get_hidden_size(), 0.f))};
+        op::v0::Constant::create(get_input_element_type(0),
+                                 Shape{s_gates_count * get_hidden_size()},
+                                 vector<float>(s_gates_count * get_hidden_size(), 0.f))};
 }
 
-shared_ptr<Node> op::RNNCell::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::RNNCell::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     if (new_args.size() == 4)

@@ -23,10 +23,10 @@ using namespace ngraph;
 
 TEST(type_prop, matmul_2D_same)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 2});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2});
 
-    auto matmul = make_shared<op::MatMul>(A, B);
+    auto matmul = make_shared<op::v0::MatMul>(A, B);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2}));
@@ -34,10 +34,10 @@ TEST(type_prop, matmul_2D_same)
 
 TEST(type_prop, matmul_4D_same)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 2, 3, 3});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 2, 3, 3});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 3, 3});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 3, 3});
 
-    auto matmul = make_shared<op::MatMul>(A, B);
+    auto matmul = make_shared<op::v0::MatMul>(A, B);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 3}));
@@ -45,10 +45,10 @@ TEST(type_prop, matmul_4D_same)
 
 TEST(type_prop, matmul_2D)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
 
-    auto matmul = make_shared<op::MatMul>(A, B);
+    auto matmul = make_shared<op::v0::MatMul>(A, B);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{3, 4}));
@@ -56,10 +56,10 @@ TEST(type_prop, matmul_2D)
 
 TEST(type_prop, matmul_4D)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 2, 3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 2, 6, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 6, 4});
 
-    auto matmul = make_shared<op::MatMul>(A, B);
+    auto matmul = make_shared<op::v0::MatMul>(A, B);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 4}));
@@ -67,10 +67,10 @@ TEST(type_prop, matmul_4D)
 
 TEST(type_prop, matmul_2D_transpose_a)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{6, 3});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{6, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{6, 3});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{6, 4});
 
-    auto matmul = make_shared<op::MatMul>(A, B, 1);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, 1);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{3, 4}));
@@ -78,10 +78,10 @@ TEST(type_prop, matmul_2D_transpose_a)
 
 TEST(type_prop, matmul_4D_transpose_a)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 2, 6, 3});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 2, 6, 4});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 6, 3});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 6, 4});
 
-    auto matmul = make_shared<op::MatMul>(A, B, 1);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, 1);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 4}));
@@ -89,10 +89,10 @@ TEST(type_prop, matmul_4D_transpose_a)
 
 TEST(type_prop, matmul_2D_transpose_b)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{4, 6});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{4, 6});
 
-    auto matmul = make_shared<op::MatMul>(A, B, 0, 1);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, 0, 1);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{3, 4}));
@@ -100,10 +100,10 @@ TEST(type_prop, matmul_2D_transpose_b)
 
 TEST(type_prop, matmul_4D_transpose_b)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{2, 2, 3, 6});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{2, 2, 4, 6});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 3, 6});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{2, 2, 4, 6});
 
-    auto matmul = make_shared<op::MatMul>(A, B, 0, 1);
+    auto matmul = make_shared<op::v0::MatMul>(A, B, 0, 1);
 
     ASSERT_EQ(matmul->get_output_element_type(0), element::f32);
     ASSERT_EQ(matmul->get_output_shape(0), (Shape{2, 2, 3, 4}));

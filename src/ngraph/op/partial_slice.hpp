@@ -109,7 +109,5 @@ namespace ngraph
                 std::vector<int64_t> m_upper_bounds;
             };
         }
-        using v0::PartialSlice;
-        using v0::PartialSliceBackprop;
     }
 }

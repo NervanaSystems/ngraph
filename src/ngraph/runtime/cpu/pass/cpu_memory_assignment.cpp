@@ -58,7 +58,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(NodeVector
 {
     for (shared_ptr<Node> node : nodes)
     {
-        if (auto concat = as_type_ptr<op::Concat>(node))
+        if (auto concat = as_type_ptr<op::v0::Concat>(node))
         {
             if (auto op_annotations = concat->get_op_annotations())
             {
@@ -69,7 +69,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(NodeVector
                     bool found_last_concat = true;
                     for (auto user : concat->get_users())
                     {
-                        if (auto user_concat = as_type_ptr<op::Concat>(user))
+                        if (auto user_concat = as_type_ptr<op::v0::Concat>(user))
                         {
                             if (auto user_op_annotations = user_concat->get_op_annotations())
                             {
@@ -132,7 +132,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_concat(NodeVector
 void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_concat(const Output<Node>& output)
 {
     auto op = output.get_node_shared_ptr();
-    if (is_type<op::Concat>(op))
+    if (is_type<op::v0::Concat>(op))
     {
         auto output_tensor = &op->get_output_tensor(0);
         auto output_bufferID = get_bufferID(output_tensor);
@@ -216,7 +216,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::process_in_place_slice(NodeVector 
 {
     for (shared_ptr<Node>& node : nodes)
     {
-        if (auto slice = as_type_ptr<op::Slice>(node))
+        if (auto slice = as_type_ptr<op::v0::Slice>(node))
         {
             if (auto op_annotations = slice->get_op_annotations())
             {
@@ -283,7 +283,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::propagate_in_place_slice(const Inp
 
         auto node = in.get_node();
         // let process_in_place_slice handle slice.
-        if (is_type<op::Slice>(node))
+        if (is_type<op::v0::Slice>(node))
         {
             continue;
         }
@@ -341,7 +341,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(NodeVector&
             m_tensor_to_bufferID[output_tensor] = count;
             count++;
         }
-        else if (is_type<op::Constant>(node))
+        else if (is_type<op::v0::Constant>(node))
         {
             auto output_tensor = &node->get_output_tensor(0);
             auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
@@ -392,7 +392,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(NodeVector&
                     auto cacheable = op_annotations->is_cacheable();
 
                     // in place concat
-                    if (is_type<op::Concat>(node))
+                    if (is_type<op::v0::Concat>(node))
                     {
                         auto output_tensor = &node->get_output_tensor(0);
                         auto ele = std::pair<TensorRole, unordered_set<descriptor::Tensor*>>(
@@ -494,7 +494,7 @@ void runtime::cpu::pass::CPUMemoryAssignment::build_buffer_sets_maps(NodeVector&
                                     auto input_buffer_it = m_bufferID_to_tensorSets.find(bufferID);
                                     NGRAPH_CHECK(input_buffer_it != m_bufferID_to_tensorSets.end());
 
-                                    if (is_type<op::Slice>(node))
+                                    if (is_type<op::v0::Slice>(node))
                                     {
                                         if (input_buffer_it->second.first != TensorRole::CONSTANT)
                                         {

@@ -40,7 +40,7 @@
 //
 // This sample expands to a list like this:
 // ngraph::op::v0::Abs,
-// ngraph::op::Acos,
+// ngraph::op::v0::Acos,
 // ...
 //
 // It's that easy. You can use this for fun and profit.

@@ -50,6 +50,5 @@ namespace ngraph
                 bool m_ctc_merge_repeated;
             };
         }
-        using v0::CTCGreedyDecoder;
     }
 }

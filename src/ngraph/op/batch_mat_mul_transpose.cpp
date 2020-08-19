@@ -27,12 +27,12 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::BatchMatMulTranspose::type_info;
+constexpr NodeTypeInfo op::v0::BatchMatMulTranspose::type_info;
 
-op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
-                                               const Output<Node>& arg1,
-                                               bool transpose_arg0,
-                                               bool transpose_arg1)
+op::v0::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
+                                                   const Output<Node>& arg1,
+                                                   bool transpose_arg0,
+                                                   bool transpose_arg1)
     : FusedOp({arg0, arg1})
     , m_transpose_arg0(transpose_arg0)
     , m_transpose_arg1(transpose_arg1)
@@ -40,7 +40,7 @@ op::BatchMatMulTranspose::BatchMatMulTranspose(const Output<Node>& arg0,
     constructor_validate_and_infer_types();
 }
 
-OutputVector op::BatchMatMulTranspose::decompose_op() const
+OutputVector op::v0::BatchMatMulTranspose::decompose_op() const
 {
     const PartialShape& arg0_pshape = get_input_partial_shape(0);
     const PartialShape& arg1_pshape = get_input_partial_shape(1);
@@ -68,41 +68,42 @@ OutputVector op::BatchMatMulTranspose::decompose_op() const
         const bool transpose = i == 0 ? m_transpose_arg0 : m_transpose_arg1;
         for (size_t j = 0; j < num_batches; j++)
         {
-            auto slice =
-                std::make_shared<op::Slice>(input_value(i),
-                                            Coordinate{j, 0, 0},
-                                            Coordinate{j + 1, arg_shape.at(1), arg_shape.at(2)});
+            auto slice = std::make_shared<op::v0::Slice>(
+                input_value(i),
+                Coordinate{j, 0, 0},
+                Coordinate{j + 1, arg_shape.at(1), arg_shape.at(2)});
             auto reshape_slice =
-                std::make_shared<op::Reshape>(slice, AxisVector{0, 1, 2}, arg_shape_res);
+                std::make_shared<op::v0::Reshape>(slice, AxisVector{0, 1, 2}, arg_shape_res);
 
-            dot_inputs.push_back(transpose ? std::make_shared<op::Reshape>(reshape_slice,
-                                                                           AxisVector{1, 0},
-                                                                           arg_shape_res_trans)
+            dot_inputs.push_back(transpose ? std::make_shared<op::v0::Reshape>(reshape_slice,
+                                                                               AxisVector{1, 0},
+                                                                               arg_shape_res_trans)
                                            : reshape_slice);
         }
     }
     OutputVector concat_inputs;
     for (size_t i = 0; i < num_batches; i++)
     {
-        auto dot = std::make_shared<op::Dot>(dot_inputs[i], dot_inputs[i + num_batches]);
+        auto dot = std::make_shared<op::v0::Dot>(dot_inputs[i], dot_inputs[i + num_batches]);
         auto dot_shape = dot->get_output_shape(0);
-        auto dot_reshape = std::make_shared<op::Reshape>(
+        auto dot_reshape = std::make_shared<op::v0::Reshape>(
             dot, AxisVector{0, 1}, Shape{1, dot_shape.at(0), dot_shape.at(1)});
         concat_inputs.push_back(dot_reshape);
     }
 
-    auto concat_result = std::make_shared<op::Concat>(concat_inputs, 0);
+    auto concat_result = std::make_shared<op::v0::Concat>(concat_inputs, 0);
     return {concat_result};
 }
 
-shared_ptr<Node> op::BatchMatMulTranspose::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node>
+    op::v0::BatchMatMulTranspose::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<BatchMatMulTranspose>(
         new_args.at(0), new_args.at(1), m_transpose_arg0, m_transpose_arg1);
 }
 
-void op::BatchMatMulTranspose::validate_and_infer_types()
+void op::v0::BatchMatMulTranspose::validate_and_infer_types()
 {
     // Check input types
     const auto& arg0_et = get_input_element_type(0);
@@ -148,8 +149,8 @@ void op::BatchMatMulTranspose::validate_and_infer_types()
     set_output_type(0, output_et, output_shape);
 }
 
-void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
-                                                 const OutputVector& deltas)
+void op::v0::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                     const OutputVector& deltas)
 {
     auto delta = deltas.at(0); // NxIxK
 
@@ -157,8 +158,8 @@ void op::BatchMatMulTranspose::generate_adjoints(autodiff::Adjoints& adjoints,
     auto arg1 = get_input_node_shared_ptr(1); // NxJxK (maybe transposed)
 
     // If arg1 is already transposed, it does not need to be transposed again
-    auto delta_dot_arg1 =
-        make_shared<op::BatchMatMulTranspose>(delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
+    auto delta_dot_arg1 = make_shared<op::v0::BatchMatMulTranspose>(
+        delta, arg1, false, !m_transpose_arg1); // IK.KJ->IJ
     // If arg0 is transposed, the result need to be transposed to match original arg0 shape.
     if (m_transpose_arg0)
     {
