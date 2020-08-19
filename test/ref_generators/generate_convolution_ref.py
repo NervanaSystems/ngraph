@@ -260,9 +260,9 @@ NGRAPH_TEST (${BACKEND_NAME}, %s)
     Shape shape_b{%s};
     Shape shape_r{%s};
     auto make_graph = [shape_a, shape_b] {
-        auto A = make_shared<op::Parameter>(element::f32, shape_a);
-        auto B = make_shared<op::Parameter>(element::f32, shape_b);
-        return make_shared<Function>(make_shared<op::Convolution>(A, B,
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+        auto B = make_shared<op::v0::Parameter>(element::f32, shape_b);
+        return make_shared<Function>(make_shared<op::v0::Convolution>(A, B,
                                                                   Strides{%s},        // move_strides
                                                                   Strides{%s},        // filter_dilation
                                                                   CoordinateDiff{%s}, // below_pads

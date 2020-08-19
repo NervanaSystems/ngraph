@@ -66,7 +66,6 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v1::Add;
     }
 
     NGRAPH_API

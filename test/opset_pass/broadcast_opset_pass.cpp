@@ -13,7 +13,7 @@ using namespace ngraph;
 
 TEST(opset_transform, opset1_broadcast_upgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{5, 6});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{5, 6});
 
     auto bcast_v0 = make_shared<op::v0::Broadcast>(arg, Shape{3, 5, 4, 6}, AxisSet{0, 2});
     auto f = make_shared<Function>(OutputVector{bcast_v0}, ParameterVector{arg});
@@ -30,19 +30,19 @@ TEST(opset_transform, opset1_broadcast_upgrade_pass)
     EXPECT_EQ(bcast_v1->get_broadcast_axes(), (std::make_pair<bool, AxisSet>(true, AxisSet{0, 2})));
     ASSERT_TRUE(bcast_v1->input_value(1).get_node()->is_constant());
     ASSERT_TRUE(bcast_v1->input_value(2).get_node()->is_constant());
-    EXPECT_EQ(
-        as_type_ptr<op::Constant>(bcast_v1->input_value(1).get_node_shared_ptr())->get_shape_val(),
-        (Shape{3, 5, 4, 6}));
-    EXPECT_EQ(as_type_ptr<op::Constant>(bcast_v1->input_value(2).get_node_shared_ptr())
+    EXPECT_EQ(as_type_ptr<op::v0::Constant>(bcast_v1->input_value(1).get_node_shared_ptr())
+                  ->get_shape_val(),
+              (Shape{3, 5, 4, 6}));
+    EXPECT_EQ(as_type_ptr<op::v0::Constant>(bcast_v1->input_value(2).get_node_shared_ptr())
                   ->get_axis_set_val(),
               (AxisSet{1, 3}));
 }
 
 TEST(opset_transform, opset1_broadcast_downgrade_pass)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3});
-    auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{5}, {3, 1, 4, 2, 3});
-    auto axes_mapping = op::Constant::create<int64_t>(element::i64, Shape{3}, {1, 3, 4});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3});
+    auto target_shape = op::v0::Constant::create<int64_t>(element::i64, Shape{5}, {3, 1, 4, 2, 3});
+    auto axes_mapping = op::v0::Constant::create<int64_t>(element::i64, Shape{3}, {1, 3, 4});
 
     auto bcast_v1 = make_shared<op::v1::Broadcast>(arg, target_shape, axes_mapping);
     auto f = make_shared<Function>(OutputVector{bcast_v1}, ParameterVector{arg});

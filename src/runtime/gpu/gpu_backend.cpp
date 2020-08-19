@@ -178,8 +178,8 @@ bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
 
     if (is_type<op::v0::BatchNormInference>(&op))
     {
-        const ngraph::op::BatchNormInference* bn =
-            static_cast<const ngraph::op::BatchNormInference*>(&op);
+        const ngraph::op::v0::BatchNormInference* bn =
+            static_cast<const ngraph::op::v0::BatchNormInference*>(&op);
         if (bn->get_eps_value() < CUDNN_BN_MIN_EPSILON)
         {
             return false;
@@ -187,8 +187,8 @@ bool runtime::gpu::GPUBackend::is_supported(const Node& op) const
     }
     else if (is_type<op::v0::BatchNormTraining>(&op))
     {
-        const ngraph::op::BatchNormTraining* bn =
-            static_cast<const ngraph::op::BatchNormTraining*>(&op);
+        const ngraph::op::v0::BatchNormTraining* bn =
+            static_cast<const ngraph::op::v0::BatchNormTraining*>(&op);
         if (bn->get_eps_value() < CUDNN_BN_MIN_EPSILON)
         {
             return false;

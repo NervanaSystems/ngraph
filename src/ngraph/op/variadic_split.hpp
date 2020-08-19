@@ -56,7 +56,5 @@ namespace ngraph
                 size_t get_default_output_index() const override { return no_default_index(); }
             };
         }
-
-        using v1::VariadicSplit;
     }
 }

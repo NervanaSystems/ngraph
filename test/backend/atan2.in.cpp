@@ -47,9 +47,9 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, atan2)
 {
     Shape shape{30};
-    auto X = make_shared<op::Parameter>(element::f32, shape);
-    auto Y = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Atan2>(Y, X), ParameterVector{X, Y});
+    auto X = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto Y = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v0::Atan2>(Y, X), ParameterVector{X, Y});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

@@ -23,9 +23,9 @@ using namespace std;
 using namespace ngraph;
 
 template <class T>
-shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> arg,
-                                                     shared_ptr<op::Constant> shape,
-                                                     shared_ptr<op::Constant> axes)
+shared_ptr<op::v0::Constant> fold_constant_dyn_broadcast(shared_ptr<op::v0::Constant> arg,
+                                                         shared_ptr<op::v0::Constant> shape,
+                                                         shared_ptr<op::v0::Constant> axes)
 {
     const Shape& out_shape = shape->get_shape_val();
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(T));
@@ -37,19 +37,19 @@ shared_ptr<op::Constant> fold_constant_dyn_broadcast(shared_ptr<op::Constant> ar
                                      out_shape,
                                      axes->get_axis_set_val());
 
-    return make_shared<op::Constant>(arg->get_output_element_type(0), out_shape, data_ptr);
+    return make_shared<op::v0::Constant>(arg->get_output_element_type(0), out_shape, data_ptr);
 }
 
 void pass::ConstantFolding::construct_constant_dyn_broadcast()
 {
-    auto constant_arg_label =
-        make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
-    auto constant_shape_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{2}, pattern::has_class<op::Constant>());
-    auto constant_axes_label =
-        make_shared<pattern::op::Label>(element::i64, Shape{1}, pattern::has_class<op::Constant>());
+    auto constant_arg_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2}, pattern::has_class<op::v0::Constant>());
+    auto constant_shape_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{2}, pattern::has_class<op::v0::Constant>());
+    auto constant_axes_label = make_shared<pattern::op::Label>(
+        element::i64, Shape{1}, pattern::has_class<op::v0::Constant>());
 
-    auto dyn_broadcast = make_shared<op::DynBroadcast>(
+    auto dyn_broadcast = make_shared<op::v0::DynBroadcast>(
         constant_arg_label, constant_shape_label, constant_axes_label);
 
     auto constant_dyn_broadcast_callback = [constant_arg_label,
@@ -61,16 +61,16 @@ void pass::ConstantFolding::construct_constant_dyn_broadcast()
         auto pattern_map = m.get_pattern_map();
 
         auto constant_arg_match =
-            static_pointer_cast<op::Constant>(pattern_map[constant_arg_label]);
+            static_pointer_cast<op::v0::Constant>(pattern_map[constant_arg_label]);
         auto constant_shape_match =
-            static_pointer_cast<op::Constant>(pattern_map[constant_shape_label]);
+            static_pointer_cast<op::v0::Constant>(pattern_map[constant_shape_label]);
         auto constant_axes_match =
-            static_pointer_cast<op::Constant>(pattern_map[constant_axes_label]);
-        auto dyn_broadcast_match = m.get_match_root_as<op::DynBroadcast>();
+            static_pointer_cast<op::v0::Constant>(pattern_map[constant_axes_label]);
+        auto dyn_broadcast_match = m.get_match_root_as<op::v0::DynBroadcast>();
         NGRAPH_CHECK(dyn_broadcast_match,
                      "match root node ",
                      *m.get_match_root(),
-                     " not of type `op::DynBroadcast`");
+                     " not of type `op::v0::DynBroadcast`");
 
         NGRAPH_CHECK(revalidate_and_ensure_static(dyn_broadcast_match));
 

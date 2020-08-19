@@ -24,8 +24,8 @@ using namespace ngraph;
 TEST(type_prop, convert_deduce)
 {
     // Deduce type
-    auto param = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto c = make_shared<op::Convert>(param, element::i32);
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4});
+    auto c = make_shared<op::v0::Convert>(param, element::i32);
     ASSERT_EQ(c->get_output_element_type(0), element::i32);
     ASSERT_EQ(c->get_output_shape(0), (Shape{2, 3, 4}));
 }

@@ -69,6 +69,5 @@ namespace ngraph
                 std::shared_ptr<ngraph::Function> m_function;
             };
         }
-        using v0::CompiledKernel;
     }
 }

@@ -48,10 +48,10 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, squeeze)
 {
-    const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
+    const auto data_node = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
-        make_shared<ngraph::op::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 2});
-    const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
+        make_shared<ngraph::op::v0::Constant>(element::i64, Shape{2}, vector<int64_t>{0, 2});
+    const auto squeeze = make_shared<op::v0::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(OutputVector{squeeze}, ParameterVector{data_node});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -64,10 +64,10 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze)
 
 NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
 {
-    const auto data_node = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
+    const auto data_node = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
     const auto axes_node =
-        make_shared<ngraph::op::Constant>(element::i64, Shape{0}, vector<int64_t>{});
-    const auto squeeze = make_shared<op::Squeeze>(data_node, axes_node);
+        make_shared<ngraph::op::v0::Constant>(element::i64, Shape{0}, vector<int64_t>{});
+    const auto squeeze = make_shared<op::v0::Squeeze>(data_node, axes_node);
 
     const auto function = make_shared<Function>(OutputVector{squeeze}, ParameterVector{data_node});
     auto test_case = ngraph::test::NgraphTestCase(function, "${BACKEND_NAME}");
@@ -80,7 +80,7 @@ NGRAPH_TEST(${BACKEND_NAME}, squeeze_default_axes)
 
 NGRAPH_TEST(${BACKEND_NAME}, squeeze_dynamic)
 {
-    const auto data_param = make_shared<op::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
-    const auto axes_param = make_shared<op::Parameter>(element::i64, Shape{2});
-    EXPECT_THROW(make_shared<op::Squeeze>(data_param, axes_param), CheckFailure);
+    const auto data_param = make_shared<op::v0::Parameter>(element::f32, Shape{1, 4, 1, 1, 2});
+    const auto axes_param = make_shared<op::v0::Parameter>(element::i64, Shape{2});
+    EXPECT_THROW(make_shared<op::v0::Squeeze>(data_param, axes_param), CheckFailure);
 }

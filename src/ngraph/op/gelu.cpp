@@ -29,9 +29,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Gelu::type_info;
+constexpr NodeTypeInfo op::v0::Gelu::type_info;
 
-op::Gelu::Gelu(const Output<Node>& data)
+op::v0::Gelu::Gelu(const Output<Node>& data)
     : FusedOp({data})
 {
     constructor_validate_and_infer_types();
@@ -43,7 +43,7 @@ bool ngraph::op::v0::Gelu::visit_attributes(AttributeVisitor& visitor)
 }
 
 // f(x) = 0.5 * x * (1.0 + erf( x / sqrt(2.0) )
-OutputVector op::Gelu::decompose_op() const
+OutputVector op::v0::Gelu::decompose_op() const
 {
     auto data = input_value(0);
 
@@ -56,10 +56,10 @@ OutputVector op::Gelu::decompose_op() const
     shared_ptr<ngraph::Node> sqrt_two =
         builder::make_constant(data.get_element_type(), data.get_shape(), std::sqrt(2.0));
 
-    return {half * data * (one + make_shared<ngraph::op::Erf>(data / sqrt_two))};
+    return {half * data * (one + make_shared<ngraph::op::v0::Erf>(data / sqrt_two))};
 }
 
-shared_ptr<Node> op::Gelu::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Gelu::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -68,7 +68,7 @@ shared_ptr<Node> op::Gelu::clone_with_new_inputs(const OutputVector& new_args) c
     return make_shared<Gelu>(new_args.at(0));
 }
 
-void op::Gelu::pre_validate_and_infer_types()
+void op::v0::Gelu::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
     PartialShape input_pshape = get_input_partial_shape(0);
@@ -85,24 +85,24 @@ void op::Gelu::pre_validate_and_infer_types()
     }
 }
 
-void op::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Gelu::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
 
     auto x = input_value(0);
 
-    adjoints.add_delta(x, delta * (make_shared<op::GeluBackpropFactor>(x)));
+    adjoints.add_delta(x, delta * (make_shared<op::v0::GeluBackpropFactor>(x)));
 }
 
-constexpr NodeTypeInfo op::GeluBackpropFactor::type_info;
+constexpr NodeTypeInfo op::v0::GeluBackpropFactor::type_info;
 
-op::GeluBackpropFactor::GeluBackpropFactor(const Output<Node>& x)
+op::v0::GeluBackpropFactor::GeluBackpropFactor(const Output<Node>& x)
     : FusedOp({x})
 {
     constructor_validate_and_infer_types();
 }
 
-void op::GeluBackpropFactor::pre_validate_and_infer_types()
+void op::v0::GeluBackpropFactor::pre_validate_and_infer_types()
 {
     element::Type input_element_type = get_input_element_type(0);
     PartialShape input_pshape = get_input_partial_shape(0);
@@ -119,13 +119,14 @@ void op::GeluBackpropFactor::pre_validate_and_infer_types()
     }
 }
 
-shared_ptr<Node> op::GeluBackpropFactor::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node>
+    op::v0::GeluBackpropFactor::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<GeluBackpropFactor>(new_args.at(0));
 }
 
-OutputVector op::GeluBackpropFactor::decompose_op() const
+OutputVector op::v0::GeluBackpropFactor::decompose_op() const
 {
     auto x = input_value(0);
 
@@ -138,7 +139,7 @@ OutputVector op::GeluBackpropFactor::decompose_op() const
         builder::make_constant(x.get_element_type(), x.get_shape(), 1.0 / std::sqrt(2.0 * pi));
     auto sqrt_half = builder::make_constant(x.get_element_type(), x.get_shape(), std::sqrt(0.5));
 
-    auto e1 = half * (one + make_shared<op::Erf>(x * sqrt_half));
-    auto e2 = x * make_shared<op::Exp>(x * x * (-half)) * inv_sqrt_two_pi;
+    auto e1 = half * (one + make_shared<op::v0::Erf>(x * sqrt_half));
+    auto e2 = x * make_shared<op::v0::Exp>(x * x * (-half)) * inv_sqrt_two_pi;
     return {e1 + e2};
 }

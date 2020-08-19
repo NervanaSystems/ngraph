@@ -55,14 +55,14 @@ TEST(builder, scaled_QC_with_relu)
     Shape shape_r{1, 1, 3, 3}; // output shape
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     vector<int8_t> b_data = {1, 2, 1, 0, 0, 0, -1, -2, -1};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto C = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{1}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{1}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{1}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{1}, {20.0f});
-    auto H = op::Constant::create(element::f32, Shape{1}, {-24.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto C = op::v0::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{1}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{1}, {20.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{1}, {-24.0f});
     auto CV = ngraph::builder::QuantizedConvolutionReluBuilder(A,
                                                                B,
                                                                Strides{1, 1}, // move_strides
@@ -97,14 +97,14 @@ TEST(builder, dynamic_scaled_QC_with_relu)
     Shape shape_r{1, 1, 3, 3}; // output shape
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     vector<int8_t> b_data = {1, 2, 1, 0, 0, 0, -1, -2, -1};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto D = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto E = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto F = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto G = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto H = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     auto CV = ngraph::builder::QuantizedConvolutionReluBuilder(A,
                                                                B,
                                                                Strides{1, 1}, // move_strides
@@ -151,15 +151,15 @@ TEST(builder, scaled_QC_with_bias)
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{1}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{1}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{1}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{1}, {22.0f});
-    auto H = op::Constant::create(element::f32, Shape{1}, {90.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = op::v0::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{1}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{1}, {22.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{1}, {90.0f});
     auto CV = ngraph::builder::QuantizedConvolutionBiasBuilder(A,
                                                                B,
                                                                Bias,
@@ -199,15 +199,15 @@ TEST(builder, dynamic_scaled_QC_with_bias)
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto D = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto E = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto F = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto G = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto H = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     auto CV = ngraph::builder::QuantizedConvolutionBiasBuilder(A,
                                                                B,
                                                                Bias,
@@ -258,15 +258,15 @@ TEST(builder, scaled_QC_with_bias_and_relu)
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     vector<int8_t> b_data = {1, 2, 1, 0, 0, 0, -1, -2, -1};
     vector<int32_t> c_data = {5};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{1}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{1}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{1}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{1}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{1}, {20.0f});
-    auto H = op::Constant::create(element::f32, Shape{1}, {-24.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = op::v0::Constant::create(element::f32, Shape{1}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{1}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{1}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{1}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{1}, {20.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{1}, {-24.0f});
     auto CV = ngraph::builder::QuantizedConvolutionBiasBuilder(A,
                                                                B,
                                                                Bias,
@@ -307,18 +307,18 @@ TEST(builder, scaled_QC_with_bias_add_and_relu)
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
     vector<uint8_t> conv_2_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Add = make_shared<op::Parameter>(element::u8, shape_a);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{}, {22.0f});
-    auto H = op::Constant::create(element::f32, Shape{}, {90.0f});
-    auto I = op::Constant::create(element::f32, Shape{}, {22.0f});
-    auto J = op::Constant::create(element::f32, Shape{}, {180.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Add = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{}, {22.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{}, {90.0f});
+    auto I = op::v0::Constant::create(element::f32, Shape{}, {22.0f});
+    auto J = op::v0::Constant::create(element::f32, Shape{}, {180.0f});
     auto CV =
         ngraph::builder::QuantizedConvolutionBiasAddBuilder(A,
                                                             B,
@@ -366,18 +366,18 @@ TEST(builder, dynamic_scaled_QC_with_bias_add_and_relu)
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
     vector<uint8_t> conv_2_data = {1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Add = make_shared<op::Parameter>(element::u8, shape_a);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto H = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto I = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto J = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Add = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto D = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto E = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto F = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto G = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto H = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto I = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto J = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     auto CV =
         ngraph::builder::QuantizedConvolutionBiasAddBuilder(A,
                                                             B,
@@ -441,18 +441,18 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu)
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
     vector<int8_t> conv_2_data = {-1, -2, -3, -4, -5, -6, -10, 0, 1, 2, 3, 4};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Add = make_shared<op::Parameter>(element::i8, shape_a);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{}, {22.0f});
-    auto H = op::Constant::create(element::f32, Shape{}, {90.0f});
-    auto I = op::Constant::create(element::f32, Shape{}, {22.0f});
-    auto J = op::Constant::create(element::f32, Shape{}, {90.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Add = make_shared<op::v0::Parameter>(element::i8, shape_a);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{}, {22.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{}, {90.0f});
+    auto I = op::v0::Constant::create(element::f32, Shape{}, {22.0f});
+    auto J = op::v0::Constant::create(element::f32, Shape{}, {90.0f});
     auto CV = ngraph::builder::QuantizedConvolutionBiasSignedAddBuilder(
         A,
         B,
@@ -500,21 +500,21 @@ TEST(builder, scaled_QC_with_bias_signed_add_and_relu_nhwc)
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
     vector<int8_t> conv_2_data = {-1, -2, -3, -4, -5, -6, -10, 0, 1, 2, 3, 4};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto A_reshape = make_shared<op::Reshape>(A, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto B_reshape = make_shared<op::Reshape>(B, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
-    auto Add = make_shared<op::Parameter>(element::i8, shape_a);
-    auto Add_reshape = make_shared<op::Reshape>(Add, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{}, {22.0f});
-    auto H = op::Constant::create(element::f32, Shape{}, {90.0f});
-    auto I = op::Constant::create(element::f32, Shape{}, {22.0f});
-    auto J = op::Constant::create(element::f32, Shape{}, {90.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto A_reshape = make_shared<op::v0::Reshape>(A, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto B_reshape = make_shared<op::v0::Reshape>(B, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 3});
+    auto Add = make_shared<op::v0::Parameter>(element::i8, shape_a);
+    auto Add_reshape = make_shared<op::v0::Reshape>(Add, AxisVector{0, 3, 1, 2}, Shape{1, 1, 3, 4});
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{}, {22.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{}, {90.0f});
+    auto I = op::v0::Constant::create(element::f32, Shape{}, {22.0f});
+    auto J = op::v0::Constant::create(element::f32, Shape{}, {90.0f});
     auto CV = ngraph::builder::QuantizedConvolutionBiasSignedAddBuilder(
         A_reshape,
         B_reshape,
@@ -562,18 +562,18 @@ TEST(builder, dynamic_scaled_QC_with_bias_signed_add_and_relu)
     vector<int8_t> b_data = {1, 2, 3, 4, 5, 0, 0, 1, 2};
     vector<int32_t> c_data = {5};
     vector<int8_t> conv_2_data = {-1, -2, -3, -4, -5, -6, -10, 0, 1, 2, 3, 4};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Add = make_shared<op::Parameter>(element::i8, shape_a);
-    auto Bias = make_shared<op::Parameter>(element::i32, Shape{1});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto H = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto I = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto J = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Add = make_shared<op::v0::Parameter>(element::i8, shape_a);
+    auto Bias = make_shared<op::v0::Parameter>(element::i32, Shape{1});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto D = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto E = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto F = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto G = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto H = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto I = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto J = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     auto CV = ngraph::builder::QuantizedConvolutionBiasSignedAddBuilder(
         A,
         B,
@@ -636,15 +636,15 @@ TEST(builder, scaled_QC_with_f32_bias_and_relu)
     vector<uint8_t> a_data = {1, 2, 3, 4, 5, 6, 7, 8, 9};
     vector<int8_t> b_data = {1, 2, 1, 0, 0, 0, -1, -2, -1};
     vector<float> c_data = {5};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Bias = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto C = op::Constant::create(element::f32, Shape{}, {0.0f});
-    auto D = op::Constant::create(element::f32, Shape{}, {255.0f});
-    auto E = op::Constant::create(element::f32, Shape{}, {-127.0f});
-    auto F = op::Constant::create(element::f32, Shape{}, {127.0f});
-    auto G = op::Constant::create(element::f32, Shape{}, {20.0f});
-    auto H = op::Constant::create(element::f32, Shape{}, {-24.0f});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Bias = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {0.0f});
+    auto D = op::v0::Constant::create(element::f32, Shape{}, {255.0f});
+    auto E = op::v0::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto F = op::v0::Constant::create(element::f32, Shape{}, {127.0f});
+    auto G = op::v0::Constant::create(element::f32, Shape{}, {20.0f});
+    auto H = op::v0::Constant::create(element::f32, Shape{}, {-24.0f});
     auto CV = ngraph::builder::QuantizedConvolutionBiasBuilder(A,
                                                                B,
                                                                Bias,
@@ -681,10 +681,10 @@ TEST(builder, scaled_Q_unsigned)
     vector<float> a_data = {-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0};
     Shape shape_a{8};
     AxisSet quantization_axes;
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = op::Constant::create(element::f32, Shape{}, {-255.0f});
-    auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
+    op::v0::Quantize::RoundMode round_mode = op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = op::v0::Constant::create(element::f32, Shape{}, {-255.0f});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = ngraph::builder::QuantizeBuilder(A, B, C, element::u8, quantization_axes, round_mode);
     auto f = make_shared<Function>(OutputVector{QT}, ParameterVector{A});
     constant_fold(f);
@@ -702,14 +702,14 @@ TEST(builder, dynamic_scaled_Q)
 {
     auto call_SQ = [](shared_ptr<runtime::Backend>& backend,
                       element::Type type,
-                      op::Quantize::RoundMode mode,
+                      op::v0::Quantize::RoundMode mode,
                       Shape in_shape,
                       vector<float> in,
                       float min,
                       float max) {
-        auto A = make_shared<op::Parameter>(element::f32, in_shape);
-        auto B = make_shared<op::Parameter>(element::f32, Shape{});
-        auto C = make_shared<op::Parameter>(element::f32, Shape{});
+        auto A = make_shared<op::v0::Parameter>(element::f32, in_shape);
+        auto B = make_shared<op::v0::Parameter>(element::f32, Shape{});
+        auto C = make_shared<op::v0::Parameter>(element::f32, Shape{});
         auto QT = ngraph::builder::QuantizeBuilder(A, B, C, type, AxisSet{}, mode);
         auto f = make_shared<Function>(OutputVector{QT}, ParameterVector{A, B, C});
         // Create some tensors for input/output
@@ -727,7 +727,7 @@ TEST(builder, dynamic_scaled_Q)
     auto backend = runtime::Backend::create("CPU");
     auto result = call_SQ(backend,
                           element::u8,
-                          op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                          op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
                           Shape{8},
                           vector<float>{-255.0, 0.0, 1.0, 1.25, 1.75, 64.0, 127.0, 500.0},
                           -255.0f,
@@ -735,7 +735,7 @@ TEST(builder, dynamic_scaled_Q)
     EXPECT_EQ((vector<uint8_t>{0, 0, 1, 1, 2, 64, 127, 255}), read_vector<uint8_t>(result));
     auto result2 = call_SQ(backend,
                            element::u8,
-                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
                            Shape{8},
                            vector<float>{-85.0, 0.0, 2.0, 10.0, 15.0, 127.0, 64.0, 500.0},
                            -85.0f,
@@ -743,7 +743,7 @@ TEST(builder, dynamic_scaled_Q)
     EXPECT_EQ((vector<uint8_t>{0, 0, 6, 30, 45, 255, 192, 255}), read_vector<uint8_t>(result2));
     auto result3 = call_SQ(backend,
                            element::u8,
-                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
                            Shape{2, 2},
                            vector<float>{0.1392, 0.5928, 0.6027, 0.8579},
                            0.0f,
@@ -751,7 +751,7 @@ TEST(builder, dynamic_scaled_Q)
     EXPECT_EQ((vector<uint8_t>{35, 151, 154, 219}), read_vector<uint8_t>(result3));
     auto result4 = call_SQ(backend,
                            element::i8,
-                           op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
+                           op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN,
                            Shape{2, 4},
                            vector<float>{-1.3990955,
                                          -1.468798,
@@ -772,10 +772,10 @@ TEST(builder, scaled_Q_signed)
     vector<float> a_data = {-127.0, 0.0, 1.0, 3.0, 5.0, 64.0, 127.0, 500.0};
     Shape shape_a{8};
     AxisSet quantization_axes;
-    op::Quantize::RoundMode round_mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
-    auto A = make_shared<op::Parameter>(element::f32, shape_a);
-    auto B = op::Constant::create(element::f32, Shape{}, {-127.0f});
-    auto C = op::Constant::create(element::f32, Shape{}, {127.0f});
+    op::v0::Quantize::RoundMode round_mode = op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape_a);
+    auto B = op::v0::Constant::create(element::f32, Shape{}, {-127.0f});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {127.0f});
     auto QT = ngraph::builder::QuantizeBuilder(A, B, C, element::i8, quantization_axes, round_mode);
     auto f = make_shared<Function>(OutputVector{QT}, ParameterVector{A});
     constant_fold(f);
@@ -793,9 +793,9 @@ TEST(builder, scaled_DQ_signed)
 {
     vector<int8_t> a_data = {42};
     AxisSet quantization_axes;
-    auto A = make_shared<op::Parameter>(element::i8, Shape{1});
-    auto B = op::Constant::create(element::f32, Shape{}, {-1.0f});
-    auto C = op::Constant::create(element::f32, Shape{}, {300.0f});
+    auto A = make_shared<op::v0::Parameter>(element::i8, Shape{1});
+    auto B = op::v0::Constant::create(element::f32, Shape{}, {-1.0f});
+    auto C = op::v0::Constant::create(element::f32, Shape{}, {300.0f});
     auto r = ngraph::builder::DequantizeBuilder(A, B, C, element::f32, quantization_axes);
     auto f = make_shared<Function>(r, ParameterVector{A});
     constant_fold(f);
@@ -817,9 +817,9 @@ shared_ptr<runtime::Tensor> call_SDQ(shared_ptr<runtime::Backend>& backend,
                                      float min,
                                      float max)
 {
-    auto A = make_shared<op::Parameter>(type, in_shape);
-    auto B = make_shared<op::Parameter>(element::f32, Shape{});
-    auto C = make_shared<op::Parameter>(element::f32, Shape{});
+    auto A = make_shared<op::v0::Parameter>(type, in_shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto C = make_shared<op::v0::Parameter>(element::f32, Shape{});
     auto DQT = ngraph::builder::DequantizeBuilder(A, B, C, element::f32, AxisSet{});
     auto f = make_shared<Function>(OutputVector{DQT}, ParameterVector{A, B, C});
     // Create some tensors for input/output
@@ -849,17 +849,17 @@ TEST(builder, dynamic_scaled_DQ)
 TEST(builder, scaled_quantize_concat_unsigned)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto An = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Ax = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto An = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Ax = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_b{3, 2};
-    auto B = make_shared<op::Parameter>(element::u8, shape_b);
-    auto Bn = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Bx = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto B = make_shared<op::v0::Parameter>(element::u8, shape_b);
+    auto Bn = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Bx = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_c{3, 2};
-    auto C = make_shared<op::Parameter>(element::u8, shape_c);
-    auto Cn = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto C = make_shared<op::v0::Parameter>(element::u8, shape_c);
+    auto Cn = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Cx = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_r{8, 2};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
         OutputVector{A, B, C}, 0, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
@@ -897,17 +897,17 @@ TEST(builder, scaled_quantize_concat_unsigned)
 TEST(builder, scaled_quantize_concat_signed)
 {
     Shape shape_a{2, 2};
-    auto A = make_shared<op::Parameter>(element::i8, shape_a);
-    auto An = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Ax = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::i8, shape_a);
+    auto An = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Ax = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_b{3, 2};
-    auto B = make_shared<op::Parameter>(element::i8, shape_b);
-    auto Bn = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Bx = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+    auto Bn = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Bx = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_c{3, 2};
-    auto C = make_shared<op::Parameter>(element::i8, shape_c);
-    auto Cn = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto C = make_shared<op::v0::Parameter>(element::i8, shape_c);
+    auto Cn = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Cx = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_r{8, 2};
 
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
@@ -946,17 +946,17 @@ TEST(builder, scaled_quantize_concat_signed)
 TEST(builder, scaled_quantize_concat_unsigned_varying)
 {
     Shape shape_a{2, 3};
-    auto A = make_shared<op::Parameter>(element::u8, shape_a);
-    auto An = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Ax = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+    auto An = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Ax = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_b{2, 3};
-    auto B = make_shared<op::Parameter>(element::u8, shape_b);
-    auto Bn = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Bx = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto B = make_shared<op::v0::Parameter>(element::u8, shape_b);
+    auto Bn = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Bx = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_c{2, 3};
-    auto C = make_shared<op::Parameter>(element::u8, shape_c);
-    auto Cn = make_shared<op::Parameter>(element::f32, Shape{1});
-    auto Cx = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto C = make_shared<op::v0::Parameter>(element::u8, shape_c);
+    auto Cn = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+    auto Cx = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     Shape shape_r{2, 9};
     auto QConcat = ngraph::builder::QuantizedConcatBuilder(
         OutputVector{A, B, C}, 1, OutputVector{An, Bn, Cn}, OutputVector{Ax, Bx, Cx});
@@ -1004,15 +1004,15 @@ TEST(builder, dynamic_scaled_QD_with_bias)
     Shape shape_r{4, 3}; // output shape
 
     auto make_function = [shape_a, shape_b, shape_c](bool requantize, bool with_relu) {
-        auto A = make_shared<op::Parameter>(element::u8, shape_a);
-        auto B = make_shared<op::Parameter>(element::i8, shape_b);
-        auto Bias = make_shared<op::Parameter>(element::i32, shape_c);
-        auto C = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto D = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto E = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto F = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto G = make_shared<op::Parameter>(element::f32, Shape{1});
-        auto H = make_shared<op::Parameter>(element::f32, Shape{1});
+        auto A = make_shared<op::v0::Parameter>(element::u8, shape_a);
+        auto B = make_shared<op::v0::Parameter>(element::i8, shape_b);
+        auto Bias = make_shared<op::v0::Parameter>(element::i32, shape_c);
+        auto C = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+        auto D = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+        auto E = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+        auto F = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+        auto G = make_shared<op::v0::Parameter>(element::f32, Shape{1});
+        auto H = make_shared<op::v0::Parameter>(element::f32, Shape{1});
         auto CV = ngraph::builder::QuantizedDotBiasBuilder(
             A, B, Bias, C, D, E, F, G, H, requantize, with_relu);
         return make_shared<Function>(OutputVector{CV},

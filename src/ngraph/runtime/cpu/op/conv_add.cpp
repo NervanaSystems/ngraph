@@ -40,7 +40,7 @@ void op::util::validate_conv_shapes(const Node* node,
 
 constexpr NodeTypeInfo op::ConvolutionAdd::type_info;
 
-op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::Convolution>& conv,
+op::ConvolutionAdd::ConvolutionAdd(const std::shared_ptr<op::v0::Convolution>& conv,
                                    const Output<Node>& sum_input,
                                    bool with_relu)
     : Op({conv->input_value(0), conv->input_value(1), sum_input})

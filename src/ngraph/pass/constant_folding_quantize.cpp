@@ -22,10 +22,10 @@ using namespace std;
 using namespace ngraph;
 
 template <class REAL, class QUANT>
-Output<Node> fold_constant_quantize(shared_ptr<op::Constant> constant,
-                                    shared_ptr<op::Quantize> quant,
-                                    shared_ptr<op::Constant> scale,
-                                    shared_ptr<op::Constant> offset)
+Output<Node> fold_constant_quantize(shared_ptr<op::v0::Constant> constant,
+                                    shared_ptr<op::v0::Quantize> quant,
+                                    shared_ptr<op::v0::Constant> scale,
+                                    shared_ptr<op::v0::Constant> offset)
 {
     const Shape& out_shape = constant->get_output_shape(0);
     runtime::AlignedBuffer buffer(shape_size(out_shape) * sizeof(QUANT));
@@ -40,19 +40,19 @@ Output<Node> fold_constant_quantize(shared_ptr<op::Constant> constant,
                                               quant->get_axes(),
                                               quant->get_round_mode());
 
-    return make_shared<op::Constant>(quant->get_output_element_type(0), out_shape, data_ptr)
+    return make_shared<op::v0::Constant>(quant->get_output_element_type(0), out_shape, data_ptr)
         ->output(0);
 }
 
 void pass::ConstantFolding::construct_constant_quantize()
 {
-    auto constant_label =
-        make_shared<pattern::op::Label>(element::f32, Shape{2}, pattern::has_class<op::Constant>());
-    auto q_scale = op::Constant::create(element::f32, Shape{}, {1});
-    auto q_offset = op::Constant::create(element::i8, Shape{}, {0});
-    auto mode = op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
-    auto quant_op =
-        make_shared<op::Quantize>(constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
+    auto constant_label = make_shared<pattern::op::Label>(
+        element::f32, Shape{2}, pattern::has_class<op::v0::Constant>());
+    auto q_scale = op::v0::Constant::create(element::f32, Shape{}, {1});
+    auto q_offset = op::v0::Constant::create(element::i8, Shape{}, {0});
+    auto mode = op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY;
+    auto quant_op = make_shared<op::v0::Quantize>(
+        constant_label, q_scale, q_offset, element::i8, AxisSet{}, mode);
     auto quant = make_shared<pattern::op::Label>(quant_op, nullptr, OutputVector{quant_op});
 
     auto constant_quantize_callback = [constant_label, quant](pattern::Matcher& m) {
@@ -61,15 +61,17 @@ void pass::ConstantFolding::construct_constant_quantize()
 
         auto pattern_map = m.get_pattern_map();
 
-        auto constant_match = as_type_ptr<op::Constant>(pattern_map[constant_label]);
+        auto constant_match = as_type_ptr<op::v0::Constant>(pattern_map[constant_label]);
         auto quant_match = pattern_map[quant];
-        auto quantize_op = as_type_ptr<op::Quantize>(quant_match);
+        auto quantize_op = as_type_ptr<op::v0::Quantize>(quant_match);
 
         NGRAPH_CHECK(revalidate_and_ensure_static(quantize_op));
 
         auto args = quant_match->get_arguments();
-        auto scale = static_pointer_cast<op::Constant>(quant_match->get_input_node_shared_ptr(1));
-        auto offset = static_pointer_cast<op::Constant>(quant_match->get_input_node_shared_ptr(2));
+        auto scale =
+            static_pointer_cast<op::v0::Constant>(quant_match->get_input_node_shared_ptr(1));
+        auto offset =
+            static_pointer_cast<op::v0::Constant>(quant_match->get_input_node_shared_ptr(2));
 
         auto type = quant_match->get_output_element_type(0);
 

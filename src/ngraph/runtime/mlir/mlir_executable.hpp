@@ -81,8 +81,8 @@ public:
         create_output_tensor(size_t output_index, size_t pipeline_depth) override;
 
 protected:
-    std::shared_ptr<ngraph::op::Parameter> get_parameter(size_t index) const;
-    std::shared_ptr<ngraph::op::Result> get_result(size_t index) const;
+    std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
+    std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
     int get_alignment() const { return 64; }
     std::shared_ptr<Function> m_function;
     NodeVector m_nodes;

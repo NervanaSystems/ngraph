@@ -19,16 +19,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Recv::type_info;
+constexpr NodeTypeInfo op::v0::Recv::type_info;
 
-op::Recv::Recv(const Output<Node>& arg, int src_id)
+op::v0::Recv::Recv(const Output<Node>& arg, int src_id)
     : Op({arg})
     , m_src_id(src_id)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::Recv::validate_and_infer_types()
+void op::v0::Recv::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
@@ -41,13 +41,13 @@ void op::Recv::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::Recv::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Recv::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<Recv>(new_args.at(0), m_src_id);
 }
 
-int op::Recv::get_src_id() const
+int op::v0::Recv::get_src_id() const
 {
     return m_src_id;
 }

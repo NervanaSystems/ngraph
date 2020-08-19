@@ -54,7 +54,7 @@ void op::v0::Power::generate_adjoints(autodiff::Adjoints& adjoints, const Output
     auto x = input_value(0);
     auto y = input_value(1);
 
-    auto log_x = make_shared<op::Log>(x);
+    auto log_x = make_shared<op::v0::Log>(x);
 
     adjoints.add_delta(x, delta * y * shared_from_this() / x);
     adjoints.add_delta(y, delta * shared_from_this() * log_x);
@@ -147,7 +147,7 @@ void op::v1::Power::generate_adjoints(autodiff::Adjoints& adjoints, const Output
     auto x = input_value(0);
     auto y = input_value(1);
 
-    auto log_x = make_shared<op::Log>(x);
+    auto log_x = make_shared<op::v0::Log>(x);
 
     adjoints.add_delta(x, delta * y * shared_from_this() / x);
     adjoints.add_delta(y, delta * shared_from_this() * log_x);

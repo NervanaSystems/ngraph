@@ -74,8 +74,8 @@ static bool cse_constant(shared_ptr<Node> a, shared_ptr<Node> b)
         return false;
     }
 
-    const op::Constant* ca = static_cast<op::Constant*>(a.get());
-    const op::Constant* cb = static_cast<op::Constant*>(b.get());
+    const op::v0::Constant* ca = static_cast<op::v0::Constant*>(a.get());
+    const op::v0::Constant* cb = static_cast<op::v0::Constant*>(b.get());
 
     size_t size = shape_size(a->get_output_shape(0)) * a->get_output_element_type(0).size();
 
@@ -105,8 +105,8 @@ static bool cse_reshape(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_reshape for " << a->get_name() << " and " << b->get_name();
 
-    const op::Reshape* reshape_a = static_cast<ngraph::op::Reshape*>(a.get());
-    const op::Reshape* reshape_b = static_cast<ngraph::op::Reshape*>(b.get());
+    const op::v0::Reshape* reshape_a = static_cast<ngraph::op::v0::Reshape*>(a.get());
+    const op::v0::Reshape* reshape_b = static_cast<ngraph::op::v0::Reshape*>(b.get());
 
     return (a->input_value(0) == b->input_value(0)) &&
            (reshape_a->get_input_order() == reshape_b->get_input_order()) &&
@@ -117,8 +117,8 @@ static bool cse_broadcast(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_broadcast for " << a->get_name() << " and " << b->get_name();
 
-    const op::Broadcast* broadcast_a = static_cast<ngraph::op::Broadcast*>(a.get());
-    const op::Broadcast* broadcast_b = static_cast<ngraph::op::Broadcast*>(b.get());
+    const op::v0::Broadcast* broadcast_a = static_cast<ngraph::op::v0::Broadcast*>(a.get());
+    const op::v0::Broadcast* broadcast_b = static_cast<ngraph::op::v0::Broadcast*>(b.get());
 
     return (a->input_value(0) == b->input_value(0)) &&
            (broadcast_a->get_broadcast_axes() == broadcast_b->get_broadcast_axes()) &&
@@ -157,8 +157,8 @@ static bool cse_one_hot(shared_ptr<Node> a, shared_ptr<Node> b)
 {
     NGRAPH_DEBUG << "In cse_one_hot for " << a->get_name() << " and " << b->get_name();
 
-    const op::OneHot* one_hot_a = static_cast<ngraph::op::OneHot*>(a.get());
-    const op::OneHot* one_hot_b = static_cast<ngraph::op::OneHot*>(b.get());
+    const op::v0::OneHot* one_hot_a = static_cast<ngraph::op::v0::OneHot*>(a.get());
+    const op::v0::OneHot* one_hot_b = static_cast<ngraph::op::v0::OneHot*>(b.get());
 
     return (a->input_value(0) == b->input_value(0)) &&
            (one_hot_a->get_one_hot_axis() == one_hot_b->get_one_hot_axis()) &&
@@ -173,39 +173,39 @@ static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node
 {
     return unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>(
         {{TI(op::v0::Abs), cse_unarywise},
-         {TI(op::Acos), cse_unarywise},
-         {TI(op::Asin), cse_unarywise},
-         {TI(op::Atan), cse_unarywise},
-         {TI(op::Atan2), cse_binarywise},
-         {TI(op::Ceiling), cse_unarywise},
-         {TI(op::Constant), cse_constant},
-         {TI(op::Cos), cse_unarywise},
-         {TI(op::Cosh), cse_unarywise},
-         {TI(op::Exp), cse_unarywise},
-         {TI(op::Floor), cse_unarywise},
-         {TI(op::Log), cse_unarywise},
-         {TI(op::Negative), cse_unarywise},
-         {TI(op::OneHot), cse_one_hot},
-         {TI(op::Relu), cse_unarywise},
-         {TI(op::Sigmoid), cse_unarywise},
-         {TI(op::Sign), cse_unarywise},
-         {TI(op::Sin), cse_unarywise},
-         {TI(op::Sinh), cse_unarywise},
-         //{TI(op::Softmax), cse_unarywise},
-         {TI(op::Sqrt), cse_unarywise},
-         {TI(op::Tan), cse_unarywise},
-         {TI(op::Tanh), cse_unarywise},
-         {TI(op::Add), cse_binarywise},
-         {TI(op::Divide), cse_binarywise},
-         {TI(op::Maximum), cse_binarywise},
-         {TI(op::Minimum), cse_binarywise},
-         {TI(op::Multiply), cse_binarywise},
-         {TI(op::Power), cse_binarywise},
-         {TI(op::Subtract), cse_binarywise},
-         {TI(op::Sum), cse_reduction},
-         {TI(op::Product), cse_reduction},
-         {TI(op::Reshape), cse_reshape},
-         {TI(op::Broadcast), cse_broadcast}});
+         {TI(op::v0::Acos), cse_unarywise},
+         {TI(op::v0::Asin), cse_unarywise},
+         {TI(op::v0::Atan), cse_unarywise},
+         {TI(op::v0::Atan2), cse_binarywise},
+         {TI(op::v0::Ceiling), cse_unarywise},
+         {TI(op::v0::Constant), cse_constant},
+         {TI(op::v0::Cos), cse_unarywise},
+         {TI(op::v0::Cosh), cse_unarywise},
+         {TI(op::v0::Exp), cse_unarywise},
+         {TI(op::v0::Floor), cse_unarywise},
+         {TI(op::v0::Log), cse_unarywise},
+         {TI(op::v0::Negative), cse_unarywise},
+         {TI(op::v0::OneHot), cse_one_hot},
+         {TI(op::v0::Relu), cse_unarywise},
+         {TI(op::v0::Sigmoid), cse_unarywise},
+         {TI(op::v0::Sign), cse_unarywise},
+         {TI(op::v0::Sin), cse_unarywise},
+         {TI(op::v0::Sinh), cse_unarywise},
+         //{TI(op::v0::Softmax), cse_unarywise},
+         {TI(op::v0::Sqrt), cse_unarywise},
+         {TI(op::v0::Tan), cse_unarywise},
+         {TI(op::v0::Tanh), cse_unarywise},
+         {TI(op::v1::Add), cse_binarywise},
+         {TI(op::v1::Divide), cse_binarywise},
+         {TI(op::v0::Maximum), cse_binarywise},
+         {TI(op::v0::Minimum), cse_binarywise},
+         {TI(op::v1::Multiply), cse_binarywise},
+         {TI(op::v0::Power), cse_binarywise},
+         {TI(op::v1::Subtract), cse_binarywise},
+         {TI(op::v0::Sum), cse_reduction},
+         {TI(op::v0::Product), cse_reduction},
+         {TI(op::v0::Reshape), cse_reshape},
+         {TI(op::v0::Broadcast), cse_broadcast}});
 }
 
 static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node>)>>

@@ -22,12 +22,12 @@ void test_type_prop_opset0_downgrade_pass(const element::Type& output_type,
                                           const element::Type& input_type = element::f32,
                                           const string node_name = "")
 {
-    auto A = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});
-    auto B = make_shared<op::Parameter>(input_type, Shape{1, 2});
+    auto A = make_shared<op::v0::Parameter>(input_type, Shape{1, 3, 2});
+    auto B = make_shared<op::v0::Parameter>(input_type, Shape{1, 2});
     const op::AutoBroadcastSpec np_auto_b = op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY);
 
     auto v1_node = make_shared<OpV1>(A, B);
-    auto result = make_shared<op::Result>(v1_node);
+    auto result = make_shared<op::v0::Result>(v1_node);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{A, B});
 
     ngraph::pass::Manager pass_manager;
@@ -61,12 +61,12 @@ void test_type_prop_opset1_upgrade_pass(const element::Type& output_type,
                                         const element::Type& input_type = element::f32,
                                         const string node_name = "")
 {
-    auto A = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});
-    auto B = make_shared<op::Parameter>(input_type, Shape{1, 3, 2});
+    auto A = make_shared<op::v0::Parameter>(input_type, Shape{1, 3, 2});
+    auto B = make_shared<op::v0::Parameter>(input_type, Shape{1, 3, 2});
     const op::AutoBroadcastSpec none_auto_b = op::AutoBroadcastSpec(op::AutoBroadcastType::NONE);
 
     auto v0_node = make_shared<OpV0>(A, B);
-    auto result = make_shared<op::Result>(v0_node);
+    auto result = make_shared<op::v0::Result>(v0_node);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{A, B});
 
     ngraph::pass::Manager pass_manager;
@@ -102,14 +102,14 @@ void test_opset1_comparison_upgrade_pass()
 
 TEST(opset_transform, opset0_divide_downgrade_pass)
 {
-    auto A = make_shared<op::Parameter>(element::f32, Shape{1, 3, 2});
-    auto B = make_shared<op::Parameter>(element::f32, Shape{1, 2});
+    auto A = make_shared<op::v0::Parameter>(element::f32, Shape{1, 3, 2});
+    auto B = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2});
     const op::AutoBroadcastSpec np_auto_b = op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY);
     const bool pydiv = false;
 
     auto divide_v1 = make_shared<op::v1::Divide>(A, B);
     divide_v1->set_is_pythondiv(pydiv);
-    auto result = make_shared<op::Result>(divide_v1);
+    auto result = make_shared<op::v0::Result>(divide_v1);
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{A, B});
 
     ngraph::pass::Manager pass_manager;

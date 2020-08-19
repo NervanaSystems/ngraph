@@ -68,7 +68,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
     {
         if (is_type<op::v0::Concat>(n))
         {
-            auto concat = std::static_pointer_cast<ngraph::op::Concat>(n);
+            auto concat = std::static_pointer_cast<ngraph::op::v0::Concat>(n);
             auto shape = concat->get_input_shape(0);
             auto axis = concat->get_concatenation_axis();
             auto product = 1;
@@ -227,7 +227,7 @@ bool runtime::cpu::pass::CPUMemoryOptimization::run_on_function(std::shared_ptr<
     {
         if (is_type<op::v0::Slice>(n))
         {
-            auto slice = std::static_pointer_cast<ngraph::op::Slice>(n);
+            auto slice = std::static_pointer_cast<ngraph::op::v0::Slice>(n);
             auto in_shape = slice->get_input_shape(0);
             auto out_shape = slice->get_output_shape(0);
             auto strides = slice->get_strides();

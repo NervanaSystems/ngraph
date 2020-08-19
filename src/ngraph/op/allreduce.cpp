@@ -21,16 +21,16 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::AllReduce::type_info;
+constexpr NodeTypeInfo op::v0::AllReduce::type_info;
 
-op::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
+op::v0::AllReduce::AllReduce(const Output<Node>& arg, reduction::Type reduce_type)
     : Op({arg})
     , m_reduce_type(reduce_type)
 {
     constructor_validate_and_infer_types();
 }
 
-void op::AllReduce::validate_and_infer_types()
+void op::v0::AllReduce::validate_and_infer_types()
 {
     NODE_VALIDATION_CHECK(this,
                           get_input_element_type(0).is_dynamic() ||
@@ -43,24 +43,24 @@ void op::AllReduce::validate_and_infer_types()
     set_output_type(0, get_input_element_type(0), get_input_partial_shape(0));
 }
 
-shared_ptr<Node> op::AllReduce::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::AllReduce::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<AllReduce>(new_args.at(0), get_reduce_type());
 }
 
-bool op::AllReduce::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::AllReduce::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("reduce_type", m_reduce_type);
     return true;
 }
 
-reduction::Type op::AllReduce::get_reduce_type() const
+reduction::Type op::v0::AllReduce::get_reduce_type() const
 {
     return m_reduce_type;
 }
 
-void op::AllReduce::set_reduce_type(reduction::Type reduce_type)
+void op::v0::AllReduce::set_reduce_type(reduction::Type reduce_type)
 {
     m_reduce_type = reduce_type;
 }

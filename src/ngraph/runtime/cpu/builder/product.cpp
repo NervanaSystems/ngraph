@@ -32,7 +32,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Product)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Product)
             {
                 BUILD_REDUCTION_FUNCTOR(Product, product);
             }

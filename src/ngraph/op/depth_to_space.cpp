@@ -25,11 +25,11 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::DepthToSpace::type_info;
+constexpr NodeTypeInfo op::v0::DepthToSpace::type_info;
 
-op::DepthToSpace::DepthToSpace(const Output<Node>& data,
-                               const DepthToSpaceMode& mode,
-                               const size_t block_size)
+op::v0::DepthToSpace::DepthToSpace(const Output<Node>& data,
+                                   const DepthToSpaceMode& mode,
+                                   const size_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
     , m_mode(mode)
@@ -37,21 +37,21 @@ op::DepthToSpace::DepthToSpace(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::DepthToSpace::DepthToSpace(const Output<Node>& data,
-                               const std::string& mode,
-                               const size_t block_size)
+op::v0::DepthToSpace::DepthToSpace(const Output<Node>& data,
+                                   const std::string& mode,
+                                   const size_t block_size)
     : DepthToSpace(data, mode_from_string(mode), block_size)
 {
 }
 
-bool op::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
+bool op::v0::DepthToSpace::visit_attributes(AttributeVisitor& visitor)
 {
     visitor.on_attribute("block_size", m_blocksize);
     visitor.on_attribute("mode", m_mode);
     return true;
 }
 
-OutputVector op::DepthToSpace::decompose_op() const
+OutputVector op::v0::DepthToSpace::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape();
@@ -151,7 +151,7 @@ OutputVector op::DepthToSpace::decompose_op() const
     return OutputVector{flat_node};
 }
 
-shared_ptr<Node> op::DepthToSpace::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::DepthToSpace::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {
@@ -163,25 +163,26 @@ shared_ptr<Node> op::DepthToSpace::clone_with_new_inputs(const OutputVector& new
 namespace ngraph
 {
     template <>
-    EnumNames<op::DepthToSpace::DepthToSpaceMode>&
-        EnumNames<op::DepthToSpace::DepthToSpaceMode>::get()
+    EnumNames<op::v0::DepthToSpace::DepthToSpaceMode>&
+        EnumNames<op::v0::DepthToSpace::DepthToSpaceMode>::get()
     {
-        static auto enum_names = EnumNames<op::DepthToSpace::DepthToSpaceMode>(
-            "op::DepthToSpace::DepthToSpaceMode",
-            {{"blocks_first", op::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST},
-             {"depth_first", op::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST}});
+        static auto enum_names = EnumNames<op::v0::DepthToSpace::DepthToSpaceMode>(
+            "op::v0::DepthToSpace::DepthToSpaceMode",
+            {{"blocks_first", op::v0::DepthToSpace::DepthToSpaceMode::BLOCKS_FIRST},
+             {"depth_first", op::v0::DepthToSpace::DepthToSpaceMode::DEPTH_FIRST}});
         return enum_names;
     }
 
-    constexpr DiscreteTypeInfo AttributeAdapter<op::DepthToSpace::DepthToSpaceMode>::type_info;
+    constexpr DiscreteTypeInfo AttributeAdapter<op::v0::DepthToSpace::DepthToSpaceMode>::type_info;
 
-    std::ostream& operator<<(std::ostream& s, const op::DepthToSpace::DepthToSpaceMode& type)
+    std::ostream& operator<<(std::ostream& s, const op::v0::DepthToSpace::DepthToSpaceMode& type)
     {
         return s << as_string(type);
     }
 }
 
-op::DepthToSpace::DepthToSpaceMode op::DepthToSpace::mode_from_string(const std::string& mode) const
+op::v0::DepthToSpace::DepthToSpaceMode
+    op::v0::DepthToSpace::mode_from_string(const std::string& mode) const
 {
     return as_enum<DepthToSpaceMode>(mode);
 }

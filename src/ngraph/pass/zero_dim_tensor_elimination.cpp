@@ -84,10 +84,10 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
     bool replaced = false;
     auto cvals = vector<string>(0);
     // we need to go over all nodes since we could have sum or any other 0-length-tensor-to scalar
-    // op as an internal node (i.e. a node that isn't an argument to `op::Result`)
+    // op as an internal node (i.e. a node that isn't an argument to `op::v0::Result`)
     for (auto n : f->get_ordered_ops())
     {
-        // don't try to replace `op::Result`
+        // don't try to replace `op::v0::Result`
         if (n->is_output() || n->is_parameter() || n->get_output_size() > 1)
         {
             continue;
@@ -97,7 +97,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
         {
             // we don't have to create constants every time but this is the easiest
             // and it's CSE's job to eliminate the same ones
-            auto constant = make_shared<op::Constant>(
+            auto constant = make_shared<op::v0::Constant>(
                 n->get_output_element_type(0), n->get_output_shape(0), cvals);
             replace_node(n, constant);
             NGRAPH_DEBUG << " Replacing " << n->get_name() << " with " << constant->get_name();
@@ -110,7 +110,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
             continue;
         }
 
-        if (auto concat = as_type_ptr<op::Concat>(n))
+        if (auto concat = as_type_ptr<op::v0::Concat>(n))
         {
             OutputVector non_zero_dim_args;
             for (auto arg : concat->get_arguments())
@@ -130,7 +130,7 @@ bool pass::ZeroDimTensorElimination::run_on_function(shared_ptr<Function> f)
                 continue;
             }
         }
-        else if (auto replace_slice = as_type_ptr<op::ReplaceSlice>(n))
+        else if (auto replace_slice = as_type_ptr<op::v0::ReplaceSlice>(n))
         {
             const Shape& replacement_shape = replace_slice->get_input_shape(1);
             if (shape_size(replacement_shape) == 0)

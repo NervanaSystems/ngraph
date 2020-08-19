@@ -86,7 +86,7 @@ namespace ngraph
                 /// Maps CompiledKernel nodes to their MLIR compiler
                 /// The MLIR compiler caches the compiled code on the first invocation,
                 /// and may in the future support re-compilation
-                std::unordered_map<ngraph::op::CompiledKernel*,
+                std::unordered_map<ngraph::op::v0::CompiledKernel*,
                                    ngraph::runtime::ngmlir::MLIRCPURuntime>
                     mlir_runtimes;
 #endif

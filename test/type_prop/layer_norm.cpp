@@ -23,12 +23,12 @@ using namespace ngraph;
 
 TEST(type_prop, layer_norm_element_type)
 {
-    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 4});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto data = make_shared<op::v0::Parameter>(element::i32, Shape{2, 4});
+    auto scale = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{4});
     try
     {
-        auto ln = make_shared<op::LayerNorm>(data, scale, bias);
+        auto ln = make_shared<op::v0::LayerNorm>(data, scale, bias);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect element type";
     }
@@ -46,12 +46,12 @@ TEST(type_prop, layer_norm_element_type)
 
 TEST(type_prop, layer_norm_begin_norm_axis)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto scale = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{4});
     try
     {
-        auto ln = make_shared<op::LayerNorm>(data, scale, bias, false, 2);
+        auto ln = make_shared<op::v0::LayerNorm>(data, scale, bias, false, 2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect begin norm axis";
     }
@@ -67,12 +67,12 @@ TEST(type_prop, layer_norm_begin_norm_axis)
 
 TEST(type_prop, layer_norm_affine_rank)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto bias = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto scale = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto bias = make_shared<op::v0::Parameter>(element::f32, Shape{4});
     try
     {
-        auto ln = make_shared<op::LayerNorm>(data, scale, bias);
+        auto ln = make_shared<op::v0::LayerNorm>(data, scale, bias);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect affine ranks";
     }
@@ -88,11 +88,11 @@ TEST(type_prop, layer_norm_affine_rank)
 
 TEST(type_prop, layer_norm_bprop_element_type)
 {
-    auto data = make_shared<op::Parameter>(element::i32, Shape{2, 4});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto data = make_shared<op::v0::Parameter>(element::i32, Shape{2, 4});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+        auto lnb = make_shared<op::v0::LayerNormBackprop>(data, delta);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect element type";
     }
@@ -110,11 +110,11 @@ TEST(type_prop, layer_norm_bprop_element_type)
 
 TEST(type_prop, layer_norm_bprop_begin_norm_axis)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta, 2);
+        auto lnb = make_shared<op::v0::LayerNormBackprop>(data, delta, 2);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect begin norm axis";
     }
@@ -130,11 +130,11 @@ TEST(type_prop, layer_norm_bprop_begin_norm_axis)
 
 TEST(type_prop, layer_norm_bprop_delta)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{4});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta);
+        auto lnb = make_shared<op::v0::LayerNormBackprop>(data, delta);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect delta rank";
     }
@@ -150,13 +150,13 @@ TEST(type_prop, layer_norm_bprop_delta)
 
 TEST(type_prop, layer_norm_bprop_stats)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto mean = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto variance = make_shared<op::v0::Parameter>(element::f32, Shape{2});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta, mean, variance);
+        auto lnb = make_shared<op::v0::LayerNormBackprop>(data, delta, mean, variance);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect stats rank";
     }
@@ -172,12 +172,12 @@ TEST(type_prop, layer_norm_bprop_stats)
 
 TEST(type_prop, layer_norm_bprop_affine)
 {
-    auto data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto scale = make_shared<op::Parameter>(element::f32, Shape{2, 4});
+    auto data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto scale = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
     try
     {
-        auto lnb = make_shared<op::LayerNormBackprop>(data, delta, scale);
+        auto lnb = make_shared<op::v0::LayerNormBackprop>(data, delta, scale);
         // Should have thrown, so fail if it didn't
         FAIL() << "Incorrect affine rank";
     }

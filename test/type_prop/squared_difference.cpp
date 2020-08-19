@@ -23,13 +23,13 @@ using namespace ngraph;
 
 TEST(type_prop, squared_difference)
 {
-    const auto x1 = make_shared<op::Parameter>(element::f64, Shape{2, 2});
-    const auto x2 = make_shared<op::Parameter>(element::f64, Shape{3, 2});
-    const auto x3 = make_shared<op::Parameter>(element::f64, Shape{1, 2});
+    const auto x1 = make_shared<op::v0::Parameter>(element::f64, Shape{2, 2});
+    const auto x2 = make_shared<op::v0::Parameter>(element::f64, Shape{3, 2});
+    const auto x3 = make_shared<op::v0::Parameter>(element::f64, Shape{1, 2});
 
     try
     {
-        const auto squared_diff = make_shared<op::SquaredDifference>(x1, x2);
+        const auto squared_diff = make_shared<op::v0::SquaredDifference>(x1, x2);
         FAIL() << "SquaredDifference node was created with incorrect data.";
     }
     catch (const NodeValidationFailure& error)
@@ -37,7 +37,7 @@ TEST(type_prop, squared_difference)
         EXPECT_HAS_SUBSTRING(error.what(), std::string("Argument shapes are inconsistent"));
     }
 
-    const auto clamp = make_shared<op::SquaredDifference>(x1, x3);
+    const auto clamp = make_shared<op::v0::SquaredDifference>(x1, x3);
     EXPECT_EQ(clamp->get_output_element_type(0), element::f64);
     EXPECT_EQ(clamp->get_output_shape(0), (Shape{2, 2}));
 }

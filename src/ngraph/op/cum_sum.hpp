@@ -116,6 +116,5 @@ namespace ngraph
                 bool m_reverse;
             };
         }
-        using v0::CumSum;
     }
 }

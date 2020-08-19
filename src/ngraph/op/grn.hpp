@@ -54,6 +54,5 @@ namespace ngraph
                 float m_bias = 1.0f;
             };
         }
-        using v0::GRN;
     }
 }

@@ -60,6 +60,5 @@ namespace ngraph
                 PadMode m_pad_mode;
             };
         }
-        using v0::DynPad;
     }
 }

@@ -200,7 +200,7 @@ namespace ngraph
                         }
                     }
 
-                    ngraph::op::LSTMSequence::direction m_direction;
+                    ngraph::op::v0::LSTMSequence::direction m_direction;
                     std::int64_t m_hidden_size;
                     float m_clip_threshold;
                     std::vector<std::string> m_activations;

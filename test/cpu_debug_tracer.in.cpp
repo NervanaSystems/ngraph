@@ -67,9 +67,9 @@ namespace
 NGRAPH_TEST(${BACKEND}, cpu_debug_tracer, check_flow_with_external_function)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto B = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Add>(A, B), ParameterVector{A, B});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto B = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v1::Add>(A, B), ParameterVector{A, B});
 
     shared_ptr<runtime::Backend> backend = runtime::Backend::create("${BACKEND_NAME}");
 

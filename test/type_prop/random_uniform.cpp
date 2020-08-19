@@ -23,15 +23,15 @@ using namespace ngraph;
 
 TEST(type_prop, random_uniform_et_mismatch)
 {
-    auto min_val = make_shared<op::Parameter>(element::f64, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f64, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Element type mismatch of min_val and max_val not detected";
     }
@@ -47,15 +47,15 @@ TEST(type_prop, random_uniform_et_mismatch)
 
 TEST(type_prop, random_uniform_et_non_float)
 {
-    auto min_val = make_shared<op::Parameter>(element::i64, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::i64, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::i64, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-floating point element type not detected";
     }
@@ -72,15 +72,15 @@ TEST(type_prop, random_uniform_et_non_float)
 
 TEST(type_prop, random_uniform_min_non_scalar)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{33});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{33});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-scalar min_val not detected";
     }
@@ -96,15 +96,15 @@ TEST(type_prop, random_uniform_min_non_scalar)
 
 TEST(type_prop, random_uniform_max_non_scalar)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{44});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{44});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-scalar max_val not detected";
     }
@@ -120,15 +120,15 @@ TEST(type_prop, random_uniform_max_non_scalar)
 
 TEST(type_prop, random_uniform_shape_non_i64)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::f64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::f64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-i64 result_shape not detected";
     }
@@ -144,15 +144,15 @@ TEST(type_prop, random_uniform_shape_non_i64)
 
 TEST(type_prop, random_uniform_shape_non_scalar)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3, 3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3, 3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-vector result_shape not detected";
     }
@@ -168,15 +168,15 @@ TEST(type_prop, random_uniform_shape_non_scalar)
 
 TEST(type_prop, random_uniform_use_fixed_seed_non_boolean)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::i32, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::i32, Shape{});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-boolean use_fixed_seed not detected";
     }
@@ -193,15 +193,15 @@ TEST(type_prop, random_uniform_use_fixed_seed_non_boolean)
 
 TEST(type_prop, random_uniform_use_fixed_seed_non_scalar)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{1});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{1});
     size_t fixed_seed = 999;
 
     try
     {
-        auto ru = make_shared<op::RandomUniform>(
+        auto ru = make_shared<op::v0::RandomUniform>(
             min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
         FAIL() << "Non-scalar use_fixed_seed not detected";
     }
@@ -217,14 +217,14 @@ TEST(type_prop, random_uniform_use_fixed_seed_non_scalar)
 
 TEST(type_prop, random_uniform_use_result_shape_rank_dynamic)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
-    auto ru =
-        make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
+    auto ru = make_shared<op::v0::RandomUniform>(
+        min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
     EXPECT_EQ(ru->get_output_element_type(0), element::f32);
     EXPECT_TRUE(ru->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
@@ -232,14 +232,14 @@ TEST(type_prop, random_uniform_use_result_shape_rank_dynamic)
 
 TEST(type_prop, random_uniform_use_result_shape_rank_static_dynamic)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, PartialShape::dynamic(1));
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic(1));
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
-    auto ru =
-        make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
+    auto ru = make_shared<op::v0::RandomUniform>(
+        min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
     EXPECT_EQ(ru->get_output_element_type(0), element::f32);
     EXPECT_TRUE(ru->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
@@ -247,14 +247,14 @@ TEST(type_prop, random_uniform_use_result_shape_rank_static_dynamic)
 
 TEST(type_prop, random_uniform_use_result_shape_shape_static)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto result_shape = make_shared<op::Parameter>(element::i64, Shape{6});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto result_shape = make_shared<op::v0::Parameter>(element::i64, Shape{6});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
-    auto ru =
-        make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
+    auto ru = make_shared<op::v0::RandomUniform>(
+        min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
     EXPECT_EQ(ru->get_output_element_type(0), element::f32);
     EXPECT_TRUE(ru->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(6)));
@@ -262,15 +262,15 @@ TEST(type_prop, random_uniform_use_result_shape_shape_static)
 
 TEST(type_prop, random_uniform_use_result_shape_constant)
 {
-    auto min_val = make_shared<op::Parameter>(element::f32, Shape{});
-    auto max_val = make_shared<op::Parameter>(element::f32, Shape{});
+    auto min_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto max_val = make_shared<op::v0::Parameter>(element::f32, Shape{});
     auto result_shape =
-        make_shared<op::Constant>(element::i64, Shape{4}, std::vector<int64_t>{2, 4, 6, 9});
-    auto use_fixed_seed = make_shared<op::Parameter>(element::boolean, Shape{});
+        make_shared<op::v0::Constant>(element::i64, Shape{4}, std::vector<int64_t>{2, 4, 6, 9});
+    auto use_fixed_seed = make_shared<op::v0::Parameter>(element::boolean, Shape{});
     size_t fixed_seed = 999;
 
-    auto ru =
-        make_shared<op::RandomUniform>(min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
+    auto ru = make_shared<op::v0::RandomUniform>(
+        min_val, max_val, result_shape, use_fixed_seed, fixed_seed);
 
     EXPECT_EQ(ru->get_output_element_type(0), element::f32);
     EXPECT_TRUE(ru->get_output_partial_shape(0).same_scheme(PartialShape{2, 4, 6, 9}));

@@ -37,7 +37,7 @@ constexpr NodeTypeInfo op::v1::GroupConvolution::type_info;
 
 shared_ptr<Node> op::v1::GroupConvolution::get_default_value() const
 {
-    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
+    return op::v0::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }
 
 op::v1::GroupConvolution::GroupConvolution(const Output<Node>& data_batch,
@@ -245,7 +245,7 @@ bool op::v1::GroupConvolutionBackpropData::is_dynamic() const
     bool is_dynamic = Node::is_dynamic();
     if (get_input_size() == 3 && !is_dynamic)
     {
-        return !is_type<op::Constant>(input_value(2).get_node());
+        return !is_type<op::v0::Constant>(input_value(2).get_node());
     }
     return is_dynamic;
 }
@@ -266,7 +266,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_
     bool is_output_shape_present = get_input_size() == 3;
     if (is_output_shape_present)
     {
-        if (auto const_op = as_type<op::Constant>(input_value(2).get_node()))
+        if (auto const_op = as_type<op::v0::Constant>(input_value(2).get_node()))
         {
             shape = const_op->get_shape_val();
         }
@@ -281,7 +281,7 @@ const PartialShape op::v1::GroupConvolutionBackpropData::get_convolution_output_
 void op::v1::GroupConvolutionBackpropData::set_output_shape(const Shape& shape)
 {
     this->input(2).replace_source_output(
-        op::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
+        op::v0::Constant::create(this->get_input_element_type(2), Shape{shape.size()}, shape)
             ->output(0));
 }
 
@@ -528,7 +528,7 @@ OutputVector op::v1::GroupConvolutionBackpropData::decompose_op() const
     }
 
     size_t concatenation_axis = 1;
-    return {std::make_shared<ngraph::op::Concat>(conv_groups, concatenation_axis)};
+    return {std::make_shared<ngraph::op::v0::Concat>(conv_groups, concatenation_axis)};
 }
 
 void op::v1::GroupConvolutionBackpropData::generate_adjoints(autodiff::Adjoints& adjoints,
@@ -745,27 +745,27 @@ OutputVector op::v0::GroupConvolution::decompose_op() const
         if (m_groups_in_filters)
         {
             // Remove group dimmension after slicing
-            sliced_filter = make_shared<op::Reshape>(
+            sliced_filter = make_shared<op::v0::Reshape>(
                 sliced_filters[group],
                 get_default_order(sliced_filters[group].get_shape().size()),
                 Shape(std::next(std::begin(filters_shape), 1), std::end(filters_shape)));
         }
         convolution_nodes.push_back(
-            std::make_shared<ngraph::op::Convolution>(sliced_data[group],
-                                                      sliced_filter,
-                                                      m_window_movement_strides,
-                                                      m_window_dilation_strides,
-                                                      m_padding_below,
-                                                      m_padding_above,
-                                                      m_data_dilation_strides,
-                                                      m_pad_type));
+            std::make_shared<ngraph::op::v0::Convolution>(sliced_data[group],
+                                                          sliced_filter,
+                                                          m_window_movement_strides,
+                                                          m_window_dilation_strides,
+                                                          m_padding_below,
+                                                          m_padding_above,
+                                                          m_data_dilation_strides,
+                                                          m_pad_type));
     }
     std::size_t concatenation_axis = 1;
-    return {std::make_shared<ngraph::op::Concat>(convolution_nodes, concatenation_axis)};
+    return {std::make_shared<ngraph::op::v0::Concat>(convolution_nodes, concatenation_axis)};
 }
 
-void op::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
-                                             const OutputVector& /* deltas */)
+void op::v0::GroupConvolution::generate_adjoints(autodiff::Adjoints& /* adjoints */,
+                                                 const OutputVector& /* deltas */)
 {
     throw ngraph_error("NYI");
 }
@@ -859,7 +859,7 @@ OutputVector op::v0::GroupConvolutionBackpropData::decompose_op() const
 
     for (size_t i = 0; i < groups; ++i)
     {
-        auto sliced_conv = std::make_shared<op::ConvolutionBackpropData>(
+        auto sliced_conv = std::make_shared<op::v0::ConvolutionBackpropData>(
             data_shape,
             sliced_filters[i],
             sliced_delta[i],
@@ -873,7 +873,7 @@ OutputVector op::v0::GroupConvolutionBackpropData::decompose_op() const
     }
 
     size_t concatenation_axis = 1;
-    return {std::make_shared<ngraph::op::Concat>(sliced_inputs, concatenation_axis)};
+    return {std::make_shared<ngraph::op::v0::Concat>(sliced_inputs, concatenation_axis)};
 }
 
 //------------------------------------------------------------------------------
@@ -958,7 +958,7 @@ OutputVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
         const Coordinate data_upper_bound{
             data_shape.at(0), (i + 1) * channel_step, data_shape.at(2), data_shape.at(3)};
         auto sliced_data =
-            std::make_shared<op::Slice>(data_batch, data_lower_bound, data_upper_bound);
+            std::make_shared<op::v0::Slice>(data_batch, data_lower_bound, data_upper_bound);
 
         size_t filters_step = filters_shape.at(0) / get_groups();
 
@@ -966,27 +966,27 @@ OutputVector op::v0::GroupConvolutionBackpropFilters::decompose_op() const
         const Coordinate filters_upper_bound{
             (i + 1) * filters_step, filters_shape.at(1), filters_shape.at(2), filters_shape.at(3)};
         auto sliced_filters =
-            std::make_shared<op::Slice>(filters, filters_lower_bound, filters_upper_bound);
+            std::make_shared<op::v0::Slice>(filters, filters_lower_bound, filters_upper_bound);
 
         const Coordinate delta_lower_bound{0, i * filters_step, 0, 0};
         const Coordinate delta_upper_bound{
             delta_shape.at(0), (i + 1) * filters_step, delta_shape.at(2), delta_shape.at(3)};
         auto sliced_delta =
-            std::make_shared<op::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
+            std::make_shared<op::v0::Slice>(output_delta, delta_lower_bound, delta_upper_bound);
 
-        auto sliced_conv =
-            std::make_shared<op::ConvolutionBackpropFilters>(sliced_data,
-                                                             sliced_filters->get_output_shape(0),
-                                                             sliced_delta,
-                                                             get_window_movement_strides(),
-                                                             get_window_dilation_strides(),
-                                                             get_padding_below(),
-                                                             get_padding_above(),
-                                                             Strides{1, 1});
+        auto sliced_conv = std::make_shared<op::v0::ConvolutionBackpropFilters>(
+            sliced_data,
+            sliced_filters->get_output_shape(0),
+            sliced_delta,
+            get_window_movement_strides(),
+            get_window_dilation_strides(),
+            get_padding_below(),
+            get_padding_above(),
+            Strides{1, 1});
 
         sliced_inputs.push_back(sliced_conv);
     }
 
     size_t concatenation_axis = 0;
-    return {std::make_shared<ngraph::op::Concat>(sliced_inputs, concatenation_axis)};
+    return {std::make_shared<ngraph::op::v0::Concat>(sliced_inputs, concatenation_axis)};
 }

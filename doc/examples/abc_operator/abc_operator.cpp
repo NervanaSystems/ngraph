@@ -24,9 +24,9 @@ int main()
 {
     // Build the graph
     Shape s{2, 3};
-    auto a = std::make_shared<op::Parameter>(element::f32, s);
-    auto b = std::make_shared<op::Parameter>(element::f32, s);
-    auto c = std::make_shared<op::Parameter>(element::f32, s);
+    auto a = std::make_shared<op::v0::Parameter>(element::f32, s);
+    auto b = std::make_shared<op::v0::Parameter>(element::f32, s);
+    auto c = std::make_shared<op::v0::Parameter>(element::f32, s);
 
     auto t1 = (a + b) * c;
 

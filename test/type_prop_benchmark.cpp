@@ -23,8 +23,8 @@ using namespace ngraph;
 
 TEST(type_prop, DISABLED_benchmark_type_prop_add)
 {
-    auto p1 = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
-    auto p2 = make_shared<op::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto p1 = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
+    auto p2 = make_shared<op::v0::Parameter>(element::f32, Shape{1, 2, 3, 4});
 
     constexpr size_t num_iterations = 1000000;
     size_t total_nanosec = 0;
@@ -34,7 +34,7 @@ TEST(type_prop, DISABLED_benchmark_type_prop_add)
     for (size_t i = 0; i < num_iterations; i++)
     {
         sw.start();
-        auto n = make_shared<op::Add>(p1, p2);
+        auto n = make_shared<op::v1::Add>(p1, p2);
         sw.stop();
 
         total_nanosec += sw.get_nanoseconds();
@@ -47,8 +47,8 @@ TEST(type_prop, DISABLED_benchmark_type_prop_add)
 
 TEST(type_prop, DISABLED_benchmark_type_prop_convolution)
 {
-    auto d = make_shared<op::Parameter>(element::f32, Shape{64, 3, 224, 224});
-    auto f = make_shared<op::Parameter>(element::f32, Shape{64, 3, 7, 7});
+    auto d = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 224, 224});
+    auto f = make_shared<op::v0::Parameter>(element::f32, Shape{64, 3, 7, 7});
     auto strides = Strides{1, 1};
     auto dilation = Strides{1, 1};
     auto padding_below = CoordinateDiff{1, 1};
@@ -63,7 +63,7 @@ TEST(type_prop, DISABLED_benchmark_type_prop_convolution)
     {
         sw.start();
         auto n =
-            make_shared<op::Convolution>(d, f, strides, dilation, padding_below, padding_above);
+            make_shared<op::v0::Convolution>(d, f, strides, dilation, padding_below, padding_above);
         sw.stop();
 
         total_nanosec += sw.get_nanoseconds();

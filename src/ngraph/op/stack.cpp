@@ -25,26 +25,26 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::Stack::type_info;
+constexpr NodeTypeInfo op::v0::Stack::type_info;
 
-op::Stack::Stack(const OutputVector& args, int64_t axis)
+op::v0::Stack::Stack(const OutputVector& args, int64_t axis)
     : FusedOp(OutputVector{args})
     , m_axis(axis)
 {
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::Stack::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::Stack::clone_with_new_inputs(const OutputVector& new_args) const
 {
     return make_shared<Stack>(new_args, m_axis);
 }
 
-void op::Stack::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
+void op::v0::Stack::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
     ngraph_error("Not yet implemented");
 }
 
-void op::Stack::pre_validate_and_infer_types()
+void op::v0::Stack::pre_validate_and_infer_types()
 {
     bool is_input_dynamic = false;
 
@@ -63,7 +63,7 @@ void op::Stack::pre_validate_and_infer_types()
     }
 }
 
-OutputVector op::Stack::decompose_op() const
+OutputVector op::v0::Stack::decompose_op() const
 {
     auto axis = get_axis();
     OutputVector args;
@@ -88,8 +88,9 @@ OutputVector op::Stack::decompose_op() const
         data_shape.insert(data_shape.begin() + axis, 1);
         std::vector<size_t> input_order(data_shape.size() - 1);
         std::iota(std::begin(input_order), std::end(input_order), 0);
-        args.push_back(std::make_shared<op::Reshape>(data, AxisVector(input_order), data_shape));
+        args.push_back(
+            std::make_shared<op::v0::Reshape>(data, AxisVector(input_order), data_shape));
     }
-    auto concat = std::make_shared<op::Concat>(args, axis);
+    auto concat = std::make_shared<op::v0::Concat>(args, axis);
     return {concat};
 }

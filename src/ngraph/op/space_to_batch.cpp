@@ -53,9 +53,9 @@ OutputVector op::v1::SpaceToBatch::decompose_op() const
                           data_shape.size(),
                           ")");
 
-    const auto block_const = as_type_ptr<op::Constant>(block.get_node_shared_ptr());
-    const auto pads_begin_const = as_type_ptr<op::Constant>(pads_begin.get_node_shared_ptr());
-    const auto pads_end_const = as_type_ptr<op::Constant>(pads_end.get_node_shared_ptr());
+    const auto block_const = as_type_ptr<op::v0::Constant>(block.get_node_shared_ptr());
+    const auto pads_begin_const = as_type_ptr<op::v0::Constant>(pads_begin.get_node_shared_ptr());
+    const auto pads_end_const = as_type_ptr<op::v0::Constant>(pads_end.get_node_shared_ptr());
 
     vector<int64_t> block_values;
     block_values = block_const->cast_vector<int64_t>();

@@ -31,7 +31,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Gelu)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Gelu)
             {
                 auto& functors = external_function->get_functors();
 

@@ -48,7 +48,6 @@ namespace ngraph
                                                const OutputVector& deltas) override;
             };
         }
-        using v0::Negative;
     }
     NGRAPH_API
     std::shared_ptr<Node> operator-(const Output<Node>& arg0);

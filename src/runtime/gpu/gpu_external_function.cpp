@@ -306,7 +306,7 @@ void runtime::gpu::GPUExternalFunction::emit_constant_declarations()
     {
         for (shared_ptr<Node> node : p.second)
         {
-            const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+            const op::v0::Constant* c = dynamic_cast<ngraph::op::v0::Constant*>(node.get());
             if (c)
             {
                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
@@ -333,7 +333,7 @@ void runtime::gpu::GPUExternalFunction::emit_constant_declarations()
             {
                 for (shared_ptr<Node> node : p.second)
                 {
-                    const op::Constant* c = dynamic_cast<ngraph::op::Constant*>(node.get());
+                    const op::v0::Constant* c = dynamic_cast<ngraph::op::v0::Constant*>(node.get());
                     if (c)
                     {
                         shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
@@ -414,7 +414,7 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
         set<descriptor::Tensor*> constants;
         for (shared_ptr<Node> node : m_function_ordered_ops.at(current_function))
         {
-            if (dynamic_cast<ngraph::op::Constant*>(node.get()))
+            if (dynamic_cast<ngraph::op::v0::Constant*>(node.get()))
             {
                 shared_ptr<descriptor::Tensor> tv = node->get_outputs()[0].get_tensor_ptr();
                 constants.insert(tv.get());
@@ -435,7 +435,7 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
 
             // Add inputs to the variable name map
             size_t arg_index = 0;
-            for (shared_ptr<ngraph::op::Parameter> param : current_function->get_parameters())
+            for (shared_ptr<ngraph::op::v0::Parameter> param : current_function->get_parameters())
             {
                 for (size_t i = 0; i < param->get_output_size(); ++i)
                 {
@@ -460,9 +460,9 @@ void runtime::gpu::GPUExternalFunction::emit_functions()
                 ss << "((" << type << "*)(outputs[" << i << "]))";
                 m_variable_name_map[tv->get_name()] = ss.str();
 
-                auto res = dynamic_pointer_cast<ngraph::op::Result>(op);
+                auto res = dynamic_pointer_cast<ngraph::op::v0::Result>(op);
                 // keep assigning different outputs to a result descriptor
-                // op::Result emitter will check if in and out descriptors are the same
+                // op::v0::Result emitter will check if in and out descriptors are the same
                 // and skip a copy
                 auto input_node = res->get_inputs().at(0).get_output().get_node();
                 if (!input_node->is_constant() && !input_node->is_parameter())
@@ -720,7 +720,7 @@ void runtime::gpu::GPUExternalFunction::propagate_in_place_output(
     ngraph::descriptor::Output* res_src_output, const std::string& output_name)
 {
     // we start with a particular output
-    // which is an argument to a given op::Result
+    // which is an argument to a given op::v0::Result
     size_t offset = res_src_output->get_tensor().get_pool_offset();
     auto it = res_src_output;
 
