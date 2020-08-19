@@ -132,6 +132,4 @@ namespace ngraph
     const NGRAPH_API OpSet& get_opset0();
     const NGRAPH_API OpSet& get_opset1();
     const NGRAPH_API OpSet& get_opset3();
-    // Every op after opset0
-    const NGRAPH_API OpSet& get_ie_opset();
 }
