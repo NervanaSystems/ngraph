@@ -629,7 +629,7 @@ else()
     )
 endif()
 
-add_custom_target(check
+add_custom_target(ngraph-check
     DEPENDS
     style-check
     unit-test-check
