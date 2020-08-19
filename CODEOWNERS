@@ -14,9 +14,7 @@
 /.gitignore                         @rkimballn1
 /VERSION.in                         @rkimballn1 @silee2
 
-/doc/examples/mnist_mlp/dist_*      @wenzhe-nrv
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik
-/doc/*/*/inspection/                @diyessi
 project/introduction.rst            @adstraw
 project/governance.rst              @adstraw
 
@@ -25,25 +23,14 @@ project/governance.rst              @adstraw
 
 /src/resource/                      @rkimballn1
 /src/tools/                         @rkimballn1
-/src/ngraph/autodiff/               @diyessi
 /src/ngraph/builder/                @silee2
 /src/ngraph/codegen/                @rkimballn1
-/src/ngraph/distributed.*           @wenzhe-nrv @diyessi
 /src/ngraph/frontend/               @silee2
-/src/ngraph/op/                     @diyessi
-/src/ngraph/op/allreduce.*pp        @wenzhe-nrv @diyessi
-/src/ngraph/pass/                   @diyessi
-/src/ngraph/pattern/                @diyessi
 /src/ngraph/runtime/                @rkimballn1
 /src/ngraph/runtime/cpu/            @silee2
 /src/contrib/mlir/                  @silee2
-/src/ngraph/runtime/cpu/builder/allreduce.*pp    @wenzhe-nrv
-/src/ngraph/runtime/dynamic/        @diyessi
 /src/runtime/gpu/                   @rkimballn1
 /src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/runtime/reference/      @diyessi
-/src/ngraph/runtime/reference/allreduce.*pp      @wenzhe-nrv @diyessi
-/src/ngraph/type/                   @diyessi
 /src/ngraph/serializer.*pp          @rkimballn1
 
 /test/mlir/                         @silee2
