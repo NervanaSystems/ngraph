@@ -47,24 +47,24 @@ namespace ngraph
                     // In general "entrywise" lp-norm for matrix `A` is defined as following double
                     // sum:
                     // ||A||_p = ||vec(A)||_p = [sum_{i=1}^m sum_{j=1}^n abs(a_{i,j})^p]^{1/p}
-                    shared_ptr<Node> abs_values{make_shared<ngraph::opset1::Abs>(value)};
-                    shared_ptr<Node> p_node = ngraph::opset1::Constant::create(
-                        value.get_element_type(), Shape{}, {p_norm});
+                    shared_ptr<Node> abs_values{make_shared<op::v0::Abs>(value)};
+                    shared_ptr<Node> p_node =
+                        op::v0::Constant::create(value.get_element_type(), Shape{}, {p_norm});
 
                     // Get inner part of equation: abs_values^p_node, then sum over reduction_axes.
-                    shared_ptr<Node> values{make_shared<ngraph::opset1::Power>(abs_values, p_node)};
-                    values = make_shared<ngraph::opset1::ReduceSum>(values, reduction_axes, false);
+                    shared_ptr<Node> values{make_shared<op::v1::Power>(abs_values, p_node)};
+                    values = make_shared<op::v1::ReduceSum>(values, reduction_axes, false);
 
-                    shared_ptr<Node> bias_node{ngraph::opset1::Constant::create(
+                    shared_ptr<Node> bias_node{op::v0::Constant::create(
                         values->get_output_element_type(0), Shape{}, {bias})};
 
-                    values = make_shared<ngraph::opset1::Add>(values, bias_node);
+                    values = make_shared<op::v1::Add>(values, bias_node);
 
                     // Get outer part of equation: raise values to 1/p_norm exponent.
-                    shared_ptr<Node> inv_p_node = ngraph::opset1::Constant::create(
+                    shared_ptr<Node> inv_p_node = op::v0::Constant::create(
                         values->get_output_element_type(0), Shape{}, {1.f / p_norm});
 
-                    return {make_shared<ngraph::opset1::Power>(values, inv_p_node)
+                    return {make_shared<op::v1::Power>(values, inv_p_node)
                                 ->add_provenance_group_members_above({value})};
                 }
             }
@@ -75,13 +75,13 @@ namespace ngraph
         {
             // L0 norm returns number of elements different from zero.
             const shared_ptr<Node> zero_node{
-                ngraph::opset1::Constant::create(value.get_element_type(), Shape{}, {0.f})};
+                op::v0::Constant::create(value.get_element_type(), Shape{}, {0.f})};
 
             // Convert bool values to input node data type.
-            const shared_ptr<Node> non_zero_values = make_shared<ngraph::opset1::Convert>(
-                make_shared<ngraph::opset1::NotEqual>(value, zero_node), value.get_element_type());
+            const shared_ptr<Node> non_zero_values = make_shared<op::v0::Convert>(
+                make_shared<op::v1::NotEqual>(value, zero_node), value.get_element_type());
 
-            return make_shared<ngraph::opset1::ReduceSum>(non_zero_values, reduction_axes, false)
+            return make_shared<op::v1::ReduceSum>(non_zero_values, reduction_axes, false)
                 ->add_provenance_group_members_above({value});
         }
 
@@ -89,13 +89,13 @@ namespace ngraph
                                                   const Output<Node>& reduction_axes,
                                                   float bias)
         {
-            const shared_ptr<Node> values{make_shared<ngraph::opset1::ReduceSum>(
-                make_shared<ngraph::opset1::Abs>(value), reduction_axes, false)};
+            const shared_ptr<Node> values{make_shared<op::v1::ReduceSum>(
+                make_shared<op::v0::Abs>(value), reduction_axes, false)};
 
-            const shared_ptr<Node> bias_node{ngraph::opset1::Constant::create(
-                values->get_output_element_type(0), Shape{}, {bias})};
+            const shared_ptr<Node> bias_node{
+                op::v0::Constant::create(values->get_output_element_type(0), Shape{}, {bias})};
 
-            return make_shared<ngraph::opset1::Add>(values, bias_node)
+            return make_shared<op::v1::Add>(values, bias_node)
                 ->add_provenance_group_members_above({value});
         }
 
@@ -105,24 +105,22 @@ namespace ngraph
                                                   BiasMode bias_mode,
                                                   bool keep_dims)
         {
-            shared_ptr<Node> values{make_shared<ngraph::opset1::ReduceSum>(
-                make_shared<ngraph::opset1::Multiply>(value, value), reduction_axes, keep_dims)};
+            shared_ptr<Node> values{make_shared<op::v1::ReduceSum>(
+                make_shared<op::v1::Multiply>(value, value), reduction_axes, keep_dims)};
 
-            shared_ptr<Node> bias_node{ngraph::opset1::Constant::create(
-                values->get_output_element_type(0), Shape{}, {bias})};
+            shared_ptr<Node> bias_node{
+                op::v0::Constant::create(values->get_output_element_type(0), Shape{}, {bias})};
             shared_ptr<Node> result;
             switch (bias_mode)
             {
             case BiasMode::MAX:
             {
-                result = make_shared<ngraph::opset1::Sqrt>(
-                    make_shared<ngraph::opset1::Maximum>(values, bias_node));
+                result = make_shared<op::v0::Sqrt>(make_shared<op::v1::Maximum>(values, bias_node));
                 break;
             }
             case BiasMode::ADD:
             default:
-                result = make_shared<ngraph::opset1::Sqrt>(
-                    make_shared<ngraph::opset1::Add>(values, bias_node));
+                result = make_shared<op::v0::Sqrt>(make_shared<op::v1::Add>(values, bias_node));
             }
             return result->add_provenance_group_members_above({value});
         }
