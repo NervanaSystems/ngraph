@@ -37,13 +37,22 @@ namespace ngraph
                        const Strides& strides,
                        const Shape& out_shape)
             {
+                NGRAPH_INFO << arg_shape;
+                NGRAPH_INFO << lower_bounds;
+                NGRAPH_INFO << upper_bounds;
+                NGRAPH_INFO << strides;
                 CoordinateTransform input_transform(arg_shape, lower_bounds, upper_bounds, strides);
+                NGRAPH_INFO;
                 CoordinateTransform output_transform(out_shape);
+                NGRAPH_INFO;
 
                 CoordinateTransform::Iterator output_it = output_transform.begin();
+                NGRAPH_INFO << input_transform.get_target_shape();
+                NGRAPH_INFO << output_transform.get_target_shape();
 
                 NGRAPH_CHECK(shape_size(input_transform.get_target_shape()) ==
                              shape_size(output_transform.get_target_shape()));
+                             NGRAPH_INFO;
 
                 for (const Coordinate& in_coord : input_transform)
                 {
@@ -53,6 +62,7 @@ namespace ngraph
 
                     ++output_it;
                 }
+                NGRAPH_INFO;
             }
         }
     }

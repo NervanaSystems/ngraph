@@ -203,6 +203,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             if (it == tensor_map.end())
             {
                 const PartialShape& shape = op->get_output_partial_shape(i);
+                NGRAPH_INFO << shape;
                 const element::Type& type = op->get_output_element_type(i);
                 string name = op->output(i).get_tensor().get_name();
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);

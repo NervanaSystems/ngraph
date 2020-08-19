@@ -48,21 +48,21 @@ CoordinateTransform::CoordinateTransform(const Shape& source_shape,
     , m_n_axes(source_shape.size())
     , m_end_iterator(Shape(), true)
 {
-    if (m_n_axes != source_start_corner.size())
-    {
-        throw std::domain_error(
-            "Source start corner does not have the same number of axes as the source space shape");
-    }
-    if (m_n_axes != source_end_corner.size())
-    {
-        throw std::domain_error(
-            "Source end corner does not have the same number of axes as the source space shape");
-    }
-    if (m_n_axes != source_strides.size())
-    {
-        throw std::domain_error(
-            "Source strides do not have the same number of axes as the source space shape");
-    }
+    // if (m_n_axes != source_start_corner.size())
+    // {
+    //     throw std::domain_error(
+    //         "Source start corner does not have the same number of axes as the source space shape");
+    // }
+    // if (m_n_axes != source_end_corner.size())
+    // {
+    //     throw std::domain_error(
+    //         "Source end corner does not have the same number of axes as the source space shape");
+    // }
+    // if (m_n_axes != source_strides.size())
+    // {
+    //     throw std::domain_error(
+    //         "Source strides do not have the same number of axes as the source space shape");
+    // }
     if (m_n_axes != source_axis_order.size())
     {
         // Note: this check is NOT redundant with the is_permutation check below, though you might
