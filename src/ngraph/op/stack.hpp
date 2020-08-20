@@ -59,6 +59,5 @@ namespace ngraph
                 int64_t m_axis;
             };
         }
-        using v0::Stack;
     }
 }

@@ -22,7 +22,7 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::BatchMatMul::type_info;
+constexpr NodeTypeInfo op::v0::BatchMatMul::type_info;
 
 op::v0::BatchMatMul::BatchMatMul(const Output<Node>& arg0, const Output<Node>& arg1)
     : Op({arg0, arg1})
@@ -85,7 +85,7 @@ void op::v0::BatchMatMul::generate_adjoints(autodiff::Adjoints& adjoints,
     auto arg0 = input_value(0); // NxIxJ
     auto arg1 = input_value(1); // NxJxK
 
-    auto delta_dot_arg1 = make_shared<op::BatchMatMul>(
+    auto delta_dot_arg1 = make_shared<op::v0::BatchMatMul>(
         delta, util::batch_mat_transpose(arg1.get_node_shared_ptr())); // IK.KJ->IJ
     adjoints.add_delta(arg0, delta_dot_arg1);
 
@@ -103,7 +103,7 @@ shared_ptr<Node> op::util::batch_mat_transpose(const shared_ptr<Node>& node)
         // Applies static shape transpose
         Shape static_shape = node_shape.to_shape();
         std::swap(static_shape[1], static_shape[2]);
-        return make_shared<op::Reshape>(node, AxisVector{0, 2, 1}, static_shape);
+        return make_shared<op::v0::Reshape>(node, AxisVector{0, 2, 1}, static_shape);
     }
     else
     {

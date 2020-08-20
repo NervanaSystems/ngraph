@@ -28,9 +28,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ReverseSequence)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ReverseSequence)
             {
-                auto rev_seq = static_cast<const ngraph::op::ReverseSequence*>(node);
+                auto rev_seq = static_cast<const ngraph::op::v0::ReverseSequence*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -79,7 +79,10 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_reverse_sequence_cpp() { REGISTER_OP_BUILDER(ReverseSequence); }
+            void register_builders_reverse_sequence_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::ReverseSequence);
+            }
         }
     }
 }

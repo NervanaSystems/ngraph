@@ -359,8 +359,5 @@ namespace ngraph
                 bool m_exclude_pad{false};
             };
         }
-
-        using v0::AvgPool;
-        using v0::AvgPoolBackprop;
     }
 }

@@ -41,12 +41,12 @@
 using namespace std;
 using namespace ngraph;
 
-using ReshapeMap = unordered_map<shared_ptr<Node>, shared_ptr<op::Reshape>>;
+using ReshapeMap = unordered_map<shared_ptr<Node>, shared_ptr<op::v0::Reshape>>;
 
 static string describe_reshape(shared_ptr<Node> node)
 {
     stringstream ss;
-    auto reshape = as_type_ptr<op::Reshape>(node);
+    auto reshape = as_type_ptr<op::v0::Reshape>(node);
     ss << reshape->get_name()
        << " ( axis order = " << ngraph::vector_to_string(reshape->get_input_order())
        << " , shape = " << vector_to_string(reshape->get_output_shape(0)) << " ) "
@@ -55,23 +55,24 @@ static string describe_reshape(shared_ptr<Node> node)
     return ss.str();
 }
 
-static shared_ptr<op::Reshape>
+static shared_ptr<op::v0::Reshape>
     make_reshape(shared_ptr<Node> arg, const AxisVector& input_order, const Shape& output_shape)
 {
-    auto reshape = make_shared<op::Reshape>(arg, input_order, output_shape);
+    auto reshape = make_shared<op::v0::Reshape>(arg, input_order, output_shape);
     NGRAPH_DEBUG << "Make Reshape " << describe_reshape(reshape);
     return reshape;
 }
 
-static void
-    write_reshapemap(ReshapeMap& reorders, shared_ptr<Node> target, shared_ptr<op::Reshape> reshape)
+static void write_reshapemap(ReshapeMap& reorders,
+                             shared_ptr<Node> target,
+                             shared_ptr<op::v0::Reshape> reshape)
 {
     NGRAPH_DEBUG << "Write ReshapeMap[" << target->get_name()
                  << "] = " << describe_reshape(reshape);
     reorders[target] = reshape;
 }
 
-static shared_ptr<op::Reshape> read_reshapemap(ReshapeMap& reorders, shared_ptr<Node> target)
+static shared_ptr<op::v0::Reshape> read_reshapemap(ReshapeMap& reorders, shared_ptr<Node> target)
 {
     auto reorder = reorders.at(target);
     NGRAPH_DEBUG << "Read ReshapeMap[" << target->get_name() << "]  -> "
@@ -79,8 +80,8 @@ static shared_ptr<op::Reshape> read_reshapemap(ReshapeMap& reorders, shared_ptr<
     return reorder;
 }
 
-static shared_ptr<op::Reshape> combine_reshapes(shared_ptr<op::Reshape> r1,
-                                                shared_ptr<op::Reshape> r2)
+static shared_ptr<op::v0::Reshape> combine_reshapes(shared_ptr<op::v0::Reshape> r1,
+                                                    shared_ptr<op::v0::Reshape> r2)
 {
     auto default_order = ngraph::get_default_order(r1->get_output_shape(0));
     auto perm_r1 = apply_permutation(default_order, r1->get_input_order());
@@ -119,7 +120,7 @@ static void mark_reshape_for_deletion(shared_ptr<Node> reshape,
     reshapes_to_delete.insert(reshape);
 }
 
-static shared_ptr<op::Reshape> create_default_reshape(shared_ptr<Node> n)
+static shared_ptr<op::v0::Reshape> create_default_reshape(shared_ptr<Node> n)
 {
     auto default_order = ngraph::get_default_order(n->get_output_shape(0));
     auto default_reshape = make_reshape(n, default_order, n->get_output_shape(0));
@@ -128,7 +129,7 @@ static shared_ptr<op::Reshape> create_default_reshape(shared_ptr<Node> n)
 }
 
 // compute an axis order that converts the given axis order to default
-static AxisSet get_quantization_axes_in_default_order(shared_ptr<op::Reshape> arg_reshape,
+static AxisSet get_quantization_axes_in_default_order(shared_ptr<op::v0::Reshape> arg_reshape,
                                                       const AxisSet& old_axis_set)
 {
     auto perm_to_def = ngraph::get_permutation_to_default_order(arg_reshape->get_input_order());
@@ -143,7 +144,7 @@ static AxisSet get_quantization_axes_in_default_order(shared_ptr<op::Reshape> ar
 struct Swimmer
 {
     Input<Node> input;
-    shared_ptr<op::Reshape> reshape;
+    shared_ptr<op::v0::Reshape> reshape;
 };
 
 // Swim is used to push/"swim" reshapes towards paramaters.
@@ -152,7 +153,7 @@ struct Swimmer
 // we prefer nchw since a lot of ngraph ops require this format,
 // so keeping things in nchw allows us to eliminate as many reshapes
 // as possible
-void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
+void swim(Input<Node> input, shared_ptr<op::v0::Reshape> reshape)
 {
     Swimmer sw{input, reshape};
     list<Swimmer> work_queue;
@@ -186,9 +187,9 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
             NGRAPH_DEBUG << "Propagating reshape " << describe_reshape(csw.reshape) << " for "
                          << n->get_name() << " to " << n->get_argument(0);
         }
-        else if (is_type<op::Broadcast>(n))
+        else if (is_type<op::v0::Broadcast>(n))
         {
-            auto old_broadcast = static_pointer_cast<op::Broadcast>(n);
+            auto old_broadcast = static_pointer_cast<op::v0::Broadcast>(n);
             auto broadcast_axes = old_broadcast->get_broadcast_axes();
             auto broadcast_reshape = csw.reshape;
             // swimming can only handle 1 dim change
@@ -242,7 +243,7 @@ void swim(Input<Node> input, shared_ptr<op::Reshape> reshape)
                     make_reshape(broadcast_input, new_source_axis_order, new_arg_shape);
             }
 
-            auto new_broadcast = make_shared<op::Broadcast>(
+            auto new_broadcast = make_shared<op::v0::Broadcast>(
                 broadcast_input, broadcast_reshape->get_output_shape(0), new_broadcast_axes);
             csw.input.replace_source_output(new_broadcast->output(0));
         }
@@ -312,7 +313,7 @@ static void materialize_shapes(shared_ptr<Node> n,
     write_reshapemap(reorders, n, create_default_reshape(n));
 }
 
-static void sink_reshape(shared_ptr<op::Reshape> reshape,
+static void sink_reshape(shared_ptr<op::v0::Reshape> reshape,
                          ReshapeMap& reorders,
                          set<shared_ptr<Node>>& reshapes_to_delete)
 {
@@ -391,7 +392,7 @@ static void sink_binary(shared_ptr<Node> binary,
     }
 }
 
-static void sink_slice(shared_ptr<op::Slice> n,
+static void sink_slice(shared_ptr<op::v0::Slice> n,
                        ReshapeMap& reorders,
                        set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
@@ -409,7 +410,8 @@ static void sink_slice(shared_ptr<op::Slice> n,
     auto new_lower = ngraph::apply_permutation(n->get_lower_bounds(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_upper_bounds(), def_order);
     auto new_strides = ngraph::apply_permutation(n->get_strides(), def_order);
-    auto new_slice = make_shared<op::Slice>(dummy_correct_shape, new_lower, new_upper, new_strides);
+    auto new_slice =
+        make_shared<op::v0::Slice>(dummy_correct_shape, new_lower, new_upper, new_strides);
     ngraph::replace_node(dummy_correct_shape, n->get_argument(0));
     NGRAPH_DEBUG << "Replacing " << n->get_name() << " with " << new_slice->get_name();
     ngraph::replace_node(n, new_slice);
@@ -419,7 +421,7 @@ static void sink_slice(shared_ptr<op::Slice> n,
     write_reshapemap(reorders, new_slice, new_reshape);
 }
 
-static void sink_pad(shared_ptr<op::Pad> n,
+static void sink_pad(shared_ptr<op::v0::Pad> n,
                      ReshapeMap& reorders,
                      set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
@@ -435,7 +437,7 @@ static void sink_pad(shared_ptr<op::Pad> n,
 
     auto new_lower = ngraph::apply_permutation(n->get_padding_below(), def_order);
     auto new_upper = ngraph::apply_permutation(n->get_padding_above(), def_order);
-    auto new_pad = make_shared<op::Pad>(
+    auto new_pad = make_shared<op::v0::Pad>(
         dummy_correct_shape, n->input_value(1), new_lower, new_upper, n->get_pad_mode());
     ngraph::replace_node(dummy_correct_shape, n->get_argument(0));
     NGRAPH_DEBUG << "Replacing " << n->get_name() << " with " << new_pad->get_name();
@@ -444,25 +446,25 @@ static void sink_pad(shared_ptr<op::Pad> n,
     NGRAPH_DEBUG << "Propagating " << describe_reshape(new_reshape) << " for " << n->get_name();
     write_reshapemap(reorders, new_pad, new_reshape);
 }
-static void sink_quantize(shared_ptr<op::Quantize> quantize,
+static void sink_quantize(shared_ptr<op::v0::Quantize> quantize,
                           ReshapeMap& reorders,
                           set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(quantize->get_argument(0));
     AxisSet axes_in_def_order =
         get_quantization_axes_in_default_order(arg_reshape, quantize->get_axes());
-    auto new_quantize = make_shared<op::Quantize>(quantize->input_value(0),
-                                                  quantize->input_value(1),
-                                                  quantize->input_value(2),
-                                                  quantize->get_output_element_type(0),
-                                                  axes_in_def_order,
-                                                  quantize->get_round_mode());
+    auto new_quantize = make_shared<op::v0::Quantize>(quantize->input_value(0),
+                                                      quantize->input_value(1),
+                                                      quantize->input_value(2),
+                                                      quantize->get_output_element_type(0),
+                                                      axes_in_def_order,
+                                                      quantize->get_round_mode());
 
     ngraph::replace_node(quantize, new_quantize);
     write_reshapemap(reorders, new_quantize, arg_reshape);
 }
 
-static void sink_concat(shared_ptr<op::Concat> n,
+static void sink_concat(shared_ptr<op::v0::Concat> n,
                         ReshapeMap& reorders,
                         set<shared_ptr<Node>>& reshapes_to_delete)
 {
@@ -497,7 +499,7 @@ static void sink_concat(shared_ptr<op::Concat> n,
     }
 
     auto new_axis = order.at(n->get_concatenation_axis());
-    auto new_concat = make_shared<op::Concat>(new_args, new_axis);
+    auto new_concat = make_shared<op::v0::Concat>(new_args, new_axis);
     // put back the original arguments
     for (size_t i = 0; i < new_concat->get_input_size(); i++)
     {
@@ -511,18 +513,18 @@ static void sink_concat(shared_ptr<op::Concat> n,
     write_reshapemap(reorders, new_concat, new_reshape);
 }
 
-static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
+static void sink_dequantize(shared_ptr<op::v0::Dequantize> dequantize,
                             ReshapeMap& reorders,
                             set<shared_ptr<Node>>& /* reshapes_to_delete */)
 {
     auto arg_reshape = reorders.at(dequantize->get_argument(0));
     AxisSet axes_in_def_order =
         get_quantization_axes_in_default_order(arg_reshape, dequantize->get_axes());
-    auto new_dequantize = make_shared<op::Dequantize>(dequantize->input_value(0),
-                                                      dequantize->input_value(1),
-                                                      dequantize->input_value(2),
-                                                      dequantize->get_output_element_type(0),
-                                                      axes_in_def_order);
+    auto new_dequantize = make_shared<op::v0::Dequantize>(dequantize->input_value(0),
+                                                          dequantize->input_value(1),
+                                                          dequantize->input_value(2),
+                                                          dequantize->get_output_element_type(0),
+                                                          axes_in_def_order);
 
     ngraph::replace_node(dequantize, new_dequantize);
     write_reshapemap(reorders, new_dequantize, arg_reshape);
@@ -532,8 +534,8 @@ static void sink_dequantize(shared_ptr<op::Dequantize> dequantize,
 // round-trip reshapes(i.e. nhwc->nchw(nchw-only-op)->nhwc)
 // around nchw-only-op (e.g.Convolution, Batchnorm, Avg/MaxPool)
 // This is achieved by both **sinking**, propagating reshapes
-// through ops towards op::Results,
-// or **swimming** Reshapes up towards op::Parameter
+// through ops towards op::v0::Results,
+// or **swimming** Reshapes up towards op::v0::Parameter
 // For each op type we support we can either combine
 // two reshapes by replacing the existing Reshape,
 // materialize pending reshapes if they can't be propagated through op
@@ -553,7 +555,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
             results.push_back(n);
         }
 
-        if (auto reshape = as_type_ptr<op::Reshape>(n))
+        if (auto reshape = as_type_ptr<op::v0::Reshape>(n))
         {
             sink_reshape(reshape, reorders, reshapes_to_delete);
         }
@@ -565,15 +567,15 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         {
             sink_binary(n, reorders, reshapes_to_delete);
         }
-        else if (auto quantize = as_type_ptr<op::Quantize>(n))
+        else if (auto quantize = as_type_ptr<op::v0::Quantize>(n))
         {
             sink_quantize(quantize, reorders, reshapes_to_delete);
         }
-        else if (auto dequantize = as_type_ptr<op::Dequantize>(n))
+        else if (auto dequantize = as_type_ptr<op::v0::Dequantize>(n))
         {
             sink_dequantize(dequantize, reorders, reshapes_to_delete);
         }
-        else if (auto slice = as_type_ptr<op::Slice>(n))
+        else if (auto slice = as_type_ptr<op::v0::Slice>(n))
         {
             // A heuristic. If Reshape has multiple slice users, if sunk
             // it will be replicated by the number of its users
@@ -594,11 +596,11 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
                 materialize_shapes(n, reorders, reshapes_to_delete);
             }
         }
-        else if (auto pad = as_type_ptr<op::Pad>(n))
+        else if (auto pad = as_type_ptr<op::v0::Pad>(n))
         {
             sink_pad(pad, reorders, reshapes_to_delete);
         }
-        else if (auto concat = as_type_ptr<op::Concat>(n))
+        else if (auto concat = as_type_ptr<op::v0::Concat>(n))
         {
             sink_concat(concat, reorders, reshapes_to_delete);
         }
@@ -621,7 +623,7 @@ bool ngraph::pass::ReshapeSinking::run_on_function(shared_ptr<ngraph::Function> 
         NGRAPH_CHECK(r->get_output_shape(0) == r->get_input_shape(0) &&
                          r->get_output_element_type(0) ==
                              r->get_argument(0)->get_output_element_type(0),
-                     " op::Result = ",
+                     " op::v0::Result = ",
                      *r,
                      ", Arg = ",
                      *r->get_argument(0));

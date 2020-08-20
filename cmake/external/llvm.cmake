@@ -15,51 +15,61 @@
 # ******************************************************************************
 
 include(FetchContent)
-set(LLVM_ROOT ${EXTERNAL_PROJECTS_ROOT}/llvm CACHE STRING "Path to LLVM installation.")
-if("${LLVM_ROOT}" STREQUAL "${EXTERNAL_PROJECTS_ROOT}/llvm")
-    set(NGRAPH_OVERWRITE_LLVM_ROOT ON CACHE BOOL "Overwrite contents in LLVM_ROOT if version does not match.")
-else()
-    set(NGRAPH_OVERWRITE_LLVM_ROOT OFF CACHE BOOL "Overwrite contents in LLVM_ROOT if version does not match.")
-endif()
 
-set(NEED_TO_BUILD_LLVM TRUE)
+set(NGRAPH_EXTERNAL_LLVM_BUILD_DIR "" CACHE STRING "Path to prebuilt LLVM build tree.")
 
-# Try to find system or user provide Clang first and use it if available
-# Clang Config does not support version so find LLVM first
-# For non-system clang, provide LLVM_ROOT by passing
-# -DLLVM_ROOT=<CMAKE_INSTALL_PREFIX that was used for build or top level directory of unpacked LLVM release from github>
-# When you configure CMake
 if(NGRAPH_USE_PREBUILT_MLIR)
-    set(LLVM_ROOT ${MLIR_LLVM_PREBUILT_PATH}/build)
+    set(NGRAPH_EXTERNAL_LLVM_BUILD_DIR ${MLIR_LLVM_PREBUILT_PATH}/build)
 endif()
-set(LLVM_COMMIT_ID e31cfc4cd3e393300002e9c519787c96e3b67bab)
-set(VCSREVISION "${LLVM_ROOT}/include/llvm/Support/VCSRevision.h")
-if(EXISTS "${VCSREVISION}")
-    message(STATUS "LLVM: VCSRevision.h found.")
-    file(READ "${VCSREVISION}" REVISION_FILE)
-    if(${REVISION_FILE} MATCHES "^#undef LLVM_REVISION*")
-        message(STATUS "LLVM: No revision.")
-        set(NEED_TO_BUILD_LLVM FALSE)
-    else()
-        string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
-        set(LONG_REV ${CMAKE_MATCH_1})
-        if(LONG_REV STREQUAL LLVM_COMMIT_ID)
-            message(STATUS "LLVM: Revision Matches.")
-            set(NEED_TO_BUILD_LLVM FALSE)
+
+if(NOT ("${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}" STREQUAL ""))
+    set(TRY_EXTERNAL_LLVM_BUILD TRUE)
+endif()
+
+set(LLVM_COMMIT_ID f48eced390dcda54766e1c510af10bbcbaebcd7e)
+if(TRY_EXTERNAL_LLVM_BUILD)
+    set(VCSREVISION "${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}/include/llvm/Support/VCSRevision.h")
+    if(EXISTS "${VCSREVISION}")
+        message(STATUS "LLVM: VCSRevision.h found.")
+        file(READ "${VCSREVISION}" REVISION_FILE)
+        if(${REVISION_FILE} MATCHES "^#undef LLVM_REVISION*")
+            # LLVM is built from a source archive
+            message(WARNING "LLVM: Could not revision. Make sure commit ID is ${LLVM_COMMIT_ID}")
+            set(USE_EXTERNAL_LLVM_BUILD TRUE)
+        else()
+            string(REGEX MATCH "LLVM_REVISION \"([A-Za-z0-9]+)\"" _ ${REVISION_FILE})
+            set(LONG_REV ${CMAKE_MATCH_1})
+            if(LONG_REV STREQUAL LLVM_COMMIT_ID)
+                message(STATUS "LLVM: Revision Matches.")
+                set(USE_EXTERNAL_LLVM_BUILD TRUE)
+            endif()
         endif()
     endif()
 endif()
 
-if(NEED_TO_BUILD_LLVM)
-    if(NOT NGRAPH_OVERWRITE_LLVM_ROOT)
-        message(FATAL_ERROR "nGraph is not allowed overwrite contents at LLVM_ROOT: ${LLVM_ROOT} "
-            "Set NGRAPH_OVERWRITE_LLVM_ROOT to ON if you would like to overwrite.")
+if(USE_EXTERNAL_LLVM_BUILD)
+    if(NGRAPH_CODEGEN_ENABLE)
+        find_package(Clang REQUIRED CONFIG HINTS "${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}/lib/cmake/clang" NO_DEFAULT_PATH)
+    endif()
+    if(NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
+        find_package(MLIR REQUIRED CONFIG HINTS "${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}/lib/cmake/mlir" NO_DEFAULT_PATH)
+        include(${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}/lib/cmake/llvm/TableGen.cmake)
+        # Enable LLVM package, definitions and env vars.
+        add_definitions(${LLVM_DEFINITIONS})
+        message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+        message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
+    endif()
+    set(llvm_BINARY_DIR ${NGRAPH_EXTERNAL_LLVM_BUILD_DIR})
+    set(llvm_SOURCE_DIR ${llvm_BINARY_DIR}/..)
+else()
+    if (NGRAPH_USE_PREBUILT_LLVM)
+        message(FATAL_ERROR "LLVM: prebuilt is the wrong hash, expected ${LLVM_COMMIT_ID}")
     endif()
     message(STATUS "LLVM: Building LLVM from source")
     message(STATUS "LLVM: Fetching source")
 
     set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${LLVM_COMMIT_ID}.zip)
-    set(LLVM_ARCHIVE_URL_HASH db42aa67d214bfe07bc9977fc28eaaf7cc06b127)
+    set(LLVM_ARCHIVE_URL_HASH b21201e6a8c59fb5ca4f9ae9190f044996d40321)
 
     FetchContent_Declare(
         llvm
@@ -67,61 +77,39 @@ if(NEED_TO_BUILD_LLVM)
         URL_HASH SHA1=${LLVM_ARCHIVE_URL_HASH}
         )
 
+    set(LLVM_ENABLE_RTTI ON CACHE INTERNAL "")
+    set(LLVM_TARGETS_TO_BUILD host CACHE INTERNAL "")
+    if(NGRAPH_CODEGEN_ENABLE)
+        set(LLVM_ENABLE_PROJECTS "clang;openmp;mlir" CACHE INTERNAL "")
+    else()
+        set(LLVM_ENABLE_PROJECTS "mlir" CACHE INTERNAL "")
+    endif()
+
     FetchContent_GetProperties(llvm)
     if(NOT llvm_POPULATED)
         FetchContent_Populate(llvm)
+        add_subdirectory(${llvm_SOURCE_DIR}/llvm ${llvm_BINARY_DIR})
     endif()
 
-    # MLIR needs build tree
-    set(llvm_BINARY_DIR ${LLVM_ROOT})
-    message(STATUS "Override llvm_BINARY_DIR: ${llvm_BINARY_DIR}")
-    if(NOT EXISTS ${LLVM_ROOT})
-        file(MAKE_DIRECTORY ${LLVM_ROOT})
+    # In subdirectory build cannot use cmake config file and need to set some variables manually
+    set(LLVM_CMAKE_DIR ${llvm_SOURCE_DIR}/llvm/cmake/modules)
+    set(LLVM_INCLUDE_DIRS ${llvm_SOURCE_DIR}/llvm/include ${llvm_BINARY_DIR}/include)
+    if(NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
+        set(MLIR_CMAKE_DIR ${llvm_SOURCE_DIR}/mlir/cmake/modules)
+        set(MLIR_INCLUDE_DIR ${llvm_BINARY_DIR}/tools/mlir/include)
+        set(MLIR_INCLUDE_DIRS ${llvm_SOURCE_DIR}/mlir/include ${llvm_BINARY_DIR}/tools/mlir/include)
+        set(MLIR_TABLEGEN_EXE "mlir-tblgen")
     endif()
-
     if(NGRAPH_CODEGEN_ENABLE)
-        execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
-            -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
-            -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
-            ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
-            -DLLVM_ENABLE_PROJECTS:STRING=clang\;openmp\;mlir
-            -DLLVM_ENABLE_RTTI=ON
-            -DLLVM_INSTALL_UTILS=ON
-            -DLLVM_TARGETS_TO_BUILD=host
-            ${LLVM_CMAKE_ARGS}
-            ${llvm_SOURCE_DIR}/llvm
-            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
-    else()
-        execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
-            -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
-            -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
-            ${NGRAPH_FORWARD_CMAKE_ARGS}
-            -DCMAKE_INSTALL_PREFIX=${LLVM_ROOT}
-            -DLLVM_ENABLE_PROJECTS:STRING=mlir
-            -DLLVM_ENABLE_RTTI=ON
-            -DLLVM_INSTALL_UTILS=ON
-            -DLLVM_TARGETS_TO_BUILD=host
-            ${LLVM_CMAKE_ARGS}
-            ${llvm_SOURCE_DIR}/llvm
-            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
-    endif()
-
-    # clone and build llvm
-    include(ProcessorCount)
-    ProcessorCount(N)
-    if(("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles") AND (NOT N EQUAL 0))
-        execute_process(COMMAND "${CMAKE_COMMAND}" --build . -- -j${N}
-            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
-    else()
-        execute_process(COMMAND "${CMAKE_COMMAND}" --build .
-            WORKING_DIRECTORY "${llvm_BINARY_DIR}")
+        set(CLANG_INCLUDE_DIRS ${llvm_SOURCE_DIR}/clang/include ${llvm_BINARY_DIR}/tools/clang/include)
+        set(LLVM_INCLUDE_DIR ${llvm_BINARY_DIR}/include)
+        set(LLVM_VERSION_MAJOR 12)
+        set(LLVM_VERSION_MINOR 0)
+        set(LLVM_VERSION_PATCH 0)
     endif()
 endif()
 
 if(NGRAPH_CODEGEN_ENABLE)
-    find_package(Clang REQUIRED CONFIG HINTS "${LLVM_ROOT}/lib/cmake/clang" NO_DEFAULT_PATH)
-    message(STATUS "CLANG_CMAKE_DIR: ${CLANG_CMAKE_DIR}")
     message(STATUS "CLANG_INCLUDE_DIRS: ${CLANG_INCLUDE_DIRS}")
     message(STATUS "LLVM_INCLUDE_DIRS: ${LLVM_INCLUDE_DIRS}")
     add_library(libllvm INTERFACE)
@@ -133,33 +121,23 @@ if(NGRAPH_MLIR_ENABLE OR NGRAPH_CPU_MLIR_ENABLE)
     # MLIR environment variables. Some of them are used by LIT tool.
 
     # Only used in this file
-    set(MLIR_LLVM_ROOT ${llvm_SOURCE_DIR})
-    set(MLIR_LLVM_SOURCE_DIR ${MLIR_LLVM_ROOT}/llvm)
-    set(MLIR_SOURCE_DIR ${MLIR_LLVM_ROOT}/mlir)
+    set(MLIR_SOURCE_DIR ${llvm_SOURCE_DIR}/mlir)
     # Used in test/mlir:
     # lit cfg
-    set(MLIR_LLVM_BUILD_DIR ${LLVM_ROOT})
+    set(MLIR_LLVM_BUILD_DIR ${llvm_BINARY_DIR})
     set(NGRAPH_LIT_TEST_SRC_DIR ${PROJECT_SOURCE_DIR}/test/mlir)
     set(NGRAPH_LIT_TEST_BUILD_DIR ${PROJECT_BINARY_DIR}/test/mlir)
     # lit cfg and path to llvm-lit
     set(MLIR_LLVM_TOOLS_DIR ${MLIR_LLVM_BUILD_DIR}/bin)
 
-    set(MLIR_ROOT ${LLVM_ROOT})
-    find_package(MLIR REQUIRED CONFIG HINTS "${LLVM_ROOT}/lib/cmake/mlir" NO_DEFAULT_PATH)
-
-    # Enable LLVM package, definitions and env vars.
-    add_definitions(${LLVM_DEFINITIONS})
-    message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-    message(STATUS "LLVM RTTI is ${LLVM_ENABLE_RTTI}")
-
     # Enable modules for LLVM.
     list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
-    message(STATUS "Using modules in: ${LLVM_CMAKE_DIR}")
+    message(STATUS "Using LLVM modules in: ${LLVM_CMAKE_DIR}")
     include(AddLLVM)
 
     # Enable modules for MLIR.
     list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
-    message(STATUS "Using modules in: ${MLIR_CMAKE_DIR}")
+    message(STATUS "Using MLIR modules in: ${MLIR_CMAKE_DIR}")
     include(AddMLIR)
 
     # Used by tblgen

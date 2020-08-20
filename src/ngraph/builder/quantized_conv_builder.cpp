@@ -51,10 +51,12 @@ namespace ngraph
 
             // TODO: Check for this later
             // For Builders the zero point is assumed to be zero (for now)
-            auto input_zero_point = op::Constant::create(input.get_element_type(), Shape{}, {0});
-            auto filter_zero_point = op::Constant::create(filters.get_element_type(), Shape{}, {0});
+            auto input_zero_point =
+                op::v0::Constant::create(input.get_element_type(), Shape{}, {0});
+            auto filter_zero_point =
+                op::v0::Constant::create(filters.get_element_type(), Shape{}, {0});
 
-            return make_shared<op::QuantizedConvolution>(
+            return make_shared<op::v0::QuantizedConvolution>(
                        input,
                        filters,
                        window_movement_strides,
@@ -113,23 +115,23 @@ namespace ngraph
                 AxisSet quantization_axes;
                 auto bias_scale = quantization_utils::get_bias_scale(
                     min_input, max_input, min_filter, max_filter);
-                op::Quantize::RoundMode round_mode =
-                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+                op::v0::Quantize::RoundMode round_mode =
+                    op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                mybias = make_shared<op::Quantize>(
+                mybias = make_shared<op::v0::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
 
-            return make_shared<op::QuantizedConvolutionBias>(input,
-                                                             filters,
-                                                             mybias,
-                                                             window_movement_strides,
-                                                             window_dilation_strides,
-                                                             padding_below,
-                                                             padding_above,
-                                                             data_dilation_strides,
-                                                             requantization_scale,
-                                                             with_relu)
+            return make_shared<op::v0::QuantizedConvolutionBias>(input,
+                                                                 filters,
+                                                                 mybias,
+                                                                 window_movement_strides,
+                                                                 window_dilation_strides,
+                                                                 padding_below,
+                                                                 padding_above,
+                                                                 data_dilation_strides,
+                                                                 requantization_scale,
+                                                                 with_relu)
                 ->add_provenance_group_members_above({input,
                                                       filters,
                                                       bias,
@@ -162,14 +164,14 @@ namespace ngraph
             auto output_scale = quantization_utils::get_scale(min_output, max_output, element::u8);
             auto requantization_scale = input_scale * filter_scale / output_scale;
 
-            return make_shared<op::QuantizedConvolutionRelu>(input,
-                                                             filters,
-                                                             window_movement_strides,
-                                                             window_dilation_strides,
-                                                             padding_below,
-                                                             padding_above,
-                                                             data_dilation_strides,
-                                                             requantization_scale)
+            return make_shared<op::v0::QuantizedConvolutionRelu>(input,
+                                                                 filters,
+                                                                 window_movement_strides,
+                                                                 window_dilation_strides,
+                                                                 padding_below,
+                                                                 padding_above,
+                                                                 data_dilation_strides,
+                                                                 requantization_scale)
                 ->add_provenance_group_members_above({input,
                                                       filters,
                                                       min_input,
@@ -217,25 +219,25 @@ namespace ngraph
                 AxisSet quantization_axes;
                 auto bias_scale = quantization_utils::get_bias_scale(
                     min_input, max_input, min_filter, max_filter);
-                op::Quantize::RoundMode round_mode =
-                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+                op::v0::Quantize::RoundMode round_mode =
+                    op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                mybias = make_shared<op::Quantize>(
+                mybias = make_shared<op::v0::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
 
-            return make_shared<op::QuantizedConvolutionBiasAdd>(input,
-                                                                filters,
-                                                                mybias,
-                                                                sum_input,
-                                                                window_movement_strides,
-                                                                window_dilation_strides,
-                                                                padding_below,
-                                                                padding_above,
-                                                                data_dilation_strides,
-                                                                requantization_scale,
-                                                                sum_scale,
-                                                                with_relu)
+            return make_shared<op::v0::QuantizedConvolutionBiasAdd>(input,
+                                                                    filters,
+                                                                    mybias,
+                                                                    sum_input,
+                                                                    window_movement_strides,
+                                                                    window_dilation_strides,
+                                                                    padding_below,
+                                                                    padding_above,
+                                                                    data_dilation_strides,
+                                                                    requantization_scale,
+                                                                    sum_scale,
+                                                                    with_relu)
                 ->add_provenance_group_members_above({input,
                                                       filters,
                                                       bias,
@@ -294,25 +296,26 @@ namespace ngraph
                 AxisSet quantization_axes;
                 auto bias_scale = quantization_utils::get_bias_scale(
                     min_input, max_input, min_filter, max_filter);
-                op::Quantize::RoundMode round_mode =
-                    op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
+                op::v0::Quantize::RoundMode round_mode =
+                    op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN;
 
-                mybias = make_shared<op::Quantize>(
+                mybias = make_shared<op::v0::Quantize>(
                     bias, bias_scale, zero, element::i32, quantization_axes, round_mode);
             }
-            auto qconv = make_shared<op::QuantizedConvolutionBiasSignedAdd>(input,
-                                                                            filters,
-                                                                            mybias,
-                                                                            sum_input,
-                                                                            window_movement_strides,
-                                                                            window_dilation_strides,
-                                                                            padding_below,
-                                                                            padding_above,
-                                                                            data_dilation_strides,
-                                                                            requantization_scale,
-                                                                            sum_scale,
-                                                                            with_relu);
-            return make_shared<op::Convert>(qconv, element::u8)
+            auto qconv =
+                make_shared<op::v0::QuantizedConvolutionBiasSignedAdd>(input,
+                                                                       filters,
+                                                                       mybias,
+                                                                       sum_input,
+                                                                       window_movement_strides,
+                                                                       window_dilation_strides,
+                                                                       padding_below,
+                                                                       padding_above,
+                                                                       data_dilation_strides,
+                                                                       requantization_scale,
+                                                                       sum_scale,
+                                                                       with_relu);
+            return make_shared<op::v0::Convert>(qconv, element::u8)
                 ->add_provenance_group_members_above({input,
                                                       filters,
                                                       bias,

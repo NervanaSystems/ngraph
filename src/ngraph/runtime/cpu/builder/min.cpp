@@ -32,12 +32,12 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Min)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Min)
             {
                 BUILD_REDUCTION_FUNCTOR(Min, min);
             }
 
-            void register_builders_min_cpp() { REGISTER_OP_BUILDER(Min); }
+            void register_builders_min_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Min); }
         }
     }
 }

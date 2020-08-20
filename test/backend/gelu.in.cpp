@@ -49,14 +49,14 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, gelu_f32)
 {
     Shape shape{100000};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v0::Gelu>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
     test::Uniform<float> rng(-100.0f, 100.0f);
     vector<vector<float>> args;
-    for (shared_ptr<op::Parameter> param : f->get_parameters())
+    for (shared_ptr<op::v0::Parameter> param : f->get_parameters())
     {
         auto name = param->get_name();
         vector<float> tensor_val(shape_size(param->get_output_shape(0)));
@@ -81,8 +81,8 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_f32)
 NGRAPH_TEST(${BACKEND_NAME}, gelu_f64)
 {
     Shape shape{8};
-    auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto f = make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape);
+    auto f = make_shared<Function>(make_shared<op::v0::Gelu>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -110,8 +110,8 @@ static double gelu_backprop_factor(double x)
 NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f32)
 {
     Shape shape{8};
-    auto A = make_shared<op::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::GeluBackpropFactor>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+    auto f = make_shared<Function>(make_shared<op::v0::GeluBackpropFactor>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -134,8 +134,8 @@ NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f32)
 NGRAPH_TEST(${BACKEND_NAME}, gelu_backprop_factor_f64)
 {
     Shape shape{8};
-    auto A = make_shared<op::Parameter>(element::f64, shape);
-    auto f = make_shared<Function>(make_shared<op::GeluBackpropFactor>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::f64, shape);
+    auto f = make_shared<Function>(make_shared<op::v0::GeluBackpropFactor>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -160,8 +160,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_gelu_f32)
 
     Shape shape{8};
     auto make_graph = [shape]() {
-        auto A = make_shared<op::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+        auto A = make_shared<op::v0::Parameter>(element::f32, shape);
+        return make_shared<Function>(make_shared<op::v0::Gelu>(A), ParameterVector{A});
     };
 
     // Create some tensors for input/output
@@ -178,8 +178,8 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_gelu_f64)
 
     Shape shape{8};
     auto make_graph = [shape]() {
-        auto A = make_shared<op::Parameter>(element::f64, shape);
-        return make_shared<Function>(make_shared<op::Gelu>(A), ParameterVector{A});
+        auto A = make_shared<op::v0::Parameter>(element::f64, shape);
+        return make_shared<Function>(make_shared<op::v0::Gelu>(A), ParameterVector{A});
     };
 
     // Create some tensors for input/output

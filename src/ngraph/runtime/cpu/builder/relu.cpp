@@ -30,7 +30,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Relu)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Relu)
             {
                 if (runtime::cpu::dnnl_utils::use_dnnl_kernel(node))
                 {
@@ -80,7 +80,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ReluBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ReluBackprop)
             {
                 auto& functors = external_function->get_functors();
 
@@ -162,8 +162,8 @@ namespace ngraph
 
             void register_builders_relu_cpp()
             {
-                REGISTER_OP_BUILDER(Relu);
-                REGISTER_OP_BUILDER(ReluBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Relu);
+                REGISTER_OP_BUILDER(ngraph::op::v0::ReluBackprop);
             }
         }
     }

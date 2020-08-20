@@ -52,7 +52,7 @@ void op::v0::Split::pre_validate_and_infer_types()
 
     const auto axis_node = input_value(1).get_node_shared_ptr();
     NODE_VALIDATION_CHECK(this, axis_node->is_constant(), "The 'axis' input node must be constant");
-    const auto axis_node_const = as_type_ptr<op::Constant>(axis_node);
+    const auto axis_node_const = as_type_ptr<op::v0::Constant>(axis_node);
     m_axis = axis_node_const->cast_vector<int64_t>()[0];
 
     // Create dynamic-typed outputs. Actual shape/type will be computed during shape inference
@@ -144,7 +144,7 @@ void op::v1::Split::validate_and_infer_types()
 
     if (input_value(1).get_node_shared_ptr()->is_constant() && data_ps.is_static())
     {
-        const auto axis_input = as_type_ptr<op::Constant>(input_value(1).get_node_shared_ptr());
+        const auto axis_input = as_type_ptr<op::v0::Constant>(input_value(1).get_node_shared_ptr());
         auto axis = axis_input->cast_vector<int64_t>()[0];
 
         const auto data_rank = get_input_partial_shape(0).rank();

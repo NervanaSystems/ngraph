@@ -32,9 +32,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Dot)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Dot)
             {
-                auto dot = static_cast<const ngraph::op::Dot*>(node);
+                auto dot = static_cast<const ngraph::op::v0::Dot*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -267,7 +267,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_dot_cpp() { REGISTER_OP_BUILDER(Dot); }
+            void register_builders_dot_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Dot); }
         }
     }
 }

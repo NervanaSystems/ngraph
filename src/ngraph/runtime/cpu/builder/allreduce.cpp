@@ -28,7 +28,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::AllReduce)
+            void Builder::BUILDER_DECL(ngraph::op::v0::AllReduce)
             {
                 static int call_seq = 0;
 
@@ -37,8 +37,8 @@ namespace ngraph
                 auto out_buffer_index = external_function->get_buffer_index(out[0].get_name());
                 auto count = static_cast<int>(out[0].get_size());
                 auto data_type = args[0].get_element_type();
-                const ngraph::op::AllReduce* allreduce =
-                    static_cast<const ngraph::op::AllReduce*>(node);
+                const ngraph::op::v0::AllReduce* allreduce =
+                    static_cast<const ngraph::op::v0::AllReduce*>(node);
                 auto reduce_type = allreduce->get_reduce_type();
 
                 auto external_function_name = external_function->get_function_name();
@@ -62,7 +62,10 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_allreduce_cpp() { REGISTER_OP_BUILDER(AllReduce); }
+            void register_builders_allreduce_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::AllReduce);
+            }
         }
     }
 }

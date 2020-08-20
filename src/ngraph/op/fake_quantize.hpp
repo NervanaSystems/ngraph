@@ -87,6 +87,5 @@ namespace ngraph
                 AutoBroadcastSpec m_auto_broadcast;
             };
         }
-        using v0::FakeQuantize;
     }
 }

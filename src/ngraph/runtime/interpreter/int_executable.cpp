@@ -157,9 +157,9 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
     for (size_t output_count = 0; output_count < get_results().size(); ++output_count)
     {
         auto output = get_results()[output_count];
-        if (!is_type<op::Result>(output))
+        if (!is_type<op::v0::Result>(output))
         {
-            throw ngraph_error("One of function's outputs isn't op::Result");
+            throw ngraph_error("One of function's outputs isn't op::v0::Result");
         }
         descriptor::Tensor* tensor = &output->get_output_tensor(0);
         tensor_map.insert({tensor, func_outputs[output_count]});
@@ -206,20 +206,22 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 
         // get op type
         element::Type type;
-        if (is_type<op::Convert>(op) || is_type<op::Quantize>(op) || is_type<op::Dequantize>(op) ||
-            is_type<op::ArgMin>(op) || is_type<op::ArgMax>(op))
+        if (is_type<op::v0::Convert>(op) || is_type<op::v0::Quantize>(op) ||
+            is_type<op::v0::Dequantize>(op) || is_type<op::v0::ArgMin>(op) ||
+            is_type<op::v0::ArgMax>(op))
         {
             type = op->get_input_element_type(0);
         }
-        else if (is_type<op::Equal>(op) || is_type<op::Greater>(op) || is_type<op::GreaterEq>(op) ||
-                 is_type<op::Less>(op) || is_type<op::LessEq>(op) || is_type<op::NotEqual>(op))
+        else if (is_type<op::v0::Equal>(op) || is_type<op::v0::Greater>(op) ||
+                 is_type<op::v0::GreaterEq>(op) || is_type<op::v0::Less>(op) ||
+                 is_type<op::v0::LessEq>(op) || is_type<op::v0::NotEqual>(op))
         {
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
             type = op->get_input_element_type(1);
         }
-        else if (is_type<op::TopK>(op))
+        else if (is_type<op::v0::TopK>(op))
         {
             type = op->get_output_element_type(1);
         }
@@ -349,7 +351,7 @@ void runtime::interpreter::INTExecutable::save(ostream& out)
     writer.write("model", model.data(), model.size());
 }
 
-shared_ptr<ngraph::op::Parameter>
+shared_ptr<ngraph::op::v0::Parameter>
     runtime::interpreter::INTExecutable::get_parameter(size_t index) const
 {
     const ParameterVector& parameters = get_parameters();
@@ -357,7 +359,8 @@ shared_ptr<ngraph::op::Parameter>
     return parameters[index];
 }
 
-shared_ptr<ngraph::op::Result> runtime::interpreter::INTExecutable::get_result(size_t index) const
+shared_ptr<ngraph::op::v0::Result>
+    runtime::interpreter::INTExecutable::get_result(size_t index) const
 {
     const ResultVector& results = get_results();
     NGRAPH_CHECK(index < results.size(), "create_tensor for input out of bounds");
@@ -366,7 +369,7 @@ shared_ptr<ngraph::op::Result> runtime::interpreter::INTExecutable::get_result(s
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTExecutable::create_input_tensor(size_t input_index)
 {
-    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    shared_ptr<op::v0::Parameter> parameter = get_parameter(input_index);
     return make_shared<runtime::HostTensor>(parameter->get_output_element_type(0),
                                             parameter->get_output_shape(0));
 }
@@ -374,7 +377,7 @@ shared_ptr<runtime::Tensor>
 shared_ptr<runtime::Tensor>
     runtime::interpreter::INTExecutable::create_output_tensor(size_t output_index)
 {
-    shared_ptr<op::Result> result = get_result(output_index);
+    shared_ptr<op::v0::Result> result = get_result(output_index);
     return make_shared<runtime::HostTensor>(result->get_output_element_type(0),
                                             result->get_output_shape(0));
 }
@@ -384,7 +387,7 @@ vector<shared_ptr<runtime::Tensor>>
                                                              size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
-    shared_ptr<op::Parameter> parameter = get_parameter(input_index);
+    shared_ptr<op::v0::Parameter> parameter = get_parameter(input_index);
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;
@@ -406,7 +409,7 @@ vector<shared_ptr<runtime::Tensor>>
                                                               size_t pipeline_depth)
 {
     vector<shared_ptr<runtime::HostTensor>> tensors;
-    shared_ptr<op::Result> result = get_result(output_index);
+    shared_ptr<op::v0::Result> result = get_result(output_index);
     for (size_t i = 0; i < pipeline_depth; i++)
     {
         shared_ptr<runtime::HostTensor> tensor;

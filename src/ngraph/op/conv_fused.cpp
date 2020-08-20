@@ -26,9 +26,9 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::ConvolutionBias::type_info;
-constexpr NodeTypeInfo op::ConvolutionBiasBackpropFiltersBias::type_info;
-constexpr NodeTypeInfo op::ConvolutionBiasAdd::type_info;
+constexpr NodeTypeInfo op::v0::ConvolutionBias::type_info;
+constexpr NodeTypeInfo op::v0::ConvolutionBiasBackpropFiltersBias::type_info;
+constexpr NodeTypeInfo op::v0::ConvolutionBiasAdd::type_info;
 
 static void validate_convbias_shapes(const Node* node,
                                      element::Type et_filters,
@@ -65,15 +65,15 @@ static void validate_convbias_shapes(const Node* node,
     }
 }
 
-op::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
-                                     const Output<Node>& filters,
-                                     const Output<Node>& bias,
-                                     const Strides& window_movement_strides,
-                                     const Strides& window_dilation_strides,
-                                     const CoordinateDiff& padding_below,
-                                     const CoordinateDiff& padding_above,
-                                     const Strides& data_dilation_strides,
-                                     const bool with_relu)
+op::v0::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
+                                         const Output<Node>& filters,
+                                         const Output<Node>& bias,
+                                         const Strides& window_movement_strides,
+                                         const Strides& window_dilation_strides,
+                                         const CoordinateDiff& padding_below,
+                                         const CoordinateDiff& padding_above,
+                                         const Strides& data_dilation_strides,
+                                         const bool with_relu)
     : FusedOp({data_batch, filters, bias})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -85,9 +85,9 @@ op::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
-op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
-                                     const Output<Node>& bias,
-                                     const bool with_relu)
+op::v0::ConvolutionBias::ConvolutionBias(const shared_ptr<op::v0::Convolution>& conv,
+                                         const Output<Node>& bias,
+                                         const bool with_relu)
     : ConvolutionBias(conv->input_value(0),
                       conv->input_value(1),
                       bias,
@@ -100,9 +100,9 @@ op::ConvolutionBias::ConvolutionBias(const shared_ptr<op::Convolution>& conv,
 {
 }
 
-op::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
-                                     const Output<Node>& filters,
-                                     const Output<Node>& bias)
+op::v0::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
+                                         const Output<Node>& filters,
+                                         const Output<Node>& bias)
     : ConvolutionBias(data_batch,
                       filters,
                       bias,
@@ -119,7 +119,7 @@ op::ConvolutionBias::ConvolutionBias(const Output<Node>& data_batch,
 ///
 /// This implementation handles partial shapes and adjust conv attributes
 /// to support simplified ConvolutionBias op construction
-void op::ConvolutionBias::validate_and_infer_types()
+void op::v0::ConvolutionBias::validate_and_infer_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
@@ -178,7 +178,7 @@ void op::ConvolutionBias::validate_and_infer_types()
     set_output_type(0, result_et, result_shape);
 }
 
-shared_ptr<Node> op::ConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::ConvolutionBias::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 3)
     {
@@ -196,15 +196,15 @@ shared_ptr<Node> op::ConvolutionBias::clone_with_new_inputs(const OutputVector& 
                                         m_with_relu);
 }
 
-OutputVector op::ConvolutionBias::decompose_op() const
+OutputVector op::v0::ConvolutionBias::decompose_op() const
 {
-    auto conv = make_shared<op::Convolution>(input_value(0),
-                                             input_value(1),
-                                             m_window_movement_strides,
-                                             m_window_dilation_strides,
-                                             m_padding_below,
-                                             m_padding_above,
-                                             m_data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(input_value(0),
+                                                 input_value(1),
+                                                 m_window_movement_strides,
+                                                 m_window_dilation_strides,
+                                                 m_padding_below,
+                                                 m_padding_above,
+                                                 m_data_dilation_strides);
     AxisSet bcast_axes;
     bcast_axes.insert(0);
     for (size_t i = 2; i < conv->get_output_shape(0).size(); i++)
@@ -212,11 +212,12 @@ OutputVector op::ConvolutionBias::decompose_op() const
         bcast_axes.insert(i);
     }
 
-    auto conv_bias = make_shared<op::Add>(
-        conv, make_shared<op::Broadcast>(input_value(2), conv->get_output_shape(0), bcast_axes));
+    auto conv_bias = make_shared<op::v1::Add>(
+        conv,
+        make_shared<op::v0::Broadcast>(input_value(2), conv->get_output_shape(0), bcast_axes));
     if (m_with_relu)
     {
-        return {make_shared<op::Relu>(conv_bias)};
+        return {make_shared<op::v0::Relu>(conv_bias)};
     }
     else
     {
@@ -224,13 +225,13 @@ OutputVector op::ConvolutionBias::decompose_op() const
     }
 }
 
-void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
-                                            const OutputVector& deltas)
+void op::v0::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
+                                                const OutputVector& deltas)
 {
     auto delta = deltas.at(0);
     if (m_with_relu)
     {
-        delta = make_shared<op::ReluBackprop>(shared_from_this(), delta);
+        delta = make_shared<op::v0::ReluBackprop>(shared_from_this(), delta);
     }
 
     auto data = input_value(0);
@@ -244,25 +245,25 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
 
     // using regular convolution backprop for data
     adjoints.add_delta(data,
-                       make_shared<op::ConvolutionBackpropData>(data_shape,
-                                                                filter,
+                       make_shared<op::v0::ConvolutionBackpropData>(data_shape,
+                                                                    filter,
+                                                                    delta,
+                                                                    m_window_movement_strides,
+                                                                    m_window_dilation_strides,
+                                                                    m_padding_below,
+                                                                    m_padding_above,
+                                                                    m_data_dilation_strides));
+
+    auto filter_bias_backprop =
+        make_shared<op::v0::ConvolutionBiasBackpropFiltersBias>(data,
+                                                                filter_shape,
+                                                                bias_shape,
                                                                 delta,
                                                                 m_window_movement_strides,
                                                                 m_window_dilation_strides,
                                                                 m_padding_below,
                                                                 m_padding_above,
-                                                                m_data_dilation_strides));
-
-    auto filter_bias_backprop =
-        make_shared<op::ConvolutionBiasBackpropFiltersBias>(data,
-                                                            filter_shape,
-                                                            bias_shape,
-                                                            delta,
-                                                            m_window_movement_strides,
-                                                            m_window_dilation_strides,
-                                                            m_padding_below,
-                                                            m_padding_above,
-                                                            m_data_dilation_strides);
+                                                                m_data_dilation_strides);
     auto filter_delta = Output<Node>(filter_bias_backprop, 0);
     auto bias_delta = Output<Node>(filter_bias_backprop, 1);
 
@@ -270,7 +271,7 @@ void op::ConvolutionBias::generate_adjoints(autodiff::Adjoints& adjoints,
     adjoints.add_delta(bias, bias_delta);
 }
 
-op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
+op::v0::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     const Output<Node>& data_batch,
     const Shape& filters_shape,
     const Shape& bias_shape,
@@ -319,7 +320,7 @@ op::ConvolutionBiasBackpropFiltersBias::ConvolutionBiasBackpropFiltersBias(
     constructor_validate_and_infer_types();
 }
 
-shared_ptr<Node> op::ConvolutionBiasBackpropFiltersBias::clone_with_new_inputs(
+shared_ptr<Node> op::v0::ConvolutionBiasBackpropFiltersBias::clone_with_new_inputs(
     const OutputVector& new_args) const
 {
     if (new_args.size() != 2)
@@ -337,16 +338,17 @@ shared_ptr<Node> op::ConvolutionBiasBackpropFiltersBias::clone_with_new_inputs(
                                                            m_data_dilation_strides_forward);
 }
 
-OutputVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
+OutputVector op::v0::ConvolutionBiasBackpropFiltersBias::decompose_op() const
 {
-    auto conv_bprop = make_shared<op::ConvolutionBackpropFilters>(input_value(0),
-                                                                  m_filters_shape,
-                                                                  input_value(1),
-                                                                  m_window_movement_strides_forward,
-                                                                  m_window_dilation_strides_forward,
-                                                                  m_padding_below_forward,
-                                                                  m_padding_above_forward,
-                                                                  m_data_dilation_strides_forward);
+    auto conv_bprop =
+        make_shared<op::v0::ConvolutionBackpropFilters>(input_value(0),
+                                                        m_filters_shape,
+                                                        input_value(1),
+                                                        m_window_movement_strides_forward,
+                                                        m_window_dilation_strides_forward,
+                                                        m_padding_below_forward,
+                                                        m_padding_above_forward,
+                                                        m_data_dilation_strides_forward);
 
     AxisSet reduce_axes;
     reduce_axes.insert(0);
@@ -355,21 +357,21 @@ OutputVector op::ConvolutionBiasBackpropFiltersBias::decompose_op() const
         reduce_axes.insert(i);
     }
 
-    auto bias_bprop = make_shared<op::Sum>(input_value(1), reduce_axes);
+    auto bias_bprop = make_shared<op::v0::Sum>(input_value(1), reduce_axes);
 
     return {conv_bprop, bias_bprop};
 }
 
-op::ConvolutionBiasAdd::ConvolutionBiasAdd(const Output<Node>& data_batch,
-                                           const Output<Node>& filters,
-                                           const Output<Node>& bias,
-                                           const Output<Node>& add_input,
-                                           const Strides& window_movement_strides,
-                                           const Strides& window_dilation_strides,
-                                           const CoordinateDiff& padding_below,
-                                           const CoordinateDiff& padding_above,
-                                           const Strides& data_dilation_strides,
-                                           bool with_relu)
+op::v0::ConvolutionBiasAdd::ConvolutionBiasAdd(const Output<Node>& data_batch,
+                                               const Output<Node>& filters,
+                                               const Output<Node>& bias,
+                                               const Output<Node>& add_input,
+                                               const Strides& window_movement_strides,
+                                               const Strides& window_dilation_strides,
+                                               const CoordinateDiff& padding_below,
+                                               const CoordinateDiff& padding_above,
+                                               const Strides& data_dilation_strides,
+                                               bool with_relu)
     : FusedOp({data_batch, filters, bias, add_input})
     , m_window_movement_strides(window_movement_strides)
     , m_window_dilation_strides(window_dilation_strides)
@@ -381,9 +383,9 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const Output<Node>& data_batch,
     constructor_validate_and_infer_types();
 }
 
-op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::ConvolutionBias>& conv,
-                                           const Output<Node>& add_input,
-                                           bool with_relu)
+op::v0::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::v0::ConvolutionBias>& conv,
+                                               const Output<Node>& add_input,
+                                               bool with_relu)
     : ConvolutionBiasAdd(conv->input_value(0),
                          conv->input_value(1),
                          conv->input_value(2),
@@ -401,7 +403,7 @@ op::ConvolutionBiasAdd::ConvolutionBiasAdd(const std::shared_ptr<op::Convolution
 /// based on FusedOp decomposition.
 ///
 /// This implementation handles partial shapes
-void op::ConvolutionBiasAdd::validate_and_infer_types()
+void op::v0::ConvolutionBiasAdd::validate_and_infer_types()
 {
     const PartialShape& data_batch_shape = get_input_partial_shape(0);
     element::Type data_batch_et = get_input_element_type(0);
@@ -437,7 +439,7 @@ void op::ConvolutionBiasAdd::validate_and_infer_types()
 }
 
 std::shared_ptr<Node>
-    op::ConvolutionBiasAdd::clone_with_new_inputs(const OutputVector& new_args) const
+    op::v0::ConvolutionBiasAdd::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 4)
     {
@@ -456,15 +458,15 @@ std::shared_ptr<Node>
                                            m_with_relu);
 }
 
-OutputVector op::ConvolutionBiasAdd::decompose_op() const
+OutputVector op::v0::ConvolutionBiasAdd::decompose_op() const
 {
-    auto conv = make_shared<op::Convolution>(input_value(0),
-                                             input_value(1),
-                                             m_window_movement_strides,
-                                             m_window_dilation_strides,
-                                             m_padding_below,
-                                             m_padding_above,
-                                             m_data_dilation_strides);
+    auto conv = make_shared<op::v0::Convolution>(input_value(0),
+                                                 input_value(1),
+                                                 m_window_movement_strides,
+                                                 m_window_dilation_strides,
+                                                 m_padding_below,
+                                                 m_padding_above,
+                                                 m_data_dilation_strides);
     AxisSet bcast_axes;
     bcast_axes.insert(0);
     for (size_t i = 2; i < conv->get_output_shape(0).size(); i++)
@@ -472,11 +474,12 @@ OutputVector op::ConvolutionBiasAdd::decompose_op() const
         bcast_axes.insert(i);
     }
 
-    auto conv_bias = make_shared<op::Add>(
-        conv, make_shared<op::Broadcast>(input_value(2), conv->get_output_shape(0), bcast_axes));
+    auto conv_bias = make_shared<op::v1::Add>(
+        conv,
+        make_shared<op::v0::Broadcast>(input_value(2), conv->get_output_shape(0), bcast_axes));
     if (m_with_relu)
     {
-        return {make_shared<op::Relu>(conv_bias + input_value(3))};
+        return {make_shared<op::v0::Relu>(conv_bias + input_value(3))};
     }
     else
     {

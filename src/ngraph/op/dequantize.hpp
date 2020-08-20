@@ -69,6 +69,5 @@ namespace ngraph
                 AxisSet m_axes;
             };
         }
-        using v0::Dequantize;
     }
 }

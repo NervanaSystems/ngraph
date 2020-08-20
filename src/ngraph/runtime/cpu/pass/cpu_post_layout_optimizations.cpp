@@ -49,12 +49,12 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
 {
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{64});
     auto reshape_conv =
-        std::make_shared<ngraph::op::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
+        std::make_shared<ngraph::op::v0::Reshape>(param, AxisVector{0}, Shape{16, 4, 1, 1});
     auto data_conv = std::make_shared<pattern::op::Label>(element::f32, Shape{16, 4, 7, 7});
     descriptor::Tensor& tvt = reshape_conv->get_output_tensor(0);
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(tvt);
     auto cvt_lt_conv = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape_conv, lt_desc);
-    auto conv = std::make_shared<ngraph::op::Convolution>(
+    auto conv = std::make_shared<ngraph::op::v0::Convolution>(
         data_conv, cvt_lt_conv, Strides{1, 1}, Strides{1, 1});
 
     auto callback = [param](pattern::Matcher& m) {
@@ -66,9 +66,9 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
 
         std::shared_ptr<Node> m_conv_bprop;
 
-        std::vector<std::type_index> user_pattern = {TI(ngraph::op::Reshape),
+        std::vector<std::type_index> user_pattern = {TI(ngraph::op::v0::Reshape),
                                                      TI(runtime::cpu::op::ConvertLayout),
-                                                     TI(ngraph::op::ConvolutionBackpropData)};
+                                                     TI(ngraph::op::v0::ConvolutionBackpropData)};
 
         for (auto u : m.get_pattern_map()[param]->get_users())
         {
@@ -126,7 +126,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_weight_fu
 void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_convertLayout_fusion()
 {
     auto param = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 576, 17, 17});
-    auto slice = std::make_shared<ngraph::op::Slice>(
+    auto slice = std::make_shared<ngraph::op::v0::Slice>(
         param, Coordinate{0, 0, 0, 0}, Coordinate{1, 192, 17, 17});
     descriptor::Tensor& tvt = slice->get_output_tensor(0);
     auto lt_desc = std::make_shared<runtime::cpu::LayoutDescriptor>(tvt);
@@ -138,7 +138,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
 
         auto m_cvt_lt = m.get_match_value();
         auto m_slice = m_cvt_lt.get_node()->get_argument(0);
-        auto slice_ptr = static_cast<const ngraph::op::Slice*>(m_slice.get());
+        auto slice_ptr = static_cast<const ngraph::op::v0::Slice*>(m_slice.get());
         // do the fusion if slice has 1 user and uses dnnl kernel.
         if (!runtime::cpu::dnnl_utils::use_dnnl_kernel(slice_ptr) ||
             m_slice->get_users().size() != 1)
@@ -153,10 +153,10 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::construct_slice_con
                 continue;
             }
 
-            auto new_slice = std::make_shared<ngraph::op::Slice>(m_slice->input_value(0),
-                                                                 slice_ptr->get_lower_bounds(),
-                                                                 slice_ptr->get_upper_bounds(),
-                                                                 slice_ptr->get_strides());
+            auto new_slice = std::make_shared<ngraph::op::v0::Slice>(m_slice->input_value(0),
+                                                                     slice_ptr->get_lower_bounds(),
+                                                                     slice_ptr->get_upper_bounds(),
+                                                                     slice_ptr->get_strides());
             auto op_annotations = std::make_shared<ngraph::runtime::cpu::CPUOpAnnotations>();
             op_annotations->set_dnnl_op(true);
             new_slice->set_op_annotations(op_annotations);
@@ -190,7 +190,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
 {
     auto input = std::make_shared<pattern::op::Label>(element::f32, Shape{1, 1, 1, 1});
     auto reshape =
-        std::make_shared<ngraph::op::Reshape>(input, AxisVector{0, 1, 2, 3}, Shape{1, 1, 1, 1});
+        std::make_shared<ngraph::op::v0::Reshape>(input, AxisVector{0, 1, 2, 3}, Shape{1, 1, 1, 1});
     auto lt_desc =
         std::make_shared<runtime::cpu::LayoutDescriptor>(*reshape->get_output_tensor_ptr(0));
     auto cvt_lt = std::make_shared<runtime::cpu::op::ConvertLayout>(reshape, lt_desc);
@@ -204,7 +204,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
                      "match root node ",
                      *m.get_match_root(),
                      " not of type `runtime::cpu::op::ConvertLayout`");
-        auto reshape_m = static_pointer_cast<ngraph::op::Reshape>(cvt_lt_m->get_argument(0));
+        auto reshape_m = static_pointer_cast<ngraph::op::v0::Reshape>(cvt_lt_m->get_argument(0));
 
         if (reshape_m->get_users().size() > 1)
         {
@@ -254,7 +254,7 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
                                                                           rotated_lt_desc);
         cvt_lt_n->set_op_annotations(cvt_lt_m->get_op_annotations());
 
-        auto reshape_n = std::make_shared<ngraph::op::Reshape>(
+        auto reshape_n = std::make_shared<ngraph::op::v0::Reshape>(
             cvt_lt_n, reshape_order, cvt_lt_m->get_output_shape(0));
         auto reshape_n_layout = std::make_shared<ngraph::runtime::cpu::LayoutDescriptor>(
             *reshape_n->get_output_tensor_ptr(0));
@@ -276,8 +276,8 @@ void ngraph::runtime::cpu::pass::CPUPostLayoutOptimizations::
 
 // fold Constant + ConvertLayout to Constant
 template <typename T>
-static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
-    const shared_ptr<op::Constant>& input,
+static shared_ptr<ngraph::op::v0::Constant> fold_constant_convertlayout_helper(
+    const shared_ptr<op::v0::Constant>& input,
     const shared_ptr<runtime::cpu::op::ConvertLayout>& convertlayout,
     dnnl::memory::desc& input_desc,
     dnnl::memory::desc& result_desc)
@@ -310,7 +310,8 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
              convertlayout->get_users().size() == 1)
     {
         Shape weights_shape_groups;
-        if (auto gconv = as_type_ptr<ngraph::op::GroupConvolution>(convertlayout->get_users()[0]))
+        if (auto gconv =
+                as_type_ptr<ngraph::op::v0::GroupConvolution>(convertlayout->get_users()[0]))
         {
             weights_shape_groups = gconv->get_weights_dimensions();
         }
@@ -349,7 +350,7 @@ static shared_ptr<ngraph::op::Constant> fold_constant_convertlayout_helper(
         throw ngraph_error("Could not run mkdnn primitive " + std::string(e.message));
     }
 
-    return make_shared<ngraph::op::Constant>(
+    return make_shared<ngraph::op::v0::Constant>(
         convertlayout->get_output_element_type(0), convertlayout->get_output_shape(0), result_vec);
 }
 
@@ -371,12 +372,12 @@ bool ngraph::runtime::cpu::pass::CPUConvertLayoutConstantFolding::run_on_functio
             }
 
             auto arg = m_convertlayout->get_input_node_shared_ptr(0);
-            if (is_type<ngraph::op::Constant>(arg))
+            if (is_type<ngraph::op::v0::Constant>(arg))
             {
-                auto m_input = static_pointer_cast<ngraph::op::Constant>(arg);
+                auto m_input = static_pointer_cast<ngraph::op::v0::Constant>(arg);
                 auto input_md = dnnl_utils::get_input_dnnl_md(m_convertlayout.get(), 0);
 
-                std::shared_ptr<ngraph::op::Constant> replacement;
+                std::shared_ptr<ngraph::op::v0::Constant> replacement;
 
                 switch (m_input->get_output_element_type(0))
                 {

@@ -23,15 +23,15 @@ using namespace ngraph;
 
 TEST(type_prop, dyn_pad_pad_value_test)
 {
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4});
-    auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4});
+    auto pad_b = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto pad_a = make_shared<op::v0::Parameter>(element::i64, Shape{3});
 
     // padding value matches tensor data-type
     try
     {
-        auto pad_v = make_shared<op::Parameter>(element::i32, Shape{});
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto pad_v = make_shared<op::v0::Parameter>(element::i32, Shape{});
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -45,8 +45,8 @@ TEST(type_prop, dyn_pad_pad_value_test)
     // padding value is scalar
     try
     {
-        auto pad_v = make_shared<op::Parameter>(element::f32, Shape{3});
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto pad_v = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -60,14 +60,14 @@ TEST(type_prop, dyn_pad_pad_value_test)
 
 TEST(type_prop, dyn_pad_wrong_ranks)
 {
-    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
+    auto pad_v = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
     try
     {
-        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3, 4});
-        auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::v0::Parameter>(element::i64, Shape{3, 4});
+        auto pad_a = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -80,11 +80,11 @@ TEST(type_prop, dyn_pad_wrong_ranks)
 
     try
     {
-        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
-        auto pad_a = make_shared<op::Parameter>(
+        auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+        auto pad_a = make_shared<op::v0::Parameter>(
             element::i64, PartialShape{Dimension::dynamic(), Dimension::dynamic()});
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -97,10 +97,10 @@ TEST(type_prop, dyn_pad_wrong_ranks)
 
     try
     {
-        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
-        auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+        auto pad_a = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -113,10 +113,10 @@ TEST(type_prop, dyn_pad_wrong_ranks)
 
     try
     {
-        auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-        auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-        auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+        auto pad_b = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+        auto pad_a = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -129,10 +129,10 @@ TEST(type_prop, dyn_pad_wrong_ranks)
 
     try
     {
-        auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-        auto pad_b = make_shared<op::Parameter>(element::i64, Shape{4});
-        auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
-        auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+        auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+        auto pad_b = make_shared<op::v0::Parameter>(element::i64, Shape{4});
+        auto pad_a = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+        auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
     }
     catch (const NodeValidationFailure& error)
     {
@@ -146,11 +146,11 @@ TEST(type_prop, dyn_pad_wrong_ranks)
 
 TEST(type_prop, dyn_pad_output_ranks_arg_static_ok)
 {
-    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-    auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    auto pad_v = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+    auto pad_b = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto pad_a = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
 
     EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
     EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -158,12 +158,12 @@ TEST(type_prop, dyn_pad_output_ranks_arg_static_ok)
 
 TEST(type_prop, dyn_pad_output_ranks_arg_dynamic_ok)
 {
-    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg = make_shared<op::Parameter>(
+    auto pad_v = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::v0::Parameter>(
         element::f32, PartialShape{2, Dimension::dynamic(), 4, Dimension::dynamic()});
-    auto pad_b = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto pad_a = make_shared<op::Parameter>(element::i64, PartialShape::dynamic());
-    auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    auto pad_b = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto pad_a = make_shared<op::v0::Parameter>(element::i64, PartialShape::dynamic());
+    auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
 
     EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
     EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
@@ -171,11 +171,11 @@ TEST(type_prop, dyn_pad_output_ranks_arg_dynamic_ok)
 
 TEST(type_prop, dyn_pad_output_ranks_pad_static_ok)
 {
-    auto pad_v = make_shared<op::Parameter>(element::f32, Shape{});
-    auto arg = make_shared<op::Parameter>(element::f32, PartialShape::dynamic());
-    auto pad_b = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto pad_a = make_shared<op::Parameter>(element::i64, Shape{3});
-    auto dyn_pad = make_shared<op::DynPad>(arg, pad_b, pad_a, pad_v);
+    auto pad_v = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    auto arg = make_shared<op::v0::Parameter>(element::f32, PartialShape::dynamic());
+    auto pad_b = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto pad_a = make_shared<op::v0::Parameter>(element::i64, Shape{3});
+    auto dyn_pad = make_shared<op::v0::DynPad>(arg, pad_b, pad_a, pad_v);
 
     EXPECT_EQ(dyn_pad->get_output_element_type(0), element::f32);
     EXPECT_TRUE(dyn_pad->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(3)));

@@ -60,15 +60,15 @@ namespace
                     const AxisSet& shrink_mask,
                     const AxisSet& ellipsis_mask)
     {
-        auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
-        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{lb_values.size()});
-        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{ub_values.size()});
-        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{strides_values.size()});
+        auto arg = std::make_shared<op::v0::Parameter>(input_element_type, input_shape);
+        auto lb = std::make_shared<op::v0::Parameter>(element::i64, Shape{lb_values.size()});
+        auto ub = std::make_shared<op::v0::Parameter>(element::i64, Shape{ub_values.size()});
+        auto strides = std::make_shared<op::v0::Parameter>(element::i64, Shape{strides_values.size()});
 
         std::vector<T> input_values(shape_size(input_shape));
         std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
 
-        auto slice = std::make_shared<op::DynSlice>(
+        auto slice = std::make_shared<op::v0::DynSlice>(
             arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
 
         auto f = std::make_shared<Function>(OutputVector{slice}, ParameterVector{arg, lb, ub, strides});
@@ -118,15 +118,15 @@ namespace
                     const Shape& expected_output_shape,
                     const std::vector<T>& expected_values)
     {
-        auto arg = std::make_shared<op::Parameter>(input_element_type, input_shape);
-        auto lb = std::make_shared<op::Parameter>(element::i64, Shape{lb_values.size()});
-        auto ub = std::make_shared<op::Parameter>(element::i64, Shape{ub_values.size()});
-        auto strides = std::make_shared<op::Parameter>(element::i64, Shape{strides_values.size()});
+        auto arg = std::make_shared<op::v0::Parameter>(input_element_type, input_shape);
+        auto lb = std::make_shared<op::v0::Parameter>(element::i64, Shape{lb_values.size()});
+        auto ub = std::make_shared<op::v0::Parameter>(element::i64, Shape{ub_values.size()});
+        auto strides = std::make_shared<op::v0::Parameter>(element::i64, Shape{strides_values.size()});
 
         std::vector<T> input_values(shape_size(input_shape));
         std::iota(input_values.begin(), input_values.end(), static_cast<T>(0));
 
-        auto slice = std::make_shared<op::DynSlice>(
+        auto slice = std::make_shared<op::v0::DynSlice>(
             arg, lb, ub, strides, lb_mask, ub_mask, new_mask, shrink_mask, ellipsis_mask);
 
         auto f = std::make_shared<Function>(OutputVector{slice}, ParameterVector{arg, lb, ub, strides});

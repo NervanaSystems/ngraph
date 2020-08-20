@@ -25,11 +25,11 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::SpaceToDepth::type_info;
+constexpr NodeTypeInfo op::v0::SpaceToDepth::type_info;
 
-op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
-                               const SpaceToDepthMode& mode,
-                               size_t block_size)
+op::v0::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
+                                   const SpaceToDepthMode& mode,
+                                   size_t block_size)
     : FusedOp({data})
     , m_blocksize(block_size)
     , m_mode(mode)
@@ -37,7 +37,9 @@ op::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-op::SpaceToDepth::SpaceToDepth(const Output<Node>& data, const std::string& mode, size_t block_size)
+op::v0::SpaceToDepth::SpaceToDepth(const Output<Node>& data,
+                                   const std::string& mode,
+                                   size_t block_size)
     : SpaceToDepth(data, as_enum<SpaceToDepthMode>(mode), block_size)
 {
 }
@@ -49,7 +51,7 @@ bool ngraph::op::v0::SpaceToDepth::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-OutputVector op::SpaceToDepth::decompose_op() const
+OutputVector op::v0::SpaceToDepth::decompose_op() const
 {
     auto data = input_value(0);
     auto data_shape = data.get_shape();
@@ -141,7 +143,7 @@ OutputVector op::SpaceToDepth::decompose_op() const
     return OutputVector{flat_node};
 }
 
-shared_ptr<Node> op::SpaceToDepth::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::SpaceToDepth::clone_with_new_inputs(const OutputVector& new_args) const
 {
     if (new_args.size() != 1)
     {

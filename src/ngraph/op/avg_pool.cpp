@@ -626,7 +626,7 @@ bool op::v1::AvgPoolBackprop::visit_attributes(AttributeVisitor& visitor)
 const Shape op::v1::AvgPoolBackprop::get_forward_arg_shape() const
 {
     Shape shape;
-    if (auto const_op = as_type<op::Constant>(input_value(1).get_node()))
+    if (auto const_op = as_type<op::v0::Constant>(input_value(1).get_node()))
     {
         shape = const_op->get_shape_val();
     }
@@ -745,5 +745,5 @@ void op::v1::AvgPool::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
 
 shared_ptr<Node> op::v1::AvgPool::get_default_value() const
 {
-    return op::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
+    return op::v0::Constant::create(get_output_element_type(0), get_output_shape(0), {0});
 }

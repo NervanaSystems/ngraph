@@ -58,6 +58,5 @@ namespace ngraph
                 bool m_with_relu;
             };
         }
-        using v0::QuantizedDotBias;
     }
 }

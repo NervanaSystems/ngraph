@@ -31,7 +31,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Sigmoid)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Sigmoid)
             {
                 auto& functors = external_function->get_functors();
 
@@ -80,7 +80,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::SigmoidBackprop)
+            void Builder::BUILDER_DECL(ngraph::op::v0::SigmoidBackprop)
             {
                 auto& functors = external_function->get_functors();
 
@@ -216,10 +216,10 @@ namespace ngraph
 
             void register_builders_sigmoid_cpp()
             {
-                REGISTER_OP_BUILDER(Sigmoid);
-                REGISTER_OP_BUILDER(SigmoidBackprop);
-                REGISTER_OP_BUILDER(SigmoidMultiply);
-                REGISTER_OP_BUILDER(SigmoidMultiplyBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::v0::Sigmoid);
+                REGISTER_OP_BUILDER(ngraph::op::v0::SigmoidBackprop);
+                REGISTER_OP_BUILDER(ngraph::op::SigmoidMultiply);
+                REGISTER_OP_BUILDER(ngraph::op::SigmoidMultiplyBackprop);
             }
         }
     }

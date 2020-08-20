@@ -30,7 +30,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::ScatterAdd)
+            void Builder::BUILDER_DECL(ngraph::op::v0::ScatterAdd)
             {
                 (void)node;
                 auto& functors = external_function->get_functors();
@@ -202,7 +202,10 @@ namespace ngraph
                 }
             }
 
-            void register_builders_scatter_add_cpp() { REGISTER_OP_BUILDER(ScatterAdd); }
+            void register_builders_scatter_add_cpp()
+            {
+                REGISTER_OP_BUILDER(ngraph::op::v0::ScatterAdd);
+            }
         }
     }
 }

@@ -266,40 +266,40 @@ namespace
     };
 
     // Return llvm type for given attributes type
-    static LLVM::LLVMType getLLVMType(AttrsType attrsType, LLVM::LLVMDialect* llvmDialect)
+    static LLVM::LLVMType getLLVMType(AttrsType attrsType, MLIRContext* context)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
-        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(context);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
         auto llvmArray1DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
         auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
         auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
-        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
+        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(context);
         switch (attrsType)
         {
         case AttrsType::INT: return llvmI64Ty;
         case AttrsType::CONV1D:
             return LLVM::LLVMType::getStructTy(
-                llvmDialect,
+                context,
                 {llvmI8Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty, llvmArray1DI64Ty});
         case AttrsType::CONV2D:
             return LLVM::LLVMType::getStructTy(
-                llvmDialect,
+                context,
                 {llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty});
         case AttrsType::CONV3D:
             return LLVM::LLVMType::getStructTy(
-                llvmDialect,
+                context,
                 {llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty});
         case AttrsType::POOL2D:
             return LLVM::LLVMType::getStructTy(
-                llvmDialect,
+                context,
                 {llvmI8Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty, llvmArray2DI64Ty});
         case AttrsType::POOL3D:
             return LLVM::LLVMType::getStructTy(
-                llvmDialect,
+                context,
                 {llvmI8Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty, llvmArray3DI64Ty});
         case AttrsType::GEMM:
-            return LLVM::LLVMType::getStructTy(llvmDialect,
+            return LLVM::LLVMType::getStructTy(context,
                                                {llvmI8Ty,
                                                 llvmI8Ty,
                                                 llvmI64Ty,
@@ -690,15 +690,15 @@ namespace
     }
 
     // Attribute is int64_t
-    static void initINT(LLVM::LLVMDialect* llvmDialect,
+    static void initINT(MLIRContext* context,
                         int64_t intAttr,
                         LLVM::AddressOfOp globalPtr,
                         OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
         auto castOp =
             builder.create<LLVM::BitcastOp>(builder.getUnknownLoc(),
-                                            getLLVMType(AttrsType::INT, llvmDialect).getPointerTo(),
+                                            getLLVMType(AttrsType::INT, context).getPointerTo(),
                                             globalPtr);
         auto intOp = builder.create<LLVM::ConstantOp>(
             builder.getUnknownLoc(), llvmI64Ty, builder.getI64IntegerAttr(intAttr));
@@ -716,17 +716,17 @@ namespace
                 int64_t padAbove[N];
             };
      */
-    static void initCONV1D(LLVM::LLVMDialect* llvmDialect,
+    static void initCONV1D(MLIRContext* context,
                            convAttrs<1>& convAttrs1d,
                            SmallVector<LLVM::ConstantOp, 12>& constants,
                            LLVM::AddressOfOp globalPtr,
                            OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
         auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
         auto llvmArray1DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 1);
-        auto conv1dTy = getLLVMType(AttrsType::CONV1D, llvmDialect);
+        auto conv1dTy = getLLVMType(AttrsType::CONV1D, context);
         auto castOp = builder.create<LLVM::BitcastOp>(
             builder.getUnknownLoc(), conv1dTy.getPointerTo(), globalPtr);
 
@@ -763,17 +763,17 @@ namespace
         }
     }
 
-    static void initCONV2D(LLVM::LLVMDialect* llvmDialect,
+    static void initCONV2D(MLIRContext* context,
                            convAttrs<2>& convAttrs2d,
                            SmallVector<LLVM::ConstantOp, 12>& constants,
                            LLVM::AddressOfOp globalPtr,
                            OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
         auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
         auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
-        auto conv2dTy = getLLVMType(AttrsType::CONV2D, llvmDialect);
+        auto conv2dTy = getLLVMType(AttrsType::CONV2D, context);
         auto castOp = builder.create<LLVM::BitcastOp>(
             builder.getUnknownLoc(), conv2dTy.getPointerTo(), globalPtr);
 
@@ -820,17 +820,17 @@ namespace
         }
     }
 
-    static void initCONV3D(LLVM::LLVMDialect* llvmDialect,
+    static void initCONV3D(MLIRContext* context,
                            convAttrs<3>& convAttrs3d,
                            SmallVector<LLVM::ConstantOp, 12>& constants,
                            LLVM::AddressOfOp globalPtr,
                            OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
         auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
         auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
-        auto conv3dTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto conv3dTy = getLLVMType(AttrsType::CONV3D, context);
         auto castOp = builder.create<LLVM::BitcastOp>(
             builder.getUnknownLoc(), conv3dTy.getPointerTo(), globalPtr);
 
@@ -892,17 +892,17 @@ namespace
                 int64_t padAbove[N];
             };
      */
-    static void initPOOL2D(LLVM::LLVMDialect* llvmDialect,
+    static void initPOOL2D(MLIRContext* context,
                            poolAttrs<2>& poolAttrs2d,
                            SmallVector<LLVM::ConstantOp, 12>& constants,
                            LLVM::AddressOfOp globalPtr,
                            OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
         auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
         auto llvmArray2DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 2);
-        auto pool2dTy = getLLVMType(AttrsType::POOL2D, llvmDialect);
+        auto pool2dTy = getLLVMType(AttrsType::POOL2D, context);
         auto castOp = builder.create<LLVM::BitcastOp>(
             builder.getUnknownLoc(), pool2dTy.getPointerTo(), globalPtr);
 
@@ -950,17 +950,17 @@ namespace
         }
     }
 
-    static void initPOOL3D(LLVM::LLVMDialect* llvmDialect,
+    static void initPOOL3D(MLIRContext* context,
                            poolAttrs<3>& poolAttrs3d,
                            SmallVector<LLVM::ConstantOp, 12>& constants,
                            LLVM::AddressOfOp globalPtr,
                            OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
         auto llvmI64PtrTy = llvmI64Ty.getPointerTo();
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
         auto llvmArray3DI64Ty = LLVM::LLVMType::getArrayTy(llvmI64Ty, 3);
-        auto pool3dTy = getLLVMType(AttrsType::POOL3D, llvmDialect);
+        auto pool3dTy = getLLVMType(AttrsType::POOL3D, context);
         auto castOp = builder.create<LLVM::BitcastOp>(
             builder.getUnknownLoc(), pool3dTy.getPointerTo(), globalPtr);
 
@@ -1028,17 +1028,17 @@ namespace
                 BroadcastType broadcastHint;
             };
      */
-    static void initGEMM(LLVM::LLVMDialect* llvmDialect,
+    static void initGEMM(MLIRContext* context,
                          gemmAttrs gemmAttrs2d,
                          SmallVector<LLVM::ConstantOp, 12>& constants,
                          LLVM::AddressOfOp globalPtr,
                          OpBuilder& builder)
     {
-        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(llvmDialect);
-        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
-        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(llvmDialect);
-        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(llvmDialect);
-        auto gemmTy = getLLVMType(AttrsType::GEMM, llvmDialect);
+        auto llvmI64Ty = LLVM::LLVMType::getInt64Ty(context);
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(context);
+        auto llvmI8Ty = LLVM::LLVMType::getInt8Ty(context);
+        auto llvmF32Ty = LLVM::LLVMType::getFloatTy(context);
+        auto gemmTy = getLLVMType(AttrsType::GEMM, context);
         auto castOp = builder.create<LLVM::BitcastOp>(
             builder.getUnknownLoc(), gemmTy.getPointerTo(), globalPtr);
 
@@ -1118,8 +1118,8 @@ namespace
         }
 
         // Insert operations into entry block
-        auto* llvmDialect = module.getContext()->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(llvmDialect);
+        auto* context = module.getContext();
+        auto llvmI32Ty = LLVM::LLVMType::getInt32Ty(context);
 
         // constants needed by gep
         // LLVM requires that structure indexes be (vectors of) 32-bit integer
@@ -1132,7 +1132,7 @@ namespace
                 builder.getUnknownLoc(), llvmI32Ty, builder.getI32IntegerAttr(i));
             constants.push_back(constant);
         }
-        auto globalType = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto globalType = getLLVMType(AttrsType::CONV3D, context);
         int32_t i = 0;
         for (auto attrs : m_attrsVec)
         {
@@ -1146,24 +1146,24 @@ namespace
             auto globalPtr = builder.create<LLVM::AddressOfOp>(builder.getUnknownLoc(), globalVal);
             switch (m_attrsTyVec[i])
             {
-            case AttrsType::INT: initINT(llvmDialect, attrs.intAttr, globalPtr, builder); break;
+            case AttrsType::INT: initINT(context, attrs.intAttr, globalPtr, builder); break;
             case AttrsType::CONV1D:
-                initCONV1D(llvmDialect, attrs.convAttrs1d, constants, globalPtr, builder);
+                initCONV1D(context, attrs.convAttrs1d, constants, globalPtr, builder);
                 break;
             case AttrsType::CONV2D:
-                initCONV2D(llvmDialect, attrs.convAttrs2d, constants, globalPtr, builder);
+                initCONV2D(context, attrs.convAttrs2d, constants, globalPtr, builder);
                 break;
             case AttrsType::CONV3D:
-                initCONV3D(llvmDialect, attrs.convAttrs3d, constants, globalPtr, builder);
+                initCONV3D(context, attrs.convAttrs3d, constants, globalPtr, builder);
                 break;
             case AttrsType::POOL2D:
-                initPOOL2D(llvmDialect, attrs.poolAttrs2d, constants, globalPtr, builder);
+                initPOOL2D(context, attrs.poolAttrs2d, constants, globalPtr, builder);
                 break;
             case AttrsType::POOL3D:
-                initPOOL3D(llvmDialect, attrs.poolAttrs3d, constants, globalPtr, builder);
+                initPOOL3D(context, attrs.poolAttrs3d, constants, globalPtr, builder);
                 break;
             case AttrsType::GEMM:
-                initGEMM(llvmDialect, attrs.gemmAttrs2d, constants, globalPtr, builder);
+                initGEMM(context, attrs.gemmAttrs2d, constants, globalPtr, builder);
                 break;
             default: break;
             }
@@ -1720,8 +1720,7 @@ namespace
                                            DialectLoweringPass& pass,
                                            MLIRContext* context)
     {
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto globalTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto globalTy = getLLVMType(AttrsType::CONV3D, context);
         StringRef name = "globalAttrs" + std::to_string(index);
         LLVM::GlobalOp globalVal = pass.getGlobalOp(name,
                                                     globalTy,
@@ -1814,8 +1813,7 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
         // Get callback func
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unionTy = getLLVMType(AttrsType::CONV3D, context);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         FuncOp callBackFunc = pass.getCallDecl(
@@ -1891,8 +1889,7 @@ namespace
         attrs.gemmAttrs2d.beta = 0.0;
         auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
         // Get callback func
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unionTy = getLLVMType(AttrsType::CONV3D, context);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto callBackFunc = pass.getCallDecl(
@@ -2011,8 +2008,7 @@ namespace
         attrs.gemmAttrs2d.broadcastHint = broadcastHint;
         auto index = pass.insertAttrs(attrs, AttrsType::GEMM);
         // Get callback func
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unionTy = getLLVMType(AttrsType::CONV3D, context);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         auto callBackFunc = pass.getCallDecl("callback_3_inputs",
@@ -2070,8 +2066,7 @@ namespace
         attrs.intAttr = axes[0].cast<IntegerAttr>().getInt();
         auto index = pass.insertAttrs(attrs, AttrsType::INT);
         // Get callback func
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unionTy = getLLVMType(AttrsType::CONV3D, context);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         FuncOp callBackFunc =
@@ -2161,8 +2156,7 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::CONV3D);
         }
         // Get callback func
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unionTy = getLLVMType(AttrsType::CONV3D, context);
         auto int64Ty = rewriter.getIntegerType(64);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         FuncOp callBackFunc = pass.getCallDecl("callback_3_inputs",
@@ -2936,8 +2930,7 @@ namespace
             index = pass.insertAttrs(attrs, AttrsType::POOL3D);
         }
         // Get callback func
-        auto* llvmDialect = context->getRegisteredDialect<mlir::LLVM::LLVMDialect>();
-        auto unionTy = getLLVMType(AttrsType::CONV3D, llvmDialect);
+        auto unionTy = getLLVMType(AttrsType::CONV3D, context);
         auto unrankedMemrefTy = UnrankedMemRefType::get(elemTy, 0);
         FuncOp callBackFunc =
             pass.getCallDecl("callback_1_input",

@@ -47,8 +47,8 @@ static string s_manifest = "${MANIFEST}";
 NGRAPH_TEST(${BACKEND_NAME}, not)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::boolean, shape);
+    auto f = make_shared<Function>(make_shared<op::v1::LogicalNot>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -65,8 +65,8 @@ NGRAPH_TEST(${BACKEND_NAME}, not)
 NGRAPH_TEST(${BACKEND_NAME}, not_i32)
 {
     Shape shape{2, 2};
-    auto A = make_shared<op::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::Not>(A), ParameterVector{A});
+    auto A = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto f = make_shared<Function>(make_shared<op::v1::LogicalNot>(A), ParameterVector{A});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

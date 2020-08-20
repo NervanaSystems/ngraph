@@ -64,6 +64,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::Dequantize
+.. doxygenclass:: ngraph::op::v0::Dequantize
    :project: ngraph
    :members: 

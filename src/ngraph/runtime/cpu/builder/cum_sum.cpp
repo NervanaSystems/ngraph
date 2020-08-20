@@ -28,7 +28,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::CumSum)
+            void Builder::BUILDER_DECL(ngraph::op::v0::CumSum)
             {
 #define FUNCTOR_CUMSUM(T, M)                                                                       \
     do                                                                                             \
@@ -51,7 +51,7 @@ namespace ngraph
     } while (0)
                 (void)node;
 
-                auto cumsum_op = static_cast<const ngraph::op::CumSum*>(node);
+                auto cumsum_op = static_cast<const ngraph::op::v0::CumSum*>(node);
                 auto tensor_shape = args[0].get_shape();
                 auto arg0_buffer_index = external_function->get_buffer_index(args[0].get_name());
                 auto arg1_buffer_index = external_function->get_buffer_index(args[1].get_name());
@@ -152,7 +152,7 @@ namespace ngraph
                 }
             }
 
-            void register_builders_cumsum_cpp() { REGISTER_OP_BUILDER(CumSum); }
+            void register_builders_cumsum_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::CumSum); }
         }
     }
 }

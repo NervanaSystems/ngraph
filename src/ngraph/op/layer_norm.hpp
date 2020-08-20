@@ -139,7 +139,5 @@ namespace ngraph
                 double m_epsilon{1e-5};
             };
         }
-        using v0::LayerNorm;
-        using v0::LayerNormBackprop;
     }
 }

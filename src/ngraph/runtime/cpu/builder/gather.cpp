@@ -38,7 +38,8 @@ namespace ngraph
                                                  const vector<TensorWrapper>& out,
                                                  CPU_ExternalFunction* external_function)
                 {
-                    const ngraph::op::Gather* gather = static_cast<const ngraph::op::Gather*>(node);
+                    const ngraph::op::v0::Gather* gather =
+                        static_cast<const ngraph::op::v0::Gather*>(node);
                     auto params_buffer_index =
                         external_function->get_buffer_index(args[0].get_name());
                     auto indices_buffer_index =
@@ -176,7 +177,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Gather)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Gather)
             {
                 auto& functors = external_function->get_functors();
                 CPUKernelFunctor functor;
@@ -238,7 +239,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_gather_cpp() { REGISTER_OP_BUILDER(Gather); }
+            void register_builders_gather_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Gather); }
         }
     }
 }

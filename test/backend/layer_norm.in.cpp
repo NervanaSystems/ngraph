@@ -47,10 +47,10 @@ static string s_manifest = "${MANIFEST}";
 
 NGRAPH_TEST(${BACKEND_NAME}, layer_norm_affine_stats)
 {
-    auto p_data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto p_scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto p_bias = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto ln = make_shared<op::LayerNorm>(p_data, p_scale, p_bias);
+    auto p_data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto p_scale = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto p_bias = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto ln = make_shared<op::v0::LayerNorm>(p_data, p_scale, p_bias);
     auto f = make_shared<Function>(ln->outputs(), ParameterVector{p_data, p_scale, p_bias});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -92,12 +92,12 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_affine_stats)
 
 NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine_stats)
 {
-    auto p_data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto p_delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto p_mean = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto p_var = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto p_scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto lnb = make_shared<op::LayerNormBackprop>(p_data, p_delta, p_mean, p_var, p_scale);
+    auto p_data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto p_delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto p_mean = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto p_var = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto p_scale = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto lnb = make_shared<op::v0::LayerNormBackprop>(p_data, p_delta, p_mean, p_var, p_scale);
     auto f = make_shared<Function>(lnb->outputs(),
                                    ParameterVector{p_data, p_delta, p_mean, p_var, p_scale});
 
@@ -149,10 +149,10 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine_stats)
 
 NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine)
 {
-    auto p_data = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto p_delta = make_shared<op::Parameter>(element::f32, Shape{2, 4});
-    auto p_scale = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto lnb = make_shared<op::LayerNormBackprop>(p_data, p_delta, p_scale);
+    auto p_data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto p_delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
+    auto p_scale = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto lnb = make_shared<op::v0::LayerNormBackprop>(p_data, p_delta, p_scale);
     auto f = make_shared<Function>(lnb->outputs(), ParameterVector{p_data, p_delta, p_scale});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
@@ -197,12 +197,12 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_affine)
 
 NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
 {
-    auto p_data = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-    auto p_delta = make_shared<op::Parameter>(element::f32, Shape{2, 3, 4, 5});
-    auto p_mean = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto p_variance = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto p_scale = make_shared<op::Parameter>(element::f32, Shape{60});
-    auto lnb = make_shared<op::LayerNormBackprop>(p_data, p_delta, p_mean, p_variance, p_scale);
+    auto p_data = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+    auto p_delta = make_shared<op::v0::Parameter>(element::f32, Shape{2, 3, 4, 5});
+    auto p_mean = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto p_variance = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto p_scale = make_shared<op::v0::Parameter>(element::f32, Shape{60});
+    auto lnb = make_shared<op::v0::LayerNormBackprop>(p_data, p_delta, p_mean, p_variance, p_scale);
 
     auto output_data = lnb->output(0);
     auto output_scale = lnb->output(1);
@@ -210,7 +210,7 @@ NGRAPH_TEST(${BACKEND_NAME}, layer_norm_bprop_4d_input)
 
     // flatten output_scale
     auto output_scale_shape = output_scale.get_shape();
-    auto flattened_output_scale = make_shared<op::Reshape>(
+    auto flattened_output_scale = make_shared<op::v0::Reshape>(
         output_scale, get_default_order(output_scale_shape), Shape{shape_size(output_scale_shape)});
 
     auto f = make_shared<Function>(OutputVector{output_data, flattened_output_scale, output_bias},

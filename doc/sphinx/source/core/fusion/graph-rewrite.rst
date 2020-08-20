@@ -21,10 +21,10 @@ examples:
 
 .. code-block:: cpp 
 
-    auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto absn = make_shared<op::Abs>(a);
-    auto neg1 = make_shared<op::Negative>(absn);
-    auto neg2 = make_shared<op::Negative>(neg1);
+    auto a = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto absn = make_shared<op::v0::Abs>(a);
+    auto neg1 = make_shared<op::v0::Negative>(absn);
+    auto neg2 = make_shared<op::v0::Negative>(neg1);
 
 
 |image4|
@@ -32,12 +32,12 @@ examples:
 	
 .. code-block:: cpp 
 
-    auto a = make_shared<op::Parameter>(element::i32, shape);
-    auto b = make_shared<op::Parameter>(element::i32, shape);
+    auto a = make_shared<op::v0::Parameter>(element::i32, shape);
+    auto b = make_shared<op::v0::Parameter>(element::i32, shape);
     auto c = a + b;
-    auto absn = make_shared<op::Abs>(c);
-    auto neg1 = make_shared<op::Negative>(absn);
-    auto neg2 = make_shared<op::Negative>(neg1);
+    auto absn = make_shared<op::v0::Abs>(c);
+    auto neg1 = make_shared<op::v0::Negative>(absn);
+    auto neg2 = make_shared<op::v0::Negative>(neg1);
 
 
 Label AKA ``.`` in regexes
@@ -53,8 +53,8 @@ Graph2
 
     //note element::f32, will still match integer Graph1 and Graph2 
     auto lbl = std::make_shared<pattern::op::Label>(element::f32, Shape{});  
-    auto neg1 = make_shared<op::Negative>(lbl);
-    auto neg2 = make_shared<op::Negative>(neg1);
+    auto neg1 = make_shared<op::v0::Negative>(lbl);
+    auto neg2 = make_shared<op::v0::Negative>(neg1);
 
 
 
@@ -71,11 +71,11 @@ Double Negative w/ Addition
 
 .. code-block:: cpp
 
-    auto a = make_shared<op::Parameter>(element::i32, shape);
+    auto a = make_shared<op::v0::Parameter>(element::i32, shape);
     //`lbl` borrows the type and shape information from `a`
     auto lbl = std::make_shared<pattern::op::Label>(a);  
-    auto neg1 = make_shared<op::Negative>(a);
-    auto neg2 = make_shared<op::Negative>(neg1);
+    auto neg1 = make_shared<op::v0::Negative>(a);
+    auto neg2 = make_shared<op::v0::Negative>(neg1);
 
 Double Negative w/ Subtraction  
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,8 +90,8 @@ Predicates are of type ``std::function<bool(std::shared_ptr<Node>)>``
    
     //predicates are of type std::function<bool(std::shared_ptr<Node>)>
     auto add_or_sub = [](std::shared_ptr<Node> n) {
-        return std::dynamic_pointer_cast<op::Add>(n) != nullptr ||
-            std::dynamic_pointer_cast<op::Sub>(n) != nullptr
+        return std::dynamic_pointer_cast<op::v1::Add>(n) != nullptr ||
+            std::dynamic_pointer_cast<op::v0::Sub>(n) != nullptr
     };
 
     auto lbl = std::make_shared<pattern::op::Label>(
@@ -99,8 +99,8 @@ Predicates are of type ``std::function<bool(std::shared_ptr<Node>)>``
         Shape{}, 
         add_or_sub
     );  
-    auto neg1 = make_shared<op::Negative>(a);
-    auto neg2 = make_shared<op::Negative>(neg1);
+    auto neg1 = make_shared<op::v0::Negative>(a);
+    auto neg2 = make_shared<op::v0::Negative>(neg1);
 
 
 

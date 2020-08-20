@@ -58,8 +58,8 @@ namespace
                                           double max,
                                           const std::vector<T>& output)
     {
-        auto data = make_shared<op::Parameter>(type, dynamic_shape);
-        auto clamp = make_shared<op::Clamp>(data, min, max);
+        auto data = make_shared<op::v0::Parameter>(type, dynamic_shape);
+        auto clamp = make_shared<op::v0::Clamp>(data, min, max);
         auto function = make_shared<Function>(clamp, ParameterVector{data});
 
         auto mode = test::BackendMode::STATIC;

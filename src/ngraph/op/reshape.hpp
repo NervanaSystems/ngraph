@@ -161,6 +161,5 @@ namespace ngraph
                 bool m_special_zero;
             };
         }
-        using v0::Reshape;
     }
 }

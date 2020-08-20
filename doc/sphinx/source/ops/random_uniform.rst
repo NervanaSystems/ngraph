@@ -64,6 +64,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::RandomUniform
+.. doxygenclass:: ngraph::op::v0::RandomUniform
    :project: ngraph
    :members:

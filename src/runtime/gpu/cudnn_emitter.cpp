@@ -280,7 +280,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             if (output_type == element::i64)
             {
                 size_t workspace_indices_idx = allocator.reserve_workspace(indices_size);
-                auto convert_idx = cuda_emitter->template build_elementwise<op::Convert>(
+                auto convert_idx = cuda_emitter->template build_elementwise<op::v0::Convert>(
                     {element::i32.c_type_string(), element::i64.c_type_string()}, output_shape);
                 convert_output = [=](void** inputs, void** outputs) {
                     gpu::invoke_primitive(m_ctx, convert_idx, inputs, outputs);
@@ -297,7 +297,7 @@ size_t runtime::gpu::CUDNNEmitter::build_reduce_forward(const cudnnReduceTensorO
             {
                 size_t input_idx = allocator.reserve_workspace(shape_size(input_shape) *
                                                                modified_input_type.size());
-                auto convert_input_idx = cuda_emitter->template build_elementwise<op::Convert>(
+                auto convert_input_idx = cuda_emitter->template build_elementwise<op::v0::Convert>(
                     {input_type.c_type_string(), modified_input_type.c_type_string()}, input_shape);
 
                 convert_input = [=](void** inputs, void** outputs) {
@@ -499,7 +499,7 @@ cudnnConvolutionDescriptor_t& runtime::gpu::CUDNNEmitter::get_cudnn_convolution_
     return conv_descriptor;
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::v0::Convolution* node)
 {
     auto input_shape = node->get_input_shape(0);
     auto filter_shape = node->get_input_shape(1);
@@ -606,7 +606,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Convolution* node)
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropData* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::v0::ConvolutionBackpropData* node)
 {
     auto input_shape = node->get_input_shape(0);
     auto filter_shape = node->get_input_shape(1);
@@ -733,7 +733,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackpropFilters* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::v0::ConvolutionBackpropFilters* node)
 {
     auto input_shape_0 = node->get_input_shape(0);
     auto input_shape_1 = node->get_input_shape(1);
@@ -840,7 +840,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::ConvolutionBackprop
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::v0::MaxPool* node)
 {
     auto& input_shape = node->get_input_shape(0);
     auto& result_shape = node->get_output_shape(0);
@@ -931,7 +931,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::MaxPool* node)
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::v0::Max* node)
 {
     auto& input_shape = node->get_input_shape(0);
     auto& output_shape = node->get_output_shape(0);
@@ -993,7 +993,7 @@ size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Max* node)
     return this->m_primitive_emitter->register_primitive(kernel_launch, hash);
 }
 
-size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::Min* node)
+size_t runtime::gpu::CUDNNEmitter::build_primitive(const op::v0::Min* node)
 {
     auto& input_shape = node->get_input_shape(0);
     auto& output_shape = node->get_output_shape(0);

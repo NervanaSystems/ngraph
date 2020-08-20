@@ -34,29 +34,31 @@ namespace ngraph
             auto quant_type = args[0].get_element_type();
 
             // output scale
-            auto min = make_shared<op::Min>(make_shared<op::Concat>(mins, 0), ngraph::AxisSet{0});
-            auto max = make_shared<op::Max>(make_shared<op::Concat>(maxs, 0), ngraph::AxisSet{0});
+            auto min =
+                make_shared<op::v0::Min>(make_shared<op::v0::Concat>(mins, 0), ngraph::AxisSet{0});
+            auto max =
+                make_shared<op::v0::Max>(make_shared<op::v0::Concat>(maxs, 0), ngraph::AxisSet{0});
             auto out_scale = quantization_utils::get_scale(min, max, quant_type);
 
             OutputVector rescaled_args(args.size());
             for (size_t i = 0; i < args.size(); ++i)
             {
                 auto q_type = args[i].get_element_type();
-                auto in_scale = make_shared<ngraph::op::Reshape>(
+                auto in_scale = make_shared<ngraph::op::v0::Reshape>(
                     quantization_utils::get_scale(mins[i], maxs[i], q_type),
                     AxisVector{0},
                     Shape{});
                 auto zero = make_constant(q_type, in_scale->get_output_shape(0), 0);
 
-                rescaled_args[i] =
-                    make_shared<op::Dequantize>(args[i], in_scale, zero, element::f32, AxisSet{});
-                rescaled_args[i] =
-                    make_shared<op::Quantize>(rescaled_args[i],
-                                              out_scale,
-                                              zero,
-                                              q_type,
-                                              AxisSet{},
-                                              op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
+                rescaled_args[i] = make_shared<op::v0::Dequantize>(
+                    args[i], in_scale, zero, element::f32, AxisSet{});
+                rescaled_args[i] = make_shared<op::v0::Quantize>(
+                    rescaled_args[i],
+                    out_scale,
+                    zero,
+                    q_type,
+                    AxisSet{},
+                    op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_EVEN);
             }
             OutputVector base = args;
             for (auto node : mins)
@@ -67,7 +69,7 @@ namespace ngraph
             {
                 base.push_back(node);
             };
-            return make_shared<op::Concat>(rescaled_args, concatenation_axis)
+            return make_shared<op::v0::Concat>(rescaled_args, concatenation_axis)
                 ->add_provenance_group_members_above(base);
         }
     }

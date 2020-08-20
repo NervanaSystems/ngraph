@@ -30,9 +30,9 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
 {
     const size_t axis = 2;
     const size_t k = 10;
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
+    const auto data = make_shared<op::v0::Parameter>(element::i32, Shape{5, 10, 15});
     const auto topk_v0 = make_shared<op::v0::TopK>(data, axis, element::i32, k);
-    const auto result = make_shared<op::Result>(topk_v0->output(0));
+    const auto result = make_shared<op::v0::Result>(topk_v0->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
@@ -52,16 +52,16 @@ TEST(opset_transform, opset1_topk_upgrade_pass)
 
 TEST(opset_transform, opset1_topk_downgrade_pass)
 {
-    const auto data = make_shared<op::Parameter>(element::i32, Shape{5, 10, 15});
+    const auto data = make_shared<op::v0::Parameter>(element::i32, Shape{5, 10, 15});
     const int32_t k = 10;
-    const auto k_node = op::Constant::create(element::i64, Shape{}, {k});
+    const auto k_node = op::v0::Constant::create(element::i64, Shape{}, {k});
     const size_t axis = 2;
     const auto mode = op::v1::TopK::Mode::max;
     const auto sort = op::v1::TopK::SortType::index;
     const auto elem_type = element::i64;
 
     const auto topk_v1 = make_shared<op::v1::TopK>(data, k_node, axis, mode, sort, elem_type);
-    const auto result = make_shared<op::Result>(topk_v1->output(0));
+    const auto result = make_shared<op::v0::Result>(topk_v1->output(0));
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;

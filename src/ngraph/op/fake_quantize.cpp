@@ -37,15 +37,15 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::FakeQuantize::type_info;
+constexpr NodeTypeInfo op::v0::FakeQuantize::type_info;
 
-op::FakeQuantize::FakeQuantize(const Output<Node>& data,
-                               const Output<Node>& input_low,
-                               const Output<Node>& input_high,
-                               const Output<Node>& output_low,
-                               const Output<Node>& output_high,
-                               size_t levels,
-                               const AutoBroadcastSpec& auto_broadcast)
+op::v0::FakeQuantize::FakeQuantize(const Output<Node>& data,
+                                   const Output<Node>& input_low,
+                                   const Output<Node>& input_high,
+                                   const Output<Node>& output_low,
+                                   const Output<Node>& output_high,
+                                   size_t levels,
+                                   const AutoBroadcastSpec& auto_broadcast)
     : FusedOp({data, input_low, input_high, output_low, output_high})
     , m_levels(levels)
     , m_auto_broadcast(auto_broadcast)
@@ -53,7 +53,7 @@ op::FakeQuantize::FakeQuantize(const Output<Node>& data,
     constructor_validate_and_infer_types();
 }
 
-void op::FakeQuantize::validate_and_infer_types()
+void op::v0::FakeQuantize::validate_and_infer_types()
 {
     PartialShape data_pshape = get_input_partial_shape(0);
 
@@ -88,7 +88,7 @@ bool ngraph::op::v0::FakeQuantize::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-OutputVector op::FakeQuantize::decompose_op() const
+OutputVector op::v0::FakeQuantize::decompose_op() const
 {
     Output<Node> data{input_value(0)};
     Output<Node> input_low{input_value(1)};
@@ -137,21 +137,21 @@ OutputVector op::FakeQuantize::decompose_op() const
     const auto axes = get_default_order(input_data_shape);
 
     // clip the input data to the range <input_low;input_high>
-    data =
-        std::make_shared<op::Minimum>(input_high, std::make_shared<op::Maximum>(input_low, data));
+    data = std::make_shared<op::v0::Minimum>(input_high,
+                                             std::make_shared<op::v0::Maximum>(input_low, data));
 
     // shift the input data so that it contains only positive values (and zeros)
     data = data - input_low;
 
     shared_ptr<Node> quantized_data =
-        make_shared<op::Quantize>(data,
-                                  quant_scale,
-                                  zero_point,
-                                  element::i32,
-                                  axes,
-                                  op::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY);
+        make_shared<op::v0::Quantize>(data,
+                                      quant_scale,
+                                      zero_point,
+                                      element::i32,
+                                      axes,
+                                      op::v0::Quantize::RoundMode::ROUND_NEAREST_TOWARD_INFINITY);
 
-    quantized_data = make_shared<op::Convert>(quantized_data, input_data_type);
+    quantized_data = make_shared<op::v0::Convert>(quantized_data, input_data_type);
 
     // dequantization without using the Dequantize op (just a multiplication by the dequant_scale)
     const auto dequantized_data = quantized_data * dequant_scale;
@@ -160,7 +160,7 @@ OutputVector op::FakeQuantize::decompose_op() const
     return {dequantized_data + output_low};
 }
 
-shared_ptr<Node> op::FakeQuantize::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::FakeQuantize::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
     return make_shared<FakeQuantize>(new_args.at(0), // X

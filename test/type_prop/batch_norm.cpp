@@ -23,10 +23,10 @@ using namespace ngraph;
 
 TEST(type_prop, batch_norm_training_rank_less_than_2)
 {
-    auto dummy = make_shared<op::Parameter>(element::f32, Shape{1});
+    auto dummy = make_shared<op::v0::Parameter>(element::f32, Shape{1});
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(dummy, dummy, dummy, 0.001);
+        auto bc = make_shared<op::v0::BatchNormTraining>(dummy, dummy, dummy, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors whose rank is less than 2";
     }
     catch (const NodeValidationFailure& error)
@@ -42,12 +42,12 @@ TEST(type_prop, batch_norm_training_rank_less_than_2)
 
 TEST(type_prop, batch_norm_training_zero_channel_check)
 {
-    auto data_batch = make_shared<op::Parameter>(element::f32, Shape{1, 0, 2, 3});
-    auto gamma = make_shared<op::Parameter>(element::f32, Shape{0});
-    auto beta = make_shared<op::Parameter>(element::f32, Shape{0});
+    auto data_batch = make_shared<op::v0::Parameter>(element::f32, Shape{1, 0, 2, 3});
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, Shape{0});
+    auto beta = make_shared<op::v0::Parameter>(element::f32, Shape{0});
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
+        auto bc = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for tensors w/ zero-dimension channels";
     }
     catch (const NodeValidationFailure& error)
@@ -62,13 +62,13 @@ TEST(type_prop, batch_norm_training_zero_channel_check)
 
 TEST(type_prop, batch_norm_training_et_check)
 {
-    auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
-    auto gamma = make_shared<op::Parameter>(element::f64, Shape{3});
-    auto beta = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto data_batch = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_shared<op::v0::Parameter>(element::f64, Shape{3});
+    auto beta = make_shared<op::v0::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
+        auto bc = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw for different element types";
     }
     catch (const NodeValidationFailure& error)
@@ -83,13 +83,13 @@ TEST(type_prop, batch_norm_training_et_check)
 
 TEST(type_prop, batch_norm_training_shape_check)
 {
-    auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
-    auto gamma = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto beta = make_shared<op::Parameter>(element::f32, Shape{3});
+    auto data_batch = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto beta = make_shared<op::v0::Parameter>(element::f32, Shape{3});
 
     try
     {
-        auto bc = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, 0.001);
+        auto bc = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, 0.001);
         FAIL() << "BatchNorm c-tor should throw if gamma and beta shapes don't match";
     }
     catch (const NodeValidationFailure& error)
@@ -104,16 +104,16 @@ TEST(type_prop, batch_norm_training_shape_check)
 
 TEST(type_prop, batch_norm_training_backprop_et_check)
 {
-    auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
-    auto gamma = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto beta = make_shared<op::Parameter>(element::f64, Shape{3});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto data_batch = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto beta = make_shared<op::v0::Parameter>(element::f64, Shape{3});
+    auto mean = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto variance = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
 
     try
     {
-        auto bc = make_shared<op::BatchNormTrainingBackprop>(
+        auto bc = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
@@ -129,16 +129,16 @@ TEST(type_prop, batch_norm_training_backprop_et_check)
 
 TEST(type_prop, batch_norm_training_backprop_shape_check)
 {
-    auto data_batch = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
-    auto gamma = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto beta = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto mean = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto variance = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto data_batch = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto gamma = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto beta = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto mean = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto variance = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
 
     try
     {
-        auto bc = make_shared<op::BatchNormTrainingBackprop>(
+        auto bc = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
@@ -155,14 +155,14 @@ TEST(type_prop, batch_norm_training_backprop_shape_check)
 
 TEST(type_prop, batch_norm_training_backprop_delta_check)
 {
-    auto dummy = make_shared<op::Parameter>(element::f32, Shape{3});
-    auto dummy2 = make_shared<op::Parameter>(element::f32, Shape{4});
-    auto param = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 2});
-    auto delta = make_shared<op::Parameter>(element::f32, Shape{4, 3, 2, 3});
+    auto dummy = make_shared<op::v0::Parameter>(element::f32, Shape{3});
+    auto dummy2 = make_shared<op::v0::Parameter>(element::f32, Shape{4});
+    auto param = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 2});
+    auto delta = make_shared<op::v0::Parameter>(element::f32, Shape{4, 3, 2, 3});
 
     try
     {
-        auto bc = make_shared<op::BatchNormTrainingBackprop>(
+        auto bc = make_shared<op::v0::BatchNormTrainingBackprop>(
             param, dummy, dummy, dummy, dummy, delta, 0.001);
         FAIL() << "Deduced type should disagree with c-tor arguments";
     }
@@ -191,13 +191,14 @@ TEST(type_prop, batch_norm_inference_partial_all_rank_dynamic)
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+    auto bn =
+        make_shared<op::v0::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -219,13 +220,14 @@ TEST(type_prop, batch_norm_inference_partial_input_rank_static_dynamic_ok)
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+    auto bn =
+        make_shared<op::v0::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -248,16 +250,16 @@ TEST(type_prop, batch_norm_inference_partial_input_rank_static_dynamic_zero_chan
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
     try
     {
-        auto bn =
-            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+        auto bn = make_shared<op::v0::BatchNormInference>(
+            data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -284,13 +286,14 @@ TEST(type_prop, batch_norm_inference_partial_input_rank_dynamic_some_rank_static
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+    auto bn =
+        make_shared<op::v0::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -311,16 +314,16 @@ TEST(type_prop, batch_norm_inference_partial_input_rank_dynamic_some_rank_static
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
     try
     {
-        auto bn =
-            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+        auto bn = make_shared<op::v0::BatchNormInference>(
+            data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -350,16 +353,16 @@ TEST(type_prop,
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
     try
     {
-        auto bn =
-            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+        auto bn = make_shared<op::v0::BatchNormInference>(
+            data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance shape not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -388,16 +391,16 @@ TEST(type_prop,
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
     try
     {
-        auto bn =
-            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+        auto bn = make_shared<op::v0::BatchNormInference>(
+            data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -425,13 +428,14 @@ TEST(type_prop, batch_norm_inference_partial_input_rank_static_dynamic_some_stat
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
-    auto bn = make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+    auto bn =
+        make_shared<op::v0::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 1);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -454,16 +458,16 @@ TEST(type_prop,
     element::Type mean_et = element::f32;
     element::Type variance_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
 
     try
     {
-        auto bn =
-            make_shared<op::BatchNormInference>(data_batch, gamma, beta, mean, variance, epsilon);
+        auto bn = make_shared<op::v0::BatchNormInference>(
+            data_batch, gamma, beta, mean, variance, epsilon);
         FAIL() << "Inconsistent input/gamma/beta/mean/variance channel count not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -488,11 +492,11 @@ TEST(type_prop, batch_norm_training_partial_all_rank_dynamic)
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+    auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -514,11 +518,11 @@ TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_batch_size
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+    auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -541,11 +545,11 @@ TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_channel_co
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+    auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -568,12 +572,12 @@ TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_zero_chann
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+        auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -596,11 +600,11 @@ TEST(type_prop, batch_norm_training_partial_input_rank_dynamic_some_rank_static_
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+    auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -621,13 +625,13 @@ TEST(type_prop, batch_norm_training_partial_input_rank_dynamic_some_rank_static_
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+        auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Wrong gamma/beta shape not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -652,13 +656,13 @@ TEST(type_prop,
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+        auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta shape not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -682,13 +686,13 @@ TEST(type_prop,
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+        auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent gamma/beta channel count not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -711,11 +715,11 @@ TEST(type_prop, batch_norm_training_partial_input_rank_static_dynamic_some_stati
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
-    auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+    auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
     ASSERT_EQ(bn->get_output_element_type(0), data_batch_et);
@@ -738,13 +742,13 @@ TEST(type_prop,
     element::Type gamma_et = element::f32;
     element::Type beta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTraining>(data_batch, gamma, beta, epsilon);
+        auto bn = make_shared<op::v0::BatchNormTraining>(data_batch, gamma, beta, epsilon);
         FAIL() << "Inconsistent input/gamma/beta channel count not detected";
     }
     catch (const NodeValidationFailure& error)
@@ -780,14 +784,14 @@ TEST(type_prop, batch_norm_training_backprop_partial_all_rank_dynamic)
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
-    auto bn = make_shared<op::BatchNormTrainingBackprop>(
+    auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
         data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
@@ -816,14 +820,14 @@ TEST(type_prop, batch_norm_training_backprop_partial_input_rank_static_dynamic_o
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
-    auto bn = make_shared<op::BatchNormTrainingBackprop>(
+    auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
         data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
@@ -853,16 +857,16 @@ TEST(type_prop, batch_norm_training_backprop_partial_input_rank_static_dynamic_z
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
@@ -892,14 +896,14 @@ TEST(type_prop, batch_norm_training_backprop_partial_delta_rank_static_dynamic_o
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
-    auto bn = make_shared<op::BatchNormTrainingBackprop>(
+    auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
         data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
@@ -928,14 +932,14 @@ TEST(type_prop, batch_norm_training_backprop_partial_delta_rank_static_dynamic_c
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
-    auto bn = make_shared<op::BatchNormTrainingBackprop>(
+    auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
         data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
@@ -964,16 +968,16 @@ TEST(type_prop, batch_norm_training_backprop_partial_delta_rank_static_dynamic_z
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Zero channel count not detected";
     }
@@ -1004,14 +1008,14 @@ TEST(type_prop,
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
-    auto bn = make_shared<op::BatchNormTrainingBackprop>(
+    auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
         data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
@@ -1041,16 +1045,16 @@ TEST(
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
@@ -1084,16 +1088,16 @@ TEST(
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Wrong gamma/beta/mean/variance shape not detected";
     }
@@ -1126,16 +1130,16 @@ TEST(
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "nconsistent gamma/beta/mean/variance channel count not detected";
     }
@@ -1167,14 +1171,14 @@ TEST(type_prop,
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
-    auto bn = make_shared<op::BatchNormTrainingBackprop>(
+    auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
         data_batch, gamma, beta, mean, variance, delta, epsilon);
 
     ASSERT_EQ(bn->get_output_size(), 3);
@@ -1204,16 +1208,16 @@ TEST(
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent delta/gamma/beta/mean/variance channel count not detected";
     }
@@ -1247,16 +1251,16 @@ TEST(
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent input/delta batch size not detected";
     }
@@ -1291,16 +1295,16 @@ TEST(
     element::Type variance_et = element::f32;
     element::Type delta_et = element::f32;
 
-    auto data_batch = make_shared<op::Parameter>(data_batch_et, data_batch_shape);
-    auto gamma = make_shared<op::Parameter>(gamma_et, gamma_shape);
-    auto beta = make_shared<op::Parameter>(beta_et, beta_shape);
-    auto mean = make_shared<op::Parameter>(mean_et, mean_shape);
-    auto variance = make_shared<op::Parameter>(variance_et, variance_shape);
-    auto delta = make_shared<op::Parameter>(delta_et, delta_shape);
+    auto data_batch = make_shared<op::v0::Parameter>(data_batch_et, data_batch_shape);
+    auto gamma = make_shared<op::v0::Parameter>(gamma_et, gamma_shape);
+    auto beta = make_shared<op::v0::Parameter>(beta_et, beta_shape);
+    auto mean = make_shared<op::v0::Parameter>(mean_et, mean_shape);
+    auto variance = make_shared<op::v0::Parameter>(variance_et, variance_shape);
+    auto delta = make_shared<op::v0::Parameter>(delta_et, delta_shape);
 
     try
     {
-        auto bn = make_shared<op::BatchNormTrainingBackprop>(
+        auto bn = make_shared<op::v0::BatchNormTrainingBackprop>(
             data_batch, gamma, beta, mean, variance, delta, epsilon);
         FAIL() << "Inconsistent input/delta spatial dimensions not detected";
     }

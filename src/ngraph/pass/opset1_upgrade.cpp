@@ -44,12 +44,7 @@ namespace
     // Default is that we did nothing
     shared_ptr<Node> op_cast(shared_ptr<Node> node) { return nullptr; }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::And> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::And, op::v1::LogicalAnd>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::AvgPool> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::AvgPool> node)
     {
         auto rounding_mode =
             node->get_ceil_mode() ? op::RoundingType::CEIL : op::RoundingType::FLOOR;
@@ -83,7 +78,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::AvgPoolBackprop> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::AvgPoolBackprop> node)
     {
         auto exclude_pad = !node->get_include_padding_in_avg_computation();
         auto pads_begin = node->get_padding_below();
@@ -102,7 +97,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Broadcast> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Broadcast> node)
     {
         auto replacement_node = ngraph::builder::opset1::make_broadcast(
             node->input_value(0), node->get_broadcast_shape(), node->get_broadcast_axes());
@@ -110,8 +105,8 @@ namespace
         return replacement_node.get_node_shared_ptr();
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::BroadcastLike> node) { return nullptr; }
-    shared_ptr<Node> op_cast(shared_ptr<op::Convolution> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::BroadcastLike> node) { return nullptr; }
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Convolution> node)
     {
         auto strides = node->get_window_movement_strides();
         auto dilations = node->get_window_dilation_strides();
@@ -140,7 +135,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::ConvolutionBackpropData> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::ConvolutionBackpropData> node)
     {
         auto data_batch_shape = node->get_data_batch_shape();
         auto strides = node->get_window_movement_strides_forward();
@@ -162,7 +157,7 @@ namespace
         auto replacement_node = make_shared<op::v1::ConvolutionBackpropData>(
             node->input_value(1), // data
             node->input_value(0), // filters
-            op::Constant::create(
+            op::v0::Constant::create(
                 element::i64,
                 Shape{data_batch_shape.size() - 2},
                 vector<size_t>(data_batch_shape.begin() + 2, data_batch_shape.end())),
@@ -174,7 +169,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::ConvolutionBackpropFilters> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::ConvolutionBackpropFilters> node)
     {
         auto filters_shape = node->get_filters_shape();
         auto strides = node->get_window_movement_strides_forward();
@@ -206,7 +201,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Divide> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Divide> node)
     {
         const auto autob = node->get_autob();
         const bool pydiv = node->is_pythondiv();
@@ -216,7 +211,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Reshape> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Reshape> node)
     {
         shared_ptr<Node> replacement_node =
             builder::opset1::reshape(node->input_value(0), node->get_reshape_output_shape());
@@ -224,28 +219,29 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Equal> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Equal> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Gather> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Gather> node)
     {
         int64_t axis = node->get_axis();
 
-        auto axis_node = make_shared<op::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
+        auto axis_node =
+            make_shared<op::v0::Constant>(element::i64, Shape{}, vector<int64_t>{axis});
         auto replacement_node =
             make_shared<op::v1::Gather>(node->input_value(0), node->input_value(1), axis_node);
         replace_node(node, replacement_node);
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Greater> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Greater> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::GreaterEq> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::GreaterEq> node)
     {
         return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
     }
@@ -338,7 +334,8 @@ namespace
         auto replacement_node = make_shared<op::v1::GroupConvolutionBackpropData>(
             node->input_value(2),
             reshaped_filters,
-            op::Constant::create(element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
+            op::v0::Constant::create(
+                element::i64, Shape{data_batch_shape.size()}, data_batch_shape),
             strides,
             pads_begin,
             pads_end,
@@ -347,17 +344,17 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Less> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Less> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::LessEq> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::LessEq> node)
     {
         return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Max> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Max> node)
     {
         bool keep_dims = false;
         auto replacement_node =
@@ -366,12 +363,12 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Maximum> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Maximum> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::MaxPool> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::MaxPool> node)
     {
         auto rounding_type =
             node->get_ceil_mode() ? op::RoundingType::CEIL : op::RoundingType::FLOOR;
@@ -398,7 +395,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::MaxPoolBackprop> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::MaxPoolBackprop> node)
     {
         auto pads_begin = node->get_padding_below();
         auto pads_end = node->get_padding_above();
@@ -425,7 +422,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Min> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Min> node)
     {
         bool keep_dims = false;
         auto replacement_node =
@@ -434,29 +431,17 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Minimum> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Minimum> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Multiply> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Multiply, op::v1::Multiply>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Not> node)
-    {
-        auto replacement_node = make_shared<op::v1::LogicalNot>(node->input_value(0));
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::NotEqual> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::NotEqual> node)
     {
         return op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::OneHot> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::OneHot> node)
     {
         const auto indices = node->input_value(0).get_node_shared_ptr();
         const auto one_hot_axis = node->get_one_hot_axis();
@@ -466,10 +451,10 @@ namespace
                      "OneHot:v0 one hot axis dimension must be static ",
                      *node);
         const auto depth = output_pshape[one_hot_axis].get_length();
-        const auto depth_node = op::Constant::create(element::i64, Shape{}, {depth});
+        const auto depth_node = op::v0::Constant::create(element::i64, Shape{}, {depth});
 
-        const auto on_value = op::Constant::create(element::i64, Shape{}, {1});
-        const auto off_value = op::Constant::create(element::i64, Shape{}, {0});
+        const auto on_value = op::v0::Constant::create(element::i64, Shape{}, {1});
+        const auto off_value = op::v0::Constant::create(element::i64, Shape{}, {0});
 
         auto replacement_node =
             make_shared<op::v1::OneHot>(indices, depth_node, on_value, off_value, one_hot_axis);
@@ -477,19 +462,14 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Or> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Or, op::v1::LogicalOr>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Pad> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Pad> node)
     {
         auto padding_below = node->get_padding_below();
         auto pads_begin_node =
-            make_shared<op::Constant>(element::i64, Shape{padding_below.size()}, padding_below);
+            make_shared<op::v0::Constant>(element::i64, Shape{padding_below.size()}, padding_below);
         auto padding_above = node->get_padding_above();
         auto pads_end_node =
-            make_shared<op::Constant>(element::i64, Shape{padding_above.size()}, padding_above);
+            make_shared<op::v0::Constant>(element::i64, Shape{padding_above.size()}, padding_above);
 
         auto replacement_node = make_shared<op::v1::Pad>(node->input_value(0),
                                                          pads_begin_node,
@@ -501,12 +481,12 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Power> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Power> node)
     {
         return op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Product> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Product> node)
     {
         bool keep_dims = false;
         auto replacement_node =
@@ -515,13 +495,13 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Reverse> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Reverse> node)
     {
         // creates a Constant node from the v0::Reverse reversed_axes attribute
         // and uses it as the second input of v1::Reverse
         const auto reversed_axes = node->get_reversed_axes();
 
-        const auto reversed_axes_constant = op::Constant::create(
+        const auto reversed_axes_constant = op::v0::Constant::create(
             element::i64, Shape{reversed_axes.size()}, reversed_axes.to_vector());
 
         const auto replacement_node = make_shared<op::v1::Reverse>(
@@ -531,7 +511,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Select> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Select> node)
     {
         auto replacement_node = make_shared<op::v1::Select>(node->input_value(0),
                                                             node->input_value(1),
@@ -541,7 +521,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Softmax> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Softmax> node)
     {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
                      "axes parameter is expected to be a static constant");
@@ -559,14 +539,14 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Slice> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Slice> node)
     {
         const auto data = node->input_value(0);
-        const auto begin = op::Constant::create(
+        const auto begin = op::v0::Constant::create(
             element::i64, Shape{node->get_lower_bounds().size()}, node->get_lower_bounds());
-        const auto end = op::Constant::create(
+        const auto end = op::v0::Constant::create(
             element::i64, Shape{node->get_upper_bounds().size()}, node->get_upper_bounds());
-        const auto strides = op::Constant::create(
+        const auto strides = op::v0::Constant::create(
             element::i64, Shape{node->get_strides().size()}, node->get_strides());
         int64_t input_size = node->get_lower_bounds().size();
 
@@ -581,7 +561,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Split> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Split> node)
     {
         const auto& splits_vec = node->get_splits();
         const auto first_elem = splits_vec.front();
@@ -599,8 +579,8 @@ namespace
         }
         else
         {
-            const auto split_lengths =
-                ngraph::op::Constant::create(element::u64, Shape{splits_vec.size()}, splits_vec);
+            const auto split_lengths = ngraph::op::v0::Constant::create(
+                element::u64, Shape{splits_vec.size()}, splits_vec);
 
             replacement_node = make_shared<op::v1::VariadicSplit>(
                 node->input_value(0), node->input_value(1), split_lengths);
@@ -610,12 +590,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::Subtract> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Subtract, op::v1::Subtract>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Sum> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::Sum> node)
     {
         bool keep_dims = false;
         auto replacement_node =
@@ -624,7 +599,7 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::TopK> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v0::TopK> node)
     {
         NGRAPH_CHECK(node->input_value(1).get_node_shared_ptr()->is_constant(),
                      "parameter k is expected to be a static constant");
@@ -637,9 +612,9 @@ namespace
         std::string sort;
         switch (node->get_sort())
         {
-        case op::TopK::SortType::index: sort = "index"; break;
-        case op::TopK::SortType::value: sort = "value"; break;
-        case op::TopK::SortType::none: sort = "none"; break;
+        case op::v0::TopK::SortType::index: sort = "index"; break;
+        case op::v0::TopK::SortType::value: sort = "value"; break;
+        case op::v0::TopK::SortType::none: sort = "none"; break;
         }
 
         std::string mode;
@@ -652,21 +627,13 @@ namespace
             mode = "min";
         }
 
-        const auto k_constant = op::Constant::create(element::i64, Shape{}, {k});
+        const auto k_constant = op::v0::Constant::create(element::i64, Shape{}, {k});
         auto replacement_node =
             make_shared<op::v1::TopK>(node->input_value(0), k_constant, axis, mode, sort);
 
         // indices output will be 0, values 1
         vector<int64_t> output_order{1, 0};
         replace_node(node, replacement_node, output_order);
-        return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::Xor> node)
-    {
-        auto replacement_node = make_shared<op::v1::LogicalXor>(
-            node->input_value(0), node->input_value(1), node->get_autob());
-        replace_node(node, replacement_node);
         return replacement_node;
     }
 

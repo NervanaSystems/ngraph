@@ -35,8 +35,8 @@ using namespace ngraph;
 
 Output<Node> make_broadcast_zero(const Output<Node>& output)
 {
-    Output<Node> zero = std::make_shared<op::ScalarConstantLike>(output, 0.0);
-    Output<Node> bzero = std::make_shared<op::BroadcastLike>(zero, output, AxisSet{});
+    Output<Node> zero = std::make_shared<op::v0::ScalarConstantLike>(output, 0.0);
+    Output<Node> bzero = std::make_shared<op::v0::BroadcastLike>(zero, output, AxisSet{});
     return bzero;
 }
 
@@ -174,7 +174,7 @@ void autodiff::Adjoints::add_delta(const Output<Node>& x, const Output<Node>& de
     }
     else
     {
-        deltas = std::make_shared<op::Add>(deltas, delta);
+        deltas = std::make_shared<op::v1::Add>(deltas, delta);
     }
 }
 
@@ -197,15 +197,16 @@ void autodiff::Adjoints::add_delta_to_slice(const Output<Node>& x,
     if (deltas == Output<Node>())
     {
         auto zero = make_broadcast_zero(x);
-        deltas =
-            std::make_shared<op::ReplaceSlice>(zero, delta, lower_bounds, upper_bounds, strides);
+        deltas = std::make_shared<op::v0::ReplaceSlice>(
+            zero, delta, lower_bounds, upper_bounds, strides);
     }
     else
     {
-        deltas = std::make_shared<op::ReplaceSlice>(
+        deltas = std::make_shared<op::v0::ReplaceSlice>(
             deltas,
-            std::make_shared<op::Add>(
-                std::make_shared<op::Slice>(deltas, lower_bounds, upper_bounds, strides), delta),
+            std::make_shared<op::v1::Add>(
+                std::make_shared<op::v0::Slice>(deltas, lower_bounds, upper_bounds, strides),
+                delta),
             lower_bounds,
             upper_bounds,
             strides);

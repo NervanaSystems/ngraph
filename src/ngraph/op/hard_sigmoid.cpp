@@ -27,11 +27,11 @@
 using namespace std;
 using namespace ngraph;
 
-constexpr NodeTypeInfo op::HardSigmoid::type_info;
+constexpr NodeTypeInfo op::v0::HardSigmoid::type_info;
 
-op::HardSigmoid::HardSigmoid(const Output<Node>& data,
-                             const Output<Node>& alpha,
-                             const Output<Node>& beta)
+op::v0::HardSigmoid::HardSigmoid(const Output<Node>& data,
+                                 const Output<Node>& alpha,
+                                 const Output<Node>& beta)
     : FusedOp({data, alpha, beta})
 {
     constructor_validate_and_infer_types();
@@ -42,7 +42,7 @@ bool ngraph::op::v0::HardSigmoid::visit_attributes(AttributeVisitor& visitor)
     return true;
 }
 
-void op::HardSigmoid::pre_validate_and_infer_types()
+void op::v0::HardSigmoid::pre_validate_and_infer_types()
 {
     const auto& alpha_pshape = get_input_partial_shape(1);
     const auto& beta_pshape = get_input_partial_shape(2);
@@ -75,15 +75,15 @@ void op::HardSigmoid::pre_validate_and_infer_types()
         "The element types of both alpha and beta inputs must match the data input type.");
 }
 
-OutputVector op::HardSigmoid::decompose_op() const
+OutputVector op::v0::HardSigmoid::decompose_op() const
 {
     const auto data = input_value(0);
 
     const auto one_node =
-        ngraph::op::Constant::create<float>(data.get_element_type(), data.get_shape(), {1.0f});
+        ngraph::op::v0::Constant::create<float>(data.get_element_type(), data.get_shape(), {1.0f});
 
     const auto zero_node =
-        ngraph::op::Constant::create<float>(data.get_element_type(), data.get_shape(), {0.0f});
+        ngraph::op::v0::Constant::create<float>(data.get_element_type(), data.get_shape(), {0.0f});
 
     const auto alpha_node = input_value(1).get_node_shared_ptr();
     const auto beta_node = input_value(2).get_node_shared_ptr();
@@ -98,7 +98,7 @@ OutputVector op::HardSigmoid::decompose_op() const
         std::make_shared<op::v1::Maximum>(alpha_x_plus_beta, zero_node), one_node)};
 }
 
-shared_ptr<Node> op::HardSigmoid::clone_with_new_inputs(const OutputVector& new_args) const
+shared_ptr<Node> op::v0::HardSigmoid::clone_with_new_inputs(const OutputVector& new_args) const
 {
     check_new_args_count(this, new_args);
 

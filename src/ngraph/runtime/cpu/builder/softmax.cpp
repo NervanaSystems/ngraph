@@ -32,9 +32,9 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::Softmax)
+            void Builder::BUILDER_DECL(ngraph::op::v0::Softmax)
             {
-                auto softmax = static_cast<const ngraph::op::Softmax*>(node);
+                auto softmax = static_cast<const ngraph::op::v0::Softmax*>(node);
 
                 auto& functors = external_function->get_functors();
 
@@ -207,7 +207,7 @@ namespace ngraph
                 functors.emplace_back(functor);
             }
 
-            void register_builders_softmax_cpp() { REGISTER_OP_BUILDER(Softmax); }
+            void register_builders_softmax_cpp() { REGISTER_OP_BUILDER(ngraph::op::v0::Softmax); }
         }
     }
 }

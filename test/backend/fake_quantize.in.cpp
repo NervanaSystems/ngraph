@@ -50,14 +50,14 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize)
 {
     const Shape data_shape{1, 2, 3, 4};
     const size_t levels = 4;
-    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto input_low = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
-    const auto quantize =
-        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    const auto quantize = make_shared<op::v0::FakeQuantize>(
+        data, input_low, input_high, output_low, output_high, levels);
     const auto function = make_shared<Function>(
         OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
@@ -93,14 +93,14 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip)
 {
     const Shape data_shape{1, 2, 3, 4};
     const size_t levels = 5;
-    const auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    const auto input_low = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto input_high = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto output_low = make_shared<op::Parameter>(element::f32, Shape{});
-    const auto output_high = make_shared<op::Parameter>(element::f32, Shape{});
+    const auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    const auto input_low = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    const auto input_high = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    const auto output_low = make_shared<op::v0::Parameter>(element::f32, Shape{});
+    const auto output_high = make_shared<op::v0::Parameter>(element::f32, Shape{});
 
-    const auto quantize =
-        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    const auto quantize = make_shared<op::v0::FakeQuantize>(
+        data, input_low, input_high, output_low, output_high, levels);
     const auto function = make_shared<Function>(
         OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
@@ -133,14 +133,14 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_with_clip_across_channels)
 {
     Shape data_shape{1, 2, 5, 5};
     size_t levels = 5;
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto input_low = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
-    auto input_high = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
-    auto output_low = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
-    auto output_high = make_shared<op::Parameter>(element::f32, Shape{2, 1, 1});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    auto input_low = make_shared<op::v0::Parameter>(element::f32, Shape{2, 1, 1});
+    auto input_high = make_shared<op::v0::Parameter>(element::f32, Shape{2, 1, 1});
+    auto output_low = make_shared<op::v0::Parameter>(element::f32, Shape{2, 1, 1});
+    auto output_high = make_shared<op::v0::Parameter>(element::f32, Shape{2, 1, 1});
 
-    auto quantize =
-        make_shared<op::FakeQuantize>(data, input_low, input_high, output_low, output_high, levels);
+    auto quantize = make_shared<op::v0::FakeQuantize>(
+        data, input_low, input_high, output_low, output_high, levels);
     auto function = make_shared<Function>(
         OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
@@ -176,20 +176,20 @@ NGRAPH_TEST(${BACKEND_NAME}, fake_quantize_pdpd)
 {
     Shape data_shape{1, 2, 5, 5};
     size_t levels = 5;
-    auto data = make_shared<op::Parameter>(element::f32, data_shape);
-    auto input_low = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto input_high = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto output_low = make_shared<op::Parameter>(element::f32, Shape{2});
-    auto output_high = make_shared<op::Parameter>(element::f32, Shape{2});
+    auto data = make_shared<op::v0::Parameter>(element::f32, data_shape);
+    auto input_low = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto input_high = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto output_low = make_shared<op::v0::Parameter>(element::f32, Shape{2});
+    auto output_high = make_shared<op::v0::Parameter>(element::f32, Shape{2});
 
     auto quantize =
-        make_shared<op::FakeQuantize>(data,
-                                      input_low,
-                                      input_high,
-                                      output_low,
-                                      output_high,
-                                      levels,
-                                      op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
+        make_shared<op::v0::FakeQuantize>(data,
+                                          input_low,
+                                          input_high,
+                                          output_low,
+                                          output_high,
+                                          levels,
+                                          op::AutoBroadcastSpec(op::AutoBroadcastType::PDPD, 1));
     auto function = make_shared<Function>(
         OutputVector{quantize},
         ParameterVector{data, input_low, input_high, output_low, output_high});
