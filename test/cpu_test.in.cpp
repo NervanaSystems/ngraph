@@ -1233,8 +1233,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto sub = a - b;
     auto mul = a * b;
     auto divn = a / b;
-    auto min = make_shared<op::v0::Minimum>(c, a);
-    auto max = make_shared<op::v0::Maximum>(a, c);
+    auto min = make_shared<op::v1::Minimum>(c, a);
+    auto max = make_shared<op::v1::Maximum>(a, c);
     auto absn = make_shared<op::v0::Abs>(c);
     auto neg = make_shared<op::v0::Negative>(c);
     auto sqrt = make_shared<op::v0::Sqrt>(d);
@@ -1277,8 +1277,8 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::v1::Subtract>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Divide>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Minimum>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Maximum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Minimum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Maximum>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Abs>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Negative>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Sqrt>(func), 0);

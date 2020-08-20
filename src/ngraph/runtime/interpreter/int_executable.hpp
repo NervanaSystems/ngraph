@@ -1054,9 +1054,9 @@ protected:
                               max->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Maximum_v0:
+        case OP_TYPEID::Maximum_v1:
         {
-            auto maximum = static_cast<const op::v0::Maximum*>(&node);
+            auto maximum = static_cast<const op::v1::Maximum*>(&node);
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1104,9 +1104,9 @@ protected:
                               min->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Minimum_v0:
+        case OP_TYPEID::Minimum_v1:
         {
-            auto minimum = static_cast<const op::v0::Minimum*>(&node);
+            auto minimum = static_cast<const op::v1::Minimum*>(&node);
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1863,9 +1863,7 @@ protected:
         case OP_TYPEID::LayerNormBackprop_v0:
         case OP_TYPEID::LSTMCell_v0:
         case OP_TYPEID::LSTMSequence_v0:
-        case OP_TYPEID::Maximum_v1:
         case OP_TYPEID::MaxPool_v1:
-        case OP_TYPEID::Minimum_v1:
         case OP_TYPEID::Mod_v1:
         case OP_TYPEID::MVN_v0:
         case OP_TYPEID::NonMaxSuppression_v1:

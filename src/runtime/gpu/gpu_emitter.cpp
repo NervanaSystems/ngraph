@@ -571,7 +571,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Maximum(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Maximum>(
+    return emit_elementwise<ngraph::op::v1::Maximum>(
         compiled_function, function_name, node, args, out);
 }
 

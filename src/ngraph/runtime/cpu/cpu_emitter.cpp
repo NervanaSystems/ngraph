@@ -1371,7 +1371,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Maximum)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Maximum)
             {
                 (void)external_function;
                 (void)node;
@@ -1387,7 +1387,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Minimum)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Minimum)
             {
                 (void)external_function;
                 (void)node;
@@ -4341,9 +4341,9 @@ namespace ngraph
                     std::type_index,
                     std::function<std::string(const std::vector<std::string>&)>>{
                     {TI(ngraph::op::v0::Abs), abse},
-                    {TI(ngraph::op::v0::Minimum), mine},
+                    {TI(ngraph::op::v1::Minimum), mine},
                     {TI(ngraph::op::v0::Relu), maxe},
-                    {TI(ngraph::op::v0::Maximum), maxe},
+                    {TI(ngraph::op::v1::Maximum), maxe},
                     {TI(ngraph::op::v1::Add), adde},
                     {TI(ngraph::op::v0::Negative), nege},
                     {TI(ngraph::op::v1::Subtract), sube},

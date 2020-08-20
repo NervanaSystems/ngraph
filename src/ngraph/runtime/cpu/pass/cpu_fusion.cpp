@@ -1311,7 +1311,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_leaky_relu()
         return (is_type<ngraph::op::v0::Broadcast>(n.get_node()));
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
-    auto leaky_relu = std::make_shared<ngraph::op::v0::Maximum>(
+    auto leaky_relu = std::make_shared<ngraph::op::v1::Maximum>(
         input, std::make_shared<ngraph::op::v1::Multiply>(input, skip_broadcast));
 
     auto callback = [input, alpha](pattern::Matcher& m) {
@@ -1374,7 +1374,7 @@ void ngraph::runtime::cpu::pass::CPUFusion::construct_bounded_relu()
         return (is_type<ngraph::op::v0::Broadcast>(n.get_node()));
     };
     auto skip_broadcast = std::make_shared<pattern::op::Skip>(alpha, broadcast_pred);
-    auto min = std::make_shared<ngraph::op::v0::Minimum>(relu, skip_broadcast);
+    auto min = std::make_shared<ngraph::op::v1::Minimum>(relu, skip_broadcast);
 
     auto callback = [relu_input, alpha](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_bounded_relu against "

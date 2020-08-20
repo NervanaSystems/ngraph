@@ -54,6 +54,8 @@ namespace
     NGRAPH_OP(GreaterEq, 0)                                                                        \
     NGRAPH_OP(Less, 0)                                                                             \
     NGRAPH_OP(LessEq, 0)                                                                           \
+    NGRAPH_OP(Maximum, 0)                                                                          \
+    NGRAPH_OP(Minimum, 0)                                                                          \
     NGRAPH_OP(Multiply, 0)                                                                         \
     NGRAPH_OP(Not, 0)                                                                              \
     NGRAPH_OP(NotEqual, 0)                                                                         \
@@ -1890,7 +1892,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Maximum_v0:
         {
-            node = make_shared<op::v0::Maximum>(
+            node = make_shared<op::v1::Maximum>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::Maximum_v1:
+        {
+            node = make_shared<op::v1::Maximum>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -1902,7 +1910,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Minimum_v0:
         {
-            node = make_shared<op::v0::Minimum>(
+            node = make_shared<op::v1::Minimum>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::Minimum_v1:
+        {
+            node = make_shared<op::v1::Minimum>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -3239,10 +3253,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["padding_above"] = tmp->get_padding_above();
         break;
     }
-    case OP_TYPEID::Maximum_v0:
+    case OP_TYPEID::Maximum_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v0::Maximum*>(&n);
+        tmp = static_cast<const op::v1::Maximum*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());
@@ -3255,10 +3269,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["reduction_axes"] = serialize_axis_set(tmp->get_reduction_axes());
         break;
     }
-    case OP_TYPEID::Minimum_v0:
+    case OP_TYPEID::Minimum_v1:
     {
         const op::util::BinaryElementwiseArithmetic* tmp = nullptr;
-        tmp = static_cast<const op::v0::Minimum*>(&n);
+        tmp = static_cast<const op::v1::Minimum*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());

@@ -299,7 +299,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Minimum>
+            struct CudaOpMap<ngraph::op::v1::Minimum>
             {
                 static constexpr const char* op = "min";
                 static constexpr const char* math_kernel = "x0 > x1 ? x1 : x0";
@@ -307,7 +307,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Maximum>
+            struct CudaOpMap<ngraph::op::v1::Maximum>
             {
                 static constexpr const char* op = "max";
                 static constexpr const char* math_kernel = "x0 > x1 ? x0 : x1";

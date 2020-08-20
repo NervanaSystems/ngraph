@@ -274,12 +274,12 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::v0::Maximum)
+            void Builder::BUILDER_DECL(ngraph::op::v1::Maximum)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::maximum);
             }
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::v0::Minimum)
+            void Builder::BUILDER_DECL(ngraph::op::v1::Minimum)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::minimum);
             }
@@ -510,13 +510,13 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Minimum)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v1::Minimum)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::minimum);
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Maximum)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v1::Maximum)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::maximum);
             }
@@ -703,8 +703,8 @@ namespace ngraph
                 REGISTER_OP_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_OP_BUILDER(ngraph::op::v1::Less);
                 REGISTER_OP_BUILDER(ngraph::op::v1::LessEqual);
-                REGISTER_OP_BUILDER(ngraph::op::v0::Maximum);
-                REGISTER_OP_BUILDER(ngraph::op::v0::Minimum);
+                REGISTER_OP_BUILDER(ngraph::op::v1::Maximum);
+                REGISTER_OP_BUILDER(ngraph::op::v1::Minimum);
                 REGISTER_OP_BUILDER(ngraph::op::v1::LogicalAnd);
                 REGISTER_OP_BUILDER(ngraph::op::v1::LogicalOr);
                 REGISTER_OP_BUILDER(ngraph::op::v1::LogicalXor);
@@ -713,8 +713,8 @@ namespace ngraph
                 REGISTER_CF_BUILDER(ngraph::op::v1::Subtract);
                 REGISTER_CF_BUILDER(ngraph::op::v1::Multiply);
                 REGISTER_CF_BUILDER(ngraph::op::v1::Divide);
-                REGISTER_CF_BUILDER(ngraph::op::v0::Minimum);
-                REGISTER_CF_BUILDER(ngraph::op::v0::Maximum);
+                REGISTER_CF_BUILDER(ngraph::op::v1::Minimum);
+                REGISTER_CF_BUILDER(ngraph::op::v1::Maximum);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Abs);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Negative);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Relu);

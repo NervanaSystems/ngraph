@@ -128,22 +128,22 @@ TEST(opset_transform, opset0_divide_downgrade_pass)
 
 TEST(opset_transform, opset0_maximum_downgrade_pass)
 {
-    test_opset0_arithmetic_downgrade_pass<op::v0::Maximum, op::v1::Maximum>();
+    test_opset0_arithmetic_downgrade_pass<op::v1::Maximum, op::v1::Maximum>();
 }
 
 TEST(opset_transform, opset1_maximum_upgrade_pass)
 {
-    test_opset1_arithmetic_upgrade_pass<op::v0::Maximum, op::v1::Maximum>();
+    test_opset1_arithmetic_upgrade_pass<op::v1::Maximum, op::v1::Maximum>();
 }
 
 TEST(opset_transform, opset0_minimum_downgrade_pass)
 {
-    test_opset0_arithmetic_downgrade_pass<op::v0::Minimum, op::v1::Minimum>();
+    test_opset0_arithmetic_downgrade_pass<op::v1::Minimum, op::v1::Minimum>();
 }
 
 TEST(opset_transform, opset1_minimum_upgrade_pass)
 {
-    test_opset1_arithmetic_upgrade_pass<op::v0::Minimum, op::v1::Minimum>();
+    test_opset1_arithmetic_upgrade_pass<op::v1::Minimum, op::v1::Minimum>();
 }
 
 TEST(opset_transform, opset0_power_downgrade_pass)

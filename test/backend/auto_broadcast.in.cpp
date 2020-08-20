@@ -115,9 +115,9 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
                                                      {5, 12, 21, 20, 30, 42});
     check_auto_bcast<op::v1::Divide, float, float>({{4, 5, 6, 7, 8, 9}, {1, 2, 3}},
                                                    {4, 2.5f, 2, 7, 4, 3});
-    check_auto_bcast<op::v0::Maximum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::Maximum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                     {1, 5, 8, 4, 5, 8});
-    check_auto_bcast<op::v0::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                     {1, 2, 3, 1, 5, 6});
     check_auto_bcast<op::v0::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}},
@@ -155,9 +155,9 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
         {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {5, 12, 21, 20, 30, 42}, autob);
     check_auto_bcast<op::v1::Divide, float, float>(
         {{4, 5, 6, 7, 8, 9}, {1, 2, 3}}, {4, 2.5f, 2, 7, 4, 3}, autob);
-    check_auto_bcast<op::v0::Maximum, float, float>(
+    check_auto_bcast<op::v1::Maximum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 5, 8, 4, 5, 8}, autob);
-    check_auto_bcast<op::v0::Minimum, float, float>(
+    check_auto_bcast<op::v1::Minimum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 2, 3, 1, 5, 6}, autob);
     check_auto_bcast<op::v0::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}}, {1, 4, 27, 4, 25, 216}, autob, true);

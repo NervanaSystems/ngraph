@@ -950,7 +950,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_maximum)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::v0::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::v0::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::v0::Maximum>(X0, X1), ParameterVector{X0, X1});
+        return make_shared<Function>(make_shared<op::v1::Maximum>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }
@@ -967,7 +967,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_minimum)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::v0::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::v0::Parameter>(element::f32, shape);
-        return make_shared<Function>(make_shared<op::v0::Minimum>(X0, X1), ParameterVector{X0, X1});
+        return make_shared<Function>(make_shared<op::v1::Minimum>(X0, X1), ParameterVector{X0, X1});
     };
     EXPECT_TRUE(autodiff_numeric_compare<float>(backend.get(), make_graph, {x0, x1}, .01f, .01f));
 }

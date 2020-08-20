@@ -386,14 +386,14 @@ mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::NotEqual>(
     return NgDialectObj.createGenericOp<mlir::NGNotEqOp>(ngNode);
 }
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Maximum>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Maximum>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGMaxOp>(ngNode);
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Minimum>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Minimum>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGMinOp>(ngNode);

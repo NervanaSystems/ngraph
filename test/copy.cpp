@@ -222,12 +222,12 @@ TEST(copy, log)
 
 TEST(copy, maximum)
 {
-    ASSERT_TRUE(check_binary<op::v0::Maximum>());
+    ASSERT_TRUE(check_binary<op::v1::Maximum>());
 }
 
 TEST(copy, minimum)
 {
-    ASSERT_TRUE(check_binary<op::v0::Minimum>());
+    ASSERT_TRUE(check_binary<op::v1::Minimum>());
 }
 
 TEST(copy, multiply)

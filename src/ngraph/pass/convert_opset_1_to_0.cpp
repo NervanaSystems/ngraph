@@ -447,7 +447,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
+        return op_cast_binary_elementwise_node<op::v1::Maximum, op::v1::Maximum>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::MaxPool> node)
@@ -508,7 +508,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Minimum> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
+        return op_cast_binary_elementwise_node<op::v1::Minimum, op::v1::Minimum>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::NotEqual> node)

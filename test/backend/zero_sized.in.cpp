@@ -307,12 +307,12 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_lesseq)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_maximum)
 {
-    make_binary_empty_test<op::v0::Maximum>("${BACKEND_NAME}");
+    make_binary_empty_test<op::v1::Maximum>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_minimum)
 {
-    make_binary_empty_test<op::v0::Minimum>("${BACKEND_NAME}");
+    make_binary_empty_test<op::v1::Minimum>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply)

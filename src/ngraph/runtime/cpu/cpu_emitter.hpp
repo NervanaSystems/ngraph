@@ -144,9 +144,9 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Log);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Maximum);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Maximum);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Minimum);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Minimum);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Negative);
             template <>

@@ -137,8 +137,8 @@ OutputVector op::v0::FakeQuantize::decompose_op() const
     const auto axes = get_default_order(input_data_shape);
 
     // clip the input data to the range <input_low;input_high>
-    data = std::make_shared<op::v0::Minimum>(input_high,
-                                             std::make_shared<op::v0::Maximum>(input_low, data));
+    data = std::make_shared<op::v1::Minimum>(input_high,
+                                             std::make_shared<op::v1::Maximum>(input_low, data));
 
     // shift the input data so that it contains only positive values (and zeros)
     data = data - input_low;

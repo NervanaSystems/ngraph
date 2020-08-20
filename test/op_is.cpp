@@ -773,7 +773,7 @@ namespace
 
     void op_is_Maximum()
     {
-        op::v0::Maximum node;
+        op::v1::Maximum node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -809,7 +809,7 @@ namespace
 
     void op_is_Minimum()
     {
-        op::v0::Minimum node;
+        op::v1::Minimum node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());

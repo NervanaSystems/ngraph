@@ -2046,7 +2046,7 @@ namespace
             auto relu = std::make_shared<op::v0::Relu>(relu_input);
             auto alpha = op::v0::Constant::create<float>(
                 element::f32, input_shape, std::vector<float>(1.0f, alpha_val));
-            auto min = std::make_shared<op::v0::Minimum>(relu, alpha);
+            auto min = std::make_shared<op::v1::Minimum>(relu, alpha);
             auto f = make_shared<Function>(OutputVector{min}, ParameterVector{relu_input});
             return f;
         };
@@ -2154,7 +2154,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_fusion_fuse_leaky_relu)
     auto make_function = [](Shape input_shape, vector<float> alpha_val) {
         auto input = std::make_shared<op::v0::Parameter>(element::f32, input_shape);
         auto alpha = op::v0::Constant::create<float>(element::f32, input_shape, alpha_val);
-        auto out = std::make_shared<op::v0::Maximum>(
+        auto out = std::make_shared<op::v1::Maximum>(
             input, std::make_shared<op::v1::Multiply>(input, alpha));
         auto f = make_shared<Function>(OutputVector{out}, ParameterVector{input});
         return f;
