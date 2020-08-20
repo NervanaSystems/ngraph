@@ -18,7 +18,7 @@
 
 #include "ngraph/node.hpp"
 #include "ngraph/ops.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
+#include "ngraph/pass/convert_opset_3_to_1.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/validation_util.hpp"
 
@@ -120,7 +120,7 @@ namespace
     }
 }
 
-bool pass::Opset1Downgrade::run_on_node(shared_ptr<Node> node)
+bool pass::ConvertOpset3To1::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
     auto& dispatch_map = get_dispatch_map();

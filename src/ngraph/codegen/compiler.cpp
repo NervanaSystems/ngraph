@@ -185,6 +185,7 @@ void codegen::CompilerCore::initialize()
     // This is for both Eigen strong and weak inlines
     args.push_back("-mllvm");
     args.push_back("-inline-threshold=1000000");
+    // args.push_back("-fpch-instantiate-templates");
     if (m_enable_pass_report)
     {
         args.push_back("-Rpass-analysis=.*");

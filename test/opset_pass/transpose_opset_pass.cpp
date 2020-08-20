@@ -18,8 +18,8 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
 #include "util/type_prop.hpp"
 
 using namespace std;
@@ -36,7 +36,7 @@ TEST(opset_transform, opset1_transpose_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     auto reshape_result = f->get_results().at(0);
@@ -58,12 +58,12 @@ TEST(opset_transform, opset1_transpose_downgrade_pass_data_shape_not_staic)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
 
     try
     {
         pass_manager.run_passes(f);
-        FAIL() << "Exception after Transpose Opset0Downgrade pass was not thrown.";
+        FAIL() << "Exception after Transpose ConvertOpset1To0 pass was not thrown.";
     }
     catch (const ngraph_error& error)
     {
@@ -87,12 +87,12 @@ TEST(opset_transform, opset1_transpose_downgrade_pass_order_not_constant)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, order_node});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
 
     try
     {
         pass_manager.run_passes(f);
-        FAIL() << "Exception after Transpose Opset0Downgrade pass was not thrown.";
+        FAIL() << "Exception after Transpose ConvertOpset1To0 pass was not thrown.";
     }
     catch (const ngraph_error& error)
     {

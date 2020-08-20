@@ -28,10 +28,12 @@ broadcast_v1
 builder_opset1_mean
 builder_opset1_mean_dynamic
 builder_opset1_mean_dynamic_2
-clamp_float16_static
+clamp_bfloat16_dynamic
 clamp_bfloat16_static
 clamp_double_dynamic
 clamp_float_dynamic
+clamp_float16_dynamic
+clamp_float16_static
 clamp_int8_dynamic
 clamp_int16_dynamic
 clamp_int32_dynamic
@@ -40,8 +42,6 @@ clamp_uint8_dynamic
 clamp_uint16_dynamic
 clamp_uint32_dynamic
 clamp_uint64_dynamic
-clamp_float16_dynamic
-clamp_bfloat16_dynamic
 concat_negative_axis
 create_dynamic_tensor
 dyn_broadcast
@@ -240,6 +240,8 @@ dyn_slice_186
 dyn_slice_187
 dynamic_abc
 dynamic_axpy
+dynamic_dim_add
+dynamic_rank_add
 dynamic_reverse_shape
 dynamic_to_vector
 partial_slice_bprop_unknown_rank
@@ -277,7 +279,6 @@ strided_slice_1
 strided_slice_stride_optional
 sum_dynamic
 transpose
-
 # dynamic parameterized tests
 dyn_replace_slice
 flatten

@@ -27,10 +27,10 @@
 #include "ngraph/op/reshape.hpp"
 #include "ngraph/op/transpose.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
+#include "ngraph/pass/convert_opset_3_to_1.hpp"
 #include "ngraph/pass/dyn_elimination.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/shape_relevance.hpp"
 #include "ngraph/runtime/dynamic/dynamic_executable.hpp"
 #include "ngraph/runtime/dynamic/dynamic_tensor.hpp"
@@ -222,12 +222,12 @@ bool runtime::dynamic::DynamicExecutable::call(
         }
 
         pass::Manager passes;
-        // Opset1Downgrade should be moved below DynElimination
+        // ConvertOpset3To1 should be moved below DynElimination
         // when ConstantFolding for v3 ops will be ready
-        passes.register_pass<pass::Opset1Downgrade>();
+        passes.register_pass<pass::ConvertOpset3To1>();
         passes.register_pass<pass::ConstantFolding>();
         passes.register_pass<pass::DynElimination>();
-        passes.register_pass<pass::Opset0Downgrade>(); // Converts dynamic v1 variants to v0 ops
+        passes.register_pass<pass::ConvertOpset1To0>(); // Converts dynamic v1 variants to v0 ops
         passes.set_per_pass_validation(false);
 
         // FIXME(amprocte): Vile, temporary hack: we need to do repeated rounds of

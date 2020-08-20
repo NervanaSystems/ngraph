@@ -25,10 +25,10 @@
 #include "ngraph/builder/norm.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/convert_opset_0_to_1.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
 #include "ngraph/provenance.hpp"
 #include "util/provenance_enabler.hpp"
 
@@ -557,7 +557,7 @@ TEST(provenance, opset1_upgrade_pass_topk)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::ConvertOpset0To1>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
@@ -588,7 +588,7 @@ TEST(provenance, opset0_downgrade_pass_topk)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     const auto pass_replacement_node = f->get_result()->get_input_node_shared_ptr(0);
@@ -617,7 +617,7 @@ TEST(provenance, opset1_upgrade_pass_graph)
     auto f = make_shared<Function>(d, ParameterVector{x, y});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::ConvertOpset0To1>();
     pass_manager.run_passes(f);
 
     for (auto node : f->get_ordered_ops())
@@ -645,7 +645,7 @@ TEST(provenance, opset0_downgrade_pass_graph)
     auto f = make_shared<Function>(d, ParameterVector{x, y});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     for (auto node : f->get_ordered_ops())
