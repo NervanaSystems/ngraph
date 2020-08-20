@@ -89,7 +89,7 @@
 #include "ngraph/runtime/cpu/kernel/greater.hpp"
 #include "ngraph/runtime/cpu/kernel/greater_eq.hpp"
 #include "ngraph/runtime/cpu/kernel/less.hpp"
-#include "ngraph/runtime/cpu/kernel/less_equal.hpp"
+#include "ngraph/runtime/cpu/kernel/less_eq.hpp"
 #include "ngraph/runtime/cpu/kernel/log.hpp"
 #include "ngraph/runtime/cpu/kernel/maximum.hpp"
 #include "ngraph/runtime/cpu/kernel/minimum.hpp"
