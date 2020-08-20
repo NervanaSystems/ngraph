@@ -126,7 +126,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Divide);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Equal);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Equal);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Greater);
             template <>

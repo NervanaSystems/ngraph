@@ -170,11 +170,11 @@ NGRAPH_TEST(${BACKEND_NAME}, constant_equality_bool)
     Shape shape{4};
     // auto A = make_shared<op::v0::Parameter>(element::boolean, shape);
     // auto B = make_shared<op::v0::Parameter>(element::boolean, shape);
-    // auto f = make_shared<Function>(make_shared<op::v0::Equal>(A, B), ParameterVector{A, B});
+    // auto f = make_shared<Function>(make_shared<op::v1::Equal>(A, B), ParameterVector{A, B});
 
     auto A = op::v0::Constant::create(element::boolean, shape, {true, false, true, false});
     auto B = op::v0::Constant::create(element::boolean, shape, {true, true, true, true});
-    auto f = make_shared<Function>(make_shared<op::v0::Equal>(A, B), ParameterVector{});
+    auto f = make_shared<Function>(make_shared<op::v1::Equal>(A, B), ParameterVector{});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

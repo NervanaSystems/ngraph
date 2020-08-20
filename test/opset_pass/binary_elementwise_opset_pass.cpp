@@ -128,12 +128,7 @@ TEST(opset_transform, opset0_divide_downgrade_pass)
 
 TEST(opset_transform, opset0_equal_downgrade_pass)
 {
-    test_opset0_comparison_downgrade_pass<op::v0::Equal, op::v1::Equal>();
-}
-
-TEST(opset_transform, opset1_equal_upgrade_pass)
-{
-    test_opset1_comparison_upgrade_pass<op::v0::Equal, op::v1::Equal>();
+    test_opset0_comparison_downgrade_pass<op::v1::Equal, op::v1::Equal>();
 }
 
 TEST(opset_transform, opset0_less_downgrade_pass)

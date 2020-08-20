@@ -325,7 +325,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v0::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::v0::BatchMatMul>},
     {TI(ngraph::op::v0::Concat), &runtime::cpu::CPU_Emitter::emit<op::v0::Concat>},
     {TI(ngraph::op::v1::Divide), &runtime::cpu::CPU_Emitter::emit<op::v1::Divide>},
-    {TI(ngraph::op::v0::Equal), &runtime::cpu::CPU_Emitter::emit<op::v0::Equal>},
+    {TI(ngraph::op::v1::Equal), &runtime::cpu::CPU_Emitter::emit<op::v1::Equal>},
     {TI(ngraph::op::v0::Erf), &runtime::cpu::CPU_Emitter::emit<op::v0::Erf>},
     {TI(ngraph::op::v0::Gather), &runtime::cpu::CPU_Emitter::emit<op::v0::Gather>},
     {TI(ngraph::op::v0::GatherND), &runtime::cpu::CPU_Emitter::emit<op::v0::GatherND>},

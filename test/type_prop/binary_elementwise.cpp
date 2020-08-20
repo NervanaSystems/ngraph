@@ -237,7 +237,7 @@ TEST(type_prop, eltwise_auto_bcast)
     test_binary_eltwise_numpy<op::v1::Add>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::LogicalAnd>(element::boolean, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::GreaterEqual>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v0::Less>(element::f32, op::AutoBroadcastType::NUMPY);
@@ -256,7 +256,7 @@ TEST(type_prop, comparison_good)
 {
     auto tv0_2_4_param_0 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
     auto tv0_2_4_param_1 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
-    auto eq = make_shared<op::v0::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
+    auto eq = make_shared<op::v1::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
     EXPECT_EQ(eq->get_output_element_type(0), element::boolean);
     EXPECT_EQ(eq->get_output_shape(0), (Shape{2, 4}));
 }

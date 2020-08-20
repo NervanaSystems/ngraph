@@ -788,9 +788,9 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Equal_v0:
+        case OP_TYPEID::Equal_v1:
         {
-            auto equal = static_cast<const op::v0::Equal*>(&node);
+            auto equal = static_cast<const op::v1::Equal*>(&node);
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
@@ -1852,7 +1852,6 @@ protected:
         case OP_TYPEID::EmbeddingBagOffsetsSum_v3:
         case OP_TYPEID::EmbeddingBagPackedSum_v3:
         case OP_TYPEID::EmbeddingSegmentsSum_v3:
-        case OP_TYPEID::Equal_v1:
         case OP_TYPEID::ExtractImagePatches_v3:
         case OP_TYPEID::FakeQuantize_v0:
         case OP_TYPEID::FloorMod_v1:

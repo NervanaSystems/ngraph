@@ -324,7 +324,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Equal> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
+        return op_cast_binary_elementwise_node<op::v1::Equal, op::v1::Equal>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Gather> node)

@@ -43,7 +43,7 @@ NGRAPH_TEST(${BACKEND_NAME}, equal)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::v0::Parameter>(element::f32, shape);
     auto B = make_shared<op::v0::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::Equal>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Equal>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -320,7 +320,7 @@ NGRAPH_TEST(${BACKEND_NAME}, equal_unsigned_limit)
     Shape shape{};
     auto A = make_shared<op::v0::Parameter>(element::u32, shape);
     auto B = make_shared<op::v0::Parameter>(element::u32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::Equal>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Equal>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

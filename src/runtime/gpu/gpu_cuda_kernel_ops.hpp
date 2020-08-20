@@ -191,7 +191,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Equal>
+            struct CudaOpMap<ngraph::op::v1::Equal>
             {
                 static constexpr const char* op = "equal";
                 static constexpr const char* math_kernel = "x0 == x1";

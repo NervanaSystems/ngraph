@@ -491,7 +491,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Equal>(
+    return emit_elementwise<ngraph::op::v1::Equal>(
         compiled_function, function_name, node, args, out);
 }
 
