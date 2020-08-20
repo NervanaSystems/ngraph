@@ -69,7 +69,7 @@
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/log.hpp"
@@ -1239,7 +1239,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::GreaterEq)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::GreaterEqual)
             {
                 (void)external_function;
                 (void)node;

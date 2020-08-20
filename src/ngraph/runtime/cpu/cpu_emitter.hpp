@@ -130,7 +130,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Greater);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::GreaterEq);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::GreaterEqual);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Less);
             template <>

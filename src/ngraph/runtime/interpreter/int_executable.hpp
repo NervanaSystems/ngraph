@@ -67,7 +67,7 @@
 #include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
-#include "ngraph/runtime/reference/greater_eq.hpp"
+#include "ngraph/runtime/reference/greater_equal.hpp"
 #include "ngraph/runtime/reference/less.hpp"
 #include "ngraph/runtime/reference/less_eq.hpp"
 #include "ngraph/runtime/reference/log.hpp"
@@ -939,9 +939,9 @@ protected:
                                   greater->get_autob());
             break;
         }
-        case OP_TYPEID::GreaterEq_v0:
+        case OP_TYPEID::GreaterEqual_v1:
         {
-            auto greater_eq = static_cast<const op::v0::GreaterEq*>(&node);
+            auto greater_eq = static_cast<const op::v1::GreaterEqual*>(&node);
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
@@ -1862,7 +1862,6 @@ protected:
         case OP_TYPEID::GeluBackpropFactor_v0:
         case OP_TYPEID::Gemm_v0:
         case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEqual_v1:
         case OP_TYPEID::GRN_v0:
         case OP_TYPEID::GroupConvolution_v0:
         case OP_TYPEID::GroupConvolution_v1:

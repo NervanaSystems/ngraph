@@ -514,7 +514,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_GreaterEq(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::GreaterEq>(
+    return emit_elementwise<ngraph::op::v1::GreaterEqual>(
         compiled_function, function_name, node, args, out);
 }
 

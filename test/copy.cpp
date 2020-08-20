@@ -197,7 +197,7 @@ TEST(copy, floor)
 
 TEST(copy, greater_eq)
 {
-    ASSERT_TRUE(check_binary<op::v0::GreaterEq>());
+    ASSERT_TRUE(check_binary<op::v1::GreaterEqual>());
 }
 
 TEST(copy, greater)

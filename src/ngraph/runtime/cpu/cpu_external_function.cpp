@@ -90,7 +90,7 @@
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/gemm.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
@@ -332,7 +332,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v0::ScatterAdd), &runtime::cpu::CPU_Emitter::emit<op::v0::ScatterAdd>},
     {TI(ngraph::op::v0::ScatterNDAdd), &runtime::cpu::CPU_Emitter::emit<op::v0::ScatterNDAdd>},
     {TI(ngraph::op::v0::Greater), &runtime::cpu::CPU_Emitter::emit<op::v0::Greater>},
-    {TI(ngraph::op::v0::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::v0::GreaterEq>},
+    {TI(ngraph::op::v1::GreaterEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::GreaterEqual>},
     {TI(ngraph::op::v0::Less), &runtime::cpu::CPU_Emitter::emit<op::v0::Less>},
     {TI(ngraph::op::v0::LessEq), &runtime::cpu::CPU_Emitter::emit<op::v0::LessEq>},
     {TI(ngraph::op::v0::Log), &runtime::cpu::CPU_Emitter::emit<op::v0::Log>},

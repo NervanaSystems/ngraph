@@ -371,11 +371,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::GreaterEqual> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::GroupConvolution> node)
     {
         const auto data_arg = node->input_value(0);

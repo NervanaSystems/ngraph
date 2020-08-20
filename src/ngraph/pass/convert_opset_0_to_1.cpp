@@ -241,11 +241,6 @@ namespace
         return op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::GreaterEq> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v0::GroupConvolution> node)
     {
         auto strides = node->get_window_movement_strides();

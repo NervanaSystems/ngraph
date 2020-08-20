@@ -90,7 +90,7 @@
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/gemm.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/grn.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/gru_cell.hpp"

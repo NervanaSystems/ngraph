@@ -41,7 +41,7 @@
 #include "ngraph/op/experimental/compiled_kernel.hpp"
 #include "ngraph/op/floor.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/less_eq.hpp"
 #include "ngraph/op/log.hpp"
@@ -187,7 +187,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::v0::GreaterEq)
+            void Builder::BUILDER_DECL(ngraph::op::v1::GreaterEqual)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::greater_eq);
             }
@@ -582,7 +582,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::GreaterEq)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v1::GreaterEqual)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::greater_eq);
             }
@@ -700,7 +700,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(ngraph::op::v0::Equal);
                 REGISTER_OP_BUILDER(ngraph::op::v0::NotEqual);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Greater);
-                REGISTER_OP_BUILDER(ngraph::op::v0::GreaterEq);
+                REGISTER_OP_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Less);
                 REGISTER_OP_BUILDER(ngraph::op::v0::LessEq);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Maximum);
@@ -724,7 +724,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(ngraph::op::v0::Equal);
                 REGISTER_CF_BUILDER(ngraph::op::v0::NotEqual);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Greater);
-                REGISTER_CF_BUILDER(ngraph::op::v0::GreaterEq);
+                REGISTER_CF_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Less);
                 REGISTER_CF_BUILDER(ngraph::op::v0::LessEq);
                 REGISTER_CF_BUILDER(ngraph::op::v1::LogicalAnd);

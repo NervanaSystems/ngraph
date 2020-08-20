@@ -267,8 +267,8 @@ set (SRC
     op/gelu.hpp
     op/gemm.cpp
     op/gemm.hpp
-    op/greater_eq.cpp
-    op/greater_eq.hpp
+    op/greater_equal.cpp
+    op/greater_equal.hpp
     op/greater.cpp
     op/greater.hpp
     op/grn.cpp
