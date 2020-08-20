@@ -181,7 +181,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::v0::Greater)
+            void Builder::BUILDER_DECL(ngraph::op::v1::Greater)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::greater);
             }
@@ -576,7 +576,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Greater)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v1::Greater)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::greater);
             }
@@ -699,7 +699,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(ngraph::op::v1::LogicalNot);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Equal);
                 REGISTER_OP_BUILDER(ngraph::op::v0::NotEqual);
-                REGISTER_OP_BUILDER(ngraph::op::v0::Greater);
+                REGISTER_OP_BUILDER(ngraph::op::v1::Greater);
                 REGISTER_OP_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Less);
                 REGISTER_OP_BUILDER(ngraph::op::v0::LessEq);
@@ -723,7 +723,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(ngraph::op::v0::Ceiling);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Equal);
                 REGISTER_CF_BUILDER(ngraph::op::v0::NotEqual);
-                REGISTER_CF_BUILDER(ngraph::op::v0::Greater);
+                REGISTER_CF_BUILDER(ngraph::op::v1::Greater);
                 REGISTER_CF_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Less);
                 REGISTER_CF_BUILDER(ngraph::op::v0::LessEq);

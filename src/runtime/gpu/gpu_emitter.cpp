@@ -508,7 +508,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Greater>(
+    return emit_elementwise<ngraph::op::v1::Greater>(
         compiled_function, function_name, node, args, out);
 }
 

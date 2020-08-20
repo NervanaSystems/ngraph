@@ -238,7 +238,7 @@ TEST(type_prop, eltwise_auto_bcast)
     test_binary_eltwise_numpy<op::v1::LogicalAnd>(element::boolean, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v0::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::GreaterEqual>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v0::Less>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v0::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
@@ -546,7 +546,7 @@ TEST(type_prop, logic_arith_compare_partial_et)
     auto test_compare = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
         auto param0 = std::make_shared<op::v0::Parameter>(et0, Shape{1, 2, 3});
         auto param1 = std::make_shared<op::v0::Parameter>(et1, Shape{1, 2, 3});
-        return std::make_shared<op::v0::Greater>(param0, param1);
+        return std::make_shared<op::v1::Greater>(param0, param1);
     };
 
     auto test_not = [](element::Type et) -> std::shared_ptr<Node> {

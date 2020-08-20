@@ -205,7 +205,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Greater>
+            struct CudaOpMap<ngraph::op::v1::Greater>
             {
                 static constexpr const char* op = "greater";
                 static constexpr const char* math_kernel = "x0 > x1";

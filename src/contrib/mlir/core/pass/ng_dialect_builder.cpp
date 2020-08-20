@@ -343,7 +343,7 @@ mlir::Operation*
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Greater>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Greater>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGGreaterOp>(ngNode);

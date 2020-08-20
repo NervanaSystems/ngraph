@@ -136,26 +136,6 @@ TEST(opset_transform, opset1_equal_upgrade_pass)
     test_opset1_comparison_upgrade_pass<op::v0::Equal, op::v1::Equal>();
 }
 
-TEST(opset_transform, opset0_greater_downgrade_pass)
-{
-    test_opset0_comparison_downgrade_pass<op::v0::Greater, op::v1::Greater>();
-}
-
-TEST(opset_transform, opset1_greater_upgrade_pass)
-{
-    test_opset1_comparison_upgrade_pass<op::v0::Greater, op::v1::Greater>();
-}
-
-TEST(opset_transform, opset0_greater_eq_downgrade_pass)
-{
-    test_opset0_comparison_downgrade_pass<op::v1::GreaterEqual, op::v1::GreaterEqual>();
-}
-
-TEST(opset_transform, opset1_greater_eq_upgrade_pass)
-{
-    test_opset1_comparison_upgrade_pass<op::v1::GreaterEqual, op::v1::GreaterEqual>();
-}
-
 TEST(opset_transform, opset0_less_downgrade_pass)
 {
     test_opset0_comparison_downgrade_pass<op::v0::Less, op::v1::Less>();

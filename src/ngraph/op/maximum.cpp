@@ -57,10 +57,10 @@ void op::v0::Maximum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto x = input_value(0);
     auto y = input_value(1);
     adjoints.add_delta(x,
-                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Greater>(x, y),
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Greater>(x, y),
                                                             x.get_element_type()));
     adjoints.add_delta(y,
-                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Greater>(y, x),
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Greater>(y, x),
                                                             y.get_element_type()));
 }
 

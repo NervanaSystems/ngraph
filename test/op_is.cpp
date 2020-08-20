@@ -575,7 +575,7 @@ namespace
 
     void op_is_Greater()
     {
-        op::v0::Greater node;
+        op::v1::Greater node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());

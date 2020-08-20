@@ -368,7 +368,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Greater> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
+        return op_cast_binary_elementwise_node<op::v1::Greater, op::v1::Greater>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::GroupConvolution> node)

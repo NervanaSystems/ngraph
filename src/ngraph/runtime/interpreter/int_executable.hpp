@@ -928,9 +928,9 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Greater_v0:
+        case OP_TYPEID::Greater_v1:
         {
-            auto greater = static_cast<const op::v0::Greater*>(&node);
+            auto greater = static_cast<const op::v1::Greater*>(&node);
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
@@ -1861,7 +1861,6 @@ protected:
         case OP_TYPEID::Gelu_v0:
         case OP_TYPEID::GeluBackpropFactor_v0:
         case OP_TYPEID::Gemm_v0:
-        case OP_TYPEID::Greater_v1:
         case OP_TYPEID::GRN_v0:
         case OP_TYPEID::GroupConvolution_v0:
         case OP_TYPEID::GroupConvolution_v1:

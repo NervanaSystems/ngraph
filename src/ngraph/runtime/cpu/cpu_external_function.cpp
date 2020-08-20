@@ -331,7 +331,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v0::GatherND), &runtime::cpu::CPU_Emitter::emit<op::v0::GatherND>},
     {TI(ngraph::op::v0::ScatterAdd), &runtime::cpu::CPU_Emitter::emit<op::v0::ScatterAdd>},
     {TI(ngraph::op::v0::ScatterNDAdd), &runtime::cpu::CPU_Emitter::emit<op::v0::ScatterNDAdd>},
-    {TI(ngraph::op::v0::Greater), &runtime::cpu::CPU_Emitter::emit<op::v0::Greater>},
+    {TI(ngraph::op::v1::Greater), &runtime::cpu::CPU_Emitter::emit<op::v1::Greater>},
     {TI(ngraph::op::v1::GreaterEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::GreaterEqual>},
     {TI(ngraph::op::v0::Less), &runtime::cpu::CPU_Emitter::emit<op::v0::Less>},
     {TI(ngraph::op::v0::LessEq), &runtime::cpu::CPU_Emitter::emit<op::v0::LessEq>},

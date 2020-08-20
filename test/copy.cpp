@@ -202,7 +202,7 @@ TEST(copy, greater_eq)
 
 TEST(copy, greater)
 {
-    ASSERT_TRUE(check_binary<op::v0::Greater>());
+    ASSERT_TRUE(check_binary<op::v1::Greater>());
 }
 
 TEST(copy, less_eq)
