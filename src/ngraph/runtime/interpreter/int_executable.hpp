@@ -31,6 +31,9 @@
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
+#include "ngraph/runtime/reference/asinh.hpp"
+#include "ngraph/runtime/reference/acosh.hpp"
+#include "ngraph/runtime/reference/atanh.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
@@ -216,7 +219,6 @@ protected:
                    const std::vector<std::shared_ptr<HostTensor>>& out,
                    const std::vector<std::shared_ptr<HostTensor>>& args)
     {
-        NGRAPH_INFO << node;
 // We want to check that every OP_TYPEID enumeration is included in the list.
 // These GCC flags enable compile-time checking so that if an enumeration
 // is not in the list an error is generated.
@@ -238,6 +240,13 @@ protected:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::acos<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::Acosh_v3:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::acosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
@@ -343,11 +352,26 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
+        case OP_TYPEID::Asinh_v3:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::asinh<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
         case OP_TYPEID::Atan_v0:
         {
             size_t element_count = shape_size(node.get_output_shape(0));
             reference::atan<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
+        }
+        case OP_TYPEID::Atanh_v3:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            reference::atanh<T>(
+                args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            break;
             break;
         }
         case OP_TYPEID::Atan2_v0:
@@ -1873,9 +1897,6 @@ protected:
             break;
         }
 
-        case OP_TYPEID::Acosh_v3:
-        case OP_TYPEID::Asinh_v3:
-        case OP_TYPEID::Atanh_v3:
         case OP_TYPEID::AvgPool_v1:
         case OP_TYPEID::BatchMatMulTranspose_v0:
         case OP_TYPEID::BatchToSpace_v1:

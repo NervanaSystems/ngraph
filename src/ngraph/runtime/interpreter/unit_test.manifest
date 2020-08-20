@@ -1,6 +1,3 @@
-acosh
-asinh
-atanh
 ceiling_int64
 clamp_bfloat16
 clamp_float16
