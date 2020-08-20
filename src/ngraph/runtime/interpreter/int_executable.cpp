@@ -458,3 +458,85 @@ Strides runtime::interpreter::INTExecutable::to_strides(const HostTensor* tensor
     }
     return Strides(stride_data);
 }
+
+vector<int64_t> runtime::interpreter::INTExecutable::read_i64_tensor(const HostTensor* tensor)
+{
+    vector<int64_t> result;
+    switch (tensor->get_element_type())
+    {
+    case element::Type_t::i8:
+    {
+        const int8_t* p = tensor->get_data_ptr<const int8_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::i16:
+    {
+        const int16_t* p = tensor->get_data_ptr<const int16_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::i32:
+    {
+        const int32_t* p = tensor->get_data_ptr<const int32_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::i64:
+    {
+        const int64_t* p = tensor->get_data_ptr<const int64_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::u8:
+    {
+        const uint8_t* p = tensor->get_data_ptr<const uint8_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::u16:
+    {
+        const uint16_t* p = tensor->get_data_ptr<const uint16_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::u32:
+    {
+        const uint32_t* p = tensor->get_data_ptr<const uint32_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    case element::Type_t::u64:
+    {
+        const uint64_t* p = tensor->get_data_ptr<const uint64_t>();
+        for (size_t i = 0; i < tensor->get_element_count(); ++i)
+        {
+            result.push_back(static_cast<int64_t>(p[i]));
+        }
+        break;
+    }
+    default: throw runtime_error("Unsupported type reading int64_t tensor"); break;
+    }
+    return result;
+}

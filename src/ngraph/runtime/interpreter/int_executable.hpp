@@ -31,10 +31,8 @@
 #include "ngraph/runtime/host_tensor.hpp"
 #include "ngraph/runtime/interpreter/int_backend_visibility.hpp"
 #include "ngraph/runtime/reference/abs.hpp"
-#include "ngraph/runtime/reference/asinh.hpp"
-#include "ngraph/runtime/reference/acosh.hpp"
-#include "ngraph/runtime/reference/atanh.hpp"
 #include "ngraph/runtime/reference/acos.hpp"
+#include "ngraph/runtime/reference/acosh.hpp"
 #include "ngraph/runtime/reference/add.hpp"
 #include "ngraph/runtime/reference/all.hpp"
 #include "ngraph/runtime/reference/allreduce.hpp"
@@ -43,8 +41,10 @@
 #include "ngraph/runtime/reference/argmax.hpp"
 #include "ngraph/runtime/reference/argmin.hpp"
 #include "ngraph/runtime/reference/asin.hpp"
+#include "ngraph/runtime/reference/asinh.hpp"
 #include "ngraph/runtime/reference/atan.hpp"
 #include "ngraph/runtime/reference/atan2.hpp"
+#include "ngraph/runtime/reference/atanh.hpp"
 #include "ngraph/runtime/reference/avg_pool.hpp"
 #include "ngraph/runtime/reference/batch_mat_mul.hpp"
 #include "ngraph/runtime/reference/batch_norm.hpp"
@@ -191,6 +191,8 @@ protected:
         tensor->read(result.data(), result.size() * sizeof(T));
         return result;
     }
+
+    std::vector<int64_t> read_i64_tensor(const HostTensor* tensor);
 
     std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
     std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
@@ -1616,9 +1618,40 @@ protected:
         }
         case OP_TYPEID::Reshape_v1:
         {
-            throw unsupported_op("Unsupported op 'Reshape_v1'");
-            // const op::v1::Reshape* reshape = static_cast<const op::v1::Reshape*>(&node);
-            // reshape->evaluate(out, args);
+            const op::v1::Reshape* reshape = static_cast<const op::v1::Reshape*>(&node);
+            auto input_shape = args[0]->get_shape();
+            vector<int64_t> pattern = read_i64_tensor(args[1].get());
+            bool special_zero = reshape->get_special_zero();
+
+            for (size_t i = 0; i < pattern.size(); i++)
+            {
+                if (pattern[i] < 0)
+                {
+                    // Infer this dim from shape size of input
+                    size_t pattern_size = 1;
+                    for (auto v : pattern)
+                    {
+                        pattern_size *= (v < 0 ? 1 : v);
+                    }
+                    pattern[i] = shape_size(input_shape) / pattern_size;
+                }
+                else if (special_zero && pattern[i] == 0)
+                {
+                    pattern[i] = input_shape[i];
+                }
+            }
+            Shape output_shape;
+            for (int64_t d : pattern)
+            {
+                output_shape.push_back(d);
+            }
+
+            AxisVector input_order = get_default_order(input_shape.size());
+            reference::reshape(args[0]->get_data_ptr<const T>(),
+                               out[0]->get_data_ptr<T>(),
+                               input_shape,
+                               input_order,
+                               output_shape);
             break;
         }
         case OP_TYPEID::Result_v0:
