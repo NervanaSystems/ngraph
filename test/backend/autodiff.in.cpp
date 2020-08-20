@@ -1029,7 +1029,7 @@ NGRAPH_TEST(${BACKEND_NAME}, backwards_power)
     auto make_graph = [shape]() {
         auto X0 = make_shared<op::v0::Parameter>(element::f32, shape);
         auto X1 = make_shared<op::v0::Parameter>(element::f32, shape);
-        return make_shared<Function>(std::make_shared<op::v0::Power>(X0, X1),
+        return make_shared<Function>(std::make_shared<op::v1::Power>(X0, X1),
                                      ParameterVector{X0, X1});
     };
 

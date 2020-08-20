@@ -340,7 +340,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v1::Minimum), &runtime::cpu::CPU_Emitter::emit<op::v1::Minimum>},
     {TI(ngraph::op::v0::Negative), &runtime::cpu::CPU_Emitter::emit<op::v0::Negative>},
     {TI(ngraph::op::v1::NotEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::NotEqual>},
-    {TI(ngraph::op::v0::Power), &runtime::cpu::CPU_Emitter::emit<op::v0::Power>},
+    {TI(ngraph::op::v1::Power), &runtime::cpu::CPU_Emitter::emit<op::v1::Power>},
     {TI(ngraph::op::v0::Select), &runtime::cpu::CPU_Emitter::emit<op::v0::Select>},
     {TI(ngraph::op::v1::Subtract), &runtime::cpu::CPU_Emitter::emit<op::v1::Subtract>},
     {TI(ngraph::op::v0::Broadcast), &runtime::cpu::CPU_Emitter::emit<op::v0::Broadcast>},

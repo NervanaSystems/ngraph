@@ -476,9 +476,9 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Power> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Power> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
+        return op_cast_binary_elementwise_node<op::v1::Power, op::v1::Power>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::Product> node)

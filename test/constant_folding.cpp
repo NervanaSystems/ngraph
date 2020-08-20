@@ -421,7 +421,7 @@ TEST(constant_folding, constant_unary_binary)
     auto sub = a - b;
     auto mul = a * b;
     auto divn = a / b;
-    auto pow = make_shared<op::v0::Power>(a, b);
+    auto pow = make_shared<op::v1::Power>(a, b);
     auto min = make_shared<op::v1::Minimum>(c, a);
     auto max = make_shared<op::v1::Maximum>(a, c);
     auto absn = make_shared<op::v0::Abs>(c);
@@ -431,7 +431,7 @@ TEST(constant_folding, constant_unary_binary)
     auto sub_autob_numpy = make_shared<op::v1::Subtract>(a, e, op::AutoBroadcastType::NUMPY);
     auto mul_autob_numpy = make_shared<op::v1::Multiply>(a, e, op::AutoBroadcastType::NUMPY);
     auto div_autob_numpy = make_shared<op::v1::Divide>(a, g, op::AutoBroadcastType::NUMPY);
-    auto pow_autob_numpy = make_shared<op::v0::Power>(a, g, op::AutoBroadcastType::NUMPY);
+    auto pow_autob_numpy = make_shared<op::v1::Power>(a, g, op::AutoBroadcastType::NUMPY);
     auto min_autob_numpy = make_shared<op::v1::Minimum>(a, f, op::AutoBroadcastType::NUMPY);
     auto max_autob_numpy = make_shared<op::v1::Maximum>(a, f, op::AutoBroadcastType::NUMPY);
     auto equal_autob_numpy = make_shared<op::v1::Equal>(a, g, op::AutoBroadcastType::NUMPY);

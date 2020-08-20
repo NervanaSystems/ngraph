@@ -155,7 +155,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Power>
+            struct CudaOpMap<ngraph::op::v1::Power>
             {
                 static constexpr const char* op = "powf";
                 static constexpr const char* math_kernel = nullptr;

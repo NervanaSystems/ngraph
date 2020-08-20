@@ -754,7 +754,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Power>(
+    return emit_elementwise<ngraph::op::v1::Power>(
         compiled_function, function_name, node, args, out);
 }
 

@@ -289,17 +289,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Divide> node)
-    {
-        const auto input_arg0 = node->input_value(0);
-        const auto input_arg1 = node->input_value(1);
-        const auto autob = node->get_autob();
-        const bool pydiv = node->is_pythondiv();
-        auto replacement_node = make_shared<op::v1::Divide>(input_arg0, input_arg1, pydiv, autob);
-        replace_node(node, replacement_node);
-        return replacement_node;
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Reshape> node)
     {
         shared_ptr<Node> replacement_node;
@@ -320,11 +309,6 @@ namespace
 
         replace_node(node, replacement_node);
         return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Equal> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::Equal, op::v1::Equal>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Gather> node)
@@ -364,11 +348,6 @@ namespace
 
         replace_node(node, replacement_node);
         return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Greater> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::Greater, op::v1::Greater>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::GroupConvolution> node)
@@ -435,21 +414,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Less> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::Less, op::v1::Less>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::LessEqual> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::LessEqual, op::v1::LessEqual>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::Maximum, op::v1::Maximum>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::MaxPool> node)
     {
         auto const input_arg = node->input_value(0);
@@ -506,16 +470,6 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Minimum> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::Minimum, op::v1::Minimum>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::NotEqual> node)
-    {
-        return op_cast_binary_elementwise_node<op::v1::NotEqual, op::v1::NotEqual>(node);
-    }
-
     shared_ptr<Node> op_cast(shared_ptr<op::v1::OneHot> node)
     {
         const auto indices = node->input_value(0);
@@ -561,11 +515,6 @@ namespace
 
         replace_node(node, replacement_node);
         return replacement_node;
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v1::Power> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::ReduceMax> node)

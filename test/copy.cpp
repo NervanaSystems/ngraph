@@ -260,7 +260,7 @@ TEST(copy, parameter)
 
 TEST(copy, power)
 {
-    ASSERT_TRUE(check_binary<op::v0::Power>());
+    ASSERT_TRUE(check_binary<op::v1::Power>());
 }
 
 TEST(copy, reshape)

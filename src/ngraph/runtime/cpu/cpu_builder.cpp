@@ -285,7 +285,7 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::v0::Power)
+            void Builder::BUILDER_DECL(ngraph::op::v1::Power)
             {
                 BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::cwise_pow);
             }
@@ -488,7 +488,7 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::Power)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v1::Power)
             {
                 BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::cwise_pow);
             }
@@ -675,7 +675,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(ngraph::op::v1::Subtract);
                 REGISTER_OP_BUILDER(ngraph::op::v1::Multiply);
                 REGISTER_OP_BUILDER(ngraph::op::v1::Divide);
-                REGISTER_OP_BUILDER(ngraph::op::v0::Power);
+                REGISTER_OP_BUILDER(ngraph::op::v1::Power);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Abs);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Acos);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Asin);
@@ -733,7 +733,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(ngraph::op::v0::Round);
                 REGISTER_CF_BUILDER(ngraph::op::v0::Sign);
                 REGISTER_CF_BUILDER(ngraph::op::v1::LogicalNot);
-                REGISTER_CF_BUILDER(ngraph::op::v0::Power);
+                REGISTER_CF_BUILDER(ngraph::op::v1::Power);
             }
         }
     }

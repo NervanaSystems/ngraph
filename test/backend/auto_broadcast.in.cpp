@@ -119,7 +119,7 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
                                                     {1, 5, 8, 4, 5, 8});
     check_auto_bcast<op::v1::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                     {1, 2, 3, 1, 5, 6});
-    check_auto_bcast<op::v0::Power, float, float>(
+    check_auto_bcast<op::v1::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}},
         {1, 4, 27, 4, 25, 216},
         op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY),
@@ -159,7 +159,7 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 5, 8, 4, 5, 8}, autob);
     check_auto_bcast<op::v1::Minimum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 2, 3, 1, 5, 6}, autob);
-    check_auto_bcast<op::v0::Power, float, float>(
+    check_auto_bcast<op::v1::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}}, {1, 4, 27, 4, 25, 216}, autob, true);
     check_auto_bcast<op::v1::LogicalAnd, char, char>(
         {{1, 0, 1, 0, 0, 1}, {1, 0, 1}}, {1, 0, 1, 0, 0, 1}, autob);

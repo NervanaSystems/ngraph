@@ -200,7 +200,7 @@ static unordered_map<type_index, function<bool(shared_ptr<Node>, shared_ptr<Node
          {TI(op::v1::Maximum), cse_binarywise},
          {TI(op::v1::Minimum), cse_binarywise},
          {TI(op::v1::Multiply), cse_binarywise},
-         {TI(op::v0::Power), cse_binarywise},
+         {TI(op::v1::Power), cse_binarywise},
          {TI(op::v1::Subtract), cse_binarywise},
          {TI(op::v0::Sum), cse_reduction},
          {TI(op::v0::Product), cse_reduction},

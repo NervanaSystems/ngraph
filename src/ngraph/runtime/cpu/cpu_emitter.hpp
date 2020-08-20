@@ -204,7 +204,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::ScatterNDAdd);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Power);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Power);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::UpdateSlice);
             template <>

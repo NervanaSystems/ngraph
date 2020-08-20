@@ -1174,9 +1174,9 @@ protected:
                            pad->get_pad_mode());
             break;
         }
-        case OP_TYPEID::Power_v0:
+        case OP_TYPEID::Power_v1:
         {
-            auto power = static_cast<const op::v0::Power*>(&node);
+            auto power = static_cast<const op::v1::Power*>(&node);
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
@@ -1874,7 +1874,6 @@ protected:
         case OP_TYPEID::Pad_v1:
         case OP_TYPEID::PartialSlice_v0:
         case OP_TYPEID::PartialSliceBackprop_v0:
-        case OP_TYPEID::Power_v1:
         case OP_TYPEID::PRelu_v0:
         case OP_TYPEID::PriorBox_v0:
         case OP_TYPEID::PriorBoxClustered_v0:
