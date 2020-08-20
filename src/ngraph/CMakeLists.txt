@@ -699,7 +699,6 @@ set(SRC ${SRC}
 set(OPSETS
     opset/opset0_tbl.hpp
     opset/opset1_tbl.hpp
-    opset/opset2_tbl.hpp
     opset/opset3_tbl.hpp
     opset/opset_orphans_tbl.hpp
 )
