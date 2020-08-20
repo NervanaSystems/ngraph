@@ -1588,21 +1588,7 @@ protected:
             vector<size_t> tmp(axes.begin(), axes.end());
             AxisSet reduction_axes(tmp);
             Shape input_shape = args[0]->get_shape();
-            vector<size_t> output_tmp;
-            size_t index = 0;
-            for (auto dim : input_shape)
-            {
-                if (reduction_axes.find(index) == reduction_axes.end())
-                {
-                    output_tmp.push_back(dim);
-                }
-                else if (op->get_keep_dims())
-                {
-                    output_tmp.push_back(1);
-                }
-                index++;
-            }
-            PartialShape output_shape(output_tmp);
+            Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
             out[0]->set_partial_shape(output_shape);
             reference::max<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
