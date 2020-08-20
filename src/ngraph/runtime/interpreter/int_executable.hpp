@@ -950,9 +950,9 @@ protected:
                                      greater_eq->get_autob());
             break;
         }
-        case OP_TYPEID::Less_v0:
+        case OP_TYPEID::Less_v1:
         {
-            auto less = static_cast<const op::v0::Less*>(&node);
+            auto less = static_cast<const op::v1::Less*>(&node);
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
@@ -1872,7 +1872,6 @@ protected:
         case OP_TYPEID::Interpolate_v3:
         case OP_TYPEID::LayerNorm_v0:
         case OP_TYPEID::LayerNormBackprop_v0:
-        case OP_TYPEID::Less_v1:
         case OP_TYPEID::LSTMCell_v0:
         case OP_TYPEID::LSTMSequence_v0:
         case OP_TYPEID::Maximum_v1:

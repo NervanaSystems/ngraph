@@ -656,7 +656,7 @@ namespace
 
     void op_is_Less()
     {
-        op::v0::Less node;
+        op::v1::Less node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());

@@ -58,10 +58,10 @@ void op::v0::Minimum::generate_adjoints(autodiff::Adjoints& adjoints, const Outp
     auto y = input_value(1);
 
     adjoints.add_delta(x,
-                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Less>(x, y),
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Less>(x, y),
                                                             x.get_element_type()));
     adjoints.add_delta(y,
-                       delta * make_shared<op::v0::Convert>(make_shared<op::v0::Less>(y, x),
+                       delta * make_shared<op::v0::Convert>(make_shared<op::v1::Less>(y, x),
                                                             y.get_element_type()));
 }
 

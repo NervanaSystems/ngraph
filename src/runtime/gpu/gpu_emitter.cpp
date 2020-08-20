@@ -520,7 +520,7 @@ std::string runtime::gpu::GPU_Emitter::emit_GreaterEq(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Less(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Less>(
+    return emit_elementwise<ngraph::op::v1::Less>(
         compiled_function, function_name, node, args, out);
 }
 

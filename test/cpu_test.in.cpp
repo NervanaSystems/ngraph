@@ -1245,7 +1245,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto not_equal = make_shared<op::v0::NotEqual>(g, h);
     auto greater = make_shared<op::v1::Greater>(g, h);
     auto greater_eq = make_shared<op::v1::GreaterEqual>(g, h);
-    auto less = make_shared<op::v0::Less>(g, h);
+    auto less = make_shared<op::v1::Less>(g, h);
     auto less_eq = make_shared<op::v0::LessEq>(g, h);
     auto logical_and = make_shared<op::v1::LogicalAnd>(i, j);
     auto logical_or = make_shared<op::v1::LogicalOr>(i, j);
@@ -1288,7 +1288,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::v0::NotEqual>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Greater>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::GreaterEqual>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Less>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Less>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::LessEq>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::LogicalAnd>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::LogicalOr>(func), 0);

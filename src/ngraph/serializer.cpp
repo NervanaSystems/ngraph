@@ -52,6 +52,7 @@ namespace
     NGRAPH_OP(GetOutputElement, 0)                                                                 \
     NGRAPH_OP(Greater, 0)                                                                          \
     NGRAPH_OP(GreaterEq, 0)                                                                        \
+    NGRAPH_OP(Less, 0)                                                                             \
     NGRAPH_OP(Multiply, 0)                                                                         \
     NGRAPH_OP(Not, 0)                                                                              \
     NGRAPH_OP(Or, 0)                                                                               \
@@ -1659,7 +1660,13 @@ shared_ptr<Node> JSONDeserializer::deserialize_node(json node_js)
         }
         case OP_TYPEID::Less_v0:
         {
-            node = make_shared<op::v0::Less>(
+            node = make_shared<op::v1::Less>(
+                args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
+            break;
+        }
+        case OP_TYPEID::Less_v1:
+        {
+            node = make_shared<op::v1::Less>(
                 args[0], args[1], read_auto_broadcast(node_js, "auto_broadcast"));
             break;
         }
@@ -3131,10 +3138,10 @@ json JSONSerializer::serialize_node(const Node& n)
         node["begin_norm_axis"] = tmp->get_begin_norm_axis();
         break;
     }
-    case OP_TYPEID::Less_v0:
+    case OP_TYPEID::Less_v1:
     {
         const op::util::BinaryElementwiseComparison* tmp = nullptr;
-        tmp = static_cast<const op::v0::Less*>(&n);
+        tmp = static_cast<const op::v1::Less*>(&n);
         if (tmp != nullptr && tmp->get_autob().m_type != op::AutoBroadcastType::NONE)
         {
             node["auto_broadcast"] = write_auto_broadcast(tmp->get_autob());

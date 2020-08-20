@@ -219,7 +219,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Less>
+            struct CudaOpMap<ngraph::op::v1::Less>
             {
                 static constexpr const char* op = "less";
                 static constexpr const char* math_kernel = "x0 < x1";

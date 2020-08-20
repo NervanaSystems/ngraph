@@ -212,7 +212,7 @@ TEST(copy, less_eq)
 
 TEST(copy, less)
 {
-    ASSERT_TRUE(check_binary<op::v0::Less>());
+    ASSERT_TRUE(check_binary<op::v1::Less>());
 }
 
 TEST(copy, log)

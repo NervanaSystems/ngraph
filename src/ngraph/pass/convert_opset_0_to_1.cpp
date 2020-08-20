@@ -339,9 +339,9 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Less> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Less> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
+        return op_cast_binary_elementwise_node<op::v1::Less, op::v1::Less>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::LessEq> node)
