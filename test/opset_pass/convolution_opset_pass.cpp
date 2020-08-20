@@ -2,9 +2,9 @@
 #include "gtest/gtest.h"
 
 #include "ngraph/ngraph.hpp"
+#include "ngraph/pass/convert_opset_0_to_1.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_upgrade.hpp"
 #include "util/test_control.hpp"
 #include "util/type_prop.hpp"
 
@@ -28,7 +28,7 @@ TEST(opset_transform, opset1_convolution_upgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filters});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::ConvertOpset0To1>();
     pass_manager.run_passes(f);
 
     auto convolution_s1_result = f->get_results().at(0);
@@ -60,7 +60,7 @@ TEST(opset_transform, opset1_convolution_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, filters});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     auto conv_s0_result = f->get_results().at(0);
@@ -92,7 +92,7 @@ TEST(opset_transform, opset1_convolution_backprop_data_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     auto conv_s0_result = f->get_results().at(0);
@@ -123,7 +123,7 @@ TEST(opset_transform, opset1_convolution_backprop_filters_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{data, delta});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     auto conv_s0_result = f->get_results().at(0);
@@ -157,7 +157,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_downgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset0Downgrade>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     pass_manager.run_passes(f);
 
     auto group_conv_backprop_s0_result = f->get_results().at(0);
@@ -191,7 +191,7 @@ TEST(opset_transform, opset1_group_convolution_backprop_data_upgrade_pass)
     auto f = make_shared<Function>(ResultVector{result}, ParameterVector{filters, delta});
 
     ngraph::pass::Manager pass_manager;
-    pass_manager.register_pass<pass::Opset1Upgrade>();
+    pass_manager.register_pass<pass::ConvertOpset0To1>();
     pass_manager.run_passes(f);
 
     auto group_conv_backprop_s1_result = f->get_results().at(0);

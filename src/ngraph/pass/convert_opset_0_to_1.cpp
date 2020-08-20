@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset1_upgrade.hpp"
 
 #include <functional>
 #include <iterator>
@@ -24,6 +23,7 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops.hpp"
+#include "ngraph/pass/convert_opset_0_to_1.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -667,7 +667,7 @@ namespace
     }
 }
 
-bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
+bool pass::ConvertOpset0To1::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
     auto& dispatch_map = get_dispatch_map();

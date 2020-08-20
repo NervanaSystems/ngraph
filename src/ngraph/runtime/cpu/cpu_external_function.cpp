@@ -146,6 +146,8 @@
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
+#include "ngraph/pass/convert_opset_3_to_1.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -156,8 +158,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
@@ -1288,8 +1288,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
-    REGISTER_KNOBBED_PASS(Opset1Downgrade, true, ngraph::pass)
-    REGISTER_KNOBBED_PASS(Opset0Downgrade, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(ConvertOpset3To1, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(ConvertOpset1To0, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)

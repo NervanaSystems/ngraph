@@ -25,8 +25,8 @@
 #include "ngraph/node.hpp"
 #include "ngraph/op/util/attr_types.hpp"
 #include "ngraph/ops.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
 #include "ngraph/pass/implicit_broadcast_elimination.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
 #include "ngraph/provenance.hpp"
 #include "ngraph/slice_plan.hpp"
 #include "ngraph/type.hpp"
@@ -878,7 +878,7 @@ namespace
     }
 }
 
-bool pass::Opset0Downgrade::run_on_node(shared_ptr<Node> node)
+bool pass::ConvertOpset1To0::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
     auto& dispatch_map = get_dispatch_map();
