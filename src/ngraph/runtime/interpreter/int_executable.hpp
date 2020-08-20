@@ -1523,19 +1523,6 @@ protected:
 
             break;
         }
-        case OP_TYPEID::Recv_v0:
-        {
-            size_t element_count = shape_size(node.get_output_shape(0));
-            size_t memSize = element_count * sizeof(T);
-            const auto* op = static_cast<const ngraph::op::v0::Recv*>(&node);
-            int src_id = op->get_src_id();
-
-            reference::recv<T>(
-                args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
-
-            memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
-            break;
-        }
         case OP_TYPEID::RandomUniform_v0:
         {
             const op::v0::RandomUniform* ru = static_cast<const op::v0::RandomUniform*>(&node);
@@ -1568,6 +1555,19 @@ protected:
             }
             break;
         }
+        case OP_TYPEID::Recv_v0:
+        {
+            size_t element_count = shape_size(node.get_output_shape(0));
+            size_t memSize = element_count * sizeof(T);
+            const auto* op = static_cast<const ngraph::op::v0::Recv*>(&node);
+            int src_id = op->get_src_id();
+
+            reference::recv<T>(
+                args[0]->get_data_ptr<T>(), node.get_input_element_type(0), element_count, src_id);
+
+            memcpy(out[0]->get_data_ptr<T>(), args[0]->get_data_ptr<T>(), memSize);
+            break;
+        }
         case OP_TYPEID::Range_v0:
         {
             const op::v0::Range* op = static_cast<const op::v0::Range*>(&node);
@@ -1576,6 +1576,47 @@ protected:
                                 out[0]->get_shape(),
                                 out[0]->get_data_ptr<T>());
             break;
+        }
+        case OP_TYPEID::ReduceLogicalAnd_v1: { throw runtime_error("Not implemented");
+        }
+        case OP_TYPEID::ReduceLogicalOr_v1: { throw runtime_error("Not implemented");
+        }
+        case OP_TYPEID::ReduceMax_v1:
+        {
+            const op::v1::ReduceMax* op = static_cast<const op::v1::ReduceMax*>(&node);
+            vector<int64_t> axes = read_i64_tensor(args[1].get());
+            vector<size_t> tmp(axes.begin(), axes.end());
+            AxisSet reduction_axes(tmp);
+            Shape input_shape = args[0]->get_shape();
+            vector<size_t> output_tmp;
+            size_t index = 0;
+            for (auto dim : input_shape)
+            {
+                if (reduction_axes.find(index) == reduction_axes.end())
+                {
+                    output_tmp.push_back(dim);
+                }
+                else if (op->get_keep_dims())
+                {
+                    output_tmp.push_back(1);
+                }
+                index++;
+            }
+            PartialShape output_shape(output_tmp);
+            out[0]->set_partial_shape(output_shape);
+            reference::max<T>(args[0]->get_data_ptr<const T>(),
+                              out[0]->get_data_ptr<T>(),
+                              input_shape,
+                              reduction_axes);
+            break;
+        }
+        case OP_TYPEID::ReduceMean_v1: { throw runtime_error("Not implemented");
+        }
+        case OP_TYPEID::ReduceMin_v1: { throw runtime_error("Not implemented");
+        }
+        case OP_TYPEID::ReduceProd_v1: { throw runtime_error("Not implemented");
+        }
+        case OP_TYPEID::ReduceSum_v1: { throw runtime_error("Not implemented");
         }
         case OP_TYPEID::Relu_v0:
         {
@@ -1640,12 +1681,7 @@ protected:
                     pattern[i] = input_shape[i];
                 }
             }
-            Shape output_shape;
-            for (int64_t d : pattern)
-            {
-                output_shape.push_back(d);
-            }
-
+            Shape output_shape(pattern.begin(), pattern.end());
             AxisVector input_order = get_default_order(input_shape.size());
             reference::reshape(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
@@ -2003,13 +2039,6 @@ protected:
         case OP_TYPEID::PriorBoxClustered_v0:
         case OP_TYPEID::Proposal_v0:
         case OP_TYPEID::PSROIPooling_v0:
-        case OP_TYPEID::ReduceLogicalAnd_v1:
-        case OP_TYPEID::ReduceLogicalOr_v1:
-        case OP_TYPEID::ReduceMax_v1:
-        case OP_TYPEID::ReduceMean_v1:
-        case OP_TYPEID::ReduceMin_v1:
-        case OP_TYPEID::ReduceProd_v1:
-        case OP_TYPEID::ReduceSum_v1:
         case OP_TYPEID::RegionYolo_v0:
         case OP_TYPEID::ReorgYolo_v0:
         case OP_TYPEID::Reverse_v1:
