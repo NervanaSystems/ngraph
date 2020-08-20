@@ -203,7 +203,7 @@ dyn_convolution_backprop_filter
 dyn_generate_mask
 dyn_group_convolution_backprop_data
 dyn_group_convolution_backprop_filters
-#dyn_slice_0
+dyn_slice_0
 dyn_slice_4
 dyn_slice_5
 dyn_slice_6

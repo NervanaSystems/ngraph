@@ -99,17 +99,12 @@ def print_new_mask_axes(slices):
     slices = make_iterable(slices)
 
     mask_strs = []
+    i = 0
 
-    new_axis_needed = False
     for sl in slices:
         if sl is None:
-            new_axis_needed = True
-
-    if new_axis_needed:
-        i = 0
-        for sl in slices:
             mask_strs.append(str(i))
-            i += 1
+        i += 1
     return ','.join(mask_strs)
 
 def print_shrink_mask_axes(slices):
