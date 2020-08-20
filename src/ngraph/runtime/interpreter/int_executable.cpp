@@ -21,13 +21,13 @@
 #include "ngraph/except.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/pass/assign_layout.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
+#include "ngraph/pass/convert_opset_3_to_1.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/fused_op_decomposition.hpp"
 #include "ngraph/pass/like_replacement.hpp"
 #include "ngraph/pass/liveness.hpp"
 #include "ngraph/pass/manager.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/runtime/backend_manager.hpp"
 #include "ngraph/serializer.hpp"
 #include "ngraph/util.hpp"
@@ -90,8 +90,8 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
-    // pass_manager.register_pass<pass::Opset1Downgrade>();
-    // pass_manager.register_pass<pass::Opset0Downgrade>();
+    // pass_manager.register_pass<pass::ConvertOpset3To1>();
+    // pass_manager.register_pass<pass::ConvertOpset1To0>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     // pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     // pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();

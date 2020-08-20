@@ -59,6 +59,13 @@ CPU.cpu_fusion_fuse_dropout
 
 CPU.onnx_dyn_shapes_slice_10_3d_input_12_axes
 
+CPU.dynamic_abc
+CPU.dynamic_axpy
+CPU.dynamic_to_vector
+CPU.dynamic_reverse_shape
+CPU.dynamic_dim_add
+CPU.dynamic_rank_add
+
 ################################################################################
 # MLIR
 ################################################################################
@@ -136,6 +143,13 @@ CPU_MLIR.debugger_delete_breakpoint
 CPU_MLIR.debugger_while_stepping
 CPU_MLIR.debugger_resume
 
+CPU_MLIR.dynamic_abc
+CPU_MLIR.dynamic_axpy
+CPU_MLIR.dynamic_to_vector
+CPU_MLIR.dynamic_reverse_shape
+CPU_MLIR.dynamic_dim_add
+CPU_MLIR.dynamic_rank_add
+
 ################################################################################
 # CODEGEN
 ################################################################################
@@ -190,3 +204,10 @@ CPU_CODEGEN.debugger_stepping
 CPU_CODEGEN.debugger_delete_breakpoint
 CPU_CODEGEN.debugger_while_stepping
 CPU_CODEGEN.debugger_resume
+
+CPU_CODEGEN.dynamic_abc
+CPU_CODEGEN.dynamic_axpy
+CPU_CODEGEN.dynamic_to_vector
+CPU_CODEGEN.dynamic_reverse_shape
+CPU_CODEGEN.dynamic_dim_add
+CPU_CODEGEN.dynamic_rank_add

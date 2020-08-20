@@ -580,12 +580,12 @@ set (SRC
     pass/memory_visualize.hpp
     pass/nop_elimination.cpp
     pass/nop_elimination.hpp
-    pass/opset0_downgrade.cpp
-    pass/opset0_downgrade.hpp
-    pass/opset1_downgrade.cpp
-    pass/opset1_downgrade.hpp
-    pass/opset1_upgrade.cpp
-    pass/opset1_upgrade.hpp
+    pass/convert_opset_0_to_1.cpp
+    pass/convert_opset_0_to_1.hpp
+    pass/convert_opset_1_to_0.cpp
+    pass/convert_opset_1_to_0.hpp
+    pass/convert_opset_3_to_1.cpp
+    pass/convert_opset_3_to_1.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/pass_util.cpp
@@ -699,7 +699,6 @@ set(SRC ${SRC}
 set(OPSETS
     opset/opset0_tbl.hpp
     opset/opset1_tbl.hpp
-    opset/opset2_tbl.hpp
     opset/opset3_tbl.hpp
     opset/opset_orphans_tbl.hpp
 )
