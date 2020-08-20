@@ -109,10 +109,14 @@ TEST(algebraic_simplification, add_v1_types_shapes)
             auto b = make_shared<op::Parameter>(type, shape);
             auto c = make_shared<op::Parameter>(type, shape);
             auto iconst0 = ngraph::make_constant_from_string("0", type, shape);
-            auto add_a_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(a, iconst0));
-            auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, iconst0);
-            auto add_b_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(b, iconst0));
-            auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, iconst0);
+            auto add_a_0 = make_shared<op::Abs>(
+                make_shared<op::v1::Add>(a, iconst0, op::AutoBroadcastType::NUMPY));
+            auto add_a_0_0 =
+                make_shared<op::v1::Add>(add_a_0, iconst0, op::AutoBroadcastType::NUMPY);
+            auto add_b_0 = make_shared<op::Abs>(
+                make_shared<op::v1::Add>(b, iconst0, op::AutoBroadcastType::NUMPY));
+            auto add_b_0_0 =
+                make_shared<op::v1::Add>(add_b_0, iconst0, op::AutoBroadcastType::NUMPY);
 
             auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, add_a_0_0, c, add_b_0_0},
                                                 ParameterVector{a, b, c});
@@ -178,10 +182,14 @@ TEST(algebraic_simplification, add_v1_broadcast_v1)
     auto iconst0 = ngraph::make_zero(element::i32, Shape{});
     auto target_shape = op::Constant::create<int64_t>(element::i64, Shape{2}, {2, 2});
     auto const_broadcast = make_shared<op::v1::Broadcast>(iconst0, target_shape);
-    auto add_a_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(a, const_broadcast));
-    auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, const_broadcast);
-    auto add_b_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(b, const_broadcast));
-    auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, const_broadcast);
+    auto add_a_0 = make_shared<op::Abs>(
+        make_shared<op::v1::Add>(a, const_broadcast, op::AutoBroadcastType::NUMPY));
+    auto add_a_0_0 =
+        make_shared<op::v1::Add>(add_a_0, const_broadcast, op::AutoBroadcastType::NUMPY);
+    auto add_b_0 = make_shared<op::Abs>(
+        make_shared<op::v1::Add>(b, const_broadcast, op::AutoBroadcastType::NUMPY));
+    auto add_b_0_0 =
+        make_shared<op::v1::Add>(add_b_0, const_broadcast, op::AutoBroadcastType::NUMPY);
 
     auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, add_a_0_0, c, add_b_0_0},
                                         ParameterVector{a, b, c});
@@ -362,10 +370,14 @@ TEST(algebraic_simplification, zero_plus_zero_commutativity_v1)
     auto b = make_shared<op::Parameter>(type, shape);
     auto c = make_shared<op::Parameter>(type, shape);
     auto iconst0 = ngraph::make_constant_from_string("0", type, shape);
-    auto add_a_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(iconst0, iconst0));
-    auto add_a_0_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(iconst0, iconst0));
-    auto add_b_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(iconst0, b));
-    auto add_b_0_0 = make_shared<op::Abs>(make_shared<op::v1::Add>(iconst0, b));
+    auto add_a_0 = make_shared<op::Abs>(
+        make_shared<op::v1::Add>(iconst0, iconst0, op::AutoBroadcastType::NUMPY));
+    auto add_a_0_0 = make_shared<op::Abs>(
+        make_shared<op::v1::Add>(iconst0, iconst0, op::AutoBroadcastType::NUMPY));
+    auto add_b_0 =
+        make_shared<op::Abs>(make_shared<op::v1::Add>(iconst0, b, op::AutoBroadcastType::NUMPY));
+    auto add_b_0_0 =
+        make_shared<op::Abs>(make_shared<op::v1::Add>(iconst0, b, op::AutoBroadcastType::NUMPY));
 
     auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, add_a_0_0, c, add_b_0_0},
                                         ParameterVector{a, b, c});
@@ -462,10 +474,10 @@ TEST(algebraic_simplification, add_negative_tests_v1)
     auto c = make_shared<op::Parameter>(type, shape);
     auto abs_a = make_shared<op::Abs>(a);
     auto iconst2 = ngraph::make_constant_from_string("2", type, shape);
-    auto add_a_0 = make_shared<op::v1::Add>(a, iconst2);
-    auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, iconst2);
-    auto add_b_0 = make_shared<op::v1::Add>(b, abs_a);
-    auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, abs_a);
+    auto add_a_0 = make_shared<op::v1::Add>(a, iconst2, op::AutoBroadcastType::NUMPY);
+    auto add_a_0_0 = make_shared<op::v1::Add>(add_a_0, iconst2, op::AutoBroadcastType::NUMPY);
+    auto add_b_0 = make_shared<op::v1::Add>(b, abs_a, op::AutoBroadcastType::NUMPY);
+    auto add_b_0_0 = make_shared<op::v1::Add>(add_b_0, abs_a, op::AutoBroadcastType::NUMPY);
 
     auto f = std::make_shared<Function>(ngraph::OutputVector{a, b, add_a_0_0, c, add_b_0_0},
                                         ParameterVector{a, b, c});
