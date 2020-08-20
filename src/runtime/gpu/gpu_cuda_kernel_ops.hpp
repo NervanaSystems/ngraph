@@ -198,7 +198,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::NotEqual>
+            struct CudaOpMap<ngraph::op::v1::NotEqual>
             {
                 static constexpr const char* op = "not_equal";
                 static constexpr const char* math_kernel = "x0 != x1";

@@ -513,7 +513,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::NotEqual> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
+        return op_cast_binary_elementwise_node<op::v1::NotEqual, op::v1::NotEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::OneHot> node)

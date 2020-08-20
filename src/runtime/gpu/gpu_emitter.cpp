@@ -686,7 +686,7 @@ std::string runtime::gpu::GPU_Emitter::emit_LogicalNot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_NotEqual(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::NotEqual>(
+    return emit_elementwise<ngraph::op::v1::NotEqual>(
         compiled_function, function_name, node, args, out);
 }
 

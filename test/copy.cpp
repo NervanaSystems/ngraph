@@ -242,7 +242,7 @@ TEST(copy, negative)
 
 TEST(copy, not_equal)
 {
-    ASSERT_TRUE(check_binary<op::v0::NotEqual>());
+    ASSERT_TRUE(check_binary<op::v1::NotEqual>());
 }
 
 TEST(copy, parameter)

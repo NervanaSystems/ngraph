@@ -322,7 +322,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    make_binary_empty_test<op::v0::NotEqual>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::NotEqual>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_power)

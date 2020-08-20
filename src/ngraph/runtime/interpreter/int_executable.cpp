@@ -214,7 +214,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
         }
         else if (is_type<op::v1::Equal>(op) || is_type<op::v1::Greater>(op) ||
                  is_type<op::v1::GreaterEqual>(op) || is_type<op::v1::Less>(op) ||
-                 is_type<op::v1::LessEqual>(op) || is_type<op::v0::NotEqual>(op))
+                 is_type<op::v1::LessEqual>(op) || is_type<op::v1::NotEqual>(op))
         {
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs

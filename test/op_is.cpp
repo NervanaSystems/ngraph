@@ -845,7 +845,7 @@ namespace
 
     void op_is_NotEqual()
     {
-        op::v0::NotEqual node;
+        op::v1::NotEqual node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());

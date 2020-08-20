@@ -380,7 +380,7 @@ mlir::Operation*
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::NotEqual>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::NotEqual>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGNotEqOp>(ngNode);

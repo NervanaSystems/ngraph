@@ -126,22 +126,6 @@ TEST(opset_transform, opset0_divide_downgrade_pass)
     EXPECT_EQ(divide_v1_node->get_output_shape(0), (Shape{1, 3, 2}));
 }
 
-TEST(opset_transform, opset0_equal_downgrade_pass)
-{
-    test_opset0_comparison_downgrade_pass<op::v1::Equal, op::v1::Equal>();
-}
-
-TEST(opset_transform, opset0_less_downgrade_pass)
-{
-    test_opset0_comparison_downgrade_pass<op::v1::Less, op::v1::Less>();
-}
-
-TEST(opset_transform, opset0_less_eq_downgrade_pass)
-{
-    test_type_prop_opset0_downgrade_pass<op::v1::LessEqual, op::v1::LessEqual>(
-        element::boolean, element::f32, "LessEq");
-}
-
 TEST(opset_transform, opset0_maximum_downgrade_pass)
 {
     test_opset0_arithmetic_downgrade_pass<op::v0::Maximum, op::v1::Maximum>();
@@ -160,16 +144,6 @@ TEST(opset_transform, opset0_minimum_downgrade_pass)
 TEST(opset_transform, opset1_minimum_upgrade_pass)
 {
     test_opset1_arithmetic_upgrade_pass<op::v0::Minimum, op::v1::Minimum>();
-}
-
-TEST(opset_transform, opset0_not_equal_downgrade_pass)
-{
-    test_opset0_comparison_downgrade_pass<op::v0::NotEqual, op::v1::NotEqual>();
-}
-
-TEST(opset_transform, opset1_not_equal_upgrade_pass)
-{
-    test_opset1_comparison_upgrade_pass<op::v0::NotEqual, op::v1::NotEqual>();
 }
 
 TEST(opset_transform, opset0_power_downgrade_pass)

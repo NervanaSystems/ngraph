@@ -173,7 +173,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     // ignore_mask
     auto mask_constant = ngraph::op::v0::Constant::create(element::i64, Shape{41, 1}, {1});
     auto mask_label = std::make_shared<pattern::op::Label>(mask_constant);
-    auto not_equal = std::make_shared<ngraph::op::v0::NotEqual>(labels_y, mask_label);
+    auto not_equal = std::make_shared<ngraph::op::v1::NotEqual>(labels_y, mask_label);
     auto convert = std::make_shared<ngraph::op::v0::Convert>(not_equal, element::f64);
     auto reshape = std::make_shared<ngraph::op::v0::Reshape>(
         convert, AxisVector{0, 1}, Shape{convert->get_output_shape(0).at(0)});

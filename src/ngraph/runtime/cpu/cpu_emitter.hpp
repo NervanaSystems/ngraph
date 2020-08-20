@@ -150,7 +150,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Negative);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::NotEqual);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::NotEqual);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Select);
             template <>

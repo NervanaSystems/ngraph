@@ -113,7 +113,7 @@ static std::shared_ptr<ngraph::Node>
 {
     auto mask_constant = ngraph::op::v0::Constant::create(
         labels.get_element_type(), labels.get_shape(), {ignore_index});
-    auto not_equal = std::make_shared<ngraph::op::v0::NotEqual>(labels, mask_constant);
+    auto not_equal = std::make_shared<ngraph::op::v1::NotEqual>(labels, mask_constant);
     auto convert = std::make_shared<ngraph::op::v0::Convert>(not_equal, input.get_element_type());
     return convert;
 }

@@ -1242,7 +1242,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto relu = make_shared<op::v0::Relu>(e);
     auto sign = make_shared<op::v0::Sign>(f);
     auto equal = make_shared<op::v1::Equal>(g, h);
-    auto not_equal = make_shared<op::v0::NotEqual>(g, h);
+    auto not_equal = make_shared<op::v1::NotEqual>(g, h);
     auto greater = make_shared<op::v1::Greater>(g, h);
     auto greater_eq = make_shared<op::v1::GreaterEqual>(g, h);
     auto less = make_shared<op::v1::Less>(g, h);
@@ -1285,7 +1285,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::v0::Relu>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Sign>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Equal>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::NotEqual>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::NotEqual>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Greater>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::GreaterEqual>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Less>(func), 0);

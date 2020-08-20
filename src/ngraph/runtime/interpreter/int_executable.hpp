@@ -1133,9 +1133,9 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::NotEqual_v0:
+        case OP_TYPEID::NotEqual_v1:
         {
-            auto not_equal = static_cast<const op::v0::NotEqual*>(&node);
+            auto not_equal = static_cast<const op::v1::NotEqual*>(&node);
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
@@ -1872,7 +1872,6 @@ protected:
         case OP_TYPEID::NonMaxSuppression_v3:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NormalizeL2_v0:
-        case OP_TYPEID::NotEqual_v1:
         case OP_TYPEID::OneHot_v1:
         case OP_TYPEID::Pad_v1:
         case OP_TYPEID::PartialSlice_v0:
