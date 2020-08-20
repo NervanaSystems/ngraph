@@ -365,9 +365,8 @@ mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::GreaterEqual>
 }
 
 template <>
-mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::v0::LessEq>(NgDialectConversionPass& NgDialectObj,
-                                                              const ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::LessEqual>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGLessEqOp>(ngNode);
 }

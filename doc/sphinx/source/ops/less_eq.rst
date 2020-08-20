@@ -1,4 +1,4 @@
-.. less_eq.rst:
+.. less_equal.rst:
 
 ######
 LessEq
@@ -48,6 +48,6 @@ Mathematical Definition
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::LessEq
+.. doxygenclass:: ngraph::op::v1::LessEqual
    :project: ngraph
    :members:

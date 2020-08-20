@@ -169,7 +169,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::v0::Parameter>(element::f32, shape);
     auto B = make_shared<op::v0::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::LessEq>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::LessEqual>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -190,7 +190,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_int32)
     Shape shape{2, 2};
     auto A = make_shared<op::v0::Parameter>(element::i32, shape);
     auto B = make_shared<op::v0::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::LessEq>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::LessEqual>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -211,7 +211,7 @@ NGRAPH_TEST(${BACKEND_NAME}, lesseq_bool)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::v0::Parameter>(element::boolean, shape);
     auto B = make_shared<op::v0::Parameter>(element::boolean, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::LessEq>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::LessEqual>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

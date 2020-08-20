@@ -45,7 +45,7 @@ Some operations are experimental.
    * :doc:`floor`
    * :doc:`greater_eq`
    * :doc:`greater`
-   * :doc:`less_eq`
+   * :doc:`less_equal`
    * :doc:`less`
    * :doc:`log`
    * :doc:`max`
@@ -125,7 +125,7 @@ Some operations are experimental.
    floor.rst
    greater_eq.rst
    greater.rst
-   less_eq.rst
+   less_equal.rst
    less.rst
    log.rst
    max.rst

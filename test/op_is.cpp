@@ -663,9 +663,9 @@ namespace
         EXPECT_FALSE(node.is_binary_elementwise_logical());
     }
 
-    void op_is_LessEq()
+    void op_is_LessEqual()
     {
-        op::v0::LessEq node;
+        op::v1::LessEqual node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());

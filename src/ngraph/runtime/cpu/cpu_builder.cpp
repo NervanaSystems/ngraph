@@ -43,7 +43,7 @@
 #include "ngraph/op/greater.hpp"
 #include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/less_equal.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/logical_and.hpp"
 #include "ngraph/op/logical_not.hpp"
@@ -89,7 +89,7 @@
 #include "ngraph/runtime/cpu/kernel/greater.hpp"
 #include "ngraph/runtime/cpu/kernel/greater_eq.hpp"
 #include "ngraph/runtime/cpu/kernel/less.hpp"
-#include "ngraph/runtime/cpu/kernel/less_eq.hpp"
+#include "ngraph/runtime/cpu/kernel/less_equal.hpp"
 #include "ngraph/runtime/cpu/kernel/log.hpp"
 #include "ngraph/runtime/cpu/kernel/maximum.hpp"
 #include "ngraph/runtime/cpu/kernel/minimum.hpp"
@@ -199,9 +199,9 @@ namespace ngraph
             }
 
             template <>
-            void Builder::BUILDER_DECL(ngraph::op::v0::LessEq)
+            void Builder::BUILDER_DECL(ngraph::op::v1::LessEqual)
             {
-                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::less_eq);
+                BUILD_BINARY_ELEMWISE_FUNCTOR(runtime::cpu::kernel::less_equal);
             }
 
             template <>
@@ -594,9 +594,9 @@ namespace ngraph
             }
 
             template <>
-            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v0::LessEq)
+            NodeExecutorTy Builder::BUILDER_CF_DECL(ngraph::op::v1::LessEqual)
             {
-                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::less_eq);
+                BUILD_BINARY_ELEMWISE_CF_FUNCTOR(runtime::cpu::kernel::less_equal);
             }
 
             template <>
@@ -702,7 +702,7 @@ namespace ngraph
                 REGISTER_OP_BUILDER(ngraph::op::v1::Greater);
                 REGISTER_OP_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_OP_BUILDER(ngraph::op::v1::Less);
-                REGISTER_OP_BUILDER(ngraph::op::v0::LessEq);
+                REGISTER_OP_BUILDER(ngraph::op::v1::LessEqual);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Maximum);
                 REGISTER_OP_BUILDER(ngraph::op::v0::Minimum);
                 REGISTER_OP_BUILDER(ngraph::op::v1::LogicalAnd);
@@ -726,7 +726,7 @@ namespace ngraph
                 REGISTER_CF_BUILDER(ngraph::op::v1::Greater);
                 REGISTER_CF_BUILDER(ngraph::op::v1::GreaterEqual);
                 REGISTER_CF_BUILDER(ngraph::op::v1::Less);
-                REGISTER_CF_BUILDER(ngraph::op::v0::LessEq);
+                REGISTER_CF_BUILDER(ngraph::op::v1::LessEqual);
                 REGISTER_CF_BUILDER(ngraph::op::v1::LogicalAnd);
                 REGISTER_CF_BUILDER(ngraph::op::v1::LogicalOr);
                 REGISTER_CF_BUILDER(ngraph::op::v1::LogicalXor);

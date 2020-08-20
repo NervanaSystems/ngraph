@@ -442,7 +442,7 @@ namespace
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::LessEqual> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
+        return op_cast_binary_elementwise_node<op::v1::LessEqual, op::v1::LessEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)

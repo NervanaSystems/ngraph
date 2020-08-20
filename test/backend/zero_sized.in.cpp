@@ -302,7 +302,7 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_less)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    make_binary_empty_test<op::v0::LessEq>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::LessEqual>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_maximum)

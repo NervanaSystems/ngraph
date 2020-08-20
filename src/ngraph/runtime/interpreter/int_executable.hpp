@@ -69,7 +69,7 @@
 #include "ngraph/runtime/reference/greater.hpp"
 #include "ngraph/runtime/reference/greater_equal.hpp"
 #include "ngraph/runtime/reference/less.hpp"
-#include "ngraph/runtime/reference/less_eq.hpp"
+#include "ngraph/runtime/reference/less_equal.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/matmul.hpp"
@@ -961,26 +961,15 @@ protected:
                                less->get_autob());
             break;
         }
-        case OP_TYPEID::LessEq_v0:
-        {
-            auto less_eq = static_cast<const op::v0::LessEq*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
-            break;
-        }
         case OP_TYPEID::LessEqual_v1:
         {
-            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
+            auto less_equal = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_equal<T>(args[0]->get_data_ptr<const T>(),
+                                     args[1]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<char>(),
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     less_equal->get_autob());
             break;
         }
         case OP_TYPEID::Log_v0:

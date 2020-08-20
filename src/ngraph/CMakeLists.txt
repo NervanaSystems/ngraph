@@ -284,8 +284,8 @@ set (SRC
     op/interpolate.hpp
     op/layer_norm.cpp
     op/layer_norm.hpp
-    op/less_eq.cpp
-    op/less_eq.hpp
+    op/less_equal.cpp
+    op/less_equal.hpp
     op/less.cpp
     op/less.hpp
     op/log.cpp

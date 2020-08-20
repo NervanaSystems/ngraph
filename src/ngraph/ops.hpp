@@ -98,7 +98,7 @@
 #include "ngraph/op/interpolate.hpp"
 #include "ngraph/op/layer_norm.hpp"
 #include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/less_equal.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/logical_and.hpp"
 #include "ngraph/op/logical_not.hpp"

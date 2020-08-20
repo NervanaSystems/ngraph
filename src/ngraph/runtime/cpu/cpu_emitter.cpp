@@ -1269,7 +1269,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::LessEq)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LessEqual)
             {
                 (void)external_function;
                 (void)node;

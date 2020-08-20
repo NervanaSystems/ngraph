@@ -138,8 +138,8 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
                                                         {1, 0, 0, 1, 1, 0});
     check_auto_bcast<op::v1::Less, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                   {0, 1, 1, 0, 0, 1});
-    check_auto_bcast<op::v0::LessEq, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                    {1, 1, 1, 0, 1, 1});
+    check_auto_bcast<op::v1::LessEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                       {1, 1, 1, 0, 1, 1});
     check_auto_bcast<op::v0::NotEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                       {0, 1, 1, 1, 0, 1});
 }
@@ -174,7 +174,7 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 0, 0, 1, 1, 0}, autob);
     check_auto_bcast<op::v1::Less, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 0, 0, 1}, autob);
-    check_auto_bcast<op::v0::LessEq, uint8_t, char>(
+    check_auto_bcast<op::v1::LessEqual, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 1, 1, 0, 1, 1}, autob);
     check_auto_bcast<op::v0::NotEqual, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 1, 0, 1}, autob);

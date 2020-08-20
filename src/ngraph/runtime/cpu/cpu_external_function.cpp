@@ -93,7 +93,7 @@
 #include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/less_equal.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/logical_and.hpp"
 #include "ngraph/op/logical_not.hpp"
@@ -334,7 +334,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v1::Greater), &runtime::cpu::CPU_Emitter::emit<op::v1::Greater>},
     {TI(ngraph::op::v1::GreaterEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::GreaterEqual>},
     {TI(ngraph::op::v1::Less), &runtime::cpu::CPU_Emitter::emit<op::v1::Less>},
-    {TI(ngraph::op::v0::LessEq), &runtime::cpu::CPU_Emitter::emit<op::v0::LessEq>},
+    {TI(ngraph::op::v1::LessEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::LessEqual>},
     {TI(ngraph::op::v0::Log), &runtime::cpu::CPU_Emitter::emit<op::v0::Log>},
     {TI(ngraph::op::v0::Maximum), &runtime::cpu::CPU_Emitter::emit<op::v0::Maximum>},
     {TI(ngraph::op::v0::Minimum), &runtime::cpu::CPU_Emitter::emit<op::v0::Minimum>},

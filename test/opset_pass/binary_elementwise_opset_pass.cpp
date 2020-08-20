@@ -138,14 +138,8 @@ TEST(opset_transform, opset0_less_downgrade_pass)
 
 TEST(opset_transform, opset0_less_eq_downgrade_pass)
 {
-    test_type_prop_opset0_downgrade_pass<op::v0::LessEq, op::v1::LessEqual>(
+    test_type_prop_opset0_downgrade_pass<op::v1::LessEqual, op::v1::LessEqual>(
         element::boolean, element::f32, "LessEq");
-}
-
-TEST(opset_transform, opset1_less_eq_upgrade_pass)
-{
-    test_type_prop_opset1_upgrade_pass<op::v0::LessEq, op::v1::LessEqual>(
-        element::boolean, element::f32, "LessEqual");
 }
 
 TEST(opset_transform, opset0_maximum_downgrade_pass)

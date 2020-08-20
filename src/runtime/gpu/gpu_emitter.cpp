@@ -526,7 +526,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Less(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_LessEq(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::LessEq>(
+    return emit_elementwise<ngraph::op::v1::LessEqual>(
         compiled_function, function_name, node, args, out);
 }
 
