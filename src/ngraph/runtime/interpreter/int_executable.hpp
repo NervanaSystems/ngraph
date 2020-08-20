@@ -181,18 +181,94 @@ public:
 protected:
     INTExecutable(const std::string& model_string);
 
-    Coordinate to_coordinate(const HostTensor* tensor);
-    Strides to_strides(const HostTensor* tensor);
-
     template <typename T>
-    std::vector<T> to_vector(const HostTensor* tensor)
+    std::vector<T> as_vector(const HostTensor* tensor) const
     {
-        vector<T> result(shape_size(tensor->get_shape()));
-        tensor->read(result.data(), result.size() * sizeof(T));
+        vector<T> result;
+        switch (tensor->get_element_type())
+        {
+        case element::Type_t::i8:
+        {
+            const int8_t* p = tensor->get_data_ptr<const int8_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::i16:
+        {
+            const int16_t* p = tensor->get_data_ptr<const int16_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::i32:
+        {
+            const int32_t* p = tensor->get_data_ptr<const int32_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::i64:
+        {
+            const int64_t* p = tensor->get_data_ptr<const int64_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::u8:
+        {
+            const uint8_t* p = tensor->get_data_ptr<const uint8_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::u16:
+        {
+            const uint16_t* p = tensor->get_data_ptr<const uint16_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::u32:
+        {
+            const uint32_t* p = tensor->get_data_ptr<const uint32_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        case element::Type_t::u64:
+        {
+            const uint64_t* p = tensor->get_data_ptr<const uint64_t>();
+            for (size_t i = 0; i < tensor->get_element_count(); ++i)
+            {
+                result.push_back(static_cast<T>(p[i]));
+            }
+            break;
+        }
+        default: throw runtime_error("Unsupported type reading int64_t tensor"); break;
+        }
         return result;
     }
 
-    std::vector<int64_t> read_i64_tensor(const HostTensor* tensor);
+
+    Coordinate as_coordinate(const HostTensor* tensor) const;
+    Strides as_strides(const HostTensor* tensor) const;
+    Shape as_shape(const HostTensor* tensor) const;
+    AxisSet as_axis_set(const HostTensor* tensor) const;
 
     std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
     std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
@@ -783,19 +859,19 @@ protected:
         {
             const op::v0::DynSlice* op = static_cast<const op::v0::DynSlice*>(&node);
 
-            Coordinate lower_bounds = to_coordinate(args[1].get());
-            Coordinate upper_bounds = to_coordinate(args[2].get());
-            Strides strides = to_strides(args[3].get());
+            Coordinate lower_bounds = as_coordinate(args[1].get());
+            Coordinate upper_bounds = as_coordinate(args[2].get());
+            Strides strides = as_strides(args[3].get());
 
             NGRAPH_INFO << args[0]->get_shape();
-            NGRAPH_INFO << join(to_vector<int64_t>(args[1].get()));
-            NGRAPH_INFO << join(to_vector<int64_t>(args[2].get()));
-            NGRAPH_INFO << join(to_vector<int64_t>(args[3].get()));
+            NGRAPH_INFO << join(as_vector<int64_t>(args[1].get()));
+            NGRAPH_INFO << join(as_vector<int64_t>(args[2].get()));
+            NGRAPH_INFO << join(as_vector<int64_t>(args[3].get()));
 
             Shape output_shape = op->compute_output_shape(args[0]->get_shape(),
-                                                          to_vector<int64_t>(args[1].get()),
-                                                          to_vector<int64_t>(args[2].get()),
-                                                          to_vector<int64_t>(args[3].get()));
+                                                          as_vector<int64_t>(args[1].get()),
+                                                          as_vector<int64_t>(args[2].get()),
+                                                          as_vector<int64_t>(args[3].get()));
             NGRAPH_INFO << output_shape;
             NGRAPH_INFO << out[0]->get_partial_shape();
             out[0]->set_shape(output_shape);
@@ -1584,9 +1660,7 @@ protected:
         case OP_TYPEID::ReduceMax_v1:
         {
             const op::v1::ReduceMax* op = static_cast<const op::v1::ReduceMax*>(&node);
-            vector<int64_t> axes = read_i64_tensor(args[1].get());
-            vector<size_t> tmp(axes.begin(), axes.end());
-            AxisSet reduction_axes(tmp);
+            AxisSet reduction_axes = as_axis_set(args[1].get());
             Shape input_shape = args[0]->get_shape();
             Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
             out[0]->set_partial_shape(output_shape);
@@ -1647,7 +1721,7 @@ protected:
         {
             const op::v1::Reshape* reshape = static_cast<const op::v1::Reshape*>(&node);
             auto input_shape = args[0]->get_shape();
-            vector<int64_t> pattern = read_i64_tensor(args[1].get());
+            vector<int64_t> pattern = as_vector<int64_t>(args[1].get());
             bool special_zero = reshape->get_special_zero();
 
             for (size_t i = 0; i < pattern.size(); i++)
