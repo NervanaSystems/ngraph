@@ -81,6 +81,7 @@
 #include "ngraph/runtime/reference/max.hpp"
 #include "ngraph/runtime/reference/max_pool.hpp"
 #include "ngraph/runtime/reference/maximum.hpp"
+#include "ngraph/runtime/reference/mean.hpp"
 #include "ngraph/runtime/reference/min.hpp"
 #include "ngraph/runtime/reference/minimum.hpp"
 #include "ngraph/runtime/reference/multiply.hpp"
@@ -263,7 +264,6 @@ protected:
         }
         return result;
     }
-
 
     Coordinate as_coordinate(const HostTensor* tensor) const;
     Strides as_strides(const HostTensor* tensor) const;
@@ -1653,9 +1653,13 @@ protected:
                                 out[0]->get_data_ptr<T>());
             break;
         }
-        case OP_TYPEID::ReduceLogicalAnd_v1: { throw runtime_error("Not implemented");
+        case OP_TYPEID::ReduceLogicalAnd_v1:
+        {
+            throw runtime_error("INTERPRETER ReduceLogicalAnd_v1 Not implemented");
         }
-        case OP_TYPEID::ReduceLogicalOr_v1: { throw runtime_error("Not implemented");
+        case OP_TYPEID::ReduceLogicalOr_v1:
+        {
+            throw runtime_error("INTERPRETER ReduceLogicalOr_v1 Not implemented");
         }
         case OP_TYPEID::ReduceMax_v1:
         {
@@ -1670,13 +1674,57 @@ protected:
                               reduction_axes);
             break;
         }
-        case OP_TYPEID::ReduceMean_v1: { throw runtime_error("Not implemented");
+        case OP_TYPEID::ReduceMean_v1:
+        {
+            const op::v1::ReduceMean* op = static_cast<const op::v1::ReduceMean*>(&node);
+            AxisSet reduction_axes = as_axis_set(args[1].get());
+            Shape input_shape = args[0]->get_shape();
+            Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
+            out[0]->set_partial_shape(output_shape);
+            reference::mean<T>(args[0]->get_data_ptr<const T>(),
+                               out[0]->get_data_ptr<T>(),
+                               input_shape,
+                               reduction_axes);
+            break;
         }
-        case OP_TYPEID::ReduceMin_v1: { throw runtime_error("Not implemented");
+        case OP_TYPEID::ReduceMin_v1:
+        {
+            const op::v1::ReduceMin* op = static_cast<const op::v1::ReduceMin*>(&node);
+            AxisSet reduction_axes = as_axis_set(args[1].get());
+            Shape input_shape = args[0]->get_shape();
+            Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
+            out[0]->set_partial_shape(output_shape);
+            reference::min<T>(args[0]->get_data_ptr<const T>(),
+                              out[0]->get_data_ptr<T>(),
+                              input_shape,
+                              reduction_axes);
+            break;
         }
-        case OP_TYPEID::ReduceProd_v1: { throw runtime_error("Not implemented");
+        case OP_TYPEID::ReduceProd_v1:
+        {
+            const op::v1::ReduceProd* op = static_cast<const op::v1::ReduceProd*>(&node);
+            AxisSet reduction_axes = as_axis_set(args[1].get());
+            Shape input_shape = args[0]->get_shape();
+            Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
+            out[0]->set_partial_shape(output_shape);
+            reference::product<T>(args[0]->get_data_ptr<const T>(),
+                                  out[0]->get_data_ptr<T>(),
+                                  input_shape,
+                                  reduction_axes);
+            break;
         }
-        case OP_TYPEID::ReduceSum_v1: { throw runtime_error("Not implemented");
+        case OP_TYPEID::ReduceSum_v1:
+        {
+            const op::v1::ReduceSum* op = static_cast<const op::v1::ReduceSum*>(&node);
+            AxisSet reduction_axes = as_axis_set(args[1].get());
+            Shape input_shape = args[0]->get_shape();
+            Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
+            out[0]->set_partial_shape(output_shape);
+            reference::sum<T>(args[0]->get_data_ptr<const T>(),
+                              out[0]->get_data_ptr<T>(),
+                              input_shape,
+                              reduction_axes);
+            break;
         }
         case OP_TYPEID::Relu_v0:
         {
