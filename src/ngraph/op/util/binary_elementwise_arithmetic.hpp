@@ -65,7 +65,7 @@ namespace ngraph
 
             public:
                 void validate_and_infer_types() override;
-                bool supports_auto_broadcast() const override { return true; }
+                bool is_binary_elementwise_arithmetic() const override { return true; }
                 bool visit_attributes(AttributeVisitor& visitor) override;
             };
         }
