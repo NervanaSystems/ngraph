@@ -73,6 +73,8 @@ namespace ngraph
                 bool supports_auto_broadcast() const override { return true; }
                 bool visit_attributes(AttributeVisitor& visitor) override;
 
+                Shape compute_output_shape(const Shape& a, const Shape& b) const;
+
             private:
                 AutoBroadcastSpec m_autob;
             };
