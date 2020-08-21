@@ -341,3 +341,5 @@ onnx_model_lp_norm_p2
 onnx_model_lp_norm_default
 onnx_model_instance_normalization
 onnx_model_pad_constant
+
+flatten
