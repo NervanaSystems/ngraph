@@ -176,6 +176,8 @@ dynamic_reverse_shape
 dynamic_to_vector
 fake_quantize_pdpd
 floor_int64
+generate_mask
+generate_mask2
 hard_sigmoid
 lstm_cell_activaction_functions
 non_zero
@@ -200,12 +202,6 @@ onnx_dyn_shapes_flatten_neg_axis
 onnx_dyn_shapes_global_avg_pool_dyn_shape
 onnx_dyn_shapes_global_max_pool_dyn_shape
 onnx_dyn_shapes_max_pool_dyn_shape
-onnx_dyn_shapes_model_acosh_1_3
-onnx_dyn_shapes_model_acosh_3_2
-onnx_dyn_shapes_model_asinh_1_3
-onnx_dyn_shapes_model_asinh_3_2
-onnx_dyn_shapes_model_atanh_1_3
-onnx_dyn_shapes_model_atanh_3_2
 onnx_dyn_shapes_model_conv_with_dynamic_batch
 onnx_dyn_shapes_model_convtranspose_dyn_data
 onnx_dyn_shapes_model_convtranspose_dyn_filters
@@ -315,5 +311,8 @@ unhandled_op
 v1_group_conv_backprop_data
 v1_group_conv_backprop_data_output_shape
 
+
+
+# Parameterized tests
 dyn_replace_slice
 flatten

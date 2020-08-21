@@ -309,29 +309,38 @@ protected:
         {
         case OP_TYPEID::Abs_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::abs<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Acos_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::acos<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Acosh_v3:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            NGRAPH_INFO;
+            size_t element_count = shape_size(args[0]->get_shape());
+            NGRAPH_INFO;
             reference::acosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
+            NGRAPH_INFO;
             break;
         }
         case OP_TYPEID::Add_v1:
         {
             const op::v1::Add* add = static_cast<const op::v1::Add*>(&node);
-            out[0]->set_broadcast(add->get_autob(), args[0], args[1]);
+            Shape output_shape =
+                add->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::add<T>(args[0]->get_data_ptr<const T>(),
                               args[1]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
@@ -425,28 +434,36 @@ protected:
         }
         case OP_TYPEID::Asin_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::asin<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Asinh_v3:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::asinh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Atan_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::atan<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Atanh_v3:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::atanh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -454,7 +471,11 @@ protected:
         }
         case OP_TYPEID::Atan2_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            const op::v0::Atan2* op = static_cast<const op::v0::Atan2*>(&node);
+            Shape output_shape =
+                op->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
+            size_t element_count = shape_size(output_shape);
             reference::atan2<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
@@ -589,7 +610,9 @@ protected:
         case OP_TYPEID::BroadcastLike_v0: break;
         case OP_TYPEID::Ceiling_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::ceiling<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -634,7 +657,9 @@ protected:
             // const op::v0::Convert* c = static_cast<const op::v0::Convert*>(&node);
             element::Type type = node.get_output_element_type(0);
             std::stringstream ss;
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             switch (type)
             {
             case element::Type_t::boolean:
@@ -755,14 +780,18 @@ protected:
         }
         case OP_TYPEID::Cos_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::cos<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Cosh_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::cosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -832,14 +861,17 @@ protected:
         }
         case OP_TYPEID::Divide_v1:
         {
-            const op::v1::Divide* divop = static_cast<const op::v1::Divide*>(&node);
+            const op::v1::Divide* divide = static_cast<const op::v1::Divide*>(&node);
+            Shape output_shape =
+                divide->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::divide<T>(args[0]->get_data_ptr<const T>(),
                                  args[1]->get_data_ptr<const T>(),
                                  out[0]->get_data_ptr<T>(),
                                  args[0]->get_shape(),
                                  args[1]->get_shape(),
-                                 divop->get_autob(),
-                                 divop->is_pythondiv());
+                                 divide->get_autob(),
+                                 divide->is_pythondiv());
             break;
         }
         case OP_TYPEID::Dot_v0:
@@ -926,6 +958,9 @@ protected:
         case OP_TYPEID::Equal_v0:
         {
             auto equal = static_cast<const op::v0::Equal*>(&node);
+            Shape output_shape =
+                equal->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
@@ -936,14 +971,18 @@ protected:
         }
         case OP_TYPEID::Erf_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::erf<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Exp_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::exp<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -975,7 +1014,9 @@ protected:
 #endif
         case OP_TYPEID::Floor_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::floor<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -1048,7 +1089,9 @@ protected:
 
             bool training = static_cast<bool>(args[0]->get_data_ptr<const T>()[0]);
             auto state = static_cast<BernoulliRNGState*>(m_states.at(&node).get());
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             if (!use_seed)
             {
                 reference::generate_mask<T>(
@@ -1066,6 +1109,9 @@ protected:
         case OP_TYPEID::Greater_v0:
         {
             auto greater = static_cast<const op::v0::Greater*>(&node);
+            Shape output_shape =
+                greater->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
@@ -1077,6 +1123,9 @@ protected:
         case OP_TYPEID::GreaterEq_v0:
         {
             auto greater_eq = static_cast<const op::v0::GreaterEq*>(&node);
+            Shape output_shape =
+                greater_eq->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
@@ -1088,6 +1137,9 @@ protected:
         case OP_TYPEID::Less_v0:
         {
             auto less = static_cast<const op::v0::Less*>(&node);
+            Shape output_shape =
+                less->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
@@ -1099,6 +1151,9 @@ protected:
         case OP_TYPEID::LessEq_v0:
         {
             auto less_eq = static_cast<const op::v0::LessEq*>(&node);
+            Shape output_shape =
+                less_eq->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
@@ -1120,7 +1175,9 @@ protected:
         }
         case OP_TYPEID::Log_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::log<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -1138,7 +1195,9 @@ protected:
         }
         case OP_TYPEID::LogicalNot_v1:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::logical_not(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -1203,6 +1262,9 @@ protected:
         case OP_TYPEID::Maximum_v0:
         {
             auto maximum = static_cast<const op::v0::Maximum*>(&node);
+            Shape output_shape =
+                maximum->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1253,6 +1315,9 @@ protected:
         case OP_TYPEID::Minimum_v0:
         {
             auto minimum = static_cast<const op::v0::Minimum*>(&node);
+            Shape output_shape =
+                minimum->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1264,7 +1329,9 @@ protected:
         case OP_TYPEID::Multiply_v1:
         {
             auto multiply = static_cast<const op::v1::Multiply*>(&node);
-            out[0]->set_broadcast(multiply->get_autob(), args[0], args[1]);
+            Shape output_shape =
+                multiply->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::multiply<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -1275,7 +1342,9 @@ protected:
         }
         case OP_TYPEID::Negative_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::negate<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -1283,6 +1352,9 @@ protected:
         case OP_TYPEID::NotEqual_v0:
         {
             auto not_equal = static_cast<const op::v0::NotEqual*>(&node);
+            Shape output_shape =
+                not_equal->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
@@ -1324,6 +1396,9 @@ protected:
         case OP_TYPEID::Power_v0:
         {
             auto power = static_cast<const op::v0::Power*>(&node);
+            Shape output_shape =
+                power->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
@@ -1624,7 +1699,9 @@ protected:
         }
         case OP_TYPEID::Recv_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             size_t memSize = element_count * sizeof(T);
             const auto* op = static_cast<const ngraph::op::v0::Recv*>(&node);
             int src_id = op->get_src_id();
@@ -1719,14 +1796,18 @@ protected:
         }
         case OP_TYPEID::Relu_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::relu<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::ReluBackprop_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::relu_backprop<T>(args[0]->get_data_ptr<const T>(),
                                         args[1]->get_data_ptr<const T>(),
                                         out[0]->get_data_ptr<T>(),
@@ -1830,7 +1911,9 @@ protected:
         }
         case OP_TYPEID::Round_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::round<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -1907,7 +1990,9 @@ protected:
         }
         case OP_TYPEID::Send_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             size_t memSize = element_count * sizeof(T);
             const auto* op = static_cast<const ngraph::op::v0::Send*>(&node);
             int dest_id = op->get_dest_id();
@@ -1932,14 +2017,18 @@ protected:
         }
         case OP_TYPEID::Sigmoid_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sigmoid<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::SigmoidBackprop_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sigmoid_backprop<T>(args[0]->get_data_ptr<const T>(),
                                            args[1]->get_data_ptr<const T>(),
                                            out[0]->get_data_ptr<T>(),
@@ -1948,21 +2037,27 @@ protected:
         }
         case OP_TYPEID::Sign_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sign<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Sin_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sin<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Sinh_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sinh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -1990,7 +2085,9 @@ protected:
         }
         case OP_TYPEID::Sqrt_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sqrt<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
@@ -2000,6 +2097,9 @@ protected:
         case OP_TYPEID::Subtract_v1:
         {
             auto subtract = static_cast<const op::v1::Subtract*>(&node);
+            Shape output_shape =
+                subtract->compute_output_shape(args[0]->get_shape(), args[1]->get_shape());
+            out[0]->set_shape(output_shape);
             reference::subtract<T>(args[0]->get_data_ptr<const T>(),
                                    args[1]->get_data_ptr<const T>(),
                                    out[0]->get_data_ptr<T>(),
@@ -2019,14 +2119,18 @@ protected:
         }
         case OP_TYPEID::Tan_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::tan<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
         case OP_TYPEID::Tanh_v0:
         {
-            size_t element_count = shape_size(node.get_output_shape(0));
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::tanh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;

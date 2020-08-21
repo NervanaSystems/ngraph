@@ -486,6 +486,8 @@ set (SRC
     op/util/arithmetic_reductions_keep_dims.hpp
     op/util/attr_types.cpp
     op/util/attr_types.hpp
+    op/util/binary_elementwise.cpp
+    op/util/binary_elementwise.hpp
     op/util/binary_elementwise_arithmetic.cpp
     op/util/binary_elementwise_arithmetic.hpp
     op/util/binary_elementwise_comparison.cpp
