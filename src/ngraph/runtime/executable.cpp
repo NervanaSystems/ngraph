@@ -56,16 +56,6 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
         throw runtime_error(ss.str());
     }
 
-    for (size_t i = 0; i < outputs.size(); ++i)
-    {
-        // Need to reset the partial shapes of the output Tensors to their initial partial shape
-        if (results[i]->is_dynamic())
-        {
-            std::shared_ptr<runtime::Tensor> t = outputs[i];
-            t->set_partial_shape(results[i]->get_input_partial_shape(0));
-        }
-    }
-
     for (size_t i = 0; i < parameters.size(); i++)
     {
         if (parameters[i]->get_output_element_type(0).is_static() &&

@@ -121,17 +121,6 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
 {
     event::Duration d1("call", "Interpreter");
 
-    // Need to reset the partial shapes of the output Tensors to their initial partial shape
-    auto results = get_results();
-    for (size_t i = 0; i < outputs.size(); ++i)
-    {
-        if (results[i]->is_dynamic())
-        {
-            std::shared_ptr<runtime::Tensor> t = outputs[i];
-            t->set_partial_shape(results[i]->get_input_partial_shape(0));
-        }
-    }
-
     // convert inputs to HostTensor
     vector<shared_ptr<HostTensor>> func_inputs;
     for (auto tensor : inputs)

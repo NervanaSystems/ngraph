@@ -68,7 +68,7 @@ void op::v1::Transpose::validate_and_infer_types()
     }
     else
     {
-        set_output_type(0, get_input_element_type(0), PartialShape::dynamic(arg_shape.rank()));
+        set_output_type(0, get_input_element_type(0), PartialShape::dynamic());
     }
 }
 
