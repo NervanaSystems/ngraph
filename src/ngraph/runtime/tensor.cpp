@@ -33,9 +33,9 @@ const PartialShape& runtime::Tensor::get_partial_shape() const
     return m_descriptor->get_partial_shape();
 }
 
-void runtime::Tensor::set_partial_shape(const ngraph::PartialShape& shape)
+void runtime::Tensor::reset()
 {
-    m_descriptor->set_partial_shape(shape);
+    m_descriptor->set_partial_shape(m_original_partial_shape);
 }
 
 Strides runtime::Tensor::get_strides() const

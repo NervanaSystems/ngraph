@@ -1667,7 +1667,7 @@ protected:
             AxisSet reduction_axes = as_axis_set(args[1].get());
             Shape input_shape = args[0]->get_shape();
             Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
-            out[0]->set_partial_shape(output_shape);
+            out[0]->set_shape(output_shape);
             reference::max<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               input_shape,
@@ -1680,7 +1680,7 @@ protected:
             AxisSet reduction_axes = as_axis_set(args[1].get());
             Shape input_shape = args[0]->get_shape();
             Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
-            out[0]->set_partial_shape(output_shape);
+            out[0]->set_shape(output_shape);
             reference::mean<T>(args[0]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<T>(),
                                input_shape,
@@ -1693,7 +1693,7 @@ protected:
             AxisSet reduction_axes = as_axis_set(args[1].get());
             Shape input_shape = args[0]->get_shape();
             Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
-            out[0]->set_partial_shape(output_shape);
+            out[0]->set_shape(output_shape);
             reference::min<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               input_shape,
@@ -1706,7 +1706,7 @@ protected:
             AxisSet reduction_axes = as_axis_set(args[1].get());
             Shape input_shape = args[0]->get_shape();
             Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
-            out[0]->set_partial_shape(output_shape);
+            out[0]->set_shape(output_shape);
             reference::product<T>(args[0]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
                                   input_shape,
@@ -1719,7 +1719,7 @@ protected:
             AxisSet reduction_axes = as_axis_set(args[1].get());
             Shape input_shape = args[0]->get_shape();
             Shape output_shape = op->compute_output_shape(input_shape, reduction_axes);
-            out[0]->set_partial_shape(output_shape);
+            out[0]->set_shape(output_shape);
             reference::sum<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               input_shape,

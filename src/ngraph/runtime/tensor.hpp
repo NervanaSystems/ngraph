@@ -35,6 +35,7 @@ namespace ngraph
             Tensor(const std::shared_ptr<ngraph::descriptor::Tensor>& descriptor)
                 : m_descriptor(descriptor)
                 , m_stale(true)
+                , m_original_partial_shape(descriptor->get_partial_shape())
             {
             }
 
@@ -49,7 +50,9 @@ namespace ngraph
             /// \brief Get tensor partial shape
             /// \return const reference to a PartialShape
             const ngraph::PartialShape& get_partial_shape() const;
-            void set_partial_shape(const ngraph::PartialShape& shape);
+
+            /// \brief Reset partial shape to the originally constructed value
+            void reset();
 
             /// \brief Get tensor strides
             /// \return Strides
@@ -113,6 +116,7 @@ namespace ngraph
         protected:
             std::shared_ptr<ngraph::descriptor::Tensor> m_descriptor;
             bool m_stale;
+            PartialShape m_original_partial_shape;
         };
     }
 }
