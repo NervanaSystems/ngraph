@@ -22,6 +22,7 @@
 #include "affine_lowerer.hpp"
 
 #include "contrib/mlir/backend/analysis/memory_analysis.hpp"
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
 #include "contrib/mlir/runtime/cpu/callback_utils.hpp"
@@ -32,6 +33,11 @@
 
 #include <llvm/ADT/DenseSet.h>
 #include <llvm/Support/Debug.h>
+#include <mlir/Dialect/Affine/IR/AffineOps.h>
+#include <mlir/Dialect/Affine/Passes.h>
+#include <mlir/Dialect/SCF/SCF.h>
+#include <mlir/Dialect/StandardOps/IR/Ops.h>
+#include <mlir/Dialect/Vector/VectorOps.h>
 #include <mlir/Dialect/Affine/EDSC/Builders.h>
 #include <mlir/Dialect/Affine/EDSC/Intrinsics.h>
 #include <mlir/Dialect/LLVMIR/LLVMDialect.h>
@@ -326,6 +332,15 @@ namespace
     class DialectLoweringPass : public PassWrapper<DialectLoweringPass, OperationPass<ModuleOp>>
     {
     public:
+        void getDependentDialects(DialectRegistry &registry) const override {
+            registry.insert<
+                AffineDialect,
+                LLVM::LLVMDialect,
+                scf::SCFDialect,
+                StandardOpsDialect,
+                vector::VectorDialect,
+                NGraphOpsDialect>();
+        }
         void runOnOperation() override;
 
         SmallVector<Value, 4> buildOutputDefs(Operation* op, PatternRewriter& rewriter);

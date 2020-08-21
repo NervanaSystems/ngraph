@@ -33,28 +33,6 @@ namespace mlir
 {
     using llvm::raw_ostream;
 
-    enum NGTypeKind
-    {
-        // The enum starts at the range reserved for this dialect.
-        // These values are pre-defined in MLIR lib and not configurable from here.
-        NG_TYPE = mlir::Type::Kind::FIRST_PRIVATE_EXPERIMENTAL_0_TYPE,
-        // Element types that are added by the dialect.
-        // Other types are just re-use of std dialect types.
-        NG_FIRST_INT_TYPE_ID,
-        NG_I8_TYPE_ID = NG_FIRST_INT_TYPE_ID,
-        NG_I16_TYPE_ID,
-        NG_I32_TYPE_ID,
-        NG_I64_TYPE_ID,
-        NG_U8_TYPE_ID,
-        NG_U16_TYPE_ID,
-        NG_U32_TYPE_ID,
-        NG_U64_TYPE_ID,
-        NG_LAST_INT_TYPE_ID = NG_U64_TYPE_ID,
-        NG_BOOL_TYPE_ID,
-        // Tensor type
-        NG_TENSOR_TYPE_ID
-    };
-
     // reuse std float types as-is
     using NGFloatType = mlir::FloatType;
     using NGIntegerType = mlir::IntegerType;
@@ -64,14 +42,8 @@ namespace mlir
     {
     public:
         using Base::Base;
-        static NGBoolType get(NGTypeKind kind, mlir::MLIRContext* context)
-        {
-            NGRAPH_CHECK(kindof(kind), "Not a bool type.");
-            return Base::get(context, kind);
-        }
 
-        static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_BOOL_TYPE_ID; }
-        static NGBoolType get(mlir::MLIRContext* ctx) { return get(NG_BOOL_TYPE_ID, ctx); }
+        static NGBoolType get(mlir::MLIRContext* ctx) { return get(ctx); }
         size_t getWidth() { return 8; }
     };
 
@@ -177,8 +149,5 @@ namespace mlir
 
         /// create a unique tensor type based on element type and shape.
         static NGTensorType get(mlir::MLIRContext* context, EltType eltType, Shape shape);
-
-        /// for llvm RTTI
-        static bool kindof(unsigned kind) { return kind == NGTypeKind::NG_TENSOR_TYPE_ID; }
     };
 }
