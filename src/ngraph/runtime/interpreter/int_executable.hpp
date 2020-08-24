@@ -116,6 +116,7 @@
 #include "ngraph/runtime/reference/slice.hpp"
 #include "ngraph/runtime/reference/softmax.hpp"
 #include "ngraph/runtime/reference/sqrt.hpp"
+#include "ngraph/runtime/reference/strided_slice.hpp"
 #include "ngraph/runtime/reference/subtract.hpp"
 #include "ngraph/runtime/reference/sum.hpp"
 #include "ngraph/runtime/reference/tan.hpp"
@@ -123,6 +124,7 @@
 #include "ngraph/runtime/reference/topk.hpp"
 #include "ngraph/runtime/reference/xor.hpp"
 #include "ngraph/runtime/tensor.hpp"
+#include "ngraph/slice_plan.hpp"
 #include "ngraph/state/bernoulli_rng_state.hpp"
 #include "ngraph/state/uniform_rng_state.hpp"
 #include "ngraph/util.hpp"
@@ -2094,6 +2096,35 @@ protected:
         }
         case OP_TYPEID::StopGradient_v0: { throw unsupported_op("Unsupported op 'StopGradient_v0'");
         }
+        case OP_TYPEID::StridedSlice_v1:
+        {
+            const op::v1::StridedSlice* slice = static_cast<const op::v1::StridedSlice*>(&node);
+            Shape input_shape = args[0]->get_shape();
+            vector<int64_t> t_begin = as_vector<int64_t>(args[1].get());
+            vector<int64_t> t_end = as_vector<int64_t>(args[2].get());
+            vector<int64_t> t_strides = as_vector<int64_t>(args[3].get());
+            NGRAPH_INFO << args.size();
+            SlicePlan slice_plan =
+                make_slice_plan(input_shape,
+                                t_begin,
+                                t_end,
+                                t_strides,
+                                slice->convert_mask_to_axis_set(slice->get_begin_mask()),
+                                slice->convert_mask_to_axis_set(slice->get_end_mask()),
+                                slice->convert_mask_to_axis_set(slice->get_new_axis_mask()),
+                                slice->convert_mask_to_axis_set(slice->get_shrink_axis_mask()),
+                                slice->convert_mask_to_axis_set(slice->get_ellipsis_mask()));
+            Shape output_shape = slice_plan.reshape_out_shape;
+            NGRAPH_INFO << output_shape;
+
+            NGRAPH_INFO << out[0]->get_partial_shape();
+            out[0]->set_shape(output_shape);
+            reference::strided_slice<T>(args[0]->get_data_ptr<const T>(),
+                                        out[0]->get_data_ptr<T>(),
+                                        input_shape,
+                                        slice_plan);
+            break;
+        }
         case OP_TYPEID::Subtract_v1:
         {
             auto subtract = static_cast<const op::v1::Subtract*>(&node);
@@ -2285,7 +2316,6 @@ protected:
         case OP_TYPEID::SquaredDifference_v0:
         case OP_TYPEID::Squeeze_v0:
         case OP_TYPEID::Stack_v0:
-        case OP_TYPEID::StridedSlice_v1:
         case OP_TYPEID::TensorIterator_v0:
         case OP_TYPEID::Tile_v0:
         case OP_TYPEID::TopK_v1:
