@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "ngraph/coordinate.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -268,6 +269,7 @@ protected:
     Strides as_strides(const HostTensor* tensor) const;
     Shape as_shape(const HostTensor* tensor) const;
     AxisSet as_axis_set(const HostTensor* tensor) const;
+    AxisVector as_axis_vector(const HostTensor* tensor) const;
 
     std::shared_ptr<ngraph::op::v0::Parameter> get_parameter(size_t index) const;
     std::shared_ptr<ngraph::op::v0::Result> get_result(size_t index) const;
@@ -2109,10 +2111,12 @@ protected:
         case OP_TYPEID::Sum_v0:
         {
             const op::v0::Sum* sum = static_cast<const op::v0::Sum*>(&node);
+            AxisSet reduction_axes = as_axis_set(args[1].get());
+            out[0]->set_shape(reduce(args[0]->get_shape(), reduction_axes));
             reference::sum<T>(args[0]->get_data_ptr<const T>(),
                               out[0]->get_data_ptr<T>(),
                               args[0]->get_shape(),
-                              sum->get_reduction_axes());
+                              reduction_axes);
             break;
         }
         case OP_TYPEID::Tan_v0:
@@ -2164,6 +2168,23 @@ protected:
             {
                 throw ngraph_error("Unexpected type");
             }
+            break;
+        }
+        case OP_TYPEID::Transpose_v1:
+        {
+            const op::v1::Transpose* op = static_cast<const op::v1::Transpose*>(&node);
+            Shape input_shape = args[0]->get_shape();
+            AxisVector input_order = as_axis_vector(args[1].get());
+            Shape output_shape;
+            for (size_t axis : input_order)
+            {
+                output_shape.push_back(input_shape[axis]);
+            }
+            reference::reshape(args[0]->get_data_ptr<const T>(),
+                               out[0]->get_data_ptr<T>(),
+                               input_shape,
+                               input_order,
+                               output_shape);
             break;
         }
 
@@ -2269,7 +2290,6 @@ protected:
         case OP_TYPEID::Tile_v0:
         case OP_TYPEID::TopK_v1:
         case OP_TYPEID::TopK_v3:
-        case OP_TYPEID::Transpose_v1:
         case OP_TYPEID::Unsqueeze_v0:
         case OP_TYPEID::VariadicSplit_v1:
         case OP_TYPEID::UnknownOp:

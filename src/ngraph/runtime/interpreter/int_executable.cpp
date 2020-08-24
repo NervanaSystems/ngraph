@@ -445,3 +445,8 @@ AxisSet runtime::interpreter::INTExecutable::as_axis_set(const HostTensor* tenso
 {
     return AxisSet(as_vector<size_t>(tensor));
 }
+
+AxisVector runtime::interpreter::INTExecutable::as_axis_vector(const HostTensor* tensor) const
+{
+    return AxisVector(as_vector<size_t>(tensor));
+}

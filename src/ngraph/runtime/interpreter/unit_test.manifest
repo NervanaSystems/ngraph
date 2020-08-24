@@ -10,10 +10,6 @@ clamp_float16_static
 concat_negative_axis
 convert_bf16_float32
 convert_float32_bf16
-depth_to_space_block_first
-depth_to_space_depth_first
-depth_to_space_space_to_depth_block_first
-depth_to_space_space_to_depth_depth_first
 dyn_broadcast
 dyn_convolution_backprop_data
 dyn_convolution_backprop_filter
@@ -198,20 +194,16 @@ shape_of_5d_v3
 shape_of_matrix_v3
 softmax_dynamic_axes
 space_to_batch
-space_to_depth_block_first
-space_to_depth_depth_first
 stack_negative_axis
 strided_slice_0
 strided_slice_1
 strided_slice_stride_optional
-sum_dynamic
 tile_3d_few_repeats
 tile_3d_small_data_rank
 transpose
 unhandled_op
 v1_group_conv_backprop_data
 v1_group_conv_backprop_data_output_shape
-
 
 # Parameterized tests
 dyn_replace_slice
