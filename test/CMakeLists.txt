@@ -75,7 +75,7 @@ foreach(HEADER ${NGRAPH_HEADER_LIST})
     if(MSVC)
         add_custom_command(
             OUTPUT ${PREPROCESSOR_OUT_FILE}
-            COMMAND "${CMAKE_CXX_COMPILER}" /I${PROJECT_SOURCE_DIR}/src /E ${OUT_FILE} /P
+            COMMAND "${CMAKE_CXX_COMPILER}" /nologo /I${PROJECT_SOURCE_DIR}/src /E ${OUT_FILE} /P
             WORKING_DIRECTORY ${PREPROCESSOR_WORK_DIR}
             MAIN_DEPENDENCY ${HEADER}
         )
