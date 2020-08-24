@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "ngraph/coordinate.hpp"
-#include "ngraph/log.hpp"
 #include "ngraph/ops.hpp"
 #include "ngraph/runtime/aligned_buffer.hpp"
 #include "ngraph/runtime/backend.hpp"
@@ -327,12 +326,11 @@ protected:
         }
         case OP_TYPEID::Acosh_v3:
         {
-            NGRAPH_INFO;
-            size_t element_count = shape_size(args[0]->get_shape());
-            NGRAPH_INFO;
+            Shape output_shape = args[0]->get_shape();
+            size_t element_count = shape_size(output_shape);
+            out[0]->set_shape(output_shape);
             reference::acosh<T>(
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
-            NGRAPH_INFO;
             break;
         }
         case OP_TYPEID::Add_v1:
