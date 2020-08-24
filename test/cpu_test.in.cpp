@@ -1233,20 +1233,20 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto sub = a - b;
     auto mul = a * b;
     auto divn = a / b;
-    auto min = make_shared<op::v0::Minimum>(c, a);
-    auto max = make_shared<op::v0::Maximum>(a, c);
+    auto min = make_shared<op::v1::Minimum>(c, a);
+    auto max = make_shared<op::v1::Maximum>(a, c);
     auto absn = make_shared<op::v0::Abs>(c);
     auto neg = make_shared<op::v0::Negative>(c);
     auto sqrt = make_shared<op::v0::Sqrt>(d);
     auto neg_sqrt = make_shared<op::v0::Sqrt>(c);
     auto relu = make_shared<op::v0::Relu>(e);
     auto sign = make_shared<op::v0::Sign>(f);
-    auto equal = make_shared<op::v0::Equal>(g, h);
-    auto not_equal = make_shared<op::v0::NotEqual>(g, h);
-    auto greater = make_shared<op::v0::Greater>(g, h);
-    auto greater_eq = make_shared<op::v0::GreaterEq>(g, h);
-    auto less = make_shared<op::v0::Less>(g, h);
-    auto less_eq = make_shared<op::v0::LessEq>(g, h);
+    auto equal = make_shared<op::v1::Equal>(g, h);
+    auto not_equal = make_shared<op::v1::NotEqual>(g, h);
+    auto greater = make_shared<op::v1::Greater>(g, h);
+    auto greater_eq = make_shared<op::v1::GreaterEqual>(g, h);
+    auto less = make_shared<op::v1::Less>(g, h);
+    auto less_equal = make_shared<op::v1::LessEqual>(g, h);
     auto logical_and = make_shared<op::v1::LogicalAnd>(i, j);
     auto logical_or = make_shared<op::v1::LogicalOr>(i, j);
     auto logical_xor = make_shared<op::v1::LogicalXor>(i, j);
@@ -1262,7 +1262,7 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     auto func = make_shared<Function>(
         OutputVector{add,        sub,         mul,        divn,  min,         max,
                      absn,       neg,         sqrt,       relu,  sign,        equal,
-                     not_equal,  greater,     greater_eq, less,  less_eq,     logical_and,
+                     not_equal,  greater,     greater_eq, less,  less_equal,  logical_and,
                      logical_or, logical_xor, ceil,       floor, logical_not, add_autob_numpy},
         ParameterVector{});
 
@@ -1277,19 +1277,19 @@ NGRAPH_TEST(${BACKEND_NAME}, cpu_test_constant_unary_binary)
     ASSERT_EQ(count_ops_of_type<op::v1::Subtract>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Multiply>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::Divide>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Minimum>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Maximum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Minimum>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Maximum>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Abs>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Negative>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Sqrt>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Relu>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v0::Sign>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Equal>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::NotEqual>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Greater>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::GreaterEq>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::Less>(func), 0);
-    ASSERT_EQ(count_ops_of_type<op::v0::LessEq>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Equal>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::NotEqual>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Greater>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::GreaterEqual>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::Less>(func), 0);
+    ASSERT_EQ(count_ops_of_type<op::v1::LessEqual>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::LogicalAnd>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::LogicalOr>(func), 0);
     ASSERT_EQ(count_ops_of_type<op::v1::LogicalXor>(func), 0);

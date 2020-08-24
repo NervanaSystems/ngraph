@@ -182,7 +182,7 @@ TEST(copy, dot)
 
 TEST(copy, equal)
 {
-    ASSERT_TRUE(check_binary<op::v0::Equal>());
+    ASSERT_TRUE(check_binary<op::v1::Equal>());
 }
 
 TEST(copy, exp)
@@ -197,22 +197,22 @@ TEST(copy, floor)
 
 TEST(copy, greater_eq)
 {
-    ASSERT_TRUE(check_binary<op::v0::GreaterEq>());
+    ASSERT_TRUE(check_binary<op::v1::GreaterEqual>());
 }
 
 TEST(copy, greater)
 {
-    ASSERT_TRUE(check_binary<op::v0::Greater>());
+    ASSERT_TRUE(check_binary<op::v1::Greater>());
 }
 
-TEST(copy, less_eq)
+TEST(copy, less_equal)
 {
-    ASSERT_TRUE(check_binary<op::v0::LessEq>());
+    ASSERT_TRUE(check_binary<op::v1::LessEqual>());
 }
 
 TEST(copy, less)
 {
-    ASSERT_TRUE(check_binary<op::v0::Less>());
+    ASSERT_TRUE(check_binary<op::v1::Less>());
 }
 
 TEST(copy, log)
@@ -222,12 +222,12 @@ TEST(copy, log)
 
 TEST(copy, maximum)
 {
-    ASSERT_TRUE(check_binary<op::v0::Maximum>());
+    ASSERT_TRUE(check_binary<op::v1::Maximum>());
 }
 
 TEST(copy, minimum)
 {
-    ASSERT_TRUE(check_binary<op::v0::Minimum>());
+    ASSERT_TRUE(check_binary<op::v1::Minimum>());
 }
 
 TEST(copy, multiply)
@@ -242,7 +242,7 @@ TEST(copy, negative)
 
 TEST(copy, not_equal)
 {
-    ASSERT_TRUE(check_binary<op::v0::NotEqual>());
+    ASSERT_TRUE(check_binary<op::v1::NotEqual>());
 }
 
 TEST(copy, parameter)
@@ -260,7 +260,7 @@ TEST(copy, parameter)
 
 TEST(copy, power)
 {
-    ASSERT_TRUE(check_binary<op::v0::Power>());
+    ASSERT_TRUE(check_binary<op::v1::Power>());
 }
 
 TEST(copy, reshape)

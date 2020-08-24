@@ -105,7 +105,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_soft_labels()
         std::make_shared<ngraph::op::v0::Broadcast>(max_x, Shape{41, 37}, AxisSet{1});
     auto subtract_input_x = std::make_shared<ngraph::op::v1::Subtract>(input_x, broadcast_max_x);
     auto constant_2 = ngraph::op::v0::Constant::create(element::f32, Shape{41, 37}, {1});
-    auto maximum = std::make_shared<ngraph::op::v0::Maximum>(constant_2, subtract_input_x);
+    auto maximum = std::make_shared<ngraph::op::v1::Maximum>(constant_2, subtract_input_x);
     auto softmax_axes = ngraph::op::v0::Constant::create(element::i64, Shape{1}, {1});
     auto softmax = std::make_shared<ngraph::op::v0::Softmax>(maximum, softmax_axes);
     auto softmax_label =
@@ -161,7 +161,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
         std::make_shared<ngraph::op::v0::Broadcast>(max_x, Shape{41, 37}, AxisSet{1});
     auto subtract_input_x = std::make_shared<ngraph::op::v1::Subtract>(input_x, broadcast_max_x);
     auto constant_2 = ngraph::op::v0::Constant::create(element::f64, Shape{41, 37}, {1});
-    auto maximum = std::make_shared<ngraph::op::v0::Maximum>(constant_2, subtract_input_x);
+    auto maximum = std::make_shared<ngraph::op::v1::Maximum>(constant_2, subtract_input_x);
     auto softmax_axes = ngraph::op::v0::Constant::create(element::i64, Shape{1}, {1});
     auto softmax = std::make_shared<ngraph::op::v0::Softmax>(maximum, softmax_axes);
     auto softmax_label =
@@ -173,7 +173,7 @@ void pass::CoreFusion::construct_softmax_cross_entropy_bprop_with_ignore_mask()
     // ignore_mask
     auto mask_constant = ngraph::op::v0::Constant::create(element::i64, Shape{41, 1}, {1});
     auto mask_label = std::make_shared<pattern::op::Label>(mask_constant);
-    auto not_equal = std::make_shared<ngraph::op::v0::NotEqual>(labels_y, mask_label);
+    auto not_equal = std::make_shared<ngraph::op::v1::NotEqual>(labels_y, mask_label);
     auto convert = std::make_shared<ngraph::op::v0::Convert>(not_equal, element::f64);
     auto reshape = std::make_shared<ngraph::op::v0::Reshape>(
         convert, AxisVector{0, 1}, Shape{convert->get_output_shape(0).at(0)});
@@ -238,7 +238,7 @@ void pass::CoreFusion::construct_relu()
 
     auto skip_broadcast =
         make_shared<pattern::op::Skip>(zero, pattern::has_class<op::v0::Broadcast>());
-    auto max = make_shared<op::v0::Maximum>(skip_broadcast, val);
+    auto max = make_shared<op::v1::Maximum>(skip_broadcast, val);
 
     auto callback = [val, zero](pattern::Matcher& m) {
         NGRAPH_DEBUG << "In a callback for construct_relu against "

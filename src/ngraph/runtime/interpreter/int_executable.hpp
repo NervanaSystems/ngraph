@@ -67,9 +67,9 @@
 #include "ngraph/runtime/reference/gather_nd.hpp"
 #include "ngraph/runtime/reference/generate_mask.hpp"
 #include "ngraph/runtime/reference/greater.hpp"
-#include "ngraph/runtime/reference/greater_eq.hpp"
+#include "ngraph/runtime/reference/greater_equal.hpp"
 #include "ngraph/runtime/reference/less.hpp"
-#include "ngraph/runtime/reference/less_eq.hpp"
+#include "ngraph/runtime/reference/less_equal.hpp"
 #include "ngraph/runtime/reference/log.hpp"
 #include "ngraph/runtime/reference/lrn.hpp"
 #include "ngraph/runtime/reference/matmul.hpp"
@@ -788,9 +788,9 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Equal_v0:
+        case OP_TYPEID::Equal_v1:
         {
-            auto equal = static_cast<const op::v0::Equal*>(&node);
+            auto equal = static_cast<const op::v1::Equal*>(&node);
             reference::equal<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<char>(),
@@ -928,9 +928,9 @@ protected:
             }
             break;
         }
-        case OP_TYPEID::Greater_v0:
+        case OP_TYPEID::Greater_v1:
         {
-            auto greater = static_cast<const op::v0::Greater*>(&node);
+            auto greater = static_cast<const op::v1::Greater*>(&node);
             reference::greater<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<char>(),
@@ -939,9 +939,9 @@ protected:
                                   greater->get_autob());
             break;
         }
-        case OP_TYPEID::GreaterEq_v0:
+        case OP_TYPEID::GreaterEqual_v1:
         {
-            auto greater_eq = static_cast<const op::v0::GreaterEq*>(&node);
+            auto greater_eq = static_cast<const op::v1::GreaterEqual*>(&node);
             reference::greater_eq<T>(args[0]->get_data_ptr<const T>(),
                                      args[1]->get_data_ptr<const T>(),
                                      out[0]->get_data_ptr<char>(),
@@ -950,9 +950,9 @@ protected:
                                      greater_eq->get_autob());
             break;
         }
-        case OP_TYPEID::Less_v0:
+        case OP_TYPEID::Less_v1:
         {
-            auto less = static_cast<const op::v0::Less*>(&node);
+            auto less = static_cast<const op::v1::Less*>(&node);
             reference::less<T>(args[0]->get_data_ptr<const T>(),
                                args[1]->get_data_ptr<const T>(),
                                out[0]->get_data_ptr<char>(),
@@ -961,26 +961,15 @@ protected:
                                less->get_autob());
             break;
         }
-        case OP_TYPEID::LessEq_v0:
-        {
-            auto less_eq = static_cast<const op::v0::LessEq*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
-            break;
-        }
         case OP_TYPEID::LessEqual_v1:
         {
-            auto less_eq = static_cast<const op::v1::LessEqual*>(&node);
-            reference::less_eq<T>(args[0]->get_data_ptr<const T>(),
-                                  args[1]->get_data_ptr<const T>(),
-                                  out[0]->get_data_ptr<char>(),
-                                  node.get_input_shape(0),
-                                  node.get_input_shape(1),
-                                  less_eq->get_autob());
+            auto less_equal = static_cast<const op::v1::LessEqual*>(&node);
+            reference::less_equal<T>(args[0]->get_data_ptr<const T>(),
+                                     args[1]->get_data_ptr<const T>(),
+                                     out[0]->get_data_ptr<char>(),
+                                     node.get_input_shape(0),
+                                     node.get_input_shape(1),
+                                     less_equal->get_autob());
             break;
         }
         case OP_TYPEID::Log_v0:
@@ -1065,9 +1054,9 @@ protected:
                               max->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Maximum_v0:
+        case OP_TYPEID::Maximum_v1:
         {
-            auto maximum = static_cast<const op::v0::Maximum*>(&node);
+            auto maximum = static_cast<const op::v1::Maximum*>(&node);
             reference::maximum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1115,9 +1104,9 @@ protected:
                               min->get_reduction_axes());
             break;
         }
-        case OP_TYPEID::Minimum_v0:
+        case OP_TYPEID::Minimum_v1:
         {
-            auto minimum = static_cast<const op::v0::Minimum*>(&node);
+            auto minimum = static_cast<const op::v1::Minimum*>(&node);
             reference::minimum<T>(args[0]->get_data_ptr<const T>(),
                                   args[1]->get_data_ptr<const T>(),
                                   out[0]->get_data_ptr<T>(),
@@ -1144,9 +1133,9 @@ protected:
                 args[0]->get_data_ptr<const T>(), out[0]->get_data_ptr<T>(), element_count);
             break;
         }
-        case OP_TYPEID::NotEqual_v0:
+        case OP_TYPEID::NotEqual_v1:
         {
-            auto not_equal = static_cast<const op::v0::NotEqual*>(&node);
+            auto not_equal = static_cast<const op::v1::NotEqual*>(&node);
             reference::not_equal<T>(args[0]->get_data_ptr<const T>(),
                                     args[1]->get_data_ptr<const T>(),
                                     out[0]->get_data_ptr<char>(),
@@ -1185,9 +1174,9 @@ protected:
                            pad->get_pad_mode());
             break;
         }
-        case OP_TYPEID::Power_v0:
+        case OP_TYPEID::Power_v1:
         {
-            auto power = static_cast<const op::v0::Power*>(&node);
+            auto power = static_cast<const op::v1::Power*>(&node);
             reference::power<T>(args[0]->get_data_ptr<const T>(),
                                 args[1]->get_data_ptr<const T>(),
                                 out[0]->get_data_ptr<T>(),
@@ -1852,7 +1841,6 @@ protected:
         case OP_TYPEID::EmbeddingBagOffsetsSum_v3:
         case OP_TYPEID::EmbeddingBagPackedSum_v3:
         case OP_TYPEID::EmbeddingSegmentsSum_v3:
-        case OP_TYPEID::Equal_v1:
         case OP_TYPEID::ExtractImagePatches_v3:
         case OP_TYPEID::FakeQuantize_v0:
         case OP_TYPEID::FloorMod_v1:
@@ -1861,8 +1849,6 @@ protected:
         case OP_TYPEID::Gelu_v0:
         case OP_TYPEID::GeluBackpropFactor_v0:
         case OP_TYPEID::Gemm_v0:
-        case OP_TYPEID::Greater_v1:
-        case OP_TYPEID::GreaterEqual_v1:
         case OP_TYPEID::GRN_v0:
         case OP_TYPEID::GroupConvolution_v0:
         case OP_TYPEID::GroupConvolution_v1:
@@ -1875,24 +1861,19 @@ protected:
         case OP_TYPEID::Interpolate_v3:
         case OP_TYPEID::LayerNorm_v0:
         case OP_TYPEID::LayerNormBackprop_v0:
-        case OP_TYPEID::Less_v1:
         case OP_TYPEID::LSTMCell_v0:
         case OP_TYPEID::LSTMSequence_v0:
-        case OP_TYPEID::Maximum_v1:
         case OP_TYPEID::MaxPool_v1:
-        case OP_TYPEID::Minimum_v1:
         case OP_TYPEID::Mod_v1:
         case OP_TYPEID::MVN_v0:
         case OP_TYPEID::NonMaxSuppression_v1:
         case OP_TYPEID::NonMaxSuppression_v3:
         case OP_TYPEID::NonZero_v3:
         case OP_TYPEID::NormalizeL2_v0:
-        case OP_TYPEID::NotEqual_v1:
         case OP_TYPEID::OneHot_v1:
         case OP_TYPEID::Pad_v1:
         case OP_TYPEID::PartialSlice_v0:
         case OP_TYPEID::PartialSliceBackprop_v0:
-        case OP_TYPEID::Power_v1:
         case OP_TYPEID::PRelu_v0:
         case OP_TYPEID::PriorBox_v0:
         case OP_TYPEID::PriorBoxClustered_v0:

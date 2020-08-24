@@ -83,7 +83,6 @@ set(SRC
     op_eval/strided_slice.cpp
     op_is.cpp
     opset1.cpp
-    opset_pass/binary_elementwise_opset_pass.cpp
     opset_pass/broadcast_opset_pass.cpp
     opset_pass/convolution_opset_pass.cpp
     opset_pass/one_hot_opset_pass.cpp

@@ -69,7 +69,7 @@
 #include "ngraph/op/gather_nd.hpp"
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
 #include "ngraph/op/log.hpp"
@@ -1209,7 +1209,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Equal)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Equal)
             {
                 (void)external_function;
                 (void)node;
@@ -1224,7 +1224,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Greater)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Greater)
             {
                 (void)external_function;
                 (void)node;
@@ -1239,7 +1239,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::GreaterEq)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::GreaterEqual)
             {
                 (void)external_function;
                 (void)node;
@@ -1254,7 +1254,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Less)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Less)
             {
                 (void)external_function;
                 (void)node;
@@ -1269,7 +1269,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::LessEq)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LessEqual)
             {
                 (void)external_function;
                 (void)node;
@@ -1371,7 +1371,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Maximum)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Maximum)
             {
                 (void)external_function;
                 (void)node;
@@ -1387,7 +1387,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Minimum)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Minimum)
             {
                 (void)external_function;
                 (void)node;
@@ -1417,7 +1417,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::NotEqual)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::NotEqual)
             {
                 (void)external_function;
                 (void)node;
@@ -2166,7 +2166,7 @@ namespace ngraph
             }
 
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Power)
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Power)
             {
                 (void)external_function;
                 (void)node;
@@ -4341,9 +4341,9 @@ namespace ngraph
                     std::type_index,
                     std::function<std::string(const std::vector<std::string>&)>>{
                     {TI(ngraph::op::v0::Abs), abse},
-                    {TI(ngraph::op::v0::Minimum), mine},
+                    {TI(ngraph::op::v1::Minimum), mine},
                     {TI(ngraph::op::v0::Relu), maxe},
-                    {TI(ngraph::op::v0::Maximum), maxe},
+                    {TI(ngraph::op::v1::Maximum), maxe},
                     {TI(ngraph::op::v1::Add), adde},
                     {TI(ngraph::op::v0::Negative), nege},
                     {TI(ngraph::op::v1::Subtract), sube},

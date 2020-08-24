@@ -82,7 +82,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add)
     auto add = make_shared<op::v1::Add>(P4, P5);
     auto sg2_output = make_shared<op::v1::Add>(add, P6);
 
-    auto out = make_shared<op::v0::Maximum>(sg1_output, sg2_output);
+    auto out = make_shared<op::v1::Maximum>(sg1_output, sg2_output);
 
     auto f = make_shared<Function>(out, ParameterVector{P1, P2, P3, P4, P5, P6});
 
@@ -183,7 +183,7 @@ NGRAPH_TEST(${BACKEND_NAME}, mlir_subgraphs_dot_add_3)
     auto add = make_shared<op::v1::Add>(P4, P5);
     auto sg2_output = make_shared<op::v1::Add>(add, P6);
 
-    auto max = make_shared<op::v0::Maximum>(sg1_output, sg2_output);
+    auto max = make_shared<op::v1::Maximum>(sg1_output, sg2_output);
     auto add2 = make_shared<op::v1::Add>(max, max);
 
     auto f = make_shared<Function>(add2, ParameterVector{P1, P2, P3, P4, P5, P6});

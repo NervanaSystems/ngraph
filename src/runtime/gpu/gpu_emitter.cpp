@@ -491,7 +491,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Dot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Equal(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Equal>(
+    return emit_elementwise<ngraph::op::v1::Equal>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -508,25 +508,25 @@ std::string runtime::gpu::GPU_Emitter::emit_Floor(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Greater(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Greater>(
+    return emit_elementwise<ngraph::op::v1::Greater>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_GreaterEq(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_GreaterEqual(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::GreaterEq>(
+    return emit_elementwise<ngraph::op::v1::GreaterEqual>(
         compiled_function, function_name, node, args, out);
 }
 
 std::string runtime::gpu::GPU_Emitter::emit_Less(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Less>(
+    return emit_elementwise<ngraph::op::v1::Less>(
         compiled_function, function_name, node, args, out);
 }
 
-std::string runtime::gpu::GPU_Emitter::emit_LessEq(EMIT_ARGS)
+std::string runtime::gpu::GPU_Emitter::emit_LessEqual(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::LessEq>(
+    return emit_elementwise<ngraph::op::v1::LessEqual>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -571,7 +571,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Max(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Maximum(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Maximum>(
+    return emit_elementwise<ngraph::op::v1::Maximum>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -686,7 +686,7 @@ std::string runtime::gpu::GPU_Emitter::emit_LogicalNot(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_NotEqual(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::NotEqual>(
+    return emit_elementwise<ngraph::op::v1::NotEqual>(
         compiled_function, function_name, node, args, out);
 }
 
@@ -754,7 +754,7 @@ std::string runtime::gpu::GPU_Emitter::emit_Parameter(EMIT_ARGS)
 
 std::string runtime::gpu::GPU_Emitter::emit_Power(EMIT_ARGS)
 {
-    return emit_elementwise<ngraph::op::v0::Power>(
+    return emit_elementwise<ngraph::op::v1::Power>(
         compiled_function, function_name, node, args, out);
 }
 

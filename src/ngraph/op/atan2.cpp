@@ -41,10 +41,17 @@ shared_ptr<Node> op::v0::Atan2::clone_with_new_inputs(const OutputVector& new_ar
 
 void op::v0::Atan2::generate_adjoints(autodiff::Adjoints& adjoints, const OutputVector& deltas)
 {
-    if (get_autob().m_type != op::AutoBroadcastType::NONE)
+    bool static_shapes =
+        input(0).get_partial_shape().is_static() && input(1).get_partial_shape().is_static();
+    if (static_shapes && input(0).get_shape() == input(1).get_shape())
+    {
+        // It does not matter if broadcast is enabled since shapes match
+    }
+    else if (get_autob().m_type != op::AutoBroadcastType::NONE)
     {
         throw ngraph_error("Autodiff not supported with auto broadcasting");
     }
+
     auto y = input_value(0);
     auto x = input_value(1);
     auto delta_over_r = deltas.at(0) / (x * x + y * y);
