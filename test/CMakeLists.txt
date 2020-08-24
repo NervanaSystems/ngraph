@@ -44,6 +44,71 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif()
 endif()
 
+# This code generates one source file per header file under ngraph/src where the source file
+# has just a single #include statement. This checks that each header in the source tree is
+# complete and self-contained so it can be included without requiring any other includes.
+set(DIRECTORIES_IGNORED runtime frontend)
+set(NGRAPH_MAIN_SRC_DIR "${PROJECT_SOURCE_DIR}/src/ngraph")
+file(GLOB_RECURSE LIST_RECURSE
+    "${NGRAPH_MAIN_SRC_DIR}/autodiff/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/builder/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/codegen/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/descriptor/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/distributed/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/op/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/pass/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/state*.hpp")
+file(GLOB LIST
+    "${NGRAPH_MAIN_SRC_DIR}/*.hpp"
+    "${NGRAPH_MAIN_SRC_DIR}/runtime/*.hpp")
+set(NGRAPH_HEADER_LIST ${LIST_RECURSE} ${LIST})
+list(APPEND NGRAPH_HEADER_LIST ${LIST})
+foreach(HEADER ${NGRAPH_HEADER_LIST})
+    file(RELATIVE_PATH OUT_PATH ${NGRAPH_MAIN_SRC_DIR} ${HEADER})
+    string(REGEX REPLACE "hpp$" "I" OUT_PRE ${OUT_PATH})
+    set(PREPROCESSOR_OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PRE}")
+    get_filename_component(PREPROCESSOR_WORK_DIR ${PREPROCESSOR_OUT_FILE} DIRECTORY)
+    string(REGEX REPLACE "hpp$" "cpp" OUT_PATH ${OUT_PATH})
+    set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PATH}")
+    configure_file("header_standalone.in.cpp" ${OUT_FILE})
+
+    if(MSVC)
+        add_custom_command(
+            OUTPUT ${PREPROCESSOR_OUT_FILE}
+            COMMAND "${CMAKE_CXX_COMPILER}" /I${PROJECT_SOURCE_DIR}/src /E ${OUT_FILE} /P
+            WORKING_DIRECTORY ${PREPROCESSOR_WORK_DIR}
+            MAIN_DEPENDENCY ${HEADER}
+        )
+    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+        add_custom_command(
+            OUTPUT ${PREPROCESSOR_OUT_FILE}
+            COMMAND "${CMAKE_CXX_COMPILER}" --sysroot ${CMAKE_OSX_SYSROOT} -I${PROJECT_SOURCE_DIR}/src -E ${OUT_FILE} -o ${PREPROCESSOR_OUT_FILE}
+            WORKING_DIRECTORY ${PREPROCESSOR_WORK_DIR}
+            MAIN_DEPENDENCY ${HEADER}
+        )
+    else()
+        add_custom_command(
+            OUTPUT ${OUT_FILE}.stamp
+            COMMAND "${CMAKE_CXX_COMPILER}" -I${PROJECT_SOURCE_DIR}/src -E ${OUT_FILE} -o ${PREPROCESSOR_OUT_FILE}
+            WORKING_DIRECTORY ${PREPROCESSOR_WORK_DIR}
+            MAIN_DEPENDENCY ${HEADER}
+        )
+    endif()
+    list(APPEND PREPROCESSOR_OUTPUTS ${PREPROCESSOR_OUT_FILE})
+endforeach()
+
+add_custom_target(ngraph-header-check DEPENDS ${PREPROCESSOR_OUTPUTS})
+
+#try_compile(NGRAPH_HEADER_IS_STANDALONE ${CMAKE_CURRENT_BINARY_DIR}/include_test
+#    SOURCES ${NGRAPH_HEADER_SRCS} ${CMAKE_CURRENT_SOURCE_DIR}/header_main.cpp
+#    CMAKE_FLAGS -DINCLUDE_DIRECTORIES=${PROJECT_SOURCE_DIR}/src
+#    OUTPUT_VARIABLE HEADER_ERROR
+#    CXX_STANDARD ${NGRAPH_CXX_STANDARD})
+    #    if(NOT NGRAPH_HEADER_IS_STANDALONE)
+    #    message(FATAL_ERROR "nGraph headers failed standalone test. With ERROR ${HEADER_ERROR}.")
+    #endif()
+
+# nGraph test without backends
 set(SRC
     algebraic_simplification.cpp
     aligned_buffer.cpp
@@ -214,39 +279,6 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if(NGRAPH_INTERPRETER_ENABLE)
-    list(APPEND SRC
-        concat_fusion.cpp
-    )
-endif()
-
-# This code generates one source file per header file under ngraph/src where the source file
-# has just a single #include statement. This checks that each header in the source tree is
-# complete and self-contained so it can be included without requiring any other includes.
-set(DIRECTORIES_IGNORED runtime frontend)
-set(NGRAPH_MAIN_SRC_DIR "${PROJECT_SOURCE_DIR}/src/ngraph")
-file(GLOB_RECURSE LIST_RECURSE
-    "${NGRAPH_MAIN_SRC_DIR}/autodiff/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/builder/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/codegen/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/descriptor/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/distributed/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/op/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/pass/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/state*.hpp")
-file(GLOB LIST
-    "${NGRAPH_MAIN_SRC_DIR}/*.hpp"
-    "${NGRAPH_MAIN_SRC_DIR}/runtime/*.hpp")
-set(NGRAPH_HEADER_LIST ${LIST_RECURSE} ${LIST})
-list(APPEND NGRAPH_HEADER_LIST ${LIST})
-foreach(HEADER ${NGRAPH_HEADER_LIST})
-    file(RELATIVE_PATH OUT_PATH ${NGRAPH_MAIN_SRC_DIR} ${HEADER})
-    string(REGEX REPLACE "hpp$" "cpp" OUT_PATH ${OUT_PATH})
-    set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PATH}")
-    configure_file("header_standalone.in.cpp" ${OUT_FILE})
-    list(APPEND SRC ${OUT_FILE})
-endforeach()
-
 if(NGRAPH_JSON_ENABLE)
     list(APPEND SRC core.cpp serialize.cpp)
 endif()
@@ -262,7 +294,11 @@ if (NGRAPH_INTERPRETER_ENABLE)
     list(APPEND SRC
         backend_debug_api.cpp
         builder.cpp
-        backend_api.cpp)
+        backend_api.cpp
+        concat_fusion.cpp)
+    if(NGRAPH_CPU_ENABLE)
+        set_property(SOURCE backend_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS NGRAPH_CPU_ENABLE)
+    endif()
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -521,6 +557,7 @@ foreach(BACKEND_NAME ${ACTIVE_CPU_BACKEND_LIST})
 endforeach()
 
 add_executable(unit-test ${SRC})
+add_dependencies(unit-test ngraph-header-check)
 
 target_include_directories(unit-test PRIVATE ".")
 
@@ -572,7 +609,6 @@ if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
     target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
     target_link_libraries(unit-test PRIVATE DNNL::dnnl)
-    set_property(SOURCE backend_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS NGRAPH_CPU_ENABLE)
 endif()
 
 if (NGRAPH_TOOLS_ENABLE)
