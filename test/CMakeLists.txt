@@ -14,14 +14,25 @@
 # limitations under the License.
 # ******************************************************************************
 
+# Common Definitions
+add_definitions("-DNGRAPH_VERSION_LABEL=\"${NGRAPH_VERSION_LABEL}\"")
 add_definitions("-DSERIALIZED_ZOO=\"${CMAKE_CURRENT_SOURCE_DIR}/models\"")
-set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
+add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
+add_definitions("-DJSON_INCLUDES=\"${JSON_INCLUDE_DIR}\"")
+if (NGRAPH_EVAL_ENABLE)
+    add_definitions(-DNGRAPH_EVAL_ENABLE)
+endif()
+if (NGRAPH_TBB_ENABLE)
+    add_definitions(-DNGRAPH_TBB_ENABLE)
+endif()
+if (NGRAPH_INTERPRETER_ENABLE)
+    add_definitions(-DNGRAPH_INTERPRETER_ENABLE)
+endif()
 
-set(ONNX_LIBRARIES onnx)
+add_subdirectory(util)
 
 if(NOT NGRAPH_UNIT_TEST_ENABLE)
     message(STATUS "unit tests disabled")
-    add_subdirectory(util)
     return()
 endif()
 
@@ -44,7 +55,7 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif()
 endif()
 
-set(SRC
+set(COMMON_SRC
     algebraic_simplification.cpp
     aligned_buffer.cpp
     all_close_f.cpp
@@ -214,12 +225,6 @@ set(SRC
     zero_dim_tensor_elimination.cpp
 )
 
-if(NGRAPH_INTERPRETER_ENABLE)
-    list(APPEND SRC
-        concat_fusion.cpp
-    )
-endif()
-
 # This code generates one source file per header file under ngraph/src where the source file
 # has just a single #include statement. This checks that each header in the source tree is
 # complete and self-contained so it can be included without requiring any other includes.
@@ -244,25 +249,25 @@ foreach(HEADER ${NGRAPH_HEADER_LIST})
     string(REGEX REPLACE "hpp$" "cpp" OUT_PATH ${OUT_PATH})
     set(OUT_FILE "${CMAKE_CURRENT_BINARY_DIR}/include_test/${OUT_PATH}")
     configure_file("header_standalone.in.cpp" ${OUT_FILE})
-    list(APPEND SRC ${OUT_FILE})
+    list(APPEND HEADER_SRC ${OUT_FILE})
 endforeach()
 
 if(NGRAPH_JSON_ENABLE)
-    list(APPEND SRC core.cpp serialize.cpp)
+    list(APPEND JSON_SRC core.cpp serialize.cpp)
 endif()
 
 if(NOT WIN32 AND NGRAPH_TOOLS_ENABLE)
-    list(APPEND SRC tools.cpp)
+    list(APPEND TOOLS_SRC tools.cpp)
 endif()
 
 set_source_files_properties(includes.cpp PROPERTIES COMPILE_DEFINITIONS
     NGRAPH_INCLUDES="${PROJECT_SOURCE_DIR}/src/ngraph")
 
 if (NGRAPH_INTERPRETER_ENABLE)
-    list(APPEND SRC
-        backend_debug_api.cpp
+    list(APPEND INTERPRETER_SRC
         builder.cpp
-        backend_api.cpp)
+        backend_api.cpp
+        concat_fusion.cpp)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} INTERPRETER)
 endif()
 
@@ -297,8 +302,6 @@ if(NGRAPH_EVAL_ENABLE)
     set(ACTIVE_BACKEND_LIST ${ACTIVE_BACKEND_LIST} EVAL)
 endif()
 
-add_definitions("-DTEST_FILES=\"${CMAKE_CURRENT_SOURCE_DIR}/files\"")
-add_subdirectory(util)
 
 # backend specific test files must meet the following requirements:
 # 1) The must be named <name>.in.cpp
@@ -459,6 +462,8 @@ if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
+    set(NGRAPH_ONNX_NAMESPACE ngraph_onnx)
+    set(ONNX_LIBRARIES onnx)
     list(APPEND MULTI_TEST_SRC
             onnx/onnx_import.in.cpp
             onnx/onnx_import_const_folding.in.cpp
@@ -469,6 +474,7 @@ if (NGRAPH_ONNX_IMPORT_ENABLE)
             onnx/onnx_import_reshape.in.cpp
             onnx/onnx_import_rnn.in.cpp
             onnx/onnx_import_quant.in.cpp)
+    list(APPEND ONNX_IMPORT_HEADERS ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
 endif()
 
 foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
@@ -500,6 +506,15 @@ foreach(BACKEND_NAME ${ACTIVE_BACKEND_LIST})
 
     message(STATUS "Adding unit test for backend ${BACKEND_NAME}")
 endforeach()
+
+if(NGRAPH_ADDRESS_SANITIZER)
+    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
+endif()
+
+#
+# Add targets
+#
+
 # These configured tests are for the CPU backend and its variants
 set(CPU_MULTI_SRC
     cpu_fusion.in.cpp
@@ -516,23 +531,47 @@ foreach(BACKEND_NAME ${ACTIVE_CPU_BACKEND_LIST})
         string(REPLACE ":" "_" BACKEND_NAME ${BACKEND_NAME})
         string(REPLACE ".in." "_${BACKEND_NAME}." TARGET_NAME ${TEST_SRC})
         configure_file(${TEST_SRC} ${TARGET_NAME})
-        set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
+        #set(SRC ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME} ${SRC})
+        list(APPEND CPU_SRCS ${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME})
     endforeach()
 endforeach()
 
-add_executable(unit-test ${SRC})
+list(APPEND COMMON_HEADERS ".")
+get_target_property(NGRAPH_INCLUDE_DIR ngraph INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND COMMON_HEADERS "${NGRAPH_INCLUDE_DIR}")
+get_target_property(GTEST_INCLUDE_DIR libgtest INTERFACE_INCLUDE_DIRECTORIES)
+list(APPEND COMMON_HEADERS "${GTEST_INCLUDE_DIR}")
+if(TARGET cpu_backend)
+    get_target_property(DNNL_INCLUDE_DIR DNNL::dnnl INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND CPU_HEADERS "${DNNL_INCLUDE_DIR}")
+    get_target_property(EIGEN_INCLUDE_DIR Eigen3::Eigen INTERFACE_INCLUDE_DIRECTORIES)
+    list(APPEND CPU_HEADERS "${EIGEN_INCLUDE_DIR}")
+    if(TARGET TBB::tbb)
+        get_target_property(TBB_INCLUDE_DIR TBB::tbb INTERFACE_INCLUDE_DIRECTORIES)
+        list(APPEND CPU_HEADERS "${TBB_INCLUDE_DIR}")
+    endif()
+    add_library(unit-test-cpu OBJECT ${CPU_SRCS})
+    add_dependencies(unit-test-cpu libgtest)
+    target_include_directories(unit-test-cpu PRIVATE "${COMMON_HEADERS}" "${CPU_HEADERS}")
+endif()
+
+if(TARGET interpreter_backend)
+    add_library(unit-test-interpreter OBJECT backend_debug_api.cpp)
+    add_dependencies(unit-test-interpreter libgtest)
+    get_target_property(INTERPRETER_INCLUDE_DIR interpreter_backend INTERFACE_INCLUDE_DIRECTORIES)
+    target_include_directories(unit-test-interpreter PRIVATE "${COMMON_HEADERS}")
+endif()
+
+add_executable(unit-test $<TARGET_OBJECTS:unit-test-cpu> $<TARGET_OBJECTS:unit-test-interpreter> ${SRC})
 
 target_include_directories(unit-test PRIVATE ".")
 
-add_definitions("-DCURDIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
-add_definitions("-DJSON_INCLUDES=\"${JSON_INCLUDE_DIR}\"")
-
-if(NGRAPH_ADDRESS_SANITIZER)
-    add_compile_options(-g -fsanitize=address -fno-omit-frame-pointer)
-endif()
 
 target_link_libraries(unit-test PRIVATE ngraph_test_util)
 target_link_libraries(unit-test PRIVATE ngraph libgtest)
+if(TARGET cpu_backend)
+    target_link_libraries(unit-test PRIVATE cpu_backend)
+endif()
 
 if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
     target_link_libraries(unit-test PRIVATE ngraph pybind11::embed)
@@ -540,12 +579,10 @@ if(NGRAPH_UNIT_TEST_NUMPY_ENABLE)
 endif()
 
 if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_include_directories(unit-test
-        SYSTEM PRIVATE ${ONNX_INCLUDE_DIR} ${ONNX_PROTO_INCLUDE_DIR} ${Protobuf_INCLUDE_DIR})
     target_link_libraries(unit-test PRIVATE ${ONNX_LIBRARIES})
+    target_link_libraries(unit-test PRIVATE onnx_importer)
 endif()
 
-target_compile_definitions(unit-test PRIVATE NGRAPH_VERSION_LABEL="${NGRAPH_VERSION_LABEL}")
 if (NGRAPH_JSON_ENABLE)
     target_link_libraries(unit-test PRIVATE nlohmann_json::nlohmann_json)
 endif()
@@ -564,14 +601,10 @@ if (MSVC)
     target_compile_options(unit-test PRIVATE "/bigobj")
 endif()
 
-if (NGRAPH_ONNX_IMPORT_ENABLE)
-    target_link_libraries(unit-test PRIVATE onnx_importer)
-endif()
-
 if (NGRAPH_CPU_ENABLE)
     # The INTERPRETER backend is required for convolution, and backwards unit tests
-    target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
-    target_link_libraries(unit-test PRIVATE DNNL::dnnl)
+    #target_link_libraries(unit-test PRIVATE cpu_backend interpreter_backend)
+    #target_link_libraries(unit-test PRIVATE DNNL::dnnl)
     set_property(SOURCE backend_api.cpp APPEND PROPERTY COMPILE_DEFINITIONS NGRAPH_CPU_ENABLE)
 endif()
 
@@ -582,22 +615,12 @@ if (NGRAPH_TOOLS_ENABLE)
     add_dependencies(unit-test nbench)
 endif()
 
-if (NGRAPH_TBB_ENABLE)
-    target_compile_definitions(unit-test PRIVATE "NGRAPH_TBB_ENABLE")
-endif()
-
 if (NGRAPH_INTERPRETER_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_INTERPRETER_ENABLE)
     target_link_libraries(unit-test PRIVATE interpreter_backend)
 endif()
 
 if (NGRAPH_GENERIC_CPU_ENABLE)
     target_link_libraries(unit-test PRIVATE gcpu_backend)
-endif()
-
-if (NGRAPH_EVAL_ENABLE)
-    target_compile_definitions(unit-test PRIVATE NGRAPH_EVAL_ENABLE)
-    target_link_libraries(unit-test PRIVATE eval_backend)
 endif()
 
 if (NGRAPH_GPU_ENABLE)
