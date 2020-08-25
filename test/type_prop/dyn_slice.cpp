@@ -31,7 +31,7 @@ TEST(type_prop, dynslice_arg_static_params_static_ok)
     auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
 TEST(type_prop, dynslice_arg_rank_static_dynamic_params_static_ok)
@@ -45,7 +45,7 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_static_ok)
     auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
 TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_ok)
@@ -60,7 +60,7 @@ TEST(type_prop, dynslice_arg_static_params_rank_static_dynamic_ok)
     auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
 TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_static_dynamic_ok)
@@ -76,7 +76,7 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_static_dynamic_ok)
     auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
 TEST(type_prop, dynslice_arg_rank_dynamic_params_rank_static_dynamic_ok)
@@ -118,7 +118,7 @@ TEST(type_prop, dynslice_arg_rank_static_dynamic_params_rank_dynamic_ok)
     auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
 TEST(type_prop, dynslice_static_shape)
@@ -361,7 +361,7 @@ TEST(type_prop, dynslice_params_et_dynamic_ok)
     auto r = make_shared<op::v0::DynSlice>(arg, lower_bounds, upper_bounds, strides);
 
     EXPECT_EQ(r->get_output_element_type(0), element::f32);
-    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic(4)));
+    EXPECT_TRUE(r->get_output_partial_shape(0).same_scheme(PartialShape::dynamic()));
 }
 
 void DynSlice_Test_Type_Except(const shared_ptr<Node>& param_0,
