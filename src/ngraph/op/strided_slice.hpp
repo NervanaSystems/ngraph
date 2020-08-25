@@ -106,10 +106,6 @@ namespace ngraph
                               const HostTensorVector& inputs) const override;
 
                 AxisSet convert_mask_to_axis_set(const std::vector<int64_t>& mask) const;
-                Shape compute_output_shape(const Shape& input_shape,
-                                           const std::vector<int64_t>& begin,
-                                           const std::vector<int64_t>& end,
-                                           const std::vector<int64_t>& strides) const;
 
             protected:
                 void generate_adjoints(autodiff::Adjoints& adjoints,

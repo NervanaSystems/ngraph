@@ -316,21 +316,3 @@ bool op::v1::StridedSlice::evaluate(const HostTensorVector& output_values,
                                   convert_mask_to_axis_set(get_ellipsis_mask()),
                                   output_values[0]);
 }
-
-Shape op::v1::StridedSlice::compute_output_shape(const Shape& input_shape,
-                                                 const vector<int64_t>& begin,
-                                                 const vector<int64_t>& end,
-                                                 const vector<int64_t>& strides) const
-{
-    return infer_slice_shape(this,
-                             input_shape,
-                             begin,
-                             end,
-                             strides,
-                             convert_mask_to_axis_set(get_begin_mask()),
-                             convert_mask_to_axis_set(get_end_mask()),
-                             convert_mask_to_axis_set(get_new_axis_mask()),
-                             convert_mask_to_axis_set(get_shrink_axis_mask()),
-                             convert_mask_to_axis_set(get_ellipsis_mask()))
-        .get_shape();
-}
