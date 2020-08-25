@@ -130,21 +130,3 @@ void op::v0::DynSlice::generate_adjoints(autodiff::Adjoints& /* adjoints */,
 {
     throw ngraph_error("generate_adjoints not implemented for DynSlice");
 }
-
-Shape op::v0::DynSlice::compute_output_shape(const PartialShape& input_shape,
-                                             const vector<int64_t>& lower_bounds,
-                                             const vector<int64_t>& upper_bounds,
-                                             const vector<int64_t>& strides) const
-{
-    return infer_slice_shape(this,
-                             input_shape,
-                             lower_bounds,
-                             upper_bounds,
-                             strides,
-                             m_lower_bounds_mask,
-                             m_upper_bounds_mask,
-                             m_new_axis,
-                             m_shrink_axis,
-                             m_ellipsis_mask)
-        .to_shape();
-}

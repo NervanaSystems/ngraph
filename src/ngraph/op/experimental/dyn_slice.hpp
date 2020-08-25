@@ -65,12 +65,6 @@ namespace ngraph
                     clone_with_new_inputs(const OutputVector& new_args) const override;
                 void validate_and_infer_types() override;
 
-                /// Helper method to compute output shape
-                Shape compute_output_shape(const PartialShape& input_shape,
-                                           const std::vector<int64_t>& lower_bounds,
-                                           const std::vector<int64_t>& upper_bounds,
-                                           const std::vector<int64_t>& strides) const;
-
             protected:
                 virtual void generate_adjoints(autodiff::Adjoints& adjoints,
                                                const OutputVector& deltas) override;
