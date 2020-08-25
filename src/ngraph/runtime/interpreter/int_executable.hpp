@@ -268,7 +268,7 @@ protected:
     }
 
     Coordinate as_coordinate(const HostTensor* tensor) const;
-    Strides as_strides(const HostTensor* tensor) const;
+    Strides as_strides(const HostTensor* tensor, const Shape& reference_shape) const;
     Shape as_shape(const HostTensor* tensor) const;
     AxisSet as_axis_set(const HostTensor* tensor) const;
     AxisVector as_axis_vector(const HostTensor* tensor) const;
@@ -892,23 +892,21 @@ protected:
         case OP_TYPEID::DynSlice_v0:
         {
             const op::v0::DynSlice* op = static_cast<const op::v0::DynSlice*>(&node);
-
-            Coordinate lower_bounds = as_coordinate(args[1].get());
-            Coordinate upper_bounds = as_coordinate(args[2].get());
-            Strides strides = as_strides(args[3].get());
-
-            Shape output_shape = op->compute_output_shape(args[0]->get_shape(),
-                                                          as_vector<int64_t>(args[1].get()),
-                                                          as_vector<int64_t>(args[2].get()),
-                                                          as_vector<int64_t>(args[3].get()));
-            out[0]->set_shape(output_shape);
-            reference::slice<T>(args[0]->get_data_ptr<const T>(),
-                                out[0]->get_data_ptr<T>(),
-                                args[0]->get_shape(),
-                                lower_bounds,
-                                upper_bounds,
-                                strides,
-                                output_shape);
+            Shape input_shape = args[0]->get_shape();
+            SlicePlan slice_plan = make_slice_plan(input_shape,
+                                                   as_vector<int64_t>(args[1].get()),
+                                                   as_vector<int64_t>(args[2].get()),
+                                                   as_vector<int64_t>(args[3].get()),
+                                                   op->get_lower_bounds_mask(),
+                                                   op->get_upper_bounds_mask(),
+                                                   op->get_new_axis(),
+                                                   op->get_shrink_axis(),
+                                                   op->get_ellipsis_mask());
+            out[0]->set_shape(slice_plan.reshape_out_shape);
+            reference::strided_slice<T>(args[0]->get_data_ptr<const T>(),
+                                        out[0]->get_data_ptr<T>(),
+                                        input_shape,
+                                        slice_plan);
             break;
         }
         case OP_TYPEID::EmbeddingLookup_v0:
