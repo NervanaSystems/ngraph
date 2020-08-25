@@ -93,7 +93,7 @@ NGRAPH_TEST(${BACKEND_NAME}, fuse_max_with_constant_zero_input_as_relu)
     auto shape_a = Shape{2, 5};
     auto A = op::v0::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
     auto B = make_shared<op::v0::Parameter>(element::f32, shape_a);
-    auto max = make_shared<op::v0::Maximum>(A, B);
+    auto max = make_shared<op::v1::Maximum>(A, B);
     auto shape_rt = Shape{2, 5};
     auto f = make_shared<Function>(max, ParameterVector{B});
 

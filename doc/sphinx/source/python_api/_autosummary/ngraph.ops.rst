@@ -48,7 +48,7 @@ ngraph.ops
       group_convolution
       hard_sigmoid
       less
-      less_eq
+      less_equal
       log
       logical_and
       logical_not

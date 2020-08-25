@@ -237,17 +237,17 @@ TEST(type_prop, eltwise_auto_bcast)
     test_binary_eltwise_numpy<op::v1::Add>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::LogicalAnd>(element::boolean, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::Divide>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::GreaterEq>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Less>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::LessEq>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Equal>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Greater>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::GreaterEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Less>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::LessEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Maximum>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Minimum>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::Multiply>(element::f32, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::NotEqual>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::LogicalOr>(element::boolean, op::AutoBroadcastType::NUMPY);
-    test_binary_eltwise_numpy<op::v0::Power>(element::f32, op::AutoBroadcastType::NUMPY);
+    test_binary_eltwise_numpy<op::v1::Power>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::Subtract>(element::f32, op::AutoBroadcastType::NUMPY);
     test_binary_eltwise_numpy<op::v1::LogicalXor>(element::boolean, op::AutoBroadcastType::NUMPY);
 }
@@ -256,7 +256,7 @@ TEST(type_prop, comparison_good)
 {
     auto tv0_2_4_param_0 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
     auto tv0_2_4_param_1 = make_shared<op::v0::Parameter>(element::f32, Shape{2, 4});
-    auto eq = make_shared<op::v0::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
+    auto eq = make_shared<op::v1::Equal>(tv0_2_4_param_0, tv0_2_4_param_1);
     EXPECT_EQ(eq->get_output_element_type(0), element::boolean);
     EXPECT_EQ(eq->get_output_shape(0), (Shape{2, 4}));
 }
@@ -546,7 +546,7 @@ TEST(type_prop, logic_arith_compare_partial_et)
     auto test_compare = [](element::Type et0, element::Type et1) -> std::shared_ptr<Node> {
         auto param0 = std::make_shared<op::v0::Parameter>(et0, Shape{1, 2, 3});
         auto param1 = std::make_shared<op::v0::Parameter>(et1, Shape{1, 2, 3});
-        return std::make_shared<op::v0::Greater>(param0, param1);
+        return std::make_shared<op::v1::Greater>(param0, param1);
     };
 
     auto test_not = [](element::Type et) -> std::shared_ptr<Node> {

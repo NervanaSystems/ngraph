@@ -30,7 +30,7 @@ namespace ngraph
             namespace kernel
             {
                 template <typename ElementType>
-                void less_eq(void* input0, void* input1, void* output, size_t count, int arena)
+                void less_equal(void* input0, void* input1, void* output, size_t count, int arena)
                 {
                     Eigen::array<Eigen::Index, 1> out_dims, in_dims;
 

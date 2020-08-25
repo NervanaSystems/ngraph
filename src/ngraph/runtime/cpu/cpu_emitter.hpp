@@ -126,15 +126,15 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Divide);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Equal);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Equal);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Greater);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Greater);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::GreaterEq);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::GreaterEqual);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Less);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Less);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::LessEq);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::LessEqual);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Any);
             template <>
@@ -144,13 +144,13 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Log);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Maximum);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Maximum);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Minimum);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Minimum);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Negative);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::NotEqual);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::NotEqual);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Select);
             template <>
@@ -204,7 +204,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::ScatterNDAdd);
             template <>
-            void CPU_Emitter::EMITTER_DECL(ngraph::op::v0::Power);
+            void CPU_Emitter::EMITTER_DECL(ngraph::op::v1::Power);
             template <>
             void CPU_Emitter::EMITTER_DECL(ngraph::op::UpdateSlice);
             template <>

@@ -343,7 +343,7 @@ mlir::Operation*
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Greater>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Greater>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGGreaterOp>(ngNode);
@@ -351,50 +351,49 @@ mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Greater>(
 
 template <>
 mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::v0::Less>(NgDialectConversionPass& NgDialectObj,
+    NgDialectConversionPass::createOp<ngraph::op::v1::Less>(NgDialectConversionPass& NgDialectObj,
                                                             const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGLessOp>(ngNode);
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::GreaterEq>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::GreaterEqual>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGGreaterEqOp>(ngNode);
 }
 
 template <>
-mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::v0::LessEq>(NgDialectConversionPass& NgDialectObj,
-                                                              const ngraph::Node* ngNode)
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::LessEqual>(
+    NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGLessEqOp>(ngNode);
 }
 
 template <>
 mlir::Operation*
-    NgDialectConversionPass::createOp<ngraph::op::v0::Equal>(NgDialectConversionPass& NgDialectObj,
+    NgDialectConversionPass::createOp<ngraph::op::v1::Equal>(NgDialectConversionPass& NgDialectObj,
                                                              const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGEqOp>(ngNode);
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::NotEqual>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::NotEqual>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGNotEqOp>(ngNode);
 }
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Maximum>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Maximum>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGMaxOp>(ngNode);
 }
 
 template <>
-mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v0::Minimum>(
+mlir::Operation* NgDialectConversionPass::createOp<ngraph::op::v1::Minimum>(
     NgDialectConversionPass& NgDialectObj, const ngraph::Node* ngNode)
 {
     return NgDialectObj.createGenericOp<mlir::NGMinOp>(ngNode);

@@ -142,7 +142,7 @@ shared_ptr<Node> op::v0::LSTMSequence::get_masked_node(const Output<Node>& data,
 
     // Create mask node deciding whether or not to mask batch data.
     shared_ptr<Node> mask_condition =
-        make_shared<op::v0::Greater>(curr_time_step_node, batch_seq_length);
+        make_shared<op::v1::Greater>(curr_time_step_node, batch_seq_length);
 
     // Select values depnding on mask_condition.
     // Select(<condition>, <true_value>, <false_value>)

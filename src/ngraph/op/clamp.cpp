@@ -178,8 +178,8 @@ OutputVector op::v0::Clamp::decompose_op() const
     default: throw runtime_error("Unsupported data type in op Clamp"); break;
     }
 
-    auto max = make_shared<op::v0::Maximum>(clamp_min, data);
-    return {make_shared<op::v0::Minimum>(clamp_max, max)};
+    auto max = make_shared<op::v1::Maximum>(clamp_min, data);
+    return {make_shared<op::v1::Minimum>(clamp_max, max)};
 }
 
 shared_ptr<Node> op::v0::Clamp::clone_with_new_inputs(const OutputVector& new_args) const

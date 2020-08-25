@@ -115,11 +115,11 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
                                                      {5, 12, 21, 20, 30, 42});
     check_auto_bcast<op::v1::Divide, float, float>({{4, 5, 6, 7, 8, 9}, {1, 2, 3}},
                                                    {4, 2.5f, 2, 7, 4, 3});
-    check_auto_bcast<op::v0::Maximum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::Maximum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                     {1, 5, 8, 4, 5, 8});
-    check_auto_bcast<op::v0::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::Minimum, float, float>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                     {1, 2, 3, 1, 5, 6});
-    check_auto_bcast<op::v0::Power, float, float>(
+    check_auto_bcast<op::v1::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}},
         {1, 4, 27, 4, 25, 216},
         op::AutoBroadcastSpec(op::AutoBroadcastType::NUMPY),
@@ -130,17 +130,17 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise)
     check_auto_bcast<op::v1::LogicalOr, char, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}},
                                                     {1, 0, 1, 1, 1, 1});
 
-    check_auto_bcast<op::v0::Equal, uint8_t, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}},
+    check_auto_bcast<op::v1::Equal, uint8_t, char>({{1, 0, 1, 0, 1, 1}, {1, 0, 0}},
                                                    {1, 1, 0, 0, 0, 0});
-    check_auto_bcast<op::v0::Greater, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::Greater, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                    {0, 0, 0, 1, 0, 0});
-    check_auto_bcast<op::v0::GreaterEq, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                     {1, 0, 0, 1, 1, 0});
-    check_auto_bcast<op::v0::Less, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::GreaterEqual, float, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                        {1, 0, 0, 1, 1, 0});
+    check_auto_bcast<op::v1::Less, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                   {0, 1, 1, 0, 0, 1});
-    check_auto_bcast<op::v0::LessEq, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
-                                                    {1, 1, 1, 0, 1, 1});
-    check_auto_bcast<op::v0::NotEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+    check_auto_bcast<op::v1::LessEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
+                                                       {1, 1, 1, 0, 1, 1});
+    check_auto_bcast<op::v1::NotEqual, uint8_t, char>({{1, 2, 3, 4, 5, 6}, {1, 5, 8}},
                                                       {0, 1, 1, 1, 0, 1});
 }
 
@@ -155,28 +155,28 @@ NGRAPH_TEST(${BACKEND_NAME}, auto_bcast_binary_elementwise_pdpd)
         {{1, 2, 3, 4, 5, 6}, {5, 6, 7}}, {5, 12, 21, 20, 30, 42}, autob);
     check_auto_bcast<op::v1::Divide, float, float>(
         {{4, 5, 6, 7, 8, 9}, {1, 2, 3}}, {4, 2.5f, 2, 7, 4, 3}, autob);
-    check_auto_bcast<op::v0::Maximum, float, float>(
+    check_auto_bcast<op::v1::Maximum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 5, 8, 4, 5, 8}, autob);
-    check_auto_bcast<op::v0::Minimum, float, float>(
+    check_auto_bcast<op::v1::Minimum, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 2, 3, 1, 5, 6}, autob);
-    check_auto_bcast<op::v0::Power, float, float>(
+    check_auto_bcast<op::v1::Power, float, float>(
         {{1, 2, 3, 4, 5, 6}, {1, 2, 3}}, {1, 4, 27, 4, 25, 216}, autob, true);
     check_auto_bcast<op::v1::LogicalAnd, char, char>(
         {{1, 0, 1, 0, 0, 1}, {1, 0, 1}}, {1, 0, 1, 0, 0, 1}, autob);
     check_auto_bcast<op::v1::LogicalOr, char, char>(
         {{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 0, 1, 1, 1, 1}, autob);
 
-    check_auto_bcast<op::v0::Equal, uint8_t, char>(
+    check_auto_bcast<op::v1::Equal, uint8_t, char>(
         {{1, 0, 1, 0, 1, 1}, {1, 0, 0}}, {1, 1, 0, 0, 0, 0}, autob);
-    check_auto_bcast<op::v0::Greater, float, char>(
+    check_auto_bcast<op::v1::Greater, float, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 0, 0, 1, 0, 0}, autob);
-    check_auto_bcast<op::v0::GreaterEq, float, char>(
+    check_auto_bcast<op::v1::GreaterEqual, float, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 0, 0, 1, 1, 0}, autob);
-    check_auto_bcast<op::v0::Less, uint8_t, char>(
+    check_auto_bcast<op::v1::Less, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 0, 0, 1}, autob);
-    check_auto_bcast<op::v0::LessEq, uint8_t, char>(
+    check_auto_bcast<op::v1::LessEqual, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {1, 1, 1, 0, 1, 1}, autob);
-    check_auto_bcast<op::v0::NotEqual, uint8_t, char>(
+    check_auto_bcast<op::v1::NotEqual, uint8_t, char>(
         {{1, 2, 3, 4, 5, 6}, {1, 5, 8}}, {0, 1, 1, 1, 0, 1}, autob);
 }
 

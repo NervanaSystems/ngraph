@@ -55,9 +55,9 @@ OutputVector op::v0::Elu::decompose_op() const
     shared_ptr<ngraph::Node> zero_node =
         builder::make_constant(data.get_element_type(), data.get_shape(), 0);
 
-    return {make_shared<ngraph::op::v0::Maximum>(data, zero_node) +
+    return {make_shared<ngraph::op::v1::Maximum>(data, zero_node) +
             alpha_node * make_shared<ngraph::op::v0::Exp>(
-                             make_shared<ngraph::op::v0::Minimum>(data, zero_node)) -
+                             make_shared<ngraph::op::v1::Minimum>(data, zero_node)) -
             alpha_node};
 }
 

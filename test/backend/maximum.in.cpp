@@ -49,7 +49,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::v0::Parameter>(element::f32, shape);
     auto B = make_shared<op::v0::Parameter>(element::f32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::Maximum>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -71,7 +71,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_int32)
     Shape shape{2, 2};
     auto A = make_shared<op::v0::Parameter>(element::i32, shape);
     auto B = make_shared<op::v0::Parameter>(element::i32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::Maximum>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -92,7 +92,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_int64)
     Shape shape{2, 2, 2};
     auto A = make_shared<op::v0::Parameter>(element::i64, shape);
     auto B = make_shared<op::v0::Parameter>(element::i64, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::Maximum>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 
@@ -114,7 +114,7 @@ NGRAPH_TEST(${BACKEND_NAME}, maximum_unsigned_limit)
     Shape shape{};
     auto A = make_shared<op::v0::Parameter>(element::u32, shape);
     auto B = make_shared<op::v0::Parameter>(element::u32, shape);
-    auto f = make_shared<Function>(make_shared<op::v0::Maximum>(A, B), ParameterVector{A, B});
+    auto f = make_shared<Function>(make_shared<op::v1::Maximum>(A, B), ParameterVector{A, B});
 
     auto backend = runtime::Backend::create("${BACKEND_NAME}");
 

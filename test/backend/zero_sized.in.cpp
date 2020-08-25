@@ -282,37 +282,37 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_divide)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_eq)
 {
-    make_binary_empty_test<op::v0::Equal>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::Equal>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_greater)
 {
-    make_binary_empty_test<op::v0::Greater>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::Greater>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_greatereq)
 {
-    make_binary_empty_test<op::v0::GreaterEq>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::GreaterEqual>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_less)
 {
-    make_binary_empty_test<op::v0::Less>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::Less>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_lesseq)
 {
-    make_binary_empty_test<op::v0::LessEq>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::LessEqual>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_maximum)
 {
-    make_binary_empty_test<op::v0::Maximum>("${BACKEND_NAME}");
+    make_binary_empty_test<op::v1::Maximum>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_minimum)
 {
-    make_binary_empty_test<op::v0::Minimum>("${BACKEND_NAME}");
+    make_binary_empty_test<op::v1::Minimum>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply)
@@ -322,12 +322,12 @@ NGRAPH_TEST(${BACKEND_NAME}, zero_sized_multiply)
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_not_equal)
 {
-    make_binary_empty_test<op::v0::NotEqual>("${BACKEND_NAME}", true);
+    make_binary_empty_test<op::v1::NotEqual>("${BACKEND_NAME}", true);
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_power)
 {
-    make_binary_empty_test<op::v0::Power>("${BACKEND_NAME}");
+    make_binary_empty_test<op::v1::Power>("${BACKEND_NAME}");
 }
 
 NGRAPH_TEST(${BACKEND_NAME}, zero_sized_subtract)

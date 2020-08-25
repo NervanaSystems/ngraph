@@ -55,7 +55,7 @@ TEST(core_fusion, core_fusion_pass_basic)
     auto shape_a = Shape{1, 5};
     auto A = op::v0::Constant::create(element::f32, shape_a, {0, 0, 0, 0, 0});
     auto B = make_shared<op::v0::Parameter>(element::f32, shape_a);
-    auto max = make_shared<op::v0::Maximum>(A, B);
+    auto max = make_shared<op::v1::Maximum>(A, B);
     auto graph = make_shared<op::v0::Abs>(max);
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::CoreFusion>();

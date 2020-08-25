@@ -29,10 +29,10 @@ namespace ngraph
         namespace reference
         {
             template <typename T>
-            void greater_eq(const T* arg0,
-                            const T* arg1,
-                            char* out,
-                            size_t count) // TODO: using char for bool, is this right?
+            void greater_equal(const T* arg0,
+                               const T* arg1,
+                               char* out,
+                               size_t count) // TODO: using char for bool, is this right?
             {
                 for (size_t i = 0; i < count; i++)
                 {

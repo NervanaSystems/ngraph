@@ -334,7 +334,7 @@ namespace
         if (ignore_index >= 0 && !soft_label)
         // check for the mask
         {
-            size_t not_equal = count_ops_of_type<op::v0::NotEqual>(cpu_f);
+            size_t not_equal = count_ops_of_type<op::v1::NotEqual>(cpu_f);
             ASSERT_EQ(not_equal, 1);
         }
     }
@@ -379,7 +379,7 @@ namespace
         if (ignore_index >= 0 && !soft_label)
         // check for the mask
         {
-            size_t not_equal = count_ops_of_type<op::v0::NotEqual>(cpu_f);
+            size_t not_equal = count_ops_of_type<op::v1::NotEqual>(cpu_f);
             ASSERT_EQ(not_equal, 1);
         }
     }
