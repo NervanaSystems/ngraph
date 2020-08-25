@@ -194,7 +194,6 @@ shape_of_matrix_v3
 softmax_dynamic_axes
 space_to_batch
 stack_negative_axis
-strided_slice_stride_optional
 tile_3d_few_repeats
 tile_3d_small_data_rank
 transpose
