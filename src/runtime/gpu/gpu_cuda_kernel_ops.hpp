@@ -155,7 +155,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Power>
+            struct CudaOpMap<ngraph::op::v1::Power>
             {
                 static constexpr const char* op = "powf";
                 static constexpr const char* math_kernel = nullptr;
@@ -191,42 +191,42 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Equal>
+            struct CudaOpMap<ngraph::op::v1::Equal>
             {
                 static constexpr const char* op = "equal";
                 static constexpr const char* math_kernel = "x0 == x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::NotEqual>
+            struct CudaOpMap<ngraph::op::v1::NotEqual>
             {
                 static constexpr const char* op = "not_equal";
                 static constexpr const char* math_kernel = "x0 != x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Greater>
+            struct CudaOpMap<ngraph::op::v1::Greater>
             {
                 static constexpr const char* op = "greater";
                 static constexpr const char* math_kernel = "x0 > x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::GreaterEq>
+            struct CudaOpMap<ngraph::op::v1::GreaterEqual>
             {
                 static constexpr const char* op = "greater_equal";
                 static constexpr const char* math_kernel = "x0 >= x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Less>
+            struct CudaOpMap<ngraph::op::v1::Less>
             {
                 static constexpr const char* op = "less";
                 static constexpr const char* math_kernel = "x0 < x1";
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::LessEq>
+            struct CudaOpMap<ngraph::op::v1::LessEqual>
             {
                 static constexpr const char* op = "less_equal";
                 static constexpr const char* math_kernel = "x0 <= x1";
@@ -299,7 +299,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Minimum>
+            struct CudaOpMap<ngraph::op::v1::Minimum>
             {
                 static constexpr const char* op = "min";
                 static constexpr const char* math_kernel = "x0 > x1 ? x1 : x0";
@@ -307,7 +307,7 @@ namespace ngraph
             };
 
             template <>
-            struct CudaOpMap<ngraph::op::v0::Maximum>
+            struct CudaOpMap<ngraph::op::v1::Maximum>
             {
                 static constexpr const char* op = "max";
                 static constexpr const char* math_kernel = "x0 > x1 ? x0 : x1";

@@ -140,7 +140,7 @@ TEST(builder, tensor_mask)
 
     Shape mask_shape{3, 5};
     auto f = make_shared<Function>(
-        builder::tensor_mask<op::v0::Less>(sequence_lengths, 1, 0, mask_shape, 0),
+        builder::tensor_mask<op::v1::Less>(sequence_lengths, 1, 0, mask_shape, 0),
         ParameterVector{sequence_lengths});
 
     auto backend = runtime::Backend::create("INTERPRETER");

@@ -156,7 +156,7 @@ int main(int argc, const char* argv[])
     auto softmax_clip_broadcast = std::make_shared<op::v0::Broadcast>(
         softmax_clip_value, Shape{batch_size, output_size}, AxisSet{0, 1});
     auto softmax_clip =
-        std::make_shared<op::v0::Maximum>(softmax, softmax_clip_broadcast);
+        std::make_shared<op::v1::Maximum>(softmax, softmax_clip_broadcast);
     auto softmax_log = std::make_shared<op::v0::Log>(softmax_clip);
     auto prod = std::make_shared<op::v1::Multiply>(softmax_log, labels);
     auto N = std::make_shared<op::v0::Parameter>(element::f32, Shape{});

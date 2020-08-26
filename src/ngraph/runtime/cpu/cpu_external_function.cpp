@@ -90,10 +90,10 @@
 #include "ngraph/op/gelu.hpp"
 #include "ngraph/op/gemm.hpp"
 #include "ngraph/op/greater.hpp"
-#include "ngraph/op/greater_eq.hpp"
+#include "ngraph/op/greater_equal.hpp"
 #include "ngraph/op/group_conv.hpp"
 #include "ngraph/op/less.hpp"
-#include "ngraph/op/less_eq.hpp"
+#include "ngraph/op/less_equal.hpp"
 #include "ngraph/op/log.hpp"
 #include "ngraph/op/logical_and.hpp"
 #include "ngraph/op/logical_not.hpp"
@@ -146,6 +146,8 @@
 #include "ngraph/pass/batch_fusion.hpp"
 #include "ngraph/pass/common_function_collection.hpp"
 #include "ngraph/pass/constant_folding.hpp"
+#include "ngraph/pass/convert_opset_1_to_0.hpp"
+#include "ngraph/pass/convert_opset_3_to_1.hpp"
 #include "ngraph/pass/core_fusion.hpp"
 #include "ngraph/pass/cse.hpp"
 #include "ngraph/pass/dump_sorted.hpp"
@@ -156,8 +158,6 @@
 #include "ngraph/pass/manager.hpp"
 #include "ngraph/pass/memory_layout.hpp"
 #include "ngraph/pass/nop_elimination.hpp"
-#include "ngraph/pass/opset0_downgrade.hpp"
-#include "ngraph/pass/opset1_downgrade.hpp"
 #include "ngraph/pass/propagate_cacheability.hpp"
 #include "ngraph/pass/reshape_elimination.hpp"
 #include "ngraph/pass/reshape_sinking.hpp"
@@ -325,22 +325,22 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v0::BatchMatMul), &runtime::cpu::CPU_Emitter::emit<op::v0::BatchMatMul>},
     {TI(ngraph::op::v0::Concat), &runtime::cpu::CPU_Emitter::emit<op::v0::Concat>},
     {TI(ngraph::op::v1::Divide), &runtime::cpu::CPU_Emitter::emit<op::v1::Divide>},
-    {TI(ngraph::op::v0::Equal), &runtime::cpu::CPU_Emitter::emit<op::v0::Equal>},
+    {TI(ngraph::op::v1::Equal), &runtime::cpu::CPU_Emitter::emit<op::v1::Equal>},
     {TI(ngraph::op::v0::Erf), &runtime::cpu::CPU_Emitter::emit<op::v0::Erf>},
     {TI(ngraph::op::v0::Gather), &runtime::cpu::CPU_Emitter::emit<op::v0::Gather>},
     {TI(ngraph::op::v0::GatherND), &runtime::cpu::CPU_Emitter::emit<op::v0::GatherND>},
     {TI(ngraph::op::v0::ScatterAdd), &runtime::cpu::CPU_Emitter::emit<op::v0::ScatterAdd>},
     {TI(ngraph::op::v0::ScatterNDAdd), &runtime::cpu::CPU_Emitter::emit<op::v0::ScatterNDAdd>},
-    {TI(ngraph::op::v0::Greater), &runtime::cpu::CPU_Emitter::emit<op::v0::Greater>},
-    {TI(ngraph::op::v0::GreaterEq), &runtime::cpu::CPU_Emitter::emit<op::v0::GreaterEq>},
-    {TI(ngraph::op::v0::Less), &runtime::cpu::CPU_Emitter::emit<op::v0::Less>},
-    {TI(ngraph::op::v0::LessEq), &runtime::cpu::CPU_Emitter::emit<op::v0::LessEq>},
+    {TI(ngraph::op::v1::Greater), &runtime::cpu::CPU_Emitter::emit<op::v1::Greater>},
+    {TI(ngraph::op::v1::GreaterEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::GreaterEqual>},
+    {TI(ngraph::op::v1::Less), &runtime::cpu::CPU_Emitter::emit<op::v1::Less>},
+    {TI(ngraph::op::v1::LessEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::LessEqual>},
     {TI(ngraph::op::v0::Log), &runtime::cpu::CPU_Emitter::emit<op::v0::Log>},
-    {TI(ngraph::op::v0::Maximum), &runtime::cpu::CPU_Emitter::emit<op::v0::Maximum>},
-    {TI(ngraph::op::v0::Minimum), &runtime::cpu::CPU_Emitter::emit<op::v0::Minimum>},
+    {TI(ngraph::op::v1::Maximum), &runtime::cpu::CPU_Emitter::emit<op::v1::Maximum>},
+    {TI(ngraph::op::v1::Minimum), &runtime::cpu::CPU_Emitter::emit<op::v1::Minimum>},
     {TI(ngraph::op::v0::Negative), &runtime::cpu::CPU_Emitter::emit<op::v0::Negative>},
-    {TI(ngraph::op::v0::NotEqual), &runtime::cpu::CPU_Emitter::emit<op::v0::NotEqual>},
-    {TI(ngraph::op::v0::Power), &runtime::cpu::CPU_Emitter::emit<op::v0::Power>},
+    {TI(ngraph::op::v1::NotEqual), &runtime::cpu::CPU_Emitter::emit<op::v1::NotEqual>},
+    {TI(ngraph::op::v1::Power), &runtime::cpu::CPU_Emitter::emit<op::v1::Power>},
     {TI(ngraph::op::v0::Select), &runtime::cpu::CPU_Emitter::emit<op::v0::Select>},
     {TI(ngraph::op::v1::Subtract), &runtime::cpu::CPU_Emitter::emit<op::v1::Subtract>},
     {TI(ngraph::op::v0::Broadcast), &runtime::cpu::CPU_Emitter::emit<op::v0::Broadcast>},
@@ -1288,8 +1288,8 @@ void runtime::cpu::CPU_ExternalFunction::register_common_passes(
 
     REGISTER_KNOBBED_PASS(LikeReplacement, true, ngraph::pass)
     REGISTER_KNOBBED_PASS_WITH_ARGS(FusedOpDecomposition, true, ngraph::pass, is_supported)
-    REGISTER_KNOBBED_PASS(Opset1Downgrade, true, ngraph::pass)
-    REGISTER_KNOBBED_PASS(Opset0Downgrade, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(ConvertOpset3To1, true, ngraph::pass)
+    REGISTER_KNOBBED_PASS(ConvertOpset1To0, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ImplicitBroadcastElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(NopElimination, true, ngraph::pass)
     REGISTER_KNOBBED_PASS(ZeroDimTensorElimination, true, ngraph::pass)

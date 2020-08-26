@@ -25,11 +25,23 @@ SET(GTEST_GIT_LABEL release-1.10.0)
 SET(GTEST_ARCHIVE_URL https://github.com/google/googletest/archive/${GTEST_GIT_LABEL}.zip)
 SET(GTEST_ARCHIVE_HASH 9ea36bf6dd6383beab405fd619bdce05e66a6535)
 
+if(WIN32)
+    list(APPEND GTEST_CMAKE_ARGS
+        -Dgtest_force_shared_crt=TRUE
+    )
+endif()
+
+if(UNIX)
+    # workaround for compile error
+    # related: https://github.com/intel/mkl-dnn/issues/55
+    set(GTEST_CXX_FLAGS "-Wno-unused-result ${CMAKE_ORIGINAL_CXX_FLAGS} -Wno-undef")
+else()
+    set(GTEST_CXX_FLAGS ${CMAKE_ORIGINAL_CXX_FLAGS})
+endif()
+
+set(GTEST_INSTALL_PREFIX ${EXTERNAL_PROJECTS_ROOT}/gtest)
 
 message(STATUS "Fetching googletest")
-set(GMOCK_OUTPUT_DIR ${EXTERNAL_PROJECTS_ROOT}/gtest/build/lib)
-set(GTEST_OUTPUT_DIR ${GMOCK_OUTPUT_DIR})
-
 FetchContent_Declare(
     ext_gtest
     URL      ${GTEST_ARCHIVE_URL}
@@ -39,8 +51,40 @@ FetchContent_Declare(
 FetchContent_GetProperties(ext_gtest)
 if(NOT ext_gtest_POPULATED)
     FetchContent_Populate(ext_gtest)
-    add_subdirectory(${ext_gtest_SOURCE_DIR} ${ext_gtest_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
+execute_process(COMMAND "${CMAKE_COMMAND}" -G "${CMAKE_GENERATOR}"
+    -DCMAKE_GENERATOR_PLATFORM:STRING=${CMAKE_GENERATOR_PLATFORM}
+    -DCMAKE_GENERATOR_TOOLSET:STRING=${CMAKE_GENERATOR_TOOLSET}
+    ${NGRAPH_FORWARD_CMAKE_ARGS}
+    -DCMAKE_CXX_FLAGS=${GTEST_CXX_FLAGS}
+    ${GTEST_CMAKE_ARGS}
+    -DCMAKE_INSTALL_PREFIX=${GTEST_INSTALL_PREFIX}
+    ${ext_gtest_SOURCE_DIR}
+    WORKING_DIRECTORY "${ext_gtest_BINARY_DIR}")
+
+if("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles")
+    include(ProcessorCount)
+    ProcessorCount(N)
+    if(N EQUAL 0)
+        set(N 8)
+    endif()
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target install -- -j${N}
+    WORKING_DIRECTORY "${ext_gtest_BINARY_DIR}")
+elseif(NGRAPH_GENERATOR_IS_MULTI_CONFIG)
+    foreach(BUILD_CONFIG ${CMAKE_CONFIGURATION_TYPES})
+        execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target install --config ${BUILD_CONFIG}
+        WORKING_DIRECTORY "${ext_gtest_BINARY_DIR}")
+    endforeach()
+else()
+    execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target install
+    WORKING_DIRECTORY "${ext_gtest_BINARY_DIR}")
+endif()
+#------------------------------------------------------------------------------
+
+set(GTest_DIR ${GTEST_INSTALL_PREFIX}/lib/cmake/GTest)
+
+find_package(GTest REQUIRED CONFIG)
+
 add_library(libgtest INTERFACE)
-target_link_libraries(libgtest INTERFACE gtest gmock)
+target_link_libraries(libgtest INTERFACE GTest::gtest GTest::gmock)

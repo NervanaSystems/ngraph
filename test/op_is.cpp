@@ -458,7 +458,7 @@ namespace
 
     void op_is_Equal()
     {
-        op::v0::Equal node;
+        op::v1::Equal node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());
@@ -575,16 +575,16 @@ namespace
 
     void op_is_Greater()
     {
-        op::v0::Greater node;
+        op::v1::Greater node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());
         EXPECT_FALSE(node.is_binary_elementwise_logical());
     }
 
-    void op_is_GreaterEq()
+    void op_is_GreaterEqual()
     {
-        op::v0::GreaterEq node;
+        op::v1::GreaterEqual node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());
@@ -656,16 +656,16 @@ namespace
 
     void op_is_Less()
     {
-        op::v0::Less node;
+        op::v1::Less node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());
         EXPECT_FALSE(node.is_binary_elementwise_logical());
     }
 
-    void op_is_LessEq()
+    void op_is_LessEqual()
     {
-        op::v0::LessEq node;
+        op::v1::LessEqual node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());
@@ -773,7 +773,7 @@ namespace
 
     void op_is_Maximum()
     {
-        op::v0::Maximum node;
+        op::v1::Maximum node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -809,7 +809,7 @@ namespace
 
     void op_is_Minimum()
     {
-        op::v0::Minimum node;
+        op::v1::Minimum node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());
@@ -845,7 +845,7 @@ namespace
 
     void op_is_NotEqual()
     {
-        op::v0::NotEqual node;
+        op::v1::NotEqual node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_comparison());
@@ -908,7 +908,7 @@ namespace
 
     void op_is_Power()
     {
-        op::v0::Power node;
+        op::v1::Power node;
         EXPECT_FALSE(node.is_unary_elementwise_arithmetic());
         EXPECT_TRUE(node.is_binary_elementwise_arithmetic());
         EXPECT_FALSE(node.is_binary_elementwise_comparison());

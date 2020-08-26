@@ -267,8 +267,8 @@ set (SRC
     op/gelu.hpp
     op/gemm.cpp
     op/gemm.hpp
-    op/greater_eq.cpp
-    op/greater_eq.hpp
+    op/greater_equal.cpp
+    op/greater_equal.hpp
     op/greater.cpp
     op/greater.hpp
     op/grn.cpp
@@ -284,8 +284,8 @@ set (SRC
     op/interpolate.hpp
     op/layer_norm.cpp
     op/layer_norm.hpp
-    op/less_eq.cpp
-    op/less_eq.hpp
+    op/less_equal.cpp
+    op/less_equal.hpp
     op/less.cpp
     op/less.hpp
     op/log.cpp
@@ -580,12 +580,12 @@ set (SRC
     pass/memory_visualize.hpp
     pass/nop_elimination.cpp
     pass/nop_elimination.hpp
-    pass/opset0_downgrade.cpp
-    pass/opset0_downgrade.hpp
-    pass/opset1_downgrade.cpp
-    pass/opset1_downgrade.hpp
-    pass/opset1_upgrade.cpp
-    pass/opset1_upgrade.hpp
+    pass/convert_opset_0_to_1.cpp
+    pass/convert_opset_0_to_1.hpp
+    pass/convert_opset_1_to_0.cpp
+    pass/convert_opset_1_to_0.hpp
+    pass/convert_opset_3_to_1.cpp
+    pass/convert_opset_3_to_1.hpp
     pass/pass_config.cpp
     pass/pass_config.hpp
     pass/pass_util.cpp
@@ -699,7 +699,6 @@ set(SRC ${SRC}
 set(OPSETS
     opset/opset0_tbl.hpp
     opset/opset1_tbl.hpp
-    opset/opset2_tbl.hpp
     opset/opset3_tbl.hpp
     opset/opset_orphans_tbl.hpp
 )

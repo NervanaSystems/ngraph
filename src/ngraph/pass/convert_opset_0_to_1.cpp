@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //*****************************************************************************
-#include "ngraph/pass/opset1_upgrade.hpp"
 
 #include <functional>
 #include <iterator>
@@ -24,6 +23,7 @@
 #include "ngraph/builder/reshape.hpp"
 #include "ngraph/graph_util.hpp"
 #include "ngraph/ops.hpp"
+#include "ngraph/pass/convert_opset_0_to_1.hpp"
 #include "ngraph/provenance.hpp"
 
 using namespace std;
@@ -219,9 +219,9 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Equal> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Equal> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Equal, op::v1::Equal>(node);
+        return op_cast_binary_elementwise_node<op::v1::Equal, op::v1::Equal>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::Gather> node)
@@ -236,14 +236,9 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Greater> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Greater> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Greater, op::v1::Greater>(node);
-    }
-
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::GreaterEq> node)
-    {
-        return op_cast_binary_elementwise_node<op::v0::GreaterEq, op::v1::GreaterEqual>(node);
+        return op_cast_binary_elementwise_node<op::v1::Greater, op::v1::Greater>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::GroupConvolution> node)
@@ -344,14 +339,14 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Less> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Less> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Less, op::v1::Less>(node);
+        return op_cast_binary_elementwise_node<op::v1::Less, op::v1::Less>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::LessEq> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::LessEqual> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::LessEq, op::v1::LessEqual>(node);
+        return op_cast_binary_elementwise_node<op::v1::LessEqual, op::v1::LessEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::Max> node)
@@ -363,9 +358,9 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Maximum> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Maximum> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Maximum, op::v1::Maximum>(node);
+        return op_cast_binary_elementwise_node<op::v1::Maximum, op::v1::Maximum>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::MaxPool> node)
@@ -431,14 +426,14 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Minimum> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Minimum> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Minimum, op::v1::Minimum>(node);
+        return op_cast_binary_elementwise_node<op::v1::Minimum, op::v1::Minimum>(node);
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::NotEqual> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::NotEqual> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::NotEqual, op::v1::NotEqual>(node);
+        return op_cast_binary_elementwise_node<op::v1::NotEqual, op::v1::NotEqual>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::OneHot> node)
@@ -481,9 +476,9 @@ namespace
         return replacement_node;
     }
 
-    shared_ptr<Node> op_cast(shared_ptr<op::v0::Power> node)
+    shared_ptr<Node> op_cast(shared_ptr<op::v1::Power> node)
     {
-        return op_cast_binary_elementwise_node<op::v0::Power, op::v1::Power>(node);
+        return op_cast_binary_elementwise_node<op::v1::Power, op::v1::Power>(node);
     }
 
     shared_ptr<Node> op_cast(shared_ptr<op::v0::Product> node)
@@ -667,7 +662,7 @@ namespace
     }
 }
 
-bool pass::Opset1Upgrade::run_on_node(shared_ptr<Node> node)
+bool pass::ConvertOpset0To1::run_on_node(shared_ptr<Node> node)
 {
     bool modified = false;
     auto& dispatch_map = get_dispatch_map();

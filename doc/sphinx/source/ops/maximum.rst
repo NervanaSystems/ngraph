@@ -56,6 +56,6 @@ Backprop
 C++ Interface
 =============
 
-.. doxygenclass:: ngraph::op::v0::Maximum
+.. doxygenclass:: ngraph::op::v1::Maximum
    :project: ngraph
    :members:
