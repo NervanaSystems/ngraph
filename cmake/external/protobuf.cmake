@@ -47,7 +47,7 @@ if(N EQUAL 0)
 endif()
 
 # Two ways for building protobuf
-# 1. CMake ( WIN32 or cross compiling )
+# 1. CMake WIN32
 # 2. autogen.sh -> configure -> make
 if(WIN32)
     set(PROTOBUF_CMAKE_ARGS
