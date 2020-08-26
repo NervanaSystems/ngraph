@@ -24,14 +24,14 @@ endif()
 
 cmake_policy(SET CMP0074 NEW)
 
-set(NGRAPH_TBB_VERSION "2020.2")
+set(NGRAPH_TBB_VERSION "2020.3")
 
 if (WIN32)
     set(TBB_FILE https://github.com/oneapi-src/oneTBB/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-win.zip)
-    set(TBB_SHA1_HASH 38b2af1626e5dea06269c17ffb85f190d4f9b79a)
+    set(TBB_SHA1_HASH 088ec9fdc93440f4dfdd0a3af295b4710c38d65a)
 elseif(APPLE)
     set(TBB_FILE https://github.com/oneapi-src/oneTBB/releases/download/v${NGRAPH_TBB_VERSION}/tbb-${NGRAPH_TBB_VERSION}-mac.tgz)
-    set(TBB_SHA1_HASH 19b56f90bae806e7c9a9f331bb03db934f046016)
+    set(TBB_SHA1_HASH 72da50744f84d102b71a2dd1fb7d94f9986fa51e)
 endif()
 
 include(FetchContent)
@@ -46,7 +46,7 @@ if(WIN32 OR APPLE)
     )
 else()
     set(TBB_ARCHIVE_URL https://github.com/oneapi-src/oneTBB/archive/v${NGRAPH_TBB_VERSION}.zip)
-    set(TBB_ARCHIVE_HASH 8247c2854fe9326f02cb826718d991013a472bb7)
+    set(TBB_ARCHIVE_HASH 986849aa8b96a04a430bdb28d7a97a60908c3253)
     FetchContent_Declare(
         ngraphtbb
         URL           ${TBB_ARCHIVE_URL}
