@@ -22,8 +22,8 @@ include(FetchContent)
 
 message(STATUS "Fetching Eigen3")
 
-set(EIGEN_GIT_TAG dcf7655b3d469a399c1182f350c9009e13ad8654)
-set(EIGEN_ARCHIVE_HASH 15866b9373b1c28623d78d745004fff6eb40b4b4)
+set(EIGEN_GIT_TAG 25424d91f60a9f858e7dc1c7936021cc1dd72019)
+set(EIGEN_ARCHIVE_HASH 45394bcde5d2a5d868de9d4a07551cfd04d938cb)
 
 FetchContent_Declare(ext_eigen
     URL       "https://gitlab.com/api/v4/projects/15462818/repository/archive?sha=${EIGEN_GIT_TAG}"
