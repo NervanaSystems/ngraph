@@ -99,6 +99,8 @@ CPU_MLIR.onnx_dyn_shapes_flatten_neg_axis
 CPU_MLIR.onnx_dyn_shapes_flatten_axis
 CPU_MLIR.onnx_dyn_shapes_flatten_neg_axis
 
+CPU_MLIR.onnx_dyn_shapes_slice_10_3d_input_12_axes
+
 # Need use evaluate, only applicable to INTERPRETER
 CPU_MLIR.non_zero
 CPU_MLIR.non_zero_all_1s
