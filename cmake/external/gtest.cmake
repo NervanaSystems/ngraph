@@ -70,7 +70,7 @@ if("${CMAKE_GENERATOR}" STREQUAL "Unix Makefiles")
     endif()
     execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target install -- -j${N}
     WORKING_DIRECTORY "${ext_gtest_BINARY_DIR}")
-elseif(GENERATOR_IS_MULTI_CONFIG)
+elseif(NGRAPH_GENERATOR_IS_MULTI_CONFIG)
     foreach(BUILD_CONFIG ${CMAKE_CONFIGURATION_TYPES})
         execute_process(COMMAND "${CMAKE_COMMAND}" --build . --target install --config ${BUILD_CONFIG}
         WORKING_DIRECTORY "${ext_gtest_BINARY_DIR}")

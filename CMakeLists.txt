@@ -18,8 +18,8 @@ cmake_minimum_required (VERSION 3.12)
 
 # set directory where the custom finders live
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules/")
-
-if(NOT GENERATOR_IS_MULTI_CONFIG)
+get_property(NGRAPH_GENERATOR_IS_MULTI_CONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT NGRAPH_GENERATOR_IS_MULTI_CONFIG)
     if (CMAKE_BUILD_TYPE)
         set(RELEASE_TYPES Debug Release RelWithDebInfo MinSizeRel)
         list(FIND RELEASE_TYPES ${CMAKE_BUILD_TYPE} INDEX_FOUND)
@@ -323,7 +323,7 @@ if (CMAKE_OSX_SYSROOT)
             )
 endif()
 
-if (NOT GENERATOR_IS_MULTI_CONFIG)
+if (NOT NGRAPH_GENERATOR_IS_MULTI_CONFIG)
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Build type" FORCE)
     endif()
