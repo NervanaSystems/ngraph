@@ -281,8 +281,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(AllReduce)
             {
                 (void)external_function;
-                const AllReduce* allreduce =
-                    static_cast<const AllReduce*>(node);
+                const AllReduce* allreduce = static_cast<const AllReduce*>(node);
                 writer << "ngraph::get_distributed_interface()->all_reduce(" << args[0].get_name()
                        << ", " << out[0].get_name() << ", "
                        << "ngraph::element::Type_t::" << args[0].get_element_type().get_type_name()
@@ -583,14 +582,14 @@ namespace ngraph
                 (void)external_function;
                 const auto* cg = static_cast<const BatchMatMul*>(node);
                 emitBatchMatMul<BatchMatMul>(node,
-                                                             cg->get_input_shape(0),
-                                                             cg->get_input_shape(1),
-                                                             out[0].get_shape(),
-                                                             args,
-                                                             out,
-                                                             false,
-                                                             false,
-                                                             writer);
+                                             cg->get_input_shape(0),
+                                             cg->get_input_shape(1),
+                                             out[0].get_shape(),
+                                             args,
+                                             out,
+                                             false,
+                                             false,
+                                             writer);
             }
 
             template <>
@@ -599,14 +598,14 @@ namespace ngraph
                 (void)external_function;
                 const auto* cg = static_cast<const BatchMatMulTranspose*>(node);
                 emitBatchMatMul<BatchMatMul>(node,
-                                                             cg->get_input_shape(0),
-                                                             cg->get_input_shape(1),
-                                                             out[0].get_shape(),
-                                                             args,
-                                                             out,
-                                                             cg->get_transpose_arg0(),
-                                                             cg->get_transpose_arg1(),
-                                                             writer);
+                                             cg->get_input_shape(0),
+                                             cg->get_input_shape(1),
+                                             out[0].get_shape(),
+                                             args,
+                                             out,
+                                             cg->get_transpose_arg0(),
+                                             cg->get_transpose_arg1(),
+                                             writer);
             }
 
             template <>
@@ -1149,8 +1148,7 @@ namespace ngraph
                 }
                 else
                 {
-                    auto axis = (static_cast<const Concat*>(node))
-                                    ->get_concatenation_axis();
+                    auto axis = (static_cast<const Concat*>(node))->get_concatenation_axis();
 
                     std::vector<std::string> arg_names;
                     std::vector<Shape> arg_shapes;
@@ -1612,8 +1610,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(Slice)
             {
-                const Slice* slice =
-                    static_cast<const Slice*>(node);
+                const Slice* slice = static_cast<const Slice*>(node);
 
                 if (auto op_annotations = slice->get_op_annotations())
                 {
@@ -1759,8 +1756,7 @@ namespace ngraph
             {
                 (void)external_function;
                 writer.block_begin();
-                const EmbeddingLookup* embed =
-                    static_cast<const EmbeddingLookup*>(node);
+                const EmbeddingLookup* embed = static_cast<const EmbeddingLookup*>(node);
                 auto index_type_name =
                     embed->get_argument(0)->get_output_element_type(0).c_type_string();
                 auto type_name = embed->get_output_element_type(0).c_type_string();
@@ -2500,8 +2496,7 @@ namespace ngraph
                 }
                 else
                 {
-                    auto convolution =
-                        static_cast<const QuantizedConvolution*>(node);
+                    auto convolution = static_cast<const QuantizedConvolution*>(node);
 
                     auto arg0_shape = args[0].get_shape();
                     auto arg1_shape = args[1].get_shape();
@@ -2650,8 +2645,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ConvolutionBackpropFilters)
             {
-                auto convolution =
-                    static_cast<const ConvolutionBackpropFilters*>(node);
+                auto convolution = static_cast<const ConvolutionBackpropFilters*>(node);
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
@@ -2738,8 +2732,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(ConvolutionBackpropData)
             {
-                auto convolution =
-                    static_cast<const ConvolutionBackpropData*>(node);
+                auto convolution = static_cast<const ConvolutionBackpropData*>(node);
 
                 auto arg0_shape = args[0].get_shape();
                 auto arg1_shape = args[1].get_shape();
@@ -3521,8 +3514,7 @@ namespace ngraph
             void CPU_Emitter::EMITTER_DECL(Product)
             {
                 (void)external_function;
-                const Product* product =
-                    static_cast<const Product*>(node);
+                const Product* product = static_cast<const Product*>(node);
                 writer.block_begin();
                 // TODO: add an emitter akin to the emit_sum
                 writer << "reference::product<" << out[0].get_type() << ">(" << args[0].get_name()
@@ -3975,8 +3967,7 @@ namespace ngraph
                 // math: we have sigmoid functions f(x) and g(y) multiplied, z = f(x) * g(y)
                 // dz/dx = dz/df * df/dx = g(y) * f'(x)
                 // dz/dy = dz/dg * dg/dy = f(x) * g'(y)
-                auto sigmoid_mul_backprop =
-                    static_cast<const SigmoidMultiplyBackprop*>(node);
+                auto sigmoid_mul_backprop = static_cast<const SigmoidMultiplyBackprop*>(node);
                 const TensorWrapper& data_0 = args[0];
                 const TensorWrapper& data_1 = args[1];
                 const TensorWrapper& delta = args[2];
@@ -4053,8 +4044,7 @@ namespace ngraph
                 else
                 {
                     writer.block_begin();
-                    const Softmax* softmax =
-                        static_cast<const Softmax*>(node);
+                    const Softmax* softmax = static_cast<const Softmax*>(node);
                     auto type = out[0].get_type();
                     auto shape = out[0].get_shape();
                     auto dims = out[0].get_shape().size();
@@ -4352,8 +4342,7 @@ namespace ngraph
                 std::map<Output<Node>, std::string> loop_symbol_table;
                 // pre-fill symbol table with inputs
 
-                const CompiledKernel* ck =
-                    static_cast<const CompiledKernel*>(node);
+                const CompiledKernel* ck = static_cast<const CompiledKernel*>(node);
 
                 OutputVector outputs = ck->get_kernel_outputs();
                 NodeVector node_list = ck->get_node_list();
@@ -4565,12 +4554,12 @@ namespace ngraph
                     std::vector<std::size_t> deps;
                     size_t scratchpad_size;
                     emit_build_primitives<Dequantize>(external_function,
-                                                                      node,
-                                                                      writer,
-                                                                      dequantize_index,
-                                                                      deps,
-                                                                      scratchpad_size,
-                                                                      args);
+                                                      node,
+                                                      writer,
+                                                      dequantize_index,
+                                                      deps,
+                                                      scratchpad_size,
+                                                      args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -4606,12 +4595,12 @@ namespace ngraph
                     std::vector<std::size_t> deps;
                     size_t scratchpad_size;
                     emit_build_primitives<Quantize>(external_function,
-                                                                    node,
-                                                                    writer,
-                                                                    quantize_index,
-                                                                    deps,
-                                                                    scratchpad_size,
-                                                                    args);
+                                                    node,
+                                                    writer,
+                                                    quantize_index,
+                                                    deps,
+                                                    scratchpad_size,
+                                                    args);
 
                     writer << "cg_ctx->set_memory_ptr(" << to_string(deps[0]) << ", "
                            << args[0].get_name() << ");\n";
@@ -4675,8 +4664,7 @@ namespace ngraph
             template <>
             void CPU_Emitter::EMITTER_DECL(CumSum)
             {
-                const CumSum* cumsum =
-                    static_cast<const CumSum*>(node);
+                const CumSum* cumsum = static_cast<const CumSum*>(node);
                 writer.block_begin();
                 writer << "reference::cumsum<" << args[0].get_element_type().c_type_string();
                 writer << ",           " << args[1].get_element_type().c_type_string() << ">(";
