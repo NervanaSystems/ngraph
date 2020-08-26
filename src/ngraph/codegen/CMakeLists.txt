@@ -74,7 +74,7 @@ set_source_files_properties(compiler.cpp PROPERTIES COMPILE_DEFINITIONS "${HEADE
 add_custom_target(header_resource
     resource_generator --output ${PROJECT_BINARY_DIR}/header_resource.hpp --base codegen
     DEPENDS resource_generator
-    BYPRODUCTS
+    BYPRODUCTS ${PROJECT_BINARY_DIR}/header_resource.hpp
 )
 
 if(NGRAPH_LIB_VERSIONING_ENABLE)
