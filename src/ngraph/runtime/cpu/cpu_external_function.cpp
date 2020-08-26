@@ -442,8 +442,8 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::Rnn), &runtime::cpu::CPU_Emitter::emit<op::Rnn>},
     {TI(ngraph::op::v0::Sigmoid), &runtime::cpu::CPU_Emitter::emit<op::v0::Sigmoid>},
     {TI(ngraph::op::SigmoidMultiply), &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiply>},
-    {TI(ngraph::op::v0::SigmoidMultiplyBackprop),
-     &runtime::cpu::CPU_Emitter::emit<op::v0::SigmoidMultiplyBackprop>},
+    {TI(ngraph::op::SigmoidMultiplyBackprop),
+     &runtime::cpu::CPU_Emitter::emit<op::SigmoidMultiplyBackprop>},
     {TI(ngraph::op::v0::Softmax), &runtime::cpu::CPU_Emitter::emit<op::v0::Softmax>},
     {TI(ngraph::op::v0::SigmoidBackprop),
      &runtime::cpu::CPU_Emitter::emit<op::v0::SigmoidBackprop>},
@@ -466,7 +466,7 @@ static const runtime::cpu::OpMap dispatcher{
     {TI(ngraph::op::v0::Tile), &runtime::cpu::CPU_Emitter::emit<op::v0::Tile>},
     {TI(ngraph::op::v0::Gelu), &runtime::cpu::CPU_Emitter::emit<op::v0::Gelu>},
     {TI(ngraph::op::v0::RandomUniform), &runtime::cpu::CPU_Emitter::emit<op::v0::RandomUniform>},
-    {TI(ngraph::op::v0::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::v0::GeluBackprop>},
+    {TI(ngraph::op::GeluBackprop), &runtime::cpu::CPU_Emitter::emit<op::GeluBackprop>},
     {TI(ngraph::op::v0::Round), &runtime::cpu::CPU_Emitter::emit<op::v0::Round>}};
 
 static void generate_isnan_isinf_check(CodeWriter& writer,

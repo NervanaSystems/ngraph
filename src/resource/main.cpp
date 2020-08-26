@@ -93,8 +93,11 @@ int main(int argc, char** argv)
 #ifdef EIGEN_HEADERS_PATH
     include_paths.push_back({EIGEN_HEADERS_PATH, {"Eigen"}, true});
 #endif
-#ifdef DNNL_HEADERS_PATH
-    include_paths.push_back({DNNL_HEADERS_PATH, {}, true});
+#ifdef DNNL_HEADERS_PATH_SRC
+    include_paths.push_back({DNNL_HEADERS_PATH_SRC, {}, true});
+#endif
+#ifdef DNNL_HEADERS_PATH_BIN
+    include_paths.push_back({DNNL_HEADERS_PATH_BIN, {}, true});
 #endif
 #ifdef TBB_HEADERS_PATH
     include_paths.push_back({TBB_HEADERS_PATH, {}, true});

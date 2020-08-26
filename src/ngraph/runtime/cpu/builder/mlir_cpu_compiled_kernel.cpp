@@ -36,7 +36,7 @@ namespace ngraph
         namespace cpu
         {
             template <>
-            void Builder::BUILDER_DECL(CompiledKernel)
+            void Builder::BUILDER_DECL(v0::CompiledKernel)
             {
                 auto& functors = external_function->get_functors();
 
@@ -106,8 +106,8 @@ namespace ngraph
                     }
 
                     // Compile nodes within the CompiledKernel op.
-                    CompiledKernel* compiled_kernel =
-                        static_cast<CompiledKernel*>(const_cast<Node*>(node));
+                    v0::CompiledKernel* compiled_kernel =
+                        static_cast<v0::CompiledKernel*>(const_cast<Node*>(node));
 
                     auto it = ctx->mlir_runtimes.find(compiled_kernel);
 
