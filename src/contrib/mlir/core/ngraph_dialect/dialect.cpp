@@ -140,17 +140,17 @@ void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter& print
         .Case<NGIntegerType>([&](Type) {
             auto intTy = type.cast<NGIntegerType>();
             auto signedness = intTy.getSignedness();
-            if(signedness == NGIntegerType::SignednessSemantics::Signed) {
+            if (signedness == NGIntegerType::SignednessSemantics::Signed)
+            {
                 printer << "i";
             }
-            else if(signedness == NGIntegerType::SignednessSemantics::Unsigned) {
+            else if (signedness == NGIntegerType::SignednessSemantics::Unsigned)
+            {
                 printer << "u";
             }
             // TODO: What about Signless?
             printer << intTy.getWidth();
         })
-        .Case<NGBoolType>([&](Type) {
-            printer << "bool";
-        })
+        .Case<NGBoolType>([&](Type) { printer << "bool"; })
         .Default([](Type) { NGRAPH_UNREACHABLE("Incorrect type to print?"); });
 }

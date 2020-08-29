@@ -81,15 +81,14 @@ int main(int argc, char** argv)
     llvm::InitLLVM y(argc, argv);
     mlir::DialectRegistry registry;
     registry.insert<
-            // In-tree Dialects.
-            mlir::AffineDialect,
-            mlir::LLVM::LLVMDialect,
-            mlir::scf::SCFDialect,
-            mlir::StandardOpsDialect,
-            mlir::vector::VectorDialect,
-            // nGraph dialects.
-            mlir::NGraphOpsDialect>();
-
+        // In-tree Dialects.
+        mlir::AffineDialect,
+        mlir::LLVM::LLVMDialect,
+        mlir::scf::SCFDialect,
+        mlir::StandardOpsDialect,
+        mlir::vector::VectorDialect,
+        // nGraph dialects.
+        mlir::NGraphOpsDialect>();
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 
     // Register any pass manager command line options.
@@ -112,5 +111,5 @@ int main(int argc, char** argv)
                                     split_input_file,
                                     verify_diagnostics,
                                     verify_passes,
-                                    /*allowUnregisteredDialects = */ true));
+                                    /*allowUnregisteredDialects = */ false));
 }

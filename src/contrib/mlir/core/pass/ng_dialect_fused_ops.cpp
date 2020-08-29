@@ -77,7 +77,8 @@ namespace
     class NgDialectFusedOpsPass : public PassWrapper<NgDialectFusedOpsPass, OperationPass<ModuleOp>>
     {
     public:
-        void getDependentDialects(DialectRegistry &registry) const override {
+        void getDependentDialects(DialectRegistry& registry) const override
+        {
             registry.insert<NGraphOpsDialect>();
         }
         NgDialectFusedOpsPass() {}

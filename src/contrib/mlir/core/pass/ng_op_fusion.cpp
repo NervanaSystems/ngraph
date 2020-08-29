@@ -86,7 +86,8 @@ namespace
     class NgOpFusionPass : public PassWrapper<NgOpFusionPass, FunctionPass>
     {
     public:
-        void getDependentDialects(DialectRegistry &registry) const override {
+        void getDependentDialects(DialectRegistry& registry) const override
+        {
             registry.insert<NGraphOpsDialect>();
         }
         void runOnFunction() override;
