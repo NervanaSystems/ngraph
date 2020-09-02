@@ -4,15 +4,12 @@
 # Default rule: @diyessi gets everything.
 *                                   @diyessi
 
-/cmake/                             @silee2 @rkimballn1
+/cmake/                             @silee2
 
 /.ci/                               @raramer01
 /contrib/docker/                    @raramer01
 
-/.clang-format                      @rkimballn1
-/.gitattributes                     @rkimballn1
-/.gitignore                         @rkimballn1
-/VERSION.in                         @rkimballn1 @silee2
+/VERSION.in                         @silee2
 
 /doc/*/*/frameworks/tensorflow_connect.rst      @shresthamalik
 project/introduction.rst            @adstraw
@@ -21,23 +18,16 @@ project/governance.rst              @adstraw
 /licenses/                          @diyessi @raramer01
 /LICENSE                            @diyessi @raramer01
 
-/src/resource/                      @rkimballn1
-/src/tools/                         @rkimballn1
 /src/ngraph/builder/                @silee2
-/src/ngraph/codegen/                @rkimballn1
 /src/ngraph/frontend/               @silee2
-/src/ngraph/runtime/                @rkimballn1
 /src/ngraph/runtime/cpu/            @silee2
 /src/contrib/mlir/                  @silee2
-/src/runtime/gpu/                   @rkimballn1
-/src/ngraph/runtime/interpreter/    @rkimballn1
-/src/ngraph/serializer.*pp          @rkimballn1
 
 /test/mlir/                         @silee2
 
 # Putting this last so it's not overridden by directory rules
 # ** means in any directory
-**/CMakeLists.txt                   @silee2 @rkimballn1
+**/CMakeLists.txt                   @silee2
 
 # Putting this last to make sure nothing else overrides.
 /CODEOWNERS                         @diyessi
