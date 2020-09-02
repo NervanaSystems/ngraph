@@ -97,3 +97,23 @@ void op::util::ArithmeticReductionKeepDims::validate_and_infer_types()
         ArithmeticReduction::validate_and_infer_types();
     }
 }
+
+Shape op::util::ArithmeticReductionKeepDims::compute_output_shape(
+    const Shape& input_shape, const AxisSet& reduction_axes) const
+{
+    Shape output_shape;
+    size_t index = 0;
+    for (auto dim : input_shape)
+    {
+        if (reduction_axes.find(index) == reduction_axes.end())
+        {
+            output_shape.push_back(dim);
+        }
+        else if (m_keep_dims)
+        {
+            output_shape.push_back(1);
+        }
+        index++;
+    }
+    return output_shape;
+}
