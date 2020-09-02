@@ -90,8 +90,8 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass::Manager pass_manager;
     pass_manager.register_pass<pass::LikeReplacement>();
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
-    // pass_manager.register_pass<pass::ConvertOpset3To1>();
-    // pass_manager.register_pass<pass::ConvertOpset1To0>();
+    pass_manager.register_pass<pass::ConvertOpset3To1>();
+    pass_manager.register_pass<pass::ConvertOpset1To0>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
     // pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
