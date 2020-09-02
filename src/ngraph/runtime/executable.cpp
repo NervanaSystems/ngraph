@@ -17,6 +17,7 @@
 #include <sstream>
 
 #include "ngraph/file_util.hpp"
+#include "ngraph/log.hpp"
 #include "ngraph/runtime/executable.hpp"
 #include "ngraph/runtime/tensor.hpp"
 #include "ngraph/util.hpp"
@@ -90,8 +91,7 @@ void runtime::Executable::validate(const vector<std::shared_ptr<runtime::Tensor>
         {
             stringstream ss;
             ss << "Output " << i << " shape " << outputs[i]->get_partial_shape()
-               << " does not match max Result shape "
-               << results[i]->get_output_partial_shape(0).get_max_shape();
+               << " does not match max Result shape " << results[i]->get_output_partial_shape(0);
             throw runtime_error(ss.str());
         }
     }

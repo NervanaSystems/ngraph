@@ -34,6 +34,7 @@ runtime::HostTensor::HostTensor(const ngraph::element::Type& element_type,
                                 const string& name)
     : runtime::Tensor(std::make_shared<ngraph::descriptor::Tensor>(element_type, shape, name))
     , m_memory_pointer(memory_pointer)
+    , m_buffer_size(0)
 {
     if (get_partial_shape().is_static() && get_element_type().is_static())
     {
@@ -53,6 +54,7 @@ runtime::HostTensor::HostTensor(const element::Type& element_type,
                                 const std::string& name)
     : runtime::Tensor(
           std::make_shared<ngraph::descriptor::Tensor>(element_type, partial_shape, name))
+    , m_buffer_size(0)
 {
     // Defer allocation until ptr is requested
 }
@@ -125,6 +127,12 @@ void* runtime::HostTensor::get_data_ptr()
 {
     if (!m_aligned_buffer_pool)
     {
+        allocate_buffer();
+    }
+    else if (shape_size(m_descriptor->get_shape()) * get_element_type().size() != m_buffer_size)
+    {
+        // A buffer is allocated but is the wrong size
+        ngraph_free(m_allocated_buffer_pool);
         allocate_buffer();
     }
     return m_aligned_buffer_pool;

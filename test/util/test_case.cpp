@@ -55,6 +55,10 @@ ngraph::test::NgraphTestCase::NgraphTestCase(const std::shared_ptr<Function>& fu
     const auto& function_results = m_function->get_results();
     NGRAPH_CHECK(m_expected_outputs.size() == function_results.size(),
                  "Expected number of outputs is different from the function's number of results.");
+    for (auto t : m_result_tensors)
+    {
+        t->reset();
+    }
     m_executable->call_with_validate(m_result_tensors, m_input_tensors);
 
     for (size_t i = 0; i < m_expected_outputs.size(); ++i)

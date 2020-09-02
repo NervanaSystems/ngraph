@@ -98,7 +98,7 @@ void op::v0::Concat::validate_and_infer_types()
     }
     else
     {
-        set_output_type(0, inputs_et, PartialShape::dynamic(concatenation_axis_output_dim));
+        set_output_type(0, inputs_et, PartialShape::dynamic());
     }
 }
 

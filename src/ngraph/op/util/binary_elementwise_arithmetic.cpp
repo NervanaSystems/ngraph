@@ -16,20 +16,20 @@
 
 #include "ngraph/op/util/binary_elementwise_arithmetic.hpp"
 #include "ngraph/attribute_visitor.hpp"
+#include "ngraph/log.hpp"
 
 using namespace std;
 using namespace ngraph;
 
 op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const AutoBroadcastSpec& autob)
-    : m_autob(autob)
+    : BinaryElementwise()
 {
 }
 
 op::util::BinaryElementwiseArithmetic::BinaryElementwiseArithmetic(const Output<Node>& arg0,
                                                                    const Output<Node>& arg1,
                                                                    const AutoBroadcastSpec& autob)
-    : Op({arg0, arg1})
-    , m_autob(autob)
+    : BinaryElementwise(arg0, arg1, autob)
 {
 }
 
@@ -40,6 +40,5 @@ void op::util::BinaryElementwiseArithmetic::validate_and_infer_types()
 
 bool op::util::BinaryElementwiseArithmetic::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("auto_broadcast", m_autob);
-    return true;
+    return BinaryElementwise::visit_attributes(visitor);
 }

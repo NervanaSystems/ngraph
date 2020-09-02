@@ -56,6 +56,10 @@ public:
 
     std::shared_ptr<Tensor> create_tensor(const element::Type& type, const Shape& shape) override;
 
+    std::shared_ptr<ngraph::runtime::Tensor>
+        create_dynamic_tensor(const ngraph::element::Type& type,
+                              const PartialShape& shape) override;
+
     std::shared_ptr<Executable> compile(std::shared_ptr<Function> function,
                                         bool enable_performance_data = false) override;
     std::shared_ptr<Executable> load(std::istream& input_stream) override;

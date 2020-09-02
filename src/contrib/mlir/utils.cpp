@@ -53,16 +53,6 @@ void ngraph::runtime::ngmlir::initializeNGraphMLIR()
 {
     // Initialize MLIR dialects and passes only once.
     static bool init_once = []() {
-        // In-tree Dialects.
-        registerDialect<AffineDialect>();
-        registerDialect<LLVM::LLVMDialect>();
-        registerDialect<scf::SCFDialect>();
-        registerDialect<StandardOpsDialect>();
-        registerDialect<vector::VectorDialect>();
-
-        // nGraph dialects.
-        registerDialect<mlir::NGraphOpsDialect>();
-
         // In-tree passes.
         // No-op to avoid DCE on the following pass initializations.
         if (std::getenv("bar") != (char*)-1)

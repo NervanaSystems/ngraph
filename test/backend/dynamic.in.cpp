@@ -71,6 +71,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_abc)
     //
     for (size_t middle_dim = 0; middle_dim < 5; middle_dim++)
     {
+        t_r->reset();
         // Fill in some test input values, which we'll use for a, b, and c.
         vector<float> inputs(2 * middle_dim * 3);
         for (size_t i = 0; i < 2 * middle_dim * 3; i++)
@@ -123,6 +124,7 @@ static void axpy_test(const PartialShape& input_pshape, const std::vector<Shape>
 
     for (auto& shape : input_shapes)
     {
+        t_r->reset();
         vector<float> inputs(shape_size(shape));
         for (size_t i = 0; i < shape_size(shape); i++)
         {
@@ -193,6 +195,7 @@ static void to_vector_test(const PartialShape& input_pshape, const std::vector<S
 
     for (auto& shape : input_shapes)
     {
+        t_r->reset();
         vector<float> inputs(shape_size(shape));
         for (size_t i = 0; i < shape_size(shape); i++)
         {
@@ -329,6 +332,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_dim_add)
     //
     for (size_t middle_dim = 0; middle_dim < 5; middle_dim++)
     {
+        t_r->reset();
         // Fill in some test input values, which we'll use for a, b, and c.
         vector<float> inputs(2 * middle_dim * 3);
         for (size_t i = 0; i < 2 * middle_dim * 3; i++)
@@ -394,6 +398,7 @@ NGRAPH_TEST(${BACKEND_NAME}, dynamic_rank_add)
     //
     for (size_t middle_dim = 0; middle_dim < 5; middle_dim++)
     {
+        t_r->reset();
         // Fill in some test input values, which we'll use for a, b, and c.
         vector<float> inputs(2 * middle_dim * 3);
         for (size_t i = 0; i < 2 * middle_dim * 3; i++)

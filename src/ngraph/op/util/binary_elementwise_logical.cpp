@@ -25,8 +25,7 @@ op::util::BinaryElementwiseLogical::BinaryElementwiseLogical() {}
 op::util::BinaryElementwiseLogical::BinaryElementwiseLogical(const Output<Node>& arg0,
                                                              const Output<Node>& arg1,
                                                              const AutoBroadcastSpec& autob)
-    : Op({arg0, arg1})
-    , m_autob(autob)
+    : BinaryElementwise(arg0, arg1, autob)
 {
 }
 
@@ -37,6 +36,5 @@ void op::util::BinaryElementwiseLogical::validate_and_infer_types()
 
 bool op::util::BinaryElementwiseLogical::visit_attributes(AttributeVisitor& visitor)
 {
-    visitor.on_attribute("auto_broadcast", m_autob);
-    return true;
+    return BinaryElementwise::visit_attributes(visitor);
 }
