@@ -140,12 +140,12 @@ bool runtime::gcpu::GCPUExecutable::call(const vector<shared_ptr<runtime::Tensor
         case ngraph::runtime::interpreter::OP_TYPEID::ArgMax_v0:
             type = op->get_input_element_type(0);
             break;
-        case ngraph::runtime::interpreter::OP_TYPEID::Equal_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::Greater_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEq_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::Less_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::LessEq_v0:
-        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual_v0:
+        case ngraph::runtime::interpreter::OP_TYPEID::Equal_v1:
+        case ngraph::runtime::interpreter::OP_TYPEID::Greater_v1:
+        case ngraph::runtime::interpreter::OP_TYPEID::GreaterEqual_v1:
+        case ngraph::runtime::interpreter::OP_TYPEID::Less_v1:
+        case ngraph::runtime::interpreter::OP_TYPEID::LessEqual_v1:
+        case ngraph::runtime::interpreter::OP_TYPEID::NotEqual_v1:
             // Get the type of the second input, not the first
             // All BinaryElementwiseComparision ops have the same type for inputs
             // Select has bool for first input and the type we are interested in for the second
