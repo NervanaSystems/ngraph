@@ -20,6 +20,7 @@
 // MLIR API.
 
 #include "dialect.hpp"
+#include <llvm/ADT/TypeSwitch.h>
 #include <mlir/IR/DialectImplementation.h>
 #include <mlir/Parser.h>
 #include "ngraph/check.hpp"
@@ -126,42 +127,30 @@ mlir::Type NGraphOpsDialect::parseEltType(mlir::DialectAsmParser& parser) const
 
 void NGraphOpsDialect::printType(mlir::Type type, mlir::DialectAsmPrinter& printer) const
 {
-    switch (type.getKind())
-    {
-    case NG_TENSOR_TYPE_ID:
-    {
-        printer << "tensor<";
-        auto tensorTy = type.cast<NGTensorType>();
-        for (auto dim : tensorTy.getShape())
-        {
-            printer << dim << 'x';
-        }
-        printer << tensorTy.getElementType() << '>';
-        return;
-    }
-    case NG_I8_TYPE_ID:
-    case NG_I16_TYPE_ID:
-    case NG_I32_TYPE_ID:
-    case NG_I64_TYPE_ID:
-    {
-        auto intTy = type.cast<NGIntegerType>();
-        printer << "i" << intTy.getWidth();
-        return;
-    }
-    case NG_U8_TYPE_ID:
-    case NG_U16_TYPE_ID:
-    case NG_U32_TYPE_ID:
-    case NG_U64_TYPE_ID:
-    {
-        auto intTy = type.cast<NGIntegerType>();
-        printer << "u" << intTy.getWidth();
-        return;
-    }
-    case NG_BOOL_TYPE_ID:
-    {
-        printer << "bool";
-        return;
-    }
-    default: NGRAPH_UNREACHABLE("Incorrect type to print?");
-    }
+    TypeSwitch<Type>(type)
+        .Case<NGTensorType>([&](Type) {
+            printer << "tensor<";
+            auto tensorTy = type.cast<NGTensorType>();
+            for (auto dim : tensorTy.getShape())
+            {
+                printer << dim << 'x';
+            }
+            printer << tensorTy.getElementType() << '>';
+        })
+        .Case<NGIntegerType>([&](Type) {
+            auto intTy = type.cast<NGIntegerType>();
+            auto signedness = intTy.getSignedness();
+            if (signedness == NGIntegerType::SignednessSemantics::Signed)
+            {
+                printer << "i";
+            }
+            else if (signedness == NGIntegerType::SignednessSemantics::Unsigned)
+            {
+                printer << "u";
+            }
+            // TODO: What about Signless?
+            printer << intTy.getWidth();
+        })
+        .Case<NGBoolType>([&](Type) { printer << "bool"; })
+        .Default([](Type) { NGRAPH_UNREACHABLE("Incorrect type to print?"); });
 }
