@@ -26,7 +26,7 @@ if(NOT ("${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}" STREQUAL ""))
     set(TRY_EXTERNAL_LLVM_BUILD TRUE)
 endif()
 
-set(LLVM_COMMIT_ID f48eced390dcda54766e1c510af10bbcbaebcd7e)
+set(LLVM_COMMIT_ID 627e9007eaba39624fe92a4d97dceb18bc51f190)
 if(TRY_EXTERNAL_LLVM_BUILD)
     set(VCSREVISION "${NGRAPH_EXTERNAL_LLVM_BUILD_DIR}/include/llvm/Support/VCSRevision.h")
     if(EXISTS "${VCSREVISION}")
@@ -69,7 +69,7 @@ else()
     message(STATUS "LLVM: Fetching source")
 
     set(LLVM_ARCHIVE_URL https://github.com/llvm/llvm-project/archive/${LLVM_COMMIT_ID}.zip)
-    set(LLVM_ARCHIVE_URL_HASH b21201e6a8c59fb5ca4f9ae9190f044996d40321)
+    set(LLVM_ARCHIVE_URL_HASH 4f5c27db3801988895ab6062facf3c6124f23cd4)
 
     FetchContent_Declare(
         llvm

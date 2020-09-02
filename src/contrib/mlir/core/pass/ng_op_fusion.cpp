@@ -19,6 +19,7 @@
 // depends on MLIR API.
 
 #include "ng_op_fusion.hpp"
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 
 #include <llvm/ADT/SetVector.h>
@@ -85,6 +86,10 @@ namespace
     class NgOpFusionPass : public PassWrapper<NgOpFusionPass, FunctionPass>
     {
     public:
+        void getDependentDialects(DialectRegistry& registry) const override
+        {
+            registry.insert<NGraphOpsDialect>();
+        }
         void runOnFunction() override;
 
     private:

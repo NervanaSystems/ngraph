@@ -43,7 +43,7 @@ using namespace mlir;
 /// element type and shape are the same.
 NGTensorType NGTensorType::get(MLIRContext* context, EltType eltType, Shape shape)
 {
-    return Base::get(context, NGTypeKind::NG_TENSOR_TYPE_ID, eltType, shape);
+    return Base::get(context, eltType, shape);
 }
 
 bool NGTensorType::isCompatible(NGTensorType& other) const

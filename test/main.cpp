@@ -18,6 +18,14 @@
 #include <iostream>
 
 #ifdef NGRAPH_MLIR_ENABLE
+#include <mlir/Dialect/Affine/IR/AffineOps.h>
+#include <mlir/Dialect/Affine/Passes.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/Dialect/SCF/SCF.h>
+#include <mlir/Dialect/StandardOps/IR/Ops.h>
+#include <mlir/Dialect/Vector/VectorOps.h>
+#include <mlir/IR/MLIRContext.h>
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 #include "contrib/mlir/utils.hpp"
 #endif
 #include "gtest/gtest.h"
@@ -61,6 +69,16 @@ int main(int argc, char** argv)
 #ifdef NGRAPH_MLIR_ENABLE
     // Initialize MLIR
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
+    mlir::DialectRegistry& registry = mlir::getGlobalDialectRegistry();
+    registry.insert<
+        // In-tree Dialects.
+        mlir::AffineDialect,
+        mlir::LLVM::LLVMDialect,
+        mlir::scf::SCFDialect,
+        mlir::StandardOpsDialect,
+        mlir::vector::VectorDialect,
+        // nGraph dialects.
+        mlir::NGraphOpsDialect>();
 #endif
 
 #ifdef NGRAPH_UNIT_TEST_NUMPY_ENABLE
