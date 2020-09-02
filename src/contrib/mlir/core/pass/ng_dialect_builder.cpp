@@ -19,6 +19,7 @@
 // convention.
 
 #include "ng_dialect_builder.hpp"
+#include <mlir/IR/Dialect.h>
 #include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 #include "contrib/mlir/core/ngraph_dialect/ops.hpp"
 #include "contrib/mlir/core/ngraph_dialect/type.hpp"
@@ -50,6 +51,10 @@ namespace
         : public mlir::PassWrapper<NgDialectConversionPass, mlir::OperationPass<mlir::ModuleOp>>
     {
     public:
+        void getDependentDialects(mlir::DialectRegistry& registry) const override
+        {
+            registry.insert<mlir::NGraphOpsDialect>();
+        }
         using TensorList = std::vector<descriptor::Tensor*>;
         using TypeList = llvm::SmallVector<mlir::Type, 4>;
 

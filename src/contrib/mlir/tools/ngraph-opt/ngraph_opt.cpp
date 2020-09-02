@@ -30,17 +30,26 @@
 /// Please, refer to
 /// ngraph_repo_path/tests/mlir/ for examples.
 
+#include "contrib/mlir/core/ngraph_dialect/dialect.hpp"
 #include "contrib/mlir/utils.hpp"
+#include "mlir/IR/Dialect.h"
 #include "ngraph/check.hpp"
 
 #include <llvm/Support/CommandLine.h>
+#include <llvm/Support/InitLLVM.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include <llvm/Support/ToolOutputFile.h>
+#include <mlir/Dialect/Affine/IR/AffineOps.h>
+#include <mlir/Dialect/Affine/Passes.h>
+#include <mlir/Dialect/LLVMIR/LLVMDialect.h>
+#include <mlir/Dialect/SCF/SCF.h>
+#include <mlir/Dialect/StandardOps/IR/Ops.h>
+#include <mlir/Dialect/Vector/VectorOps.h>
+#include <mlir/IR/MLIRContext.h>
 #include <mlir/Pass/Pass.h>
 #include <mlir/Pass/PassManager.h>
 #include <mlir/Support/FileUtilities.h>
 #include <mlir/Support/MlirOptMain.h>
-#include "llvm/Support/InitLLVM.h"
 
 static llvm::cl::opt<std::string>
     input_filename(llvm::cl::Positional, llvm::cl::desc("<input file>"), llvm::cl::init("-"));
@@ -70,6 +79,16 @@ static llvm::cl::opt<bool>
 int main(int argc, char** argv)
 {
     llvm::InitLLVM y(argc, argv);
+    mlir::DialectRegistry registry;
+    registry.insert<
+        // In-tree Dialects.
+        mlir::AffineDialect,
+        mlir::LLVM::LLVMDialect,
+        mlir::scf::SCFDialect,
+        mlir::StandardOpsDialect,
+        mlir::vector::VectorDialect,
+        // nGraph dialects.
+        mlir::NGraphOpsDialect>();
     ngraph::runtime::ngmlir::initializeNGraphMLIR();
 
     // Register any pass manager command line options.
@@ -88,6 +107,7 @@ int main(int argc, char** argv)
     return failed(mlir::MlirOptMain(output->os(),
                                     std::move(file),
                                     passPipeline,
+                                    registry,
                                     split_input_file,
                                     verify_diagnostics,
                                     verify_passes,
