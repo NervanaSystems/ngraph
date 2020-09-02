@@ -94,7 +94,7 @@ runtime::interpreter::INTExecutable::INTExecutable(const shared_ptr<Function>& f
     pass_manager.register_pass<pass::ConvertOpset1To0>();
     // Need to decompose any v0 fused ops, which were produced by the downgrade pass
     pass_manager.register_pass<pass::FusedOpDecomposition>(is_supported);
-    pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
+    // pass_manager.register_pass<pass::AssignLayout<DenseTensorLayout>>();
     pass_manager.register_pass<pass::Liveness>();
     pass_manager.run_passes(m_function);
     for (auto node : m_function->get_ordered_ops())
@@ -191,7 +191,7 @@ bool runtime::interpreter::INTExecutable::call(const vector<shared_ptr<runtime::
             auto it = tensor_map.find(tensor);
             if (it == tensor_map.end())
             {
-                const Shape& shape = op->get_output_shape(i);
+                const PartialShape& shape = op->get_output_partial_shape(i);
                 const element::Type& type = op->get_output_element_type(i);
                 string name = op->output(i).get_tensor().get_name();
                 host_tensor = make_shared<runtime::HostTensor>(type, shape, name);
@@ -424,4 +424,29 @@ vector<shared_ptr<runtime::Tensor>>
         result_tensors.push_back(tensor);
     }
     return result_tensors;
+}
+
+Coordinate runtime::interpreter::INTExecutable::as_coordinate(const HostTensor* tensor) const
+{
+    return Coordinate(as_vector<size_t>(tensor));
+}
+
+Strides runtime::interpreter::INTExecutable::as_strides(const HostTensor* tensor) const
+{
+    return Strides(as_vector<size_t>(tensor));
+}
+
+Shape runtime::interpreter::INTExecutable::as_shape(const HostTensor* tensor) const
+{
+    return Shape(as_vector<size_t>(tensor));
+}
+
+AxisSet runtime::interpreter::INTExecutable::as_axis_set(const HostTensor* tensor) const
+{
+    return AxisSet(as_vector<size_t>(tensor));
+}
+
+AxisVector runtime::interpreter::INTExecutable::as_axis_vector(const HostTensor* tensor) const
+{
+    return AxisVector(as_vector<size_t>(tensor));
 }

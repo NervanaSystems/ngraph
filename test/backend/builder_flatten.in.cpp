@@ -69,12 +69,12 @@ NGRAPH_TEST_P(${BACKEND_NAME}, FlattenTest, flatten)
     copy_data(t_value, value_data);
 
     auto t_axis = backend->create_tensor(element::i64, Shape{});
-    auto t_result = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic(2));
 
     ASSERT_EQ(p.in_axes.size(), p.expected_out_shapes.size());
 
     for (size_t i = 0; i < p.in_axes.size(); i++)
     {
+        auto t_result = backend->create_dynamic_tensor(element::i32, PartialShape::dynamic());
         copy_data(t_axis, vector<int64_t>{static_cast<int64_t>(p.in_axes[i])});
 
         ex->call_with_validate({t_result}, {t_value, t_axis});

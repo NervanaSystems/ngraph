@@ -713,8 +713,6 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_dynamic)
 
     auto ex = backend->compile(f);
 
-    auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
-
     std::vector<Shape> x_shapes{
         Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{2, 3}, Shape{5}, Shape{5}};
     std::vector<std::vector<int32_t>> axeses{{}, {0}, {1}, {0, 1}, {}, {0}};
@@ -733,6 +731,7 @@ NGRAPH_TEST(${BACKEND_NAME}, sum_dynamic)
     {
         auto t_x = backend->create_tensor(element::f32, x_shapes[i]);
         auto t_axes = backend->create_tensor(element::i32, Shape{axeses[i].size()});
+        auto t_r = backend->create_dynamic_tensor(element::f32, PartialShape::dynamic());
 
         copy_data(t_x, inputs[i]);
         copy_data(t_axes, axeses[i]);

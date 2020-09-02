@@ -31,6 +31,7 @@ CPU.onnx_dyn_shapes_flatten_neg_axis
 
 CPU.onnx_dyn_shapes_flatten_axis
 CPU.onnx_dyn_shapes_flatten_neg_axis
+CPU.onnx_dyn_model_hardmax
 
 # Need use evaluate, only applicable to INTERPRETER
 CPU.non_zero
