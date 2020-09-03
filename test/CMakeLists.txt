@@ -44,6 +44,10 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     endif()
 endif()
 
+if(WIN32)
+    add_compile_definitions(NOMINMAX _CRT_SECURE_NO_WARNINGS)
+endif()
+
 set(SRC
     algebraic_simplification.cpp
     aligned_buffer.cpp
