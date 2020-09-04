@@ -119,8 +119,8 @@ message(STATUS "Fetching oneDNN")
 
 FetchContent_Declare(
     ext_dnnl
-    URL       https://github.com/oneapi-src/oneDNN/archive/v1.6.1.zip
-    URL_HASH  SHA1=5ebbe215ac1dd3121fe34511c9ffb597ec1d7a48
+    URL       https://github.com/oneapi-src/oneDNN/archive/v1.6.2.zip
+    URL_HASH  SHA1=d183155342cc8b842dea49992c544efe7ee2bbe9
 )
 
 FetchContent_GetProperties(ext_dnnl)
