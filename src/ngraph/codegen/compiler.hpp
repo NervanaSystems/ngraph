@@ -82,7 +82,7 @@ public:
     void add_header_search_path(const std::string& path, bool check_path = false);
 
     std::unique_ptr<ngraph::codegen::Module>
-        compile(std::unique_ptr<clang::CodeGenAction>& compiler_action, const std::string& source);
+        compile(clang::CodeGenAction *compiler_action, const std::string& source);
     std::string generate_pch(const std::string& source);
     void initialize();
 

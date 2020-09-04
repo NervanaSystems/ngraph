@@ -147,7 +147,7 @@ std::unique_ptr<codegen::Module> codegen::Compiler::compile(const std::string& s
         }
         compiler_info.compiler->set_precompiled_header_source(m_precompiled_header_source);
     }
-    auto rc = compiler_info.compiler->compile(m_compiler_action, source);
+    auto rc = compiler_info.compiler->compile(m_compiler_action.get(), source);
     return rc;
 }
 
@@ -327,18 +327,20 @@ void codegen::CompilerCore::add_header_search_path(const std::string& p, bool ch
 }
 
 std::unique_ptr<codegen::Module>
-    codegen::CompilerCore::compile(std::unique_ptr<clang::CodeGenAction>& m_compiler_action,
+    codegen::CompilerCore::compile(clang::CodeGenAction* compiler_action,
                                    const std::string& source)
 {
     PreprocessorOptions& preprocessor_options = m_compiler->getInvocation().getPreprocessorOpts();
 
-    preprocessor_options.RetainRemappedFileBuffers = true;
+    preprocessor_options.RetainRemappedFileBuffers = false;
 
     CompilerInfo& compiler_info = s_compiler_info[m_precompiled_header_source];
+
     if (!m_precompiled_header_source.empty() && compiler_info.pch_file.empty())
     {
         compiler_info.pch_file = generate_pch(m_precompiled_header_source);
     }
+
     if (!compiler_info.pch_file.empty())
     {
         // Preprocessor options
@@ -352,15 +354,18 @@ std::unique_ptr<codegen::Module>
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-    preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
+    preprocessor_options.addRemappedFile(m_source_name, buffer.get());
 
+    std::cout << "Compile" << std::endl;
     // Create and execute action
-    m_compiler_action.reset(new EmitLLVMOnlyAction());
+    compiler_action = new EmitLLVMOnlyAction();
     std::unique_ptr<llvm::Module> rc;
     bool reinitialize = false;
-    if (m_compiler->ExecuteAction(*m_compiler_action) == true)
+    std::cout << "ExecuteAction" << std::endl;
+    if (m_compiler->ExecuteAction(*compiler_action) == true)
     {
-        rc = m_compiler_action->takeModule();
+        std::cout << "takeModule" << std::endl;
+        rc = compiler_action->takeModule();
     }
     else
     {
@@ -398,8 +403,9 @@ std::string codegen::CompilerCore::generate_pch(const std::string& source)
     // Map code filename to a memoryBuffer
     StringRef source_ref(source);
     unique_ptr<MemoryBuffer> buffer = MemoryBuffer::getMemBufferCopy(source_ref);
-    preprocessor_options.RemappedFileBuffers.push_back({m_source_name, buffer.get()});
+    preprocessor_options.addRemappedFile(StringRef("header_resource.hpp"), buffer.get());
 
+    std::cout << "Generate PCH" << std::endl;
     // Create and execute action
     clang::GeneratePCHAction* compilerAction = new clang::GeneratePCHAction();
     if (m_compiler->ExecuteAction(*compilerAction) == false)
