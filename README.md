@@ -1,3 +1,5 @@
+nGraph has moved to OpenVINO: https://github.com/openvinotoolkit/openvino
+
 ![nGraph Compiler stack](doc/sphinx/source/graphics/ngraph_header.png)
 
 <div align="left">
